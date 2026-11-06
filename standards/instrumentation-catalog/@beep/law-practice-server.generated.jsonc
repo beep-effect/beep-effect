@@ -721,6 +721,7 @@
     {"name":"Citation.verifyDocumentAuthorities","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.verifyResourceBinding","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.visitAssemblyToken","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.visitHtmlCaseNameWord","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.visitKeptNativePoints","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.visitNativeReplacement","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.visitSelectionPrefixes","owner":"@beep/law-practice-server","family":"slice","conforms":true},

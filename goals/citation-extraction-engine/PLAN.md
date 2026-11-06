@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+HTML case-name target checkpoint (2026-11-06): all five source branches now
+connect prepared native HTML geometry to field-preserving metadata patches,
+using existing regex, cleanup and captured operation ownership. The eight-case
+smoke matches original mutations on Bun and Node, with sixty confirmed exits per
+runtime. Refusal/owner controls pass. Full 128-case replay per runtime is hosted
+and pending. Main #2748/#2743 is integrated. See
+[target evidence](history/evidence/2026-11-06-html-case-name-target.md).
+
 HTML case-name source checkpoint (2026-11-06): 128 direct original helper calls
 now freeze metadata/span mutations, original token classes and complete geometry/
 cleanup traces across all five HTML extraction branches. Both hash-seed exports

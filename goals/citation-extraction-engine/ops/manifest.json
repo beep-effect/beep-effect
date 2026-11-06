@@ -106,7 +106,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-05-document-cleaner-protocols.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-shared-text-capacity.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-target.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -498,6 +499,10 @@
     {
       "path": "ops/verify-html-case-names.py",
       "purpose": "Seal original HTML case-name evidence, reject corrupted observations and optionally replay the pinned oracle; not target parity."
+    },
+    {
+      "path": "ops/probe-html-case-name-pattern.py",
+      "purpose": "Derive the original HTML versus split literal/profile from pinned source and regex-V0 parser with direct split observations."
     }
   ]
 }

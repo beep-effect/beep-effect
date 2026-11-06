@@ -163,7 +163,14 @@
         "goals/citation-extraction-engine/ops/probe-html-case-names.py",
         "goals/citation-extraction-engine/ops/verify-html-case-names.py",
         "packages/law-practice/use-cases/test/fixtures/eyecite/html-case-names.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-target.md",
+        "goals/citation-extraction-engine/ops/probe-html-case-name-pattern.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/html-case-name-pattern.json",
+        "packages/law-practice/server/src/internal/Citation/HtmlCaseName.ts",
+        "packages/law-practice/server/test/CitationHtmlCaseName.fixtures.ts",
+        "packages/law-practice/server/test/CitationHtmlCaseName.test.ts",
+        "packages/law-practice/server/test/integration/CitationHtmlCaseName.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

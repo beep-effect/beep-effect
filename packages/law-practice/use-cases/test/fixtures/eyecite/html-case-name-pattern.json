@@ -1,0 +1,61 @@
+{
+  "configuration": {
+    "bindings": [
+      {
+        "flags": 2,
+        "patternSha256": "eb660449c0ac2be2a7f2979cc97ee6601af149ed21be2f69fcee0e4b1e2bae89",
+        "profile": {
+          "groups": 0,
+          "minimumWidthFloor": 3,
+          "names": {},
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      }
+    ],
+    "patterns": {
+      "splitV": {
+        "bytes": "5c732b76733f5c2e3f5c732b",
+        "width": 1
+      }
+    }
+  },
+  "formatter": "Version: 2.5.6",
+  "helpersSha256": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "producerSha256": "906c44c523313802b45f12bcc0ca1445ae365593aef9520d900b60c901e2c31a",
+  "python": "3.11.15",
+  "regex": "2023.12.25",
+  "regexCoreSha256": "e8edce03aef921b503080f55b16b46afa15fc2ea3e16deb5f52f895d51a698b0",
+  "schemaVersion": "citation-html-case-name-pattern/v1",
+  "splits": [
+    {
+      "result": ["Foo", "Bar"],
+      "source": "Foo v. Bar"
+    },
+    {
+      "result": ["Foo", "Bar"],
+      "source": "Foo vs Bar"
+    },
+    {
+      "result": ["Foo", "Bar"],
+      "source": "Foo VS. Bar"
+    },
+    {
+      "result": ["Foo", "Bar"],
+      "source": "Foo v\u017f. Bar"
+    },
+    {
+      "result": ["Foo", "Bar"],
+      "source": "Foo\tv.\nBar"
+    },
+    {
+      "result": ["Foo v.Bar"],
+      "source": "Foo v.Bar"
+    },
+    {
+      "result": ["Foo", "Bar v. Third"],
+      "source": "Foo v. Bar v. Third"
+    }
+  ]
+}

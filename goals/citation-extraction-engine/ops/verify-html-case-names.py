@@ -11,6 +11,8 @@ import tempfile
 
 CORPUS_SHA = 'e6231633d7a3d4115295517539aecda42045ce2a8253f565f9db86dacfcf1670'
 PRODUCER_SHA = '5b6a1afeb93c9fb0543e498c17f357a315aa4459694d3a25994c575f5d0c5d68'
+PATTERN_SHA = '4fd9710564c5d2ee74e298f3db7f1f4d08bb3d9543ab598afff340323a9dc0c4'
+PATTERN_PRODUCER_SHA = '906c44c523313802b45f12bcc0ca1445ae365593aef9520d900b60c901e2c31a'
 sha = lambda value: hashlib.sha256(value).hexdigest()
 
 
@@ -45,6 +47,18 @@ def validate(data, producer):
     return corpus
 
 
+def validate_pattern(data, producer, corpus):
+    assert sha(data) == PATTERN_SHA and sha(producer) == PATTERN_PRODUCER_SHA, 'HTML split pattern seals'
+    pattern = json.loads(data)
+    assert pattern['schemaVersion'] == 'citation-html-case-name-pattern/v1'
+    assert pattern['producerSha256'] == PATTERN_PRODUCER_SHA
+    assert pattern['helpersSha256'] == corpus['sources']['helpers.py']
+    binding, = pattern['configuration']['bindings']
+    assert binding == {'patternSha256': 'eb660449c0ac2be2a7f2979cc97ee6601af149ed21be2f69fcee0e4b1e2bae89',
+                       'flags': 2, 'profile': {'groups': 0, 'names': {}, 'minimumWidthFloor': 3,
+                                               'repeatedCaptures': False, 'nullableMultiRepeat': False}}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fixture-root', type=Path)
@@ -56,6 +70,9 @@ def main():
     data = (fixtures / 'html-case-names.json').read_bytes()
     producer = ops / 'probe-html-case-names.py'
     corpus = validate(data, producer.read_bytes())
+    pattern_data = (fixtures / 'html-case-name-pattern.json').read_bytes()
+    pattern_producer = ops / 'probe-html-case-name-pattern.py'
+    validate_pattern(pattern_data, pattern_producer.read_bytes(), corpus)
     controls = 0
     if args.self_test:
         mutations = []
@@ -83,11 +100,21 @@ def main():
             controls += 1
         else:
             raise AssertionError('changed producer accepted')
+        for changed_data, changed_producer in [(pattern_data + b' ', pattern_producer.read_bytes()),
+                                                (pattern_data, pattern_producer.read_bytes() + b' ')]:
+            try:
+                validate_pattern(changed_data, changed_producer, corpus)
+            except AssertionError:
+                controls += 1
+                continue
+            raise AssertionError('changed HTML split evidence accepted')
     if args.oracle_root:
         with tempfile.TemporaryDirectory(prefix='citation-html-case-names-') as temp:
             output = Path(temp) / 'replayed.json'
             subprocess.run([sys.executable, str(producer), '--oracle-root', str(args.oracle_root), '--output', str(output)], check=True)
             assert output.read_bytes() == data, 'original HTML case-name replay changed'
+            subprocess.run([sys.executable, str(pattern_producer), '--oracle-root', str(args.oracle_root), '--output', str(output)], check=True)
+            assert output.read_bytes() == pattern_data, 'original HTML split profile replay changed'
     print(json.dumps({'sourceEvidenceOnly': True, 'cases': len(corpus['cases']), 'branches': 5,
                       'corruptionControls': controls, 'oracleReplayed': args.oracle_root is not None}))
 
