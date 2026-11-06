@@ -159,6 +159,35 @@ export class GithubCheckRunRecord extends S.Opaque<GithubCheckRunRecord, { reado
 const CheckRunWire = S.Struct({ id: S.Int, name: S.String, status: S.String, conclusion: S.NullOr(S.String) });
 
 /**
+ * One commit status context (the legacy statuses API that deploy previews
+ * such as Vercel report through), newest state per context.
+ *
+ * **Example** (A pending deploy preview)
+ *
+ * ```ts
+ * import { GithubCommitStatusRecord } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const status = GithubCommitStatusRecord.make({ context: "Vercel", state: "pending" })
+ * console.log(status.state) // "pending"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubCommitStatusRecord extends S.Opaque<GithubCommitStatusRecord, { readonly brand: unique symbol }>()(
+  S.Struct({ context: S.String, state: S.String }).pipe(
+    $I.annoteSchema("GithubCommitStatusRecord", {
+      description: "The newest state of one commit status context, read over GitHub REST.",
+    })
+  )
+) {}
+
+const CombinedStatusWire = S.Struct({
+  total_count: S.Int,
+  statuses: S.Array(S.Struct({ context: S.String, state: S.String })),
+});
+
+/**
  * One GitHub Actions workflow run.
  *
  * **Example** (A failed run)
@@ -275,6 +304,12 @@ export interface GithubRestShape {
   readonly cancelWorkflowRun: (runId: number) => Effect.Effect<void, GitHubError>;
   /** Every check run on a commit (all pages). */
   readonly checkRuns: (sha: string) => Effect.Effect<ReadonlyArray<GithubCheckRunRecord>, GitHubError>;
+  /**
+   * The newest state of every commit status context on a commit (the combined
+   * status, first 100 contexts). More contexts than one page fails the read
+   * (`decode`), so a gate reading it never mistakes a partial list for all.
+   */
+  readonly commitStatuses: (sha: string) => Effect.Effect<ReadonlyArray<GithubCommitStatusRecord>, GitHubError>;
   /** Post an issue comment on a pull request; returns its URL. */
   readonly createIssueComment: (number: number, body: string) => Effect.Effect<string, GitHubError>;
   /**
@@ -483,6 +518,24 @@ const makeGithubRest = Effect.gen(function* () {
       )
     );
 
+  const combinedStatusOperation = "GET /repos/{owner}/{repo}/commits/{ref}/status";
+  const commitStatuses = (sha: string) =>
+    client
+      .requestDecoded(combinedStatusOperation, { ...at, ref: sha, per_page: 100 }, CombinedStatusWire)
+      .pipe(
+        Effect.flatMap((wire) =>
+          wire.total_count > A.length(wire.statuses)
+            ? Effect.fail(
+                GitHubError.decode(
+                  combinedStatusOperation,
+                  `${wire.total_count} status contexts exceed one page of ${A.length(wire.statuses)}`,
+                  wire.total_count
+                )
+              )
+            : Effect.succeed(A.map(wire.statuses, (status) => GithubCommitStatusRecord.make(status)))
+        )
+      );
+
   const requiredStatusContexts = (branch: string) =>
     client.paginate("GET /repos/{owner}/{repo}/rules/branches/{branch}", { ...at, branch }).pipe(
       Effect.flatMap(decodeWith(S.Array(RulesetRuleWire), "GET /repos/{owner}/{repo}/rules/branches/{branch}")),
@@ -610,6 +663,7 @@ const makeGithubRest = Effect.gen(function* () {
     addLabels,
     cancelWorkflowRun,
     checkRuns,
+    commitStatuses,
     headFirstReceivedAt,
     createIssueComment,
     mergePullRequest,

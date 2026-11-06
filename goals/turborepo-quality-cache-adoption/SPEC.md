@@ -1106,6 +1106,14 @@ Lane `codex/cache-strict-entrypoint-review-20261106`
 
 Reverse: Remove the one .repos input exclusion while retaining the source-bound original refusal and candidate metadata observations.
 
+### Bind pilot selection and mounts to one reviewed recipe, 2026-11-06
+
+Centralize the existing identity pilot computation, package filter, selected package path, and fresh dependency paths in one internal schema-backed recipe. Route activation, closure validation, native summary selection, filters, sandbox mounts, and mutation paths through that recipe. Identity remains the sole admitted recipe. This is the first implementation step toward additional reviewed computation recipes, beginning with dependency-free types lint; it does not add types execution or reuse authority. Static substitution of the unchanged recipe values reproduces the prior runner source exactly before formatting. Hosted CI remains required runtime and type-check evidence. No manual local verify, publish, tests, check, docgen or package verification was run, per operator instruction. Both whole goals and all qualification and rollout obligations remain open.
+
+Lane `codex/cache-pilot-recipes-20261106`
+
+Reverse: Revert the recipe refactor; no task cache setting or qualification state changes.
+
 ### Preserve external suite inputs across all CLI test consumers, 2026-11-06
 
 All three CLI test consumers execute the architecture proof suite, which reads
@@ -1127,5 +1135,13 @@ After accepted PR #2695, nonempty affected-query summaries still reported zero p
 Lane `codex/turbo-query-package-counts`
 
 Reverse: Revert the package counter and its assertions while preserving historical source and native evidence.
+
+### Declare the types lint toolchain hash before qualification, 2026-11-06
+
+Prepare the dependency-free types lint computation for the existing pilot runtime-key guard by declaring BEEP_CACHE_TOOLCHAIN_DIGEST in the child task env list while retaining cache false. Eight bounded native metadata-only plans with the pinned stable and canary clients prove that synthetic digest changes were ignored before the edit and invalidate the task hash after it. Input paths, command, dependencies and outputs are unchanged; only the child config file input changes. Evidence is in research/types-lint-toolchain-key-2026-11-06.json and its companion report. No task body, remote cache operation, credential read or manual quality suite ran. This is not runtime-key enforcement, qualification, adoption or production activation; types-specific execution and the full trust/adoption contracts remain open.
+
+Lane `codex/cache-types-key-input-20261106`
+
+Reverse: Remove the hashed environment declaration or revert this change; types lint stays uncached.
 
 <!-- beep:decisions:end -->

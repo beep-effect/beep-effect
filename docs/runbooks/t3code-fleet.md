@@ -123,8 +123,9 @@ listener (decision 2026-11-06). All steps run over the PC's key-auth SSH
    comes back at the PC user's next sign-in. Check with `wsl -l -v`.
 4. Join the tailnet: `tailscale up --hostname tom-pc-1-wsl --ssh=false` prints
    a login URL; the operator approves it in the admin console.
-5. Install T3 as `agent` with the mirror pinned: stage `ops/t3code-fork-pull.sh`
-   and its units under `$HOME/.local/bin` and `~/.config/systemd/user`, write
+5. Install T3 in the distro as `agent` with the mirror pinned (`$HOME` is that
+   account's home): stage `ops/t3code-fork-pull.sh` and its units under
+   `$HOME/.local/bin` and `~/.config/systemd/user`, write
    `~/.config/t3code-fork/pull.env`, then
    `T3CODE_RELEASE_BASE_URL=<mirror> T3CODE_VERSION=<published version> sh install.sh`
    (the public `t3.codes/install.sh` honours both), pin the same URL in
