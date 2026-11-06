@@ -1253,4 +1253,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the composition wave; retain separately qualified raw entry and semantic projection.
 
+### Verified primary occurrence adaptation, 2026-11-06
+
+Builtin semantic results now produce primary mentions only against genuine source capabilities for the exact tokenizer text. Existing canonical offset conversion, provenance verification and cm1 production are reused. Shortcut, invalid spans and native/JavaScript point-layout differences retain explicit unverified semantic data. Shared code-point conversion now scans cooperatively without whole-source arrays or prefix joins, with unchanged public contract. Forty prerequisite tests and both-runtime source/mention regression pass. Full-span/component evidence, warning translation, canonical source production for cleaning and the public service/Layer remain open. See history/evidence/2026-11-06-occurrence-projection.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the occurrence adaptation and converter optimization while retaining the public prerequisite contracts and raw/semantic pipeline.
+
 <!-- beep:decisions:end -->

@@ -18,6 +18,7 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
 import { citationExtractionRawRequest } from "./CitationExtractionEntry.fixtures.ts";
+import { makeCitationOccurrenceTestAdapter } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -97,6 +98,7 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
       DateTime.withCurrentZoneOffset(0)
     );
   const stage = yield* install(setup.limits);
+  const occurrences = yield* makeCitationOccurrenceTestAdapter(setup, provided);
   const mismatch = yield* install(setup.limits, { ...config, semantic: { ...config.semantic, editions: [] } }).pipe(
     Effect.flip
   );
@@ -113,6 +115,7 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
   expect(shortcut.citations).toHaveLength(1);
   expect(shortcut.raw.reservedUnits).toBe(0);
   expect(shortcut.reservedUnits).toBeGreaterThan(0);
+  yield* occurrences.shortcut(shortcut);
   const tooSmall = yield* install({ ...setup.limits, producedTextUtf16: shortcut.reservedUnits - 1 });
   const refused = yield* tooSmall.extract({ plain: "eyecite" }).pipe(Effect.flip);
   expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
@@ -131,6 +134,7 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
     yield* assertCitationTokenizedExtractionRow(result.raw.outcome.result.extraction, row, translated);
     const projectedUnits = yield* assertSemanticDocument(unicode, result.citations, row.expected);
     expect(result.reservedUnits).toBe(result.raw.reservedUnits + projectedUnits);
+    yield* occurrences.verify(unicode, result, row);
   }
   expect(rows).toHaveLength(full ? 36 : 7);
   yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);

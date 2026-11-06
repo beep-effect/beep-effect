@@ -404,3 +404,10 @@ history/evidence/2026-11-03-edition-inference.md.
   failed; after its terminal result the lock was absent and intended changes
   remained staged. Retrying normal hooks preserves validation. A single staging
   owner after parallel generators would prevent this race.
+
+- 2026-11-06 occurrence adaptation: the canonical code-point converter built a
+  whole-source character array and joined two prefixes for every citation.
+  Reading its actual implementation exposed unnecessary text/array allocations
+  before integrating verified mentions. The same public helper now scans numeric
+  coordinates cooperatively; independent former-algorithm range comparisons,
+  source-ceiling and interruption controls preserve its contract.

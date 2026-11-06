@@ -274,7 +274,12 @@
         "packages/law-practice/server/src/internal/Citation/SemanticExtraction.ts",
         "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
         "packages/law-practice/server/test/CitationSemanticExtraction.test.ts",
-        "packages/law-practice/server/test/integration/CitationSemanticExtraction.test.ts"
+        "packages/law-practice/server/test/integration/CitationSemanticExtraction.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-occurrence-projection.md",
+        "packages/law-practice/server/src/internal/Citation/OccurrenceProjection.ts",
+        "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+        "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts",
+        "packages/foundation/capability/langextract/test/VerifiedSpanOffsets.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
