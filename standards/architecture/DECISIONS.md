@@ -2604,7 +2604,10 @@ Rejected:
 - A `@beep/shared-domain` facade over alchemy. It would become the next kit.
 - Keeping CRUD rows authoritative with alchemy as a decision layer, or a
   dual-write shadow period. Both keep two sources of truth.
-- Deleting the kit in the first migration. 117 files across nine slices import
-  it; a strangler keeps each slice's PR bounded.
+- Deleting the kit in the first migration. 64 files across seven packages
+  (agents, architecture-lab, documents, epistemic, law-practice, shared and
+  workspace) import the frozen modules, per the
+  `standards/entity-kit-freeze.baseline.jsonc` census; a strangler keeps each
+  slice's PR bounded.
 - Tracking alchemy betas continuously. 84 betas in 203 days with breaking
   changes; each bump is a named task with a migration note.
