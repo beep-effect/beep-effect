@@ -63,7 +63,7 @@ const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMax
     description: "Restricted absolute native path, pinned separately by owner admission.",
   })
 );
-/** Exact private profile pins the cold-catalog model identity; no auth, endpoint, provider key or arbitrary hook is configured.
+/** Exact private profile pins the approved Responses model and medium reasoning contract; no auth, endpoint, provider key or arbitrary hook is configured.
  * **Example** (Inspect fixed profile text length)
  * ```ts
  * console.log(grokCanaryProfile.length > 0)
@@ -72,7 +72,7 @@ const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMax
  * @since 0.0.0
  */
 export const grokCanaryProfile =
-  '[models]\nsession_summary="grok-4.7"\ndefault_reasoning_effort="medium"\n[cli]\nauto_update=false\nuse_leader=false\n[features]\ntelemetry=false\nfeedback=false\ncodebase_indexing=false\nremote_fetch=false\nauto_wake=false\ntitle_refresh=false\nturn_summary=false\n[session]\nload_envrc=false\n\n[marketplace]\ndefault_skills_installs_purged = true\n\n[model."grok-4.7"]\nmodel = "grok-4.7"\n';
+  '[models]\nsession_summary="grok-4.7"\ndefault_reasoning_effort="medium"\n[cli]\nauto_update=false\nuse_leader=false\n[features]\ntelemetry=false\nfeedback=false\ncodebase_indexing=false\nremote_fetch=false\nauto_wake=false\ntitle_refresh=false\nturn_summary=false\n[session]\nload_envrc=false\n\n[marketplace]\ndefault_skills_installs_purged = true\n\n[model."grok-4.7"]\nmodel = "grok-4.7"\napi_backend = "responses"\nreasoning_efforts = [{ id = "medium", value = "medium", label = "Medium", description = "", default = false }]\n';
 /** Fixed local-only pilot project MCP bytes; never publish this override into the ordinary repository.
  * **Example** (Inspect empty MCP content)
  * ```ts

@@ -343,10 +343,14 @@ const fixture = async (
 const nativeCase = (name: string, body: () => Effect.Effect<void, unknown>) =>
   it.live(name, body, { concurrent: false });
 
-it.effect("declares only the fixed cold-catalog model identity without transport or credential overrides", () =>
+it.effect("pins the approved Responses and medium contract without endpoint or credential overrides", () =>
   Effect.gen(function* () {
     const profile = yield* Effect.fromResult(Toml.parse(grokCanaryProfile));
-    const expected = yield* Effect.fromResult(Toml.parse('[model."grok-4.7"]\nmodel="grok-4.7"\n'));
+    const expected = yield* Effect.fromResult(
+      Toml.parse(
+        '[model."grok-4.7"]\nmodel="grok-4.7"\napi_backend="responses"\nreasoning_efforts=[{id="medium",value="medium",label="Medium",description="",default=false}]\n'
+      )
+    );
     const models = R.get(profile, "model");
     const expectedModels = R.get(expected, "model");
     const expectedModel = O.getOrThrow(expectedModels);
@@ -364,7 +368,7 @@ nativeCase("a legacy profile without the model declaration refuses before native
   Effect.tryPromise(async () => {
     const f = await fixture();
     try {
-      const legacy = Str.replace('\n[model."grok-4.7"]\nmodel = "grok-4.7"\n', "")(grokCanaryProfile);
+      const legacy = Str.replace(/\n\[model\."grok-4\.7"\][\s\S]*$/u, "")(grokCanaryProfile);
       await Fs.writeFile(Path.join(f.request.nativeHome, "config.toml"), legacy, { mode: 0o600 });
       const refused = await f.run.pipe(Effect.flip, Effect.flatMap(decodeCanaryError), Effect.runPromise);
       expect(refused.phase).toBe("source");
