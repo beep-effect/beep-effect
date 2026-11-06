@@ -25,7 +25,7 @@ import {
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it, vi } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertInclude, assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -933,6 +933,44 @@ describe("beep session", () => {
           expect(rewritten).toContain("## Next actions (ordered)\n\n1. merge #7");
           // No snapshot this time: the previous file's rendered snapshot section is kept as written.
           expect(rewritten).toContain("## Gate snapshot");
+        })
+      )
+    );
+
+    it.effect("finds HANDOFF.md through the env override or the XDG cache, and reports an unreadable file", () =>
+      withScratchCheckout(({ clone, stateRoot }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const home = path.dirname(stateRoot);
+          const withEnv = <A, E, R>(extra: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
+            effect.pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromEnv({
+                  env: { BEEP_SESSION_STATE_ROOT: stateRoot, HOME: home, CODEX_THREAD_ID: "thread-1", ...extra },
+                })
+              )
+            );
+          // No file yet: the XDG cache default is written, with nothing to back up.
+          const written = yield* captureOutput(withCwd(clone, runSession(["handoff", "--write"])));
+          const defaultFile = path.join(home, ".cache", "beep", "orchestrator", "HANDOFF.md");
+          expect(written).toBe(`[session] wrote ${defaultFile}`);
+          const defaultExists = yield* fs.exists(defaultFile);
+          expect(defaultExists).toBe(true);
+          // A blank override falls back to the default; a set one is used.
+          const blank = yield* captureOutput(
+            withEnv({ BEEP_ORCHESTRATOR_HANDOFF: "  " }, withCwd(clone, runSession(["handoff", "--write"])))
+          );
+          assertInclude(blank, `[session] wrote ${defaultFile} (previous kept as `);
+          const envFile = path.join(stateRoot, "env-handoff", "HANDOFF.md");
+          const viaEnv = yield* captureOutput(
+            withEnv({ BEEP_ORCHESTRATOR_HANDOFF: envFile }, withCwd(clone, runSession(["handoff", "--write"])))
+          );
+          expect(viaEnv).toBe(`[session] wrote ${envFile}`);
+          // A directory is not a missing file: the read fails instead of rendering over it.
+          const error = yield* withCwd(clone, runSession(["handoff", "--file", stateRoot])).pipe(Effect.flip);
+          expect(error._tag).toBe("CliReportedExit");
         })
       )
     );

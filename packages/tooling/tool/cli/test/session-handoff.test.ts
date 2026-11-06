@@ -132,6 +132,11 @@ describe("HANDOFF.md rendering", () => {
     expect(text).toContain("> - last line");
   });
 
+  it("writes a section kept with no body as its heading alone", () => {
+    const text = renderHandoff(input({ existing: O.some("# old\n\n## Scratch\n") }));
+    expect(text).toContain("## Scratch\n\n## Journal pointer");
+  });
+
   it("renders the register from rows, dropping retired units", () => {
     const text = renderHandoff(
       input({ register: [unit(), unit({ address: "agent-2", state: "retired", recordedAt: DateTime.makeUnsafe(3) })] })

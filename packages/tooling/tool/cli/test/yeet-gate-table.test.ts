@@ -126,6 +126,11 @@ describe("yeet gate-table decision", () => {
     expect(row.pending).toContain("Never Ran");
   });
 
+  it("names a completed run GitHub gave no conclusion as a red", () => {
+    const row = decideGateTableRow(read({ checkRuns: withRun("Heavy / Coverage Regression", "completed", null) }));
+    expect(row.reds).toEqual(["Heavy / Coverage Regression=none"]);
+  });
+
   it("holds on any red check run, required or not, and does not hold on a pending non-required one", () => {
     const red = decideGateTableRow(read({ checkRuns: withRun("Heavy / Coverage Regression", "completed", "failure") }));
     expect(red.gateMet).toBe(false);
@@ -261,6 +266,7 @@ interface Script {
   readonly rulesFail?: boolean;
   readonly statuses: unknown;
   readonly threads: unknown;
+  readonly threadsFail?: boolean;
 }
 
 // Every REST path the read makes, by repository-relative path; anything else is a 404.
@@ -279,7 +285,9 @@ const restRoutes = (script: Script): Readonly<Record<string, GithubAnswer>> => (
 
 const answer = (script: Script, call: GithubCall): GithubAnswer | undefined =>
   O.isSome(call.graphql)
-    ? legacyGhAnswer({ call, exitCode: 0, output: encodeJson(script.threads) })
+    ? script.threadsFail === true
+      ? { status: 502, body: { message: "Bad Gateway" } }
+      : legacyGhAnswer({ call, exitCode: 0, output: encodeJson(script.threads) })
     : O.getOrUndefined(R.get(restRoutes(script), call.path));
 
 const runRead = (script: Script) =>
@@ -340,6 +348,21 @@ describe("yeet gate-table recorded read", () => {
       assertNone(row.read.requiredContexts);
       expect(row.gateMet).toBe(false);
       expect(report.entries[1]?._tag).toBe("unreadable");
+    })
+  );
+
+  it.effect("a failed thread read is threads=? and never zero", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runRead({
+        pulls: [pullFixture],
+        threads: threadsFixture,
+        statuses: noStatuses,
+        threadsFail: true,
+      });
+      const row = rowAt(report, 0);
+      expect(row.read.threads._tag).toBe("unknown");
+      expect(row.gateMet).toBe(false);
+      expect(renderGateTableEntry(row)).toContain("threads=?");
     })
   );
 

@@ -606,9 +606,7 @@ const readThreads = Effect.fnUntraced(function* (
         GateTableThreadsCounted.make({ outstanding: outstanding(read), total: A.length(read.threads) })
     ),
     Effect.catch((error) =>
-      Effect.succeed(
-        GateTableThreadsUnknown.make({ reason: Str.isNonEmpty(error.message) ? error.message : "thread read failed" })
-      )
+      Effect.succeed(GateTableThreadsUnknown.make({ reason: `thread read failed: ${error.message}` }))
     )
   );
 });
