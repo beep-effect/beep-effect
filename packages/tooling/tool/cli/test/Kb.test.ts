@@ -31,6 +31,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -42,6 +43,7 @@ const encodeAssertion = S.encodeEffect(S.fromJsonString(Assertion));
 const encodeRegistryNode = S.encodeEffect(S.fromJsonString(KbRegistryNode));
 const decodeGraph = S.decodeEffect(S.fromJsonString(KbGraph));
 const decodeClaim = S.decodeUnknownEffect(S.toType(KbClaim));
+const decodeAssertion = S.decodeUnknownEffect(S.toType(Assertion));
 
 const digest = Str.repeat(64)("a");
 const absent = { _tag: "Absent", reason: "not-assessed" };
@@ -123,6 +125,44 @@ const withLedger = Effect.fnUntraced(function* (options: { readonly public?: boo
 });
 
 describe("knowledge ledger admission and disclosure", () => {
+  it.effect("retains challenge-only media evidence without asserting a current relationship", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const claim = yield* decodeClaim({
+        ...f.claim,
+        review: { _tag: "Proposed" },
+        challengedBy: ["assertion/challenge"],
+      });
+      const assertion = Assertion.make({ ...f.internal, selector: { _tag: "MediaFragment", start: 1, end: 2 } });
+      const challenge = Assertion.make({ ...assertion, id: "assertion/challenge" });
+      expect(validateKb([claim], [assertion, challenge]).valid).toBe(true);
+      const output = projectKb([claim], [assertion, challenge], "planning")["dataset.nq"];
+      expect(output).toContain('"MediaFragment"');
+      expect(output).not.toContain("<urn:beep:kb:authorizedBy>");
+      expect(output).not.toContain("<urn:beep:kb:exact>");
+      const invalid = Assertion.make({ ...assertion, claimId: "claim/missing" });
+      expect(projectKb([claim], [invalid], "outward")["INDEX.md"]).not.toContain(claim.id);
+    })
+  );
+  it.effect("rejects every conflicting capture identity field while allowing identical metadata", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const claim = KbClaim.make({ ...f.claim, challengedBy: ["assertion/challenge"] });
+      const same = Assertion.make({ ...f.internal, id: "assertion/challenge" });
+      expect(validateKb([claim], [f.internal, same]).valid).toBe(true);
+      const sources: ReadonlyArray<Assertion["sourceRef"]> = [
+        { ...same.sourceRef, sha256: Str.repeat(64)("b") },
+        { ...same.sourceRef, kind: "self-report" },
+        { ...same.sourceRef, locator: "https://example.com/another-capture" },
+      ];
+      for (const sourceRef of sources) {
+        const changed = Assertion.make({ ...same, sourceRef });
+        expect(validateKb([claim], [f.internal, changed]).violations).toContain(
+          `Assertion ${same.id}: inconsistent capture metadata`
+        );
+      }
+    })
+  );
   it.effect("enforces outward eligibility across schema-generated audiences and derivation bases", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -276,6 +316,89 @@ describe("knowledge ledger admission and disclosure", () => {
 });
 
 layer(live)("knowledge ledger filesystem", (it) => {
+  it.effect("accepts an empty output directory but refuses an empty symbolic-link target", () =>
+    Effect.gen(function* () {
+      const f = yield* withLedger({ public: true });
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory(f.out);
+      yield* buildKb(f.root, "outward", f.out);
+      const target = `${f.out}-empty`;
+      yield* fs.makeDirectory(target);
+      yield* fs.symlink(target, `${f.out}-link`);
+      const result = yield* Effect.flip(buildKb(f.root, "outward", `${f.out}-link`));
+      expect(result).toMatchObject({
+        message: "Output directory cannot be a symbolic link",
+      });
+      const entries = yield* fs.readDirectory(target);
+      expect(entries).toEqual([]);
+    })
+  );
+  it.effect("reports schema-invalid rows, duplicate registry identities and inspection failures", () =>
+    Effect.gen(function* () {
+      const f = yield* withLedger();
+      const fs = yield* FileSystem.FileSystem;
+      const ledger = yield* KbLedger;
+      yield* fs.writeFileString(`${f.root}/claims.jsonl`, "{}\n");
+      const invalid = yield* Effect.flip(ledger.read(f.root));
+      expect(invalid).toMatchObject({
+        message: "Invalid row in claims.jsonl at byte 0",
+      });
+      const node = yield* encodeRegistryNode(KbRegistryNode.make({ id: "entity/1", type: "Concept", label: "Entity" }));
+      yield* fs.writeFileString(`${f.root}/registry.jsonl`, `${node}\n${node}\n`);
+      const duplicate = yield* Effect.flip(ledger.readRegistry(f.root));
+      expect(duplicate).toMatchObject({
+        message: "Duplicate registry ids",
+      });
+      const failing: FileSystem.FileSystem = {
+        ...fs,
+        exists: () =>
+          Effect.fail(
+            PlatformError.systemError({
+              _tag: "PermissionDenied",
+              module: "FileSystem",
+              method: "exists",
+              description: "Registry inspection denied",
+            })
+          ),
+      };
+      const captured = yield* makeKbLedger.pipe(Effect.provideService(FileSystem.FileSystem, failing));
+      const inspected = yield* Effect.flip(captured.readRegistry(f.root));
+      expect(inspected).toMatchObject({
+        message: "Cannot inspect registry.jsonl",
+      });
+    })
+  );
+  it.effect("rejects post-write canaries and maps platform write failures at the build boundary", () =>
+    Effect.gen(function* () {
+      const f = yield* withLedger({ public: true });
+      const fs = yield* FileSystem.FileSystem;
+      const tainted: FileSystem.FileSystem = {
+        ...fs,
+        writeFileString: (file, text, options) =>
+          fs.writeFileString(file, `${text}\nCANARY-INTERNAL-racing-writer`, options),
+      };
+      const result = yield* Effect.flip(
+        buildKb(f.root, "outward", f.out).pipe(Effect.provideService(FileSystem.FileSystem, tainted))
+      );
+      expect(result).toMatchObject({ message: "Outward canary check failed on disk" });
+      const denied: FileSystem.FileSystem = {
+        ...fs,
+        writeFileString: () =>
+          Effect.fail(
+            PlatformError.systemError({
+              _tag: "PermissionDenied",
+              module: "FileSystem",
+              method: "writeFileString",
+              description: "Read-only output",
+            })
+          ),
+      };
+      const failure = yield* Effect.flip(
+        buildKb(f.root, "planning", `${f.out}-denied`).pipe(Effect.provideService(FileSystem.FileSystem, denied))
+      );
+      expect(failure).toMatchObject({ message: "Cannot create knowledge view" });
+    })
+  );
   it.effect("scans every on-disk outward artifact while allowing a nested planning build", () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -350,6 +473,117 @@ const writeGraphRows = Effect.fnUntraced(function* (
   yield* fs.writeFileString(`${root}/assertions.jsonl`, A.join(assertionLines, "\n"));
 });
 layer(graphLive)("knowledge JSON graph", (it) => {
+  it.effect("preserves review states, bounded validity and confidence from pending or rejected evidence", () =>
+    Effect.gen(function* () {
+      const f = yield* withLedger();
+      const exporter = yield* KbGraphExport;
+      const states = [
+        { review: { _tag: "Proposed" }, expected: "proposed", evidence: "pending", confidence: "reported" },
+        {
+          review: {
+            _tag: "Rejected",
+            disposition: {
+              disposition: "rejected",
+              reviewer: "reviewer/1",
+              basis: digest,
+              reviewedAt: DateTime.makeUnsafe(2),
+              reason: "Unsupported evidence",
+            },
+          },
+          expected: "disputed",
+          evidence: "rejected",
+          confidence: "inferred",
+        },
+        {
+          review: { _tag: "Disputed", challengedBy: [f.internal.id], openedAt: DateTime.makeUnsafe(2) },
+          expected: "disputed",
+          evidence: "rejected",
+          confidence: "inferred",
+        },
+        {
+          review: { _tag: "Retracted", reason: "Source corrected", at: DateTime.makeUnsafe(2) },
+          expected: "retracted",
+          evidence: "rejected",
+          confidence: "inferred",
+        },
+      ];
+      for (const state of states) {
+        const claim = yield* decodeClaim({
+          ...f.claim,
+          review: state.review,
+          validTime: { _tag: "Interval", validFrom: DateTime.makeUnsafe(0), validTo: O.some(DateTime.makeUnsafe(10)) },
+        });
+        const assertion = yield* decodeAssertion({ ...f.internal, review: state.evidence });
+        yield* writeGraphRows(f.root, [claim], [assertion]);
+        const graph = yield* exporter.write(
+          f.root,
+          "planning",
+          `${f.out}-${state.expected}-${state.evidence}.json`,
+          true
+        );
+        expect(graph.claims[claim.id]).toMatchObject({ review: state.expected, confidence: state.confidence });
+        expect(graph.links[0]).toMatchObject({
+          review: state.expected,
+          confidence: state.confidence,
+          validFrom: "1970-01-01T00:00:00.000Z",
+          validTo: "1970-01-01T00:00:00.010Z",
+        });
+      }
+    })
+  );
+  it.effect("uses the public basis label when neither capture nor derivation is an HTTP locator", () =>
+    Effect.gen(function* () {
+      const f = yield* withLedger({ public: true });
+      const assertions = A.map(f.assertions, (a) =>
+        Assertion.make({
+          ...a,
+          sourceRef: { ...a.sourceRef, locator: "/captures/private.wacz" },
+          derivation: { ...a.derivation, ref: "doi:10.1234/example" },
+        })
+      );
+      yield* writeGraphRows(f.root, [f.claim], assertions);
+      const exporter = yield* KbGraphExport;
+      const graph = yield* exporter.write(f.root, "outward", `${f.out}.json`, false);
+      expect(graph.claims[f.claim.id]?.assertions).toMatchObject([{ locator: "public source" }]);
+      expect(graph.claims[f.claim.id]?.assertions[0]).not.toHaveProperty("url");
+    })
+  );
+  it.effect("refuses invalid ledgers and detects disk contamination and platform export failures", () =>
+    Effect.gen(function* () {
+      const f = yield* withLedger({ public: true });
+      const fs = yield* FileSystem.FileSystem;
+      const tainted: FileSystem.FileSystem = {
+        ...fs,
+        writeFileString: (file, text, options) =>
+          fs.writeFileString(file, `${text}\nCANARY-INTERNAL-racing-writer`, options),
+      };
+      const exporter = yield* makeKbGraphExport.pipe(Effect.provideService(FileSystem.FileSystem, tainted));
+      const contaminated = yield* Effect.flip(exporter.write(f.root, "outward", `${f.out}.json`, false));
+      expect(contaminated).toMatchObject({
+        message: "Outward canary check failed on disk",
+      });
+      const denied: FileSystem.FileSystem = {
+        ...fs,
+        writeFileString: () =>
+          Effect.fail(
+            PlatformError.systemError({
+              _tag: "PermissionDenied",
+              module: "FileSystem",
+              method: "writeFileString",
+              description: "Read-only output",
+            })
+          ),
+      };
+      const deniedExporter = yield* makeKbGraphExport.pipe(Effect.provideService(FileSystem.FileSystem, denied));
+      const failure = yield* Effect.flip(deniedExporter.write(f.root, "planning", `${f.out}-denied.json`, false));
+      expect(failure).toMatchObject({ message: "Cannot export knowledge graph" });
+      yield* fs.writeFileString(`${f.root}/assertions.jsonl`, "");
+      const invalid = yield* Effect.flip(exporter.write(f.root, "planning", `${f.out}-invalid.json`, false));
+      expect(invalid).toMatchObject({
+        message: "Ledger validation failed; run kb validate",
+      });
+    })
+  );
   it.effect("round-trips the exact contract and registry metadata with fallback ids", () =>
     Effect.scoped(
       Effect.gen(function* () {

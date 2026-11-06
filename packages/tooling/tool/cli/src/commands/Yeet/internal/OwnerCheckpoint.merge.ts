@@ -22,7 +22,6 @@ import { qualifyOwnerCheckpointSnapshot } from "./OwnerCheckpoint.ts";
 import type {
   OwnerCheckpointBinding,
   OwnerCheckpointPolicy,
-  OwnerCheckpointRecord,
   OwnerCheckpointSnapshot,
 } from "./OwnerCheckpoint.schemas.ts";
 import type { makeOwnerCheckpointStore } from "./OwnerCheckpoint.store.ts";
@@ -31,12 +30,10 @@ type Store = Effect.Success<ReturnType<typeof makeOwnerCheckpointStore>>;
 const decodeHead = S.decodeUnknownResult(OwnerCheckpointHead);
 const unknown = Effect.fnUntraced(function* (
   store: Store,
-  record: OwnerCheckpointRecord,
+  record: Effect.Success<ReturnType<Store["prepareDispatch"]>>,
   policy: OwnerCheckpointPolicy
 ) {
   const now = yield* DateTime.now;
-  if (record.state._tag !== "Claimed")
-    return OwnerCheckpointMergeOutcome.cases.Uncertain.make({ recording: "pending" });
   const recorded = yield* store
     .apply(
       OwnerCheckpointRequest.make({
@@ -111,7 +108,7 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
     .pipe(Effect.result);
   if (Result.isFailure(result) || !result.success.merged) return yield* unknown(store, record, policy);
   const commit = decodeHead(result.success.sha);
-  if (Result.isFailure(commit) || record.state._tag !== "Claimed") return yield* unknown(store, record, policy);
+  if (Result.isFailure(commit)) return yield* unknown(store, record, policy);
   const confirmed = yield* store
     .apply(
       OwnerCheckpointRequest.make({
