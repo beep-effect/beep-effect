@@ -173,6 +173,9 @@ extend-exclude = [
   "packages/law-practice/domain/src/internal/generated/free-law-project/**",
   # Exact pinned oracle text includes legal abbreviations and upstream typos.
   # Its schema, hashes, coordinates and source accounting have a separate gate.
+  # Complete immutable runtime projection: exporter --check and runtime seals/codecs
+  # validate every source row. Legal abbreviations and regex words are not prose.
+  "packages/law-practice/server/assets/citation/parser-catalog.data",
   "packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
   "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
   "packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",

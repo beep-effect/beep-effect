@@ -287,7 +287,11 @@
         "packages/law-practice/server/test/CitationCanonicalSource.test.ts",
         "packages/law-practice/server/test/CitationVerifiedExtraction.fixtures.ts",
         "packages/law-practice/server/test/CitationVerifiedExtraction.test.ts",
-        "packages/law-practice/server/test/integration/CitationVerifiedExtraction.test.ts"
+        "packages/law-practice/server/test/integration/CitationVerifiedExtraction.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-parser-catalog.md",
+        "packages/law-practice/server/src/internal/Citation/ParserCatalog.ts",
+        "packages/law-practice/server/assets/citation/parser-catalog.data",
+        "packages/law-practice/server/test/CitationParserCatalog.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

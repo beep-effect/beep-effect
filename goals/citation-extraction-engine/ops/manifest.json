@@ -145,7 +145,11 @@
     "packages/law-practice/server/test/CitationCanonicalSource.test.ts",
     "packages/law-practice/server/test/CitationVerifiedExtraction.fixtures.ts",
     "packages/law-practice/server/test/CitationVerifiedExtraction.test.ts",
-    "packages/law-practice/server/test/integration/CitationVerifiedExtraction.test.ts"
+    "packages/law-practice/server/test/integration/CitationVerifiedExtraction.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-parser-catalog.md",
+    "packages/law-practice/server/src/internal/Citation/ParserCatalog.ts",
+    "packages/law-practice/server/assets/citation/parser-catalog.data",
+    "packages/law-practice/server/test/CitationParserCatalog.test.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -239,7 +243,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-reference-template.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-extraction-loop.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-extraction-shortcut.py --self-test",
-    "python3 goals/citation-extraction-engine/ops/verify-semantic-editions.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-semantic-editions.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/export-parser-catalog.py --check"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -640,6 +645,10 @@
     {
       "path": "ops/verify-semantic-editions.py",
       "purpose": "Verify exact source-derived semantic identities, producer seal and five corruption controls."
+    },
+    {
+      "path": "ops/export-parser-catalog.py",
+      "purpose": "Project/check complete source-sealed runtime extractor metadata and frozen publications without runtime test dependencies."
     }
   ]
 }

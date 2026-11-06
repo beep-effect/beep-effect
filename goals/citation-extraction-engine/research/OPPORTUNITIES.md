@@ -418,3 +418,10 @@ history/evidence/2026-11-03-edition-inference.md.
   opaque alias without weakening evidence. A non-generator fnUntraced callback
   also erased test effect channels; the typed generator helper prevents that
   cascade. Declaration generation belongs beside the cheap package check.
+
+- 2026-11-06 runtime catalog publication: gitleaks generic-api-key classified the
+  public canonical-tokenizer source SHA-256 as a credential because its JSON key
+  includes tokenizer. The source seal is already independently fixed by the
+  exporter and full metadata comparison. An exact digest/path/detector exception
+  preserves every other value and rule; changing provenance bytes to evade the
+  detector would obscure the source relationship.

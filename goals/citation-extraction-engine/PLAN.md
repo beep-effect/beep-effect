@@ -1261,6 +1261,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the full-span/warning adaptation wave; retain primary occurrence projection and original raw warning pairs.
 
+### Production parser catalog loading, 2026-11-06
+
+The complete default catalog and frozen publications now have a reproducible production-only asset and bounded Effect FileSystem loader. All 6805 extractor occurrences/descriptors, 2533 editions and 2430 reporter payloads match independent sealed fixture installation. The source hash profile remains explicitly captured seed 0. Connected Bun/Node replay now uses the production loader and frozen owner; ten tests across three files pass in 25.75 seconds. Changed/truncated/appended/missing assets refuse. Helper metadata, full engine artifact, public service/Layer and exhaustive qualification remain open. See history/evidence/2026-11-06-parser-catalog.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the runtime catalog projection/loader and restore the fixture-based tokenizer installer; retain all sealed oracle evidence.
+
 ### Raw extraction to semantic values, 2026-11-06
 
 Raw primitive input now reaches domain Citation values under one admitted operation, deadline and cumulative text budget. Seven source documents on both actual runtimes cover all eight families, Unicode and HTML; complete 36-document replay is registered for hosted integration. Configuration binds the same edition mapping to parsing and projection. Exact/one-unit-short shortcut budget controls and complete original raw model checks pass. Hosted Fallow findings on the preceding head identified test-function complexity; focused model/metadata/publication assertion helpers repair those functions without threshold or baseline changes. See history/evidence/2026-11-06-semantic-extraction.md. Public service/Layer, verified mentions and full goal qualification remain open.

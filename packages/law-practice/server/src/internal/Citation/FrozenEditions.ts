@@ -23,10 +23,24 @@ import { snapshotCitationValue } from "./Snapshot.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/FrozenEditions");
 const Row = S.Struct({ ref: Sha256Hex, payload: S.String.check(S.isMaxLength(1024)) });
-const Bundle = S.Struct({
-  reporters: S.Array(Row).check(S.isMinLength(2430), S.isMaxLength(2430)),
-  editions: S.Array(Row).check(S.isMinLength(2533), S.isMaxLength(2533)),
-});
+/** Complete source-sealed frozen publication data for server installation.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationFrozenEditionBundle extends S.Opaque<
+  CitationFrozenEditionBundle,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    reporters: S.Array(Row).check(S.isMinLength(2430), S.isMaxLength(2430)),
+    editions: S.Array(Row).check(S.isMinLength(2533), S.isMaxLength(2533)),
+  }).pipe(
+    $I.annoteSchema("CitationFrozenEditionBundle", {
+      description:
+        "Complete original reporter and edition payloads, independently authenticated by their source references.",
+    })
+  )
+) {}
+const Bundle = CitationFrozenEditionBundle;
 const Manifest = S.fromJsonString(S.Struct({ editions: S.Array(Sha256Hex), reporters: S.Array(Sha256Hex) }));
 const expectedManifest = "b6d3fdd9b6fb4e006c3ede86639c46e7579ff03d39091bdd74ca60919dfe648e";
 const Reporter = S.Struct({

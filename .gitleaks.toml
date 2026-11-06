@@ -430,3 +430,11 @@ paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/history/integ
 regexes = [
   '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
 ]
+
+[[allowlists]]
+description = "The complete citation runtime projection retains this exact public canonical-tokenizer source SHA-256, independently checked by exporter --check and runtime/source equivalence tests. It is provenance, not an API credential. Other values and detectors remain scanned."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^(?:/repo/)?packages/law-practice/server/assets/citation/parser-catalog\.data$''']
+regexes = ['''^7f624597ee68176326cd8252a9858acd48faa7be27f1dc3e986119140a4080f3$''']

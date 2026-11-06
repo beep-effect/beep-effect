@@ -2,20 +2,22 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 
+import * as NodeURL from "node:url";
+import { CitationFrozenEditions } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { makeCitationParserCatalog } from "@beep/law-practice-server/internal/Citation/ParserCatalog";
 import { CitationTokenDispatchBindings } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import {
   CitationTokenizedExtractionConfiguration,
   makeCitationTokenizedExtraction,
 } from "@beep/law-practice-server/internal/Citation/TokenizedExtraction";
-import { makeCitationCanonicalTokenizerCatalog } from "@beep/law-practice-server/internal/Citation/TokenizerCatalog";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { loadCitationCanonicalTokenizerControls } from "./CitationCanonicalTokenizer.fixtures.ts";
 import {
   assertCitationExtractionLoopModel,
   assertCitationExtractionLoopSelection,
@@ -30,12 +32,12 @@ export const installCitationTokenizedExtractionFixture = Effect.fn("TokenizedExt
   kind: CitationNativeRuntimeKind
 ) {
   const { corpus, setup, configuration, geometry } = yield* installCitationExtractionLoopFixture(kind);
-  const controls = yield* loadCitationCanonicalTokenizerControls();
-  const tokenizer = yield* makeCitationCanonicalTokenizerCatalog(
+  const catalog = yield* makeCitationParserCatalog(
     setup.limits,
-    controls.payload,
-    controls.metadata
+    NodeURL.fileURLToPath(new URL("../assets/citation/parser-catalog.data", import.meta.url))
   ).pipe(Effect.provideContext(setup.provided));
+  const tokenizer = catalog.tokenizer;
+  const provided = Context.add(setup.provided, CitationFrozenEditions, catalog.editions);
   const editions = yield* S.decodeEffect(CitationTokenDispatchBindings)(
     A.map(tokenizer.editions, (row) => ({ id: row.id, ref: row.ref }))
   );
@@ -52,10 +54,10 @@ export const installCitationTokenizedExtractionFixture = Effect.fn("TokenizedExt
     },
   });
   const stage = yield* makeCitationTokenizedExtraction(setup.limits, setup.runtime, nativeConfiguration).pipe(
-    Effect.provideContext(setup.provided),
+    Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
-  return { corpus, setup, configuration: nativeConfiguration, geometry, stage, translated };
+  return { corpus, setup: { ...setup, provided }, configuration: nativeConfiguration, geometry, stage, translated };
 });
 type Installed = Effect.Success<ReturnType<typeof installCitationTokenizedExtractionFixture>>;
 /** Compare native-text output to the original complete model and identity observations. */
