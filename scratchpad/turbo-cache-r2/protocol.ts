@@ -9,6 +9,7 @@ import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as A from "effect/Array";
+import * as Match from "effect/Match";
 
 export interface TeamCredential {
   readonly team: string;
@@ -223,29 +224,17 @@ export const artifactHandler = ({ bucket, credentials }: ArtifactHandlerOptions)
       return forbidden();
     }
 
-    switch (route.kind) {
-      case "status": {
-        return Response.json({ status: "enabled" }, { headers: { "cache-control": "no-store" } });
-      }
+    return yield* Match.value(route).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        status: () =>
+          Effect.succeed(Response.json({ status: "enabled" }, { headers: { "cache-control": "no-store" } })),
+        events: () => Effect.succeed(refusal(204)),
+        query: () => queryArtifacts(request, bucket, team),
+        artifact: ({ hash }) => {
+          const key = `${team}/${hash}`;
 
-      case "events": {
-        return refusal(204);
-      }
-
-      case "query": {
-        return yield* queryArtifacts(request, bucket, team);
-      }
-
-      case "artifact": {
-        const key = `${team}/${route.hash}`;
-
-        return yield* request.method === "PUT"
-          ? putArtifact(request, bucket, key)
-          : readArtifact(request, bucket, key);
-      }
-
-      default: {
-        return refusal(404);
-      }
-    }
+          return request.method === "PUT" ? putArtifact(request, bucket, key) : readArtifact(request, bucket, key);
+        },
+      })
+    );
   });
