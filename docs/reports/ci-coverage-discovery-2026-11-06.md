@@ -33,14 +33,40 @@ counts: `13,16,31,5,6,23,7,3,3,2,3,56`.
 The probe ran with Bun 1.4.4 and Node 24.22.1. Hosted comparison pins Node 22.23.4.
 The measurement covers config/provider source discovery, rather than complete artifact
 loading, source hashing, merging, or the baseline comparison. Other workstation jobs
-were active. Hosted phase timings remain the acceptance evidence for end-to-end gains. A one-package
-affected comparison does not benefit from package concurrency; its invocation checks
-remain sequential.
+were active. Hosted phase timings remain the acceptance evidence for end-to-end gains.
+A one-package affected comparison does not benefit from package concurrency; its
+invocation checks remain sequential.
 
 The first probe accidentally supplied Bun's compatibility `process.versions.node`
 value instead of the child Node runtime version. Production discovery rejected that
 mismatch. The corrected probe used the child runtime's actual version; production
 runtime checks were unchanged.
+
+## First full hosted attempt
+
+PR #2772's [Check run 42237340716](https://github.com/beep-effect/beep-effect/actions/runs/42237340716)
+correctly widened to full scope because both changed implementation files are global
+coverage inputs. [Comparison job 127966899337](https://github.com/beep-effect/beep-effect/actions/runs/42237340716/job/127966899337)
+reported these separate phases:
+
+| Phase | Time | Scope |
+| --- | ---: | --- |
+| Independent expected test inventory | 142.07 s | 190 packages, 192 invocations |
+| Independent sealed artifact verification | 165.32 s | 190 packages |
+| Compare coverage evidence step | 314 s | Full scope; subsequent ratchet failed |
+| Whole comparison job | 360 s | Includes checkout, install, and artifact transfer |
+
+Artifact verification completed successfully. The subsequent ratchet refused inherited
+OwnerCheckpoint split files from #2747 because their new file identities had uncovered
+units. The consolidated [repair #2776](https://github.com/beep-effect/beep-effect/pull/2776)
+landed as `496a4a5b5d74ede757ad58d50afe733226fb59fd`, covering the observed refusal and
+recovery paths without changing floors or adding baseline exceptions. Its strict Node
+22.23.4/V8 proof covered all five modules completely; its hosted CLI ratchet passed.
+
+The earlier 383-second successful comparison and this 314-second failed comparison
+have different ratchet outcomes and source snapshots. They do not establish an accepted
+end-to-end speedup. A successful full-scope repeat after the inherited repair is required;
+the phase logs make its costs attributable without guessing how much was discovery.
 
 ## Decision and preserved gates
 
@@ -66,6 +92,7 @@ Receipts and the bounded probe are under the lane-local ignored
 - `full-discovery-baseline.log` and `full-discovery-timed.log`
 - `source-discovery-probe.ts` and `source-discovery-baseline.log`
 - `dependency-build.log`, `focused-tests.log`, `package-check.log`
+- `hosted-comparison.log` and `hosted-unit-a.log` for the first full hosted attempt
 - `package-verify.log`, `package-verify-quick-final.log`, `docgen.log`, and `workflow-lint.log`
 
 The three focused coverage suites passed all 214 tests, including configured discovery,
