@@ -1,3 +1,4 @@
+import * as NodeURL from "node:url";
 import {
   CitationOperationAdmission,
   makeCitationOperationAdmission,
@@ -11,6 +12,7 @@ import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Cita
 import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -22,6 +24,7 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import {
@@ -32,9 +35,55 @@ import {
   makeCitationRegexTestRuntime,
 } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationPublicationMetadataConfiguration } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
-import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type {
+  CitationNativeProcessRuntime,
+  CitationNativeRuntimeKind,
+} from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeExitCounts } from "./CitationNativeSpawner.fixtures.ts";
+
+/** Authenticate committed native oracle bytes before any schema projection. */
+export const readCitationOracleFixture = Effect.fn("RegexWorkerTest.readOracleFixture")(function* (
+  name: string,
+  expected: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const bytes = yield* fs.readFile(
+    NodeURL.fileURLToPath(new URL(`../../use-cases/test/fixtures/eyecite/${name}.json`, import.meta.url))
+  );
+  const actual = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
+  expect(actual).toBe(expected);
+  return new TextDecoder().decode(bytes);
+});
+/** Define a reusable actual-runtime fixture with the existing captured owners. */
+export const makeCitationMetadataFixture = <
+  Loaded extends { readonly configuration: unknown },
+  LoadError,
+  LoadEnv,
+  Stage,
+  MakeError,
+  MakeEnv,
+>(definition: {
+  readonly load: () => Effect.Effect<Loaded, LoadError, LoadEnv>;
+  readonly make: (
+    limits: CitationEngineLimits,
+    runtime: CitationNativeProcessRuntime,
+    configuration: Loaded["configuration"]
+  ) => Effect.Effect<Stage, MakeError, MakeEnv>;
+}) =>
+  Effect.fn("RegexWorkerTest.installMetadataFixture")(function* (
+    kind: CitationNativeRuntimeKind,
+    maximum?: number,
+    enclosing = false,
+    controlled = false
+  ) {
+    const loaded = yield* definition.load();
+    const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, controlled, 8192);
+    const stage = yield* definition
+      .make(setup.limits, setup.runtime, loaded.configuration)
+      .pipe(Effect.provideContext(setup.provided));
+    return { ...setup, ...loaded, stage };
+  });
 
 /** Shared actual runtime, controlled execution Clock and real cleanup observations. */
 export const setupCitationRegexRuntime = Effect.fn("RegexWorkerTest.runtime")(function* (

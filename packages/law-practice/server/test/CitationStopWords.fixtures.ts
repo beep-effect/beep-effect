@@ -1,17 +1,14 @@
 /** Original cleanup outputs through existing observed native process owners.
  * @internal @packageDocumentation @since 0.0.0
  */
-import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationStopWordsConfiguration,
   makeCitationStopWords,
 } from "@beep/law-practice-server/internal/Citation/StopWords";
-import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import {
@@ -21,7 +18,8 @@ import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
-  setupCitationMetadataRuntime,
+  makeCitationMetadataFixture,
+  readCitationOracleFixture,
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -60,15 +58,7 @@ const Corpus = S.fromJsonString(
   })
 );
 const load = Effect.fn("StopWordsTest.load")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const read = Effect.fn("StopWordsTest.read")(function* (name: string, hash: string) {
-    const bytes = yield* fs.readFile(
-      NodeURL.fileURLToPath(new URL(`../../use-cases/test/fixtures/eyecite/${name}.json`, import.meta.url))
-    );
-    const actual = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
-    expect(actual).toBe(hash);
-    return new TextDecoder().decode(bytes);
-  });
+  const read = readCitationOracleFixture;
   const config = yield* read(
     "stop-word-patterns",
     "98bdf393eb38077254b0a241767ef935ee4adaf04184c0d29b08565b1c5fa1ae"
@@ -79,19 +69,7 @@ const load = Effect.fn("StopWordsTest.load")(function* () {
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   return { configuration: config.configuration, corpus };
 });
-const install = Effect.fn("StopWordsTest.install")(function* (
-  kind: CitationNativeRuntimeKind,
-  maximum?: number,
-  enclosing = false,
-  controlled = false
-) {
-  const loaded = yield* load();
-  const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, controlled, 8192);
-  const stage = yield* makeCitationStopWords(setup.limits, setup.runtime, loaded.configuration).pipe(
-    Effect.provideContext(setup.provided)
-  );
-  return { ...setup, ...loaded, stage };
-});
+const install = makeCitationMetadataFixture({ load, make: makeCitationStopWords });
 /** Smoke contains inline case, every semicolon shape, native surrogate controls and adjacency. */
 export const replayCitationStopWords = Effect.fn("StopWordsTest.replay")(function* (
   kind: CitationNativeRuntimeKind,

@@ -11,15 +11,14 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
-  copyCitationMetadataPatterns,
-  decodeCitationMetadataRuntimeConfiguration,
-  makeCitationMetadataOperation,
+  copyCitationMetadataPatternConfiguration,
+  makeCitationMetadataStage,
   substituteCitationMetadataMatches,
 } from "./MetadataComposition.ts";
 import { trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { parseCitationPythonInteger } from "./PythonInteger.ts";
-import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
+import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
 import {
@@ -140,6 +139,14 @@ const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Arra
 const bound = (index: number, length: number) => Num.max(0, Num.min(length, index < 0 ? length + index : index));
 const plaintiffBoundary = (point: number) =>
   point === 32 || (point >= 9 && point <= 13) || point === 44 || point === 40;
+const unchanged = CitationCaseNameProcessPatch.make({
+  plaintiff: O.none(),
+  defendant: O.none(),
+  antecedentGuess: O.none(),
+  year: O.none(),
+  numericYear: O.none(),
+  fullSpanStart: O.none(),
+});
 const processName = Effect.fn("Citation.processNativeCaseName")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
@@ -191,6 +198,33 @@ const processName = Effect.fn("Citation.processNativeCaseName")(function* (
     const removed = yield* substituteCitationMetadataMatches(evaluated, O.none(), () => fail("invalid-match"));
     return yield* clean(removed);
   });
+  const finishName = Effect.fn("Citation.finishCaseNameAssignments")(function* (
+    defendant: CitationPythonUnicodeStorage,
+    cleaned: CitationPythonUnicodeStorage
+  ) {
+    if (cleaned.bytes.length === 0) return unchanged;
+    const name = request.short ? yield* clean(defendant) : cleaned;
+    const first = bound(request.startIndex === null ? 0 : request.startIndex, words.length);
+    const last = bound(request.index - 1, words.length);
+    const length = A.reduce(
+      A.take(A.drop(words, first), Num.max(0, last - first)),
+      0,
+      (sum, word) => sum + word.value.pythonLength
+    );
+    return CitationCaseNameProcessPatch.make({
+      ...unchanged,
+      defendant: request.short ? O.none() : O.some(name),
+      antecedentGuess: request.short ? O.some(name) : O.none(),
+      fullSpanStart: O.some(request.spanStart - length - 1),
+    });
+  });
+  const processYear = Effect.fn("Citation.processPreCitationYear")(function* () {
+    if (request.preCiteYear === null || request.preCiteYear.bytes.length === 0) return unchanged;
+    const prepared = yield* input.prepareUnicode(request.preCiteYear, () => Effect.void);
+    const numericYear = yield* parseCitationPythonInteger(prepared.value);
+    if (O.isNone(numericYear)) return yield* fail("invalid-year");
+    return CitationCaseNameProcessPatch.make({ ...unchanged, year: O.some(prepared.value.storage), numericYear });
+  });
   let plaintiff = O.none<CitationPythonUnicodeStorage>();
   let defendant = candidate;
   if (request.hasV) {
@@ -200,80 +234,34 @@ const processName = Effect.fn("Citation.processNativeCaseName")(function* (
     defendant = selected.defendant;
   }
   const cleaned = yield* clean(defendant);
-  let named = O.none<CitationPythonUnicodeStorage>();
-  let fullSpanStart = O.none<number>();
-  if (cleaned.bytes.length > 0) {
-    const name = request.short ? yield* clean(defendant) : cleaned;
-    named = O.some(name);
-    const first = bound(request.startIndex === null ? 0 : request.startIndex, words.length);
-    const last = bound(request.index - 1, words.length);
-    const length = A.reduce(
-      A.take(A.drop(words, first), Num.max(0, last - first)),
-      0,
-      (sum, word) => sum + word.value.pythonLength
-    );
-    fullSpanStart = O.some(request.spanStart - length - 1);
-  }
-  let year = O.none<CitationPythonUnicodeStorage>();
-  let numericYear = O.none<bigint>();
-  if (request.preCiteYear !== null && request.preCiteYear.bytes.length > 0) {
-    const prepared = yield* input.prepareUnicode(request.preCiteYear, () => Effect.void);
-    year = O.some(prepared.value.storage);
-    numericYear = yield* parseCitationPythonInteger(prepared.value);
-    if (O.isNone(numericYear)) return yield* fail("invalid-year");
-  }
-  return CitationCaseNameProcessPatch.make({
-    plaintiff,
-    defendant: request.short ? O.none() : named,
-    antecedentGuess: request.short ? named : O.none(),
-    year,
-    numericYear,
-    fullSpanStart,
-  });
+  const names = yield* finishName(defendant, cleaned);
+  const year = yield* processYear();
+  return CitationCaseNameProcessPatch.make({ ...names, plaintiff, year: year.year, numericYear: year.numericYear });
+});
+const copyConfiguration = Effect.fn("Citation.copyCaseNameProcessConfiguration")(function* (
+  limits: CitationEngineLimits,
+  decoded: CitationCaseNameProcessConfiguration
+) {
+  const owned = yield* copyCitationMetadataPatternConfiguration(
+    limits,
+    Patterns,
+    decoded.patterns,
+    decoded.bindings,
+    fingerprints,
+    () => fail("invalid-configuration")
+  );
+  const cleaner = yield* copyCitationStopWordsConfiguration(limits, decoded.cleaner);
+  return CitationCaseNameProcessConfiguration.make({ ...owned, cleaner });
 });
 /** Install one admitted composition; cleaner calls share its Scope and budget
  * without reacquiring the enclosing operation's permit. Methods have R=never.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationCaseNameProcess = Effect.fn("Citation.makeCaseNameProcess")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
-) {
-  const {
-    limits,
-    configuration: decoded,
-    runtime,
-  } = yield* decodeCitationMetadataRuntimeConfiguration(policy, runtimeInput, configurationInput, Config, () =>
-    fail("invalid-configuration")
-  );
-  const patterns = yield* copyCitationMetadataPatterns(limits, decoded.patterns, fingerprints, () =>
-    fail("invalid-configuration")
-  );
-  const owned = yield* S.decodeUnknownEffect(Patterns)(patterns).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
-  const cleaner = yield* copyCitationStopWordsConfiguration(limits, decoded.cleaner);
-  const config = CitationCaseNameProcessConfiguration.make({
-    patterns: owned,
-    bindings: A.map(decoded.bindings, copyCitationRegexDescriptor),
-    cleaner,
-  });
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => processName(limits, runtime, config, raw),
-    () => fail("invalid-configuration")
-  );
-  const apply = Effect.fn("Citation.processCaseName")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [patch, reservedUnits] = yield* installed.run(raw);
-          return CitationCaseNameProcessResult.make({ patch, reservedUnits });
-        })
-      ),
-    installed.timing.timed
-  );
-  return { apply };
+export const makeCitationCaseNameProcess = makeCitationMetadataStage({
+  method: "apply",
+  schema: Config,
+  invalid: () => fail("invalid-configuration"),
+  own: copyConfiguration,
+  prepare: processName,
+  project: (patch, reservedUnits) => CitationCaseNameProcessResult.make({ patch, reservedUnits }),
 });

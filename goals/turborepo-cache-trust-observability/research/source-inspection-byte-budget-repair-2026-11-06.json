@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "source-inspection-byte-budget-repair/v1",
+  "recordedAt": "2026-11-06T01:37:48.321988+00:00",
+  "acceptedBase": "b109f9c42fdab923bf029564154d8af6132eb972",
+  "failedInspection": {
+    "runId": 42142818104,
+    "attempt": 1,
+    "jobId": 127647045003,
+    "sourceRevision": "31d8efc09b14d558df48fc3ba75add397a3d2ac1",
+    "resolvedHeavyRevision": "31d8efc09b14d558df48fc3ba75add397a3d2ac1",
+    "sourceInspection": "failure",
+    "diagnostics": "skipped",
+    "artifacts": 0,
+    "message": "Cannot bind the declared workflow source files.",
+    "jobLogSha256": "2396dcdc142af097979931f1826b763647a37bb5e2629aa07b9d604d8bcc0f96"
+  },
+  "sourceMetadata": {
+    "method": "Read-only immutable Git tree and blob metadata; no source inspector or local suite executed.",
+    "declaredPaths": 15516,
+    "declaredTrackedBlobBytesEstimate": 275096375,
+    "formerPerFileLimitBytes": 8388608,
+    "largeDeclaredFiles": [
+      {
+        "path": "packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
+        "bytes": 34855569
+      },
+      {
+        "path": "packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
+        "bytes": 17014736
+      },
+      {
+        "path": "packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
+        "bytes": 13448401
+      }
+    ],
+    "allThreeAddedAfterPreviousSource": "4975e2916860c8b9abafe2d47fca9df5ced97efd",
+    "attribution": "These declared files necessarily exceed the existing eight-MiB reader limit and prevent complete binding. The generic failed-job message did not identify the first failing path; further independent causes remain unproven.",
+    "sourceRevision": "31d8efc09b14d558df48fc3ba75add397a3d2ac1",
+    "scope": "Failed accepted-source snapshot, not a refreshed current computation population."
+  },
+  "repair": {
+    "perFilePayloadBytes": 67108864,
+    "aggregatePreflightPayloadBytes": 1073741824,
+    "concurrentMetadataAndPayloadReaders": 4,
+    "sourcePathLimit": 20000,
+    "preflightBeforeAnyPayloadRead": true,
+    "perReadBound": "Exactly the preflight file size, plus the existing one-byte overflow probe; sizes first capped at 64 MiB.",
+    "sizeDrift": "Refuse a read whose returned length differs from preflight metadata.",
+    "completeBytesAndExistingDigestAlgorithmPreserved": true,
+    "sourceExclusionsAdded": false,
+    "productionDependencyFingerprintChanged": false,
+    "serializedWorkflowSchemaChanged": false,
+    "hostedControlsAuthored": [
+      "Complete SHA-256 of a source larger than eight MiB with a nonzero final byte.",
+      "Sparse source larger than 64 MiB refused before any payload open.",
+      "Seventeen metadata-sized 64-MiB sources exceed the one-GiB aggregate and cause zero payload opens.",
+      "A reader length mismatch after metadata preflight is refused."
+    ]
+  },
+  "unchangedBudgets": {
+    "existingRunnerJobsAtOnce": 1,
+    "inspectionJobMinutes": 10,
+    "sourceAndDiagnosticReportBytes": 4194304,
+    "diagnosticSeconds": 300,
+    "diagnosticArchivePasses": 2,
+    "diagnosticArchiveBytesPerPass": 6442450944,
+    "diagnosticProcessMemoryMiB": 256,
+    "artifactRetentionDays": 1
+  },
+  "preparedSourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "1b991ee677a03a2ca2ab79afa2634db966a4de3dfea19819e0c7732062f6df62",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "25de022778fb4cc4eb63df4a4cd8085e4f62e043941d18b74823a77660e094bc"
+  },
+  "verification": {
+    "manualLocalTests": 0,
+    "manualLocalVerifyPublishPackageVerifyOrQuality": false,
+    "hostedProof": "pending on pushed head"
+  },
+  "authority": {
+    "newCapacityOrSpend": false,
+    "credentialsOrSigningActivated": false,
+    "producerApprovalOrQualificationGranted": false,
+    "wholeGoalCriteriaCompleted": 0,
+    "goalsRemainActive": true
+  },
+  "rollback": "Revert the focused source-reader preflight and bounds while preserving the failed run and complete-input requirement. The prior eight-MiB cap fails closed on the new fixtures; any replacement needs its own bounded complete-byte evidence.",
+  "initialPreparedBase": "a3eb1c10054efff96cba9b48ed61e264e88840f4",
+  "acceptedIntegration": "Preserve accepted W7b pinned-Git boundary comments and NodeTestLayer while retaining the focused byte-budget repair."
+}
