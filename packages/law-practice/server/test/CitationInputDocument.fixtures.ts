@@ -202,8 +202,15 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
     Effect.provideService(CitationCleanerProtocols, h.protocols),
     Effect.provideService(CitationDocumentInputProtocols, protocols)
   );
-  const named = A.contains(["default", "tuple-empty", "tuple-html"], row.stepsKind);
-  if (named) steps = yield* adapter.create({ kind: row.stepsKind === "default" ? "list" : "tuple", names: tokens });
+  const named = A.contains(
+    ["default", "tuple-empty", "tuple-html", "generator-empty", "generator-html"],
+    row.stepsKind
+  );
+  if (named)
+    steps = yield* adapter.create({
+      kind: generator ? "generator" : row.stepsKind === "default" ? "list" : "tuple",
+      names: tokens,
+    });
   const cleaner = CitationCleanerProtocols.of({
     ...adapter.cleaner,
     open: Effect.fnUntraced(function* (plan, initial, work) {
@@ -235,7 +242,12 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
     Effect.provideService(CitationCleanerRuntime, registry.runtime),
     Effect.provideService(CitationDocumentInputProtocols, adapter.document)
   );
-  return { h, plain, markup, steps, stage, events: () => events, state: () => ({ generatorState, tokens }) };
+  const state = Effect.gen(function* () {
+    const current = yield* adapter.inspect(steps);
+    const ownedGenerator = O.flatMap(current, (container) => container.generator);
+    return { generatorState: O.isSome(ownedGenerator) ? ownedGenerator.value.state : generatorState, tokens };
+  });
+  return { h, plain, markup, steps, stage, events: () => events, state };
 });
 const checkValue = Effect.fn("InputDocumentTest.checkValue")(function* (
   values: CitationCleanerValues["Service"],
@@ -285,9 +297,10 @@ const checkCase = Effect.fn("InputDocumentTest.check")(function* (
   expect(fixture.events(), `${row.id}:events`).toEqual(
     A.filter(row.events, (event) => !A.contains(["placeholder", "diff:0", "diff:1", "emphasis"], event))
   );
-  if (row.stepsAfter.kind === "generator") expect(fixture.state().generatorState).toBe(row.stepsAfter.state);
+  const state = yield* fixture.state;
+  if (row.stepsAfter.kind === "generator") expect(state.generatorState).toBe(row.stepsAfter.state);
   if (row.stepsAfter.kind === "list" || row.stepsAfter.kind === "tuple")
-    expect(fixture.state().tokens).toEqual(row.stepsAfter.items);
+    expect(state.tokens).toEqual(row.stepsAfter.items);
 });
 /** Full source replay is hosted; smoke retains ordinary failures, None output and actual geometry. */
 export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")(function* (

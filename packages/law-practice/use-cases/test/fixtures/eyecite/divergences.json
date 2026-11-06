@@ -584,7 +584,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationInputDocument.fixtures.ts",
-          "sha256": "f0285f5e71a774e106ce51b9e34fce512e1cd76836d6358a16b1cc4ddf4ca47d"
+          "sha256": "8e83c76b654628046998dcb29edc87f14f18c62bb8bacabd00a78a915a85e33f"
         },
         {
           "path": "packages/law-practice/server/test/CitationInputDocument.test.ts",
@@ -600,15 +600,15 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/DocumentCleanerProtocols.ts",
-          "sha256": "024322f3ea0b6f070621b8a6b63774e6dc27df5d2b638528357fa6fb12db87f0"
+          "sha256": "4af2a3b226f6ffd4e111656abd4d98c29048048d23b1eea4e071ef745e0ad5e8"
         },
         {
           "path": "packages/law-practice/server/test/CitationDocumentCleanerProtocols.test.ts",
-          "sha256": "acc61c11337a3605b562a9f037ef548e28647a76c50c9926d34012352fe1f0a9"
+          "sha256": "c2428f1832f5b1ef97b30c9b4cdfcc62aee3bd7f80fe875c5327b2077b479e13"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-document-cleaner-protocols.md",
-          "sha256": "7c1fbc1d265111566e98a14baf2e7c86fd5ee547b7cb8b8ae00e4fb28f8e2bc5"
+          "sha256": "ebd696f8bdb9ae297d0b565a841d50310859addc755568477cc2ecb314e74170"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/TextCapacity.ts",

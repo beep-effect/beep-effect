@@ -1,5 +1,5 @@
 /** Server-owned named cleaner containers for the original Document initializer.
- * Source list/tuple behavior adapts eyecite 2.7.6 models.py (BSD-2-Clause);
+ * Source list/tuple/generator behavior adapts eyecite 2.7.6 models.py (BSD-2-Clause);
  * see THIRD_PARTY_NOTICES.md. Arbitrary host protocols remain captured services.
  * @internal @packageDocumentation @since 0.0.0
  */
@@ -10,6 +10,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationCleanerFailure } from "./CleanerPipeline.ts";
@@ -19,8 +20,28 @@ import { CitationDocumentInputFailure, CitationDocumentInputProtocols } from "./
 import type { CitationCleanerObject } from "./CleanerPipeline.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DocumentCleanerProtocols");
-const Kind = LiteralKit(["list", "tuple"]).pipe(
-  $I.annoteSchema("Kind", { description: "Exact named list or tuple, without subclass or generator normalization." })
+const Kind = LiteralKit(["list", "tuple", "generator"]).pipe(
+  $I.annoteSchema("Kind", { description: "Explicit server-owned named list, tuple or one-shot generator." })
+);
+const GeneratorState = S.Struct({
+  position: S.Natural,
+  state: LiteralKit(["GEN_CREATED", "GEN_SUSPENDED", "GEN_CLOSED"]),
+}).pipe(
+  $I.annoteSchema("GeneratorState", {
+    description: "Original generator progress: yielding the last item does not yet close it.",
+  })
+);
+/** Private observation of an issued named container; not a request or wire value.
+ * @internal @category models @since 0.0.0
+ */
+export const CitationDocumentCleanerContainerState = S.Struct({
+  kind: Kind,
+  size: S.Natural,
+  generator: S.Option(GeneratorState),
+}).pipe(
+  $I.annoteSchema("CitationDocumentCleanerContainerState", {
+    description: "Owned named container shape and optional shared generator state.",
+  })
 );
 const Input = S.Struct({ kind: Kind, names: S.Array(CitationBuiltinCleanerName) }).pipe(
   $I.annoteSchema("Input", { description: "Trusted named-container configuration; no host iterator or callback data." })
@@ -30,6 +51,7 @@ type Entry = {
   readonly names: ReadonlyArray<CitationBuiltinCleanerName>;
   readonly values: ReadonlyArray<CitationCleanerObject>;
   readonly plan: string;
+  readonly generator: O.Option<Ref.Ref<typeof GeneratorState.Type>>;
 };
 const invalid = () => CitationCleanerFailure.make({ reason: "invalid-input" });
 const sourceFailure = (sourceError: CitationDocumentInputFailure["sourceError"]) =>
@@ -38,7 +60,8 @@ const sourceFailure = (sourceError: CitationDocumentInputFailure["sourceError"])
 /** Capture one value owner, original cleaner protocols and optional host Document
  * protocols. Issued named containers share their exact handles between constructor
  * truth/membership and cleaner iteration. Selecting a plan never iterates it;
- * each list/tuple opening starts a fresh cursor. Unknown host containers delegate
+ * each list/tuple opening starts a fresh cursor, while generator membership and
+ * cleaning consume the same one-shot cursor. Unknown host containers delegate
  * without property inspection. All returned protocol methods have R=never.
  * Scope closure invalidates this adapter and releases its bounded plan table.
  * @internal @category operations @since 0.0.0
@@ -81,20 +104,56 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
     );
     yield* ensureOpen;
     const value = yield* values.retainHost(Symbol("citation-named-cleaner-container"));
+    const generator =
+      configured.kind === "generator"
+        ? yield* Ref.make(GeneratorState.make({ position: 0, state: "GEN_CREATED" })).pipe(Effect.asSome)
+        : O.none<Ref.Ref<typeof GeneratorState.Type>>();
     const entry: Entry = {
       kind: configured.kind,
       names: selected,
       values: items,
       plan: `document-steps:${value.slot}`,
+      generator,
     };
     issued.set(value, entry);
     plans = HashMap.set(plans, entry.plan, entry);
     return value;
   });
+  const next = Effect.fn("Citation.nextDocumentNamedGenerator")(function* (entry: Entry) {
+    yield* ensureOpen;
+    const state = yield* Effect.fromOption(entry.generator, invalid);
+    return yield* Ref.modify(state, (current): readonly [O.Option<number>, typeof GeneratorState.Type] => {
+      if (current.position >= entry.values.length)
+        return [O.none(), GeneratorState.make({ position: current.position, state: "GEN_CLOSED" })];
+      return [
+        O.some(current.position),
+        GeneratorState.make({ position: current.position + 1, state: "GEN_SUSPENDED" }),
+      ];
+    });
+  });
+  const contains = Effect.fn("Citation.containsDocumentNamedHtml")(function* (entry: Entry) {
+    if (O.isNone(entry.generator)) return A.contains(entry.names, "html");
+    while (true) {
+      const index = yield* next(entry);
+      if (O.isNone(index)) return false;
+      if (A.getUnsafe(entry.names, index.value) === "html") return true;
+      yield* Effect.yieldNow;
+    }
+  });
+  const inspect = Effect.fn("Citation.inspectDocumentNamedContainer")(function* (value: CitationCleanerObject) {
+    const entry = yield* entryOf(value);
+    if (O.isNone(entry)) return O.none<typeof CitationDocumentCleanerContainerState.Type>();
+    const generator = O.isSome(entry.value.generator)
+      ? yield* Ref.get(entry.value.generator.value).pipe(Effect.asSome)
+      : O.none();
+    return O.some(
+      CitationDocumentCleanerContainerState.make({ kind: entry.value.kind, size: entry.value.names.length, generator })
+    );
+  });
   const document = CitationDocumentInputProtocols.of({
     truth: Effect.fn("Citation.documentDefaultTruth")(function* (value) {
       const entry = yield* entryOf(value);
-      if (O.isSome(entry)) return entry.value.names.length !== 0;
+      if (O.isSome(entry)) return entry.value.kind === "generator" || entry.value.names.length !== 0;
       const text = yield* values.getText(value);
       // Empty projection iff the owned native string has zero Python points;
       // this test needs no native-storage copy or surrogate normalization.
@@ -104,7 +163,7 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
     }),
     containsHtml: Effect.fn("Citation.documentDefaultContainsHtml")(function* (value) {
       const entry = yield* entryOf(value);
-      if (O.isSome(entry)) return A.contains(entry.value.names, "html");
+      if (O.isSome(entry)) return yield* contains(entry.value);
       if (O.isSome(hostDocument)) return yield* hostDocument.value.containsHtml(value);
       return yield* sourceFailure("TypeError");
     }),
@@ -132,6 +191,12 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
       yield* ensureOpen;
       const entry = HashMap.get(plans, plan);
       if (O.isNone(entry)) return yield* hostCleaner.open(plan, initial, work);
+      if (O.isSome(entry.value.generator))
+        return {
+          next: next(entry.value).pipe(
+            Effect.map((index) => O.map(index, (index) => A.getUnsafe(entry.value.values, index)))
+          ),
+        };
       let index = 0;
       return { next: ensureOpen.pipe(Effect.andThen(Effect.sync(() => A.get(entry.value.values, index++)))) };
     }),
@@ -143,5 +208,5 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
       plans = HashMap.empty();
     })
   );
-  return { create, document, cleaner };
+  return { create, inspect, document, cleaner };
 });

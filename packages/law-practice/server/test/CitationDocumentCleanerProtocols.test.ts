@@ -155,3 +155,57 @@ it.effect("refuses complete container work before issuing any values", () =>
     expect(after).toEqual(before);
   })
 );
+
+it.effect("shares membership consumption with cleaning and never restarts an exhausted named generator", () =>
+  Effect.gen(function* () {
+    const { h, adapter, pipeline } = yield* setup();
+    const steps = yield* adapter.create({ kind: "generator", names: ["html", "underscores"] });
+    const created = yield* adapter.inspect(steps);
+    expect(O.getOrThrow(O.getOrThrow(created).generator)).toEqual({ position: 0, state: "GEN_CREATED" });
+    const found = yield* adapter.document.containsHtml(steps);
+    expect(found).toBe(true);
+    const suspended = yield* adapter.inspect(steps);
+    expect(O.getOrThrow(O.getOrThrow(suspended).generator)).toEqual({ position: 1, state: "GEN_SUSPENDED" });
+    const plan = yield* adapter.document.plan(steps);
+    const source = yield* h.values.sourceText("__A__");
+    const first = yield* pipeline.runOwned({ value: source, plan });
+    const text = yield* h.values.getText(first.value);
+    expect(O.getOrThrow(text).text).toBe("A");
+    const second = yield* pipeline.runOwned({ value: source, plan });
+    expect(second.value).toBe(source);
+    const closed = yield* adapter.inspect(steps);
+    expect(O.getOrThrow(O.getOrThrow(closed).generator)).toEqual({ position: 2, state: "GEN_CLOSED" });
+    const truth = yield* adapter.document.truth(steps);
+    expect(truth).toBe(true);
+  })
+);
+
+it.effect("closes an empty named generator on membership without changing its truth or insertion failure", () =>
+  Effect.gen(function* () {
+    const { adapter } = yield* setup();
+    const steps = yield* adapter.create({ kind: "generator", names: [] });
+    const truth = yield* adapter.document.truth(steps);
+    expect(truth).toBe(true);
+    const found = yield* adapter.document.containsHtml(steps);
+    expect(found).toBe(false);
+    const closed = yield* adapter.inspect(steps);
+    expect(O.getOrThrow(O.getOrThrow(closed).generator)).toEqual({ position: 0, state: "GEN_CLOSED" });
+    const failure = yield* adapter.document.insertSourceHtml(steps).pipe(Effect.flip);
+    expect(failure).toMatchObject({ sourceError: "AttributeError" });
+  })
+);
+
+it.effect("keeps a generator suspended after matching its last item until another pull exhausts it", () =>
+  Effect.gen(function* () {
+    const { adapter } = yield* setup();
+    const steps = yield* adapter.create({ kind: "generator", names: ["html"] });
+    const first = yield* adapter.document.containsHtml(steps);
+    expect(first).toBe(true);
+    const suspended = yield* adapter.inspect(steps);
+    expect(O.getOrThrow(O.getOrThrow(suspended).generator)).toEqual({ position: 1, state: "GEN_SUSPENDED" });
+    const second = yield* adapter.document.containsHtml(steps);
+    expect(second).toBe(false);
+    const closed = yield* adapter.inspect(steps);
+    expect(O.getOrThrow(O.getOrThrow(closed).generator)).toEqual({ position: 1, state: "GEN_CLOSED" });
+  })
+);

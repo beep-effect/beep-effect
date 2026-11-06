@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Named generator checkpoint (2026-11-05): server-owned one-shot generators now
+share membership and cleaner consumption through Effect Ref. They remain truthy
+after exhaustion and preserve original created/suspended/closed states. Both
+constructor smokes now use the production adapter for generator cases, retaining
+source state/event assertions. Nineteen focused tests and package checks pass.
+Hosted full replay and general host behavior remain open. See
+[protocol evidence](history/evidence/2026-11-05-document-cleaner-protocols.md).
+
 Named Document protocol checkpoint (2026-11-05): production-owned named
 list/tuple handles now connect constructor protocols to the existing cleaner
 registry and fresh iteration. Real constructor smokes use the adapter for default

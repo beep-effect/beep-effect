@@ -73,3 +73,47 @@ pre-populated Document state, whole-engine allocation/scaling proof, every other
 unfinished extraction/resolution/codec/accounting duty and reflection/lifecycle
 closeout remain required. The existing custom protocols are retained rather than
 claimed subsumed. No semantic waiver is added.
+
+## One-shot named generator follow-up
+
+Explicit server configuration can now issue a named generator as well as a list
+or tuple. Effect Ref owns its atomic position and source generator state. Unlike
+lists/tuples, membership and every cleaner opening use that same cursor. A match
+consumes through the matching item; a miss consumes to exhaustion. Matching the
+last item leaves GEN_SUSPENDED until the next pull, which sets GEN_CLOSED.
+Created and exhausted generators both remain truthy. Reversed insertion reports
+AttributeError, preserving the original absent insert attribute.
+
+The existing private observer now returns schema-owned kind, size and optional
+generator state; it authenticates the original value and honors owner closure.
+It does not inspect a host object. Arbitrary effectful generators, subclass
+protocols and host iterators continue through the captured host adapter, with no
+conversion into this named configuration. No Stream buffer or prefetch can
+consume source items early: the existing cleaner cursor pulls one item at a time
+and Ref.modify commits only that pull. Native worker/process ownership is
+unchanged.
+
+The sealed original constructor replay now routes generator-empty and
+generator-html through the production adapter on Bun and Node. Its state
+assertions read the adapter's schema state rather than a fixture-supplied cursor
+counter; original errors, event order, aliases, step contents, geometry and exact
+physical-exit assertions remain. Ordinary lists/tuples and captured custom
+protocol paths retain their prior source checks.
+
+Three new controls show that html membership leaves the following underscore
+step for actual cleaning, repeated cleaning never restarts the generator,
+empty/exhausted truth is preserved, and matching the final item does not close
+the generator prematurely. Actual HTML execution would be refused by that
+unit fixture, so successful underscore-only execution is also a negative control
+against replaying the consumed html step. Initial compiler diagnostics for
+yield-in-call and Option wrapping were fixed using bound effect execution and
+Effect.asSome without suppressions.
+
+All nineteen tests across the adapter, Bun/Node constructor and existing registry
+files pass in 11.59 seconds. Package lint/source/test checks pass (0.5/3.2 seconds).
+An isolated source-only Fallow scan of the three changed files reports no
+cognitive/cyclomatic excess or duplicate group. This is syntax-level evidence,
+not repository gate proof. The preceding head's hosted Fallow job 127737885031
+was still running and full integration job 127738260262 was queued when checked;
+full hosted replay of the new head remains required. No baseline, threshold,
+timer, resource ceiling or semantic waiver changes.
