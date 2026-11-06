@@ -108,10 +108,12 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
         const checkout = Effect.fnUntraced(function* () {
           const root = yield* fs.makeTempDirectoryScoped({ prefix: "entity-kit-freeze-" });
           yield* fs.writeFileString(path.join(root, "bun.lock"), "");
-          expect(yield* git(root, ["init", "--quiet"])).toBe(0);
+          const result1 = yield* git(root, ["init", "--quiet"]);
+          expect(result1).toBe(0);
           yield* fs.makeDirectory(path.join(root, "packages/a/src"), { recursive: true });
           yield* fs.writeFileString(path.join(root, "packages/a/src/Old.ts"), KIT_IMPORT);
-          expect(yield* git(root, ["add", "--", "packages/a/src/Old.ts"])).toBe(0);
+          const result2 = yield* git(root, ["add", "--", "packages/a/src/Old.ts"]);
+          expect(result2).toBe(0);
           return root;
         });
         const failureOf = Effect.fnUntraced(function* (root: string, write: boolean) {
@@ -128,21 +130,20 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
           path.join(malformed, "standards/entity-kit-freeze.baseline.jsonc"),
           '{ "version": 2 }\n'
         );
-        expect(yield* failureOf(malformed, false)).toContain(
-          "Failed to decode standards/entity-kit-freeze.baseline.jsonc"
-        );
+        const result3 = yield* failureOf(malformed, false);
+        expect(result3).toContain("Failed to decode standards/entity-kit-freeze.baseline.jsonc");
 
         const unreadable = yield* checkout();
         yield* fs.makeDirectory(path.join(unreadable, "standards/entity-kit-freeze.baseline.jsonc"), {
           recursive: true,
         });
-        expect(yield* failureOf(unreadable, false)).toContain(
-          "Failed to read standards/entity-kit-freeze.baseline.jsonc"
-        );
+        const result4 = yield* failureOf(unreadable, false);
+        expect(result4).toContain("Failed to read standards/entity-kit-freeze.baseline.jsonc");
 
         const unwritable = yield* checkout();
         yield* fs.writeFileString(path.join(unwritable, "standards"), "not a directory\n");
-        expect(yield* failureOf(unwritable, true)).toContain("EntityKitFreezeExecutionError");
+        const result5 = yield* failureOf(unwritable, true);
+        expect(result5).toContain("EntityKitFreezeExecutionError");
       })
     );
 
