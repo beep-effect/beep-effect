@@ -3,7 +3,7 @@ import { EffectImportRulesOptions, lawsCommand, runEffectImportRules } from "@be
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -13,6 +13,7 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -20,7 +21,11 @@ import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-const testLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+);
 const encodeJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
 const decodeJson = flow(S.decodeUnknownResult(UnknownJson), Result.getOrThrow);
 const runLawsCommand = Command.runWith(lawsCommand, { version: "0.0.0" });
@@ -163,6 +168,35 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.scannedFiles).toBe(1);
           expect(summary.changedFiles).toEqual(["docs/guide.md"]);
           expect(summary.rootImportsRewritten).toBe(1);
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
+    it.effect(
+      "skips git-ignored Markdown residue inside a git work tree",
+      Effect.fnUntraced(
+        function* () {
+          const root = yield* temporaryWorkingDirectory;
+          yield* writeTsconfig;
+          const handle = yield* ChildProcess.make("git", ["init", "--quiet"], {
+            cwd: root,
+            stdin: "ignore",
+            stdout: "ignore",
+            stderr: "ignore",
+          });
+          const exitCode = yield* handle.exitCode;
+          expect(exitCode).toBe(0);
+          yield* writeProjectFile(".gitignore", "tmp/\n");
+          yield* writeProjectFile("docs/guide.md", '```ts\nimport { Effect } from "effect";\n```\n');
+          yield* writeProjectFile("tmp/residue/example.md", '```ts\nimport { Effect } from "effect";\n```\n');
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({ mode: "markdown", effectOnly: true, excludePaths: [] })
+          );
+
+          expect(summary.scannedFiles).toBe(1);
+          expect(summary.changedFiles).toEqual(["docs/guide.md"]);
         },
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )

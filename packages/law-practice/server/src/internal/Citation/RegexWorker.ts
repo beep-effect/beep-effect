@@ -30,6 +30,7 @@ import type { CitationNativeProcessLease } from "./NativeAdmission.ts";
 import type { CitationOwnedNativeProcess } from "./NativeProcess.ts";
 
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
+const invalidRuntime = () => failure("invalid-runtime");
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 /** Capture trusted descriptors, runtime, policy, Digest, Clock, admission and
@@ -45,18 +46,18 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
   bindings: unknown,
   engineInput: unknown = "python-re"
 ) {
-  const decoded = yield* decodeCitationRegexPolicy(policy, () => failure("invalid-runtime"));
+  const decoded = yield* decodeCitationRegexPolicy(policy, invalidRuntime);
   const limits = yield* S.encodeEffect(CitationEngineLimits)(decoded).pipe(
     Effect.flatMap(S.decodeEffect(CitationEngineLimits)),
-    Effect.mapError(() => failure("invalid-runtime"))
+    Effect.mapError(invalidRuntime)
   );
   const runtime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
-    Effect.mapError(() => failure("invalid-runtime"))
+    Effect.mapError(invalidRuntime)
   );
   const supplied = yield* Effect.serviceOption(CitationNativeProcessAdmission);
   const admission = O.isSome(supplied)
     ? supplied.value
-    : yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.mapError(() => failure("invalid-runtime")));
+    : yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.mapError(invalidRuntime));
   const owner = yield* makeCitationNativeProcessOwner(limits, "extract", failure);
   const registry = yield* makeCitationRegexDescriptorRegistry(limits, bindings, engineInput);
   const preparation = yield* makeCitationRegexJobPreparation(limits);
@@ -82,7 +83,7 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
               Effect.gen(function* () {
                 const quota = yield* S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches)(
                   maximumMatches
-                ).pipe(Effect.mapError(() => failure("invalid-runtime")));
+                ).pipe(Effect.mapError(invalidRuntime));
                 if (quota > limits.patternMatches) return yield* safety("patternMatches");
                 const prepared = yield* preparation.prepare(
                   pattern,
@@ -115,9 +116,7 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
                   prepared.source.layout.pythonLength
                 );
                 return yield* Effect.gen(function* () {
-                  const lease = yield* Effect.fromOption(permit).pipe(
-                    Effect.mapError(() => failure("invalid-runtime"))
-                  );
+                  const lease = yield* Effect.fromOption(permit).pipe(Effect.mapError(invalidRuntime));
                   const started = yield* owner.start(citationNativeProcessCommand(runtime, argument), lease).pipe(
                     Effect.tap((started) =>
                       Effect.sync(() => {

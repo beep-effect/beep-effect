@@ -234,8 +234,8 @@ export class OwnerCheckpointSnapshot extends S.Opaque<OwnerCheckpointSnapshot, {
 export class OwnerCheckpointObserver extends S.Opaque<OwnerCheckpointObserver, { readonly brand: unique symbol }>()(
   S.Struct({
     mode: S.tag("upstream-owner-prerequisites"),
-    phase: S.Literal("finished"),
-    outcome: S.Literal("success"),
+    phase: S.tag("finished"),
+    outcome: S.tag("success"),
     finalizedAt: S.DateTimeUtc,
     snapshot: OwnerCheckpointSnapshot,
     digest: Sha256Hex,
@@ -284,7 +284,7 @@ export class OwnerCheckpointEvidence extends S.Opaque<OwnerCheckpointEvidence, {
 export class OwnerCheckpointPolicy extends S.Opaque<OwnerCheckpointPolicy, { readonly brand: unique symbol }>()(
   S.Struct({
     applicationId: PositiveId,
-    context: S.Literal("Owner checkpoint"),
+    context: S.tag("Owner checkpoint"),
     maxAgeMillis: S.Int.check(S.isBetween({ minimum: 1, maximum: 300000 })),
   }).pipe(
     $I.annoteSchema("OwnerCheckpointPolicy", {

@@ -186,7 +186,7 @@ const ProbeResult = S.TaggedUnion({ Continue: {}, Restart: {}, Missing: {}, Matc
 const textLength = (value: string | CitationPythonUnicodeStorage) =>
   P.isString(value) ? Str.length(value) : value.bytes.byteLength / value.width;
 const textPoint = (value: string | CitationPythonUnicodeStorage, index: number) => {
-  if (P.isString(value)) return O.getOrElse(Str.codePointAt(value, index), () => -1);
+  if (P.isString(value)) return O.getOrThrow(Str.codePointAt(value, index));
   let result = 0;
   for (let part = 0; part < value.width; part++)
     result += O.getOrElse(O.fromUndefinedOr(value.bytes[index * value.width + part]), () => 0) * 2 ** (8 * part);

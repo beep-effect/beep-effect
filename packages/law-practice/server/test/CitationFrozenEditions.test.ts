@@ -1,6 +1,11 @@
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
-import { makeCitationFrozenEditions } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import {
+  CitationFrozenEditions,
+  makeCitationFrozenEditions,
+  readCitationFrozenEdition,
+} from "@beep/law-practice-server/internal/Citation/FrozenEditions";
 import { encodeCitationRuntimeEdition } from "@beep/law-practice-server/internal/Citation/PublicationResourceHash";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -47,6 +52,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
         adapter.lookup(CitationEditionRef.make(Str.repeat(64)("0")), first.family)
       );
       expect(citationResult4.reason).toBe("missing-edition");
+      const missingSource = yield* adapter.source(CitationEditionRef.make(Str.repeat(64)("0"))).pipe(Effect.flip);
+      expect(missingSource.reason).toBe("missing-edition");
       const returned = yield* adapter.lookup(first.edition, first.family);
       const originalName = returned.value.reporter.name;
       const mutable: { name: string } = returned.value.reporter;
@@ -126,6 +133,84 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
       );
       expect(failure.reason).toBe("digest-failed");
       expect("cause" in failure).toBe(false);
+    })
+  );
+
+  it.effect("rejects malformed digest output before accepting an authenticated bundle", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const failure = yield* makeCitationFrozenEditions(bundle).pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
+        ),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "CitationFrozenEditionFailure", reason: "digest-failed" });
+      expect("cause" in failure).toBe(false);
+    })
+  );
+  it.effect("rejects authenticated artifacts whose decoded model or reporter reference is corrupt", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const crypto = yield* Digest.Digest;
+      const reporter = A.getUnsafe(bundle.reporters, 0);
+      const edition = A.getUnsafe(bundle.editions, 0);
+      const missingReporter = Str.repeat(64)("0");
+      const malformedEdition = `{"pythonType":"eyecite.models.Edition","fields":{"short_name":"Test","reporter":{"artifactSha256":"${missingReporter}"},"start":null,"end":null}}`;
+      const cases = [
+        { kind: "reporter", original: reporter, payload: "{}" },
+        { kind: "edition", original: edition, payload: "{}" },
+        { kind: "edition", original: edition, payload: malformedEdition },
+      ];
+      for (const row of cases) {
+        const altered = { ...row.original, payload: row.payload };
+        const input = {
+          reporters: row.kind === "reporter" ? O.getOrThrow(A.replace(bundle.reporters, 0, altered)) : bundle.reporters,
+          editions: row.kind === "edition" ? O.getOrThrow(A.replace(bundle.editions, 0, altered)) : bundle.editions,
+        };
+        let authenticatedAlteredPayload = false;
+        // Deliberately authenticate the changed bytes to isolate structural validation
+        // from the independently tested artifact digest check.
+        const digest = makeTestCitationDigest((algorithm, bytes) => {
+          if (new TextDecoder().decode(bytes) === row.payload) {
+            authenticatedAlteredPayload = true;
+            return crypto.digest(algorithm, new TextEncoder().encode(row.original.payload));
+          }
+          return crypto.digest(algorithm, bytes);
+        });
+        const failure = yield* makeCitationFrozenEditions(input).pipe(
+          Effect.provideService(Digest.Digest, digest),
+          Effect.flip
+        );
+        expect(authenticatedAlteredPayload).toBe(true);
+        expect(failure).toMatchObject({ _tag: "CitationFrozenEditionFailure", reason: "corrupt-artifact" });
+        expect("cause" in failure).toBe(false);
+      }
+    })
+  );
+
+  it.effect("bounds lookup batches and refuses unknown source families before lookup", () =>
+    Effect.gen(function* () {
+      const { bundle, expected } = yield* loadCitationFrozenEditionFixtures();
+      const adapter = yield* makeCitationFrozenEditions(bundle);
+      const first = A.getUnsafe(expected.editions, 0);
+      const failure = yield* adapter
+        .lookupMany(A.replicate(first.edition, CitationEngineAbsoluteMaxima.candidates + 1), first.family)
+        .pipe(Effect.flip);
+      expect(failure.reason).toBe("invalid-input");
+      let lookups = 0;
+      const unknownSource = CitationFrozenEditions.of({
+        ...adapter,
+        source: Effect.fn("FrozenEditionTest.source")(() => Effect.succeed("unsupported-private-source")),
+        lookup: Effect.fn("FrozenEditionTest.lookup")((reference, family) => {
+          lookups++;
+          return adapter.lookup(reference, family);
+        }),
+      });
+      const sourceFailure = yield* readCitationFrozenEdition(unknownSource, first.edition).pipe(Effect.flip);
+      expect(sourceFailure.reason).toBe("corrupt-artifact");
+      expect(lookups).toBe(0);
     })
   );
 });

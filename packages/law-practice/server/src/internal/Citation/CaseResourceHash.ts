@@ -17,6 +17,7 @@ import { readCitationResourcePage } from "./ResourceComponents.ts";
 import { encodeCitationRuntimeString, hashCitationRuntimePreimage } from "./RuntimeHashEncoding.ts";
 import type { CitationComponents } from "@beep/law-practice-domain/values";
 import type * as Digest from "effect/crypto/Digest";
+import type { CitationRuntimeHashEncodingFailure } from "./RuntimeHashEncoding.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseResourceHash");
 const IdentityHash = S.BigIntFromString.check(
@@ -89,12 +90,14 @@ export class CitationCaseResourceHashFailure extends S.TaggedError<
   })
 ) {}
 const failure = (reason: typeof Reason.Type) => CitationCaseResourceHashFailure.make({ reason });
+const invalidInput = () => failure("invalid-input");
+const runtimeFailure = (error: CitationRuntimeHashEncodingFailure) => failure(error.reason);
 const quote = Effect.fn("Citation.caseHashString")((value: string) =>
-  encodeCitationRuntimeString(value).pipe(Effect.mapError((error) => failure(error.reason)))
+  encodeCitationRuntimeString(value).pipe(Effect.mapError(runtimeFailure))
 );
 const jsonValue = (value: string | null) => (value === null ? Effect.succeed("null") : quote(value));
 const numericHash = Effect.fn("Citation.caseHashPreimage")((preimage: string) =>
-  hashCitationRuntimePreimage(preimage).pipe(Effect.mapError((error) => failure(error.reason)))
+  hashCitationRuntimePreimage(preimage).pipe(Effect.mapError(runtimeFailure))
 );
 const nonNullCaseHash = Effect.fn("Citation.hashNonNullCase")(function* (
   decoded: typeof CitationCaseResourceHashInputType.Type,
@@ -112,7 +115,7 @@ const nonNullCaseHash = Effect.fn("Citation.hashNonNullCase")(function* (
     return yield* failure("missing-edition");
   const rawReporter = R.get(groups, "reporter");
   if (O.isNone(edition) && O.isNone(rawReporter)) return yield* failure("missing-reporter");
-  const reporter = O.isSome(edition) ? edition.value.shortName : O.getOrElse(rawReporter, () => null);
+  const reporter = O.isSome(edition) ? edition.value.shortName : O.getOrThrow(rawReporter);
   const pageJson = yield* quote(page);
   const reporterJson = yield* jsonValue(reporter);
   const volume = R.get(groups, "volume");
@@ -135,13 +138,9 @@ export const makeCitationCaseResourceHash = Effect.fn("Citation.makeCaseResource
   input: unknown
 ): Effect.fn.Return<CitationCaseResourceHash, CitationCaseResourceHashFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(CitationCaseResourceHashInputType)(input).pipe(
-    Effect.mapError(() => failure("invalid-input"))
+    Effect.mapError(invalidInput)
   );
-  const [groups, page] = yield* readCitationResourcePage(
-    decoded.citation,
-    () => failure("invalid-input"),
-    () => failure("missing-page")
-  );
+  const [groups, page] = yield* readCitationResourcePage(decoded.citation, invalidInput, () => failure("missing-page"));
   let citationHash: bigint;
   if (page === null) {
     if (O.isNone(decoded.missingPageIdentityHash)) return yield* failure("identity-unavailable");
@@ -149,9 +148,7 @@ export const makeCitationCaseResourceHash = Effect.fn("Citation.makeCaseResource
   } else {
     citationHash = yield* nonNullCaseHash(decoded, groups, page);
   }
-  const decimal = yield* S.encodeEffect(S.BigIntFromString)(citationHash).pipe(
-    Effect.mapError(() => failure("invalid-input"))
-  );
+  const decimal = yield* S.encodeEffect(S.BigIntFromString)(citationHash).pipe(Effect.mapError(invalidInput));
   const resourceHash = yield* numericHash(`{"citation": ${decimal}, "class": "Resource"}`);
   return CitationCaseResourceHash.make({ citationHash, resourceHash });
 });

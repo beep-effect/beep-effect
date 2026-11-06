@@ -853,9 +853,10 @@ it.layer(
       yield* fs.writeFile(path.join(root, relative), bytes);
       const files = yield* collectCacheProducerWorkflowFiles(root);
       const actual = A.findFirst(files, (file) => file.path === relative);
+      const expected = yield* hashSourceBytes(bytes);
       assertSome(
         O.map(actual, (file) => file.sha256),
-        yield* hashSourceBytes(bytes)
+        expected
       );
     })
   );

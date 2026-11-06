@@ -46,7 +46,7 @@ export const encodeCitationRuntimeString = Effect.fn("Citation.pythonJsonString"
   const encoded = yield* S.encodeEffect(JsonString)(value).pipe(Effect.mapError(() => failure("invalid-input")));
   return A.join(
     A.map(Str.split(encoded, ""), (unit) => {
-      const code = O.getOrElse(Str.charCodeAt(unit, 0), () => 0);
+      const code = O.getOrThrow(Str.charCodeAt(unit, 0));
       return code < 127
         ? unit
         : `\\u${A.getUnsafe(hex, (code >>> 12) & 15)}${A.getUnsafe(hex, (code >>> 8) & 15)}${A.getUnsafe(hex, (code >>> 4) & 15)}${A.getUnsafe(hex, code & 15)}`;
@@ -80,8 +80,8 @@ export const makeCitationRuntimeStringOrder = (): Order.Order<string> =>
     let li = 0;
     let ri = 0;
     while (li < Str.length(left) && ri < Str.length(right)) {
-      const l = O.getOrElse(Str.codePointAt(left, li), () => 0);
-      const r = O.getOrElse(Str.codePointAt(right, ri), () => 0);
+      const l = O.getOrThrow(Str.codePointAt(left, li));
+      const r = O.getOrThrow(Str.codePointAt(right, ri));
       if (l !== r) return unequalPointOrder(l, r);
       li += pointUnits(l);
       ri += pointUnits(r);

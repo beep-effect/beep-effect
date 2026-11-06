@@ -15,6 +15,7 @@ import { finalCheckRefusal } from "./FinalCheck.ts";
 import { decideMergeGate, MergeGateInput, MergeGateOptions, MergeGateRead } from "./MergeGate.ts";
 import {
   OwnerCheckpointBinding,
+  OwnerCheckpointCommand,
   OwnerCheckpointDelivery,
   OwnerCheckpointError,
   OwnerCheckpointIntent,
@@ -169,14 +170,14 @@ export const qualifyOwnerCheckpointEvidence = Effect.fn("OwnerCheckpoint.qualify
     A.some(evidence.finalCheck.expectationRewrites, (rewrite) => rewrite.classification !== "follows-diff")
   )
     return yield* refuse("evidence");
-  const started = Date.parse(evidence.finalCheck.startedAt);
-  const finished = Date.parse(evidence.finalCheck.finishedAt);
+  const startedAt = yield* Effect.fromOption(DateTime.make(evidence.finalCheck.startedAt), () => refuse("evidence"));
+  const finishedAt = yield* Effect.fromOption(DateTime.make(evidence.finalCheck.finishedAt), () => refuse("evidence"));
+  const started = DateTime.toEpochMillis(startedAt);
+  const finished = DateTime.toEpochMillis(finishedAt);
   const finalized = DateTime.toEpochMillis(evidence.observer.finalizedAt);
   const observed = DateTime.toEpochMillis(evidence.observer.snapshot.read.readAt);
   const classic = DateTime.toEpochMillis(evidence.classic.read.readAt);
   if (
-    !Number.isFinite(started) ||
-    !Number.isFinite(finished) ||
     started > finished ||
     finished > observed ||
     observed > finalized ||
@@ -331,19 +332,12 @@ export const transitionOwnerCheckpoint = Effect.fn("OwnerCheckpoint.transition")
   if (!sameBinding(current.binding, request.binding)) return yield* refuse("binding");
   if (current.revision >= Number.MAX_SAFE_INTEGER - 1) return yield* refuse("conflict");
   if (current.revision !== request.expectedRevision) return yield* refuse("conflict");
-  const command = request.command;
-  switch (command._tag) {
-    case "Release":
-      return yield* releaseOwner(current, command.releaseId, command.evidence, policy, now);
-    case "Synchronize":
-      return yield* synchronizeOwner(current, command.head);
-    case "Revoke":
-      return yield* revokeOwner(current);
-    case "Claim":
-      return yield* claimOwner(current, command.claimId, command.snapshot, policy, now);
-    case "Unknown":
-      return yield* markUnknownOwner(current, command.claimId);
-    case "Confirm":
-      return yield* confirmOwner(current, command.claimId, command.mergeCommit);
-  }
+  return yield* OwnerCheckpointCommand.match(request.command, {
+    Release: (command) => releaseOwner(current, command.releaseId, command.evidence, policy, now),
+    Synchronize: (command) => synchronizeOwner(current, command.head),
+    Revoke: () => revokeOwner(current),
+    Claim: (command) => claimOwner(current, command.claimId, command.snapshot, policy, now),
+    Unknown: (command) => markUnknownOwner(current, command.claimId),
+    Confirm: (command) => confirmOwner(current, command.claimId, command.mergeCommit),
+  });
 });

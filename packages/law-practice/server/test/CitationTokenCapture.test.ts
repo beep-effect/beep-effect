@@ -1,5 +1,9 @@
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
-import { makeCitationRegexResult } from "@beep/law-practice-server/internal/Citation/RegexResult";
+import {
+  CitationRegexCapturedRange,
+  makeCitationRegexResult,
+} from "@beep/law-practice-server/internal/Citation/RegexResult";
+import { CitationRegexWorkerFailure } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
 import {
   CitationTokenCaptureRuntime,
   makeCitationTokenCapture,
@@ -81,6 +85,84 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           const citationResult4 = yield* objects.snapshot(0).pipe(Effect.flip);
           expect(citationResult4).toMatchObject({ reason: "host-failed" });
         }
+      })
+    );
+    it.effect("rejects malformed capture requests and damaged transport frames before storing a token", () =>
+      Effect.gen(function* () {
+        const controls = yield* loadCitationTokenObjectsControls();
+        const row = A.getUnsafe(controls.constructors, 0);
+        const limits = (yield* defaultCitationEnginePolicy).limits;
+        const objects = yield* makeCitationTokenObjects(limits, controls.editionBindings);
+        const operands = yield* prepare(row);
+        const runtime = CitationTokenCaptureRuntime.of({
+          ...operands,
+          construct: objects.constructFrom,
+          beforeAllocate: allow,
+        });
+        const invalidPolicy = yield* makeCitationTokenCapture(null, row.bindings).pipe(
+          Effect.provideService(CitationTokenCaptureRuntime, runtime),
+          Effect.flip
+        );
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
+        const invalidMetadata = yield* makeCitationTokenCapture(limits, row.bindings).pipe(
+          Effect.provideService(CitationTokenCaptureRuntime, {
+            ...runtime,
+            result: { ...runtime.result, matches: -1 },
+          }),
+          Effect.flip
+        );
+        expect(invalidMetadata).toMatchObject({ reason: "invalid-bindings" });
+        const mismatchedGroups = yield* makeCitationTokenCapture(limits, {
+          ...row.bindings,
+          groups: row.bindings.groups + 1,
+        }).pipe(Effect.provideService(CitationTokenCaptureRuntime, runtime), Effect.flip);
+        expect(mismatchedGroups).toMatchObject({ reason: "invalid-bindings" });
+        const capture = yield* makeCitationTokenCapture(limits, row.bindings).pipe(
+          Effect.provideService(CitationTokenCaptureRuntime, runtime)
+        );
+        const invalidMatch = yield* capture.build(-1, { kind: "Token" }).pipe(Effect.flip);
+        expect(invalidMatch).toMatchObject({ reason: "invalid-input" });
+        const missingMatch = yield* capture.build(runtime.result.matches, { kind: "Token" }).pipe(Effect.flip);
+        expect(missingMatch).toMatchObject({ reason: "invalid-frame" });
+        const invalidRecipe = yield* capture.build(0, null).pipe(Effect.flip);
+        expect(invalidRecipe).toMatchObject({ reason: "invalid-input" });
+        const corrupt = CitationTokenCaptureRuntime.of({
+          ...runtime,
+          result: {
+            ...runtime.result,
+            capture: () => Effect.fail(CitationRegexWorkerFailure.make({ reason: "invalid-frame" })),
+          },
+        });
+        const broken = yield* makeCitationTokenCapture(limits, row.bindings).pipe(
+          Effect.provideService(CitationTokenCaptureRuntime, corrupt)
+        );
+        const invalidFrame = yield* broken.build(0, { kind: "Token" }).pipe(Effect.flip);
+        expect(invalidFrame).toMatchObject({ reason: "invalid-frame" });
+        const outOfBounds = yield* makeCitationTokenCapture(limits, row.bindings).pipe(
+          Effect.provideService(CitationTokenCaptureRuntime, {
+            ...runtime,
+            result: {
+              ...runtime.result,
+              capture: () => Effect.succeed(CitationRegexCapturedRange.make({ start: 999999, end: 1000000 })),
+            },
+          })
+        );
+        const invalidRange = yield* outOfBounds.build(0, { kind: "Token" }).pipe(Effect.flip);
+        expect(invalidRange).toMatchObject({ reason: "invalid-frame" });
+        const absent = yield* objects.snapshot(0).pipe(Effect.flip);
+        expect(absent).toMatchObject({ reason: "host-failed" });
+        const bounded = yield* makeCitationTokenCapture({ ...limits, candidates: 1 }, row.bindings).pipe(
+          Effect.provideService(CitationTokenCaptureRuntime, runtime)
+        );
+        const tooManyEditions = yield* bounded
+          .build(0, {
+            kind: "CitationToken",
+            extra: { exact_editions: [0], variation_editions: [0] },
+          })
+          .pipe(Effect.flip);
+        expect(tooManyEditions).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "candidates" });
+        const stillAbsent = yield* objects.snapshot(0).pipe(Effect.flip);
+        expect(stillAbsent).toMatchObject({ reason: "host-failed" });
       })
     );
     it.effect("preflights every native field against stable store capacity and propagates external refusal", () =>

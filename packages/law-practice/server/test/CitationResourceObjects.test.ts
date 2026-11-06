@@ -304,6 +304,17 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         expect(reads).toBe(1);
         const citationResult14 = yield* Effect.flip(objects.comparison.equal(0, 99));
         expect(citationResult14.reason).toBe("comparison-failed");
+        const unknownSlot = yield* objects.comparison.equal(99, 0).pipe(Effect.flip);
+        expect(unknownSlot.reason).toBe("comparison-failed");
+        Reflect.set(first, "slot", -1);
+        const malformedHandle = yield* objects.key(first).pipe(Effect.flip);
+        expect(malformedHandle.reason).toBe("invalid-input");
+        Reflect.set(first, "slot", 0);
+        const malformedReference = CitationGroupMember.cases.Mention.make({ mentionId: ref.mentionId });
+        Reflect.set(malformedReference, "mentionId", "private-invalid-reference");
+        const rejectedReference = yield* foreign.create(malformedReference).pipe(Effect.flip);
+        expect(rejectedReference.reason).toBe("invalid-input");
+        expect("cause" in rejectedReference).toBe(false);
         yield* objects.close;
         const citationResult15 = yield* Effect.flip(objects.referenceOf(first));
         expect(citationResult15.reason).toBe("closed");
