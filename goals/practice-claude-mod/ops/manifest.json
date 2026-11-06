@@ -36,8 +36,12 @@
     "explorations/claude-mods-law-practice/BRIEF.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "../../explorations/claude-mods-law-practice/RESEARCH.md"
+    "research/cache-baseline-review-2.md",
+    "research/cache-baseline-review.md",
+    "research/verdict-promotion-cache-review-2.md",
+    "research/verdict-promotion-cache-review.md"
   ],
   "agentLaunchers": [
     {
@@ -96,5 +100,8 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "../../explorations/claude-mods-law-practice/RESEARCH.md"
   ]
 }

@@ -30,6 +30,7 @@ import {
   proofLedgerPathForCheckout,
   RepoRunContext,
   runArtifactPathForContext,
+  runHostedProofPublishPhasesForTesting,
   runPlanExecutionForTesting,
   runPushFirstPublishPhasesForTesting,
   runStandardPublishPhasesForTesting,
@@ -69,7 +70,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { offlineGithubLayer } from "./support/YeetGithub.ts";
-import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
+import type { YeetExecutedStep, YeetPrBodyRequest, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 
@@ -320,6 +321,7 @@ describe("yeet merge-loop command wiring", () => {
             ["--plan"],
             ["--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
             ["monitor", "--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
+            ["open", "--plan"],
             ["repair", "--plan"],
             ["status", "--plan"],
             ["sweep", "--plan"],
@@ -347,11 +349,11 @@ describe("yeet merge-loop command wiring", () => {
     );
   });
 
-  it.each(["sweep", "merge", "reply"])("registers the %s subcommand", (name) => {
+  it.each(["sweep", "merge", "reply", "open"])("registers the %s subcommand", (name) => {
     expect(subcommandNames).toContain(name);
   });
 
-  it.each(["sweep", "merge", "reply"])("describes the %s subcommand in help output", (name) => {
+  it.each(["sweep", "merge", "reply", "open"])("describes the %s subcommand in help output", (name) => {
     const command = findSubcommand(name);
     expect(command._tag).toBe("Some");
     expect(command._tag === "Some" ? command.value.description : undefined).toEqual(expect.any(String));
@@ -1200,6 +1202,53 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
     })
   );
 
+  it.effect(
+    "hands the --body-file summary and the yeet open route to the pull-request create",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-open-body-" });
+      yield* fs.writeFileString(`${root}/body.md`, "## Summary\n\nWhy.\n");
+      const fixture = yield* tailFixture(root, "");
+      const requests = yield* Ref.make<ReadonlyArray<YeetPrBodyRequest>>([]);
+      const ensurePullRequest = (
+        _context: RepoRunContext,
+        _steps: ReadonlyArray<RepoPlanStep>,
+        _recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+        _message?: O.Option<string>,
+        bodyRequest?: YeetPrBodyRequest
+      ) =>
+        Ref.update(requests, A.appendAll(O.toArray(O.fromUndefinedOr(bodyRequest)))).pipe(
+          Effect.andThen(fixture.ensurePullRequest())
+        );
+      yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ bodyFile: "body.md", hostedProof: true, pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        true,
+        { ensurePullRequest, listJobs: () => Effect.succeed([running]) }
+      );
+      yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ bodyFile: "missing.md", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        true,
+        { ensurePullRequest, listJobs: () => Effect.succeed([running]) }
+      );
+      const [hosted, fallback] = yield* Ref.get(requests);
+      assertSome(
+        O.flatMap(O.fromUndefinedOr(hosted), (request) => request.summary),
+        "## Summary\n\nWhy.\n"
+      );
+      expect(hosted?.hostedProof).toBe(true);
+      assertNone(O.flatMap(O.fromUndefinedOr(fallback), (request) => request.summary));
+      expect(fallback?.hostedProof).toBe(false);
+    })
+  );
+
   // `TestClock.withLive`: the contender's lock retry is a real 25 ms sleep,
   // which never elapses on the test clock.
   it.effect(
@@ -1406,10 +1455,28 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
         );
       }
     );
+    const executeHosted = (steps: ReadonlyArray<RepoPlanStep>) =>
+      runHostedProofPublishPhasesForTesting(
+        RepoRunPlan.make({ context, steps }),
+        defaultYeetRunOptions({ hostedProof: true, mode: "publish", pr: false }),
+        steps,
+        [],
+        recorder,
+        extras,
+        true
+      ).pipe(
+        provideRuntimeRootForTesting(
+          RuntimeRootChoice.make({ kind: "test-override", root: path.join(directory, "runtime") })
+        ),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+        TestClock.withLive
+      );
     return {
       committedHead,
       context,
       execute,
+      executeHosted,
+      recorder,
       extras,
       fs,
       path,
@@ -1431,6 +1498,18 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       expect(current.committedHead).not.toBe(current.startingHead);
       expect(current.context.head).toBe(current.startingHead);
       assertSome((yield* Ref.get(current.extras)).publishedHeadSha, current.committedHead);
+    })
+  );
+
+  it.effect("yeet open pushes the committed head without running any gate", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      yield* current.executeHosted([current.push]);
+      const remoteHead = yield* current.fs.readFileString(current.path.join(current.remote, "refs/heads/main"));
+      expect(Str.trim(remoteHead)).toBe(current.committedHead);
+      assertSome((yield* Ref.get(current.extras)).publishedHeadSha, current.committedHead);
+      const entries = yield* Ref.get(current.recorder);
+      expect(A.map(entries, (entry) => entry.step.label)).toEqual(["publish:git:push"]);
     })
   );
 

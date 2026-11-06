@@ -19,6 +19,21 @@ import tempfile
 import time
 from pathlib import Path
 
+
+def read_contained_source(path, root):
+    """Read bounded regular source bytes from a descriptor verified in the checkout."""
+    import stat
+
+    flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK
+    with os.fdopen(os.open(path, flags), "rb") as source:
+        opened = os.readlink(f"/proc/self/fd/{source.fileno()}")
+        assert os.path.commonpath([str(root), opened]) == str(root), "Opened source is outside the checkout."
+        assert stat.S_ISREG(os.fstat(source.fileno()).st_mode), "Source must be a regular file."
+        data = source.read(1024 * 1024 + 1)
+        assert len(data) <= 1024 * 1024, "Source exceeds one MiB."
+        return data
+
+
 if sys.flags.optimize:
     print(
         "Native availability verification requires assertions; optimized execution is refused."
@@ -38,7 +53,7 @@ cache = Path.home() / ".cache/beep/turbo-future-flag-availability"
 for directory in (base, cache):
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
 pins_path = Path(__file__).parent / "current-client-pins.json"
-pins_bytes = pins_path.read_bytes()
+pins_bytes = read_contained_source(pins_path, repo)
 pins = json.loads(pins_bytes)
 schema_path = repo / "node_modules/turbo/schema.json"
 schema_bytes = schema_path.read_bytes()
@@ -49,7 +64,7 @@ assert len(flags) == 14, (
 )
 captured_sources = {driver: driver_bytes, pins_path: pins_bytes, schema_path: schema_bytes}
 for path, data in captured_sources.items():
-    assert path.read_bytes() == data, "Source changed before observation."
+    assert (read_contained_source(path, repo) if path == pins_path else path.read_bytes()) == data, "Source changed before observation."
 clients = {
     "stable": repo / "node_modules/@turbo/linux-64/bin/turbo",
     "canary": Path.home()
@@ -197,7 +212,7 @@ for channel, binary in clients.items():
 assert time.monotonic() - start < 600
 assert len(rows) == 60
 for path, data in captured_sources.items():
-    assert path.read_bytes() == data, "Source changed during observation."
+    assert (read_contained_source(path, repo) if path == pins_path else path.read_bytes()) == data, "Source changed during observation."
 raw = {
     "schemaVersion": "cache-future-flag-native-availability/v1",
     "recordedAt": datetime.datetime.now(datetime.UTC).isoformat(),

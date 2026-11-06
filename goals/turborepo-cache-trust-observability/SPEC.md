@@ -1303,3 +1303,85 @@ two actual observations and repair the attributed cause without weakening the
 profile. Reversal removes the observer invocation, separate artifact and research
 helper while preserving both original reports and all existing production gates.
 All whole-goal acceptance criteria remain incomplete.
+
+### Complete read-only pilot tree snapshots, 2026-11-03
+
+Include the package root and every visited directory in the existing internal
+pilot snapshot, alongside regular files and symlink targets. Retain complete
+filesystem modes for roots, directories and regular files. A directory uses an
+empty-content digest with its distinct mode/type and relative path; even an
+empty directory therefore changes the snapshot. The digest remains an internal
+before/after guard, not a new persisted receipt or qualification authority.
+
+Apply the existing 5,000-entry ceiling before each append and retain the depth
+limit. The former file counter ran only when entering a directory, so a wide
+leaf list could exceed it; counting every entry closes that gap. Keep the
+existing top-level `.turbo` exclusion for native logs and summaries.
+
+Author nine supervisory regression cases: file, nested-directory and package-
+root mode changes, plus empty-directory creation, in both the selected package
+and a dependency; a wide empty-directory population must hit the entry limit.
+Require the specific source-change/bound error, no experiment receipt and
+owned fixture cleanup. Hosted CI is authoritative under the operator's explicit
+no-local-verify/publish instruction; authored cases are not passing evidence.
+
+This change grants no task/profile qualification or signing activation. Existing
+receipts remain historical under their original source. Reverse through Git;
+no public protocol/schema, persisted state or cloud resource migration is needed.
+
+### Enforce the native key floor in reviewed signed overlays, 2026-11-04 UTC
+
+The shared pilot/verifier signed-root projector must set
+`futureFlags.longerSignatureKey` to `true` with remote-cache enablement and
+signature verification. Preserve other flags, task definitions and remote
+options in both legacy and global layouts. Bind this flag into the exact
+projected root bytes and configuration identity; an omitted or disabled floor
+is a different, rejected projection. This does not activate the root setting.
+
+The recorded 168-case stable/current-canary experiment proves only native
+length behavior: short supplied UTF-8 keys fail with this safeguard enabled,
+but an absent key still needs Beep's separate reader/writer/canary posture.
+Key length does not establish entropy, upload authority or a protected producer.
+New source and assertion changes require hosted proof; prior signed artifacts
+are retained and receive no automatic new qualification. Reverse by suspending
+affected candidate tuples and reverting the projector delta, retaining both
+projection histories. Whole-goal acceptance and production gates remain open.
+
+### Preserve unknown hosted checks in readiness, 2026-11-03
+
+The shared status/completion readiness policy consumes the existing typed remote
+read failure. A passing required-only view cannot establish a complete check
+census; unknown optional checks keep the checks criterion held and the summary
+labels the incomplete read instead of displaying absent counts as zero. Preserve the
+current attribution, required-context, thread, exact-head and review-window
+checks. A complete later read can recover without a persistent failure latch.
+Reverse the isolated policy and regression-test change through Git. No stored
+proof is relabeled, baseline relaxed or runtime cache policy changed.
+
+### Bind the process creation mask to runtime identity, 2026-11-03
+
+Code inspection found that CacheToolchainSnapshot identifies binaries, libraries
+and dependencies but omits the process umask. The same tools can therefore
+produce the same runtime digest under different file-creation permissions.
+The worktree counterexample under review in #2689 motivates the inspection;
+its synthetic observation is not accepted real-computation qualification.
+
+Observe the inherited mask with the selected Bun runtime in the existing bounded,
+credential-free discovery subprocess. Disable dotenv loading, validate an
+integer from zero through 0o777, and include it in new toolchain fingerprints.
+Preserve historical encoded observations with an absent optional field; absence
+and every observed mask have distinct identities. Live contract validation
+continues to compare against the newly observed fingerprint. Do not rewrite
+historical receipts, change the caller mask or grant old qualification to the
+new identity. Existing qualified tuples need fresh evidence for that identity.
+
+Author real child-process inheritance, malformed-value, schema-boundary and
+fingerprint regressions for hosted CI. The operator requires prompt pushes
+without local verify/publish; skipped local gates are metadata only. A cache
+hit still needs semantic output equivalence within the actual profile, including
+permissions. Adding this input does not repair native mode restoration or
+qualify permission-sensitive computations. All whole-goal criteria remain open.
+
+Reverse through a reviewed revert after suspending affected tuples and restoring
+the prior reviewed profile; retain the new and historical observations. Do not
+purge shared artifacts, lower proof floors or enable unsigned fallback.

@@ -14,7 +14,7 @@ RULES
 - Licenses are load-bearing: copyleft (AGPL/GPL/MPL) upstream is CLEAN-ROOM
   reimplement only (pattern, not vendored code); permissive (MIT/Apache/BSD) may
   be ported WITH attribution; missing/unverified LICENSE ⇒ reference only.
-- Registered in ops/manifest.json `researchReports[]` + `currentSourceOfTruth[]`;
+- Listed in ops/manifest.json `currentSourceOfTruth[]` by hand; `researchReports[]` is generated from `research/` by `bun run beep goals manifest --write` (never hand-edited);
   `provenance.exploration` ↔ source exploration `links.goals`.
 -->
 

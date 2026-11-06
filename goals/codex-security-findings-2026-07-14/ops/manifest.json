@@ -213,5 +213,6 @@
       "findings/CSF-009.md"
     ]
   },
-  "mission": "Capture, triage, remediate, and close every open Codex Cloud security finding for beep-effect (the 9-finding batch of 2026-07-14) in one PR on security/codex-findings-2026-07-14. The end state is a merged PR, no unresolved PR comments or failing CI jobs, and zero packet-applicable open Codex security findings."
+  "mission": "Capture, triage, remediate, and close every open Codex Cloud security finding for beep-effect (the 9-finding batch of 2026-07-14) in one PR on security/codex-findings-2026-07-14. The end state is a merged PR, no unresolved PR comments or failing CI jobs, and zero packet-applicable open Codex security findings.",
+  "researchReports": ["research/SOURCES.md"]
 }

@@ -42,12 +42,7 @@
     "explorations/lynx-lkg-ontology-grounding/MAP.md",
     "explorations/lynx-lkg-ontology-grounding/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/lynx-lkg-ontology-grounding/research/SOURCES.md",
-    "../../explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md",
-    "../../explorations/lynx-lkg-ontology-grounding/research/05-value-assessment.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -80,5 +75,10 @@
     "A required source artifact lacks verified reuse terms.",
     "The slice requires pre-M4 SHACL generation or a general multilingual model.",
     "Existing anchor/span or ClaimGate contracts would need unrelated redesign."
+  ],
+  "researchReferences": [
+    "../../explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md",
+    "../../explorations/lynx-lkg-ontology-grounding/research/05-value-assessment.md",
+    "../../explorations/lynx-lkg-ontology-grounding/research/SOURCES.md"
   ]
 }

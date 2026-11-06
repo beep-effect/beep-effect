@@ -35,10 +35,11 @@
     "goals/effect-reference-workspace/research/2026-09-25-00-aligned-design.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
     "research/2026-09-25-00-aligned-design.md",
     "research/2026-09-25-01-current-state.md",
-    "research/2026-09-25-02-fleet-census.md"
+    "research/2026-09-25-02-fleet-census.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {

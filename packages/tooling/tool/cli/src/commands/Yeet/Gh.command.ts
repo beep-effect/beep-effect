@@ -18,6 +18,7 @@ import * as Flag from "effect/cli/Flag";
 import {
   runYeetGhChecks,
   runYeetGhMerge,
+  runYeetGhPrBody,
   runYeetGhPrComment,
   runYeetGhPrLabel,
   runYeetGhPrReady,
@@ -83,6 +84,20 @@ const commentCommand = Command.make(
   runYeetGhPrComment
 ).pipe(Command.withDescription("Post an issue comment on a pull request (REST)"));
 
+const bodyCommand = Command.make(
+  "body",
+  {
+    tokenRef: tokenRefFlag,
+    number: prArgument,
+    bodyFile: Flag.String("body-file").pipe(Flag.withDescription("Markdown file holding the new body")),
+  },
+  runYeetGhPrBody
+).pipe(
+  Command.withDescription(
+    "Replace a pull request body and keep its Yeet provenance footer (REST); use instead of gh pr edit --body"
+  )
+);
+
 const readyCommand = Command.make(
   "ready",
   { tokenRef: tokenRefFlag, noWait: noWaitFlag, number: prArgument },
@@ -91,7 +106,7 @@ const readyCommand = Command.make(
 
 const prCommand = Command.make("pr").pipe(
   Command.withDescription("Pull request reads and writes over REST"),
-  Command.withSubcommands([statusCommand, labelCommand, commentCommand, readyCommand])
+  Command.withSubcommands([statusCommand, labelCommand, commentCommand, bodyCommand, readyCommand])
 );
 
 const rerunFailedCommand = Command.make("rerun-failed", { tokenRef: tokenRefFlag, number: prArgument }, (options) =>
@@ -156,7 +171,7 @@ const rateLimitCommand = Command.make("rate-limit", { tokenRef: tokenRefFlag }, 
  */
 export const yeetGhCommand = Command.make("gh").pipe(
   Command.withDescription(
-    "REST-first GitHub operations: PR status, labels, comments, ready, checks, merge, rate limit"
+    "REST-first GitHub operations: PR status, labels, comments, body, ready, checks, merge, rate limit"
   ),
   Command.withSubcommands([prCommand, checksCommand, mergeCommand, rateLimitCommand])
 );

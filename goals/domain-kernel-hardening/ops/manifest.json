@@ -11,7 +11,11 @@
   "packetPath": "goals/domain-kernel-hardening",
   "lifecycle": "completed-retained",
   "statusNote": "P0-P2 merged via #1577, #1593 and #1599; P3 reflection and retained completion recorded under the run-9 ruling.",
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/p0-kernel-surface-2026-10-09.md"
+  ],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

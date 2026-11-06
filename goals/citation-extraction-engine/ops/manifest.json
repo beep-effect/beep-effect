@@ -95,12 +95,14 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md"
   ],
   "researchReports": [
-    "research/EYECITE_BASELINE.md",
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/2026-08-17-academia-wave2-findings.md",
     "research/CAPABILITY_LEDGER.md",
-    "research/SCHEMA_DISPOSITION.md",
+    "research/EYECITE_BASELINE.md",
+    "research/OPPORTUNITIES.md",
     "research/PARITY_METHOD.md",
-    "research/SOURCES.md",
-    "research/OPPORTUNITIES.md"
+    "research/SCHEMA_DISPOSITION.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {

@@ -176,12 +176,11 @@
     // entrypoint, and its bytes cannot change without breaking the recorded
     // run provenance (so no in-file suppressions).
     "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/**",
-    // @beep/html: generated AST (one TaggedClass per HTML element) is intentionally
-    // repetitive; the codegen script and vendored spec data are tooling, not
-    // hand-authored source subject to dead-code/duplication/complexity review.
+    // @beep/html: the generated AST and vendored spec data are intentionally
+    // repetitive. Keep its authored generator visible so dependency analysis
+    // follows the imports used by generate and generate:check.
     "packages/foundation/modeling/html/src/Html.model.ts",
     "packages/foundation/modeling/html/src/Html.meta.ts",
-    "packages/foundation/modeling/html/scripts/**",
     "packages/foundation/modeling/html/data/**",
     // @beep/data: generator-emitted registry modules (sync-data-to-ts) are intentionally
     // repetitive tuple/table output, not hand-authored source subject to
@@ -348,7 +347,12 @@
     { "file": "apps/*/src/app/**/*.tsx", "exports": ["instant"] }
   ],
   "duplicates": {
-    "ignore": [".claude/skills/shadcn/**"]
+    "ignore": [
+      ".claude/skills/shadcn/**",
+      // Preserve the generator's existing clone-scoring exclusion while its
+      // imports participate in dependency analysis.
+      "packages/foundation/modeling/html/scripts/generate.ts"
+    ]
   },
   "health": {
     // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
@@ -366,6 +370,8 @@
     // stays as on main, where both paths were never health-scored.
     "ignore": [
       ".claude/skills/shadcn/**",
+      // Preserve the existing generated-source renderer scoring scope.
+      "packages/foundation/modeling/html/scripts/generate.ts",
       "goals/schema-opaque-default/ops/codemod/**",
       "scratchpad/.jsdoc-loop/census.ts"
     ],

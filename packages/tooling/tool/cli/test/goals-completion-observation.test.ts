@@ -318,6 +318,9 @@ const recoveryVerdictFixture = (variant: string, fixture: RecoveryFixture, crite
 const recoveryRemoteFixture = (variant: string) => ({
   available: true,
   checked: true,
+  ...(variant === "unread-checks"
+    ? { readFailure: { _tag: "YeetCommandError", message: "Complete check capture unavailable" } }
+    : {}),
   detail: "PR OPEN",
   number: variant === "wrong-pr" ? 8 : 7,
   headSha: variant === "wrong-head" ? "older-head" : "accepted-head",
@@ -1041,6 +1044,7 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
     "missing-check-facts",
     "not-ready",
     "contradictory-ready",
+    "unread-checks",
     "path-escape",
     "status-symlink",
     "wrong-branch",
@@ -1122,6 +1126,7 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
           "finalized-after-merge": "Readiness recovery refused: job finalized after PR merge",
           "missing-finalization": "Readiness recovery refused: job service finalization receipt is absent",
           "wrong-head": "Readiness recovery refused: status head mismatch",
+          "unread-checks": "Readiness recovery refused: derived hard readiness criteria are not satisfied",
         };
         const diagnostic = R.get(diagnostics, variant);
         if (O.isSome(diagnostic))

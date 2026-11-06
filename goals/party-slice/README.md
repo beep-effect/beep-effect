@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,16 +31,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet: PR to mergeable — in progress (2026-11-03).
+P3 Yeet: PR to mergeable — complete (2026-11-03).
 [PR #2658](https://github.com/beep-effect/beep-effect/pull/2658) merged the
 implementation while its coverage comparison was red. The final delivery is
 [PR #2676](https://github.com/beep-effect/beep-effect/pull/2676), which restores
 the existing coverage floors with additional behavioral tests, migrates renamed
 file identities, and retains the failed hosted evidence. The base-pinned local
-comparison passes for party-domain and law-practice-domain. The proposed closeout
-and updated reflection remain operative until final-head verification, hosted
-readiness, review closeout, merge and completion refresh succeed. Readiness uses
-an attached monitor because this session has no systemd user manager.
+comparison passes for party-domain and law-practice-domain. #2676's completion
+receipt verified after the merge, and the closeout was adopted as a committed `closeout` by `goals set-status` in [#2703](https://github.com/beep-effect/beep-effect/pull/2703).
 
 ## Latest Evidence
 
