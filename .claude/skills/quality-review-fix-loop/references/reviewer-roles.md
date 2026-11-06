@@ -52,12 +52,12 @@ Every reviewer must:
      and no `bun test` usage for repo tests.
 
 7. Observability Reviewer
-   - Checks span-per-boundary, `<slice>.<concept>.<action>` naming,
+   - Checks span-per-boundary, `Concept(.Sub)*.action` domain-span naming,
      domain-semantic vs technical attributes, low-cardinality attributes, no
      secrets/PII, logging vs tracing vs console, and error-translation logs.
 
 8. Documentation And API Reviewer
-   - Checks public exports, JSDoc/TSDoc, compilable examples, lowercase
+   - Checks public exports, JSDoc/TSDoc, compilable examples, kebab-case
      `@category`, `@since`, useful conditional tags, package READMEs, docs that
      match behavior, and doctrine updates when code changed architecture.
    - Suggested skill: `$jsdoc-annotation-specialist`.
@@ -66,7 +66,8 @@ Every reviewer must:
    - Checks duplication, missed existing modules, and proposed abstractions.
      Rejects vague `common`, `core`, `utils`, or `lib` gravity. Enforces
      `foundation/capability` only after the specific-home-first routing test and
-     at least two named consumers.
+     canonical negative gate, with multiple real consumers or an explicit
+     platform-capability rationale (`standards/ARCHITECTURE.md`).
 
 10. Evolution And Deprecation Reviewer
     - Checks deprecation windows, feature-flag lifetime, migration notes,

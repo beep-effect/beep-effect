@@ -27,9 +27,10 @@ inventory/severity format live in `browser-qa-loop` — this is how to READ.
 3. **The mapping** — `session.json → clockSync`:
    `videoT = slope·tEpochMs + offsetMs` with `method`
    (`beacon` | `obs-record-state` | `assumed-start`) and `confidence`.
-   Confidence `high` ≈ ±25 ms (about one 30 fps frame); `low` means windows
-   were padded ±250 ms — do not make timing claims finer than the confidence
-   supports.
+   For a beacon fit, `high` requires residual RMS ≤25 ms and at least four
+   matched pairs. RMS is not a maximum per-event error or a frame-accuracy
+   guarantee. Inspect the method, timestamps and extraction padding before
+   making timing claims; see the method-specific table below.
 
 `references/frame-event-correlation.md` walks the arithmetic with worked
 examples; `references/evidence-anatomy.md` decodes file naming, strip

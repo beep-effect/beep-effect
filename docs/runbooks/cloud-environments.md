@@ -14,22 +14,43 @@ Packet of record: [`explorations/cloud-environment-fanout`](../../explorations/c
 
 ## What the bootstrap does
 
-`scripts/cloud/bootstrap.sh` is idempotent and snapshot-safe. It installs the
-pinned Bun from `.bun-version` (checksum from `.bun-linux-x64.sha256`), Node
-from `.nvmrc` (nvm when the image ships it, otherwise the official tarball),
-`portless`, and a GPG-verified 1Password CLI; then runs
-`bun install --frozen-lockfile --ignore-scripts` and `bun run prepare` (the
-Effect tsgo patch). Downloads run in parallel so a cold run stays inside the
-Claude five-minute setup-cache window. A lockfile stamp under `node_modules/`
-turns a re-run on a cached VM into a sub-second no-op, which is why the same
-file is safe as both a cached setup script and a per-session hook.
+`scripts/cloud/bootstrap.sh` prepares the pinned core toolchain and workspace:
+Bun from `.bun-version` with the repository checksum, Node from `.nvmrc`
+through nvm or the official tarball, then
+`bun install --frozen-lockfile --ignore-scripts` and `bun run prepare` for the
+Effect tsgo patch.
+
+`portless`, the GPG-verified 1Password CLI, and the typos/gitleaks publication
+tools are best-effort additions. `BEEP_CLOUD_SKIP_OP=1` skips the `op` download,
+as the Claude setup below requires. Installing a CLI does not supply its
+credentials or authorize an account operation. Missing publication tools can
+leave core preparation successful while the final summary says
+`publication tools: NOT ready`.
+
+A matching lockfile stamp and an existing `node_modules` directory skip the
+dependency install. A separate matching prepare-input stamp skips `prepare`.
+These are reuse conditions, not a full content-integrity audit of the dependency
+tree. Tool probes and optional fetches can still run on cached images; cold or
+cached duration is not guaranteed by the stamps. A bootstrap result is
+preparation evidence, not agent inference, authentication or workflow proof.
+
+This vendor-VM contract is separate from the broader Linux-worker parity
+workflow in `goals/cloud-agent-readiness/SPEC.md`; it does not install every
+workstation utility or qualify a Linux worker.
 
 Without a cloud marker (`CLAUDE_CODE_REMOTE=true`, a `CODEX_ENV_*` variable, or
 an explicit `BEEP_CLOUD_VENDOR`) the script exits 0 immediately, so the
 SessionStart hook in `.claude/settings.json` is inert on workstations.
-`BEEP_CLOUD_FORCE=1` with a scratch `HOME` runs it locally for testing.
+`BEEP_CLOUD_FORCE=1` bypasses the vendor guard and performs a real setup run;
+it is not a dry-run flag. A scratch `HOME` alone is not isolation: the script
+can change the checkout and write global binary locations when permissions
+allow. Use a disposable, filesystem-isolated test environment for forced runs,
+not the workstation or another owner's checkout.
 
 ## Vendor matrix
+
+Verify the target provider/account's current UI and cache limits separately;
+the bootstrap does not enforce or prove the matrix's vendor-side behavior.
 
 | | Claude cloud (Pro/Max) | Codex cloud (Plus/Pro) | Cursor Cloud Agent |
 | --- | --- | --- | --- |

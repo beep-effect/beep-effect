@@ -6,9 +6,9 @@
 # The worker never receives prompt, command, tool-input, tool-result, message, or
 # error content.
 
-# PermissionRequest hook stdout can decide the permission. This worker is
-# detached, but closing both output streams keeps that safety invariant local and
-# makes a future direct hook registration harmless rather than surprising.
+# PermissionRequest hook stdout can decide the permission.
+# This detached worker redirects both output streams to /dev/null to keep its
+# output away from the inherited hook protocol.
 exec 1>/dev/null 2>/dev/null
 
 set -uo pipefail
@@ -777,7 +777,7 @@ close_desktop() {
 
 # Sleeps up to $1 seconds in poll-sized steps, returning early once the wait is
 # no longer open so a resolved card closes promptly. Prints the last observed
-# bracket status; fails only when the shared kill switch disarms the worker.
+# bracket status. Sleep failure or a shared kill-switch disarm ends the wait early.
 wait_while_open() {
   local remaining="${1}" step status
   while [ "${remaining}" -gt 0 ]; do

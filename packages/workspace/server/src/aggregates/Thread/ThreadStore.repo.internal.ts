@@ -136,7 +136,7 @@ export class TurnEntityInput extends S.Opaque<TurnEntityInput, { readonly brand:
  */
 export class MessageEntityInput extends S.Opaque<MessageEntityInput, { readonly brand: unique symbol }>()(
   S.Struct({
-    content: Document.annotateKey({
+    content: S.suspend(() => Document).annotateKey({
       description: "Md document content persisted as the Message body.",
     }),
     id: PosInt.annotateKey({
