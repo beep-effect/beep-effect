@@ -2255,11 +2255,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavy = parseWorkflowYaml(heavyText);
       const jobs = yield* workflowJobs(heavy);
       const steps = jobSteps(jobs, "producer-execute");
-      expect(stepByName(steps, "Setup pinned toolchain without trial capabilities").with).toEqual({
+      const setup = stepByName(steps, "Setup pinned toolchain without trial capabilities");
+      expect(setup.with).toEqual({
         "turbo-remote-cache": "false",
         "r2-enabled": "false",
         "app-secrets": "false",
       });
+      expect(setup.env).toEqual({ PYTHONDONTWRITEBYTECODE: "1" });
+      expect(A.filter(steps, (step) => step.env?.PYTHONDONTWRITEBYTECODE !== undefined)).toEqual([setup]);
       const download = stepByName(steps, "Download independently selected candidate");
       expect(download.with?.["artifact-ids"]).toBe("${{ steps.selection.outputs.artifact }}");
       expect(download.with?.["digest-mismatch"]).toBe("error");

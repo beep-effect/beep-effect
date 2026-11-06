@@ -717,6 +717,9 @@ jobs:
 
       - name: Setup pinned toolchain without trial capabilities
         uses: ./.github/actions/setup-monorepo-ci
+        env:
+          # Match the reviewed inspection install without changing trial subprocess policy.
+          PYTHONDONTWRITEBYTECODE: "1"
         with:
           turbo-remote-cache: "false"
           r2-enabled: "false"

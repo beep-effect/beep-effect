@@ -2550,3 +2550,16 @@ setting preserves import output and source bytes while preventing cache writes,
 and that ordinary imports still change the raw tree digest. After acceptance,
 two fresh actual observations must establish whether the installed tree repeats.
 This is candidate preparation, not production trust or a qualification grant.
+
+
+## 2026-11-06 — Inspection and producer install policy differ
+
+While preparing protected execution after two real guarded observations passed,
+source review found `producer-inspect` applies `PYTHONDONTWRITEBYTECODE=1` before
+setup, while `producer-execute` invokes the same setup action without it. The
+passing inspection pair therefore does not prove equivalent producer dependency
+identity. Scope the same guard to the producer setup step, with hosted assertions
+that it does not enter issuer, execution or publication steps. Keep independent
+source/profile approval and actual protected execution as separate requirements.
+A paired policy assertion before the first producer-readiness review would have
+prevented this mismatch. No protected dispatch or credential change occurred.
