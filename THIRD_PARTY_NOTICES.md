@@ -734,6 +734,25 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+## Citation diff WebAssembly core
+
+The private `packages/law-practice/server/assets/citation-diff/kernel.wasm`
+compiles the unchanged `diff-match-patch-cpp-stl/diff_match_patch.h` distributed
+inside fast-diff-match-patch 2.0.1. Google Inc. (2008), Neil Fraser, Mike Slemmer,
+Sergey Nozhenko and Christian Leutloff are credited in the original header.
+The complete source archive and Apache-2.0 license ship beside the authored
+`kernel.cpp` adapter. The adapter selects the original eyecite configuration:
+four-byte Unicode points, no diff timeout, no line checking and no cleanup.
+
+The core links WASI SDK 34 libc, libc++, libc++abi, libunwind and compiler-rt.
+Complete runtime license texts, including LLVM Exceptions and legacy notices,
+are retained under `assets/citation-diff/licenses/`; `notices.json` binds the
+source archive and additional C++ runtime notices to their upstream revisions.
+The shared libc/compiler notice inventory is the adjacent citation-html
+inventory. The checksum-verified build recipe and receipt record the exact
+source, SDK, options and resulting binary. This core is not a worker transport
+or a public engine service.
+
 ## Citation HTML WebAssembly runtime
 
 The private `packages/law-practice/server/assets/citation-html/kernel.wasm`

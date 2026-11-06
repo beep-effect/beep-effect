@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Default diff-core checkpoint (2026-11-05): the unchanged pinned C++ dependency
+now builds reproducibly to a private source-point ABI. Both clean builds agree;
+all 1,052 source maps / 9,978 edit steps and step-refusal controls compare.
+This core is not yet connected to the production worker. Reuse existing Effect
+RPC/admission/retirement ownership next; effective UTF-16 limits, framing,
+deadlines/cleanup, builtin difflib production and HTML discovery remain open.
+See [diff-core evidence](history/evidence/2026-11-05-diff-kernel.md).
+
 Edition inference checkpoint (2026-11-03): built-in selection preserves exact
 priority, duplicate occurrences, truthy-year filtering and existing guesses.
 All 2480 source selections compare; six tests pass including 101 canonical date

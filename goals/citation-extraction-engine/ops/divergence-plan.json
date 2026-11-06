@@ -102,7 +102,15 @@
         "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
         "packages/law-practice/server/test/CitationSpanOffsets.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/span-offsets.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md",
+        "goals/citation-extraction-engine/ops/build-diff-kernel.py",
+        "goals/citation-extraction-engine/ops/probe-diff-kernel.py",
+        "goals/citation-extraction-engine/ops/verify-diff-kernel.py",
+        "packages/law-practice/server/assets/citation-diff/kernel.cpp",
+        "packages/law-practice/server/assets/citation-diff/kernel.wasm",
+        "packages/law-practice/server/assets/citation-diff/build-receipt.json",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

@@ -92,7 +92,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-value-ownership.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-31-unicode-dictionary.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-31-python-hashes.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -172,7 +173,8 @@
     "bun run beep lint reflection-artifacts",
     "bun run goals/citation-extraction-engine/ops/check-cleaner-pipeline.ts",
     "python3 goals/citation-extraction-engine/ops/verify-cleaner-unicode.py",
-    "python3 goals/citation-extraction-engine/ops/verify-case-name-process.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-case-name-process.py --self-test",
+    "python goals/citation-extraction-engine/ops/verify-diff-kernel.py"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -449,6 +451,18 @@
     {
       "path": "ops/probe-span-offsets.py",
       "purpose": "Observe actual DMP/builtin SpanUpdater construction, every left/right lookup and real Document emphasis geometry without claiming a target diff producer."
+    },
+    {
+      "path": "ops/build-diff-kernel.py",
+      "purpose": "Reproducibly compile the unchanged pinned default-diff header with a bounded private source-point ABI."
+    },
+    {
+      "path": "ops/probe-diff-kernel.py",
+      "purpose": "Capture exact original default edit steps across exhaustive short pairs and seeded Unicode/NUL/surrogate controls."
+    },
+    {
+      "path": "ops/verify-diff-kernel.py",
+      "purpose": "Replay sealed exact default edit steps and refusal controls through the authenticated compiled core; not worker proof."
     }
   ]
 }

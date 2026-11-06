@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "e709ed48bb5d2b95a51fb6914f6a29de07f6219e942c6738df8cc196b41b6c89",
+  "planSha256": "c18d5e743061f5e1e499b52037ca592297c8f63d1903d41515633db198e020e0",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -405,6 +405,38 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
           "sha256": "09671da4c8a8f1db289d61fda4928e30f3b062d43110b766d1607db3e0201d44"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md",
+          "sha256": "908c351a9831a8944fd9307f9bf538589d898a713c56a5a9c81fb50fa90a3ae7"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/build-diff-kernel.py",
+          "sha256": "923deeccd8360cf571d0652adfaaff0145105058082f054bc7d0fe706006e435"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-diff-kernel.py",
+          "sha256": "bf50ad197844b344e70de692d8b0bfb142e76e56b28c98b09e20cc6c91927d6a"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-diff-kernel.py",
+          "sha256": "96d2fc51ec6778d9fbabae297909bfba174b4d098379cbc9f9d2411bf39b44d2"
+        },
+        {
+          "path": "packages/law-practice/server/assets/citation-diff/kernel.cpp",
+          "sha256": "babe92df9b5ebcfe9a3c0882a45f07238928066035073fe81174b25d8585ff15"
+        },
+        {
+          "path": "packages/law-practice/server/assets/citation-diff/kernel.wasm",
+          "sha256": "f6075c21cd7bd6a88c66af53eb07a665b941d7ae6cbc2adaed6f64019d493918"
+        },
+        {
+          "path": "packages/law-practice/server/assets/citation-diff/build-receipt.json",
+          "sha256": "e42ea6d94b577c7ce98b756027e22ce3c3874f64f74c3ec63d5f1226bd5ea344"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json",
+          "sha256": "24470daeb7bbc4b8166867e8071d3a2a85b9a35b4e595c0a0b7c3429a67b0dda"
         }
       ],
       "workflowState": "audit",

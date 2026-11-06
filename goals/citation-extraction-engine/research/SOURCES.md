@@ -28,6 +28,13 @@ safety, and public representation.
 
 ## Pinned repositories
 
+The default annotation diff also uses the original fast-diff-match-patch 2.0.1
+[published source archive](https://pypi.org/project/fast-diff-match-patch/2.0.1/)
+under Apache-2.0. Its unchanged C++ header, source archive digest, private ABI,
+WASI runtime notices and exact-step comparisons are recorded in
+[diff-core evidence](../history/evidence/2026-11-05-diff-kernel.md). The target
+reuses that algorithm; this does not qualify builtin difflib or the full worker.
+
 | Repository | Commit | Tree | License | Local reference | Disposition |
 | --- | --- | --- | --- | --- | --- |
 | [freelawproject/eyecite](https://github.com/freelawproject/eyecite) | `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e` | `a35a58fac03400f71a93a93485b77f1d56f2b02f` | BSD-2-Clause | `$HOME/YeeBois/research/law_stuff/repos/eyecite` | Normative pinned oracle; port/reimplement with attribution |
