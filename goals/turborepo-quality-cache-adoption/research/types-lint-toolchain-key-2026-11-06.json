@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "cache-types-toolchain-key-observation/v1",
+  "at": "2026-11-06T20:17:11.851311+00:00",
+  "sourceRevision": "ff3970ddf0c0848d65830d60af080ad903ed4b6a",
+  "sourceState": "working-tree-overlay",
+  "task": "@beep/types#lint",
+  "configurationPath": "packages/foundation/primitive/types/turbo.json",
+  "configurationBeforeSha256": "6c8d1d6e3c12318fa0273a3ec1585487e4661e8a80bda2ccf5d48a2c821dedd4",
+  "configurationCandidateSha256": "7a3bc28477bb6761fefb109a38019dfc9b75e6c6d070be51251cd2b29328f486",
+  "rootConfigurationSha256": "4f8e35a6e90c9d1d6b1eb57180fb0f8079d1bafe9224e3207630410b204bca05",
+  "workspaceManifestSha256": "7432e63e2185d2a7b8c31faa8e2a1d82b20162240a9e838ae1288f11b083707c",
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "observations": [
+    {
+      "phase": "before",
+      "channel": "stable",
+      "syntheticDigestLabel": "first",
+      "taskHash": "becf03dad8961f9c",
+      "taskCount": 1,
+      "inputCount": 32,
+      "rawSha256": "c1c8df736d87ff7134b34fb415f5b7f42e24ae9613430f5ea40ea54a48b07318",
+      "rawBytes": 6794,
+      "exit": 0
+    },
+    {
+      "phase": "before",
+      "channel": "stable",
+      "syntheticDigestLabel": "second",
+      "taskHash": "becf03dad8961f9c",
+      "taskCount": 1,
+      "inputCount": 32,
+      "rawSha256": "7f6b377d650a86b83c919bfb492bcd2c0d08e71a8b5b1a52de1f481d5c6f927b",
+      "rawBytes": 6794,
+      "exit": 0
+    },
+    {
+      "phase": "before",
+      "channel": "canary",
+      "syntheticDigestLabel": "first",
+      "taskHash": "7990e0e9de842124",
+      "taskCount": 1,
+      "inputCount": 32,
+      "rawSha256": "a1e066e22004bb3b459d470fa427043deff6b869471232c3c4390b7f884b91d6",
+      "rawBytes": 6803,
+      "exit": 0
+    },
+    {
+      "phase": "before",
+      "channel": "canary",
+      "syntheticDigestLabel": "second",
+      "taskHash": "7990e0e9de842124",
+      "taskCount": 1,
+      "inputCount": 32,
+      "rawSha256": "e3e7fcd6163c6edf9011cba2f3fa11d095dcf5a1264d61e8fdb2a7d55ca75ee6",
+      "rawBytes": 6803,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "channel": "stable",
+      "syntheticDigestLabel": "first",
+      "taskHash": "c0d1f5beae57967f",
+      "taskCount": 1,
+      "inputCount": 32,
+      "rawSha256": "1e81d62a90431ca9bb9e5da91d2014462535299fc040bb1800d8969d252e91e3",
+      "rawBytes": 7010,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "channel": "stable",
+      "syntheticDigestLabel": "second",
+      "taskHash": "8d43c24ba51e07f3",
+      "taskCount": 1,
+      "inputCount": 32,
+      "rawSha256": "d2d4c3fc716a722091d87bb0a109c3befa247cf3953f944b689fc7e4def354e6",
+      "rawBytes": 7010,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "channel": "canary",
+      "syntheticDigestLabel": "first",
+      "taskHash": "522ae1a2032bc8c1",
+      "taskCount": 1,
+      "inputCount": 32,
+      "rawSha256": "2bb76c6e616c8beeebaae8c6d8afa1bf99d6f8b720f42c7b39e476c89e2dedd4",
+      "rawBytes": 7019,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "channel": "canary",
+      "syntheticDigestLabel": "second",
+      "taskHash": "c68452a2c0ae0f31",
+      "taskCount": 1,
+      "inputCount": 32,
+      "rawSha256": "977be93d0dd332f2e481dfc0b5aa44bb3d190cc1491d20ec7eed497abb26a6d0",
+      "rawBytes": 7019,
+      "exit": 0
+    }
+  ],
+  "comparisons": [
+    {
+      "channel": "stable",
+      "undeclaredDigestChangeIgnoredBefore": true,
+      "declaredDigestChangeInvalidatesCandidate": true,
+      "inputPathsPreserved": true,
+      "onlyChangedFileInput": "turbo.json",
+      "commandDependenciesOutputsPreserved": true,
+      "cacheRemainsDisabled": true
+    },
+    {
+      "channel": "canary",
+      "undeclaredDigestChangeIgnoredBefore": true,
+      "declaredDigestChangeInvalidatesCandidate": true,
+      "inputPathsPreserved": true,
+      "onlyChangedFileInput": "turbo.json",
+      "commandDependenciesOutputsPreserved": true,
+      "cacheRemainsDisabled": true
+    }
+  ],
+  "taskBodiesExecuted": false,
+  "secretValuesLoaded": false,
+  "qualitySuitesRun": false,
+  "bounds": {
+    "calls": 8,
+    "secondsPerCall": 30,
+    "overallSeconds": 180,
+    "bytesPerStream": 4194304,
+    "aggregateBytes": 33554432,
+    "virtualMemoryBytes": 2147483648
+  },
+  "authority": "Native task-plan invalidation evidence only. No lint execution, qualification, runtime-key enforcement, speedup, remote reuse or production activation."
+}
