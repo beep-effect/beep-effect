@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { collectTsgoWorkspaceScanDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
@@ -52,7 +53,7 @@ const scratchCheckout = Effect.fnUntraced(function* (tmpDir: string) {
   return { env, path, write, writeJson };
 });
 
-layer(Layer.mergeAll(NodeServices.layer, BunCrypto.layer), { timeout: "30 seconds" })(
+layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, BunCrypto.layer)), { timeout: "30 seconds" })(
   "lint:tsgo-rules git visibility",
   (it) => {
     it.effect(

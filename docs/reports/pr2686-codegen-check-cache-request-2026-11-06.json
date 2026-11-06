@@ -1,0 +1,20 @@
+{
+  "previous": "3a7edb194078b25a92eba060c7da503c893db748523ed4b4b2b5ed6882215c67",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effect-vitest-2686 unblocker)",
+    "reason": "Re-record the legacy cache posture after #2686, #2702 and #2704: @beep/html and @beep/technical-drawing gained a @beep/codegen-kit dependency and tsconfig reference and a --check generate:check script; root turbo.json added four input paths to two policy-fingerprint seals; no cached task's command, output, cache flag or env key changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/pr2686-codegen-check-cache-review-2026-11-06.md",
+      "sha256": "5a3aba0104552ea0eb5173d9ba733dd6851fbf56343db76b305f5617c01b186d"
+    }
+  },
+  "subjects": ["//", "@beep/html", "@beep/technical-drawing"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

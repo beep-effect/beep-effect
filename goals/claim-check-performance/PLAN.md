@@ -1,6 +1,6 @@
 # Claim Checker Performance Plan
 
-Status: active. The current product candidate recovers39/538 and parses537/538;455/538claims remain abstained or unknown. PR2685 now carries the source adapter, qualified inspection policy, read-only service/tool and measured parser repairs. All60families now deliver through62bounded tool pages with no loss of the prior39passes. Independent development annotation round3 is sealed but has zero accepted metric references; usefulness remains unproved. Original references, previous results and all original37passes are retained.
+Status: active. The measured composed nominal/predicate/policy/ownership candidate retains 43/538 exact structures, parses 537/538 and abstains on 453/538. All original 37 and every prior 41 pass remain; two owner-context gains are in one family. Accepted main metadata is admitted prospectively with exact old bytes archived; all 1,213 original artifacts verify. Full 24-family/567-claim source frame remains fixed, with 572 context nodes; independent source-context assessments are underway, new structural references/truth remain unaccepted. Broader clause-role implementation is separate and unmeasured. Every usefulness and final delivery gate remains required.
 
 ## P0 — Baseline and evaluation integrity
 

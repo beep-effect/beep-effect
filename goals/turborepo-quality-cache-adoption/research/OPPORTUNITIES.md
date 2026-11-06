@@ -1247,3 +1247,11 @@ The original captures and refusal remain retained; no historical phase was inven
   spy restoration. This fixes the Effect diagnostic without changing the
   tested behavior. Push for fresh hosted Check; do not infer compile proof
   from the earlier passing runtime tests or run a competing local suite.
+
+### 2026-11-06: Bind query counts and prepared-source history explicitly
+
+After #2695 landed, the affected-query summary still initialized `packages` to zero without counting its task rows. The earlier prepared source hashes were correct for f48bf842 but that revision was implicit, making later-code comparisons look like damaged evidence. Count distinct package identities, exercise the existing three-task/two-package fixture plus explicit empty selection, and name the historical prepared revision without rewriting its hashes or native captures. A new repair receipt binds the updated source; no local suite or generator entrypoint ran.
+
+### 2026-11-06: Use the current Option extraction helper
+
+The package-counter change failed Repo Sanity and Heavy / Check with TS2375 and the existing positive assertion returned zero instead of two. The callback supplied Option to Array.filterMap, whose current contract consumes Result. Use Array.map followed by Array.getSomes, matching the Effect reference and existing TurboLaneDigest code. Preserve the failing hosted receipts and both counter assertions. This is an introduced defect fixed in its owning PR; no local test, verify, publish or quality suite was run.

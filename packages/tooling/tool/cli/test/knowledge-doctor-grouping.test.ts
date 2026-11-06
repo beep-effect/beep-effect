@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { CommitLogEntry, Git, NameStatusEntry } from "@beep/git/Git";
 import {
   capabilityPacketFindings,
   goalPacketFindings,
@@ -12,10 +12,10 @@ import {
   KnowledgeDoctorReport,
   KnowledgeFinding,
   KnowledgePathRemoval,
+  knowledgePathRemovalsFromLog,
   makeKnowledgeDoctorMemoryTree,
   makeKnowledgeDoctorTree,
   makeKnowledgeGoalPacketReader,
-  parseKnowledgePathRemovals,
   readKnowledgeGoalsDoctorFindings,
   scanKnowledgeDoctorTree,
 } from "@beep/repo-cli/commands/Knowledge";
@@ -26,6 +26,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -37,6 +38,20 @@ const testLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.laye
 
 const REMOVER = "3333333333333333333333333333333333333333";
 const OLDER = "4444444444444444444444444444444444444444";
+const LOGGED_AT = DateTime.makeUnsafe("2026-11-03T00:00:00Z");
+const deleted = (path: string) => NameStatusEntry.make({ status: "deleted", path });
+// One `Git.log` entry read with name-status records, as the path-removal walk reads it.
+const logEntry = (sha: string, subject: string, changes: ReadonlyArray<NameStatusEntry>) =>
+  CommitLogEntry.make({
+    sha,
+    authoredAt: LOGGED_AT,
+    committedAt: LOGGED_AT,
+    authorName: "Fixture",
+    authorEmail: "fixture@example.invalid",
+    subject,
+    paths: A.map(changes, (change) => change.path),
+    changes,
+  });
 
 const doc = (...lines: ReadonlyArray<string>): string => A.join(lines, "\n");
 
@@ -200,13 +215,15 @@ describe("knowledge doctor causal grouping", () => {
             ),
           },
           pathRemovals: O.some(
-            parseKnowledgePathRemovals(`\u001e${REMOVER}\u001fchore: drop\n\nD\tdocs/gone.md\nD\tdocs/other.md\n`)
+            knowledgePathRemovalsFromLog([
+              logEntry(REMOVER, "chore: drop", [deleted("docs/gone.md"), deleted("docs/other.md")]),
+            ])
           ),
         });
         const report = yield* scanKnowledgeDoctorTree(tree);
         const expected = yield* encodeKnowledgeDoctorReportJson(report);
         for (const shuffled of permutations(report.findings)) {
-          const regrouped = groupKnowledgeDoctorFindings(shuffled, O.some(parseKnowledgePathRemovals("")));
+          const regrouped = groupKnowledgeDoctorFindings(shuffled, O.some(knowledgePathRemovalsFromLog([])));
           assert.deepStrictEqual(
             A.map(regrouped, (group) => [group.causeKey, group.rootOrigin, group.root, group.dependents]),
             A.map(report.groups, (group) => [group.causeKey, group.rootOrigin, group.root, group.dependents])
@@ -241,17 +258,33 @@ describe("knowledge doctor causal grouping", () => {
     it.effect(
       "parses deletions and renames and attributes a directory target through a file beneath it",
       Effect.fnUntraced(function* () {
-        const removals = parseKnowledgePathRemovals(
-          A.join(
-            [
-              "",
-              `${REMOVER}\u001frefactor: move the demo packet\n\nR100\tgoals/demo/README.md\tgoals/renamed/README.md\n`,
-              `${OLDER}\u001fchore: drop notes\n\nD\tdocs/notes.md\nM\tdocs/kept.md\n`,
-              "not-a-sha\u001fignored\n\nD\tdocs/ignored.md\n",
-            ],
-            "\u001e"
-          )
-        );
+        const removals = knowledgePathRemovalsFromLog([
+          logEntry(REMOVER, "refactor: move the demo packet", [
+            NameStatusEntry.make({
+              status: "renamed",
+              oldPath: "goals/demo/README.md",
+              path: "goals/renamed/README.md",
+              score: 100,
+            }),
+          ]),
+          logEntry(OLDER, "chore: drop notes", [
+            deleted("docs/notes.md"),
+            NameStatusEntry.make({ status: "modified", path: "docs/kept.md" }),
+            // A rename the listing could not pair names no source, so it removes nothing.
+            NameStatusEntry.make({ status: "renamed", path: "docs/unpaired.md" }),
+          ]),
+          logEntry("not-a-sha", "ignored", [deleted("docs/ignored.md")]),
+          // A listing read without name-status records carries no changes.
+          CommitLogEntry.make({
+            sha: OLDER,
+            authoredAt: LOGGED_AT,
+            committedAt: LOGGED_AT,
+            authorName: "Fixture",
+            authorEmail: "fixture@example.invalid",
+            subject: "no changes",
+            paths: ["docs/kept.md"],
+          }),
+        ]);
         assert.deepStrictEqual(
           A.map(removals, (removal) => [removal.path, removal.commit, removal.change]),
           [
@@ -272,6 +305,26 @@ describe("knowledge doctor causal grouping", () => {
         const notes = yield* Effect.fromOption((yield* groupOf(report, "path:docs/notes.md")).attribution);
         assert.deepStrictEqual([notes.commit, notes.repairTarget], [OLDER, O.none()]);
         assertNone((yield* groupOf(report, "path:docs/never.md")).attribution);
+        // A file that moved to another name under the new directory names no repair target for its old directory.
+        const moved = yield* scanKnowledgeDoctorTree(
+          makeKnowledgeDoctorMemoryTree({
+            files: { "docs/index.md": "`goals/moved`" },
+            pathRemovals: O.some(
+              knowledgePathRemovalsFromLog([
+                logEntry(REMOVER, "refactor: rename the packet readme", [
+                  NameStatusEntry.make({
+                    status: "renamed",
+                    oldPath: "goals/moved/README.md",
+                    path: "goals/elsewhere/INDEX.md",
+                    score: 100,
+                  }),
+                ]),
+              ])
+            ),
+          })
+        );
+        const elsewhere = yield* Effect.fromOption((yield* groupOf(moved, "path:goals/moved")).attribution);
+        assertNone(elsewhere.repairTarget);
       })
     );
 

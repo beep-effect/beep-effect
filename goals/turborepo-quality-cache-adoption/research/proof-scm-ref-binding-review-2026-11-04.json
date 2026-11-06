@@ -67,5 +67,7 @@
     "rawCaptureBytes": 12900,
     "captureDriverSha256": "a167c4c283f64d73358a1061c6810c1b0f2eded01e681161ec04febdb33549fc",
     "captureDriverLocation": "Owned private state, retained outside git; report records native argv, immutable refs and source bindings."
-  }
+  },
+  "preparedSourceRevision": "f48bf842d2eebd2a7a491283e829bfef637a2ac0",
+  "sourceBindingScope": "Initial prepared source at the named revision; preserved as historical evidence. Later repairs have their own source bindings."
 }

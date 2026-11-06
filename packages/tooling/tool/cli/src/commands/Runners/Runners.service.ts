@@ -20,7 +20,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Yaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -46,6 +46,7 @@ import {
   DEFAULT_RUNNER_BASE_AMI_PARAMETER,
   RUNNER_AMI_PIN_PARAMETER,
 } from "./Runners.schemas.ts";
+import type { ConfigListEntry } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { BakeConfig } from "./Runners.schemas.ts";
@@ -60,6 +61,10 @@ const BAKE_CANONICAL_REPO = "github.com/beep-effect/beep-effect";
 const BAKE_CLONE_URL = `https://${BAKE_CANONICAL_REPO}.git`;
 // HTTPS remotes carry `github.com/owner/repo`, SSH remotes `github.com:owner/repo`.
 const BAKE_CANONICAL_REMOTE_FORMS = [BAKE_CANONICAL_REPO, "github.com:beep-effect/beep-effect"];
+// The bake guest's toolchain inputs: a dirty copy of any of them would bake a different image than the commit names.
+const BAKE_INPUT_PATHS = ["bun.lock", ".bun-version", ".bun-linux-x64.sha256"];
+const REMOTE_KEY_PREFIX = "remote.";
+const REMOTE_URL_KEY_SUFFIX = ".url";
 const REPORT_FILE_NAME = "runners-bake-report.json";
 const AWS_POLL_INTERVAL = Duration.seconds(15);
 const BAKE_WAIT_LIMIT = Duration.hours(6);
@@ -260,43 +265,67 @@ const runAws = Effect.fn("Runners.runAws")(function* (
 // remote — fails inside the guest after the instance has already launched.
 // Refuse before any AWS call, and only trust remote-tracking refs that
 // belong to a remote pointing at the canonical clone source.
+// The remote names configuration declares (`remote.<name>.url`); a name may itself contain dots.
+const configuredRemoteNames = (entries: ReadonlyArray<ConfigListEntry>): ReadonlyArray<string> =>
+  pipe(
+    entries,
+    A.filter((entry) => Str.startsWith(REMOTE_KEY_PREFIX)(entry.key) && Str.endsWith(REMOTE_URL_KEY_SUFFIX)(entry.key)),
+    A.map((entry) => Str.slice(REMOTE_KEY_PREFIX.length, -REMOTE_URL_KEY_SUFFIX.length)(entry.key)),
+    A.filter(Str.isNonEmpty),
+    A.dedupe
+  );
+
+// A remote's fetch and push URLs as `git remote -v` prints them: `get-url` applies `insteadOf` and
+// `pushInsteadOf`, so a short alias still reads as the URL it rewrites to. An unreadable URL is no URL.
+const remoteUrls = Effect.fn("Runners.remoteUrls")(function* (repoRoot: string, remote: string) {
+  const git = yield* Git;
+  const read = (push: boolean) => git.remoteUrl(repoRoot, { remote, push }).pipe(Effect.orElseSucceed(O.none<string>));
+  return A.getSomes([yield* read(false), yield* read(true)]);
+});
+
 const assertRevisionPushed = Effect.fn("Runners.assertRevisionPushed")(function* (
   repoRoot: string,
   revision: string
-): Effect.fn.Return<void, RunnersCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const remotes = yield* runCaptured({
-    command: "git",
-    args: ["remote", "-v"],
-    cwd: repoRoot,
-    source: "all",
-    trim: true,
-  }).pipe(RunnersCommandError.mapError("Failed to list Git remotes for the bake reachability check."));
-  const canonicalRemotes = pipe(
-    Str.split("\n")(remotes.output),
-    A.filter((line) => A.some(BAKE_CANONICAL_REMOTE_FORMS, (form) => Str.includes(form)(line))),
-    A.map((line) => A.head(Str.split("\t")(Str.trim(line)))),
-    A.getSomes,
-    A.dedupe
+): Effect.fn.Return<void, RunnersCommandError, Git> {
+  const git = yield* Git;
+  const noCanonicalRemote = RunnersCommandError.make({
+    message: `No Git remote points at ${BAKE_CANONICAL_REPO}; the bake guest clones that repository.`,
+  });
+  const config = yield* git.configList(repoRoot).pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.configList(), {
+        onSpawnFailure: () => RunnersCommandError.new("Failed to list Git remotes for the bake reachability check."),
+        onNonZeroExit: () => noCanonicalRemote,
+        onTruncated: O.none(),
+      })
+    )
   );
-  if (remotes.exitCode !== 0 || A.isReadonlyArrayEmpty(canonicalRemotes)) {
-    return yield* RunnersCommandError.make({
-      message: `No Git remote points at ${BAKE_CANONICAL_REPO}; the bake guest clones that repository.`,
-    });
+  const canonicalRemotes = yield* Effect.filter(
+    configuredRemoteNames(config),
+    Effect.fnUntraced(function* (remote) {
+      const urls = yield* remoteUrls(repoRoot, remote);
+      return A.some(urls, (url) => A.some(BAKE_CANONICAL_REMOTE_FORMS, (form) => Str.includes(form)(url)));
+    })
+  );
+  if (A.isReadonlyArrayEmpty(canonicalRemotes)) {
+    return yield* noCanonicalRemote;
   }
-  const contains = yield* runCaptured({
-    command: "git",
-    args: ["branch", "-r", "--contains", revision],
-    cwd: repoRoot,
-    source: "all",
-    trim: true,
-  }).pipe(RunnersCommandError.mapError("Failed to check remote reachability of the bake revision."));
-  const reachable =
-    contains.exitCode === 0 &&
-    pipe(
-      Str.split("\n")(contains.output),
-      A.map(Str.trim),
-      A.some((ref) => A.some(canonicalRemotes, (remote) => Str.startsWith(`${remote}/`)(ref)))
-    );
+  const containing = { remotes: true, contains: revision } as const;
+  const reachable = yield* git.branchList(repoRoot, containing).pipe(
+    Effect.map(A.some((branch) => A.some(canonicalRemotes, (remote) => Str.startsWith(`${remote}/`)(branch.name)))),
+    Effect.catch((error) =>
+      adaptGitKitError<Effect.Effect<boolean, RunnersCommandError>>(
+        error,
+        GitCommand.branchList(true, false, revision),
+        {
+          onSpawnFailure: () =>
+            flow(RunnersCommandError.new("Failed to check remote reachability of the bake revision."), Effect.fail),
+          onNonZeroExit: () => Effect.succeed(false),
+          onTruncated: O.none(),
+        }
+      )
+    )
+  );
   if (!reachable) {
     return yield* RunnersCommandError.make({
       message: `Bake revision ${revision} is not reachable from any ${BAKE_CANONICAL_REPO} remote branch; push it before baking.`,
@@ -323,31 +352,25 @@ const runGitRevision = Effect.fn("Runners.gitRevision")(function* (
 
 const assertBakeInputsClean = Effect.fn("Runners.assertBakeInputsClean")(function* (
   repoRoot: string
-): Effect.fn.Return<void, RunnersCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const args = [
-    "status",
-    "--porcelain=v1",
-    "--untracked-files=all",
-    "--",
-    "bun.lock",
-    ".bun-version",
-    ".bun-linux-x64.sha256",
-  ];
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "all",
-    trim: true,
-  }).pipe(RunnersCommandError.mapError("Failed to inspect runner bake inputs in Git."));
-  if (result.exitCode !== 0) {
-    return yield* RunnersCommandError.make({
-      message: "Failed to inspect runner bake inputs in Git.",
-      command: formatCommandLine("git", args),
-      exitCode: result.exitCode,
-    });
-  }
-  if (!Str.isEmpty(result.output)) {
+): Effect.fn.Return<void, RunnersCommandError, Git> {
+  const git = yield* Git;
+  const inputs = { untrackedFiles: "all", pathspec: BAKE_INPUT_PATHS } as const;
+  const invocation = GitCommand.status(inputs);
+  const entries = yield* git.status(repoRoot, inputs).pipe(
+    Effect.mapError(
+      adaptGitKitError(invocation, {
+        onSpawnFailure: () => RunnersCommandError.new("Failed to inspect runner bake inputs in Git."),
+        onNonZeroExit: ({ exitCode }) =>
+          RunnersCommandError.make({
+            message: "Failed to inspect runner bake inputs in Git.",
+            command: formatCommandLine("git", invocation.redactedArgs),
+            exitCode,
+          }),
+        onTruncated: O.none(),
+      })
+    )
+  );
+  if (A.isReadonlyArrayNonEmpty(entries)) {
     return yield* RunnersCommandError.make({
       message: "Refusing to bake while bun.lock, .bun-version, or .bun-linux-x64.sha256 has uncommitted changes.",
     });

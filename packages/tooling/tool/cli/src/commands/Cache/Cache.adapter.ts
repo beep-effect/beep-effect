@@ -86,6 +86,7 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
       if ((yield* hashCacheExperimentExecutable(executable)) !== backendSha256)
         return yield* CacheCommandError.new("Owned adapter executable differs from its independently approved pin.");
       const dependencies = yield* readCacheDependencyMaterialization(request.sourceRoot, request.pilot.dependencies);
+      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],
