@@ -44,6 +44,12 @@ deep-research lanes under `alchemy-blog/`).
   this repo, Cloudflare state store lessons).
 - `explorations/pulumi-to-alchemy/RESEARCH.md` (2026-11-02 coverage matrix, G1–G9).
 
+## t3code patches
+
+- `~/YeeBois/references/effect/t3code/patches/alchemy@2.0.0-beta.85.patch` and
+  `@alchemy.run__test@2.0.0-beta.85.patch`: analysed in `t3code-alchemy-patches.md` (carry the
+  `Artifacts.cached` fix as a bun patch until the next release; the test patch is vite-plus only).
+
 ## Prior packets
 
 - `goals/beep-effect-web-alchemy` (completed-retained).

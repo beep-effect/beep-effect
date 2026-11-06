@@ -84,7 +84,9 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
 - Alchemy pins are npm catalog entries (`alchemy`, `@alchemy.run/*`, `@distilled.cloud/*`), bumped
   in their own PR with `alchemy plan` no-op on every stack (D13). No frozen tool clones, no git-ref
   pins. The reference checkouts under `~/YeeBois/references/effect/{alchemy,distilled}` are for
-  research and for proving an unreleased fix before a bump.
+  research and for proving an unreleased fix before a bump. A fix already merged upstream but
+  not yet released may ride as a bun `patchedDependencies` patch on the pinned version, recorded
+  in `research/t3code-alchemy-patches.md`-style notes and removed in the bump that ships it.
 - Use what Alchemy and distilled ship before writing anything: the P0 "use this, never roll
   that" matrix is the gate for every new resource or helper (D16). A repo-owned resource exists
   only where the matrix records a verified gap.
