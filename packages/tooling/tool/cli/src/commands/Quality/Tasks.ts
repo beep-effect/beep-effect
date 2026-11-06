@@ -2189,7 +2189,10 @@ type GithubCheckWaveLane = GithubCheckLaneWaveSpec["lanes"][number];
 // Deliberately narrower than hosted docs-only routing: these paths are prose
 // reports, never policy, package documentation, executable docs or tooling.
 const ReportOnlyPath = S.String.check(
-  S.isPattern(/^docs\/reports\/(?!\.|AGENTS\.md$|CLAUDE\.md$)(?!.*\/(?:\.|AGENTS\.md$|CLAUDE\.md$))[^\\\u0000]+\.md$/u)
+  S.isPattern(
+    /^docs\/reports\/(?!\.|AGENTS\.md$|CLAUDE\.md$)(?!.*\/(?:\.|AGENTS\.md$|CLAUDE\.md$))[^\\\u0000]+\.md$/su
+  ),
+  S.isEndingWith(".md")
 ).pipe(
   $RepoCliId.create("commands/Quality/Tasks").annoteSchema("ReportOnlyPath", {
     description: "A Markdown report under docs/reports without hidden or agent-instruction segments.",

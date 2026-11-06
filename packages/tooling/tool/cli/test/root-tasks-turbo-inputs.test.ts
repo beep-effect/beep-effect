@@ -4,6 +4,7 @@ import {
   EffectVitestPrimitiveGraphPath,
   EffectVitestSourceFileGlobs,
 } from "@beep/repo-cli/commands/Lint";
+import { ReportOnlyInertLaneId } from "@beep/repo-cli/commands/Quality";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { isPackageSourceFile, TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
@@ -389,30 +390,42 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         const repo = yield* findRepoRoot();
         const text = yield* fs.readFileString(path.join(repo, "turbo.json"));
         const configuration = yield* decodeConfiguration(text);
+        expect(ReportOnlyInertLaneId.literals).toEqual([
+          "quality:jsdoc-ratchet:regenerated",
+          "lint:effect-vitest",
+          "lint:effect-imports",
+          "lint:schema-first",
+        ]);
         let pending: ReadonlyArray<string> = [
           "//#lint:effect-vitest",
           "//#lint:effect-imports",
           "//#lint:schema-first",
           "//#jsdoc:ratchet:check",
         ];
-        let closure = A.empty<readonly [string, RootTask]>();
+        let closure = A.empty<readonly [string, unknown]>();
         while (A.isReadonlyArrayNonEmpty(pending)) {
           const id = pending[0];
           pending = A.drop(pending, 1);
           if (A.some(closure, ([seen]) => seen === id)) continue;
-          const task = yield* R.get(configuration.tasks, id).pipe(O.getOrThrow, decodeTask);
+          const raw = R.get(configuration.tasks, id).pipe(O.getOrThrow);
+          const task = yield* decodeTask(raw);
           expect(task.cache, id).toBe(true);
           expect(A.isReadonlyArrayNonEmpty(task.inputs), id).toBe(true);
           expect(A.contains(task.inputs, "$TURBO_DEFAULT$"), id).toBe(false);
-          closure = A.append(closure, [id, task]);
+          closure = A.append(closure, [id, raw]);
           pending = A.appendAll(pending, task.dependsOn);
         }
         // A declaration or dependency change requires renewed qualification,
         // including specific new report inputs a handful of probes cannot see.
-        const encoded = yield* jsonStringifyPretty({ global: configuration.global, closure });
+        const encoded = yield* jsonStringifyPretty({
+          global: configuration.global,
+          futureFlags: configuration.futureFlags,
+          agentGuidance: configuration.agentGuidance,
+          closure,
+        });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("55e7c23fc0b8f959e335dd7c58884fee6c30ab35f6eacf8f641f0ad15c5043d1");
+        expect(Hex.encode(bytes)).toBe("74b2b1f7d7bbc0e45cee3c48aff277cb98fffc6f37971b1df700a0f10c0af1b7");
       })
     );
   });

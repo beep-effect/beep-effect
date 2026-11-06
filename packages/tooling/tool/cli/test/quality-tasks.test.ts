@@ -2977,6 +2977,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         ["root Markdown", "README.md", false],
         ["policy docs", "docs/runbooks/policy.md", false],
         ["hidden report tooling", "docs/reports/.tool/probe.md", false],
+        ["hidden tooling after newline directory", "docs/reports/new\nline/.tool/probe.md", false],
+        ["terminal newline after Markdown suffix", "docs/reports/probe.md\n", false],
         ["agent instructions", "docs/reports/AGENTS.md", false],
         ["MDX", "docs/reports/probe.mdx", false],
       ] as const) {
