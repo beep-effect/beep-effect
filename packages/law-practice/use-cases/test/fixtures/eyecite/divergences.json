@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "6099abe607b223b2af0b4fccfa0e735a4c9f9e4c979485f3ef71f145fba46f2b",
+  "planSha256": "26126eb0e517102043dc651e0a593a51ad9753cab4a4b064856f30c243355f28",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1136,7 +1136,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationVerifiedExtraction.fixtures.ts",
-          "sha256": "e38c58b2e18a4c34adeb048c2c480b5a10169efd30cd4f919f42716096d65d97"
+          "sha256": "aa92ed8af3d6aa2e1af0f391fea0d559ed2153ae0ad98b7e041613b84475c128"
         },
         {
           "path": "packages/law-practice/server/test/CitationVerifiedExtraction.test.ts",
@@ -1168,7 +1168,11 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-default-configuration.md",
-          "sha256": "efd17843ade507ae6acd9d4e73ce385ca2d9aac23acda2ca9931737262d3d11e"
+          "sha256": "b268ad12768b4383269331fbcb7d02e7a2090356b59a061ffa8ec03c8960624c"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-engine-artifact.md",
+          "sha256": "3b7f4566905d5a185c0d2188bd74081e4818281f70e83e19f295af8894b4fa50"
         }
       ],
       "workflowState": "audit",

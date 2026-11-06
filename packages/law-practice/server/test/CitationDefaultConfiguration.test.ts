@@ -1,5 +1,9 @@
 import * as NodeURL from "node:url";
 import { makeCitationDefaultConfiguration } from "@beep/law-practice-server/internal/Citation/DefaultConfiguration";
+import {
+  makeCitationDefaultEngineConfiguration,
+  makeCitationEngineArtifact,
+} from "@beep/law-practice-server/internal/Citation/EngineArtifact";
 import { CitationSemanticExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
 import { loadCitationSemanticVocabularyAsset } from "@beep/law-practice-server/internal/Citation/SemanticVocabulary";
 import { it } from "@beep/test-runner";
@@ -13,6 +17,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
+import { citationFixtureEngineBuild } from "./CitationEngineArtifact.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 const asset = (name: string) => NodeURL.fileURLToPath(new URL(`../assets/citation/${name}`, import.meta.url));
@@ -27,17 +32,48 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })(
           const expected = yield* installCitationDocumentExtractionFixture("bun");
           const fs = yield* FileSystem.FileSystem;
           const vocabulary = yield* fs.readFileString(asset("semantic-editions.json"));
-          const actual = yield* makeCitationDefaultConfiguration(expected.setup.limits, {
-            parserCatalog: asset("parser-catalog.data"),
-            helpers: asset("helper-configurations.data"),
-            vocabulary: asset("semantic-editions.json"),
-            diffRuntime: expected.configuration.document.diffRuntime,
-          }).pipe(Effect.provideContext(expected.provided), DateTime.withCurrentZoneOffset(0));
+          const policy = { ...expected.setup.limits };
+          const suppliedBuild = {
+            ...citationFixtureEngineBuild("bun"),
+            runtime: { kind: "bun", version: "test-runtime/v1" },
+          };
+          const changingFs = FileSystem.FileSystem.of({
+            ...fs,
+            stream: (path, options) => {
+              suppliedBuild.runtime.version = "changed-after-capture";
+              policy.sourceUtf16 = 1;
+              return fs.stream(path, options);
+            },
+          });
+          const actual = yield* makeCitationDefaultEngineConfiguration(
+            policy,
+            {
+              parserCatalog: asset("parser-catalog.data"),
+              helpers: asset("helper-configurations.data"),
+              vocabulary: asset("semantic-editions.json"),
+              diffRuntime: expected.configuration.document.diffRuntime,
+            },
+            suppliedBuild
+          ).pipe(
+            Effect.provideContext(expected.provided),
+            Effect.provideService(FileSystem.FileSystem, changingFs),
+            DateTime.withCurrentZoneOffset(0)
+          );
           const original = CitationSemanticExtractionConfiguration.make({
             extraction: expected.configuration,
             semantic: { vocabulary, editions: expected.configuration.extraction.loop.full.editions },
           });
           expect(same(actual.configuration, original)).toBe(true);
+          const replayedIdentity = yield* makeCitationEngineArtifact(actual.descriptor);
+          expect(actual.engineArtifact).toBe(replayedIdentity);
+          expect(actual.descriptor.assets).toEqual(actual.assets);
+          expect(suppliedBuild.runtime.version).toBe("changed-after-capture");
+          expect(policy.sourceUtf16).toBe(1);
+          expect(actual.descriptor.build.runtime.version).toBe("test-runtime/v1");
+          expect(actual.descriptor.limits.sourceUtf16).toBe(expected.setup.limits.sourceUtf16);
+          expect(actual.descriptor.highestValidYear).toBe(
+            actual.configuration.extraction.extraction.loop.full.case.post.highestValidYear
+          );
           expect(actual.configuration.semantic.editions).toHaveLength(2533);
           expect(actual.assets.vocabulary).toBe("9e3e5f9539e13f0cfce17489ece472686e11c9ccc446ba7d71319d8680c0dba8");
           const counts = yield* expected.setup.observed.snapshot;

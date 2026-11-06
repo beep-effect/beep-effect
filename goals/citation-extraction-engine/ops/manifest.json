@@ -153,7 +153,9 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-production-helpers.md",
     "packages/law-practice/server/assets/citation/helper-configurations.data",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-default-configuration.md",
-    "packages/law-practice/server/src/internal/Citation/DefaultConfiguration.ts"
+    "packages/law-practice/server/src/internal/Citation/DefaultConfiguration.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-engine-artifact.md",
+    "packages/law-practice/server/src/internal/Citation/EngineArtifact.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

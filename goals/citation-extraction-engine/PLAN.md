@@ -1253,6 +1253,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the semantic projection wave; retain the sealed source mapping and private extraction pipeline.
 
+### Commit installed engine configuration with explicit build trust, 2026-11-06
+
+The versioned engine commitment combines trusted installer build/runtime/selected-port metadata with actual authenticated default assets, captured calendar and encoded policy. Existing Schema snapshot and SHA-256 primitives are reused. Build metadata is snapshotted before asset loading; runtime kind matches the installed diff backend. This commits installer claims rather than attesting arbitrary code. Connected extraction uses the producer with explicit fake deployment metadata; actual deployment/Layer port binding and all broader acceptance remain open. See history/evidence/2026-11-06-engine-artifact.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the identity producer and connected fixture use; retain prior asset and source evidence and every acceptance requirement.
+
 ### Full-span evidence and overlap warning binding, 2026-11-06
 
 Verified primary occurrences now retain original full spans as canonical component anchors. Equal primary/full spans share evidence without a second quote allocation; invalid full spans remain explicit component issues. Source overlap warnings bind original model IDs to verified cm1 endpoints after validating returned model views; unavailable or identical occurrence endpoints remain explicit unbound events. Source-backed Bun/Node and mention regression passes 15 tests. Final component/footnote detection, canonical source production for cleaning, public service/Layer and exhaustive goal qualification remain open. See history/evidence/2026-11-06-full-span-warnings.md.

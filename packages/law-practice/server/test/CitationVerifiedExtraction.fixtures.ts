@@ -5,7 +5,6 @@ import { CitationDocumentStepContainers } from "@beep/law-practice-server/intern
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationVerifiedExtraction } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
-import { Sha256Hex } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -13,7 +12,6 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
@@ -75,10 +73,9 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const { corpus, setup, defaultConfiguration, translated, provided, adapter } =
+  const { corpus, setup, defaultConfiguration, engineArtifact, translated, provided, adapter } =
     yield* installCitationDefaultConfigurationFixture(kind);
   const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 26, 32], row.id));
-  const engineArtifact = Sha256Hex.make(Str.repeat(64)("a"));
   const config = { engineArtifact, extraction: defaultConfiguration };
   const context = Context.add(provided, CitationDocumentStepContainers, { create: adapter.create });
   const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
