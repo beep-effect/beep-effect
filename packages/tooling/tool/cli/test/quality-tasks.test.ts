@@ -3058,23 +3058,29 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
             if (control !== "empty") {
               yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
-              if (control === "deletion") yield* fs.remove(path.join(root, "docs/reports/existing.md"));
-              if (control === "source rename") yield* runGit(root, ["mv", "source.ts", "docs/reports/renamed.md"]);
-              if (control === "symlink") {
-                yield* fs.remove(path.join(root, "docs/reports/probe.md"));
-                yield* fs.symlink("../../source.ts", path.join(root, "docs/reports/probe.md"));
-              }
-              if (control === "executable") yield* fs.chmod(path.join(root, "docs/reports/probe.md"), 0o755);
+              yield* Match.value(control).pipe(
+                Match.when("deletion", () => fs.remove(path.join(root, "docs/reports/existing.md"))),
+                Match.when("source rename", () => runGit(root, ["mv", "source.ts", "docs/reports/renamed.md"])),
+                Match.when("symlink", () =>
+                  fs
+                    .remove(path.join(root, "docs/reports/probe.md"))
+                    .pipe(Effect.andThen(fs.symlink("../../source.ts", path.join(root, "docs/reports/probe.md"))))
+                ),
+                Match.when("executable", () => fs.chmod(path.join(root, "docs/reports/probe.md"), 0o755)),
+                Match.orElse(() => Effect.void)
+              );
               yield* runGit(root, ["add", "."]);
               yield* runGit(root, ["commit", "-m", "control report"]);
             }
-            if (control === "dirty source" || control === "staged source")
-              yield* fs.writeFileString(path.join(root, "source.ts"), "changed\n");
-            if (control === "staged source") yield* runGit(root, ["add", "source.ts"]);
-            if (control === "untracked source") yield* fs.writeFileString(path.join(root, "unknown.ts"), "changed\n");
-            if (control === "dirty report")
-              yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "dirty\n");
-            if (control === "missing base") yield* runGit(root, ["update-ref", "-d", "refs/remotes/origin/main"]);
+            const dirtySource = fs.writeFileString(path.join(root, "source.ts"), "changed\n");
+            yield* Match.value(control).pipe(
+              Match.when("dirty source", () => dirtySource),
+              Match.when("staged source", () => dirtySource.pipe(Effect.andThen(runGit(root, ["add", "source.ts"])))),
+              Match.when("untracked source", () => fs.writeFileString(path.join(root, "unknown.ts"), "changed\n")),
+              Match.when("dirty report", () => fs.writeFileString(path.join(root, "docs/reports/probe.md"), "dirty\n")),
+              Match.when("missing base", () => runGit(root, ["update-ref", "-d", "refs/remotes/origin/main"])),
+              Match.orElse(() => Effect.void)
+            );
             const lanes = [reportLane(root, "lint:effect-vitest"), reportLane(root, "lint:schema-first")];
             const run = collectGithubCheckLaneWavesForTesting(
               "reports",

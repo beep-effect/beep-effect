@@ -60,6 +60,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
+import type { LsTreeEntry } from "@beep/git/Git";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
@@ -2197,6 +2198,24 @@ const ReportOnlyPath = S.String.check(
 const isReportOnlyPath = S.is(ReportOnlyPath);
 const reportOnlySkipReason = "clean report-only diff; source-only lane inputs unchanged";
 
+const reportFilesAreOrdinary = Effect.fn("QualityTasks.reportFilesAreOrdinary")(function* (
+  repoRoot: string,
+  paths: ReadonlyArray<string>,
+  before: ReadonlyArray<LsTreeEntry>,
+  after: ReadonlyArray<LsTreeEntry>
+) {
+  if (
+    A.length(after) !== A.length(paths) ||
+    !A.every([...before, ...after], (entry) => entry.mode === "100644" && entry.type === "blob")
+  )
+    return false;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* Effect.forEach(paths, (relative) => fs.lstat(path.join(repoRoot, relative)), { concurrency: 1 }).pipe(
+    Effect.map(A.every((info) => info.type === "File" && (info.mode & 0o111) === 0))
+  );
+});
+
 // Every unknown axis fails closed. Git owns NUL parsing, including Unicode and
 // newline filenames. noRenames retains the source-side deletion of a move.
 const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(function* (repoRoot: string) {
@@ -2225,21 +2244,37 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
     const before = yield* git.lsTree(repoRoot, mergeBase, { pathspec, fullTree: true });
     const after = yield* git.lsTree(repoRoot, head, { pathspec, fullTree: true });
     if (
-      A.length(after) !== A.length(entries) ||
-      !A.every([...before, ...after], (entry) => entry.mode === "100644" && entry.type === "blob")
+      !(yield* reportFilesAreOrdinary(
+        repoRoot,
+        A.map(entries, (entry) => entry.path),
+        before,
+        after
+      ))
     )
       return false;
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const regularFiles = yield* Effect.forEach(entries, (entry) => fs.lstat(path.join(repoRoot, entry.path)), {
-      concurrency: 1,
-    }).pipe(Effect.map(A.every((info) => info.type === "File" && (info.mode & 0o111) === 0)));
-    if (!regularFiles) return false;
     const finalHead = yield* git.revParse(repoRoot, "HEAD", { peel: "commit" });
     const finalBase = yield* git.revParse(repoRoot, "origin/main", { peel: "commit" });
     const finalStatus = yield* git.status(repoRoot, { untrackedFiles: "all", noOptionalLocks: true });
     return finalHead === head && finalBase === base && A.isReadonlyArrayEmpty(finalStatus);
   }).pipe(Effect.orElseSucceed(thunkFalse));
+});
+
+const cleanReportOnlyWaves = Effect.fnUntraced(function* (lanes: ReadonlyArray<GithubCheckWaveLane>) {
+  const repoRoot = O.map(A.head(lanes), (lane) => lane.step.cwd);
+  return O.isSome(repoRoot) &&
+    A.every(lanes, (lane) => lane.step.cwd === repoRoot.value) &&
+    A.some(lanes, (lane) => lane.tier === "cheap-gates" && S.is(ReportOnlyInertLaneId)(lane.id))
+    ? yield* cleanReportOnlyDiff(repoRoot.value)
+    : false;
+});
+
+const shouldSkipReportLane = Effect.fnUntraced(function* (lane: GithubCheckWaveLane, reportOnly: boolean) {
+  return (
+    reportOnly &&
+    lane.tier === "cheap-gates" &&
+    S.is(ReportOnlyInertLaneId)(lane.id) &&
+    (yield* cleanReportOnlyDiff(lane.step.cwd))
+  );
 });
 
 // What one lane contributed to its wave. The journal append and the proof
@@ -2259,12 +2294,7 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
   session: O.Option<LaneProofSession>,
   reportOnly: boolean
 ) {
-  if (
-    reportOnly &&
-    lane.tier === "cheap-gates" &&
-    S.is(ReportOnlyInertLaneId)(lane.id) &&
-    (yield* cleanReportOnlyDiff(lane.step.cwd))
-  ) {
+  if (yield* shouldSkipReportLane(lane, reportOnly)) {
     yield* Console.log(`[beep-cli] ${label}: skipped lane ${lane.id}: ${reportOnlySkipReason}`);
     return {
       lane,
@@ -2609,13 +2639,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
   // One virtual-tree hash identifies every reusable lane up front; each wave
   // then refreshes it once (see advanceGithubCheckLaneProofs).
   const allLanes = A.flatMap(waves, (wave) => wave.lanes);
-  const repoRoot = O.map(A.head(allLanes), (lane) => lane.step.cwd);
-  const reportOnly =
-    O.isSome(repoRoot) &&
-    A.every(allLanes, (lane) => lane.step.cwd === repoRoot.value) &&
-    A.some(allLanes, (lane) => lane.tier === "cheap-gates" && S.is(ReportOnlyInertLaneId)(lane.id))
-      ? yield* cleanReportOnlyDiff(repoRoot.value)
-      : false;
+  const reportOnly = yield* cleanReportOnlyWaves(allLanes);
   let session = yield* prepareLaneProofSession(allLanes, laneProofMode).pipe(
     QualityTaskConfigurationError.mapError("Failed to prepare the lane-proof session.")
   );

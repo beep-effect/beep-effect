@@ -2678,6 +2678,7 @@
     {"name":"QualityTasks.removeStaleFlakeQuarantineArtifact","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.removeTurboLaneLedger","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.renderStepOutput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"QualityTasks.reportFilesAreOrdinary","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.reportFromArtifact","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.reportFromArtifact.onSome","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"QualityTasks.requireWorkspaceTaskFilters","owner":"@beep/repo-cli","family":"tooling","conforms":true},
