@@ -1,5 +1,11 @@
 # Decision Log
 
+> Current setup reference (2026-11-06): Agent memory configuration follows
+> [root agent guidance](../../AGENTS.md#agent-memory): durable files and repo
+> docs, without a shared external memory service. The dated role assignments
+> and deployment decisions below are retained as history. Framework principles
+> and product-authority boundaries remain binding under the governing root guidance.
+
 Dated decision log for the memory architecture standard. Records decisions as they are made so the team can trace the evolution of thinking.
 
 ---

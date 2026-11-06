@@ -1,6 +1,10 @@
 import { CiLocalStepPlan } from "@beep/repo-cli/commands/Ci";
+import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality/Quality.schemas";
 import { formatCommandLine } from "@beep/repo-cli/test/Process";
 import {
+  collectGithubCheckLaneWavesForTesting,
+  GithubCheckLaneSpec,
+  GithubCheckLaneWaveSpec,
   githubCheckChangesetStatusLane,
   githubCheckPrePushLanes,
   LaneProofRefusal,
@@ -28,6 +32,7 @@ import {
   ParityLaneDecision,
   ProofEnvironment,
   ProvenLane,
+  planFinalCheckSteps,
   proofEnvironmentDifferences,
   proofEnvironmentPosture,
   provenLanesForAttempt,
@@ -502,6 +507,83 @@ const finalCheckCommand = (
 
 describe("resumable final-check steps", () => {
   it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("over a real checkout", (it) => {
+    it.effect("never reuses cache-policy authority after ignored acceptance posture changes", () =>
+      Effect.gen(function* () {
+        const { root, git } = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory(`${root}/.beep`, { recursive: true });
+        yield* fs.writeFileString(`${root}/.beep/acceptance-valid`, "valid");
+        const lane = GithubCheckLaneSpec.make({
+          id: "quality:cache-policy",
+          tier: "cheap-gates",
+          stage: "repo-quality",
+          wave: "preflight",
+          blockedBy: [],
+          step: QualityTaskStep.make({
+            label: "quality:cache-policy",
+            command: "sh",
+            cwd: root,
+            args: ["-c", "printf x >> .beep/cache-policy-runs; test -f .beep/acceptance-valid"],
+          }),
+        });
+        const run = () =>
+          collectGithubCheckLaneWavesForTesting(
+            "cache-policy-control",
+            [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+            "collect-all",
+            "active"
+          );
+        const first = yield* withVirtualTreeCount(run());
+        expect(A.map(first.result.report.lanes, (entry) => entry.status)).toEqual(["passed"]);
+        yield* fs.remove(`${root}/.beep/acceptance-valid`);
+        const sourceStatus = yield* git("status", "--porcelain");
+        expect(sourceStatus).toBe("");
+        const second = yield* withVirtualTreeCount(run());
+        expect(A.map(second.result.report.lanes, (entry) => entry.status)).toEqual(["failed"]);
+        expect([first.hashes, second.hashes]).toEqual([0, 0]);
+        const executions = yield* fs.readFileString(`${root}/.beep/cache-policy-runs`);
+        expect(executions).toBe("xx");
+      })
+    );
+
+    it.effect("does not invent root-sweep successes when the explicit full policy command fails", () =>
+      Effect.gen(function* () {
+        const { root, base } = yield* fixture();
+        const planned = A.filter(
+          planFinalCheckSteps(
+            root,
+            base,
+            [],
+            LintPolicySweeps.make({
+              schemaVersion: "lint-policy-sweeps/v1",
+              deprecatedApis: "oxlint",
+            })
+          ),
+          (entry) => entry.gate === "lint-policy"
+        );
+        const controlled = A.map(planned, (entry) =>
+          FinalCheckPlannedStep.make({
+            ...entry,
+            step: QualityTaskStep.make({ ...entry.step, command: "sh", args: ["-c", "exit 7"] }),
+          })
+        );
+        const result = yield* runFinalCheckGatesForTesting(
+          {
+            repoRoot: root,
+            mergeBase: base,
+            planned: controlled,
+            skips: [],
+            resume: false,
+          },
+          ["lint-policy"],
+          false
+        );
+        expect(A.map(result.steps, ({ label, status, reason }) => ({ label, status, reason }))).toEqual([
+          { label: "final-check:lint-policy:laws", status: "failed", reason: "exit 7" },
+        ]);
+      })
+    );
+
     it.effect("shares each refreshed boundary and reuses command-free steps without rehashing", () =>
       Effect.gen(function* () {
         const { root, base } = yield* fixture();

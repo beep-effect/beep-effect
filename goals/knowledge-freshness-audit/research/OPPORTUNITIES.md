@@ -132,3 +132,39 @@ missing evidence.
 - Prevention: run the existing canonical update/check after skill edits and
   base integration. The audit repaired the generated field in this delivery;
   no duplicate content fix, manual hash or new gate was introduced.
+
+## P4 future-use notes outlived their model policy, 2026-11-06
+
+- Work: review current-use instructions separately from completed execution
+  provenance and scanner reference candidates.
+- Evidence: seventeen completed-packet headers still prescribed the September
+  Codex route for future work. Current root Volume pools assigns a different
+  substantive route. The old root anchor in those headers also no longer names
+  a current heading. See the dated P4 future-routing qualification report.
+- Impact: conflicting reuse guidance in seventeen headers. No incorrect model
+  launch or resulting user impact was established.
+- Workaround and prevention: preserve the old date/model/effort as history and
+  link new work to the current root policy. Verify every byte outside those
+  header blocks remains unchanged. Avoid duplicating another live model pin.
+- Ownership: the audit owns these completed-packet qualifications. The retired
+  Glob example is routed separately to the active DECISIONS owner in PR #2780;
+  no competing source edit or unverified repair claim is included here.
+
+## P4 memory context and checkout setup ordering, 2026-11-06
+
+- Work: distinguish dated research from current memory configuration while
+  preserving the original assessments and decisions.
+- Evidence: T8 K2 compares an explicitly dated July 8 pending condition with a
+  July 25 retirement decision. Automatic contradiction is rejected; current
+  orientation is supplied without rewriting either historical statement.
+- Impact: reader ambiguity established; no incorrect service deployment or
+  runtime impact established. Current root policy remains authoritative.
+- Setup friction: dependency setup began before the new checkout completed.
+  It failed because a lockfile workspace was not yet on disk. The failed setup
+  log was retained privately; preparation had not run. After checkout completion,
+  frozen installation and canonical preparation passed, without manifest edits.
+- Attribution: local operation ordering, high confidence. The measured impact
+  is one failed setup attempt; total delay is unknown.
+- Prevention and ownership: wait for successful checkout completion before
+  dependency setup. This audit owns the two reading notes only. Other owners,
+  PM recovery and ADHD provenance remain separate.
