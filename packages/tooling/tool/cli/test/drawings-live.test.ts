@@ -307,7 +307,8 @@ describe("beep drawings live", () => {
         yield* tools.svgToPdf(
           SvgToPdfRequest.make({ svgPaths: [path.join(dir, "margin.svg")], outputPath: path.join(dir, "margin.pdf") })
         );
-        expect(yield* codesOf(path.join(dir, "margin.pdf"))).toContain("margin-left");
+        const codesOf1 = yield* codesOf(path.join(dir, "margin.pdf"));
+        expect(codesOf1).toContain("margin-left");
 
         // (b) a 50 % gray stroke survives the non-anti-aliased render as gray
         const gray = Str.replaceAll('stroke="#000000"', 'stroke="#808080"')(sheet);
@@ -315,7 +316,8 @@ describe("beep drawings live", () => {
         yield* tools.svgToPdf(
           SvgToPdfRequest.make({ svgPaths: [path.join(dir, "gray.svg")], outputPath: path.join(dir, "gray.pdf") })
         );
-        expect(yield* codesOf(path.join(dir, "gray.pdf"))).toContain("impure-pixels");
+        const codesOf2 = yield* codesOf(path.join(dir, "gray.pdf"));
+        expect(codesOf2).toContain("impure-pixels");
 
         // (c) PDF 1.7 is outside the Patent Center range
         yield* fs.writeFileString(path.join(dir, "v17.svg"), sheet);
@@ -326,7 +328,8 @@ describe("beep drawings live", () => {
             pdfVersion: "1.7",
           })
         );
-        expect(yield* codesOf(path.join(dir, "v17.pdf"))).toEqual(["pdf-version"]);
+        const codesOf3 = yield* codesOf(path.join(dir, "v17.pdf"));
+        expect(codesOf3).toEqual(["pdf-version"]);
       })
     );
   });

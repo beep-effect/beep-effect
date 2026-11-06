@@ -10,16 +10,15 @@ import {
   GoalMergeTimeEvidenceRequest,
   GoalObservedCheckRun,
   GoalPullRequestRef,
+  goalCompletionIo,
   layerGoalCompletionReceiptStoreMemory,
   observeGoalCompletion,
-  readGoalCompletionGit,
-  readGoalCompletionGithub,
   storedGoalCompletion,
 } from "@beep/repo-cli/test/Goals";
 import { YeetCommandError } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -34,6 +33,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { NodeTestLayer, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { completionIoFixture } from "./support/CompletionIo.ts";
 import type { GoalRequiredCheckSnapshot } from "@beep/repo-cli/test/Goals";
 
 // Recorded read-only GitHub REST responses for PR #1429 (see the fixture's
@@ -133,14 +133,10 @@ type Overrides = {
 
 const recordedIo = (data: Recorded, acceptedText: string, overrides: Overrides = {}) => {
   const value = overrides.data === undefined ? data : overrides.data(data);
-  return GoalCompletionIo.of({
-    git: Effect.fn("CompletionEvidenceTest.git")((_root: string, args: ReadonlyArray<string>) =>
-      Effect.succeed(
-        A.head(args).pipe(O.contains("show")) ? acceptedText : "git@github.com:beep-effect/beep-effect.git\n"
-      )
-    ),
-    github: Effect.fn("CompletionEvidenceTest.github")((_root: string, args: ReadonlyArray<string>) => {
-      const endpoint = O.getOrElse(A.get(args, 1), () => "");
+  return completionIoFixture({
+    manifest: Effect.succeed(acceptedText),
+    origin: Effect.succeed("git@github.com:beep-effect/beep-effect.git\n"),
+    respond: Effect.fn("CompletionEvidenceTest.response")((endpoint: string) => {
       if (overrides.fail?.(endpoint) === true)
         return Effect.fail(YeetCommandError.make({ message: "Recorded network failure" }));
       const ok = (body: unknown) => Effect.succeed(encode(body));
@@ -463,15 +459,13 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
   );
   it.effect("without a provided port the git and gh adapters fail typed, before any network read", () =>
     Effect.gen(function* () {
-      yield* temporaryWorkingDirectory;
       const missing = "/nonexistent/beep-completion-evidence";
-      const spawn = yield* readGoalCompletionGit(missing, ["status"]).pipe(Effect.flip);
+      const io = yield* goalCompletionIo();
+      const spawn = yield* io.originUrl(missing).pipe(Effect.flip);
       expect(spawn._tag).toBe("YeetCommandError");
-      const nonZero = yield* readGoalCompletionGit(process.cwd(), ["rev-parse", "--verify", "refs/heads/missing"]).pipe(
-        Effect.flip
-      );
-      expect(nonZero._tag).toBe("YeetCommandError");
-      const gh = yield* readGoalCompletionGithub(missing, ["api", "repos/{owner}/{repo}"]).pipe(Effect.flip);
+      const absent = yield* io.manifestAtHead(process.cwd(), "missing-ref", "manifest.json").pipe(Effect.option);
+      absent.pipe(O.flatten, assertNone);
+      const gh = yield* io.pullRequest(missing, 1).pipe(Effect.flip);
       expect(gh._tag).toBe("YeetCommandError");
     })
   );
@@ -530,14 +524,13 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
       const lines = `${yield* encodeReceiptJson(red)}\n${yield* encodeReceiptJson(newer)}\n`;
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", lines);
       const data = yield* recorded();
-      const io = recordedIo(data, yield* encodeGoalManifestJson(value));
+      const encodedGoalManifestJson = yield* encodeGoalManifestJson(value);
+      const io = recordedIo(data, encodedGoalManifestJson);
+      const pipe1 = yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+        Effect.provideService(GoalCompletionIo, io)
+      );
       assertSome(
-        O.map(
-          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, io)
-          ),
-          (row) => row.outcome
-        ),
+        O.map(pipe1, (row) => row.outcome),
         "verified"
       );
     })

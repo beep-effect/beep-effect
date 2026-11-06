@@ -31,7 +31,7 @@
     "goals/practice-box-onboarding/GOAL.md",
     "goals/practice-box-onboarding/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

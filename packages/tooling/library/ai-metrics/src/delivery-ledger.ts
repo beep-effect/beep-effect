@@ -428,12 +428,15 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
         });
         const readStoredOutcome = Effect.fnUntraced(function* (attemptId: Sha256Hex) {
           const payload = yield* readOutcomePayload(attemptId);
-          return O.isSome(payload) ? O.some(yield* decodeOutcome(payload.value)) : O.none();
+          return O.isSome(payload) ? yield* Effect.asSome(decodeOutcome(payload.value)) : O.none();
         });
         const readOutcome = Effect.fn("AiMetrics.delivery.readOutcome")((attemptId: Sha256Hex) =>
           safe(
             Effect.gen(function* () {
-              if (O.isNone(yield* attempt(attemptId))) return yield* failure("unknown-attempt");
+              const attempt1 = yield* attempt(attemptId);
+              if (O.isNone(attempt1)) {
+                return yield* failure("unknown-attempt");
+              }
               return yield* readStoredOutcome(attemptId);
             })
           )

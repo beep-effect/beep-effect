@@ -69,7 +69,8 @@ const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeSer
 const readRoot = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const repo = yield* findRepoRoot();
-  return { repo, config: yield* decodeRoot(yield* fs.readFileString(`${repo}/turbo.json`)) };
+  const readFileString1 = yield* fs.readFileString(`${repo}/turbo.json`);
+  return { repo, config: yield* decodeRoot(readFileString1) };
 });
 
 // The `include` a tsconfig resolves to, following relative `extends`.
@@ -78,7 +79,9 @@ const tsconfigInclude = Effect.fnUntraced(function* (file: string) {
   const path = yield* Path.Path;
   let current = file;
   for (let depth = 0; depth < 8; depth++) {
-    const config = yield* decodeTsconfig(yield* Jsonc.parse(yield* fs.readFileString(current)));
+    const readFileString7 = yield* fs.readFileString(current);
+    const parsed = yield* Jsonc.parse(readFileString7);
+    const config = yield* decodeTsconfig(parsed);
     if (config.include !== undefined) return config.include;
     if (config.extends === undefined || !Str.startsWith(".")(config.extends)) break;
     current = path.resolve(path.dirname(current), config.extends);
@@ -91,7 +94,8 @@ const tsconfigInclude = Effect.fnUntraced(function* (file: string) {
 const buildCompilesTests = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const scripts = (yield* decodeManifest(yield* fs.readFileString(path.join(directory, "package.json")))).scripts ?? {};
+  const readFileString2 = yield* fs.readFileString(path.join(directory, "package.json"));
+  const scripts = (yield* decodeManifest(readFileString2)).scripts ?? {};
   const script = O.getOrElse(
     O.orElse(R.get(scripts, "beep:build"), () => R.get(scripts, "build")),
     () => ""
@@ -112,7 +116,9 @@ const effectiveBuildInputs = Effect.fnUntraced(function* (directory: string, roo
   const path = yield* Path.Path;
   const file = path.join(directory, "turbo.json");
   if (!(yield* fs.exists(file))) return root;
-  const overlay = yield* decodeOverlay(yield* Jsonc.parse(yield* fs.readFileString(file)));
+  const readFileString8 = yield* fs.readFileString(file);
+  const parsed3 = yield* Jsonc.parse(readFileString8);
+  const overlay = yield* decodeOverlay(parsed3);
   const inputs = overlay.tasks.build?.inputs;
   if (inputs === undefined) return root;
   return A.contains(inputs, EXTENDS) ? [...root, ...A.filter(inputs, (input) => input !== EXTENDS)] : inputs;
@@ -126,7 +132,8 @@ describe("package role task inputs", () => {
       const encoded = yield* encodeRoleTask(task);
       const decoded = yield* decodeRoleTask(encoded);
       expect(roleTaskEquivalent(decoded, task)).toBe(true);
-      expect(yield* encodeRoleTask(decoded)).toBe(encoded);
+      const encodedRoleTask = yield* encodeRoleTask(decoded);
+      expect(encodedRoleTask).toBe(encoded);
     }),
     { arbitrary: fcRuns() }
   );
@@ -148,12 +155,14 @@ describe("package role task inputs", () => {
       "keeps test sources in the build of every workspace whose compiler program includes them",
       Effect.fnUntraced(function* () {
         const { repo, config } = yield* readRoot();
-        const directories = HashMap.toValues(yield* workspaceDirectories(repo));
+        const workspaceDirectories4 = yield* workspaceDirectories(repo);
+        const directories = HashMap.toValues(workspaceDirectories4);
         const rows = yield* Effect.forEach(
           directories,
           Effect.fnUntraced(function* (directory) {
             const compiles = yield* buildCompilesTests(directory);
-            return Tuple.make(directory, compiles, yield* effectiveBuildInputs(directory, config.tasks.build.inputs));
+            const effectiveBuildInputs5 = yield* effectiveBuildInputs(directory, config.tasks.build.inputs);
+            return Tuple.make(directory, compiles, effectiveBuildInputs5);
           })
         );
         const compiling = A.filter(rows, ([, compiles]) => compiles);
@@ -265,7 +274,8 @@ describe("package role task inputs", () => {
         for (const file of ["src/index.ts", "data/table.json", "src/nested/README.md"]) {
           yield* expectMisses(`packages/upstream/${file}`, everything);
         }
-        expect(yield* hashes).toEqual(baseline);
+        const hashes6 = yield* hashes;
+        expect(hashes6).toEqual(baseline);
       }),
       { timeout: 120_000 }
     );

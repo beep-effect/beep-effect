@@ -794,7 +794,8 @@ const make = Effect.gen(function* () {
   const windows = yield* isWindowsRunner(env);
   // The host libc, read once here beside the platform: it decides between
   // pnpm's glibc and musl native binaries on linux and nothing else.
-  const musl = detectMusl(yield* HostProcessPlatform);
+  const HostProcessPlatform1 = yield* HostProcessPlatform;
+  const musl = detectMusl(HostProcessPlatform1);
   const bunBinaryName = windows ? "bun.exe" : "bun";
   const shimFileName = (name: string): string => (windows ? `${name}.cmd` : name);
   const shimBody = windows ? cmdShim : posixShim;

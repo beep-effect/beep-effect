@@ -116,7 +116,8 @@ const IpcStdioLive = Layer.unwrap(
 
     // This child scope closes after process termination, draining stderr before
     // either temporary directory is removed.
-    const stderrScope = yield* Scope.fork(yield* Effect.scope);
+    const scope1 = yield* Effect.scope;
+    const stderrScope = yield* Scope.fork(scope1);
     // Boot the real sidecar; join its exit when the scope closes.
     const sidecarBinaryPath = yield* resolveSidecarBinaryPath;
     const proc = yield* Effect.acquireRelease(

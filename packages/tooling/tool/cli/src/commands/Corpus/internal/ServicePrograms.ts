@@ -40,6 +40,8 @@ import {
 import { $RepoCliId } from "@beep/identity/packages";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
 import { makePopplerRasterizer, PopplerConfig, tiffFrameCount } from "@beep/poppler";
+import { hashFileSha256 as sharedHashFileSha256 } from "@beep/repo-cli-kit/cli/FsGuards";
+import { withDuckDb } from "@beep/repo-cli-kit/duckdb/WithDuckDb";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { makeTesseractPageOcrEngine, planTesseractLanguages, TesseractConfig } from "@beep/tesseract";
@@ -70,8 +72,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import sharp from "sharp";
-import { hashFileSha256 as sharedHashFileSha256 } from "../../../internal/cli/FsGuards.ts";
-import { withDuckDb } from "../../../internal/duckdb/WithDuckDb.ts";
 import {
   CorpusArchiveMoveDestinationConflictError,
   CorpusArchiveMoveDigestMismatchError,
@@ -1035,7 +1035,8 @@ const rejectExtractOutputLinks = Effect.fn("CorpusCommandService.rejectExtractOu
     path.join(outDir, "outcomes"),
     path.join(outDir, ".staging"),
   ]) {
-    if (O.isSome(yield* fs.readLink(candidate).pipe(Effect.option))) {
+    const pipe1 = yield* fs.readLink(candidate).pipe(Effect.option);
+    if (O.isSome(pipe1)) {
       return yield* CorpusCommandError.make({
         message: `Corpus extract output cannot contain a symbolic link: "${candidate}".`,
       });
@@ -1143,7 +1144,8 @@ const acquireExtractRunLock = Effect.fn("CorpusCommandService.acquireExtractRunL
       message: `Failed creating extract run lock "${lockPath}".`,
     });
   }
-  const holder = Str.trim(yield* fs.readFileString(lockPath).pipe(Effect.orElseSucceed(() => "")));
+  const pipe2 = yield* fs.readFileString(lockPath).pipe(Effect.orElseSucceed(() => ""));
+  const holder = Str.trim(pipe2);
   const holderPid = O.filter(Num.parse(holder), Number.isSafeInteger);
   const holderRunning = O.isSome(holderPid)
     ? yield* fs.exists(`/proc/${holderPid.value}`).pipe(Effect.orElseSucceed(() => false))
@@ -1333,7 +1335,8 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
       return OcrPlan.Keep();
     }
     if (format === "image-metadata") {
-      return plan(yield* imagePages(extension, sourceBytes));
+      const imagePages3 = yield* imagePages(extension, sourceBytes);
+      return plan(imagePages3);
     }
     if (format !== "pdf-text-layer") {
       return OcrPlan.Keep();
@@ -1554,7 +1557,8 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
   const readSource = Effect.fn("CorpusCommandService.ocrSource")(function* (
     input: ExtractOcrSourceInput
   ): Effect.fn.Return<CorpusExtractOutcome, CorpusCommandError> {
-    return yield* OcrPlan.$match(yield* pagesToRead(input), {
+    const pagesToRead4 = yield* pagesToRead(input);
+    return yield* OcrPlan.$match(pagesToRead4, {
       Keep: () => Effect.succeed(input.first),
       PageCountFailed: ({ message }) =>
         Console.log(`corpus extract: OCR could not count the pages of "${input.ids.relativePath}": ${message}`).pipe(
@@ -1970,8 +1974,8 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
                 );
                 const textPath = O.isNone(textRelative)
                   ? O.none()
-                  : O.some(
-                      yield* decodePosixPath(textRelative.value).pipe(
+                  : yield* Effect.asSome(
+                      decodePosixPath(textRelative.value).pipe(
                         CorpusCommandError.mapError("Text artifact path failed decoding.")
                       )
                     );
@@ -2405,12 +2409,14 @@ const salvageCorpusImpl = Effect.fn("CorpusCommandService.salvageCorpus")(functi
     .makeDirectory(safeRunRoot, { recursive: true })
     .pipe(CorpusCommandError.mapError(`Failed creating salvage run root "${safeRunRoot}".`));
 
-  const sourceFiles = A.flatten(yield* Effect.forEach(sources, collectSalvageSourceFiles));
+  const forEach5 = yield* Effect.forEach(sources, collectSalvageSourceFiles);
+  const sourceFiles = A.flatten(forEach5);
   const digestIndex =
     options.dedupe === true
       ? yield* loadSalvageDigestIndex(options.corpusRoot)
       : MutableHashMap.empty<string, string>();
-  const salvagedAt = DateTime.formatIso(yield* DateTime.now);
+  const now6 = yield* DateTime.now;
+  const salvagedAt = DateTime.formatIso(now6);
 
   const records = yield* Effect.forEach(
     sourceFiles,
@@ -2865,7 +2871,8 @@ const archiveMoveImpl = Effect.fn("CorpusCommandService.archiveMove")(function* 
     concurrency: 1,
   });
 
-  const movedAt = DateTime.formatIso(yield* DateTime.now);
+  const now7 = yield* DateTime.now;
+  const movedAt = DateTime.formatIso(now7);
   const records = A.map(plans, (plan) =>
     CorpusArchiveMoveManifestRecord.make({
       archivePath: plan.archivePath,

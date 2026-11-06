@@ -75,7 +75,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
             yield* sql`insert into tx_commit values (2)`;
           })
         );
-        expect(yield* countRows(sql, "tx_commit")).toBe(2);
+        const countRows1 = yield* countRows(sql, "tx_commit");
+        expect(countRows1).toBe(2);
       })
     );
 
@@ -88,7 +89,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           .withTransaction(sql`insert into tx_rollback values (1)`.pipe(Effect.andThen(Effect.fail("boom" as const))))
           .pipe(Effect.flip);
         expect(error).toBe("boom");
-        expect(yield* countRows(sql, "tx_rollback")).toBe(0);
+        const countRows2 = yield* countRows(sql, "tx_rollback");
+        expect(countRows2).toBe(0);
       })
     );
 
@@ -103,7 +105,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
             yield* sql.withTransaction(sql`insert into tx_nested_commit values (2)`);
           })
         );
-        expect(yield* countRows(sql, "tx_nested_commit")).toBe(2);
+        const countRows3 = yield* countRows(sql, "tx_nested_commit");
+        expect(countRows3).toBe(2);
       })
     );
 
@@ -125,7 +128,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           )
           .pipe(Effect.flip);
         expectRefusedCommit(error, NESTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_nested_rollback")).toBe(0);
+        const countRows4 = yield* countRows(sql, "tx_nested_rollback");
+        expect(countRows4).toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -144,7 +148,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           )
           .pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_constraint")).toBe(0);
+        const countRows5 = yield* countRows(sql, "tx_constraint");
+        expect(countRows5).toBe(0);
       })
     );
 
@@ -159,9 +164,11 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         const error = yield* sql.unsafe("COMMIT").pipe(Effect.flip);
         expect(duplicate.reason._tag).toBe("UniqueViolation");
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_raw_commit")).toBe(0);
+        const countRows6 = yield* countRows(sql, "tx_raw_commit");
+        expect(countRows6).toBe(0);
         yield* sql`insert into tx_raw_commit values (2)`;
-        expect(yield* countRows(sql, "tx_raw_commit")).toBe(1);
+        const countRows7 = yield* countRows(sql, "tx_raw_commit");
+        expect(countRows7).toBe(1);
       })
     );
 
@@ -177,7 +184,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
             yield* sql`insert into tx_work_commit values (1)`.pipe(Effect.ignore);
             const error = yield* sql.unsafe(commit).pipe(Effect.flip);
             expectRefusedCommit(error, ABORTED_MESSAGE);
-            expect(yield* countRows(sql, "tx_work_commit")).toBe(0);
+            const countRows8 = yield* countRows(sql, "tx_work_commit");
+            expect(countRows8).toBe(0);
             yield* expectUsable(sql);
           })
         );
@@ -197,7 +205,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           yield* sql.unsafe("START");
           yield* sql`insert into tx_work_rollback values (2)`;
           yield* sql.unsafe("COMMIT WORK");
-          expect(yield* countRows(sql, "tx_work_rollback")).toBe(1);
+          const countRows9 = yield* countRows(sql, "tx_work_rollback");
+          expect(countRows9).toBe(1);
         })
       );
     }
@@ -210,7 +219,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         yield* sql.unsafe("BEGIN WORK");
         const error = yield* sql.unsafe("insert into tx_multi_work values (1); COMMIT WORK").pipe(Effect.flip);
         expectRefusedMultiStatement(error);
-        expect(yield* countRows(sql, "tx_multi_work")).toBe(0);
+        const countRows10 = yield* countRows(sql, "tx_multi_work");
+        expect(countRows10).toBe(0);
         yield* sql.unsafe("ROLLBACK WORK");
         yield* expectUsable(sql);
       })
@@ -226,7 +236,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         yield* sql`insert into tx_comment_raw values (1)`.pipe(Effect.ignore);
         const error = yield* sql.unsafe("-- note\nCOMMIT").pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_comment_raw")).toBe(0);
+        const countRows11 = yield* countRows(sql, "tx_comment_raw");
+        expect(countRows11).toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -241,7 +252,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         yield* sql`insert into tx_comment_nested values (1)`.pipe(Effect.ignore);
         const error = yield* sql.unsafe("/* outer /* inner */ still outer */ COMMIT;").pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_comment_nested")).toBe(0);
+        const countRows12 = yield* countRows(sql, "tx_comment_nested");
+        expect(countRows12).toBe(0);
       })
     );
 
@@ -254,12 +266,14 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         const whole = yield* sql.unsafe("BEGIN; insert into tx_multi_begin values (2); COMMIT").pipe(Effect.flip);
         expectRefusedMultiStatement(open);
         expectRefusedMultiStatement(whole);
-        expect(yield* countRows(sql, "tx_multi_begin")).toBe(0);
+        const countRows13 = yield* countRows(sql, "tx_multi_begin");
+        expect(countRows13).toBe(0);
         // Nothing ran: DuckDB is still in autocommit, so a raw BEGIN opens a fresh transaction.
         yield* sql.unsafe("BEGIN");
         yield* sql`insert into tx_multi_begin values (3)`;
         yield* sql.unsafe("COMMIT");
-        expect(yield* countRows(sql, "tx_multi_begin")).toBe(1);
+        const countRows14 = yield* countRows(sql, "tx_multi_begin");
+        expect(countRows14).toBe(1);
       })
     );
 
@@ -277,7 +291,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         expectRefusedMultiStatement(tail);
         const error = yield* sql.unsafe("COMMIT").pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_multi_commit")).toBe(0);
+        const countRows15 = yield* countRows(sql, "tx_multi_commit");
+        expect(countRows15).toBe(0);
       })
     );
 
@@ -300,7 +315,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         expectRefusedMultiStatement(taggedHidden);
         const error = yield* sql.unsafe("COMMIT").pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_multi_dollar_ident")).toBe(0);
+        const countRows16 = yield* countRows(sql, "tx_multi_dollar_ident");
+        expect(countRows16).toBe(0);
       })
     );
 
@@ -316,7 +332,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         // Neither text opened a transaction, so every row is already committed.
         yield* sql.unsafe("BEGIN");
         yield* sql.unsafe("ROLLBACK");
-        expect(yield* countRows(sql, "tx_multi_quoted")).toBe(3);
+        const countRows17 = yield* countRows(sql, "tx_multi_quoted");
+        expect(countRows17).toBe(3);
       })
     );
 
@@ -358,7 +375,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         // DuckDB 2.0 aborts even on parser errors; COMMIT would silently roll back.
         const error = yield* sql.unsafe("COMMIT").pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_raw_parser")).toBe(0);
+        const countRows18 = yield* countRows(sql, "tx_raw_parser");
+        expect(countRows18).toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -378,7 +396,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           .pipe(Effect.flip);
         yield* expectUsable(sql);
         yield* sql.withTransaction(sql`insert into tx_usable values (2)`);
-        expect(yield* countRows(sql, "tx_usable")).toBe(1);
+        const countRows19 = yield* countRows(sql, "tx_usable");
+        expect(countRows19).toBe(1);
       })
     );
 
@@ -398,7 +417,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           )
           .pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_parser")).toBe(0);
+        const countRows20 = yield* countRows(sql, "tx_parser");
+        expect(countRows20).toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -419,7 +439,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
             expect(Str.startsWith("Failed to bind statement parameters:")(bindError.reason.message)).toBe(true);
           })
         );
-        expect(yield* countRows(sql, "tx_bind")).toBe(1);
+        const countRows21 = yield* countRows(sql, "tx_bind");
+        expect(countRows21).toBe(1);
       })
     );
 
@@ -432,7 +453,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         yield* sql`insert into tx_raw_bind values (1)`;
         yield* sql.unsafe("insert into tx_raw_bind values (?)", [Symbol("unbindable")]).pipe(Effect.ignore);
         yield* sql.unsafe("COMMIT");
-        expect(yield* countRows(sql, "tx_raw_bind")).toBe(1);
+        const countRows22 = yield* countRows(sql, "tx_raw_bind");
+        expect(countRows22).toBe(1);
         yield* expectUsable(sql);
       })
     );
@@ -451,7 +473,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           )
           .pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_interrupt")).toBe(0);
+        const countRows23 = yield* countRows(sql, "tx_interrupt");
+        expect(countRows23).toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -470,7 +493,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           )
           .pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_nested_begin")).toBe(0);
+        const countRows24 = yield* countRows(sql, "tx_nested_begin");
+        expect(countRows24).toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -489,7 +513,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           )
           .pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
-        expect(yield* countRows(sql, "tx_nested_start")).toBe(0);
+        const countRows25 = yield* countRows(sql, "tx_nested_start");
+        expect(countRows25).toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -529,7 +554,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           )
         );
 
-        expect(yield* Ref.get(events)).toEqual(["first-end", "second-start"]);
+        const got = yield* Ref.get(events);
+        expect(got).toEqual(["first-end", "second-start"]);
         const rows = yield* sql<{ readonly name: string }>`select name from tx_nested_concurrent order by name`;
         expect(rows).toEqual([{ name: "first" }, { name: "second" }]);
       })
@@ -552,7 +578,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           .pipe(Effect.forkChild);
         yield* Deferred.await(inserted);
         yield* Fiber.interrupt(fiber);
-        expect(yield* countRows(sql, "tx_fiber_interrupt")).toBe(0);
+        const countRows26 = yield* countRows(sql, "tx_fiber_interrupt");
+        expect(countRows26).toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -613,9 +640,11 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         expect(error.reason._tag).toBe("SerializationError");
         assert.isTrue(error.isRetryable);
         yield* expectUsable(sql);
-        expect(yield* countRows(sql, "tx_commit_conflict")).toBe(1);
+        const countRows27 = yield* countRows(sql, "tx_commit_conflict");
+        expect(countRows27).toBe(1);
         yield* sql.withTransaction(sql`insert into tx_commit_conflict values (4)`);
-        expect(yield* countRows(sql, "tx_commit_conflict")).toBe(2);
+        const countRows28 = yield* countRows(sql, "tx_commit_conflict");
+        expect(countRows28).toBe(2);
       })
     );
 
@@ -640,9 +669,11 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         expect(error.reason._tag).toBe("SerializationError");
         assert.isTrue(error.isRetryable);
         yield* expectUsable(sql);
-        expect(yield* countRows(sql, "tx_statement_conflict")).toBe(0);
+        const countRows29 = yield* countRows(sql, "tx_statement_conflict");
+        expect(countRows29).toBe(0);
         yield* sql.withTransaction(sql`insert into tx_statement_conflict (id) values (2)`);
-        expect(yield* countRows(sql, "tx_statement_conflict")).toBe(1);
+        const countRows30 = yield* countRows(sql, "tx_statement_conflict");
+        expect(countRows30).toBe(1);
       })
     );
 
@@ -660,7 +691,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         yield* runRaw(conn2, "COMMIT");
 
         yield* expectUsable(sql);
-        expect(yield* countRows(sql, "cc")).toBe(0);
+        const countRows31 = yield* countRows(sql, "cc");
+        expect(countRows31).toBe(0);
       })
     );
   });

@@ -10,6 +10,15 @@ import * as S from "effect/Schema";
 import * as Protobuf from "protobufjs";
 import { DeliveryOutcome } from "./delivery-ledger.ts";
 
+class DeliveryResponseOperationError extends S.TaggedError<
+  DeliveryResponseOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "DeliveryResponseOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in delivery-response.ts." }
+) {}
+
 const $I = $RepoAiMetricsId.create("delivery-response");
 const MediaType = S.Literals(["application/json", "application/x-protobuf"]);
 /**
@@ -89,12 +98,14 @@ export const interpretDeliveryHttpReply = Effect.fn("AiMetrics.interpretDelivery
   return yield* Effect.gen(function* () {
     const decoded =
       reply.responseContentType === "application/json"
-        ? yield* Effect.try(() => new TextDecoder("utf-8", { fatal: true }).decode(reply.body)).pipe(
-            Effect.flatMap(decodeResponseJson)
-          )
-        : yield* Effect.try(() => wire.toObject(wire.decode(reply.body), { longs: String })).pipe(
-            Effect.flatMap(S.decodeUnknownEffect(response))
-          );
+        ? yield* Effect.try({
+            try: () => new TextDecoder("utf-8", { fatal: true }).decode(reply.body),
+            catch: (cause) => DeliveryResponseOperationError.make({ cause }),
+          }).pipe(Effect.flatMap(decodeResponseJson))
+        : yield* Effect.try({
+            try: () => wire.toObject(wire.decode(reply.body), { longs: String }),
+            catch: (cause) => DeliveryResponseOperationError.make({ cause }),
+          }).pipe(Effect.flatMap(S.decodeUnknownEffect(response)));
     const rejected = Number(decoded.partialSuccess?.rejectedSpans ?? 0);
     if (rejected > reply.sentSpans) return invalid;
     return rejected === 0

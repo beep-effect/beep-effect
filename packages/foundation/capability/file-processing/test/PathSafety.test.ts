@@ -33,8 +33,11 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
       });
 
       expect(target).toBe(path.join(root, "nested", "report.bin"));
-      expect(new TextDecoder().decode(yield* fs.readFile(target))).toBe("safe payload");
-      expect(yield* fs.readDirectory(path.dirname(target))).toEqual(["report.bin"]);
+      const argument = new TextDecoder();
+      const readFile1 = yield* fs.readFile(target);
+      expect(argument.decode(readFile1)).toBe("safe payload");
+      const readDirectory1 = yield* fs.readDirectory(path.dirname(target));
+      expect(readDirectory1).toEqual(["report.bin"]);
       yield* Effect.flip(fs.readLink(target));
       expect((yield* fs.stat(target)).mode & 0o777).toBe(0o600);
     })
@@ -58,8 +61,10 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         )
       );
 
-      expect(yield* Ref.get(makeDirectoryCalls)).toBe(0);
-      expect(yield* fs.readDirectory(root)).toEqual([]);
+      const got = yield* Ref.get(makeDirectoryCalls);
+      expect(got).toBe(0);
+      const readDirectory2 = yield* fs.readDirectory(root);
+      expect(readDirectory2).toEqual([]);
     })
   );
 
@@ -87,9 +92,12 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         )
       );
 
-      expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
-      expect(yield* fs.exists(path.join(root, "result.bin"))).toBe(false);
-      expect(yield* fs.exists(compromisedTemporaryDirectory)).toBe(false);
+      const readFileString3 = yield* fs.readFileString(outsideVictim);
+      expect(readFileString3).toBe("unchanged");
+      const exists4 = yield* fs.exists(path.join(root, "result.bin"));
+      expect(exists4).toBe(false);
+      const exists5 = yield* fs.exists(compromisedTemporaryDirectory);
+      expect(exists5).toBe(false);
     })
   );
 
@@ -102,7 +110,8 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
 
       yield* Effect.flip(writeFileWithinRootAtomically({ root, candidate: "blocked", bytes: payload }));
 
-      expect(yield* fs.readDirectory(root)).toEqual(["blocked"]);
+      const readDirectory6 = yield* fs.readDirectory(root);
+      expect(readDirectory6).toEqual(["blocked"]);
     })
   );
 
@@ -132,8 +141,10 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
       }).pipe(Effect.provideService(FileSystem.FileSystem, failingCleanupFileSystem));
 
       expect(target).toBe(path.join(root, "result.bin"));
-      expect(yield* Ref.get(cleanupAttempts)).toBe(1);
-      expect(yield* fs.readFileString(target)).toBe("safe payload");
+      const got7 = yield* Ref.get(cleanupAttempts);
+      expect(got7).toBe(1);
+      const readFileString8 = yield* fs.readFileString(target);
+      expect(readFileString8).toBe("safe payload");
     })
   );
 
@@ -163,7 +174,8 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
       }).pipe(Effect.provideService(FileSystem.FileSystem, failingCleanupFileSystem), Effect.flip);
 
       expect(error).toBe(cleanupFailure);
-      expect(yield* Ref.get(cleanupAttempts)).toBe(1);
+      const got9 = yield* Ref.get(cleanupAttempts);
+      expect(got9).toBe(1);
       expect((yield* fs.stat(`${root}/blocked`)).type).toBe("Directory");
     })
   );
@@ -191,8 +203,10 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "victim.bin", bytes: payload })
       );
 
-      expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
-      expect(yield* fs.readLink(configuredRoot)).toBe(outsideRoot);
+      const readFileString10 = yield* fs.readFileString(outsideVictim);
+      expect(readFileString10).toBe("unchanged");
+      const readLink11 = yield* fs.readLink(configuredRoot);
+      expect(readLink11).toBe(outsideRoot);
     })
   );
 
@@ -238,8 +252,10 @@ it.layer(PathSafetyTestLayer)("@beep/file-processing PathSafety — native files
         writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "linked.bin", bytes: payload })
       );
 
-      expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
-      expect(yield* fs.readLink(link)).toBe(outsideVictim);
+      const readFileString12 = yield* fs.readFileString(outsideVictim);
+      expect(readFileString12).toBe("unchanged");
+      const readLink13 = yield* fs.readLink(link);
+      expect(readLink13).toBe(outsideVictim);
     })
   );
 });

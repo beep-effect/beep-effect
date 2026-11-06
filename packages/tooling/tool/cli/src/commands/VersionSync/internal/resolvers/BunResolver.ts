@@ -10,6 +10,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
 import { SemVer } from "@beep/semver/SemVer";
 import { A, Str } from "@beep/utils";
 import * as Bool from "effect/Boolean";
@@ -22,7 +23,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { manifestParser } from "../../../../internal/ManifestRead.ts";
 import {
   NetworkUnavailableError,
   VersionCategoryReport,
@@ -280,7 +280,8 @@ export const resolveBunVersions: {
       .readFileString(pkgJsonPath)
       .pipe(VersionSyncError.mapError("Failed to read package.json", "package.json"));
 
-    const packageManagerField = extractPackageManagerVersion(yield* readPackageManagerField(pkgJsonContent));
+    const readPackageManagerField1 = yield* readPackageManagerField(pkgJsonContent);
+    const packageManagerField = extractPackageManagerVersion(readPackageManagerField1);
 
     const vercelJsonPath = path.join(repoRoot, "apps", "oip-web", "vercel.json");
     const vercelDocument = yield* fs.exists(vercelJsonPath).pipe(

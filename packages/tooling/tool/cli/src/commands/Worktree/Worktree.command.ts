@@ -10,6 +10,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { reportCommandError } from "@beep/repo-cli-kit/cli/CommandErrorFields";
+import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "@beep/utils/Array";
@@ -27,8 +29,6 @@ import { constFalse, dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { reportCommandError } from "../../internal/cli/CommandErrorFields.ts";
-import { isWithinRoot } from "../../internal/PathContainment.ts";
 import { ProcessPid, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "../Refs/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
@@ -536,13 +536,12 @@ export const addWorktree = Effect.fn("Worktree.addWorktree")(function* (
       )
     );
   }
-  const baseSha = Str.trim(
-    yield* runWorktreeGitCapture(
-      context.currentRoot,
-      ["rev-parse", "--verify", `${base}^{commit}`],
-      "Failed to resolve the worktree base."
-    )
+  const resultWorktreeGitCapture = yield* runWorktreeGitCapture(
+    context.currentRoot,
+    ["rev-parse", "--verify", `${base}^{commit}`],
+    "Failed to resolve the worktree base."
   );
+  const baseSha = Str.trim(resultWorktreeGitCapture);
   yield* Console.log(`  base: ${base} (${baseSha})`);
   yield* runStreamingStep(
     "git",
@@ -1309,7 +1308,8 @@ export const worktreeCommand = Command.make("worktree", {}, () =>
       "prepare",
       {},
       Effect.fn("Worktree.prepare")(function* () {
-        yield* installRegenerateMergeDriver(yield* findRepoRoot());
+        const foundRepoRoot = yield* findRepoRoot();
+        yield* installRegenerateMergeDriver(foundRepoRoot);
         yield* Console.log("Installed merge.regenerate in clone-local Git config.");
       })
     ).pipe(Command.withDescription("Install the local fail-closed projection merge driver")),

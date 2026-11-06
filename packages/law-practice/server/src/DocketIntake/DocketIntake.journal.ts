@@ -323,7 +323,8 @@ export const makeDocketFileJournalLayer = (
         Effect.provideService(Path.Path, path)
       );
       const mint = Effect.map(DateTime.now, makeDocketRunId);
-      const run = yield* Ref.make(yield* mint);
+      const mint1 = yield* mint;
+      const run = yield* Ref.make(mint1);
 
       return DocketIntakeJournal.of({
         append: Effect.fn("DocketJournal.append")(function* (entries) {

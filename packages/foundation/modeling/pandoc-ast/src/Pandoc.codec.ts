@@ -817,7 +817,7 @@ const decodeCiteInline = Effect.fn("Pandoc.decodeCiteInline")(function* (payload
 
 const decodeCaption = Effect.fn("Pandoc.decodeCaption")(function* (payload: unknown) {
   const [shortWire, blocksWire] = yield* decodeTableCaptionPairWire(payload);
-  const short = shortWire === null ? O.none() : O.some(yield* decodeInlines(shortWire));
+  const short = shortWire === null ? O.none() : yield* Effect.asSome(decodeInlines(shortWire));
   const blocks = yield* decodeBlockList(blocksWire);
   return PandocCaption.make({ blocks, short });
 });

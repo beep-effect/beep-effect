@@ -7,6 +7,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { readContainedFileStringNoFollow, writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
@@ -26,8 +30,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
-import { readContainedFileStringNoFollow, writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { acquireJournalFileLock, releaseJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
 import {
   appendProofJobAttemptTerminated,
@@ -36,8 +38,6 @@ import {
 import { processIdentityStatus, processStartIdentityForPid } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { detectRunScopeSupport } from "../../../internal/repo-run/RunScope.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
-import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./Ack.ts";
 import { appendYeetInboxRowOnce, YeetProofJobFinishedRow, yeetProofJobRowId } from "./Inbox.ts";
@@ -331,7 +331,8 @@ const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
     });
     return A.appendAll(own, A.flatten(children));
   });
-  return forwardedProofJobEnvironment(R.fromEntries(yield* collect([])));
+  const collect1 = yield* collect([]);
+  return forwardedProofJobEnvironment(R.fromEntries(collect1));
 });
 
 const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
@@ -368,8 +369,9 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
   const rawRead = Effect.fn("ProofJob.rawRead")(function* (id: UUID) {
     const read = yield* readContainedFileStringNoFollow(repoRoot, fileFor(id)).pipe(Effect.provide(context));
     if (!read.exists) return O.none<ProofJobRecord>();
-    if (O.isNone(read.contents))
+    if (O.isNone(read.contents)) {
       return yield* YeetCommandError.make({ message: "Job record is not a readable regular file." });
+    }
     const record = yield* codec.decode(read.contents.value);
     if (
       record.jobId !== id ||
@@ -383,7 +385,9 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
   }, Effect.mapError(guardError));
   const requireRecord = Effect.fn("ProofJob.requireRecord")(function* (id: UUID) {
     const record = yield* rawRead(id);
-    if (O.isNone(record)) return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
+    if (O.isNone(record)) {
+      return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
+    }
     return record.value;
   });
   // Take the named lock file under the jobs root and report whether this caller owns it.
@@ -563,7 +567,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
   const markPublishedLocked = Effect.fn("ProofJob.markPublishedLocked")(function* (id: UUID) {
     const record = yield* requireRecord(id);
     if (O.isSome(record.publishedAt)) return record;
-    return yield* save(ProofJobRecord.make({ ...record, publishedAt: O.some(yield* now) }));
+    return yield* save(ProofJobRecord.make({ ...record, publishedAt: yield* Effect.asSome(now) }));
   });
   // Publication is idempotent (the inbox row is appended once by id; the journal row only when
   // the attempt has no terminal row), so it always runs, and `publishedAt` is stamped afterwards
@@ -664,12 +668,14 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     const ids = A.getSomes(
       A.map(A.filter(entries, Str.endsWith(".json")), (entry) => decodeUUIDOption(Str.slice(0, -5)(entry)))
     );
-    const records = A.getSomes(yield* Effect.forEach(ids, read, { concurrency: 1 }));
+    const forEach2 = yield* Effect.forEach(ids, read, { concurrency: 1 });
+    const records = A.getSomes(forEach2);
     return A.sortWith(records, (record) => record.submittedAt, Order.flip(Order.String));
   });
   const list = loadList();
   const prune = Effect.fn("ProofJob.prune")(function* (keepTerminal: number) {
-    const stale = A.drop(A.filter(yield* list, isSettledProofJob), Math.max(0, keepTerminal));
+    const list3 = yield* list;
+    const stale = A.drop(A.filter(list3, isSettledProofJob), Math.max(0, keepTerminal));
     for (const record of stale) {
       for (const file of [record.unit.logPath, fileFor(record.jobId)]) {
         yield* readContainedFileStringNoFollow(repoRoot, file).pipe(
@@ -723,14 +729,17 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     finalize,
     withReadyMonitorSubmitLock,
     submit: Effect.fn("ProofJob.submit")(function* (submission: ProofJobSubmission) {
-      if ((yield* support) !== "active")
+      if ((yield* support) !== "active") {
         return yield* YeetCommandError.make({
           message: "Detached proof jobs require an active systemd user manager; no attached fallback was started.",
         });
-      if (submission.request.checkout !== repoRoot)
+      }
+      if (submission.request.checkout !== repoRoot) {
         return yield* YeetCommandError.make({ message: "Submission checkout does not match launcher root." });
+      }
       yield* prune(PROOF_JOB_RETENTION_BUDGET);
-      const jobId = yield* decodeUUID(yield* crypto.uuidV4()).pipe(Effect.mapError(guardError));
+      const uuidV44 = yield* crypto.uuidV4();
+      const jobId = yield* decodeUUID(uuidV44).pipe(Effect.mapError(guardError));
       const env = yield* proofJobEnvironment();
       const argv = stripProofJobSubmitFlags(submission.request.argv);
       const record = ProofJobRecord.make({
@@ -791,7 +800,8 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
         Effect.gen(function* () {
           const record = yield* requireRecord(id);
           if (isTerminalProofJobPhase(record.phase) || isSettledProofJob(record)) return O.none<ProofJobRecord>();
-          return O.some(yield* save(ProofJobRecord.make({ ...record, cancelRequestedAt: O.some(yield* now) })));
+          const save5 = yield* save(ProofJobRecord.make({ ...record, cancelRequestedAt: yield* Effect.asSome(now) }));
+          return O.some(save5);
         }),
         id
       );
@@ -819,7 +829,9 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       const pollUntilReturn = Effect.fnUntraced(function* (): Effect.fn.Return<ProofJobWaitResult, YeetCommandError> {
         while (true) {
           const found = yield* read(id);
-          if (O.isNone(found)) return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
+          if (O.isNone(found)) {
+            return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
+          }
           const record = found.value;
           if (isSettledProofJob(record)) {
             yield* writeYeetAckReceipt(
@@ -916,7 +928,8 @@ export const updateProofJobBookkeeping = Effect.fn("Yeet.updateProofJobBookkeepi
     const job = yield* configStringOption("BEEP_YEET_JOB_ID");
     if (O.isNone(job)) return;
     const jobId = yield* decodeUUID(job.value).pipe(Effect.mapError(YeetCommandError.new("Invalid proof job id.")));
-    yield* update(yield* ProofJobLauncher.make(repoRoot), jobId);
+    const made = yield* ProofJobLauncher.make(repoRoot);
+    yield* update(made, jobId);
   },
   Effect.catch((error) => Console.error(`[yeet] job bookkeeping failed: ${error.message}`))
 );

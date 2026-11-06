@@ -106,45 +106,34 @@ const encodedIdentity = (claimId: number, evidenceId: number, scenario: string) 
  */
 const seedScenario = Effect.fnUntraced(function* (scenario: string, fixture: number) {
   const db = yield* makeDrizzle();
-  const claimRows = yield* db
-    .insert(DbSchema.candidateClaim)
-    .values(
-      yield* Effect.fromResult(
-        toCandidateClaimInsert(
-          yield* decodeClaim({
-            ...productEntityFixtureInput("EpistemicCandidateClaim", fixture),
-            fixtureKey: `claim.${scenario}`,
-            lifecycle: "candidate",
-            snapshot: {},
-          })
-        )
-      )
-    )
-    .returning();
-  const evidenceRows = yield* db
-    .insert(DbSchema.evidence)
-    .values(
-      yield* Effect.fromResult(
-        toEvidenceInsert(
-          yield* decodeEvidence({
-            ...productEntityFixtureInput("EpistemicEvidence", fixture),
-            artifactFixtureKey: `artifact.${scenario}`,
-            span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
-            spanFixtureKey: `span.${scenario}`,
-          })
-        )
-      )
-    )
-    .returning();
+  const argument = db.insert(DbSchema.candidateClaim);
+  const decodedClaim = yield* decodeClaim({
+    ...productEntityFixtureInput("EpistemicCandidateClaim", fixture),
+    fixtureKey: `claim.${scenario}`,
+    lifecycle: "candidate",
+    snapshot: {},
+  });
+  const fromResult1 = yield* Effect.fromResult(toCandidateClaimInsert(decodedClaim));
+  const claimRows = yield* argument.values(fromResult1).returning();
+  const argument1 = db.insert(DbSchema.evidence);
+  const decodedEvidence = yield* decodeEvidence({
+    ...productEntityFixtureInput("EpistemicEvidence", fixture),
+    artifactFixtureKey: `artifact.${scenario}`,
+    span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
+    spanFixtureKey: `span.${scenario}`,
+  });
+  const fromResult2 = yield* Effect.fromResult(toEvidenceInsert(decodedEvidence));
+  const evidenceRows = yield* argument1.values(fromResult2).returning();
   const claimRow = yield* requireHead(claimRows, "the seeded candidate claim row");
   const evidenceRow = yield* requireHead(evidenceRows, "the seeded evidence row");
 
   const identity = encodedIdentity(claimRow.id, evidenceRow.id, scenario);
+  const decodedIdentity = yield* decodeIdentity(identity);
   return {
     claimId: claimRow.id,
     evidenceId: evidenceRow.id,
     identity,
-    logicalKey: logicalEdgeKey(yield* decodeIdentity(identity)),
+    logicalKey: logicalEdgeKey(decodedIdentity),
   };
 });
 
@@ -272,7 +261,9 @@ if (externalUrl.length === 0) {
           const sql = yield* currentSql;
           const writers = yield* twoWriters();
 
-          yield* writers[0].record(yield* recordFact(scenario.identity, { amount: "100" }, 1_000, 1_000));
+          const argument2 = writers[0];
+          const recordFact3 = yield* recordFact(scenario.identity, { amount: "100" }, 1_000, 1_000);
+          yield* argument2.record(recordFact3);
 
           const lockHeld = yield* Deferred.make<void>();
           const firstPid = yield* Deferred.make<number>();
@@ -392,7 +383,9 @@ if (externalUrl.length === 0) {
           const sql = yield* currentSql;
           const writers = yield* twoWriters();
 
-          const head = yield* writers[0].record(yield* recordFact(scenario.identity, { state: "held" }, 1_000, 1_000));
+          const argument3 = writers[0];
+          const recordFact4 = yield* recordFact(scenario.identity, { state: "held" }, 1_000, 1_000);
+          const head = yield* argument3.record(recordFact4);
           expect(head.version).toBe(1);
 
           const violation = yield* Effect.flip(sql`

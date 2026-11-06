@@ -10,9 +10,11 @@
  * @since 0.0.0
  */
 import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GraphQLDocument } from "@beep/github/GraphQL";
 import { $RepoCliId } from "@beep/identity/packages";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import { LiteralKit } from "@beep/schema";
 import { thunkTrue } from "@beep/utils";
 import * as A from "effect/Array";
@@ -29,9 +31,8 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GithubRest } from "../../../internal/github/index.ts";
-import { runGitOutput } from "../../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
@@ -39,9 +40,9 @@ import {
   makePrProvenanceServiceLive,
   PrRepository,
   PrSessionRecord,
-  parsePrProvenanceFooter,
   renderPrProvenance,
   splicePrProvenanceFooter,
+  stripPrProvenanceFooter,
   toPublicPrProvenance,
 } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
@@ -396,7 +397,7 @@ const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(
   ReconcileRequirements | SecureRandom.SecureRandom
 > {
   const readback = yield* readPrBody(prNumber);
-  const bodyDrifted = !Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody));
+  const bodyDrifted = !Str.Equivalence(stripPrProvenanceFooter(readback), stripPrProvenanceFooter(sourceBody));
   const footerMissing = !Str.Equivalence(splicePrProvenanceFooter(readback, rendered), readback);
   const outcome = bodyDrifted
     ? ProvenanceStampOutcome.make({
@@ -467,12 +468,6 @@ const readPrBody = Effect.fn("ProvenanceFooter.readPrBody")(function* (
   const pull = yield* GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(Effect.mapError(githubBodyFailure));
   return pull.body;
 });
-
-const bodyWithoutProvenanceFooter = (body: string): string =>
-  O.match(parsePrProvenanceFooter(body), {
-    onNone: () => Str.trimEnd(body),
-    onSome: ({ start, end }) => `${Str.trimEnd(Str.slice(0, start)(body))}${Str.slice(end)(body)}`,
-  });
 
 /**
  * Independent persistence outcomes for a locally detected PR session row.
@@ -661,7 +656,10 @@ export const makeCurrentPrSessionRecord = Effect.fn("ProvenanceFooter.makeRecord
 ) {
   const detector = yield* makePrProvenanceServiceLive();
   const provenance = yield* detector.detect(context.repoRoot, context.branch);
-  const headSha = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD"], yeetGitOutputErrorAdapter));
+  const git = yield* Git;
+  const headSha = yield* git
+    .revParse(context.repoRoot, "HEAD")
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), yeetGitOutputErrorAdapter)));
   const recordedAt = yield* DateTime.now;
   return PrSessionRecord.make({
     ...provenance,
@@ -733,7 +731,8 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
         const path = yield* Path.Path;
         const mirror = yield* runArtifactPathForContext(context, "provenance.json");
         yield* fs.makeDirectory(path.dirname(mirror), { recursive: true, mode: 0o700 });
-        yield* writeContainedFileString(path.dirname(mirror), mirror, yield* encodeRecord(record));
+        const encodedRecord = yield* encodeRecord(record);
+        yield* writeContainedFileString(path.dirname(mirror), mirror, encodedRecord);
       })
     );
   }).pipe(

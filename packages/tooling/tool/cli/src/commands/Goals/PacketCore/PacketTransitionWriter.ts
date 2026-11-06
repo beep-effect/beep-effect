@@ -22,6 +22,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe } from "@beep/utils";
 import * as Context from "effect/Context";
@@ -32,7 +33,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { PacketStreamError } from "./PacketCore.errors.ts";
 import {
   PacketDerivedState,
@@ -462,12 +462,11 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
       });
       events = A.append(events, genesis);
       seq = 1;
-      parent = O.some(
-        yield* packetEventDigest(genesis).pipe(
-          Effect.provideService(Digest.Digest, crypto),
-          Effect.mapError(streamErrorFromSchema(request.locator.packet, "genesis event could not be encoded"))
-        )
+      const pipe1 = yield* packetEventDigest(genesis).pipe(
+        Effect.provideService(Digest.Digest, crypto),
+        Effect.mapError(streamErrorFromSchema(request.locator.packet, "genesis event could not be encoded"))
       );
+      parent = O.some(pipe1);
     }
     return { events, seq, parent };
   });

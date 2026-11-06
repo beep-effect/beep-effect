@@ -251,8 +251,9 @@ describe("@beep/html conformance branch matrix", () => {
         ...P.make({ children: [] }),
         children: [malformedText],
       } as unknown as P;
+      const exit1 = yield* Effect.exit(conform(malformedParagraph));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(malformedParagraph)), {
+        Exit.match(exit1, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -281,8 +282,9 @@ describe("@beep/html conformance branch matrix", () => {
         children: [],
       } as unknown as Parameters<typeof inspectConformance>[0];
       expect(inspectConformance(unknownNode)).toStrictEqual([]);
+      const exit2 = yield* Effect.exit(conform(unknownNode));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(conform(unknownNode)), {
+        Exit.match(exit2, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -308,7 +310,8 @@ describe("@beep/html safe-policy branch matrix", () => {
         Div.make({ children: [] }),
       ];
       for (const root of safe) {
-        expect(yield* conform(root).pipe(Effect.map(inspectSafeHtml))).toStrictEqual([]);
+        const pipe3 = yield* conform(root).pipe(Effect.map(inspectSafeHtml));
+        expect(pipe3).toStrictEqual([]);
       }
 
       const issues = yield* conform(
@@ -328,7 +331,8 @@ describe("@beep/html safe-policy branch matrix", () => {
         Img.make({ alt: O.some("logo"), src: O.some("/logo.png") }),
       ];
       for (const root of safe) {
-        expect(yield* conform(root).pipe(Effect.map(inspectSafeHtml))).toStrictEqual([]);
+        const pipe4 = yield* conform(root).pipe(Effect.map(inspectSafeHtml));
+        expect(pipe4).toStrictEqual([]);
       }
 
       const denied = [
@@ -342,9 +346,8 @@ describe("@beep/html safe-policy branch matrix", () => {
         [Img.make({ alt: O.some("logo"), src: O.some("javascript:alert(1)") }), "unsafeUrl"],
       ] as const;
       for (const [root, rule] of denied) {
-        expect(yield* conform(root).pipe(Effect.map(inspectSafeHtml))).toContainEqual(
-          expect.objectContaining({ rule })
-        );
+        const pipe5 = yield* conform(root).pipe(Effect.map(inspectSafeHtml));
+        expect(pipe5).toContainEqual(expect.objectContaining({ rule }));
       }
     })
   );
@@ -355,18 +358,21 @@ describe("@beep/html serialization branch matrix", () => {
     Effect.gen(function* () {
       expect(text("value")).toEqual(Text.make({ value: "value" }));
       expect(comment("note")).toEqual(Comment.make({ value: "note" }));
-      expect(yield* pipe(comment("note"), serialize, Effect.map(untrustedHtmlValue))).toBe("<!--note-->");
-      expect(yield* pipe(Title.make({ content: "<title>" }), serialize, Effect.map(untrustedHtmlValue))).toBe(
-        "<title>&lt;title&gt;</title>"
+      const pipe6 = yield* pipe(comment("note"), serialize, Effect.map(untrustedHtmlValue));
+      expect(pipe6).toBe("<!--note-->");
+      const pipe7 = yield* pipe(Title.make({ content: "<title>" }), serialize, Effect.map(untrustedHtmlValue));
+      expect(pipe7).toBe("<title>&lt;title&gt;</title>");
+      const pipe8 = yield* pipe(Textarea.make({ content: "a & b" }), serialize, Effect.map(untrustedHtmlValue));
+      expect(pipe8).toBe("<textarea>a &amp; b</textarea>");
+      const pipe9 = yield* pipe(
+        Style.make({ content: "body > p { color: red; }" }),
+        serialize,
+        Effect.map(untrustedHtmlValue)
       );
-      expect(yield* pipe(Textarea.make({ content: "a & b" }), serialize, Effect.map(untrustedHtmlValue))).toBe(
-        "<textarea>a &amp; b</textarea>"
-      );
-      expect(
-        yield* pipe(Style.make({ content: "body > p { color: red; }" }), serialize, Effect.map(untrustedHtmlValue))
-      ).toBe("<style>body > p { color: red; }</style>");
+      expect(pipe9).toBe("<style>body > p { color: red; }</style>");
+      const exit10 = yield* Effect.exit(serialize(Plaintext.make({ content: "remainder" })));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(Plaintext.make({ content: "remainder" }))), {
+        Exit.match(exit10, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -384,14 +390,14 @@ describe("@beep/html serialization branch matrix", () => {
 
   it.effect("serializes optional and canonical doctypes and rejects every noncanonical component", () =>
     Effect.gen(function* () {
-      expect(yield* pipe(Document.make({ children: [] }), serialize, Effect.map(untrustedHtmlValue))).toBe("");
-      expect(
-        yield* pipe(
-          Document.make({ doctype: O.some(Doctype.html()), children: [] }),
-          serialize,
-          Effect.map(untrustedHtmlValue)
-        )
-      ).toBe("<!doctype html>");
+      const pipe11 = yield* pipe(Document.make({ children: [] }), serialize, Effect.map(untrustedHtmlValue));
+      expect(pipe11).toBe("");
+      const pipe12 = yield* pipe(
+        Document.make({ doctype: O.some(Doctype.html()), children: [] }),
+        serialize,
+        Effect.map(untrustedHtmlValue)
+      );
+      expect(pipe12).toBe("<!doctype html>");
 
       for (const doctype of [
         Doctype.make({}),
@@ -399,8 +405,9 @@ describe("@beep/html serialization branch matrix", () => {
         Doctype.make({ name: O.some("html"), publicId: O.some("legacy") }),
         Doctype.make({ name: O.some("html"), systemId: O.some("legacy") }),
       ]) {
+        const exit13 = yield* Effect.exit(serialize(Document.make({ doctype: O.some(doctype), children: [] })));
         assertExitFailure(
-          Exit.match(yield* Effect.exit(serialize(Document.make({ doctype: O.some(doctype), children: [] }))), {
+          Exit.match(exit13, {
             onSuccess: Exit.succeed,
             onFailure: (cause) =>
               Exit.failCause(
@@ -421,12 +428,15 @@ describe("@beep/html serialization branch matrix", () => {
     Effect.gen(function* () {
       const svg = ForeignElement.make({ namespace: "svg", name: "svg:path", children: [] });
       const math = ForeignElement.make({ namespace: "mathml", name: "mathml:math", children: [] });
-      expect(yield* pipe(svg, serialize, Effect.map(untrustedHtmlValue))).toBe("<svg:path></svg:path>");
-      expect(yield* pipe(math, serialize, Effect.map(untrustedHtmlValue))).toBe("<mathml:math></mathml:math>");
+      const pipe14 = yield* pipe(svg, serialize, Effect.map(untrustedHtmlValue));
+      expect(pipe14).toBe("<svg:path></svg:path>");
+      const pipe15 = yield* pipe(math, serialize, Effect.map(untrustedHtmlValue));
+      expect(pipe15).toBe("<mathml:math></mathml:math>");
 
       const mismatched = ForeignElement.make({ namespace: "svg", name: "mathml:path", children: [] });
+      const exit16 = yield* Effect.exit(serialize(mismatched));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(mismatched)), {
+        Exit.match(exit16, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -445,8 +455,9 @@ describe("@beep/html serialization branch matrix", () => {
         attributes: O.some({ viewbox: "0 0 1 1" }),
         children: [],
       });
+      const exit17 = yield* Effect.exit(serialize(badAttribute));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize(badAttribute)), {
+        Exit.match(exit17, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -466,7 +477,8 @@ describe("@beep/html serialization branch matrix", () => {
     Effect.gen(function* () {
       const root = Div.make({ children: [text("safe")] });
       const conformant = yield* conform(root);
-      expect(yield* pipe(conformant, serializeConformant, Effect.map(untrustedHtmlValue))).toBe("<div>safe</div>");
+      const pipe18 = yield* pipe(conformant, serializeConformant, Effect.map(untrustedHtmlValue));
+      expect(pipe18).toBe("<div>safe</div>");
       yield* enforceSafeHtml(conformant);
     })
   );
@@ -476,8 +488,9 @@ describe("@beep/html serialization branch matrix", () => {
       expect(() => conformantRoot({} as ConformantHtml)).toThrow();
       expect(() => safeHtmlAstConformant({} as SafeHtmlAst)).toThrow();
       expect(() => safeHtmlValue({} as SafeHtml)).toThrow();
+      const exit19 = yield* Effect.exit(serialize({} as Parameters<typeof serialize>[0]));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serialize({} as Parameters<typeof serialize>[0])), {
+        Exit.match(exit19, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(
@@ -490,8 +503,9 @@ describe("@beep/html serialization branch matrix", () => {
         }),
         Cause.fail("HtmlSerializeError")
       );
+      const exit20 = yield* Effect.exit(serializeSafe({} as SafeHtmlAst));
       assertExitFailure(
-        Exit.match(yield* Effect.exit(serializeSafe({} as SafeHtmlAst)), {
+        Exit.match(exit20, {
           onSuccess: Exit.succeed,
           onFailure: (cause) =>
             Exit.failCause(

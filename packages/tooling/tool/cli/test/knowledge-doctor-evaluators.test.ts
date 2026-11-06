@@ -450,13 +450,12 @@ describe("knowledge doctor domain evaluators", () => {
           onNone: () => Effect.succeed(A.empty<KnowledgeSpan>()),
           onSome: (treeSpans) => treeSpans(tree),
         });
-        const spans = A.appendAll(
-          A.appendAll(
-            A.appendAll(spansOf("docs/status.md", statusDoc), spansOf("docs/symbols.md", SYMBOL_DOC)),
-            spansOf("goals/demo/README.md", PACKET_FILES["goals/demo/README.md"])
-          ),
-          yield* skillSpans
+        const argument = A.appendAll(
+          A.appendAll(spansOf("docs/status.md", statusDoc), spansOf("docs/symbols.md", SYMBOL_DOC)),
+          spansOf("goals/demo/README.md", PACKET_FILES["goals/demo/README.md"])
         );
+        const skillSpans1 = yield* skillSpans;
+        const spans = A.appendAll(argument, skillSpans1);
         const verdicts = yield* knowledgeCounterfactualVerdicts(tree, spans, KNOWLEDGE_DOCTOR_EVALUATORS);
         assert.deepStrictEqual(notFailed(verdicts), []);
         const witnessTags = HashSet.fromIterable(A.map(verdicts, (verdict) => verdict.witness._tag));
@@ -472,7 +471,8 @@ describe("knowledge doctor domain evaluators", () => {
       Effect.fnUntraced(function* () {
         const tree = makeKnowledgeDoctorMemoryTree({ files: { ...PACKET_FILES, ...PACKAGE_FILES } });
         const withoutPhase = overlayWithout(tree, ManifestFieldWitness.make({ slug: "demo", field: "phases.P1" }));
-        const demo = A.findFirst(yield* withoutPhase.domain.packets, (facts) => facts.slug === "demo");
+        const packets1 = yield* withoutPhase.domain.packets;
+        const demo = A.findFirst(packets1, (facts) => facts.slug === "demo");
         assert.deepStrictEqual(
           O.map(demo, (facts) => facts.phaseIds),
           O.some(["P0"])
@@ -519,9 +519,10 @@ describe("knowledge doctor domain evaluators on this checkout", () => {
             A.map(liveRecords, (record) => [record.slug, record.manifestText])
           );
 
+          const packages2 = yield* tree.domain.packages;
           const treePackages = A.sort(
             A.map(
-              A.filter(yield* tree.domain.packages, (pkg) => pkg.manifestPath !== "package.json"),
+              A.filter(packages2, (pkg) => pkg.manifestPath !== "package.json"),
               (pkg) => pkg.name
             ),
             Str.Order
@@ -533,7 +534,8 @@ describe("knowledge doctor domain evaluators on this checkout", () => {
           assert.deepStrictEqual(treePackages, livePackages);
 
           const skillsDir = path.join(repoRoot, ".claude", "skills");
-          const liveSkills = yield* Effect.filter(A.sort(yield* fs.readDirectory(skillsDir), Str.Order), (name) =>
+          const readDirectory3 = yield* fs.readDirectory(skillsDir);
+          const liveSkills = yield* Effect.filter(A.sort(readDirectory3, Str.Order), (name) =>
             fs.exists(path.join(skillsDir, name, "SKILL.md"))
           );
           assert.deepStrictEqual((yield* tree.domain.skills).installed, liveSkills);

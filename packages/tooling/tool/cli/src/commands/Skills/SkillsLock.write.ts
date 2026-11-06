@@ -24,6 +24,7 @@
  */
 
 import { SkillsLockDocument, SkillsLockWriteReceipt, SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas";
+import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -35,7 +36,6 @@ import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { HUNK_LEDGER_FILE, HUNK_LEDGER_PATH } from "./internal/HunkLedger.ts";
 import { publishSkillsLockText, requireSkillsLockUnchanged } from "./internal/LockFile.ts";
 import { PATCH_ROOT, stagedPatchPath } from "./internal/PatchStaging.ts";
@@ -432,7 +432,8 @@ const publish = Effect.fn("SkillsLock.publish")(function* (
       .writeFileString(paths.lockStage, lockText, { flag: "wx" })
       .pipe(SkillsCommandError.mapError(`Refusing to stage: ${paths.lockStage} already exists.`, paths.lockStage));
     yield* requireSkillsLockUnchanged(paths.lockPath, plan.lockSha256);
-    yield* Ref.set(createdTarget, yield* swapPatchTree(paths, A.isReadonlyArrayNonEmpty(patchFiles) || carriedLedger));
+    const swapPatchTree1 = yield* swapPatchTree(paths, A.isReadonlyArrayNonEmpty(patchFiles) || carriedLedger);
+    yield* Ref.set(createdTarget, swapPatchTree1);
     yield* fs
       .rename(paths.lockStage, paths.lockPath)
       .pipe(SkillsCommandError.mapError(`Failed to publish ${SKILLS_LOCK_PATH}.`, paths.lockPath));

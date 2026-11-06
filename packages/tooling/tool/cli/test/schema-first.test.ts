@@ -538,9 +538,10 @@ describe("G4 foundation family-flip regression fixture", () => {
     Effect.gen(function* () {
       // Bind the fixture to the on-disk policy: if a future edit reverts a
       // family flip, these assertions fail. Flipped so far: foundation, drivers.
-      const policy = O.some(
-        yield* decodeUnknownSchemaCrispeningPolicyDocumentEffect(yield* Jsonc.parse(committedPolicyText))
-      );
+      const parsed = yield* Jsonc.parse(committedPolicyText);
+      const decodedUnknownSchemaCrispeningPolicyDocumentEffect =
+        yield* decodeUnknownSchemaCrispeningPolicyDocumentEffect(parsed);
+      const policy = O.some(decodedUnknownSchemaCrispeningPolicyDocumentEffect);
       const isExempt = isSchemaCrispeningPolicyExempt(policy);
 
       expect(isExempt(foundationViolation)).toBe(false);

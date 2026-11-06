@@ -1,10 +1,12 @@
 import { CoreVocab, make, mergeVocab } from "@beep/identity";
 import { $OntologyId } from "@beep/identity/packages";
 import { fold, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
+import { FactLiteral } from "@beep/ontology/Fold.models";
 import { OWLClass } from "@beep/ontology/Ontology.models";
+import { IRI } from "@beep/rdf/Iri";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -66,6 +68,20 @@ const findPredicate = (assembled: AssembledClass, keyName: string): O.Option<Ass
   );
 
 describe("Ontology.fold", () => {
+  it.effect("resolves an explicit literal datatype without losing its value", () =>
+    Effect.gen(function* () {
+      const assembled = yield* fold($I, {
+        label: "Typed literal",
+        schemas: [Claim],
+        triples: [[Claim, "rdfs:label", { value: 42, datatype: "http://www.w3.org/2001/XMLSchema#integer" }]],
+      });
+      const fact = O.getOrThrow(A.head(assembled.facts));
+      assertTrue(S.is(FactLiteral)(fact.object));
+      expect(fact.object).toMatchObject({ value: 42 });
+      assertSome(fact.object.datatypeIri, IRI.make("http://www.w3.org/2001/XMLSchema#integer"));
+    })
+  );
+
   it.effect("resolves class IRIs and tuple facts through schema identity annotations", () =>
     Effect.gen(function* () {
       const assembled = yield* assemble;
@@ -175,7 +191,8 @@ describe("Ontology.fold", () => {
 describe("Ontology.fold projections", () => {
   it.effect("projects JSON-LD context terms from class and predicate annotations", () =>
     Effect.gen(function* () {
-      const context = toContext(yield* assemble);
+      const assemble1 = yield* assemble;
+      const context = toContext(assemble1);
 
       expect(context.prefLabel).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
       expect(context.children).toEqual({ "@reverse": "http://www.w3.org/2000/01/rdf-schema#subClassOf" });
@@ -185,7 +202,8 @@ describe("Ontology.fold projections", () => {
 
   it.effect("projects bounded JSON-LD graph nodes and reverse facts", () =>
     Effect.gen(function* () {
-      const jsonLd = toJsonLd(yield* assemble);
+      const assemble2 = yield* assemble;
+      const jsonLd = toJsonLd(assemble2);
       const claimNode = pipe(
         jsonLd["@graph"],
         A.findFirst((node) => node["@id"] === "https://beep-effect.com/ns/patent/Claim"),

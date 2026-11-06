@@ -36,6 +36,8 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
+    "research/cache-baseline-request-strict-tier-p1.json",
+    "research/cache-baseline-review-strict-tier-p1.md",
     "research/source-survey.md",
     "research/strict-tier-design.md"
   ],

@@ -32,6 +32,12 @@ import type { Diagnostic, Program, Snapshot } from "@typescript/native/unstable/
 import type * as Scope from "effect/Scope";
 import type { TsNativeConfig } from "./TsNativeApi.models.ts";
 
+class TsNativeApiOperationError extends S.TaggedError<TsNativeApiOperationError, { readonly brand: unique symbol }>()(
+  "TsNativeApiOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in TsNativeApi.ts." }
+) {}
+
 const $I = $RepoUtilsId.create("TsNativeApi");
 
 /**
@@ -214,7 +220,10 @@ const make = Effect.fn("TsNativeApi.layer")(function* (config: TsNativeConfig) {
     onSome: (value) => Effect.succeed(resolve(value)),
     onNone: Effect.fn("TsNativeApi.resolveExecutable")(
       function* () {
-        const packageUrl = yield* Effect.try(() => new URL(import.meta.resolve("@effect/tsgo/package.json")));
+        const packageUrl = yield* Effect.try({
+          try: () => new URL(import.meta.resolve("@effect/tsgo/package.json")),
+          catch: (cause) => TsNativeApiOperationError.make({ cause }),
+        });
         const packageJson = yield* path.fromFileUrl(packageUrl);
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const handle = yield* spawner.spawn(

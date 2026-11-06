@@ -177,7 +177,8 @@ describe("LocalExec layers", () => {
   it.effect("layerTest defaults to None and accepts an override", () =>
     Effect.gen(function* () {
       const local = yield* LocalExec;
-      assertNone(yield* local.context);
+      const context1 = yield* local.context;
+      assertNone(context1);
     }).pipe(withLayer(LocalExec.layerTest()))
   );
 

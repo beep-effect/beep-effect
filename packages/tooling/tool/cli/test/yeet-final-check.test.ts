@@ -350,8 +350,10 @@ describe("planFinalCheckSteps", () => {
 describe("final-check flag parsing", () => {
   it.effect("selects every gate by default and a comma-separated subset in run order", () =>
     Effect.gen(function* () {
-      expect(yield* parseFinalCheckGates([])).toEqual(FinalCheckGate.literals);
-      expect(yield* parseFinalCheckGates(["docgen,check", " lint "])).toEqual(["lint", "check", "docgen"]);
+      const parsedFinalCheckGates = yield* parseFinalCheckGates([]);
+      expect(parsedFinalCheckGates).toEqual(FinalCheckGate.literals);
+      const parsedFinalCheckGates1 = yield* parseFinalCheckGates(["docgen,check", " lint "]);
+      expect(parsedFinalCheckGates1).toEqual(["lint", "check", "docgen"]);
     })
   );
 
@@ -483,7 +485,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
         expect(A.some(ran, Str.includes("gone.test.ts"))).toBe(false);
         assertSome(
           A.findFirst(diffs, Str.includes("moved.test.ts")),
-          `git diff --unified=0 --no-color --find-renames=50% ${BASE} HEAD -- old/test/moved.test.ts new/test/moved.test.ts`
+          `git diff --no-color --no-ext-diff --unified=0 --find-renames=50% --end-of-options ${BASE} HEAD -- old/test/moved.test.ts new/test/moved.test.ts`
         );
       })
     );
@@ -510,7 +512,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
   (it) => {
     it.effect("returns nothing when no test file was modified or renamed", () =>
       Effect.gen(function* () {
-        expect(yield* collectWith(() => ({}))).toEqual([]);
+        const collectWith2 = yield* collectWith(() => ({}));
+        expect(collectWith2).toEqual([]);
       })
     );
 
@@ -562,7 +565,8 @@ const seedBaseWorktree = Effect.fnUntraced(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = O.getOrElse(yield* configStringOption("HOME"), () => "/repo");
+  const configStringOption3 = yield* configStringOption("HOME");
+  const home = O.getOrElse(configStringOption3, () => "/repo");
   const baseRoot = path.join(home, ".cache", "beep", "final-check", `base-${Str.slice(0, 12)(BASE)}-0`);
   yield* Effect.forEach(
     files,
@@ -679,20 +683,24 @@ it.layer(platformWith(), { timeout: "30 seconds" })("final-check receipts on dis
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = "/repo";
-      assertNone(yield* readFinalCheckReceipt(root, HEAD));
+      const readFinalCheckReceipt4 = yield* readFinalCheckReceipt(root, HEAD);
+      assertNone(readFinalCheckReceipt4);
       const dir = path.join(root, FINAL_CHECK_RECEIPT_DIR);
       yield* fs.makeDirectory(dir, { recursive: true });
       const encoded = yield* encodeReceiptJson(receiptOf());
       yield* fs.writeFileString(path.join(dir, `${HEAD}.json`), encoded);
-      assertSome(yield* readFinalCheckReceipt(root, HEAD), receiptOf());
+      const readFinalCheckReceipt5 = yield* readFinalCheckReceipt(root, HEAD);
+      assertSome(readFinalCheckReceipt5, receiptOf());
       yield* fs.writeFileString(path.join(dir, `${BASE}.json`), "{not json");
-      assertNone(yield* readFinalCheckReceipt(root, BASE));
+      const readFinalCheckReceipt6 = yield* readFinalCheckReceipt(root, BASE);
+      assertNone(readFinalCheckReceipt6);
     })
   );
 
   it.effect("creates no merge-base worktree when nothing was rewritten", () =>
     Effect.gen(function* () {
-      expect(yield* verifyExpectationRewrites("/nonexistent-repo", BASE, [])).toEqual([]);
+      const verifyExpectationRewrites7 = yield* verifyExpectationRewrites("/nonexistent-repo", BASE, []);
+      expect(verifyExpectationRewrites7).toEqual([]);
     })
   );
 });

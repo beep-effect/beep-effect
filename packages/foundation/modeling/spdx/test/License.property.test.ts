@@ -18,7 +18,8 @@ describe("License property floor", () => {
         const encoded = yield* S.encodeEffect(License)(value);
         const decoded = yield* S.decodeEffect(License)(encoded);
         assertTrue(S.toEquivalence(License)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(License)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(License)(decoded);
+        assert.deepStrictEqual(value1, encoded);
         assert.strictEqual(decoded.toString(), value.id);
       }),
     runs

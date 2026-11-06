@@ -14,7 +14,7 @@
   "scripts": {
     "build": "bun run beep:build",
     "check": "bun run beep:check",
-    "coverage": "bunx vitest run --coverage",
+    "coverage": "bunx --bun vitest run --coverage --exclude=test/integration/** --exclude=test/PartyContactSource.boundary.test.ts",
     "docgen": "bun run beep:docgen",
     "doctest": "bun run beep:doctest",
     "lint": "bun run beep:lint",
@@ -24,14 +24,17 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
+    "test:integration": "bun run beep:test:integration",
     "beep:build": "tsrs -p tsconfig.json",
     "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
-    "beep:test": "bunx --bun vitest run",
-    "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit"
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/** --exclude=test/PartyContactSource.boundary.test.ts && bunx vitest run test/PartyContactSource.boundary.test.ts",
+    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+    "beep:check:tests": "tsrs -p test/tsconfig.json --noEmit",
+    "test:integration:parallel": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -49,9 +52,11 @@
     "./QuestionCalendar": "./src/QuestionCalendar/index.ts",
     "./ReviewFiles": "./src/ReviewFiles/index.ts",
     "./UsptoClaims": "./src/UsptoClaims/index.ts",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./PartyContactSource": "./src/PartyContactSource/index.ts"
   },
   "files": [
+    "assets/citation-html/**",
     "src/**/*.ts",
     "dist/**/*.js",
     "dist/**/*.js.map",
@@ -75,6 +80,7 @@
     "@beep/libpff": "workspace:^",
     "@beep/m365": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
+    "@beep/party-use-cases": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/provenance": "workspace:^",
@@ -83,6 +89,8 @@
     "@beep/tika": "workspace:^",
     "@beep/uspto": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    "@effect/platform-node": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
@@ -90,14 +98,14 @@
     "@beep/md": "workspace:^",
     "@beep/memfs": "workspace:^",
     "@beep/nlp": "workspace:^",
+    "@beep/repo-utils": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
-    "@effect/platform-bun": "catalog:",
-    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
+    "@typescript/native": "catalog:",
     "bun-types": "catalog:"
   }
 }

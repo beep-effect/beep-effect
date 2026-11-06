@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { GitHubApp } from "@beep/github/GitHubApp";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -16,7 +17,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { GitHubAppAuthLive, loadReviewerCredentials, mintReviewerToken } from "./GitHubAppAuth.ts";
 import { ReviewerError } from "./ReviewerErrors.ts";
 import { reviewerWire } from "./ReviewerModels.ts";
@@ -95,7 +95,8 @@ const completeCommand = Command.make(
           ? yield* readFile(options.annotationsFile.value).pipe(Effect.flatMap(reviewerWire.annotations))
           : [];
         const result = yield* reviewerWire.result({ ...options, summary, annotations });
-        yield* Console.log(yield* (yield* Reviewer).complete(options.id, result));
+        const complete1 = yield* (yield* Reviewer).complete(options.id, result);
+        yield* Console.log(complete1);
       })
     )
 );
@@ -114,7 +115,10 @@ const commentCommand = Command.make("comment").pipe(
     Command.make("upsert", { pr, bodyFile: Flag.String("body-file") }, ({ pr, bodyFile }) =>
       boundary(
         Effect.gen(function* () {
-          yield* Console.log(yield* (yield* Reviewer).upsert(pr, yield* readFile(bodyFile)));
+          const argument = yield* Reviewer;
+          const readFile1 = yield* readFile(bodyFile);
+          const upsert2 = yield* argument.upsert(pr, readFile1);
+          yield* Console.log(upsert2);
         })
       )
     ),
@@ -127,7 +131,8 @@ const reviewCommand = Command.make("review").pipe(
       boundary(
         Effect.gen(function* () {
           const input = yield* readFile(json).pipe(Effect.flatMap(reviewerWire.review));
-          yield* Console.log(yield* (yield* Reviewer).review(pr, sha, input));
+          const review3 = yield* (yield* Reviewer).review(pr, sha, input);
+          yield* Console.log(review3);
         })
       )
     ),
@@ -147,8 +152,9 @@ const rulesetCommand = Command.make("ruleset").pipe(
         boundary(
           Effect.gen(function* () {
             const appId = yield* Config.Number("BEEP_REVIEWER_APP_ID");
-            if (!Number.isSafeInteger(appId) || appId <= 0)
+            if (!Number.isSafeInteger(appId) || appId <= 0) {
               return yield* ReviewerError.make({ operation: "ruleset", message: "A positive App id is required." });
+            }
             yield* requireReviewerRuleset(
               appId,
               apply && !O.getOrElse(dryRun, () => false),
@@ -190,7 +196,8 @@ const l0Command = Command.make("l0", { pr, sha }, ({ pr, sha }) =>
         conclusion: "auto",
         annotations: [],
       });
-      yield* Console.log(yield* reviewer.complete(check, result));
+      const complete4 = yield* reviewer.complete(check, result);
+      yield* Console.log(complete4);
     })
   )
 ).pipe(Command.provide(authLayer));

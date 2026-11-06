@@ -118,39 +118,31 @@ describe("W1 corpus manifest", () => {
 
         expect(decoded).toEqual(manifest);
         expect(A.length(encoded.rows)).toBe(25);
-        pipe(
-          yield* rejectsManifest({
-            ...encoded,
-            rows: unsortedRows,
-            corpusHash: digestRows(unsortedRows),
-          }),
-          assertTrue
-        );
-        pipe(
-          yield* rejectsManifest({
-            ...encoded,
-            rows: duplicateRows,
-            corpusHash: digestRows(duplicateRows),
-          }),
-          assertTrue
-        );
-        pipe(
-          yield* rejectsManifest({
-            ...encoded,
-            selection: {
-              ...encoded.selection,
-              onDisk: 24,
-            },
-          }),
-          assertTrue
-        );
-        pipe(
-          yield* rejectsManifest({
-            ...encoded,
-            corpusHash: Sha256Hex.make(Str.repeat(64)("0")),
-          }),
-          assertTrue
-        );
+        const rejectsManifest1 = yield* rejectsManifest({
+          ...encoded,
+          rows: unsortedRows,
+          corpusHash: digestRows(unsortedRows),
+        });
+        pipe(rejectsManifest1, assertTrue);
+        const rejectsManifest2 = yield* rejectsManifest({
+          ...encoded,
+          rows: duplicateRows,
+          corpusHash: digestRows(duplicateRows),
+        });
+        pipe(rejectsManifest2, assertTrue);
+        const rejectsManifest3 = yield* rejectsManifest({
+          ...encoded,
+          selection: {
+            ...encoded.selection,
+            onDisk: 24,
+          },
+        });
+        pipe(rejectsManifest3, assertTrue);
+        const rejectsManifest4 = yield* rejectsManifest({
+          ...encoded,
+          corpusHash: Sha256Hex.make(Str.repeat(64)("0")),
+        });
+        pipe(rejectsManifest4, assertTrue);
       })
     );
   });
@@ -353,8 +345,10 @@ describe("F1 fixtures", () => {
             const second = yield* fs.readFile(path.join(secondDirectory, name));
             const committedHash = yield* hashBytes(committed);
 
-            expect(yield* hashBytes(first)).toBe(committedHash);
-            expect(yield* hashBytes(second)).toBe(committedHash);
+            const hashBytes5 = yield* hashBytes(first);
+            expect(hashBytes5).toBe(committedHash);
+            const hashBytes6 = yield* hashBytes(second);
+            expect(hashBytes6).toBe(committedHash);
           })
         );
         const truncated = yield* fs.readFile(path.join("fixtures/f1/documents", "pdf-truncated.pdf"));

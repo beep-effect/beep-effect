@@ -46,7 +46,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(Lockfile)(value);
       const decoded = yield* S.decodeEffect(Lockfile)(encoded);
       assertTrue(S.toEquivalence(Lockfile)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(Lockfile)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(Lockfile)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -59,7 +60,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(LockfileParseError)(value);
       const decoded = yield* S.decodeEffect(LockfileParseError)(encoded);
       assertTrue(S.toEquivalence(LockfileParseError)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(LockfileParseError)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(LockfileParseError)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );
@@ -72,7 +74,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(LockfileFramingError)(value);
       const decoded = yield* S.decodeEffect(LockfileFramingError)(encoded);
       assertTrue(S.toEquivalence(LockfileFramingError)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(LockfileFramingError)(decoded), encoded);
+      const value3 = yield* S.encodeEffect(LockfileFramingError)(decoded);
+      assert.deepStrictEqual(value3, encoded);
     }),
   runs
 );
@@ -120,8 +123,11 @@ for (const format of LockfileFormat.literals) {
         const read = format === "npm" || format === "bun" ? S.decodeEffect(JsonText) : Yaml.parse;
         const text = yield* render(document);
         const parsed = yield* Lockfile.parse(text, { format });
-        const canonical = yield* render(yield* read(text));
-        assert.strictEqual(yield* render(yield* read(canonical)), canonical);
+        const read4 = yield* read(text);
+        const canonical = yield* render(read4);
+        const read6 = yield* read(canonical);
+        const render5 = yield* render(read6);
+        assert.strictEqual(render5, canonical);
         const reparsed = yield* Lockfile.parse(canonical, { format });
         assertTrue(S.toEquivalence(Lockfile)(reparsed, parsed));
         assert.deepStrictEqual(

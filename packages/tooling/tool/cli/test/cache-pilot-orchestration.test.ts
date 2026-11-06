@@ -131,11 +131,39 @@ const faultDomain = LiteralKit([
   "source-write",
   "dependency-source-write",
   "dependency-link-write",
+  "source-mode-write",
+  "dependency-source-mode-write",
+  "source-directory-mode-write",
+  "dependency-directory-mode-write",
+  "source-root-mode-write",
+  "dependency-root-mode-write",
+  "source-empty-directory-write",
+  "dependency-empty-directory-write",
+  "source-directory-overflow",
   "missing-selected",
   "library-mismatch",
   "version-mismatch",
   "private-storage-alias",
   "owned-upload-failure",
+]);
+const modeFaultDomain = faultDomain.pick([
+  "source-mode-write",
+  "dependency-source-mode-write",
+  "source-directory-mode-write",
+  "dependency-directory-mode-write",
+  "source-root-mode-write",
+  "dependency-root-mode-write",
+]);
+const emptyDirectoryFaultDomain = faultDomain.pick([
+  "source-empty-directory-write",
+  "dependency-empty-directory-write",
+]);
+const sourceTreeFaultDomain = faultDomain.pick([
+  "source-write",
+  "dependency-source-write",
+  "dependency-link-write",
+  ...modeFaultDomain.literals,
+  ...emptyDirectoryFaultDomain.literals,
 ]);
 const encodePreview = S.encodeEffect(S.fromJsonString(CacheActivationPreview));
 const encodeDependencies = S.encodeEffect(S.fromJsonString(CacheDependencyMaterialization));
@@ -199,8 +227,12 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   const after = Str.replace('"cache":false', '"cache":true')(before);
   const sourceRoots = [path.join(root, "source-a"), path.join(root, "source-b")] as const;
   const writeSourceRoot = Effect.fnUntraced(function* (directory: string) {
-    for (const [relative, text] of R.toEntries(rootFiles)) yield* write(directory, relative, text);
-    if (profile) yield* writeCacheIdentityLintProfile(directory);
+    for (const [relative, text] of R.toEntries(rootFiles)) {
+      yield* write(directory, relative, text);
+    }
+    if (profile) {
+      yield* writeCacheIdentityLintProfile(directory);
+    }
     for (const packageDirectory of [identityDirectory, typesDirectory, ...R.values(additionalDirectories)]) {
       yield* write(directory, `${packageDirectory}/src/index.ts`, "export const fixture = 1;\n");
       yield* write(directory, `${packageDirectory}/README.md`, "Fixture\n");
@@ -310,15 +342,22 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     sourceConfiguration: digest,
   });
   const preview = CacheActivationPreview.make({ source, target: source, activation });
+  const argument = CacheClientPin.make({ ...pin, namespace: "test" });
+  const argument1 = path.join(root, "tool");
+  const argument2 = path.join(root, "tool");
+  const argument3 = path.join(root, "tool");
+  const encodedDependencies = yield* encodeDependencies(dependencies);
+  const argument4 = yield* reference("dependencies.json", encodedDependencies);
+  const encodedPreview = yield* encodePreview(preview);
   const request = CachePilotRequest.make({
     channel: "stable",
-    client: CacheClientPin.make({ ...pin, namespace: "test" }),
-    executable: path.join(root, "tool"),
-    biomeExecutable: path.join(root, "tool"),
-    nodeExecutable: path.join(root, "tool"),
-    dependencies: yield* reference("dependencies.json", yield* encodeDependencies(dependencies)),
+    client: argument,
+    executable: argument1,
+    biomeExecutable: argument2,
+    nodeExecutable: argument3,
+    dependencies: argument4,
     worktrees: sourceRoots,
-    activation: yield* reference("activation.json", yield* encodePreview(preview)),
+    activation: yield* reference("activation.json", encodedPreview),
     selection: "full",
   });
   vi.spyOn(Census, "collectCacheCensus").mockReturnValue(Effect.succeed(census));
@@ -365,7 +404,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   const spawner = ChildProcessSpawner.make(
     Effect.fnUntraced(
       function* (command) {
-        if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
+        if (!ChildProcess.isStandardCommand(command)) {
+          return yield* Effect.die("Unexpected piped command");
+        }
         const args = commandArgs(command);
         let stdout = "";
         let stderr = "";
@@ -393,14 +434,19 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
             );
             const identity = mounted(`${guest}/${identityDirectory}`);
             const types = mounted(`${guest}/${typesDirectory}`);
-            for (const overlay of [identity, types])
-              expect(yield* fs.readLink(path.join(overlay, "CLAUDE.md"))).toBe("AGENTS.md");
+            for (const overlay of [identity, types]) {
+              const readLink2 = yield* fs.readLink(path.join(overlay, "CLAUDE.md"));
+              expect(readLink2).toBe("AGENTS.md");
+            }
             for (const relative of R.values(additionalDirectories)) {
               const overlay = mounted(`${guest}/${relative}`);
-              expect(yield* fs.readLink(path.join(overlay, "CLAUDE.md"))).toBe("AGENTS.md");
-              expect(yield* fs.readFileString(path.join(overlay, "src/index.ts"))).toBe("export const fixture = 1;\n");
+              const readLink1 = yield* fs.readLink(path.join(overlay, "CLAUDE.md"));
+              expect(readLink1).toBe("AGENTS.md");
+              const readFileString2 = yield* fs.readFileString(path.join(overlay, "src/index.ts"));
+              expect(readFileString2).toBe("export const fixture = 1;\n");
               const logMount = mounted(`${guest}/${relative}/.turbo`);
-              expect(yield* fs.exists(logMount)).toBe(true);
+              const exists3 = yield* fs.exists(logMount);
+              expect(exists3).toBe(true);
             }
             const directory = path.dirname(identity);
             const label = path.basename(directory);
@@ -409,7 +455,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               if (label === "mutation-root-lint-config") {
                 const rootText = yield* fs.readFileString(mounted(`${guest}/biome.jsonc`));
                 const generatedText = yield* fs.readFileString(mounted(`${guest}/biome.identity.jsonc`));
-                expect(generatedText).toBe(yield* renderCacheIdentityLintProfile(rootText));
+                const expectation = expect(generatedText);
+                const renderCacheIdentityLintProfile3 = yield* renderCacheIdentityLintProfile(rootText);
+                expectation.toBe(renderCacheIdentityLintProfile3);
                 profileMutations.push(Str.includes("!**/src/index.ts")(rootText));
               }
             }
@@ -444,9 +492,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
             const observeTask = Effect.fn("PilotOrchestrationTest.observeTask")(function* () {
               calls.push(label);
               if (Str.startsWith("non-execution-")(label)) {
-                if (label === "non-execution-absent-script")
+                if (label === "non-execution-absent-script") {
                   yield* write(directory, "run/runs/run.json", '{"tasks":[]}');
-                else {
+                } else {
                   exitCode = 1;
                   stderr =
                     label === "non-execution-missing-root-config"
@@ -483,14 +531,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                   const dependencySource = yield* fs.readFileString(path.join(types, "src/index.ts"));
                   const mutation = Str.startsWith("mutation-")(label) && label !== "mutation-root-lint-config";
                   const mutationKey = () => (mutation ? label + (number === 0 ? "before" : "after") : "");
-                  const taskHash = Str.slice(
-                    0,
-                    16
-                  )(
-                    yield* hash(
-                      `${sourceText}:${readme}:${added}:${rootConfigBytes}:${profileBytes}:${env.VITE_COSMOS_SPIKE ?? "absent"}:${enabled}:${mutationKey()}:${A.join(signedRootInputs, ":")}:${isSignedInvocation() ? child + dependencySource : ""}`
-                    )
+                  const argument5 = Str.slice(0, 16);
+                  const hash4 = yield* hash(
+                    `${sourceText}:${readme}:${added}:${rootConfigBytes}:${profileBytes}:${env.VITE_COSMOS_SPIKE ?? "absent"}:${enabled}:${mutationKey()}:${A.join(signedRootInputs, ":")}:${isSignedInvocation() ? child + dependencySource : ""}`
                   );
+                  const taskHash = argument5(hash4);
                   const cacheFile = `cache/${taskHash}`;
                   let hit = reuse && (yield* fs.exists(path.join(directory, cacheFile)));
                   const readRemote = Effect.fn("PilotOrchestrationTest.readRemote")(function* () {
@@ -536,36 +581,92 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       )
                     );
                   exitCode = fixtureExitCode();
-                  if (reuse && exitCode === 0) yield* write(directory, cacheFile, "fixture");
+                  if (reuse && exitCode === 0) {
+                    yield* write(directory, cacheFile, "fixture");
+                  }
                   const corruptSource = Effect.fn("PilotOrchestrationTest.corruptSource")(function* () {
-                    if (fault === "source-write") yield* write(identity, "src/index.ts", "unexpected write");
-                    if (fault === "dependency-source-write")
+                    if (fault === "source-write") {
+                      yield* write(identity, "src/index.ts", "unexpected write");
+                    }
+                    if (fault === "dependency-source-write") {
                       yield* write(
                         mounted(`${guest}/packages/tooling/test-kit/test-runner`),
                         "src/index.ts",
                         "unexpected write"
                       );
+                    }
                     if (fault === "dependency-link-write") {
                       const link = path.join(mounted(`${guest}/packages/tooling/test-kit/test-runner`), "CLAUDE.md");
                       yield* fs.remove(link);
                       yield* fs.symlink("./AGENTS.md", link);
                     }
+                    yield* Match.value(fault).pipe(
+                      Match.when(
+                        S.is(modeFaultDomain),
+                        Effect.fn("PilotOrchestrationTest.corruptSourceMode")(function* (
+                          modeFault: typeof modeFaultDomain.Type
+                        ) {
+                          const sourceRoot = Match.value(modeFault).pipe(
+                            Match.whenOr(
+                              "source-mode-write",
+                              "source-directory-mode-write",
+                              "source-root-mode-write",
+                              () => identity
+                            ),
+                            Match.orElse(() => mounted(`${guest}/packages/tooling/test-kit/test-runner`))
+                          );
+                          const target = Match.value(modeFault).pipe(
+                            Match.whenOr("source-mode-write", "dependency-source-mode-write", () =>
+                              path.join(sourceRoot, "src/index.ts")
+                            ),
+                            Match.whenOr("source-directory-mode-write", "dependency-directory-mode-write", () =>
+                              path.join(sourceRoot, "src")
+                            ),
+                            Match.orElse(() => sourceRoot)
+                          );
+                          const info = yield* fs.stat(target);
+                          yield* fs.chmod(target, (info.mode & 0o777) ^ 0o020);
+                        })
+                      ),
+                      Match.when(
+                        S.is(emptyDirectoryFaultDomain),
+                        Effect.fn("PilotOrchestrationTest.addEmptyDirectory")(function* (
+                          directoryFault: typeof emptyDirectoryFaultDomain.Type
+                        ) {
+                          const sourceRoot =
+                            directoryFault === "source-empty-directory-write"
+                              ? identity
+                              : mounted(`${guest}/packages/tooling/test-kit/test-runner`);
+                          yield* fs.makeDirectory(path.join(sourceRoot, "src/unexpected-empty"));
+                        })
+                      ),
+                      Match.when(
+                        "source-directory-overflow",
+                        Effect.fn("PilotOrchestrationTest.exceedSourceEntryBound")(function* () {
+                          yield* Effect.forEach(
+                            A.range(1, 5000),
+                            (index) => fs.makeDirectory(path.join(identity, "src", `overflow-${index}`)),
+                            { concurrency: 16, discard: true }
+                          );
+                        })
+                      ),
+                      Match.orElse(() => Effect.void)
+                    );
                   });
                   const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
                     const selected = nativeTask(task, taskHash, hit, exitCode);
                     const dependency = A.map(selectedDependencies, (id) =>
                       nativeTask(id, "fedcba9876543210", fault === "dependency-hit")
                     );
-                    yield* write(
-                      directory,
-                      "run/runs/run.json",
-                      yield* encodeJson({
-                        id: `${label}-${number}`,
-                        turboVersion: pin.version,
-                        tasks: fault === "missing-selected" ? dependency : [selected, ...dependency],
-                      })
-                    );
-                    if (fault === "extra-summary") yield* write(directory, "run/runs/extra.json", "{}");
+                    const encodedJson = yield* encodeJson({
+                      id: `${label}-${number}`,
+                      turboVersion: pin.version,
+                      tasks: fault === "missing-selected" ? dependency : [selected, ...dependency],
+                    });
+                    yield* write(directory, "run/runs/run.json", encodedJson);
+                    if (fault === "extra-summary") {
+                      yield* write(directory, "run/runs/extra.json", "{}");
+                    }
                     yield* corruptSource();
                     const capturedLog = Effect.fn("PilotOrchestrationTest.capturedLog")(function* () {
                       let log = Match.value({ fault, guest }).pipe(
@@ -587,8 +688,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                           Match.when("capture-oversized-log", () => `${Str.repeat(65537)("x")}\n`),
                           Match.orElse(() => "ok\n")
                         );
-                        if (label === "capture-undeclared-output")
+                        if (label === "capture-undeclared-output") {
                           yield* write(directory, "identity-log/undeclared.txt", "probe");
+                        }
                       }
                       return log;
                     });
@@ -617,7 +719,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       }
                     });
                     yield* uploadRemote();
-                    if (fault !== "missing-log") yield* write(directory, "identity-log/turbo-lint.log", log);
+                    if (fault !== "missing-log") {
+                      yield* write(directory, "identity-log/turbo-lint.log", log);
+                    }
                     const progress = hit
                       ? "cache hit, replaying logs"
                       : enabled
@@ -626,7 +730,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                     stdout = `@beep/identity:lint: ${progress} ${taskHash}\n@beep/identity:lint: ${log}`;
                   });
                   yield* writeObservation();
-                  expect(yield* fs.exists(path.join(types, "src/index.ts"))).toBe(true);
+                  const exists4 = yield* fs.exists(path.join(types, "src/index.ts"));
+                  expect(exists4).toBe(true);
                 });
                 yield* observeExecution();
               }
@@ -770,8 +875,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     const serverContext = yield* Layer.build(NodeHttpServer.layerTest);
     const server = Context.get(serverContext, HttpServer.HttpServer);
     const address = server.address;
-    if (!NetAddress.isInetAddress(address))
+    if (!NetAddress.isInetAddress(address)) {
       return yield* CacheCommandError.new("Owned upload test server did not bind TCP.");
+    }
     const uploads = yield* Ref.make(A.empty<string>());
     yield* server.serve(
       Effect.gen(function* () {
@@ -1054,13 +1160,17 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(decoded.runtimeLinker).toEqual(receipt.runtimeLinker);
       const historical = yield* decodePilotReceipt(Struct.omit(encoded, ["runtimeLinker"]));
       assertNone(historical.runtimeLinker);
-      expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
+      const exists5 = yield* fs.exists(path.join(root, ".beep/cache/experiments"));
+      expect(exists5).toBe(false);
       expect(A.fromIterable(privateDirectories).length).toBeGreaterThan(0);
-      for (const directory of privateDirectories) expect(yield* fs.exists(directory)).toBe(false);
-      for (const source of sourceRoots)
-        expect(yield* fs.readFileString(path.join(source, identityDirectory, "src/index.ts"))).toBe(
-          "export const fixture = 1;\n"
-        );
+      for (const directory of privateDirectories) {
+        const exists8 = yield* fs.exists(directory);
+        expect(exists8).toBe(false);
+      }
+      for (const source of sourceRoots) {
+        const readFileString9 = yield* fs.readFileString(path.join(source, identityDirectory, "src/index.ts"));
+        expect(readFileString9).toBe("export const fixture = 1;\n");
+      }
     })
   );
 
@@ -1072,7 +1182,10 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(failure.message).toBe("Private pilot storage must remain outside every source input mount.");
       expect(calls).toHaveLength(0);
       expect(A.fromIterable(privateDirectories)).toHaveLength(1);
-      for (const directory of privateDirectories) expect(yield* fs.exists(directory)).toBe(false);
+      for (const directory of privateDirectories) {
+        const exists10 = yield* fs.exists(directory);
+        expect(exists10).toBe(false);
+      }
     })
   );
 
@@ -1098,7 +1211,8 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
         const { root, fs, path, run, privateDirectories } = yield* fixture("none", linker, false, true, closureFault);
         (yield* run().pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         expect(A.fromIterable(privateDirectories)).toHaveLength(0);
-        expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
+        const exists6 = yield* fs.exists(path.join(root, ".beep/cache/experiments"));
+        expect(exists6).toBe(false);
       })
     );
   }
@@ -1115,6 +1229,9 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
     "source-write",
     "dependency-source-write",
     "dependency-link-write",
+    ...modeFaultDomain.literals,
+    ...emptyDirectoryFaultDomain.literals,
+    "source-directory-overflow",
     "missing-selected",
     "library-mismatch",
     "version-mismatch",
@@ -1124,8 +1241,10 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       Effect.fnUntraced(function* () {
         const { root, fs, path, run, privateDirectories } = yield* fixture(fault);
         const failure = yield* run().pipe(Effect.flip);
-        if (fault === "dependency-link-write")
+        if (S.is(sourceTreeFaultDomain)(fault))
           expect(failure.message).toBe("Read-only pilot package source changed during execution.");
+        if (fault === "source-directory-overflow")
+          expect(failure.message).toBe("Pilot source tree exceeded its traversal bound.");
         if (fault === "initial-divergence") {
           expect(failure.message).toContain("absolute-root-equivalence");
           expect(failure.message).toContain("alternate-absolute-root");
@@ -1133,9 +1252,13 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
           expect(failure.message).not.toContain("different lint observation");
           expect(failure.message).not.toContain(root);
         }
-        expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
+        const exists7 = yield* fs.exists(path.join(root, ".beep/cache/experiments"));
+        expect(exists7).toBe(false);
         expect(A.fromIterable(privateDirectories).length).toBeGreaterThan(0);
-        for (const directory of privateDirectories) expect(yield* fs.exists(directory)).toBe(false);
+        for (const directory of privateDirectories) {
+          const exists11 = yield* fs.exists(directory);
+          expect(exists11).toBe(false);
+        }
       })
     );
   }

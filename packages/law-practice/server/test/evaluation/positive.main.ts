@@ -75,10 +75,11 @@ const verifyCanonicalText = Effect.fn("PositiveEvaluation.verifyCanonicalText")(
 ) {
   for (const expected of canonical.claims) {
     const actual = A.findFirst(report.claimSet.claims, (claim) => claim.claimNumber === expected.claimNumber);
-    if (O.isNone(actual) || actual.value.claimText !== expected.claimText)
+    if (O.isNone(actual) || actual.value.claimText !== expected.claimText) {
       return yield* StructuralEvaluationError.make({
         message: `Adapter canonical text mismatch: ${familyId}/${expected.claimNumber}`,
       });
+    }
   }
 });
 
@@ -88,36 +89,42 @@ const program = Effect.gen(function* () {
   const output = yield* Config.String("CLAIM_EVALUATION_OUTPUT");
   const packet = "goals/claim-element-antecedent-check/research";
   const fixtures = "packages/law-practice/domain/test/fixtures/claim-element/positive";
-  const reference = yield* S.decodeEffect(referenceFreezeJson)(
-    yield* fs.readFileString(`${packet}/reference-freeze.json`)
-  );
-  const sources = yield* S.decodeEffect(sourceFreezeJson)(
-    yield* fs.readFileString(`${packet}/positive-source-freeze.json`)
-  );
+  const argument = S.decodeEffect(referenceFreezeJson);
+  const readFileString1 = yield* fs.readFileString(`${packet}/reference-freeze.json`);
+  const reference = yield* argument(readFileString1);
+  const argument1 = S.decodeEffect(sourceFreezeJson);
+  const readFileString2 = yield* fs.readFileString(`${packet}/positive-source-freeze.json`);
+  const sources = yield* argument1(readFileString2);
   const implementationFile = yield* Config.String("CLAIM_IMPLEMENTATION_FREEZE").pipe(
     Config.withDefault(`${packet}/implementation-freeze.json`)
   );
-  const implementation = yield* S.decodeEffect(implementationFreezeJson)(yield* fs.readFileString(implementationFile));
+  const argument2 = S.decodeEffect(implementationFreezeJson);
+  const readFileString3 = yield* fs.readFileString(implementationFile);
+  const implementation = yield* argument2(readFileString3);
   const verifiedText = Effect.fn("PositiveEvaluation.verifiedText")(function* (path: string, expected: string) {
     const text = yield* fs.readFileString(path);
-    if (Hex.encode(yield* digest.digest(Digest.sha256, new TextEncoder().encode(text))) !== expected)
+    const digest1 = yield* digest.digest(Digest.sha256, new TextEncoder().encode(text));
+    if (Hex.encode(digest1) !== expected) {
       return yield* StructuralEvaluationError.make({ message: `Frozen file hash mismatch: ${path}` });
+    }
     return text;
   });
   // Verify the entire baseline before any prediction, not just the next family.
-  for (const file of implementation.files) yield* verifiedText(file.path, file.sha256);
+  for (const file of implementation.files) {
+    yield* verifiedText(file.path, file.sha256);
+  }
   const inputs = yield* Effect.forEach(reference.families, (family) =>
     Effect.gen(function* () {
       const source = yield* Effect.fromOption(
         A.findFirst(sources.selection, (row) => row.familyId === family.familyId)
       );
       const base = `${fixtures}/${family.familyId}`;
-      const gold = yield* S.decodeEffect(claimElementTreesJson)(
-        yield* verifiedText(`${base}/expected.json`, family.annotationSha256)
-      );
-      const canonical = yield* S.decodeEffect(canonicalJson)(
-        yield* verifiedText(`${base}/claims.json`, family.canonicalClaimsSha256)
-      );
+      const argument3 = S.decodeEffect(claimElementTreesJson);
+      const verifiedText4 = yield* verifiedText(`${base}/expected.json`, family.annotationSha256);
+      const gold = yield* argument3(verifiedText4);
+      const argument4 = S.decodeEffect(canonicalJson);
+      const verifiedText5 = yield* verifiedText(`${base}/claims.json`, family.canonicalClaimsSha256);
+      const canonical = yield* argument4(verifiedText5);
       yield* verifiedText(`${base}/extractor.json`, family.extractorReceiptSha256);
       yield* verifiedText(`${base}/critic.json`, family.criticReceiptSha256);
       const xml = yield* verifiedText(`${base}/source.claims.xml`, source.claimsXmlSha256);
@@ -132,10 +139,11 @@ const program = Effect.gen(function* () {
       return { family, source, gold, canonical, xml };
     })
   );
-  if (yield* fs.exists(output))
+  if (yield* fs.exists(output)) {
     return yield* StructuralEvaluationError.make({
       message: "Evaluation output already exists; choose a new directory to retain prior evidence.",
     });
+  }
   yield* fs.makeDirectory(output, { recursive: true });
   const rows = yield* Effect.forEach(
     inputs,
@@ -190,7 +198,9 @@ const program = Effect.gen(function* () {
         const predicted = O.match(report, { onNone: () => [], onSome: (value) => value.report.trees });
         if (O.isSome(report)) {
           yield* verifyCanonicalText(report.value, canonical, family.familyId);
-          yield* fs.writeFileString(`${output}/${family.familyId}.prediction.json`, yield* encodeReport(report.value));
+          const argument5 = `${output}/${family.familyId}.prediction.json`;
+          const encodedReport = yield* encodeReport(report.value);
+          yield* fs.writeFileString(argument5, encodedReport);
         }
         const scores = yield* compareStructuralFamily(gold, predicted);
         const selected = A.map(scores, (score) => {
@@ -236,20 +246,19 @@ const program = Effect.gen(function* () {
       }),
     { concurrency: 1 }
   );
-  yield* fs.writeFileString(
-    `${output}/results.json`,
-    yield* encode({
-      schemaVersion: "claim-antecedent-positive-evaluation/v1",
-      protocol: "strict-source-map/v1",
-      provisional: true,
-      actualAttorneyAgreementRecorded: false,
-      sourceSelectionDigest: sources.sourceSelectionDigest,
-      referenceSelectionDigest: reference.referenceSelectionDigest,
-      implementationDigest: implementation.implementationDigest,
-      transport: "offline recorded XML with explicit synthetic metadata aliases",
-      families: rows,
-    })
-  );
+  const argument6 = `${output}/results.json`;
+  const encoded = yield* encode({
+    schemaVersion: "claim-antecedent-positive-evaluation/v1",
+    protocol: "strict-source-map/v1",
+    provisional: true,
+    actualAttorneyAgreementRecorded: false,
+    sourceSelectionDigest: sources.sourceSelectionDigest,
+    referenceSelectionDigest: reference.referenceSelectionDigest,
+    implementationDigest: implementation.implementationDigest,
+    transport: "offline recorded XML with explicit synthetic metadata aliases",
+    families: rows,
+  });
+  yield* fs.writeFileString(argument6, encoded);
 });
 BunRuntime.runMain(
   Effect.gen(function* () {

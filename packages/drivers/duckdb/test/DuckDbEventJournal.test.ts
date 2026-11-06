@@ -32,7 +32,8 @@ it.layer(DuckDbTestLayer, { timeout: "30 seconds" })("DuckDB journal widths", (i
         entries: [EventJournal.RemoteEntry.make({ entry, remoteSequence: 4294967296 })],
         effect: () => Effect.void,
       });
-      assert.strictEqual(EventJournal.entryIdMillis(A.getUnsafe(yield* journal.entries, 0).id), now);
+      const entries1 = yield* journal.entries;
+      assert.strictEqual(EventJournal.entryIdMillis(A.getUnsafe(entries1, 0).id), now);
       const sql = yield* SqlClient.SqlClient;
       const [cursor] = yield* sql<{ next_sequence: number }>`SELECT next_sequence FROM width_remotes_cursors`;
       assert.strictEqual(cursor?.next_sequence, 4294967297);
@@ -40,8 +41,10 @@ it.layer(DuckDbTestLayer, { timeout: "30 seconds" })("DuckDB journal widths", (i
   );
   it.effect("layer defaults the upstream table names", () =>
     Effect.gen(function* () {
-      const journal = Context.get(yield* Layer.build(DuckDbEventJournal.layer()), EventJournal.EventJournal);
-      assert.deepStrictEqual(yield* journal.entries, []);
+      const build2 = yield* Layer.build(DuckDbEventJournal.layer());
+      const journal = Context.get(build2, EventJournal.EventJournal);
+      const entries3 = yield* journal.entries;
+      assert.deepStrictEqual(entries3, []);
     })
   );
 });

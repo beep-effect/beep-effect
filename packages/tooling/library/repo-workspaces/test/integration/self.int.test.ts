@@ -51,7 +51,8 @@ describe("the lab Bun workspace, discovered by the package that lives in it", ()
     it.effect("discovers itself, and its siblings", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
-        const names = A.map(yield* discovery.listPackages, (pkg) => pkg.name);
+        const listPackages1 = yield* discovery.listPackages;
+        const names = A.map(listPackages1, (pkg) => pkg.name);
         assert.include(names, "@beep/repo-workspaces");
         assert.include(names, "@beep/schema");
         assert.include(names, "@beep/utils");
@@ -146,7 +147,8 @@ describe("the sync escape hatch agrees with the Effect surface", () => {
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
         const info = yield* discovery.info;
-        const async = A.map(yield* discovery.listPackages, (pkg) => pkg.name).sort();
+        const listPackages2 = yield* discovery.listPackages;
+        const async = A.map(listPackages2, (pkg) => pkg.name).sort();
         const sync = A.map(getWorkspacePackagesSync(info.root, syncOps), (pkg) => pkg.name).sort();
         // The whole point of routing both through one GlobSet: if the sync
         // enumerator ever grows a private pattern semantic again, this diverges.

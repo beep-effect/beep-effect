@@ -7,6 +7,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatJsonc, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
+import { createRepoTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
@@ -28,9 +31,6 @@ import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import { Project } from "ts-morph";
-import { formatJsonc, writeArtifact } from "../../../internal/artifacts/index.ts";
-import { runCaptured } from "../../../internal/process/index.ts";
-import { createRepoTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import { SchemaParityCodemodError } from "../Lint.errors.ts";
 import {
   SchemaParityCodemodFacetCount,
@@ -493,17 +493,16 @@ export const runSchemaParityCodemod = Effect.fn("SchemaParityCodemod.run")(funct
   const rules = yield* resolveRules(options.rules);
   const scanned = yield* discoverSources(repoRoot, options.paths);
   const isCandidate = matchesAnyRule(rules);
-  const candidates = A.getSomes(
-    yield* Effect.forEach(
-      scanned,
-      (filePath) =>
-        fs.readFileString(filePath).pipe(
-          SchemaParityCodemodError.mapError(`Failed to read ${filePath}.`),
-          Effect.map((text) => (isCandidate(text) ? O.some(filePath) : O.none()))
-        ),
-      { concurrency: 16 }
-    )
+  const forEach1 = yield* Effect.forEach(
+    scanned,
+    (filePath) =>
+      fs.readFileString(filePath).pipe(
+        SchemaParityCodemodError.mapError(`Failed to read ${filePath}.`),
+        Effect.map((text) => (isCandidate(text) ? O.some(filePath) : O.none()))
+      ),
+    { concurrency: 16 }
   );
+  const candidates = A.getSomes(forEach1);
 
   const project = createRepoTsMorphProject({
     tsConfigFilePath: path.resolve(repoRoot, options.tsconfig),

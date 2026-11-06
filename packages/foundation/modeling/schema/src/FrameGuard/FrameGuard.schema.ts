@@ -292,7 +292,8 @@ export const FrameGuardHeader = S.Union([FrameGuardOption, S.Undefined]).pipe(
           return O.none<string>();
         }
 
-        return O.some(yield* formatFrameGuardValue(option));
+        const formatFrameGuardValue1 = yield* formatFrameGuardValue(option);
+        return O.some(formatFrameGuardValue1);
       });
 
     const create: (

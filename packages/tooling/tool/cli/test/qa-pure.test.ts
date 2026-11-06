@@ -1,5 +1,7 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Exiftool } from "@beep/exiftool";
 import { FFmpeg } from "@beep/ffmpeg";
+import { Git, StatusEntry } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ArtifactBudget,
@@ -36,6 +38,7 @@ import {
   CaptureTargetRequest,
   citedEventIds,
   citedPaths,
+  collectToolVersions,
   discoverRecordedVideo,
   EvidenceCrossCheck,
   extractionPlanPath,
@@ -93,14 +96,20 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { ActionEvent } from "@beep/qa-capture";
 
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
-const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer));
+// `Git` over the platform spawner: commit provenance reads HEAD and status through the kit (W7b, SPEC D-19).
+const SpawnerLayer = Git.layer.pipe(
+  Layer.provideMerge(NodeChildProcessSpawner.layer),
+  Layer.provideMerge(PlatformLayer)
+);
 
 const temporaryDirectory = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -285,9 +294,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         temporaryDirectory,
         Effect.fnUntraced(function* (dir) {
           const hintPath = `${dir}/record-hint.json`;
-          assertNone(yield* readRecordStartHint(hintPath));
+          const readRecordStartHint1 = yield* readRecordStartHint(hintPath);
+          assertNone(readRecordStartHint1);
           yield* writeRecordStartHint(hintPath, 1754000000123);
-          assertSome(yield* readRecordStartHint(hintPath), 1754000000123);
+          const readRecordStartHint2 = yield* readRecordStartHint(hintPath);
+          assertSome(readRecordStartHint2, 1754000000123);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -297,12 +308,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         temporaryDirectory,
         Effect.fnUntraced(function* (dir) {
           const budgetPath = `${dir}/artifact-budget.json`;
-          assertNone(yield* readArtifactBudget(budgetPath));
+          const readArtifactBudget3 = yield* readArtifactBudget(budgetPath);
+          assertNone(readArtifactBudget3);
           yield* writeArtifactBudget(budgetPath, ArtifactBudget.make({ maxTotalBytes: 4096 }));
           const budget = yield* readArtifactBudget(budgetPath);
           budget.pipe(O.isSome, assertTrue);
           assertSome(budget.pipe(O.map((value) => value.maxTotalBytes)), 4096);
-          assertNone(yield* readExtractionPlan(`${dir}/extraction-plan.json`));
+          const readExtractionPlan4 = yield* readExtractionPlan(`${dir}/extraction-plan.json`);
+          assertNone(readExtractionPlan4);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -313,9 +326,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         Effect.fnUntraced(function* (dir) {
           const fs = yield* FileSystem.FileSystem;
           const videoDir = `${dir}/video`;
-          assertNone(yield* discoverRecordedVideo(videoDir));
+          const discoverRecordedVideo5 = yield* discoverRecordedVideo(videoDir);
+          assertNone(discoverRecordedVideo5);
           yield* fs.makeDirectory(videoDir, { recursive: true });
-          assertNone(yield* discoverRecordedVideo(videoDir));
+          const discoverRecordedVideo6 = yield* discoverRecordedVideo(videoDir);
+          assertNone(discoverRecordedVideo6);
           yield* fs.writeFileString(`${videoDir}/notes.txt`, "ignore me");
           yield* fs.writeFileString(`${videoDir}/capture.mkv`, "not really a container");
           const found = yield* discoverRecordedVideo(videoDir);
@@ -336,13 +351,45 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
       );
+
+      it.effect("reads the HEAD sha and a dirty tree from the kit", () =>
+        Effect.gen(function* () {
+          const sha = "0123456789abcdef0123456789abcdef01234567";
+          const provenance = yield* readCommitProvenance("/repo").pipe(
+            Effect.provideService(
+              Git,
+              Git.makeTest({
+                revParse: () => Effect.succeed(sha),
+                status: () => Effect.succeed([StatusEntry.make({ x: " ", y: "M", path: "note.md" })]),
+              })
+            )
+          );
+          expect(provenance.sha).toBe(sha);
+          expect(provenance.dirty).toBe(true);
+        })
+      );
+
+      it.effect("records a tool's version only when its probe exits 0", () =>
+        Effect.gen(function* () {
+          const versions = yield* collectToolVersions().pipe(
+            provideSpawner(
+              ScriptedSpawner.make((command) =>
+                command === "ffmpeg" ? { stdout: "ffmpeg version 7.1\n" } : { exit: 1 }
+              )
+            )
+          );
+          expect(R.keys(versions)).toContain("ffmpeg");
+          expect(R.keys(versions)).not.toContain("exiftool");
+        })
+      );
     });
 
     it.effect("reports no legacy manifest when the file is absent", () =>
       Effect.flatMap(
         temporaryDirectory,
         Effect.fnUntraced(function* (dir) {
-          assertNone(yield* readLegacyManifest(`${dir}/manifest.json`));
+          const readLegacyManifest7 = yield* readLegacyManifest(`${dir}/manifest.json`);
+          assertNone(readLegacyManifest7);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -353,12 +400,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         Effect.fnUntraced(function* (dir) {
           const fs = yield* FileSystem.FileSystem;
           const manifestPath = `${dir}/manifest.json`;
-          yield* fs.writeFileString(
-            manifestPath,
-            yield* encodeJson({
-              scenarios: [{ assertions: [], name: "dock drag", notes: ["watch the sash"], screenshots: [] }],
-            })
-          );
+          const encodedJson = yield* encodeJson({
+            scenarios: [{ assertions: [], name: "dock drag", notes: ["watch the sash"], screenshots: [] }],
+          });
+          yield* fs.writeFileString(manifestPath, encodedJson);
           const legacy = yield* readLegacyManifest(manifestPath);
           legacy.pipe(O.isSome, assertTrue);
         })
@@ -373,22 +418,20 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         Effect.fnUntraced(function* (dir) {
           const fs = yield* FileSystem.FileSystem;
           const manifestPath = `${dir}/manifest.json`;
-          yield* fs.writeFileString(
-            manifestPath,
-            yield* encodeJson({
-              scenarios: [
-                {
-                  assertions: [
-                    { detail: "sash never moved", name: "sash moves", ok: false },
-                    { name: "no smear", ok: true },
-                  ],
-                  name: "drag",
-                  notes: ["watch the ghost"],
-                  screenshots: [],
-                },
-              ],
-            })
-          );
+          const encodedJson8 = yield* encodeJson({
+            scenarios: [
+              {
+                assertions: [
+                  { detail: "sash never moved", name: "sash moves", ok: false },
+                  { name: "no smear", ok: true },
+                ],
+                name: "drag",
+                notes: ["watch the ghost"],
+                screenshots: [],
+              },
+            ],
+          });
+          yield* fs.writeFileString(manifestPath, encodedJson8);
           const legacy = yield* readLegacyManifest(manifestPath);
           const timeline = renderTimeline(
             RenderTimelineOptions.make({
@@ -839,8 +882,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             );
             expect(outcome.artifacts).toEqual([]);
             expect(outcome.failures).toEqual([]);
-            expect(yield* fs.exists(path.join(layout.root, "extraction-plan.json"))).toBe(true);
-            expect(yield* fs.exists(path.join(layout.videoDir, "normalized.mp4"))).toBe(false);
+            const exists9 = yield* fs.exists(path.join(layout.root, "extraction-plan.json"));
+            expect(exists9).toBe(true);
+            const exists10 = yield* fs.exists(path.join(layout.videoDir, "normalized.mp4"));
+            expect(exists10).toBe(false);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );

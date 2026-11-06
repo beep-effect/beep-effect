@@ -120,10 +120,8 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
         yield* sql`INSERT INTO documents (id, digest, payload)
             VALUES (${document.id}, ${storedDocument.digest}, ${storedDocument.payload})
             ON CONFLICT (id) DO NOTHING`;
-        yield* ensureStoredDigest(
-          yield* sql<StoredRow>`SELECT digest, payload FROM documents WHERE id = ${document.id}`,
-          storedDocument.digest
-        );
+        const value1 = yield* sql<StoredRow>`SELECT digest, payload FROM documents WHERE id = ${document.id}`;
+        yield* ensureStoredDigest(value1, storedDocument.digest);
 
         const parseSnapshot = LedgerDocumentSnapshot.make({
           canonical,
@@ -135,10 +133,8 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
         yield* sql`INSERT INTO parse_outcomes (id, document, digest, payload)
             VALUES (${document.id}, ${document.id}, ${storedParse.digest}, ${storedParse.payload})
             ON CONFLICT (id) DO NOTHING`;
-        yield* ensureStoredDigest(
-          yield* sql<StoredRow>`SELECT digest, payload FROM parse_outcomes WHERE id = ${document.id}`,
-          storedParse.digest
-        );
+        const value2 = yield* sql<StoredRow>`SELECT digest, payload FROM parse_outcomes WHERE id = ${document.id}`;
+        yield* ensureStoredDigest(value2, storedParse.digest);
 
         yield* Effect.forEach(
           chunks,
@@ -147,10 +143,8 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
             yield* sql`INSERT INTO chunks (id, document, digest, payload)
                 VALUES (${chunk.id}, ${chunk.document}, ${stored.digest}, ${stored.payload})
                 ON CONFLICT (id) DO NOTHING`;
-            yield* ensureStoredDigest(
-              yield* sql<StoredRow>`SELECT digest, payload FROM chunks WHERE id = ${chunk.id}`,
-              stored.digest
-            );
+            const value3 = yield* sql<StoredRow>`SELECT digest, payload FROM chunks WHERE id = ${chunk.id}`;
+            yield* ensureStoredDigest(value3, stored.digest);
           }),
           { concurrency: 1, discard: true }
         );
@@ -180,10 +174,8 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
         yield* sql`INSERT INTO batches (id, document, lane, digest, payload)
             VALUES (${batchId}, ${document}, ${lane}, ${stored.digest}, ${stored.payload})
             ON CONFLICT (id) DO NOTHING`;
-        yield* ensureStoredDigest(
-          yield* sql<StoredRow>`SELECT digest, payload FROM batches WHERE id = ${batchId}`,
-          stored.digest
-        );
+        const value4 = yield* sql<StoredRow>`SELECT digest, payload FROM batches WHERE id = ${batchId}`;
+        yield* ensureStoredDigest(value4, stored.digest);
 
         if (outcome.outcome === "Extracted") {
           yield* Effect.forEach(
@@ -193,10 +185,8 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
               yield* sql`INSERT INTO claims (id, batch, document, lane, digest, payload)
                   VALUES (${claim.id}, ${outcome.batch.id}, ${claim.document}, ${lane}, ${claimStored.digest}, ${claimStored.payload})
                   ON CONFLICT (id) DO NOTHING`;
-              yield* ensureStoredDigest(
-                yield* sql<StoredRow>`SELECT digest, payload FROM claims WHERE id = ${claim.id}`,
-                claimStored.digest
-              );
+              const value5 = yield* sql<StoredRow>`SELECT digest, payload FROM claims WHERE id = ${claim.id}`;
+              yield* ensureStoredDigest(value5, claimStored.digest);
             }),
             { concurrency: 1, discard: true }
           );

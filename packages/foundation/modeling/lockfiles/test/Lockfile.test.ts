@@ -1653,9 +1653,8 @@ describe("supported lockfile versions", () => {
 
       // And a shape failure, which shares the "validation" stage with the
       // version gate — so stage alone cannot tell them apart, only the tag.
-      const shape = yield* Effect.flip(
-        Lockfile.parse(yield* S.encodeEffect(JsonString)({ lockfileVersion: 3 }), { format: "npm" })
-      );
+      const value1 = yield* S.encodeEffect(JsonString)({ lockfileVersion: 3 });
+      const shape = yield* Effect.flip(Lockfile.parse(value1, { format: "npm" }));
       assert.strictEqual(shape._tag, "LockfileParseError");
       if (shape._tag !== "LockfileParseError") return;
       assert.strictEqual(shape.stage, "validation");

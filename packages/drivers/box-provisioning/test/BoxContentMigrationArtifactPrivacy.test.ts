@@ -183,7 +183,8 @@ describe("@beep/box-provisioning content migration artifact privacy", () => {
     "encodes a journal entry built from the documented example fields to the baseline shape",
     Effect.fnUntraced(function* () {
       const entry = BoxContentJournalStarted.make(makeExampleContentJournalFields());
-      const decoded = yield* decodeJsonText(yield* encodeBoxContentJournalEntry(entry));
+      const encodedBoxContentJournalEntry = yield* encodeBoxContentJournalEntry(entry);
+      const decoded = yield* decodeJsonText(encodedBoxContentJournalEntry);
 
       expect(decoded).toEqual({
         ...journalBase,

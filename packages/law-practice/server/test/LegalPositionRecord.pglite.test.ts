@@ -226,21 +226,21 @@ const appendPosition = Effect.fnUntraced(function* (
   seed: number,
   org: number
 ) {
-  const frame = yield* repository.recordFrame(yield* frameFixture(seed, org));
-  const exercise = yield* repository.recordExercise(yield* exerciseFixture(seed, frame.id, org));
-  const correction = yield* repository.recordCorrection(yield* correctionFixture(seed, frame.id, org));
+  const frameFixture1 = yield* frameFixture(seed, org);
+  const frame = yield* repository.recordFrame(frameFixture1);
+  const exerciseFixture2 = yield* exerciseFixture(seed, frame.id, org);
+  const exercise = yield* repository.recordExercise(exerciseFixture2);
+  const correctionFixture3 = yield* correctionFixture(seed, frame.id, org);
+  const correction = yield* repository.recordCorrection(correctionFixture3);
   // Two relations per position, so their seeds are spread by a decade rather
   // than by one: adjacent calls would otherwise share a seed, and the public id
   // a seed derives is uniquely indexed, so the second append would be rejected.
-  const privilege = yield* repository.recordRelator(
-    yield* relatorFixture(seed * 10, "privilege", "act", exercise.id, org)
-  );
-  const claim = yield* repository.recordRelator(
-    yield* relatorFixture(seed * 10 + 1, "claim", "omission", exercise.id, org)
-  );
-  const candidate = yield* repository.recordOppositionCandidate(
-    yield* candidateFixture(seed, [privilege.id, claim.id], org)
-  );
+  const relatorFixture4 = yield* relatorFixture(seed * 10, "privilege", "act", exercise.id, org);
+  const privilege = yield* repository.recordRelator(relatorFixture4);
+  const relatorFixture5 = yield* relatorFixture(seed * 10 + 1, "claim", "omission", exercise.id, org);
+  const claim = yield* repository.recordRelator(relatorFixture5);
+  const candidateFixture6 = yield* candidateFixture(seed, [privilege.id, claim.id], org);
+  const candidate = yield* repository.recordOppositionCandidate(candidateFixture6);
 
   return { candidate, claim, correction, exercise, frame, privilege };
 });
@@ -336,10 +336,10 @@ if (!shouldRunPgliteIntegration) {
             expect(ids(candidates)).toEqual([recorded.candidate.id, other.candidate.id]);
 
             // The frame-keyed reads never return the other frame's records.
-            expect(ids(yield* repository.listExercises(underFrame(other.frame.id, 1)))).toEqual([other.exercise.id]);
-            expect(ids(yield* repository.listCorrections(underFrame(other.frame.id, 1)))).toEqual([
-              other.correction.id,
-            ]);
+            const listExercises7 = yield* repository.listExercises(underFrame(other.frame.id, 1));
+            expect(ids(listExercises7)).toEqual([other.exercise.id]);
+            const listCorrections8 = yield* repository.listCorrections(underFrame(other.frame.id, 1));
+            expect(ids(listCorrections8)).toEqual([other.correction.id]);
 
             // Round-tripping the recorded surface, not just the row count: what
             // came back out of jsonb must still be the position that went in. An
@@ -388,19 +388,25 @@ if (!shouldRunPgliteIntegration) {
           expect(orgIds(tenantOneCandidates)).toEqual([1, 1]);
           expect(orgIds(tenantOneRelators)).toEqual([1, 1, 1, 1]);
 
-          expect(ids(yield* repository.listFrames(tenant(2)))).toEqual([foreign.frame.id]);
-          expect(orgIds(yield* repository.listFrames(tenant(2)))).toEqual([2]);
-          expect(orgIds(yield* repository.listOppositionCandidates(tenant(2)))).toEqual([2]);
-          expect(orgIds(yield* repository.listRelators(tenant(2)))).toEqual([2, 2]);
+          const listFrames9 = yield* repository.listFrames(tenant(2));
+          expect(ids(listFrames9)).toEqual([foreign.frame.id]);
+          const listFrames10 = yield* repository.listFrames(tenant(2));
+          expect(orgIds(listFrames10)).toEqual([2]);
+          const listOppositionCandidates11 = yield* repository.listOppositionCandidates(tenant(2));
+          expect(orgIds(listOppositionCandidates11)).toEqual([2]);
+          const listRelators12 = yield* repository.listRelators(tenant(2));
+          expect(orgIds(listRelators12)).toEqual([2, 2]);
 
           // The frame-keyed reads are tenant-scoped first: tenant 1 asking for
           // tenant 2's frame gets nothing rather than tenant 2's records.
-          expect(ids(yield* repository.listExercises(underFrame(foreign.frame.id, 1)))).toEqual([]);
-          expect(ids(yield* repository.listCorrections(underFrame(foreign.frame.id, 1)))).toEqual([]);
-          expect(ids(yield* repository.listExercises(underFrame(foreign.frame.id, 2)))).toEqual([foreign.exercise.id]);
-          expect(ids(yield* repository.listCorrections(underFrame(foreign.frame.id, 2)))).toEqual([
-            foreign.correction.id,
-          ]);
+          const listExercises13 = yield* repository.listExercises(underFrame(foreign.frame.id, 1));
+          expect(ids(listExercises13)).toEqual([]);
+          const listCorrections14 = yield* repository.listCorrections(underFrame(foreign.frame.id, 1));
+          expect(ids(listCorrections14)).toEqual([]);
+          const listExercises15 = yield* repository.listExercises(underFrame(foreign.frame.id, 2));
+          expect(ids(listExercises15)).toEqual([foreign.exercise.id]);
+          const listCorrections16 = yield* repository.listCorrections(underFrame(foreign.frame.id, 2));
+          expect(ids(listCorrections16)).toEqual([foreign.correction.id]);
         }),
         PgliteIntegrationTimeout
       );
@@ -426,12 +432,12 @@ if (!shouldRunPgliteIntegration) {
 
           yield* forceSequentialScans();
 
-          expect(ids(yield* repository.listFrames(tenant(1)))).toEqual([earlier.frame.id, later.frame.id]);
-          expect(ids(yield* repository.listOppositionCandidates(tenant(1)))).toEqual([
-            earlier.candidate.id,
-            later.candidate.id,
-          ]);
-          expect(ids(yield* repository.listRelators(tenant(1)))).toEqual([
+          const listFrames17 = yield* repository.listFrames(tenant(1));
+          expect(ids(listFrames17)).toEqual([earlier.frame.id, later.frame.id]);
+          const listOppositionCandidates18 = yield* repository.listOppositionCandidates(tenant(1));
+          expect(ids(listOppositionCandidates18)).toEqual([earlier.candidate.id, later.candidate.id]);
+          const listRelators19 = yield* repository.listRelators(tenant(1));
+          expect(ids(listRelators19)).toEqual([
             earlier.privilege.id,
             earlier.claim.id,
             later.privilege.id,
@@ -440,29 +446,32 @@ if (!shouldRunPgliteIntegration) {
 
           // Preserve the original singleton frame identities before checking
           // ordering among multiple records within a separate frame.
-          expect(ids(yield* repository.listExercises(underFrame(earlier.frame.id, 1)))).toEqual([earlier.exercise.id]);
-          expect(ids(yield* repository.listExercises(underFrame(later.frame.id, 1)))).toEqual([later.exercise.id]);
+          const listExercises20 = yield* repository.listExercises(underFrame(earlier.frame.id, 1));
+          expect(ids(listExercises20)).toEqual([earlier.exercise.id]);
+          const listExercises21 = yield* repository.listExercises(underFrame(later.frame.id, 1));
+          expect(ids(listExercises21)).toEqual([later.exercise.id]);
 
-          const orderedFrame = yield* repository.recordFrame(yield* frameFixture(3, 1));
+          const frameFixture22 = yield* frameFixture(3, 1);
+          const orderedFrame = yield* repository.recordFrame(frameFixture22);
           yield* setNextRowId(301);
-          const highExercise = yield* repository.recordExercise(yield* exerciseFixture(301, orderedFrame.id, 1));
-          const highCorrection = yield* repository.recordCorrection(yield* correctionFixture(301, orderedFrame.id, 1));
+          const exerciseFixture23 = yield* exerciseFixture(301, orderedFrame.id, 1);
+          const highExercise = yield* repository.recordExercise(exerciseFixture23);
+          const correctionFixture24 = yield* correctionFixture(301, orderedFrame.id, 1);
+          const highCorrection = yield* repository.recordCorrection(correctionFixture24);
           yield* setNextRowId(201);
-          const lowExercise = yield* repository.recordExercise(yield* exerciseFixture(201, orderedFrame.id, 1));
-          const lowCorrection = yield* repository.recordCorrection(yield* correctionFixture(201, orderedFrame.id, 1));
+          const exerciseFixture25 = yield* exerciseFixture(201, orderedFrame.id, 1);
+          const lowExercise = yield* repository.recordExercise(exerciseFixture25);
+          const correctionFixture26 = yield* correctionFixture(201, orderedFrame.id, 1);
+          const lowCorrection = yield* repository.recordCorrection(correctionFixture26);
 
           expect(highExercise.id).toBe(301);
           expect(lowExercise.id).toBe(201);
           expect(highCorrection.id).toBe(301);
           expect(lowCorrection.id).toBe(201);
-          expect(ids(yield* repository.listExercises(underFrame(orderedFrame.id, 1)))).toEqual([
-            lowExercise.id,
-            highExercise.id,
-          ]);
-          expect(ids(yield* repository.listCorrections(underFrame(orderedFrame.id, 1)))).toEqual([
-            lowCorrection.id,
-            highCorrection.id,
-          ]);
+          const listExercises27 = yield* repository.listExercises(underFrame(orderedFrame.id, 1));
+          expect(ids(listExercises27)).toEqual([lowExercise.id, highExercise.id]);
+          const listCorrections28 = yield* repository.listCorrections(underFrame(orderedFrame.id, 1));
+          expect(ids(listCorrections28)).toEqual([lowCorrection.id, highCorrection.id]);
         }),
         PgliteIntegrationTimeout
       );

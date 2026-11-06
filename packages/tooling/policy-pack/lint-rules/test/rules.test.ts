@@ -68,8 +68,9 @@ describe("native linter process outcomes", () => {
           'process.stdout.write("partial report"); process.stderr.write("invalid configuration"); process.exit(2)',
         ])
       );
+      const result1 = yield* Effect.result(validateLinterProcess(result));
       assertFailure(
-        yield* Effect.result(validateLinterProcess(result)),
+        result1,
         LinterProcessError.make({
           exitCode: 2,
           stdout: "partial report",
@@ -92,8 +93,9 @@ describe("native linter process outcomes", () => {
       Effect.gen(function* () {
         const result = yield* Effect.sync(() => Bun.spawnSync(["bun", "-e", 'process.stdout.write("{}");']));
         const interrupted = { ...result, ...termination };
+        const result2 = yield* Effect.result(validateLinterProcess(interrupted));
         assertFailure(
-          yield* Effect.result(validateLinterProcess(interrupted)),
+          result2,
           LinterProcessError.make({
             exitCode: 0,
             stdout: "{}",
@@ -117,8 +119,9 @@ it.effect("bounds abnormal subprocess stream diagnostics", () =>
         'process.stdout.write("x".repeat(5000)); process.stderr.write("y".repeat(5000)); process.exit(2)',
       ])
     );
+    const result3 = yield* Effect.result(validateLinterProcess(result));
     assertFailure(
-      yield* Effect.result(validateLinterProcess(result)),
+      result3,
       LinterProcessError.make({
         exitCode: 2,
         stdout: Str.repeat(4096)("x"),

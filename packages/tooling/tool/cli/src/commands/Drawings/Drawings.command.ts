@@ -11,6 +11,7 @@
 import { M365 } from "@beep/m365";
 import { PdfTools } from "@beep/pdf-tools";
 import { isRequiredSeverity } from "@beep/qa-capture/QaInventory.schemas";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import {
   ConfirmationSource,
   EmailAddress,
@@ -34,7 +35,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { CriticPackRequest, CriticRunRequest } from "./Drawings.critics.schemas.ts";
 import {
   criticRunLine,
@@ -695,7 +695,9 @@ const runReviewStatus = Effect.fn("DrawingsCommand.reviewStatus")(function* (opt
   readonly round: number;
 }) {
   const review = yield* DrawingReview;
-  yield* printLines(renderReviewStatus(yield* review.status(yield* locationOf(options))));
+  const locationOf4 = yield* locationOf(options);
+  const status1 = yield* review.status(locationOf4);
+  yield* printLines(renderReviewStatus(status1));
 });
 
 const roundFlags = { corpusRoot: corpusRootFlag, matter: matterFlag, round: reviewRoundFlag };
@@ -737,15 +739,14 @@ const runDeliverRecord = Effect.fn("DrawingsCommand.deliverRecord")(function* (o
   readonly out: O.Option<string>;
 }) {
   const review = yield* DrawingReview;
-  const written = yield* review.deliver(
-    yield* S.decodeEffect(DeliverRequest)({
-      manifestPath: options.manifest,
-      draftPath: options.draft,
-      sentMessageId: options.sentMessageId,
-      internetMessageId: options.internetMessageId,
-      outPath: options.out,
-    }).pipe(Effect.mapError((cause) => DrawingsCommandError.new(cause, "The delivery flags are not valid.")))
-  );
+  const pipe2 = yield* S.decodeEffect(DeliverRequest)({
+    manifestPath: options.manifest,
+    draftPath: options.draft,
+    sentMessageId: options.sentMessageId,
+    internetMessageId: options.internetMessageId,
+    outPath: options.out,
+  }).pipe(Effect.mapError((cause) => DrawingsCommandError.new(cause, "The delivery flags are not valid.")));
+  const written = yield* review.deliver(pipe2);
   yield* printLines([
     `delivery of sheet set ${written.record.sheetSetSha256} recorded: ${written.path}`,
     ...A.map(
@@ -899,7 +900,8 @@ const runCriticsSummary = Effect.fn("DrawingsCommand.criticsSummary")(function* 
   readonly loopDir: string;
 }) {
   const critics = yield* DrawingCritics;
-  yield* printLines(Str.split(yield* critics.summary(options.loopDir), "\n"));
+  const summary3 = yield* critics.summary(options.loopDir);
+  yield* printLines(Str.split(summary3, "\n"));
 });
 
 const drawingsCriticsCommand = Command.make("critics", {}, () =>

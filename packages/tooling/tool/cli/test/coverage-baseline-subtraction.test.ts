@@ -91,7 +91,8 @@ describe("coverage baseline subtraction", () => {
         expect(Str.startsWith("// Coverage regression baseline. Do not edit by hand.")(text)).toBe(true);
         expect(Str.includes("@beep/courtlistener")(text)).toBe(false);
 
-        const decoded = yield* decodeUnknownBaselineProjection(yield* Jsonc.parse(text));
+        const parsed = yield* Jsonc.parse(text);
+        const decoded = yield* decodeUnknownBaselineProjection(parsed);
         expect(R.keys(decoded.packages)).toStrictEqual(["@beep/alpha"]);
         expect(R.keys(decoded.exemptions)).toStrictEqual([]);
         expect(R.keys(decoded.follow_ups)).toStrictEqual(["@beep/alpha"]);

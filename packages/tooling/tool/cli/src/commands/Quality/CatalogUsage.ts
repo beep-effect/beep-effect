@@ -9,7 +9,10 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
+import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
@@ -23,8 +26,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { manifestParser } from "../../internal/ManifestRead.ts";
-import { runCaptured } from "../../internal/process/index.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import {
   CatalogUsageFinding,
   CatalogUsageManifest,
@@ -76,7 +78,8 @@ type SourceEnvironment =
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 const defaultCatalogName = "default";
 const catalogProtocol = "catalog:";
@@ -341,7 +344,8 @@ export const readCatalogUsageManifest = Effect.fn("CatalogUsage.readCatalogUsage
 });
 
 const readManifest = Effect.fn("CatalogUsage.readManifest")(function* (repoRoot: string, file: string) {
-  return yield* readCatalogUsageManifest(yield* readText(repoRoot, file), file);
+  const readText1 = yield* readText(repoRoot, file);
+  return yield* readCatalogUsageManifest(readText1, file);
 });
 
 const readLockfilePackages = Effect.fn("CatalogUsage.readLockfilePackages")(function* (repoRoot: string) {
@@ -354,18 +358,24 @@ const readLockfilePackages = Effect.fn("CatalogUsage.readLockfilePackages")(func
 });
 
 const collectTemplateFiles = Effect.fn("CatalogUsage.collectTemplateFiles")(function* (repoRoot: string) {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["ls-files", "-z", "--", ...CATALOG_USAGE_TEMPLATE_SOURCES],
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(CatalogUsageError.mapError("Failed to list generator template sources."));
-  if (result.exitCode !== 0) {
-    return yield* CatalogUsageError.make({
-      message: `git ls-files for generator template sources failed with exit code ${result.exitCode}.`,
-    });
-  }
-  return pipe(Str.split(nulSeparator)(result.output), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  const git = yield* Git;
+  const entries = yield* git.lsFiles(repoRoot, { pathspec: CATALOG_USAGE_TEMPLATE_SOURCES }).pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.lsFiles(CATALOG_USAGE_TEMPLATE_SOURCES), {
+        onSpawnFailure: () => CatalogUsageError.new("Failed to list generator template sources."),
+        onNonZeroExit: ({ exitCode }) =>
+          CatalogUsageError.make({
+            message: `git ls-files for generator template sources failed with exit code ${exitCode}.`,
+          }),
+        onTruncated: O.none(),
+      })
+    )
+  );
+  return pipe(
+    entries,
+    A.map((entry) => Str.trim(entry.path)),
+    A.filter(Str.isNonEmpty)
+  );
 });
 
 const readCatalogUsageSnapshot = Effect.fn("CatalogUsage.readCatalogUsageSnapshot")(function* (
@@ -451,7 +461,8 @@ export const runCatalogUsageCheck = Effect.fn("CatalogUsage.runCatalogUsageCheck
   repoRoot: string
 ): Effect.fn.Return<CatalogUsageReport, CatalogUsageError, CatalogUsageSource> {
   const source = yield* CatalogUsageSource;
-  const report = catalogUsageReport(yield* source.snapshot(repoRoot));
+  const snapshot2 = yield* source.snapshot(repoRoot);
+  const report = catalogUsageReport(snapshot2);
   yield* Console.log(
     `[catalog-usage] catalog_entries=${report.catalogEntries} root_overrides=${report.rootOverrides} manifests=${report.manifests} template_references=${report.templateReferences} findings=${A.length(report.findings)}`
   );

@@ -88,8 +88,10 @@ describe("EntityId", () => {
   it.effect(
     "decodes generated entity ids and rejects invalid ids",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownEntityIdEntityIdValue(1)).toBe(1);
-      expect(yield* decodeUnknownEntityIdEntityIdValue(2_147_483_647)).toBe(2_147_483_647);
+      const decodedUnknownEntityIdEntityIdValue = yield* decodeUnknownEntityIdEntityIdValue(1);
+      expect(decodedUnknownEntityIdEntityIdValue).toBe(1);
+      const decodedUnknownEntityIdEntityIdValue1 = yield* decodeUnknownEntityIdEntityIdValue(2_147_483_647);
+      expect(decodedUnknownEntityIdEntityIdValue1).toBe(2_147_483_647);
       yield* expectFailure(decodeUnknownEntityIdEntityIdValue(0));
       yield* expectFailure(decodeUnknownEntityIdEntityIdValue(2_147_483_648));
       yield* expectFailure(decodeUnknownEntityIdEntityIdValue(1.5));
@@ -107,7 +109,8 @@ describe("EntityId", () => {
       expect(DocumentId.definition.description).toBe("SharedDocument entity identifier.");
       assertTrue(DocumentId.equivalence(cast(1), cast(1)));
       assertFalse(DocumentId.equivalence(cast(1), cast(2)));
-      expect(yield* decodeEffect(DocumentId)(1)).toBe(1);
+      const value = yield* decodeEffect(DocumentId)(1);
+      expect(value).toBe(1);
 
       assertTrue(S.is(DocumentId)(1));
       assertFalse(S.is(DocumentId)(0));
@@ -116,7 +119,8 @@ describe("EntityId", () => {
       assertNone(S.decodeOption(DocumentId)(0));
       const decoded = yield* S.decodeEffect(DocumentId)(1);
       expect(decoded).toBe(1);
-      expect(yield* S.encodeEffect(DocumentId)(decoded)).toBe(1);
+      const value2 = yield* S.encodeEffect(DocumentId)(decoded);
+      expect(value2).toBe(1);
       assertTrue(DocumentId.equivalence(decoded, decoded));
       assertFalse(DocumentId.equivalence(decoded, cast(2)));
       // The canonical static is the schema's own (per-AST memoized) equivalence, not the
@@ -362,13 +366,19 @@ describe("EntityRef and shared entity primitives", () => {
       if (Result.isSuccess(resultRef)) {
         expect(resultRef.success.id).toBe(1);
       }
-      expect(yield* decodeEntityRefEntityType("SharedDocument")).toBe("SharedDocument");
+      const decodedEntityRefEntityType = yield* decodeEntityRefEntityType("SharedDocument");
+      expect(decodedEntityRefEntityType).toBe("SharedDocument");
       const sha256Fixture = Str.repeat("a", 64);
-      expect(yield* decodePrimitivesSha256(sha256Fixture)).toBe(sha256Fixture);
-      expect(yield* decodePrimitivesEd25519Signature("signature")).toBe("signature");
-      expect(yield* decodePrimitivesEncryptionKeyId("key")).toBe("key");
-      expect(yield* decodePrimitivesHybridLogicalClock("clock")).toBe("clock");
-      expect(yield* decodePrimitivesVectorClock({ replica: 1 })).toEqual({ replica: 1 });
+      const decodedPrimitivesSha256 = yield* decodePrimitivesSha256(sha256Fixture);
+      expect(decodedPrimitivesSha256).toBe(sha256Fixture);
+      const decodedPrimitivesEd25519Signature = yield* decodePrimitivesEd25519Signature("signature");
+      expect(decodedPrimitivesEd25519Signature).toBe("signature");
+      const decodedPrimitivesEncryptionKeyId = yield* decodePrimitivesEncryptionKeyId("key");
+      expect(decodedPrimitivesEncryptionKeyId).toBe("key");
+      const decodedPrimitivesHybridLogicalClock = yield* decodePrimitivesHybridLogicalClock("clock");
+      expect(decodedPrimitivesHybridLogicalClock).toBe("clock");
+      const decodedPrimitivesVectorClock = yield* decodePrimitivesVectorClock({ replica: 1 });
+      expect(decodedPrimitivesVectorClock).toEqual({ replica: 1 });
     })
   );
 

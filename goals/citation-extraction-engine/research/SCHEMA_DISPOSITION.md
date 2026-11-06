@@ -32,6 +32,68 @@ consumer requires the provisional shapes. Repeat all three commands immediately
 before deletion and at close. `private: true` is supporting context, not
 consumer proof.
 
+## Applied law-slice migration — 2026-10-28
+
+The fresh consumer scan permits direct replacement of the provisional law
+shapes. `FullLawCitation` now replaces both `StatuteCitation` and
+`RegulationCitation` in the existing `Citation` union. Their files/barrels and
+unused `StatuteComponentSpan` are removed. The three standalone citation-type
+schemas are removed; `Citation.discriminants` and its derived subsets own tags.
+`FullCitation` and `ShortFormCitation` use `Citation.cases` members.
+
+The exact field mapping and remaining donor-only obligations are recorded in
+[the law schema receipt](../history/evidence/2026-10-28-law-schema.md).
+`CitationBase` and the other provisional forms still await migration; this is
+not a second citation hierarchy or a completed P1 claim. No donor disposition
+is completed by deleting its provisional representation.
+
+## Applied canonical model migration — 2026-10-28
+
+The existing union now contains semantic full case, short case, Id, supra,
+named reference, unknown, full law and full journal models. The source
+`ShortCaseCitation` maps to the existing repo name `ShortFormCaseCitation`;
+there is one branch. `FullJournalCitation` replaces the provisional journal
+class. Shared `CitationComponents`, `CitationPublication` and locator/date
+metadata replace the law-only primitive names without aliases.
+
+The recursive `Parenthetical`, its donor classification helper, five orphaned
+canonical component-span classes and `FullCaseCitation.toBlueBook` are removed.
+Parenthetical content remains semantic text; future document links reference
+IDs. Bluebook codecs, document relationships and the remaining provisional
+extension branches are unfinished. See the exact field ownership and source
+receipt in `history/evidence/2026-10-28-canonical-models.md`.
+
+## Applied provisional-contract retirement — 2026-10-28
+
+All 37 remaining mixed/locator/relationship/extension-stub value directories
+are retired. The existing `Citation` union now contains only its eight
+canonical semantic families; future extension branches require an evidenced
+disposition and semantic schema. This does not reject any donor behavior or
+complete a donor row. The old local `CitationId`, generic warning bag,
+array-index resolution result and duplicate span/locator contracts are gone.
+
+`SourceRef` is a non-citation consumer of the old module's `TextQuote` selector.
+Its exact encoded shape and annotation identity are preserved by moving that
+selector into `SourceRef`. It provides no verification or locator operations.
+`CitationSignal`, `HistorySignal` and `StructuredDate` remain pure concepts;
+no parser or formatting behavior is claimed by retaining their schemas.
+See `history/evidence/2026-10-28-provisional-retirement.md` for the complete
+path/hash inventory, consumer findings and remaining proof obligations.
+
+## Applied document relationship composition — 2026-10-28
+
+The Citation concept barrel now exports tagged resolution outcomes, authority
+representatives, runtime documents and explicit structural document receipts.
+Resolved edges alone encode authority membership. The derived member projection
+uses mention order; ambiguous candidates never become members. Shared graph
+checks require unique IDs, exact outcome coverage, closed references and
+coherent source/engine identity. Runtime mentions still require genuine
+prerequisite anchor proofs. Receipts cannot produce them by decoding.
+
+This is graph composition proof, not resolver correctness or whole-document
+server restoration. Parallel/string/history detection and all relevant donor
+obligations remain open. See the document-relationships evidence receipt.
+
 ## Target boundaries
 
 ### Semantic legal values

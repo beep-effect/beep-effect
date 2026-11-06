@@ -23,6 +23,7 @@ import { Fmt } from "@beep/cli-kit/Fmt";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -39,7 +40,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { makeYeetGhLoginOnce, provideYeetGhLogin, withYeetGhLogin } from "./GhOps.ts";
@@ -1346,7 +1346,8 @@ const seedCommentWatermark = Effect.fnUntraced(function* (
   const cursor = YeetMonitorCommentCursor.make({ createdAt: windowStart, id: 0 });
   const start = YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor, reviewBody: cursor });
   if (YeetMonitorCommentConsumer.is.shared(consumer)) return start;
-  return mergeWatermarks(yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber), start);
+  const loadedYeetMonitorCommentWatermark = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
+  return mergeWatermarks(loadedYeetMonitorCommentWatermark, start);
 });
 
 /**
@@ -1610,7 +1611,8 @@ export const replayYeetMonitorComments = Effect.fn("Yeet.replayMonitorComments")
 ): Effect.fn.Return<void, never, YeetGithubServices | FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
   const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber, consumer);
-  const since = earliestWatermarkAt(yield* Ref.get(watermarkRef));
+  const got = yield* Ref.get(watermarkRef);
+  const since = earliestWatermarkAt(got);
   if (O.isNone(persisted)) {
     return yield* Console.log(renderYeetMonitorCommentReplayStart(pullRequestNumber, since));
   }

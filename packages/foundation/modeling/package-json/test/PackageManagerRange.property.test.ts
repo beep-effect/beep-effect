@@ -17,7 +17,8 @@ const roundTrips = <T, E>(name: string, codec: S.Codec<T, E>, schema: S.Codec<T,
         const encoded = yield* S.encodeEffect(codec)(value);
         const decoded = yield* S.decodeEffect(codec)(encoded);
         assertTrue(S.toEquivalence(codec)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(codec)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(codec)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -52,12 +53,13 @@ describe("PackageManagerRange property floor", () => {
     [Arbitrary.schema(codec)],
     ([value]) =>
       Effect.gen(function* () {
-        const first = yield* S.decodeEffect(PackageManagerRange.FromString)(
-          yield* S.encodeEffect(PackageManagerRange.FromString)(value)
-        );
+        const argument = S.decodeEffect(PackageManagerRange.FromString);
+        const value3 = yield* S.encodeEffect(PackageManagerRange.FromString)(value);
+        const first = yield* argument(value3);
         const text = yield* S.encodeEffect(PackageManagerRange.FromString)(first);
         const second = yield* S.decodeEffect(PackageManagerRange.FromString)(text);
-        assert.strictEqual(yield* S.encodeEffect(PackageManagerRange.FromString)(second), text);
+        const value2 = yield* S.encodeEffect(PackageManagerRange.FromString)(second);
+        assert.strictEqual(value2, text);
         assert.deepStrictEqual(second, first);
       }),
     runs

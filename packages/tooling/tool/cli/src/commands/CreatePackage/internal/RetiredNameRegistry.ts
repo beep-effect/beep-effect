@@ -14,13 +14,13 @@
  * @since 0.0.0
  */
 
+import { RETIRED_REGISTRY_PATH, RetiredPackagesRegistry } from "@beep/repo-cli-kit/cli/Labs/index";
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { RETIRED_REGISTRY_PATH, RetiredPackagesRegistry } from "../../../internal/cli/Labs/index.ts";
 
 const RetiredPackagesRegistryFromJsonString = S.fromJsonString(RetiredPackagesRegistry, { space: 2 });
 const decodeRegistryJson = S.decodeEffect(RetiredPackagesRegistryFromJsonString);

@@ -726,6 +726,18 @@
         ]
       },
       {
+        "name": "@beep/party-server",
+        "patterns": [
+          "packages/party/server/src/**"
+        ]
+      },
+      {
+        "name": "@beep/party-use-cases",
+        "patterns": [
+          "packages/party/use-cases/src/**"
+        ]
+      },
+      {
         "name": "@beep/pdf-tools",
         "patterns": [
           "packages/drivers/pdf-tools/src/**"
@@ -855,6 +867,12 @@
         "name": "@beep/repo-cli",
         "patterns": [
           "packages/tooling/tool/cli/src/**"
+        ]
+      },
+      {
+        "name": "@beep/repo-cli-kit",
+        "patterns": [
+          "packages/tooling/library/repo-cli-kit/src/**"
         ]
       },
       {
@@ -1618,6 +1636,7 @@
           "@beep/box",
           "@beep/box-provisioning",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -1626,6 +1645,7 @@
           "@beep/box",
           "@beep/box-provisioning",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -2694,6 +2714,7 @@
       {
         "from": "@beep/html",
         "allow": [
+          "@beep/codegen-kit",
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
@@ -2702,6 +2723,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/codegen-kit",
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
@@ -2873,9 +2895,11 @@
           "@beep/md",
           "@beep/memfs",
           "@beep/nlp",
+          "@beep/party-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/repo-utils",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
@@ -2905,9 +2929,11 @@
           "@beep/md",
           "@beep/memfs",
           "@beep/nlp",
+          "@beep/party-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/repo-utils",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
@@ -3833,14 +3859,58 @@
       {
         "from": "@beep/party-domain",
         "allow": [
+          "@beep/epistemics",
           "@beep/identity",
           "@beep/party-domain",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemics",
+          "@beep/identity",
+          "@beep/party-domain",
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/party-server",
+        "allow": [
+          "@beep/epistemics",
+          "@beep/identity",
+          "@beep/m365",
+          "@beep/party-domain",
+          "@beep/party-server",
+          "@beep/party-use-cases",
+          "@beep/schema",
+          "@beep/shared-domain"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemics",
+          "@beep/identity",
+          "@beep/m365",
+          "@beep/party-domain",
+          "@beep/party-server",
+          "@beep/party-use-cases",
+          "@beep/schema",
+          "@beep/shared-domain"
+        ]
+      },
+      {
+        "from": "@beep/party-use-cases",
+        "allow": [
+          "@beep/identity",
+          "@beep/party-domain",
+          "@beep/party-use-cases",
+          "@beep/shared-domain"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/party-domain",
-          "@beep/schema"
+          "@beep/party-use-cases",
+          "@beep/shared-domain"
         ]
       },
       {
@@ -4443,6 +4513,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/jsonc",
+          "@beep/jsonl",
           "@beep/libpff",
           "@beep/lockfiles",
           "@beep/m365",
@@ -4459,9 +4530,12 @@
           "@beep/pdf-tools",
           "@beep/phoenix",
           "@beep/poppler",
+          "@beep/provenance",
           "@beep/qa-capture",
+          "@beep/rdf",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
+          "@beep/repo-cli-kit",
           "@beep/repo-configs",
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
@@ -4505,6 +4579,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/jsonc",
+          "@beep/jsonl",
           "@beep/libpff",
           "@beep/lockfiles",
           "@beep/m365",
@@ -4521,9 +4596,12 @@
           "@beep/pdf-tools",
           "@beep/phoenix",
           "@beep/poppler",
+          "@beep/provenance",
           "@beep/qa-capture",
+          "@beep/rdf",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
+          "@beep/repo-cli-kit",
           "@beep/repo-configs",
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
@@ -4545,6 +4623,47 @@
           "@beep/walker",
           "@beep/xdg",
           "@beep/yaml"
+        ]
+      },
+      {
+        "from": "@beep/repo-cli-kit",
+        "allow": [
+          "@beep/cli-kit",
+          "@beep/commands",
+          "@beep/duckdb",
+          "@beep/file-processing",
+          "@beep/git",
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/memfs",
+          "@beep/package-json",
+          "@beep/repo-cli-kit",
+          "@beep/repo-utils",
+          "@beep/repo-workspaces",
+          "@beep/runtime-env",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/cli-kit",
+          "@beep/commands",
+          "@beep/duckdb",
+          "@beep/file-processing",
+          "@beep/git",
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/memfs",
+          "@beep/package-json",
+          "@beep/repo-cli-kit",
+          "@beep/repo-utils",
+          "@beep/repo-workspaces",
+          "@beep/runtime-env",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -5103,6 +5222,7 @@
       {
         "from": "@beep/technical-drawing",
         "allow": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/technical-drawing",
@@ -5110,6 +5230,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/codegen-kit",
           "@beep/identity",
           "@beep/schema",
           "@beep/technical-drawing",

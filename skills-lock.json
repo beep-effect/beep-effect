@@ -23,7 +23,7 @@
         ".claude/skills/browser-qa-loop",
         ".agents/skills/browser-qa-loop"
       ],
-      "installedTreeHash": "52ef8d9fb36c05507e83aa549ddb941059a10682b104d11f71320dc520f42f3d"
+      "installedTreeHash": "298fab55c46893b400eed1243035bfbfb476906071af5d96a53732151143bdef"
     },
     "closeout": {
       "_tag": "local",
@@ -320,7 +320,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "26fc4a49936ea911d97a8fe56dcf5dcc2769d52f1de9264c5921bcd065747f4c"
+      "installedTreeHash": "ec23e849671eb5237d805700fb02133a34d5174c8e2106357a4f2fd3e80cf2c2"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -745,7 +745,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "957f78f00b4297c19eb3d1f862e7f320e9856f7dab2d71c0a47cddbfcd0d6b87"
+      "installedTreeHash": "f3e8571b9cfe31441414c7e77b17a128aa36058b385ad245bfe218990448e1be"
     }
   }
 }

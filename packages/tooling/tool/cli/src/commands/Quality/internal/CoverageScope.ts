@@ -34,11 +34,11 @@ const COVERAGE_FULL_INPUT_FILES = [
   "bun.lock",
   "package.json",
   COVERAGE_BASELINE_PATH,
+  "packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts",
   "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
   "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
   "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
   "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
-  "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
   "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts",
   "turbo.json",
   "tsconfig.base.json",
@@ -49,11 +49,11 @@ const COVERAGE_FULL_INPUT_FILES = [
 
 const COVERAGE_FULL_INPUT_PREFIXES = [
   ".github/",
+  "packages/tooling/library/repo-cli-kit/src/artifacts/",
+  "packages/tooling/library/repo-cli-kit/src/process/",
   "packages/tooling/test-kit/",
   "packages/tooling/tool/cli/src/commands/Ci/",
   "packages/tooling/tool/cli/src/commands/Quality/internal/Coverage",
-  "packages/tooling/tool/cli/src/internal/artifacts/",
-  "packages/tooling/tool/cli/src/internal/process/",
   "packages/tooling/tool/cli/src/internal/ratchet/",
 ] as const;
 
@@ -1411,10 +1411,7 @@ export const planWorkspaceCoverageAffectedScope = Effect.fn("CoverageScope.planW
     changedFiles: ReadonlyArray<string>,
     baselineRowPackages: O.Option<CoverageBaselineRowDelta> = O.none()
   ): Effect.fn.Return<CoverageAffectedScope, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
-    return planCoverageAffectedScopeWithBaseline(
-      yield* workspaceCoverageScopeOwners(repoRoot),
-      changedFiles,
-      baselineRowPackages
-    );
+    const workspaceCoverageScopeOwners1 = yield* workspaceCoverageScopeOwners(repoRoot);
+    return planCoverageAffectedScopeWithBaseline(workspaceCoverageScopeOwners1, changedFiles, baselineRowPackages);
   }
 );

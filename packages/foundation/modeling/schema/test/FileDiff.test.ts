@@ -43,7 +43,8 @@ describe("FileDiff.Info", () => {
         deletions: 1,
       });
 
-      expect(yield* encodeInfo(decoded)).toEqual({
+      const encodedInfo = yield* encodeInfo(decoded);
+      expect(encodedInfo).toEqual({
         status: "modified",
         file: "src/schema.ts",
         additions: 2,
@@ -114,7 +115,8 @@ describe("FileDiff.Info", () => {
     [InfoArbitrary],
     Effect.fnUntraced(function* ([info]) {
       const encoded = yield* encodeInfo(info);
-      const reencoded = yield* encodeInfo(yield* decodeInfo(encoded));
+      const decodedInfo = yield* decodeInfo(encoded);
+      const reencoded = yield* encodeInfo(decodedInfo);
 
       expect(reencoded).toEqual(encoded);
       return true;

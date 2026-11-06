@@ -1,0 +1,15 @@
+PASS absent-event
+PASS duplicate-event
+PASS absent-declaration
+PASS absent-iteration
+PASS duplicate-iteration
+PASS stale-payload-hash
+PASS wrong-exporter-hash
+PASS wrong-source-hash
+PASS absent-artifact
+PASS literal-loop-gap
+PASS self-parent-iteration
+PASS relation-with-valid-hash
+PASS identity-with-valid-hash
+PASS producer-with-valid-hash
+baseline passed; 14 actual-validator negative controls passed

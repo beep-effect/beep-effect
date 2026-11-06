@@ -65,51 +65,49 @@ describe("dock gesture command parity", () => {
       "opens at zero, middle, and a clamped upper index while supporting inactive insertion",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "open-two-clamped",
-              OpenPanelCommand.make({
-                panel: panelTwo,
-                placement: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(99)) }),
-              })
-            )
+        const transition1 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        let state = (yield* requireChanged(transition1)).state;
+        const transition2 = yield* engine.transition(
+          state,
+          envelope(
+            "open-two-clamped",
+            OpenPanelCommand.make({
+              panel: panelTwo,
+              placement: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(99)) }),
+            })
           )
-        )).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "open-three-zero-inactive",
-              OpenPanelCommand.make({
-                panel: panelThree,
-                placement: TabPlacement.make({
-                  groupId: groupOne,
-                  index: O.some(S.Natural.make(0)),
-                  activate: false,
-                }),
-              })
-            )
+        );
+        state = (yield* requireChanged(transition2)).state;
+        const transition3 = yield* engine.transition(
+          state,
+          envelope(
+            "open-three-zero-inactive",
+            OpenPanelCommand.make({
+              panel: panelThree,
+              placement: TabPlacement.make({
+                groupId: groupOne,
+                index: O.some(S.Natural.make(0)),
+                activate: false,
+              }),
+            })
           )
-        )).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "open-four-middle-inactive",
-              OpenPanelCommand.make({
-                panel: panelFour,
-                placement: TabPlacement.make({
-                  groupId: groupOne,
-                  index: O.some(S.Natural.make(1)),
-                  activate: false,
-                }),
-              })
-            )
+        );
+        state = (yield* requireChanged(transition3)).state;
+        const transition4 = yield* engine.transition(
+          state,
+          envelope(
+            "open-four-middle-inactive",
+            OpenPanelCommand.make({
+              panel: panelFour,
+              placement: TabPlacement.make({
+                groupId: groupOne,
+                index: O.some(S.Natural.make(1)),
+                activate: false,
+              }),
+            })
           )
-        )).state;
+        );
+        state = (yield* requireChanged(transition4)).state;
         const tabs = O.getOrThrow(DockWorkspace.findTabs(state, groupOne));
         expect(ids(tabs)).toEqual([panelThree.id, panelFour.id, panelOne.id, panelTwo.id]);
         expect(tabs.active.id).toBe(panelTwo.id);
@@ -120,43 +118,42 @@ describe("dock gesture command parity", () => {
       "reorders active and inactive panels without changing active identity and reports an indexed no-op",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelTwo))).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "open-three",
-              OpenPanelCommand.make({ panel: panelThree, placement: TabPlacement.make({ groupId: groupOne }) })
-            )
-          )
-        )).state;
-        const movedActive = yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "reorder-active",
-              MovePanelCommand.make({
-                panelId: panelThree.id,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(0)) }),
-              })
-            )
+        const transition5 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        let state = (yield* requireChanged(transition5)).state;
+        const transition6 = yield* engine.transition(state, openPanelTwo);
+        state = (yield* requireChanged(transition6)).state;
+        const transition7 = yield* engine.transition(
+          state,
+          envelope(
+            "open-three",
+            OpenPanelCommand.make({ panel: panelThree, placement: TabPlacement.make({ groupId: groupOne }) })
           )
         );
+        state = (yield* requireChanged(transition7)).state;
+        const transition8 = yield* engine.transition(
+          state,
+          envelope(
+            "reorder-active",
+            MovePanelCommand.make({
+              panelId: panelThree.id,
+              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(0)) }),
+            })
+          )
+        );
+        const movedActive = yield* requireChanged(transition8);
         expect(movedActive.events[0]).toMatchObject({ kind: "panelReordered", index: 0 });
         state = movedActive.state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "reorder-inactive",
-              MovePanelCommand.make({
-                panelId: panelOne.id,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(2)) }),
-              })
-            )
+        const transition9 = yield* engine.transition(
+          state,
+          envelope(
+            "reorder-inactive",
+            MovePanelCommand.make({
+              panelId: panelOne.id,
+              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(2)) }),
+            })
           )
-        )).state;
+        );
+        state = (yield* requireChanged(transition9)).state;
         const tabs = O.getOrThrow(DockWorkspace.findTabs(state, groupOne));
         expect(ids(tabs)).toEqual([panelThree.id, panelTwo.id, panelOne.id]);
         expect(tabs.active.id).toBe(panelThree.id);
@@ -205,31 +202,30 @@ describe("dock gesture command parity", () => {
           )
         );
         expect(emptyFailure).toMatchObject({ reason: "workspace-empty" });
-        const root = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        const left = yield* requireChanged(
-          yield* engine.transition(
-            root,
-            envelope(
-              "root-left",
-              OpenPanelCommand.make({
-                panel: panelTwo,
-                placement: RootSplitPlacement.make({ side: "left", splitId: splitOne, newGroupId: groupTwo }),
-              })
-            )
+        const transition10 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const root = (yield* requireChanged(transition10)).state;
+        const transition11 = yield* engine.transition(
+          root,
+          envelope(
+            "root-left",
+            OpenPanelCommand.make({
+              panel: panelTwo,
+              placement: RootSplitPlacement.make({ side: "left", splitId: splitOne, newGroupId: groupTwo }),
+            })
           )
         );
-        const bottom = yield* requireChanged(
-          yield* engine.transition(
-            root,
-            envelope(
-              "root-bottom",
-              OpenPanelCommand.make({
-                panel: panelThree,
-                placement: RootSplitPlacement.make({ side: "bottom", splitId: splitTwo, newGroupId: groupThree }),
-              })
-            )
+        const left = yield* requireChanged(transition11);
+        const transition12 = yield* engine.transition(
+          root,
+          envelope(
+            "root-bottom",
+            OpenPanelCommand.make({
+              panel: panelThree,
+              placement: RootSplitPlacement.make({ side: "bottom", splitId: splitTwo, newGroupId: groupThree }),
+            })
           )
         );
+        const bottom = yield* requireChanged(transition12);
         expect(O.getOrThrow(DockWorkspace.findTabs(left.state, groupTwo)).active.id).toBe(panelTwo.id);
         const bottomRoot = yield* DockWorkspace.match(bottom.state, {
           empty: () => Effect.die("expected populated"),
@@ -249,20 +245,21 @@ describe("dock gesture command parity", () => {
       "moves a panel to a root split target",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelTwo))).state;
-        const moved = yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "move-panel-root",
-              MovePanelCommand.make({
-                panelId: panelTwo.id,
-                target: RootSplitPlacement.make({ side: "right", splitId: splitOne, newGroupId: groupTwo }),
-              })
-            )
+        const transition13 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        let state = (yield* requireChanged(transition13)).state;
+        const transition14 = yield* engine.transition(state, openPanelTwo);
+        state = (yield* requireChanged(transition14)).state;
+        const transition15 = yield* engine.transition(
+          state,
+          envelope(
+            "move-panel-root",
+            MovePanelCommand.make({
+              panelId: panelTwo.id,
+              target: RootSplitPlacement.make({ side: "right", splitId: splitOne, newGroupId: groupTwo }),
+            })
           )
         );
+        const moved = yield* requireChanged(transition15);
         expect(moved.events[0]).toMatchObject({ kind: "panelMoved", toGroupId: groupTwo });
         expect(DockWorkspace.groupCount(moved.state)).toBe(2);
       })
@@ -272,25 +269,27 @@ describe("dock gesture command parity", () => {
       "moves a panel across groups at index zero without activating it",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelTwo))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelThreeSplitRight))).state;
-        const moved = yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "move-panel-index-zero-inactive",
-              MovePanelCommand.make({
-                panelId: panelTwo.id,
-                target: TabPlacement.make({
-                  groupId: groupTwo,
-                  index: O.some(S.Natural.make(0)),
-                  activate: false,
-                }),
-              })
-            )
+        const transition16 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        let state = (yield* requireChanged(transition16)).state;
+        const transition17 = yield* engine.transition(state, openPanelTwo);
+        state = (yield* requireChanged(transition17)).state;
+        const transition18 = yield* engine.transition(state, openPanelThreeSplitRight);
+        state = (yield* requireChanged(transition18)).state;
+        const transition19 = yield* engine.transition(
+          state,
+          envelope(
+            "move-panel-index-zero-inactive",
+            MovePanelCommand.make({
+              panelId: panelTwo.id,
+              target: TabPlacement.make({
+                groupId: groupTwo,
+                index: O.some(S.Natural.make(0)),
+                activate: false,
+              }),
+            })
           )
         );
+        const moved = yield* requireChanged(transition19);
         const destination = O.getOrThrow(DockWorkspace.findTabs(moved.state, groupTwo));
         expect(ids(destination)).toEqual([panelTwo.id, panelThree.id]);
         expect(destination.active.id).toBe(panelThree.id);
@@ -301,55 +300,52 @@ describe("dock gesture command parity", () => {
       "merges groups in source order with default and inactive activation policies and round-trips the result",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let base = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        base = (yield* requireChanged(yield* engine.transition(base, openPanelThreeSplitRight))).state;
-        base = (yield* requireChanged(
-          yield* engine.transition(
-            base,
-            envelope(
-              "open-two-source",
-              OpenPanelCommand.make({
-                panel: panelTwo,
-                placement: TabPlacement.make({ groupId: groupTwo, activate: false }),
-              })
-            )
-          )
-        )).state;
-        const merged = yield* requireChanged(
-          yield* engine.transition(
-            base,
-            envelope(
-              "merge-default",
-              MoveGroupCommand.make({
-                groupId: groupTwo,
-                target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(0)) }),
-              })
-            )
+        const transition20 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        let base = (yield* requireChanged(transition20)).state;
+        const transition21 = yield* engine.transition(base, openPanelThreeSplitRight);
+        base = (yield* requireChanged(transition21)).state;
+        const transition22 = yield* engine.transition(
+          base,
+          envelope(
+            "open-two-source",
+            OpenPanelCommand.make({
+              panel: panelTwo,
+              placement: TabPlacement.make({ groupId: groupTwo, activate: false }),
+            })
           )
         );
+        base = (yield* requireChanged(transition22)).state;
+        const transition23 = yield* engine.transition(
+          base,
+          envelope(
+            "merge-default",
+            MoveGroupCommand.make({
+              groupId: groupTwo,
+              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(0)) }),
+            })
+          )
+        );
+        const merged = yield* requireChanged(transition23);
         const tabs = O.getOrThrow(DockWorkspace.findTabs(merged.state, groupOne));
         expect(ids(tabs)).toEqual([panelThree.id, panelTwo.id, panelOne.id]);
         expect(tabs.active.id).toBe(panelThree.id);
         expect(DockWorkspace.groupCount(merged.state)).toBe(1);
-        expect(
-          S.toEquivalence(DockWorkspace)(
-            yield* engine.decodeSnapshot(yield* engine.encodeSnapshot(merged.state)),
-            merged.state
-          )
-        ).toBe(true);
+        const argument = S.toEquivalence(DockWorkspace);
+        const encodedSnapshot = yield* engine.encodeSnapshot(merged.state);
+        const decodedSnapshot = yield* engine.decodeSnapshot(encodedSnapshot);
+        expect(argument(decodedSnapshot, merged.state)).toBe(true);
 
-        const inactive = yield* requireChanged(
-          yield* engine.transition(
-            base,
-            envelope(
-              "merge-inactive",
-              MoveGroupCommand.make({
-                groupId: groupTwo,
-                target: TabPlacement.make({ groupId: groupOne, activate: false }),
-              })
-            )
+        const transition24 = yield* engine.transition(
+          base,
+          envelope(
+            "merge-inactive",
+            MoveGroupCommand.make({
+              groupId: groupTwo,
+              target: TabPlacement.make({ groupId: groupOne, activate: false }),
+            })
           )
         );
+        const inactive = yield* requireChanged(transition24);
         expect(O.getOrThrow(DockWorkspace.findTabs(inactive.state, groupOne)).active.id).toBe(panelOne.id);
       })
     );
@@ -358,53 +354,53 @@ describe("dock gesture command parity", () => {
       "relocates a complete group with its zipper intact and collapses its old parent",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelThreeSplitRight))).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "source-second-panel",
-              OpenPanelCommand.make({
-                panel: panelTwo,
-                placement: TabPlacement.make({ groupId: groupTwo, activate: false }),
-              })
-            )
-          )
-        )).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "third-group",
-              OpenPanelCommand.make({
-                panel: panelFour,
-                placement: RootSplitPlacement.make({ side: "bottom", splitId: splitTwo, newGroupId: groupThree }),
-              })
-            )
-          )
-        )).state;
-        const before = O.getOrThrow(DockWorkspace.findTabs(state, groupTwo));
-        const beforeEncoded = yield* encodeTabsNodeJson(before);
-        const moved = yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "relocate-group",
-              MoveGroupCommand.make({
-                groupId: groupTwo,
-                target: GroupSplitPlacement.make({
-                  referenceGroupId: groupThree,
-                  side: "left",
-                  splitId: splitThree,
-                  newGroupRatio: SplitRatio.make(2_500),
-                }),
-              })
-            )
+        const transition25 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        let state = (yield* requireChanged(transition25)).state;
+        const transition26 = yield* engine.transition(state, openPanelThreeSplitRight);
+        state = (yield* requireChanged(transition26)).state;
+        const transition27 = yield* engine.transition(
+          state,
+          envelope(
+            "source-second-panel",
+            OpenPanelCommand.make({
+              panel: panelTwo,
+              placement: TabPlacement.make({ groupId: groupTwo, activate: false }),
+            })
           )
         );
+        state = (yield* requireChanged(transition27)).state;
+        const transition28 = yield* engine.transition(
+          state,
+          envelope(
+            "third-group",
+            OpenPanelCommand.make({
+              panel: panelFour,
+              placement: RootSplitPlacement.make({ side: "bottom", splitId: splitTwo, newGroupId: groupThree }),
+            })
+          )
+        );
+        state = (yield* requireChanged(transition28)).state;
+        const before = O.getOrThrow(DockWorkspace.findTabs(state, groupTwo));
+        const beforeEncoded = yield* encodeTabsNodeJson(before);
+        const transition29 = yield* engine.transition(
+          state,
+          envelope(
+            "relocate-group",
+            MoveGroupCommand.make({
+              groupId: groupTwo,
+              target: GroupSplitPlacement.make({
+                referenceGroupId: groupThree,
+                side: "left",
+                splitId: splitThree,
+                newGroupRatio: SplitRatio.make(2_500),
+              }),
+            })
+          )
+        );
+        const moved = yield* requireChanged(transition29);
         const after = O.getOrThrow(DockWorkspace.findTabs(moved.state, groupTwo));
-        expect(yield* encodeTabsNodeJson(after)).toBe(beforeEncoded);
+        const encodedTabsNodeJson = yield* encodeTabsNodeJson(after);
+        expect(encodedTabsNodeJson).toBe(beforeEncoded);
         expect(DockWorkspace.groupCount(moved.state)).toBe(3);
         assertNone(
           DockWorkspace.match(moved.state, {
@@ -425,36 +421,36 @@ describe("dock gesture command parity", () => {
       "relocates a group against the populated workspace root",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        let state = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
-        state = (yield* requireChanged(yield* engine.transition(state, openPanelThreeSplitRight))).state;
-        state = (yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "root-relocate-third",
-              OpenPanelCommand.make({
-                panel: panelFour,
-                placement: RootSplitPlacement.make({ side: "bottom", splitId: splitTwo, newGroupId: groupThree }),
-              })
-            )
-          )
-        )).state;
-        const moved = yield* requireChanged(
-          yield* engine.transition(
-            state,
-            envelope(
-              "root-relocate",
-              MoveGroupCommand.make({
-                groupId: groupTwo,
-                target: GroupRootSplitPlacement.make({
-                  side: "left",
-                  splitId: splitThree,
-                  newGroupRatio: SplitRatio.make(3_000),
-                }),
-              })
-            )
+        const transition30 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        let state = (yield* requireChanged(transition30)).state;
+        const transition31 = yield* engine.transition(state, openPanelThreeSplitRight);
+        state = (yield* requireChanged(transition31)).state;
+        const transition32 = yield* engine.transition(
+          state,
+          envelope(
+            "root-relocate-third",
+            OpenPanelCommand.make({
+              panel: panelFour,
+              placement: RootSplitPlacement.make({ side: "bottom", splitId: splitTwo, newGroupId: groupThree }),
+            })
           )
         );
+        state = (yield* requireChanged(transition32)).state;
+        const transition33 = yield* engine.transition(
+          state,
+          envelope(
+            "root-relocate",
+            MoveGroupCommand.make({
+              groupId: groupTwo,
+              target: GroupRootSplitPlacement.make({
+                side: "left",
+                splitId: splitThree,
+                newGroupRatio: SplitRatio.make(3_000),
+              }),
+            })
+          )
+        );
+        const moved = yield* requireChanged(transition33);
         expect(moved.events[0]).toMatchObject({ kind: "groupMoved", groupId: groupTwo, splitId: splitThree });
         const root = yield* DockWorkspace.match(moved.state, {
           empty: () => Effect.die("expected populated"),
@@ -469,7 +465,8 @@ describe("dock gesture command parity", () => {
       "returns topology-unchanged for a single-group root relocation",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
-        const state = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
+        const transition34 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
+        const state = (yield* requireChanged(transition34)).state;
         const outcome = yield* engine.transition(
           state,
           envelope(

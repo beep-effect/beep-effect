@@ -424,7 +424,9 @@ export const DocketMatterLookupPracticeKg: Layer.Layer<
 > = Layer.effect(
   DocketMatterLookup,
   Effect.gen(function* () {
-    return DocketMatterLookup.of({ lookup: makeLookup(yield* PracticeKgMatterLookup, yield* DocketMatterMentions) });
+    const PracticeKgMatterLookup1 = yield* PracticeKgMatterLookup;
+    const DocketMatterMentions2 = yield* DocketMatterMentions;
+    return DocketMatterLookup.of({ lookup: makeLookup(PracticeKgMatterLookup1, DocketMatterMentions2) });
   })
 );
 

@@ -581,13 +581,12 @@ const resolveContainedPathBase: {
       ensureResolvedPathContained(path, `Generation action escapes output directory: "${relativePath}"`)
     );
 
-    yield* ensureCanonicalAncestor(
-      yield* resolveExistingAncestor(resolvedRoot),
-      "Generation output directory uses a symlinked ancestor"
-    );
+    const resolvedExistingAncestor = yield* resolveExistingAncestor(resolvedRoot);
+    yield* ensureCanonicalAncestor(resolvedExistingAncestor, "Generation output directory uses a symlinked ancestor");
 
+    const resolvedExistingAncestor1 = yield* resolveExistingAncestor(ancestorCandidate);
     yield* ensureCanonicalAncestor(
-      yield* resolveExistingAncestor(ancestorCandidate),
+      resolvedExistingAncestor1,
       "Generation action resolves through a symlinked ancestor"
     );
 
@@ -908,15 +907,14 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       { discard: true }
     );
 
-    return FileGenerationExecutionResult.make(
-      yield* Effect.all({
-        createdDirectories: Ref.get(counterRefs.createdDirectories),
-        writtenFiles: Ref.get(counterRefs.writtenFiles),
-        skippedFileWrites: Ref.get(counterRefs.skippedFileWrites),
-        createdSymlinks: Ref.get(counterRefs.createdSymlinks),
-        skippedSymlinks: Ref.get(counterRefs.skippedSymlinks),
-      })
-    );
+    const all2 = yield* Effect.all({
+      createdDirectories: Ref.get(counterRefs.createdDirectories),
+      writtenFiles: Ref.get(counterRefs.writtenFiles),
+      skippedFileWrites: Ref.get(counterRefs.skippedFileWrites),
+      createdSymlinks: Ref.get(counterRefs.createdSymlinks),
+      skippedSymlinks: Ref.get(counterRefs.skippedSymlinks),
+    });
+    return FileGenerationExecutionResult.make(all2);
   });
 
   return {

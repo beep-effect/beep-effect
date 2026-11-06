@@ -27,7 +27,8 @@ describe("M365Auth host token cache", () => {
 
       strictEqual(error.reason, "auth");
       strictEqual((yield* Ref.get(loads)) > 0, true);
-      strictEqual(yield* Ref.get(saves), 0);
+      const got = yield* Ref.get(saves);
+      strictEqual(got, 0);
     })
   );
 });

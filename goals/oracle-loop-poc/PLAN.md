@@ -29,6 +29,21 @@ Before marking the packet closed:
 
 ## Execution Notes
 
+- P0: discover existing owners for findings, evidence, receipts, source anchors,
+  and canonical identity; record reuse and the bounded fixture boundary before
+  adding shapes.
+- P1: complete the existing first generic slice, then implement the lab-local
+  [question-binding fixture](./QUESTION-BINDING.md). Keep the patent profile and
+  remaining codec work on their existing acceptance path.
+- P2: run the original comparisons and Q1–Q16, with separate verdicts. Record
+  the synthetic feedback-rule counterexample and simulated adoption decision.
+  Answer-binding, authority, or commitment-preservation failures block promotion
+  of affected shapes until fixed and rerun. Existing numeric criteria still apply.
+- If the fixture appears to require a general engine, production service, or
+  shared-model change, record the unmet requirement and no-go for that extension.
+  Continue the scoped document experiment; do not silently expand scope or mark
+  a missing fixture as passed. The inversion remains independent of this work.
+
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Keep this plan current; archive old run outputs under `history/`.

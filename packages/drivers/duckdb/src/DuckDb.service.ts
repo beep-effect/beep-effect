@@ -515,7 +515,8 @@ const makeNodeLayer = (options: DuckDbConnectionOptions): Layer.Layer<DuckDb> =>
       ): Effect.fn.Return<A, DuckDbError, R> {
         return yield* connectionLock.withPermit(
           Effect.gen(function* () {
-            return yield* useNative(yield* getConnection(operation));
+            const gotConnection = yield* getConnection(operation);
+            return yield* useNative(gotConnection);
           })
         );
       });

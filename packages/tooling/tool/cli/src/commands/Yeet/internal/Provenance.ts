@@ -11,7 +11,10 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { renderPrettyCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -26,10 +29,8 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
-import { runGitOutput } from "../../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -1106,6 +1107,73 @@ export const splicePrProvenanceFooter: {
 );
 
 /**
+ * Remove a current or legacy provenance footer from pull-request Markdown.
+ *
+ * **Details**
+ *
+ * The text around the footer is kept as is, and trailing whitespace before
+ * the footer is trimmed. A body without a footer comes back with only its
+ * trailing whitespace trimmed.
+ *
+ * **Example** (Strip a footer)
+ *
+ * ```ts
+ * import { stripPrProvenanceFooter } from "@beep/repo-cli/test/Yeet"
+ *
+ * const body = "Summary\n\n<!-- yeet-provenance:start -->\nfooter\n<!-- yeet-provenance:end -->\n"
+ * console.log(stripPrProvenanceFooter(body)) // "Summary"
+ * ```
+ *
+ * @param body - Pull-request Markdown that may carry a provenance footer.
+ * @returns The body without its provenance footer.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const stripPrProvenanceFooter = (body: string): string =>
+  O.match(parsePrProvenanceFooter(body), {
+    onNone: () => Str.trimEnd(body),
+    onSome: ({ start, end }) => `${Str.trimEnd(Str.slice(0, start)(body))}${Str.slice(end)(body)}`,
+  });
+
+/**
+ * Replace a pull-request body while keeping the provenance footer it carries.
+ *
+ * **Details**
+ *
+ * This is the body rewrite behind `yeet gh pr body`. The live footer is copied
+ * as opaque text, never parsed into registry state, and spliced onto the new
+ * body. A footer inside the new text is dropped first, because the local
+ * registry is the only authority for footer content and a pasted footer is not
+ * that. When the live body has no footer, the result has none either.
+ *
+ * **Example** (Keep the live footer)
+ *
+ * ```ts
+ * import { replacePrBodyKeepingFooter } from "@beep/repo-cli/test/Yeet"
+ *
+ * const footer = "<!-- yeet-provenance:start -->\nfooter\n<!-- yeet-provenance:end -->\n"
+ * const next = replacePrBodyKeepingFooter(`Old summary\n\n${footer}`, "New summary")
+ * console.log(next === `New summary\n\n${footer}`) // true
+ * ```
+ *
+ * @param previous - The pull request's live body, used for its footer only.
+ * @param next - The replacement Markdown.
+ * @returns The replacement body carrying the live footer, if there was one.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const replacePrBodyKeepingFooter: {
+  (previous: string, next: string): string;
+  (next: string): (previous: string) => string;
+} = dual(2, (previous: string, next: string): string => {
+  const replacement = stripPrProvenanceFooter(next);
+  return O.match(parsePrProvenanceFooter(previous), {
+    onNone: () => replacement,
+    onSome: ({ start, end }) => splicePrProvenanceFooter(replacement, Str.slice(start, end)(previous)),
+  });
+});
+
+/**
  * Boundary shape of a live Claude session index file.
  *
  * @category models
@@ -1324,10 +1392,13 @@ const findCodexSession = Effect.fn("PrProvenance.findCodexSession")(function* (h
 });
 const detectGitPaths = Effect.fn("PrProvenance.detectGitPaths")(function* (cwd: string) {
   const path = yield* Path.Path;
+  const git = yield* Git;
+  // `commonDir` is absolute, so the clone no longer depends on resolving git's cwd-relative answer
+  // against the checkout root (W7a Y38, SPEC D-18).
   const [common, checkout] = yield* Effect.all(
     [
-      runGitOutput(cwd, ["rev-parse", "--git-common-dir"], yeetGitOutputErrorAdapter),
-      runGitOutput(cwd, ["rev-parse", "--show-toplevel"], yeetGitOutputErrorAdapter),
+      git.commonDir(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.commonDir(), yeetGitOutputErrorAdapter))),
+      git.repoRoot(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.repoRoot(), yeetGitOutputErrorAdapter))),
     ],
     { concurrency: 2 }
   );
@@ -1530,11 +1601,14 @@ export const detectPrProvenanceFromPaths = Effect.fn("PrProvenance.detectFromPat
   const path = yield* Path.Path;
   const environment = yield* readDetectionEnvironment();
   const harness = classifyHarness(environment);
-  const workspaceOverride = yield* runGitOutput(
-    checkoutPath,
-    ["config", "--get", "beep.workspace.label"],
-    yeetGitOutputErrorAdapter
-  ).pipe(Effect.map(Str.trim), Effect.option, Effect.map(O.flatMap(decodePrProvenanceLabel)));
+  const git = yield* Git;
+  const workspaceOverride = yield* git
+    .configGet(checkoutPath, "beep.workspace.label")
+    .pipe(
+      Effect.map(O.map(Str.trim)),
+      Effect.orElseSucceed(O.none<string>),
+      Effect.map(O.flatMap(decodePrProvenanceLabel))
+    );
   const workspace = O.getOrElse(workspaceOverride, () => labelFromBasename(path, clonePath));
   const evidence = yield* readSessionEvidence(harness, environment, checkoutPath);
   const sessionWorkspace = yield* detectSessionWorkspace(path, evidence.sessionHome, workspace);

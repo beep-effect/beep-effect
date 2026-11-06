@@ -597,10 +597,12 @@ for (const missing of ["remote-id", "parent"] as const) {
         const remaining = yield* listOperationsByStatus("queued");
         expect(A.map(remaining, (operation) => operation.id)).toEqual([queued.id]);
         expect(remaining[0]?.attemptCount).toBe(0);
-        expect(yield* listOperationsByStatus("leased")).toEqual([]);
+        const listOperationsByStatus1 = yield* listOperationsByStatus("leased");
+        expect(listOperationsByStatus1).toEqual([]);
         expect((yield* mirror.counts).uploadFile).toBe(0);
         expect((yield* mirror.counts).renameItem).toBe(0);
-        expect(A.length(yield* listOperationsByStatus("failed"))).toBe(missing === "remote-id" ? 1 : 0);
+        const listOperationsByStatus2 = yield* listOperationsByStatus("failed");
+        expect(A.length(listOperationsByStatus2)).toBe(missing === "remote-id" ? 1 : 0);
       })
     );
   });
@@ -687,7 +689,8 @@ for (const failureWindow of ["item", "operation"] as const) {
               yield* mirror.moveItem(MoveItemInput.make({ itemKind, remoteId, newParentRemoteId: other.remoteId }));
             }
             yield* engine.syncOnce(syncInput(root));
-            const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+            const listOpenConflicts3 = yield* engine.listOpenConflicts(listConflictsInput);
+            const conflict = yield* Effect.fromOption(A.head(listOpenConflicts3));
             yield* engine.markConflictReviewed(
               MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId })
             );
@@ -699,13 +702,15 @@ for (const failureWindow of ["item", "operation"] as const) {
             expect((yield* findTrackedItem(originalPath)).syncState).toBe(
               failureWindow === "item" ? "pending" : "current"
             );
-            expect(A.length(yield* listOperationsByStatus("leased"))).toBe(1);
+            const listOperationsByStatus4 = yield* listOperationsByStatus("leased");
+            expect(A.length(listOperationsByStatus4)).toBe(1);
             // Rebuild the engine while retaining the durable repositories.
             const restarted = yield* makeVaultSyncEngine();
             const recovered = yield* restarted.syncOnce(syncInput(root));
             expect(recovered.pendingItems).toBe(0);
             expect(recovered.queuedOperations).toBe(0);
-            expect(yield* listOperationsByStatus("leased")).toEqual([]);
+            const listOperationsByStatus5 = yield* listOperationsByStatus("leased");
+            expect(listOperationsByStatus5).toEqual([]);
             const current = yield* findTrackedItem(originalPath);
             expect(current.syncState).toBe("current");
             expect(current.remoteId).toEqual(item.remoteId);
@@ -758,8 +763,10 @@ it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
         )
       );
       yield* offline.syncOnce(syncInput(root));
-      expect(yield* listOperationsByStatus("failed")).toEqual(failed);
-      expect(yield* listOperationsByStatus("queued")).toEqual([]);
+      const listOperationsByStatus6 = yield* listOperationsByStatus("failed");
+      expect(listOperationsByStatus6).toEqual(failed);
+      const listOperationsByStatus7 = yield* listOperationsByStatus("queued");
+      expect(listOperationsByStatus7).toEqual([]);
     })
   );
 });

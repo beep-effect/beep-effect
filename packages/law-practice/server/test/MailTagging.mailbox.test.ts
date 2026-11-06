@@ -210,7 +210,8 @@ describe("MailTagging M365 mailbox", () => {
       yield* mailbox.listMessagesSince(ListMessagesSinceRequest.make({ since }));
 
       expect(page.envelopes).toStrictEqual([]);
-      expect(yield* Ref.get(lookups)).toStrictEqual([
+      const got = yield* Ref.get(lookups);
+      expect(got).toStrictEqual([
         ["deleteditems", mailboxUserId],
         ["junkemail", mailboxUserId],
       ]);
@@ -235,7 +236,8 @@ describe("MailTagging M365 mailbox", () => {
         "unavailable",
         "response status 403",
       ]);
-      expect(yield* Ref.get(listed)).toBe(0);
+      const got1 = yield* Ref.get(listed);
+      expect(got1).toBe(0);
     })
   );
 
@@ -255,7 +257,8 @@ describe("MailTagging M365 mailbox", () => {
       const first = yield* mailbox.listMessagesSince(ListMessagesSinceRequest.make({ since }));
       const second = yield* mailbox.listMessagesSince(ListMessagesSinceRequest.make({ since, cursor: first.next }));
 
-      expect(yield* Ref.get(requests)).toStrictEqual([
+      const got2 = yield* Ref.get(requests);
+      expect(got2).toStrictEqual([
         {
           userId: mailboxUserId,
           bodyContentType: "text",
@@ -312,28 +315,16 @@ describe("MailTagging M365 mailbox", () => {
       const envelope = yield* found.getEnvelope(messageId);
 
       expect(O.getOrNull(O.map(envelope, (read) => read.messageId))).toBe(messageId);
-      assertNone(yield* missing.getEnvelope(messageId));
-      expect(portError(yield* Effect.flip(broken.getEnvelope(messageId)))).toStrictEqual([
-        "Mailbox",
-        "getEnvelope",
-        "unavailable",
-        "response status 500",
-      ]);
-      expect(portError(yield* Effect.flip(throttled.getEnvelope(messageId)))).toStrictEqual([
-        "Mailbox",
-        "getEnvelope",
-        "throttled",
-        "throttled 429",
-      ]);
-      expect(
-        portError(yield* Effect.flip(throttled.listMessagesSince(ListMessagesSinceRequest.make({ since }))))
-      ).toStrictEqual(["Mailbox", "listMessagesSince", "unavailable", "transport"]);
-      expect(portError(yield* Effect.flip(found.getEnvelope(MailMessageId.make("folder/msg-1"))))).toStrictEqual([
-        "Mailbox",
-        "getEnvelope",
-        "unavailable",
-        "request encoding",
-      ]);
+      const gotEnvelope = yield* missing.getEnvelope(messageId);
+      assertNone(gotEnvelope);
+      const flip3 = yield* Effect.flip(broken.getEnvelope(messageId));
+      expect(portError(flip3)).toStrictEqual(["Mailbox", "getEnvelope", "unavailable", "response status 500"]);
+      const flip4 = yield* Effect.flip(throttled.getEnvelope(messageId));
+      expect(portError(flip4)).toStrictEqual(["Mailbox", "getEnvelope", "throttled", "throttled 429"]);
+      const flip5 = yield* Effect.flip(throttled.listMessagesSince(ListMessagesSinceRequest.make({ since })));
+      expect(portError(flip5)).toStrictEqual(["Mailbox", "listMessagesSince", "unavailable", "transport"]);
+      const flip6 = yield* Effect.flip(found.getEnvelope(MailMessageId.make("folder/msg-1")));
+      expect(portError(flip6)).toStrictEqual(["Mailbox", "getEnvelope", "unavailable", "request encoding"]);
     })
   );
 
@@ -354,7 +345,8 @@ describe("MailTagging M365 mailbox", () => {
       );
       yield* mailbox.setCategories(SetCategoriesRequest.make({ messageId, expected: [], categories: ["P: USPTO"] }));
 
-      expect(yield* Ref.get(writes)).toStrictEqual([
+      const got7 = yield* Ref.get(writes);
+      expect(got7).toStrictEqual([
         [["Personal", "P: USPTO"], "ck-1"],
         [["P: USPTO"], null],
       ]);
@@ -411,12 +403,14 @@ describe("MailTagging M365 mailbox", () => {
         SetCategoriesRequest.make({ messageId, expected: [], categories: ["P: USPTO"], changeKey: O.some("ck-1") })
       );
 
-      expect(A.filter(yield* Ref.get(writes), ([, changeKey]) => changeKey !== "ck-1")).toStrictEqual([
+      const got8 = yield* Ref.get(writes);
+      expect(A.filter(got8, ([, changeKey]) => changeKey !== "ck-1")).toStrictEqual([
         [["Personal", "Follow up", "M: acme.10001"], "ck-2"],
         [["Personal", "Follow up", "Urgent"], "ck-3"],
         [["P: USPTO"], "ck-4"],
       ]);
-      expect(yield* Ref.get(writes)).toHaveLength(6);
+      const got9 = yield* Ref.get(writes);
+      expect(got9).toHaveLength(6);
     })
   );
 
@@ -441,19 +435,12 @@ describe("MailTagging M365 mailbox", () => {
         updateMessageCategories: () => Effect.fail(status(412)),
       });
 
-      expect(portError(yield* Effect.flip(alwaysStale.setCategories(request)))).toStrictEqual([
-        "Mailbox",
-        "setCategories",
-        "unavailable",
-        "response status 412",
-      ]);
-      expect(yield* Ref.get(calls)).toBe(3);
-      expect(portError(yield* Effect.flip(gone.setCategories(request)))).toStrictEqual([
-        "Mailbox",
-        "setCategories",
-        "unavailable",
-        "response status 404",
-      ]);
+      const flip10 = yield* Effect.flip(alwaysStale.setCategories(request));
+      expect(portError(flip10)).toStrictEqual(["Mailbox", "setCategories", "unavailable", "response status 412"]);
+      const got11 = yield* Ref.get(calls);
+      expect(got11).toBe(3);
+      const flip12 = yield* Effect.flip(gone.setCategories(request));
+      expect(portError(flip12)).toStrictEqual(["Mailbox", "setCategories", "unavailable", "response status 404"]);
     })
   );
 
@@ -480,7 +467,8 @@ describe("MailTagging M365 mailbox", () => {
       ]);
 
       expect(created).toBe(1);
-      expect(yield* Ref.get(drafts)).toStrictEqual([
+      const got13 = yield* Ref.get(drafts);
+      expect(got13).toStrictEqual([
         ["P: USPTO", "preset7"],
         ["M: acme.10001", "preset3"],
       ]);

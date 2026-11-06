@@ -88,8 +88,8 @@ import {
 } from "./RunScope.schemas.ts";
 import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
+import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { UUID } from "../schema/Uuid.ts";
 import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
@@ -710,25 +710,23 @@ const collectStaleStagingFiles = Effect.fnUntraced(function* (
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return A.flatten(
-    yield* Effect.forEach(
-      [directories.claims, directories.leases, directories.promotions, directories.queue],
-      Effect.fnUntraced(function* (directory: string) {
-        const names = yield* fs
-          .readDirectory(directory)
-          .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
-        return A.getSomes(
-          yield* Effect.forEach(
-            A.getSomes(A.map(names, (name) => O.map(stagingFileOwner(name), (owner) => ({ name, owner })))),
-            ({ name, owner }) =>
-              Effect.map(isProcessIdentityAlive(owner), (alive) =>
-                alive ? O.none<string>() : O.some(path.join(directory, name))
-              )
+  const forEach1 = yield* Effect.forEach(
+    [directories.claims, directories.leases, directories.promotions, directories.queue],
+    Effect.fnUntraced(function* (directory: string) {
+      const names = yield* fs
+        .readDirectory(directory)
+        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
+      const forEach10 = yield* Effect.forEach(
+        A.getSomes(A.map(names, (name) => O.map(stagingFileOwner(name), (owner) => ({ name, owner })))),
+        ({ name, owner }) =>
+          Effect.map(isProcessIdentityAlive(owner), (alive) =>
+            alive ? O.none<string>() : O.some(path.join(directory, name))
           )
-        );
-      })
-    )
+      );
+      return A.getSomes(forEach10);
+    })
   );
+  return A.flatten(forEach1);
 });
 
 interface LiveAdmissionState {
@@ -843,27 +841,26 @@ const readReapClaims = Effect.fnUntraced(function* (
   const names = yield* fs
     .readDirectory(directories.claims)
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission claims in ${directories.claims}.`)));
-  return A.getSomes(
-    yield* Effect.forEach(
-      A.filter(
-        names,
-        (name) => Str.endsWith(".reap.json")(name) || Str.endsWith(".reap.pending-protocol-off.json")(name)
-      ),
-      Effect.fnUntraced(function* (name: string) {
-        const claimPath = path.join(directories.claims, name);
-        const text = yield* fs.readFileString(claimPath).pipe(Effect.option);
-        if (O.isNone(text)) {
-          return O.none<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>();
-        }
-        const claim = yield* decodeReapClaim(text.value).pipe(Effect.option);
-        if (O.isNone(claim)) {
-          yield* quarantineEntry(directories, claimPath, "undecodable reap claim");
-          return O.none<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>();
-        }
-        return O.some({ claimPath, claim: claim.value });
-      })
-    )
+  const forEach2 = yield* Effect.forEach(
+    A.filter(
+      names,
+      (name) => Str.endsWith(".reap.json")(name) || Str.endsWith(".reap.pending-protocol-off.json")(name)
+    ),
+    Effect.fnUntraced(function* (name: string) {
+      const claimPath = path.join(directories.claims, name);
+      const text = yield* fs.readFileString(claimPath).pipe(Effect.option);
+      if (O.isNone(text)) {
+        return O.none<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>();
+      }
+      const claim = yield* decodeReapClaim(text.value).pipe(Effect.option);
+      if (O.isNone(claim)) {
+        yield* quarantineEntry(directories, claimPath, "undecodable reap claim");
+        return O.none<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>();
+      }
+      return O.some({ claimPath, claim: claim.value });
+    })
   );
+  return A.getSomes(forEach2);
 });
 
 const REAP_CLAIM_SUFFIX = ".reap.json";
@@ -1127,14 +1124,10 @@ const processReapClaim = Effect.fnUntraced(function* (
             QualitySchedulerError.new(`Failed to remove claimed admission state ${pendingClaim.sourcePath}.`)
           )
         );
-      const attemptJournal = O.getOrElse(
-        yield* Effect.serviceOption(AdmissionAttemptTerminationJournal),
-        constant(defaultAttemptTerminationJournal)
-      );
-      const admissionJournal = O.getOrElse(
-        yield* Effect.serviceOption(AdmissionEvictionJournal),
-        constant(defaultAdmissionEvictionJournal)
-      );
+      const serviceOption3 = yield* Effect.serviceOption(AdmissionAttemptTerminationJournal);
+      const attemptJournal = O.getOrElse(serviceOption3, constant(defaultAttemptTerminationJournal));
+      const serviceOption4 = yield* Effect.serviceOption(AdmissionEvictionJournal);
+      const admissionJournal = O.getOrElse(serviceOption4, constant(defaultAdmissionEvictionJournal));
       const attemptPending = yield* processAttemptJournalSink(pendingClaimPath, pendingClaim, attemptJournal);
       const admissionPending = yield* processAdmissionJournalSink(
         directories,
@@ -1282,11 +1275,10 @@ const repairDeadAdmissionState = Effect.fnUntraced(function* (
     ({ ticket, path: sourcePath }) => claimDeadTicket(directories, sourcePath, ticket),
     { discard: true }
   );
-  yield* Effect.forEach(
-    yield* readReapClaims(directories),
-    ({ claimPath, claim }) => processReapClaim(directories, claimPath, claim),
-    { discard: true }
-  );
+  const readReapClaims5 = yield* readReapClaims(directories);
+  yield* Effect.forEach(readReapClaims5, ({ claimPath, claim }) => processReapClaim(directories, claimPath, claim), {
+    discard: true,
+  });
 });
 
 const promotionTransitionPath = (path: Path.Path, directories: AdmissionDirectories, nonce: string): string =>
@@ -1326,8 +1318,9 @@ const readPromotionLease = Effect.fnUntraced(function* (
   if (O.isNone(text)) {
     return O.none();
   }
+  const pipe6 = yield* decodeLease(text.value).pipe(Effect.option);
   return pipe(
-    yield* decodeLease(text.value).pipe(Effect.option),
+    pipe6,
     O.filter((lease) => lease.nonce === transition.nonce && lease.pid === transition.ticket.pid)
   );
 });
@@ -1944,7 +1937,8 @@ const stageSelfLease = Effect.fnUntraced(function* (
   }
   const rescanned = yield* scanAdmissionState(directories, false);
   const stats = yield* MemoryStats;
-  const capacityNow = admissionCapacityTokensFor(yield* stats.availableGib, config);
+  const availableGib7 = yield* stats.availableGib;
+  const capacityNow = admissionCapacityTokensFor(availableGib7, config);
   if (isOvershootLoser(rescanned, capacityNow, lease)) {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove(leasePath, { force: true }).pipe(Effect.ignore);
@@ -1955,7 +1949,8 @@ const stageSelfLease = Effect.fnUntraced(function* (
     ...lease,
     runScope: yield* enterRunScope(ticket.nonce, directories.root),
   });
-  yield* refreshHeartbeat(leasePath, yield* encodeLeaseText(scopedLease));
+  const encodedLeaseText = yield* encodeLeaseText(scopedLease);
+  yield* refreshHeartbeat(leasePath, encodedLeaseText);
   yield* persistPromotionTransition(
     promotionPath,
     AdmissionPromotionTransition.make({ ...prepared, lease: scopedLease, phase: "lease-published" })
@@ -1973,7 +1968,8 @@ const heartbeatLoop = Effect.fnUntraced(function* (
     yield* Effect.sleep(Duration.millis(config.heartbeatSeconds * 1000));
     const nowMillis = yield* Clock.currentTimeMillis;
     current = YeetAdmissionLease.make({ ...current, heartbeatAtMillis: nowMillis });
-    yield* refreshHeartbeat(leasePath, yield* encodeLeaseText(current));
+    const encodedLeaseText8 = yield* encodeLeaseText(current);
+    yield* refreshHeartbeat(leasePath, encodedLeaseText8);
   }
 });
 
@@ -2140,7 +2136,8 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
       heartbeatAtMillis: refreshedMillis,
       blockedOnOriginAtMillis: tick.originBusy ? refreshedMillis : ticket.blockedOnOriginAtMillis,
     });
-    yield* refreshHeartbeat(ticketPath, yield* encodeTicketText(ticket));
+    const encodedTicketText = yield* encodeTicketText(ticket);
+    yield* refreshHeartbeat(ticketPath, encodedTicketText);
   }
 });
 
@@ -2326,7 +2323,8 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const admittedRequest = AdmissionRequest.make({ ...request, weightTokens });
   const directories = yield* ensureAdmissionDirectories();
   const nowMillis = yield* Clock.currentTimeMillis;
-  const procStart = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "");
+  const processStartIdentityForPid9 = yield* processStartIdentityForPid(process.pid);
+  const procStart = O.getOrElse(processStartIdentityForPid9, () => "");
   const ticket = YeetAdmissionTicket.make({
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,
@@ -2628,7 +2626,7 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
 > {
   const directories = yield* ensureAdmissionDirectories();
   const retainedDeadLeasePaths = options.apply
-    ? yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false))
+    ? yield* yield* Effect.map(scanAdmissionState(directories, false), stopLeakedRunScopes)
     : A.empty<string>();
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply, retainedDeadLeasePaths);
 });

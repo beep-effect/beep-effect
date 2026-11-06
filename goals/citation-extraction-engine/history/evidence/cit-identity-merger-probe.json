@@ -1,0 +1,34 @@
+{
+  "input": "1 C.I.T. 1. 1 Ct. Int'l Trade 1.",
+  "citations": [
+    {
+      "kind": "FullCaseCitation",
+      "correctedReporter": "C.I.T.",
+      "groups": {
+        "volume": "1",
+        "reporter": "C.I.T.",
+        "page": "1"
+      },
+      "span": [0, 10]
+    },
+    {
+      "kind": "FullCaseCitation",
+      "correctedReporter": "Ct. Int'l Trade",
+      "groups": {
+        "volume": "1",
+        "reporter": "Ct. Int'l Trade",
+        "page": "1"
+      },
+      "span": [12, 31]
+    }
+  ],
+  "equal": false,
+  "authorityGroups": [[0], [1]],
+  "schemaVersion": "citation-identity-merger-probe/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "scope": "Focused compatibility probe; requires integration into the final supplemental case ledger.",
+  "exporterSha256": "a71040513638ab6f956dd718ac47331f67c6ef13ad5430dc1eb1458af5761e77",
+  "modelSourceSha256": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+  "resolveSourceSha256": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044"
+}

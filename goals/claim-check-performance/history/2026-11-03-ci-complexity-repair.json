@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "claim-performance-ci-repair/v1",
+  "hostedFailure": {
+    "run": 41620024117,
+    "job": 125863471044,
+    "finding": "normalizer parent-reference callback cognitive complexity9 exceeds8"
+  },
+  "repair": "Extract pure expression boundary validation helper; no baseline/threshold waiver",
+  "sourceFreeze": "research/implementation-reference-bounds-008.json",
+  "implementationDigest": "1ac18c22e73b2766eeebd31728b7e556f0003067a18cec75ba813204b793059b",
+  "predictionReportsByteIdenticalTo007": 56,
+  "strictMatches": 37,
+  "retained37": true,
+  "lost": [],
+  "stages": {
+    "structural-mismatch": 458,
+    "strict-match": 37,
+    "input-failed": 43
+  },
+  "protectedFilesExact": 1213,
+  "focusedParserTestsPassed": 12,
+  "localFallowHealth": {
+    "findingCount": 0,
+    "exitStatus": 0,
+    "logSha256": "3c3b9591921a6a484e56c15834b4be91b2635bf0bcea0b9b52187332bdeeaa7b"
+  },
+  "hostedReplacementPending": true,
+  "goalComplete": false,
+  "packageVerification": {
+    "package": "@beep/law-practice-domain",
+    "audit": "pass",
+    "docgen": "pass",
+    "logSha256": "9a79afee1ee15c1bfaed6d73e5063c8f826e2903299d3f2a991eb8c561091000"
+  },
+  "independentReview": {
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "requiredFindings": 0,
+    "scope": "pure helper extraction;12 focused tests independently passed"
+  }
+}

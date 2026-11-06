@@ -6,6 +6,7 @@
  */
 
 import { Exiftool, ReadTagsRequest } from "@beep/exiftool";
+import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { A, Str } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import * as Config from "effect/Config";
@@ -21,7 +22,6 @@ import * as R from "effect/Record";
 import * as Stream from "effect/Stream";
 import { imageSizeFromFile } from "image-size/fromFile";
 import sharp from "sharp";
-import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { FilesCommandError } from "../Files.errors.ts";
 import {
   isExifOrientationRotated,

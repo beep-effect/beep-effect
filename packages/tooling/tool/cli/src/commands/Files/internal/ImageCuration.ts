@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
+import { hashFileSha256 as hashFileSha256Hex } from "@beep/repo-cli-kit/cli/FsGuards";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Digest from "effect/crypto/Digest";
@@ -19,8 +21,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import sharp from "sharp";
-import { concatBytes } from "../../../internal/cli/Bytes.ts";
-import { hashFileSha256 as hashFileSha256Hex } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError, PlatformErrorOptions } from "../Files.errors.ts";
 import { isSupportedMetadataImageExtension, normalizeBareExtension } from "../Files.media.ts";
 import {
@@ -520,11 +520,10 @@ const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
     `${decoded.info.width}x${decoded.info.height}x${decoded.info.channels}:`
   );
   const crypto = yield* Digest.Digest;
-  const decodedHash = Hex.encode(
-    yield* crypto
-      .digest(Digest.sha256, concatBytes([decodedHeader, decoded.data]))
-      .pipe(FilesCommandError.mapError(`Failed to hash decoded pixels for "${source.path}"`))
-  );
+  const pipe1 = yield* crypto
+    .digest(Digest.sha256, concatBytes([decodedHeader, decoded.data]))
+    .pipe(FilesCommandError.mapError(`Failed to hash decoded pixels for "${source.path}"`));
+  const decodedHash = Hex.encode(pipe1);
 
   return {
     colorHash: colorHashFromRgb(color.data, color.info.channels),
@@ -691,12 +690,10 @@ const renderJsonContent = Effect.fn("Files.renderImageCurationJson")(function* (
   value: unknown,
   description: string
 ): Effect.fn.Return<string, FilesCommandError> {
-  return pipe(
-    yield* encodeUnknownJson(value).pipe(
-      Effect.mapError((cause) => FilesCommandError.new(cause, `Failed to encode ${description}`))
-    ),
-    Str.concat("\n")
+  const pipe2 = yield* encodeUnknownJson(value).pipe(
+    Effect.mapError((cause) => FilesCommandError.new(cause, `Failed to encode ${description}`))
   );
+  return pipe(pipe2, Str.concat("\n"));
 });
 
 const writeJsonAtomically = Effect.fn("Files.writeImageCurationJsonAtomically")(function* (

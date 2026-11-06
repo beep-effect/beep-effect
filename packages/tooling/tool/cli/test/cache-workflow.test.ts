@@ -15,6 +15,7 @@ import {
   CacheToolchainSnapshot,
 } from "@beep/repo-cli/commands/Cache";
 import * as Adapter from "@beep/repo-cli/commands/Cache/Cache.adapter";
+import * as Evidence from "@beep/repo-cli/commands/Cache/Cache.evidence";
 import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import * as Linker from "@beep/repo-cli/commands/Cache/Cache.linker";
 import * as SignedRunner from "@beep/repo-cli/commands/Cache/Cache.pilot.runner";
@@ -55,6 +56,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -72,6 +74,7 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { bearers, targetFor } from "./cache-conformance-server.ts";
 import { input as bundleInput, contractInput } from "./helpers/cache-producer-bundle-fixture.ts";
+import { NodeTestLayer } from "./support/CommandTest.ts";
 
 afterEach(() => vi.restoreAllMocks());
 const activationJson = JsonStringCodec(CacheActivationPreview);
@@ -113,6 +116,7 @@ const fixture = Effect.fn("WorkflowTest.fixture")(function* () {
   return { root, fs, path, source, git };
 });
 const encodeExecutionProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
+const hashSourceBytes = S.decodeEffect(Sha256HexFromBytes);
 const inspectedFixture = Effect.fn("WorkflowTest.inspectedFixture")(function* () {
   const base = yield* fixture();
   const bundle = yield* S.decodeUnknownEffect(CacheProducerBundle)(bundleInput);
@@ -325,7 +329,7 @@ const provisioningFixture = Effect.fn("WorkflowTest.provisioningFixture")(functi
 it.layer(
   Layer.mergeAll(
     NodeCrypto.layer,
-    NodeServices.layer,
+    NodeTestLayer,
     FetchHttpClient.layer,
     FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
     Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) }))
@@ -339,14 +343,19 @@ it.layer(
       const [binding, profile] = yield* readCacheProducerExecutionProfile(f.destination);
       expect(binding).toEqual(f.approval.binding);
       expect(profile).toEqual(f.profile);
-      for (const name of ["approval.json", "issuer.key", "runtime.json"])
+      for (const name of ["approval.json", "issuer.key", "runtime.json"]) {
         expect((yield* f.fs.stat(f.path.join(f.destination, name))).mode & 0o777).toBe(0o600);
+      }
       const key = f.path.join(f.destination, "issuer.key");
       const material = yield* f.fs.readFile(key);
-      expect(yield* f.provision().pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.readFile(key)).toEqual(material);
-      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(false);
-      expect(yield* readCacheProducerExecutionProfile(f.destination)).toEqual([binding, profile]);
+      const pipe1 = yield* f.provision().pipe(Effect.isFailure);
+      expect(pipe1).toBe(true);
+      const readFile2 = yield* f.fs.readFile(key);
+      expect(readFile2).toEqual(material);
+      const exists3 = yield* f.fs.exists(f.path.join(f.destination, "revoked"));
+      expect(exists3).toBe(false);
+      const readCacheProducerExecutionProfile4 = yield* readCacheProducerExecutionProfile(f.destination);
+      expect(readCacheProducerExecutionProfile4).toEqual([binding, profile]);
     })
   );
   it.effect("installs the separately approved issuer into execution without replacing its material", () =>
@@ -362,7 +371,8 @@ it.layer(
         f.profile,
         O.some(Redacted.make(original))
       ).pipe(Effect.provideService(FileSystem.FileSystem, f.observedFs));
-      expect(yield* f.fs.readFile(f.path.join(f.destination, "issuer.key"))).toEqual(original);
+      const readFile5 = yield* f.fs.readFile(f.path.join(f.destination, "issuer.key"));
+      expect(readFile5).toEqual(original);
       const [binding, profile] = yield* readCacheProducerExecutionProfile(f.destination);
       expect(binding).toEqual(f.approval.binding);
       expect(profile).toEqual(f.profile);
@@ -371,18 +381,23 @@ it.layer(
   it.effect("refuses a different loaded checkout before reserving an execution store", () =>
     Effect.gen(function* () {
       const f = yield* provisioningFixture();
-      expect(
-        yield* initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(yield* f.fs.exists(f.destination)).toBe(false);
+      const pipe6 = yield* initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(
+        Effect.isFailure
+      );
+      expect(pipe6).toBe(true);
+      const exists7 = yield* f.fs.exists(f.destination);
+      expect(exists7).toBe(false);
     })
   );
   it.effect("refuses relative and source-visible execution stores before creating material", () =>
     Effect.gen(function* () {
       const f = yield* provisioningFixture();
-      for (const directory of ["relative-store", f.root, f.path.join(f.root, "private-store")])
-        expect(yield* f.provision(f.approval, f.profile, directory).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.exists(f.path.join(f.root, "private-store"))).toBe(false);
+      for (const directory of ["relative-store", f.root, f.path.join(f.root, "private-store")]) {
+        const pipe2 = yield* f.provision(f.approval, f.profile, directory).pipe(Effect.isFailure);
+        expect(pipe2).toBe(true);
+      }
+      const exists8 = yield* f.fs.exists(f.path.join(f.root, "private-store"));
+      expect(exists8).toBe(false);
     })
   );
   it.effect("refuses oversized approval and runtime records before reserving a store", () =>
@@ -394,9 +409,12 @@ it.layer(
         ...f.profile,
         adapterExecutable: `/${Str.repeat(16385)("x")}`,
       });
-      expect(yield* f.provision(oversizedApproval).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.provision(f.approval, oversizedProfile).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.exists(f.destination)).toBe(false);
+      const pipe9 = yield* f.provision(oversizedApproval).pipe(Effect.isFailure);
+      expect(pipe9).toBe(true);
+      const pipe10 = yield* f.provision(f.approval, oversizedProfile).pipe(Effect.isFailure);
+      expect(pipe10).toBe(true);
+      const exists11 = yield* f.fs.exists(f.destination);
+      expect(exists11).toBe(false);
     })
   );
   it.effect("refuses absent upload approval, target drift and relative or changed executable selection", () =>
@@ -406,7 +424,8 @@ it.layer(
         ...f.approval,
         binding: CacheProducerBinding.make({ ...f.approval.binding, uploadApproval: O.none() }),
       });
-      expect(yield* f.provision(absent).pipe(Effect.isFailure)).toBe(true);
+      const pipe12 = yield* f.provision(absent).pipe(Effect.isFailure);
+      expect(pipe12).toBe(true);
       const changed = CacheProducerExecutionProfile.make({
         ...f.profile,
         target: CacheConformanceTarget.make({
@@ -414,14 +433,14 @@ it.layer(
           backend: f.profile.target.backend,
         }),
       });
-      expect(yield* f.provision(f.approval, changed).pipe(Effect.isFailure)).toBe(true);
+      const pipe13 = yield* f.provision(f.approval, changed).pipe(Effect.isFailure);
+      expect(pipe13).toBe(true);
       const linker = vi.spyOn(Linker, "inspectCacheLinkedFile");
       linker.mockClear();
-      expect(
-        yield* f
-          .provision(f.approval, CacheProducerExecutionProfile.make({ ...f.profile, adapterExecutable: "relative" }))
-          .pipe(Effect.isFailure)
-      ).toBe(true);
+      const pipe14 = yield* f
+        .provision(f.approval, CacheProducerExecutionProfile.make({ ...f.profile, adapterExecutable: "relative" }))
+        .pipe(Effect.isFailure);
+      expect(pipe14).toBe(true);
       expect(linker).not.toHaveBeenCalled();
       linker.mockImplementation((file) =>
         Effect.succeed(
@@ -435,8 +454,10 @@ it.layer(
           })
         )
       );
-      expect(yield* f.provision().pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.exists(f.destination)).toBe(false);
+      const pipe15 = yield* f.provision().pipe(Effect.isFailure);
+      expect(pipe15).toBe(true);
+      const exists16 = yield* f.fs.exists(f.destination);
+      expect(exists16).toBe(false);
     })
   );
   it.effect("refuses stale workflow revision and source identity before reserving a store", () =>
@@ -448,11 +469,12 @@ it.layer(
           ...f.approval.binding,
           workflowImplementation: Sha256Hex.make(Str.repeat(64)("e")),
         }),
-      ])
-        expect(yield* f.provision(CacheProducerApproval.make({ ...f.approval, binding })).pipe(Effect.isFailure)).toBe(
-          true
-        );
-      expect(yield* f.fs.exists(f.destination)).toBe(false);
+      ]) {
+        const pipe3 = yield* f.provision(CacheProducerApproval.make({ ...f.approval, binding })).pipe(Effect.isFailure);
+        expect(pipe3).toBe(true);
+      }
+      const exists17 = yield* f.fs.exists(f.destination);
+      expect(exists17).toBe(false);
     })
   );
   it.effect("revokes the reserved execution store when source drifts after private installation", () =>
@@ -465,9 +487,12 @@ it.layer(
             .writeFileString(f.source, "export const changed = true;\n")
             .pipe(CacheCommandError.mapError("Cannot mutate workflow fixture."), Effect.as(f.toolchain))
         );
-      expect(yield* f.provision().pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
-      expect(yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure)).toBe(true);
+      const pipe18 = yield* f.provision().pipe(Effect.isFailure);
+      expect(pipe18).toBe(true);
+      const exists19 = yield* f.fs.exists(f.path.join(f.destination, "revoked"));
+      expect(exists19).toBe(true);
+      const pipe20 = yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure);
+      expect(pipe20).toBe(true);
     })
   );
   it.effect("revokes an issuer interrupted immediately after writing its private material", () =>
@@ -484,10 +509,14 @@ it.layer(
       );
       if (Exit.isFailure(exit)) expect(Cause.hasInterrupts(exit.cause)).toBe(true);
       else expect.unreachable("Interrupted issuer installation completed successfully.");
-      expect(yield* f.fs.exists(key)).toBe(true);
-      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
-      expect(yield* f.fs.exists(f.path.join(f.destination, "runtime.json"))).toBe(false);
-      expect(yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure)).toBe(true);
+      const exists21 = yield* f.fs.exists(key);
+      expect(exists21).toBe(true);
+      const exists22 = yield* f.fs.exists(f.path.join(f.destination, "revoked"));
+      expect(exists22).toBe(true);
+      const exists23 = yield* f.fs.exists(f.path.join(f.destination, "runtime.json"));
+      expect(exists23).toBe(false);
+      const pipe24 = yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure);
+      expect(pipe24).toBe(true);
     })
   );
   it.effect("revokes an issuer whose private material fails its final reopen", () =>
@@ -503,10 +532,14 @@ it.layer(
               .pipe(Effect.andThen(file === key ? f.fs.chmod(key, 0o644) : Effect.void)),
         })
       );
-      expect(yield* installation.pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
-      expect(yield* f.fs.exists(f.path.join(f.destination, "runtime.json"))).toBe(false);
-      expect(yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure)).toBe(true);
+      const pipe25 = yield* installation.pipe(Effect.isFailure);
+      expect(pipe25).toBe(true);
+      const exists26 = yield* f.fs.exists(f.path.join(f.destination, "revoked"));
+      expect(exists26).toBe(true);
+      const exists27 = yield* f.fs.exists(f.path.join(f.destination, "runtime.json"));
+      expect(exists27).toBe(false);
+      const pipe28 = yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure);
+      expect(pipe28).toBe(true);
     })
   );
   it.effect("revokes an interrupted private profile installation", () =>
@@ -524,7 +557,8 @@ it.layer(
       );
       if (Exit.isFailure(exit)) expect(Cause.hasInterrupts(exit.cause)).toBe(true);
       else expect.unreachable("Interrupted installation completed successfully.");
-      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+      const exists29 = yield* f.fs.exists(f.path.join(f.destination, "revoked"));
+      expect(exists29).toBe(true);
     })
   );
   it.effect("preserves a competing runtime record and revokes the reserved store", () =>
@@ -542,9 +576,12 @@ it.layer(
               : f.fs.writeFileString(file, body, options),
         })
       );
-      expect(yield* installation.pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.readFileString(runtimeFile)).toBe("reserved");
-      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+      const pipe30 = yield* installation.pipe(Effect.isFailure);
+      expect(pipe30).toBe(true);
+      const readFileString31 = yield* f.fs.readFileString(runtimeFile);
+      expect(readFileString31).toBe("reserved");
+      const exists32 = yield* f.fs.exists(f.path.join(f.destination, "revoked"));
+      expect(exists32).toBe(true);
     })
   );
   it.effect("revokes a profile whose installed permissions fail the normal reopen boundary", () =>
@@ -560,8 +597,10 @@ it.layer(
               .pipe(Effect.andThen(file === runtimeFile ? f.fs.chmod(file, 0o644) : Effect.void)),
         })
       );
-      expect(yield* installation.pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+      const pipe33 = yield* installation.pipe(Effect.isFailure);
+      expect(pipe33).toBe(true);
+      const exists34 = yield* f.fs.exists(f.path.join(f.destination, "revoked"));
+      expect(exists34).toBe(true);
     })
   );
   it.effect("revokes a valid private record changed during installation", () =>
@@ -578,8 +617,10 @@ it.layer(
             f.fs.writeFileString(file, file === runtimeFile ? changed : body, options),
         })
       );
-      expect(yield* installation.pipe(Effect.isFailure)).toBe(true);
-      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+      const pipe35 = yield* installation.pipe(Effect.isFailure);
+      expect(pipe35).toBe(true);
+      const exists36 = yield* f.fs.exists(f.path.join(f.destination, "revoked"));
+      expect(exists36).toBe(true);
     })
   );
   it.effect.prop(
@@ -796,10 +837,63 @@ it.layer(
       const changed = yield* collectCacheProducerWorkflowFiles(root);
       expect(changed).not.toEqual(original);
       yield* fs.writeFileString(path.join(root, "packages/fixture/src/new.ts"), "export {};\n");
-      expect(A.map(yield* collectCacheProducerWorkflowFiles(root), (file) => file.path)).toEqual([
+      const collectCacheProducerWorkflowFiles37 = yield* collectCacheProducerWorkflowFiles(root);
+      expect(A.map(collectCacheProducerWorkflowFiles37, (file) => file.path)).toEqual([
         "packages/fixture/src/main.ts",
         "packages/fixture/src/new.ts",
       ]);
+    })
+  );
+  it.effect("hashes complete source files larger than the former eight-MiB cap", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      const relative = "packages/fixture/large.bin";
+      const bytes = new Uint8Array(8 * 1024 * 1024 + 1);
+      bytes[bytes.length - 1] = 1;
+      yield* fs.writeFile(path.join(root, relative), bytes);
+      const files = yield* collectCacheProducerWorkflowFiles(root);
+      const actual = A.findFirst(files, (file) => file.path === relative);
+      assertSome(
+        O.map(actual, (file) => file.sha256),
+        yield* hashSourceBytes(bytes)
+      );
+    })
+  );
+  it.effect("rejects an oversized source before opening any payload", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      const file = path.join(root, "packages/fixture/oversized.bin");
+      yield* fs.writeFile(file, new Uint8Array());
+      yield* fs.truncate(file, 64 * 1024 * 1024 + 1);
+      const open = vi.spyOn(fs, "open");
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toBe("Workflow source file exceeded its byte bound.");
+      expect(open).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("rejects an aggregate source overflow before opening any payload", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      const files = A.map(A.range(0, 16), (index) => path.join(root, `packages/fixture/budget-${index}.bin`));
+      yield* Effect.forEach(files, (file) => fs.writeFileString(file, "x"), { concurrency: 4 });
+      const stat = fs.stat;
+      vi.spyOn(fs, "stat").mockImplementation((file) =>
+        stat(file).pipe(
+          Effect.map((info) => (A.contains(files, file) ? { ...info, size: ByteSize.mebibytes(64) } : info))
+        )
+      );
+      const open = vi.spyOn(fs, "open");
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toBe("Workflow source inventory exceeded its byte bound.");
+      expect(open).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("refuses source size drift after the metadata preflight", () =>
+    Effect.gen(function* () {
+      const { root } = yield* fixture();
+      vi.spyOn(Evidence, "readCacheExperimentBytes").mockReturnValue(Effect.succeed(new Uint8Array()));
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toBe("Workflow source size changed during inspection.");
     })
   );
   it.effect("preserves whitespace in Git paths instead of hashing a different file", () =>
@@ -807,7 +901,8 @@ it.layer(
       const { root, fs, path } = yield* fixture();
       const relative = "packages/fixture/src/ space\nname.ts";
       yield* fs.writeFileString(path.join(root, relative), "export {};\n");
-      expect(A.some(yield* collectCacheProducerWorkflowFiles(root), (file) => file.path === relative)).toBe(true);
+      const collectCacheProducerWorkflowFiles38 = yield* collectCacheProducerWorkflowFiles(root);
+      expect(A.some(collectCacheProducerWorkflowFiles38, (file) => file.path === relative)).toBe(true);
     })
   );
   it.effect("binds source alias targets and executable permission changes", () =>
@@ -818,7 +913,8 @@ it.layer(
       const original = yield* collectCacheProducerWorkflowFiles(root);
       assertTrue(A.some(original, (file) => O.contains(file.linkTarget, "main.ts")));
       yield* fs.chmod(source, 0o700);
-      expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(original);
+      const collectCacheProducerWorkflowFiles39 = yield* collectCacheProducerWorkflowFiles(root);
+      expect(collectCacheProducerWorkflowFiles39).not.toEqual(original);
     })
   );
   it.effect("rejects an alias escaping the workflow checkout", () =>
@@ -847,7 +943,8 @@ it.layer(
       regular.pipe(O.isSome, assertTrue);
       if (O.isSome(regular)) expect(regular.value.mode & 0o170000).toBe(0o100000);
       yield* fs.writeFileString(source, "export const value = 2;\n");
-      expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(original);
+      const collectCacheProducerWorkflowFiles40 = yield* collectCacheProducerWorkflowFiles(root);
+      expect(collectCacheProducerWorkflowFiles40).not.toEqual(original);
       yield* fs.writeFileString(path.join(root, "packages/fixture/src/nested/new.txt"), "new member\n");
       const changed = yield* collectCacheProducerWorkflowFiles(root);
       expect(A.findFirst(changed, (file) => file.path === "packages/fixture/alias")).not.toEqual(directory);
@@ -855,7 +952,8 @@ it.layer(
       yield* fs.chmod(nested, 0o755);
       const beforeMode = yield* collectCacheProducerWorkflowFiles(root);
       yield* fs.chmod(nested, 0o700);
-      expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(beforeMode);
+      const collectCacheProducerWorkflowFiles41 = yield* collectCacheProducerWorkflowFiles(root);
+      expect(collectCacheProducerWorkflowFiles41).not.toEqual(beforeMode);
     })
   );
   it.effect("records declared child aliases without following directory cycles", () =>
@@ -888,8 +986,11 @@ it.layer(
         const { root, fs, path } = yield* fixture();
         yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
         const hidden = path.join(root, "packages/fixture/src", member);
-        if (member === "ignored.ts") yield* fs.writeFileString(hidden, "ignored override\n");
-        else yield* fs.makeDirectory(hidden);
+        if (member === "ignored.ts") {
+          yield* fs.writeFileString(hidden, "ignored override\n");
+        } else {
+          yield* fs.makeDirectory(hidden);
+        }
         const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
         expect(error.message).toContain("undeclared");
       }

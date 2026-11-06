@@ -9,7 +9,6 @@ import {
   runChangesetGraphCheck,
 } from "@beep/repo-cli/test/Quality";
 import { parseChangesetFile } from "@changesets/parse";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -17,7 +16,6 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
-import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -25,6 +23,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
+import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -270,7 +269,8 @@ Record a private workspace change.
           const file = `.changeset/${name}.md`;
           if (outcome === "rejected") {
             expect(() => parseChangesetFile(content), name).toThrow();
-            expect(yield* changesetPackageReferencesFromText(file, content), name).toEqual([]);
+            const changesetPackageReferencesFromText1 = yield* changesetPackageReferencesFromText(file, content);
+            expect(changesetPackageReferencesFromText1, name).toEqual([]);
             return;
           }
           if (outcome === "loud") {
@@ -283,10 +283,8 @@ Record a private workspace change.
             A.map(parseChangesetFile(content).releases, (release) => release.name),
             Order.String
           );
-          const guardNames = A.map(
-            yield* changesetPackageReferencesFromText(file, content),
-            (reference) => reference.packageName
-          );
+          const changesetPackageReferencesFromText2 = yield* changesetPackageReferencesFromText(file, content);
+          const guardNames = A.map(changesetPackageReferencesFromText2, (reference) => reference.packageName);
           expect(releaseNames, name).toEqual(packages);
           expect(guardNames, name).toEqual(releaseNames);
         }),
@@ -379,7 +377,7 @@ Record a null bump.
     });
   });
 
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: false, timeout: "30 seconds" })((it) => {
+  it.layer(NodeTestLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     // 4-A2: the root patterns come from `@beep/repo-workspaces` `WorkspacePatterns.read`;
     // its typed read failure maps onto ChangesetGraphError with the failing file.
     it.effect("reports an unreadable root manifest as a ChangesetGraphError naming the file", () =>
@@ -413,7 +411,8 @@ Record a null bump.
         });
         yield* runGit(tmpDir, ["init"]);
         yield* runGit(tmpDir, ["add", "."]);
-        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["a/from-yaml/package.json"]);
+        const collectWorkspacePackageJsonFiles3 = yield* collectWorkspacePackageJsonFiles(tmpDir);
+        expect(collectWorkspacePackageJsonFiles3).toEqual(["a/from-yaml/package.json"]);
       })
     );
 
@@ -434,7 +433,8 @@ Record a null bump.
         });
         yield* runGit(tmpDir, ["init"]);
         yield* runGit(tmpDir, ["add", "."]);
-        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["packages/public/package.json"]);
+        const collectWorkspacePackageJsonFiles4 = yield* collectWorkspacePackageJsonFiles(tmpDir);
+        expect(collectWorkspacePackageJsonFiles4).toEqual(["packages/public/package.json"]);
       })
     );
 
@@ -450,10 +450,8 @@ Record a null bump.
         yield* writePackageJson(tmpDir, "tools/cli/package.json", { name: "@beep/cli", version: "0.0.0" });
         yield* runGit(tmpDir, ["init"]);
         yield* runGit(tmpDir, ["add", "."]);
-        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual([
-          "apps/web/package.json",
-          "libs/core/package.json",
-        ]);
+        const collectWorkspacePackageJsonFiles5 = yield* collectWorkspacePackageJsonFiles(tmpDir);
+        expect(collectWorkspacePackageJsonFiles5).toEqual(["apps/web/package.json", "libs/core/package.json"]);
       })
     );
 
@@ -484,7 +482,8 @@ Record a null bump.
         });
         yield* runGit(tmpDir, ["init"]);
         yield* runGit(tmpDir, ["add", "."]);
-        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["packages/demo/package.json"]);
+        const collectWorkspacePackageJsonFiles6 = yield* collectWorkspacePackageJsonFiles(tmpDir);
+        expect(collectWorkspacePackageJsonFiles6).toEqual(["packages/demo/package.json"]);
       })
     );
 

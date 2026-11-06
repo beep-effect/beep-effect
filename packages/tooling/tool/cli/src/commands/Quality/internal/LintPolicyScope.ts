@@ -14,6 +14,7 @@
 
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -26,7 +27,6 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { collectChangedFiles } from "../../../internal/repo-run/ChangedFiles.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { PolicyToolsFingerprint } from "../../Lint/PolicyFingerprint.schemas.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import type { Git } from "@beep/git/Git";
@@ -435,7 +435,8 @@ export const resolveLintPolicyScope = Effect.fn("LintPolicyScope.resolve")(funct
   base: string
 ): Effect.fn.Return<LintPolicyScope, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path | Git> {
   const facts = yield* collectLintPolicyChangeFacts(repoRoot, base);
-  return planLintPolicyScope(facts, yield* readLintPolicySeal(repoRoot), base);
+  const readLintPolicySeal1 = yield* readLintPolicySeal(repoRoot);
+  return planLintPolicyScope(facts, readLintPolicySeal1, base);
 });
 
 /**

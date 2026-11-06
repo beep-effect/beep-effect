@@ -42,10 +42,12 @@ it.effect.prop(
       const text = `${yield* Yaml.stringify(preamble)}---\n${yield* Yaml.stringify(main)}`;
       const render = Effect.fnUntraced(function* (content: string) {
         const docs = yield* Yaml.parseAll(content);
-        return A.join(yield* Effect.forEach(docs, (doc) => Yaml.stringify(doc)), "---\n");
+        const forEach1 = yield* Effect.forEach(docs, (doc) => Yaml.stringify(doc));
+        return A.join(forEach1, "---\n");
       });
       const canonical = yield* render(text);
-      assert.strictEqual(yield* render(canonical), canonical);
+      const render2 = yield* render(canonical);
+      assert.strictEqual(render2, canonical);
       const manager = yield* PnpmEnvLockfile.packageManager(text);
       const dependencies = yield* PnpmEnvLockfile.configDependencies(text);
       assertSome(
@@ -67,11 +69,10 @@ it.effect.prop(
           integrity: sample.integrity,
         })
       );
-      assert.deepStrictEqual(yield* PnpmEnvLockfile.packageManager(canonical), manager);
-      assert.deepStrictEqual(
-        HashMap.toEntries(yield* PnpmEnvLockfile.configDependencies(canonical)),
-        HashMap.toEntries(dependencies)
-      );
+      const packageManager3 = yield* PnpmEnvLockfile.packageManager(canonical);
+      assert.deepStrictEqual(packageManager3, manager);
+      const configDependencies4 = yield* PnpmEnvLockfile.configDependencies(canonical);
+      assert.deepStrictEqual(HashMap.toEntries(configDependencies4), HashMap.toEntries(dependencies));
     }),
   runs
 );

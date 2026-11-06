@@ -8,9 +8,12 @@ import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/v
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const runs = { arbitrary: fcRuns(100) };
 
@@ -54,7 +57,11 @@ describe("SectionMarkers", () => {
       { key: "a", begin: "", end: "END A" },
       { key: "a b", begin: "BEGIN A", end: "END A" },
     ];
-    for (const input of refused) assertFalse(S.is(SectionMarkers)(input), JSON.stringify(input));
+    for (const input of refused)
+      assertFalse(
+        S.is(SectionMarkers)(input),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(input), identity)
+      );
   });
 });
 

@@ -9,12 +9,16 @@ describe("TestTerminal regressions", () => {
       yield* terminal.end;
 
       yield* terminal.input([{ name: "enter" }, { name: "down" }]);
-      assert.deepStrictEqual(yield* terminal.reads, { keys: 0, lines: 0, subscriptions: 0 });
-      assert.strictEqual(yield* terminal.pending, 0);
+      const reads1 = yield* terminal.reads;
+      assert.deepStrictEqual(reads1, { keys: 0, lines: 0, subscriptions: 0 });
+      const pending2 = yield* terminal.pending;
+      assert.strictEqual(pending2, 0);
 
       yield* terminal.type("abc");
-      assert.deepStrictEqual(yield* terminal.reads, { keys: 0, lines: 0, subscriptions: 0 });
-      assert.strictEqual(yield* terminal.pending, 0);
+      const reads3 = yield* terminal.reads;
+      assert.deepStrictEqual(reads3, { keys: 0, lines: 0, subscriptions: 0 });
+      const pending4 = yield* terminal.pending;
+      assert.strictEqual(pending4, 0);
     })
   );
 });

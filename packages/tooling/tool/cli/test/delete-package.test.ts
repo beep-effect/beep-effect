@@ -557,8 +557,10 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
           assertTrue(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined);
 
-          expect(yield* fs.exists(packageDir)).toBe(false);
-          expect(yield* fs.readFileString("package.json")).not.toContain("packages/drivers/courtlistener");
+          const exists1 = yield* fs.exists(packageDir);
+          expect(exists1).toBe(false);
+          const readFileString2 = yield* fs.readFileString("package.json");
+          expect(readFileString2).not.toContain("packages/drivers/courtlistener");
           const lines = yield* TestConsole.logLines;
           expect(
             A.some(lines, (line) => P.isString(line) && Str.includes("removed with zero declared residue")(line))
@@ -874,7 +876,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         const read = yield* pruneChangesets("@beep/schema", [
           ["multi.md", '---\n"@beep/schema": patch\n"@beep/schema-org": minor\n---\n\nTouches @beep/schema.\n'],
         ]);
-        assertSome(yield* read("multi.md"), '---\n"@beep/schema-org": minor\n---\n\nTouches @beep/schema.\n');
+        const read3 = yield* read("multi.md");
+        assertSome(read3, '---\n"@beep/schema-org": minor\n---\n\nTouches @beep/schema.\n');
       })
     );
 
@@ -883,12 +886,14 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         const readQuoted = yield* pruneChangesets("@beep/schema", [
           ["quoted.md", "---\n'@beep/schema': minor\n'@beep/schema-org': patch\n---\n\nSingle-quoted keys.\n"],
         ]);
-        assertSome(yield* readQuoted("quoted.md"), "---\n'@beep/schema-org': patch\n---\n\nSingle-quoted keys.\n");
+        const readQuoted4 = yield* readQuoted("quoted.md");
+        assertSome(readQuoted4, "---\n'@beep/schema-org': patch\n---\n\nSingle-quoted keys.\n");
 
         const readUnquoted = yield* pruneChangesets("probe", [
           ["unquoted.md", "---\nprobe: patch\nprobe-extra: minor\n---\n\nUnquoted keys.\n"],
         ]);
-        assertSome(yield* readUnquoted("unquoted.md"), "---\nprobe-extra: minor\n---\n\nUnquoted keys.\n");
+        const readUnquoted5 = yield* readUnquoted("unquoted.md");
+        assertSome(readUnquoted5, "---\nprobe-extra: minor\n---\n\nUnquoted keys.\n");
       })
     );
 
@@ -899,9 +904,12 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           ["crlf.md", '---\r\n"@beep/a": patch\r\n"@beep/b": minor\r\n"@beep/c": minor\r\n---\r\n\r\nCRLF.\r\n'],
           ["comment.md", '---\n# bump both\n"@beep/a": patch\n"@beep/b": minor # keep\n---\n\n---\n"@beep/a": prose\n'],
         ]);
-        assertSome(yield* read("escaped.md"), '---\n"@beep/b": minor\n---\n\nEscaped key.\n');
-        assertSome(yield* read("crlf.md"), '---\r\n"@beep/b": minor\r\n"@beep/c": minor\r\n---\r\n\r\nCRLF.\r\n');
-        assertSome(yield* read("comment.md"), '---\n"@beep/b": minor # keep\n---\n\n---\n"@beep/a": prose\n');
+        const read6 = yield* read("escaped.md");
+        assertSome(read6, '---\n"@beep/b": minor\n---\n\nEscaped key.\n');
+        const read7 = yield* read("crlf.md");
+        assertSome(read7, '---\r\n"@beep/b": minor\r\n"@beep/c": minor\r\n---\r\n\r\nCRLF.\r\n');
+        const read8 = yield* read("comment.md");
+        assertSome(read8, '---\n"@beep/b": minor # keep\n---\n\n---\n"@beep/a": prose\n');
       })
     );
 
@@ -912,9 +920,12 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           ["blank.md", '---\n"@beep/a": patch\n"@beep/b": minor\n\n---\n\nTrailing blank.\n'],
           ["mixed.md", '---\n"@beep/a": patch\r\n"@beep/b": minor\n---\n\nMixed.\n'],
         ]);
-        assertSome(yield* read("spacing.md"), "---\n'@beep/b': minor\n---\n\nSibling spacing.\n");
-        assertSome(yield* read("blank.md"), '---\n"@beep/b": minor\n---\n\nTrailing blank.\n');
-        assertSome(yield* read("mixed.md"), '---\n"@beep/b": minor\n---\n\nMixed.\n');
+        const read9 = yield* read("spacing.md");
+        assertSome(read9, "---\n'@beep/b': minor\n---\n\nSibling spacing.\n");
+        const read10 = yield* read("blank.md");
+        assertSome(read10, '---\n"@beep/b": minor\n---\n\nTrailing blank.\n');
+        const read11 = yield* read("mixed.md");
+        assertSome(read11, '---\n"@beep/b": minor\n---\n\nMixed.\n');
       })
     );
 
@@ -925,8 +936,10 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           ["single.md", '---\n"@beep/schema": patch\n---\n\nOnly schema.\n'],
           ["sibling.md", sibling],
         ]);
-        assertNone(yield* read("single.md"));
-        assertSome(yield* read("sibling.md"), sibling);
+        const read12 = yield* read("single.md");
+        assertNone(read12);
+        const read13 = yield* read("sibling.md");
+        assertSome(read13, sibling);
       })
     );
   });
@@ -960,7 +973,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* seedLiveCourtlistener("@beep/courtlistener-mcp");
           const exit = yield* Effect.exit(runDeletePackage(["courtlistener", "--dry-run"]));
           assertTrue(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined);
-          expect(yield* TestConsole.errorLines).toStrictEqual([]);
+          const errorLines14 = yield* TestConsole.errorLines;
+          expect(errorLines14).toStrictEqual([]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -972,7 +986,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* seedLiveCourtlistener("@beep/courtlistener");
           const exit = yield* Effect.exit(runDeletePackage(["courtlistener", "--dry-run"]));
           expectReportedExit(exit);
-          expect(yield* TestConsole.errorLines).toStrictEqual([
+          const errorLines15 = yield* TestConsole.errorLines;
+          expect(errorLines15).toStrictEqual([
             "[delete-package] REFUSE [retired-name-collision/hard] @beep/courtlistener is both live and retired; reconcile name provenance before deletion.",
           ]);
         })
@@ -1012,7 +1027,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           yield* removeShapeTestRow(repoRoot, "@beep/courtlistener");
-          expect(yield* fs.readFileString(shapeTest)).toBe(
+          const readFileString16 = yield* fs.readFileString(shapeTest);
+          expect(readFileString16).toBe(
             A.join(
               [
                 "const currentPackagesRuntimeNamedImports = [",
@@ -1264,16 +1280,18 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ])
           );
           assertTrue(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined);
-          expect(yield* TestConsole.errorLines).toStrictEqual([]);
+          const errorLines17 = yield* TestConsole.errorLines;
+          expect(errorLines17).toStrictEqual([]);
+          const logLines18 = yield* TestConsole.logLines;
           expect(
-            A.some(
-              yield* TestConsole.logLines,
-              (line) => P.isString(line) && Str.includes("removed with zero declared residue")(line)
-            )
+            A.some(logLines18, (line) => P.isString(line) && Str.includes("removed with zero declared residue")(line))
           ).toBe(true);
-          expect(yield* fs.exists("packages/drivers/courtlistener")).toBe(false);
-          expect(yield* fs.exists("packages/drivers/courtlistener-identity/package.json")).toBe(true);
-          expect(yield* fs.readFileString("packages/foundation/modeling/identity/src/packages.ts")).toBe(
+          const exists19 = yield* fs.exists("packages/drivers/courtlistener");
+          expect(exists19).toBe(false);
+          const exists20 = yield* fs.exists("packages/drivers/courtlistener-identity/package.json");
+          expect(exists20).toBe(true);
+          const readFileString21 = yield* fs.readFileString("packages/foundation/modeling/identity/src/packages.ts");
+          expect(readFileString21).toBe(
             A.join(
               [
                 'const composers = $I.compose("courtlistener-identity");',
@@ -1283,7 +1301,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               "\n"
             )
           );
-          expect(yield* fs.readFileString(SHAPE_TEST)).toBe(
+          const readFileString22 = yield* fs.readFileString(SHAPE_TEST);
+          expect(readFileString22).toBe(
             A.join(
               [
                 "const currentPackagesRuntimeNamedImports = [",

@@ -75,10 +75,12 @@ describe("Public USPTO antecedent slice", () => {
   })((it) => {
     it.effect("preserves the recorded legacy slice while adding source-anchored relationships", () =>
       Effect.gen(function* () {
-        const expectedClaims = yield* S.decodeEffect(patentClaimsJson)(yield* fixture("US20200109732A1.claims.json"));
-        const expectedTree = yield* S.decodeEffect(claimElementTreeJson)(
-          yield* fixture("US20200109732A1.claim1.expected.json")
-        );
+        const argument = S.decodeEffect(patentClaimsJson);
+        const fixture1 = yield* fixture("US20200109732A1.claims.json");
+        const expectedClaims = yield* argument(fixture1);
+        const argument1 = S.decodeEffect(claimElementTreeJson);
+        const fixture2 = yield* fixture("US20200109732A1.claim1.expected.json");
+        const expectedTree = yield* argument1(fixture2);
         const result = yield* ClaimSelfCheck.use((service) =>
           service.checkPublished(
             UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make("20200109732") })
@@ -177,9 +179,15 @@ describe("Current strict public claim slice", () => {
   })((it) => {
     it.effect("matches the frozen full claim9 tree and the examiner's exact brush-roller phrase", () =>
       Effect.gen(function* () {
-        const expected = yield* S.decodeEffect(referenceTreesJson)(yield* brushFixture("expected.json"));
-        const canonical = yield* S.decodeEffect(canonicalClaimsJson)(yield* brushFixture("claims.json"));
-        const provenance = yield* S.decodeEffect(publicProvenanceJson)(yield* brushFixture("provenance.json"));
+        const argument2 = S.decodeEffect(referenceTreesJson);
+        const brushFixture3 = yield* brushFixture("expected.json");
+        const expected = yield* argument2(brushFixture3);
+        const argument3 = S.decodeEffect(canonicalClaimsJson);
+        const brushFixture4 = yield* brushFixture("claims.json");
+        const canonical = yield* argument3(brushFixture4);
+        const argument4 = S.decodeEffect(publicProvenanceJson);
+        const brushFixture5 = yield* brushFixture("provenance.json");
+        const provenance = yield* argument4(brushFixture5);
         assert.deepStrictEqual(provenance.officeActionDocumentIdentifiers, ["H2KCNOYDPXXIFW4"]);
         assert.strictEqual(provenance.officeActionMailDate, "2012-05-25");
         const action = A.join(provenance.officeActionSection112Text, " ");

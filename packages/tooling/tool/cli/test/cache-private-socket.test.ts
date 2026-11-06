@@ -110,19 +110,23 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })((it) =>
               Effect.flatMap((response) => response.text.pipe(Effect.as(response.status)))
             )
           );
-          expect(yield* upload(secrets.writer)).toBe(200);
+          const upload1 = yield* upload(secrets.writer);
+          expect(upload1).toBe(200);
           const restored = yield* client.get(endpoint, {
             headers: { authorization: `Bearer ${secrets.reader}` },
           });
           expect(restored.status).toBe(200);
           assertSome(Headers.get(restored.headers, "x-artifact-tag"), tag);
-          expect(new Uint8Array(yield* restored.arrayBuffer)).toEqual(bytes);
-          expect(yield* upload(secrets.reader)).toBe(403);
+          const arrayBuffer2 = yield* restored.arrayBuffer;
+          expect(new Uint8Array(arrayBuffer2)).toEqual(bytes);
+          const upload3 = yield* upload(secrets.reader);
+          expect(upload3).toBe(403);
           const finalRead = yield* client.get(endpoint, {
             headers: { authorization: `Bearer ${secrets.reader}` },
           });
           expect(finalRead.status).toBe(200);
-          expect(new Uint8Array(yield* finalRead.arrayBuffer)).toEqual(bytes);
+          const arrayBuffer4 = yield* finalRead.arrayBuffer;
+          expect(new Uint8Array(arrayBuffer4)).toEqual(bytes);
           const observed = yield* proxy.events;
           expect(observed).toHaveLength(4);
           const put = O.getOrThrow(A.get(observed, 0));
@@ -155,8 +159,10 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })((it) =>
       );
       expect(events).toHaveLength(4);
       const address = yield* Ref.get(saved).pipe(Effect.map(O.getOrThrow), Effect.map(Redacted.value));
-      expect(yield* fs.exists(address.path)).toBe(false);
-      expect(yield* fs.exists(path.dirname(address.path))).toBe(false);
+      const exists5 = yield* fs.exists(address.path);
+      expect(exists5).toBe(false);
+      const exists6 = yield* fs.exists(path.dirname(address.path));
+      expect(exists6).toBe(false);
     })
   );
 });

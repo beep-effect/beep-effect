@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -18,7 +19,6 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { isContainedLintPath } from "./internal/LintPackage.ts";
 import { SchemaFirstSchemaClass } from "./internal/SchemaFirstSchemaClass.ts";
 import { LintFileDiscoveryError } from "./Lint.errors.ts";
@@ -161,7 +161,7 @@ export const collectTypeScriptFiles = Effect.fn("Lint.collectTypeScriptFiles")(f
         if (isExcludedTypeScriptSourcePath(`${candidate}/`)) {
           continue;
         }
-        results = A.appendAll(results, yield* walk(candidate));
+        results = yield* walk(candidate).pipe(Effect.map(A.prependAll(results)));
         continue;
       }
 
@@ -173,7 +173,7 @@ export const collectTypeScriptFiles = Effect.fn("Lint.collectTypeScriptFiles")(f
     return results;
   });
 
-  return A.sort(yield* walk(root), Order.String);
+  return yield* walk(root).pipe(Effect.map(A.sort(Order.String)));
 });
 
 const recoverLintFileDiscovery = <A>(checkName: string, fallback: A) =>

@@ -229,10 +229,8 @@ export const makeDocketTrackedDatesCsvLayer = (
       const currentSheet = Effect.fnUntraced(function* (): Effect.fn.Return<ParsedSheet, DocketIntakeError> {
         const info = yield* fs.stat(options.path).pipe(Effect.mapError(sheetFailure("docket-sheet-unreadable")));
         const modified = O.map(info.mtime, (date) => DateTime.fromDateUnsafe(date).epochMilliseconds);
-        const cached = O.filter(
-          yield* Ref.get(cache),
-          (entry) => O.isSome(modified) && sameModified(entry.modified, modified)
-        );
+        const got = yield* Ref.get(cache);
+        const cached = O.filter(got, (entry) => O.isSome(modified) && sameModified(entry.modified, modified));
         if (O.isSome(cached)) {
           return cached.value.sheet;
         }

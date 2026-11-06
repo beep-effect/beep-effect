@@ -554,7 +554,8 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
       );
 
       const read = Effect.fn("PackageJsonFile.read")(function* (target: string) {
-        return yield* Package.decode(yield* readJson(target));
+        const readJson1 = yield* readJson(target);
+        return yield* Package.decode(readJson1);
       });
 
       const write: PackageJsonFileShape["write"] = dual(
@@ -570,7 +571,8 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
       );
 
       const readManifest = Effect.fn("PackageJsonFile.readManifest")(function* (target: string) {
-        return yield* PackageManifest.decode(yield* readJson(target));
+        const readJson2 = yield* readJson(target);
+        return yield* PackageManifest.decode(readJson2);
       });
 
       const writeManifest: PackageJsonFileShape["writeManifest"] = dual(

@@ -6,6 +6,18 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import {
+  isCi,
+  isCiSync,
+  readTurboCacheEnvironment,
+  resolveTurboCacheStep,
+  turboEnvExtendsAmbient,
+  turboEnvOverrides,
+} from "@beep/repo-cli-kit/cli/EnvConfig";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import { resolveTurboCachePlan, turboCachePlanArgs } from "@beep/repo-cli-kit/cli/TurboCache";
+import { QualityTaskStep, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
@@ -22,18 +34,6 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as Regex from "effect/RegExp";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import {
-  isCi,
-  isCiSync,
-  readTurboCacheEnvironment,
-  resolveTurboCacheStep,
-  turboEnvExtendsAmbient,
-  turboEnvOverrides,
-} from "../../../internal/cli/EnvConfig.ts";
-import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import { printLines } from "../../../internal/cli/Printer.ts";
-import { resolveTurboCachePlan, turboCachePlanArgs } from "../../../internal/cli/TurboCache.ts";
-import { QualityTaskStep, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { collectChangedFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import {
   aggregateGeneratedDocs,
@@ -44,6 +44,7 @@ import {
   resolveDocgenWorkspacePackage,
 } from "./Operations.ts";
 import type { Git } from "@beep/git/Git";
+import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
@@ -51,7 +52,6 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
-import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { DocgenConfigDocument, DocgenPackageAnalysis, DocgenWorkspacePackage } from "./Operations.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/Local");
@@ -520,6 +520,7 @@ const buildPlanFromChangedFiles = Effect.fn("DocgenLocal.buildPlanFromChangedFil
     O.getOrElse(() => "scoped" as const)
   );
 
+  const argument1 = localParallel(options.parallel);
   return DocgenLocalPlan.make({
     base: options.base,
     changedFiles,
@@ -527,10 +528,16 @@ const buildPlanFromChangedFiles = Effect.fn("DocgenLocal.buildPlanFromChangedFil
     fullReasons,
     head: options.head,
     mode,
-    parallel: localParallel(options.parallel),
+    parallel: argument1,
     selectedPackages: sortedSelectedPackages,
     turboArgs:
-      mode === "scoped" ? [...turboArgsForSelectedPackages(sortedSelectedPackages, options.parallel, yield* isCi)] : [],
+      mode === "scoped"
+        ? [
+            ...(yield* Effect.map(isCi, (value) =>
+              turboArgsForSelectedPackages(sortedSelectedPackages, options.parallel, value)
+            )),
+          ]
+        : [],
   });
 });
 
@@ -563,17 +570,26 @@ const buildPlanFromPackage = Effect.fn("DocgenLocal.buildPlanFromPackage")(funct
   const selectedPackages = [selectedPackageFromWorkspacePackage(target, [`--package ${packageSelector}`])] as const;
   const mode: DocgenLocalMode = options.full ? "full" : "scoped";
 
+  const argument2 = A.empty();
+  const argument3 = A.empty();
+  const argument4 = localParallel(options.parallel);
   return DocgenLocalPlan.make({
     base: options.base,
-    changedFiles: A.empty(),
+    changedFiles: argument2,
     fallbackCommand: DOCGEN_FULL_COMMAND,
-    fullReasons: A.empty(),
+    fullReasons: argument3,
     head: options.head,
     mode,
-    parallel: localParallel(options.parallel),
+    parallel: argument4,
     selectedPackages,
     turboArgs:
-      mode === "scoped" ? [...turboArgsForSelectedPackages(selectedPackages, options.parallel, yield* isCi)] : [],
+      mode === "scoped"
+        ? [
+            ...(yield* Effect.map(isCi, (value) =>
+              turboArgsForSelectedPackages(selectedPackages, options.parallel, value)
+            )),
+          ]
+        : [],
   });
 });
 

@@ -1,5 +1,6 @@
 import { CacheLinkedFile, CacheLinkerResolution, CacheRuntimeLinkerSnapshot } from "@beep/repo-cli/commands/Cache";
 import {
+  collectCacheRuntimeLinker,
   inspectCacheLinkedFile,
   inspectCacheLinkerResolution,
   parseCacheLinkerOutput,
@@ -28,7 +29,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("runtime startup 
       );
       expect(first).toEqual(["/lib64/ld.so", "/usr/lib/libz.so"]);
       expect(second).toEqual(first);
-      expect(yield* parseCacheLinkerOutput("\tstatically linked\n")).toEqual([]);
+      const parsedCacheLinkerOutput = yield* parseCacheLinkerOutput("\tstatically linked\n");
+      expect(parsedCacheLinkerOutput).toEqual([]);
     })
   );
 
@@ -47,8 +49,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("runtime startup 
           A.makeBy(257, (i) => `/usr/lib/lib${i}.so (0x123)`),
           "\n"
         ),
-      ])
-        expect(yield* parseCacheLinkerOutput(output).pipe(Effect.isFailure)).toBe(true);
+      ]) {
+        const pipe5 = yield* parseCacheLinkerOutput(output).pipe(Effect.isFailure);
+        expect(pipe5).toBe(true);
+      }
     })
   );
 
@@ -75,9 +79,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("runtime startup 
       const changed = yield* inspectCacheLinkedFile(alias);
       expect(changed.target).toBe(retargeted.target);
       expect(changed.sha256).not.toBe(retargeted.sha256);
-      expect(yield* inspectCacheLinkedFile(root).pipe(Effect.isFailure)).toBe(true);
+      const pipe1 = yield* inspectCacheLinkedFile(root).pipe(Effect.isFailure);
+      expect(pipe1).toBe(true);
       yield* fs.remove(second);
-      expect(yield* inspectCacheLinkedFile(alias).pipe(Effect.isFailure)).toBe(true);
+      const pipe2 = yield* inspectCacheLinkedFile(alias).pipe(Effect.isFailure);
+      expect(pipe2).toBe(true);
     })
   );
 
@@ -90,8 +96,28 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("runtime startup 
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-linker-invalid-" });
       const file = path.join(root, "not-an-executable");
       yield* fs.writeFileString(file, "not an ELF executable\n");
-      expect(yield* inspectCacheLinkerResolution(root, file).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* inspectCacheLinkerResolution(root, path.join(root, "missing")).pipe(Effect.isFailure)).toBe(true);
+      const pipe3 = yield* inspectCacheLinkerResolution(root, file).pipe(Effect.isFailure);
+      expect(pipe3).toBe(true);
+      const pipe4 = yield* inspectCacheLinkerResolution(root, path.join(root, "missing")).pipe(Effect.isFailure);
+      expect(pipe4).toBe(true);
+    })
+  );
+
+  it.effect("retains every runtime role with the observed detector and loader identities", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* collectCacheRuntimeLinker("/", {
+        bun: "/usr/bin/bash",
+        node: "/usr/bin/bash",
+        turbo: "/usr/bin/bash",
+        biome: "/usr/bin/bash",
+        bash: "/usr/bin/bash",
+        sh: "/usr/bin/bash",
+      });
+      expect(isCacheRuntimeLinkerSnapshot(snapshot)).toBe(true);
+      expect(snapshot.detector.path).toBe("/usr/bin/ldd");
+      expect(snapshot.loader.path).toBe("/lib64/ld-linux-x86-64.so.2");
+      expect(snapshot.executables.bun).toMatchObject({ _tag: "Dynamic" });
+      expect(snapshot.executables.sh).toEqual(snapshot.executables.bun);
     })
   );
 

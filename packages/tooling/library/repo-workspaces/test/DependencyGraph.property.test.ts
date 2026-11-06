@@ -16,7 +16,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -36,7 +37,9 @@ it.effect.prop(
       assert.strictEqual(graph.toMermaid(), text);
       // README: node and edge ordering must be independent of declaration order.
       assert.strictEqual(DependencyGraph.make({ packages: A.reverse(graph.packages) }).toMermaid(), text);
-      const decoded = yield* S.decodeEffect(DependencyGraph)(yield* S.encodeEffect(DependencyGraph)(graph));
+      const argument = S.decodeEffect(DependencyGraph);
+      const value2 = yield* S.encodeEffect(DependencyGraph)(graph);
+      const decoded = yield* argument(value2);
       assert.strictEqual(decoded.toMermaid(), text);
     }),
   runs

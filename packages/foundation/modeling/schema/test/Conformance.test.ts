@@ -20,10 +20,12 @@ import { assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const decodeAnnotationResult = S.decodeResult(Annotation);
 const decodeEnforcementResult = S.decodeResult(Enforcement);
@@ -252,7 +254,10 @@ describe("Conformance", () => {
 
     A.forEach(invalidDescriptors, (descriptor, index) => {
       pipe(decodeUnknownInvariantResult(descriptor), Result.isFailure, (failed) =>
-        assertTrue(failed, `Invalid invariant descriptor ${index}: ${JSON.stringify(descriptor)}`)
+        assertTrue(
+          failed,
+          `Invalid invariant descriptor ${index}: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(descriptor), identity)}`
+        )
       );
     });
 
@@ -372,7 +377,10 @@ describe("Conformance", () => {
 
     A.forEach(invalidRevisions, (revision, index) => {
       pipe(decodeUnknownRevisionResult(revision), Result.isFailure, (failed) =>
-        assertTrue(failed, `Invalid revision ${index}: ${JSON.stringify(revision)}`)
+        assertTrue(
+          failed,
+          `Invalid revision ${index}: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(revision), identity)}`
+        )
       );
     });
     pipe(

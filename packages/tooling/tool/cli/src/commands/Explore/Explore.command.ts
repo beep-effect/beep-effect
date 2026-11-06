@@ -10,10 +10,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { PacketEventStoreLive } from "../Goals/PacketCore/PacketEventStore.ts";
 import { exploreAtlasCommand } from "./Atlas.ts";
 import { runExploreCheck } from "./Check.ts";

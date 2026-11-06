@@ -247,7 +247,8 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
  * @since 0.0.0
  */
 export const encodeRetentionReport = Effect.fn("Retention.encodeReport")(function* (report: RetentionReport) {
-  return `${canonicalDetectionJson(yield* S.encodeEffect(RetentionReport)(report).pipe(unavailable("encode")))}\n`;
+  const pipe1 = yield* S.encodeEffect(RetentionReport)(report).pipe(unavailable("encode"));
+  return `${canonicalDetectionJson(pipe1)}\n`;
 });
 
 /**

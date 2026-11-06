@@ -1,0 +1,10 @@
+2026-11-02T22:33:10.6549324Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-11-02T22:33:30.1639718Z HEAD is now at 1a4ab0f35 Merge d738c948ba3b4f2341c3f2db6c44c8c31d5f0b95 into 5200ca9f357e37c79301ea46e7cf4e818c81ff59
+2026-11-02T22:33:30.1852802Z 1a4ab0f35e97440350f0e4f23fcfbfccfe851916
+2026-11-02T22:33:31.6979206Z ##[group]Run oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+2026-11-02T22:33:32.8546081Z ##[group]Run actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+2026-11-02T22:35:32.3114910Z @beep/law-practice-server:test:integration:parallel:  ✓ test/integration/CitationCleanerNativeCustom.test.ts (1 test) 15775ms
+2026-11-02T22:43:41.2019874Z @beep/law-practice-server:test:integration:parallel:  ✓ test/integration/CitationHtmlUnicode.test.ts (1 test) 504723ms
+2026-11-02T22:43:41.2084436Z @beep/law-practice-server:test:integration:parallel:  Test Files  2 passed (2)
+2026-11-02T22:43:41.2085968Z @beep/law-practice-server:test:integration:parallel:       Tests  2 passed (2)
+2026-11-02T22:43:41.2089021Z @beep/law-practice-server:test:integration:parallel:    Duration  514.96s (tests 96%, transform 3%, import 1%)

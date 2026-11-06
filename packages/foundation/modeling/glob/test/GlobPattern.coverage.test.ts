@@ -66,8 +66,9 @@ describe("GlobPattern remaining branches", () => {
         throw defect;
       });
       try {
+        const exit1 = yield* Effect.exit(Effect.sync(() => GlobPattern.make({ source: "valid" })));
         assertExitFailure(
-          yield* Effect.exit(Effect.sync(() => GlobPattern.make({ source: "valid" }))),
+          exit1,
           Cause.die(new Error("Constructor adapter can only throw schema issues", { cause: Cause.die(defect) }))
         );
       } finally {
@@ -83,7 +84,8 @@ describe("GlobPattern remaining branches", () => {
         throw defect;
       });
       try {
-        assertExitFailure(yield* Effect.exit(Effect.sync(() => GlobPattern.compileResult("valid"))), Cause.die(defect));
+        const exit2 = yield* Effect.exit(Effect.sync(() => GlobPattern.compileResult("valid")));
+        assertExitFailure(exit2, Cause.die(defect));
       } finally {
         spy.mockRestore();
       }

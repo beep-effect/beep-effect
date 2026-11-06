@@ -22,6 +22,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
@@ -40,16 +42,11 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  gitTreeEntriesFromNulOutput,
-  resolveGitCommit,
-  runGitRawOutput,
-  sortedUniquePaths,
-} from "../../internal/repo-run/GitExec.ts";
+import { adaptGitKitError, resolveGitCommit, sortedUniquePaths } from "../../internal/repo-run/GitExec.ts";
 import { sha256Hex } from "../Goals/PacketCore/PacketDigest.ts";
 import { CHANGE_ATOM_KIND_VALUES, ChangeAtom, ChangeSet, RouteError } from "./Route.schemas.ts";
 import { ChangeClassifier } from "./Route.service.ts";
-import type { Git } from "@beep/git/Git";
+import type { NameStatusEntry } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -180,112 +177,62 @@ export class ClassifyDiff extends S.Opaque<ClassifyDiff, { readonly brand: uniqu
  */
 export type RouteReadAt<R = never> = (ref: string, path: string) => Effect.Effect<O.Option<string>, RouteError, R>;
 
-const RenameStatus = S.String.check(S.isPattern(/^R[0-9]+$/u)).pipe(
-  $I.annoteSchema("RenameStatus", { description: "A git rename name-status field such as R100." })
-);
-const CopyStatus = S.String.check(S.isPattern(/^C[0-9]+$/u)).pipe(
-  $I.annoteSchema("CopyStatus", { description: "A git copy name-status field such as C075." })
-);
-const isRenameStatus = S.is(RenameStatus);
-const isCopyStatus = S.is(CopyStatus);
-const isChangedPathStatus = S.is(ChangedPathStatus);
-const isNonEmptyString = S.is(S.NonEmptyString);
-
-type NameStatusRecord = {
-  readonly width: number;
-  readonly entries: ReadonlyArray<ChangedPathEntry>;
+// The kit's decoded change kinds, back to the name-status letters the classifier keys on (`renamed` and `copied`
+// are split below; `--no-renames` keeps them out of the live listing).
+const KIT_STATUS_LETTERS: Readonly<
+  Record<Exclude<NameStatusEntry["status"], "renamed" | "copied">, ChangedPathStatus>
+> = {
+  added: "A",
+  modified: "M",
+  deleted: "D",
+  typeChanged: "T",
+  unmerged: "U",
+  unknown: "X",
+  broken: "B",
 };
 
-const pathField = (fields: ReadonlyArray<string>, index: number): O.Option<string> =>
-  O.filter(A.get(fields, index), isNonEmptyString);
-
-// Boolean (not refining) predicates: a pattern check refines `string` to `string`, which would make
-// `Match` treat the first case as exhaustive.
-const renameField = (status: string): boolean => isRenameStatus(status);
-const copyField = (status: string): boolean => isCopyStatus(status);
-
-const nameStatusRecord = (
-  fields: ReadonlyArray<string>,
-  index: number
-): ((status: string) => O.Option<NameStatusRecord>) => {
-  const paths = O.all([pathField(fields, index + 1), pathField(fields, index + 2)]);
-  return Match.type<string>().pipe(
-    Match.when(renameField, () =>
-      O.map(paths, ([source, target]) => ({
-        width: 3,
-        entries: [
-          ChangedPathEntry.make({ path: source, status: "D" }),
-          ChangedPathEntry.make({ path: target, status: "A" }),
-        ],
-      }))
+const kitEntryPaths = (entry: NameStatusEntry): ReadonlyArray<ChangedPathEntry> =>
+  Match.value(entry.status).pipe(
+    Match.when("renamed", () =>
+      A.append(
+        A.map(A.fromOption(O.fromUndefinedOr(entry.oldPath)), (path) => ChangedPathEntry.make({ path, status: "D" })),
+        ChangedPathEntry.make({ path: entry.path, status: "A" })
+      )
     ),
-    Match.when(copyField, () =>
-      O.map(paths, ([, target]) => ({
-        width: 3,
-        entries: [ChangedPathEntry.make({ path: target, status: "A" })],
-      }))
-    ),
-    Match.orElse((status) =>
-      O.map(O.all([O.liftPredicate(status, isChangedPathStatus), pathField(fields, index + 1)]), ([letter, path]) => ({
-        width: 2,
-        entries: [ChangedPathEntry.make({ path, status: letter })],
-      }))
-    )
+    Match.when("copied", () => [ChangedPathEntry.make({ path: entry.path, status: "A" })]),
+    Match.orElse((status) => [ChangedPathEntry.make({ path: entry.path, status: KIT_STATUS_LETTERS[status] })])
   );
-};
 
 /**
- * Parse `git diff --name-status -z` output into changed-path entries.
+ * Maps `Git.nameStatus` entries onto changed-path entries.
  *
  * **Details**
  *
- * Returns `None` on any malformed record (an unknown status, a missing path,
- * output not terminated by NUL) rather than guessing at the remainder. A
- * rename becomes a deletion of its source and an addition of its target; a
- * copy becomes an addition of its target.
+ * A rename becomes a deletion of its source and an addition of its target; a
+ * copy becomes an addition of its target; every other change keeps its
+ * name-status letter.
  *
  * **Example** (Split a rename)
  *
  * ```ts import.meta.vitest name="Split a rename"
- * import { changedPathEntriesFromNameStatus } from "@beep/repo-cli/commands/Ci/RouteClassify"
+ * import { NameStatusEntry } from "@beep/git/Git"
+ * import { changedPathEntriesFromKit } from "@beep/repo-cli/commands/Ci/RouteClassify"
  * import * as A from "effect/Array"
- * import * as O from "effect/Option"
  *
- * const entries = changedPathEntriesFromNameStatus("M\0bun.lock\0R100\0old.md\0new.md\0")
- * console.log(O.map(entries, A.map((entry) => `${entry.status} ${entry.path}`)))
- * // Some([ "M bun.lock", "D old.md", "A new.md" ])
+ * const entries = changedPathEntriesFromKit([
+ *   NameStatusEntry.make({ status: "modified", path: "bun.lock" }),
+ *   NameStatusEntry.make({ status: "renamed", oldPath: "old.md", path: "new.md", score: 100 }),
+ * ])
+ * A.map(entries, (entry) => `${entry.status} ${entry.path}`) // => ["M bun.lock", "D old.md", "A new.md"]
  * ```
  *
- * @param output - Raw stdout of `git diff --name-status -z`.
- * @returns The entries in output order, or `None` when any record is malformed.
+ * @param entries - The kit's name-status listing.
+ * @returns The changed-path entries in listing order.
  * @category parsing
  * @since 0.0.0
  */
-export const changedPathEntriesFromNameStatus = (output: string): O.Option<ReadonlyArray<ChangedPathEntry>> =>
-  pipe(nulFields(output), O.flatMap(nameStatusEntries));
-
-// NUL-terminated fields; `None` when non-empty output lacks the final terminator.
-const nulFields = (output: string): O.Option<ReadonlyArray<string>> =>
-  Str.isEmpty(output)
-    ? O.some(A.empty<string>())
-    : pipe(output, O.liftPredicate(Str.endsWith("\0")), O.map(flow(Str.split("\0"), A.dropRight(1))));
-
-// Walk the fields record by record; one malformed record makes the whole listing `None`.
-const nameStatusEntries = (fields: ReadonlyArray<string>): O.Option<ReadonlyArray<ChangedPathEntry>> =>
-  pipe(
-    A.unfold(O.some(0), (state: O.Option<number>) =>
-      O.flatMap(state, (index) =>
-        index >= A.length(fields)
-          ? O.none()
-          : O.map(A.get(fields, index), (status) => {
-              const record = nameStatusRecord(fields, index)(status);
-              return [record, O.map(record, (parsed) => index + parsed.width)] as const;
-            })
-      )
-    ),
-    O.all,
-    O.map(A.flatMap((record) => record.entries))
-  );
+export const changedPathEntriesFromKit: (entries: ReadonlyArray<NameStatusEntry>) => ReadonlyArray<ChangedPathEntry> =
+  A.flatMap(kitEntryPaths);
 
 type PathFacts = {
   readonly path: string;
@@ -700,7 +647,8 @@ const readWorkspace = Effect.fnUntraced(function* <R>(
   read: RouteReadAt<R>,
   ref: string
 ): Effect.fn.Return<RefWorkspace, RouteError, R> {
-  const manifest = O.flatMap(yield* read(ref, MANIFEST_NAME), decodeManifestText);
+  const read1 = yield* read(ref, MANIFEST_NAME);
+  const manifest = O.flatMap(read1, decodeManifestText);
   return {
     ref,
     globs: pipe(manifest, O.map(workspacePatterns), O.flatMap(flow(GlobSet.compileResult, Result.getSuccess))),
@@ -901,46 +849,59 @@ const routeGitErrors: GitCommandErrorAdapter<RouteError> = {
   onTruncated: O.some((commandLine: string) => RouteError.new("git", `${commandLine} printed truncated output.`)),
 };
 
-// Read a blob at a commit: `ls-tree` decides presence (an absent path is not a git failure), `cat-file` reads it.
+// Read a blob at a commit: `ls-tree` decides presence (an absent path is not a git failure), `show` reads it.
 const gitReadAt =
-  (
-    repoRoot: string
-  ): RouteReadAt<Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
+  (repoRoot: string): RouteReadAt<Git> =>
   (ref, path) =>
     Effect.gen(function* () {
-      const listing = yield* runGitRawOutput(
-        repoRoot,
-        ["ls-tree", "-z", "--full-tree", ref, "--", `:(literal)${path}`],
-        routeGitErrors
-      );
-      const entries = yield* Effect.fromOption(gitTreeEntriesFromNulOutput(listing), () =>
-        RouteError.new("git", `git ls-tree ${ref} -- ${path} printed output that does not parse.`)
-      );
-      const blob = A.findFirst(entries, (entry) => entry.path === path && entry.objectType === "blob");
-      if (O.isNone(blob)) {
+      const git = yield* Git;
+      const literal = `:(literal)${path}`;
+      const entries = yield* git
+        .lsTree(repoRoot, ref, { fullTree: true, pathspec: [literal] })
+        .pipe(Effect.mapError(adaptGitKitError(GitCommand.lsTree(ref, [literal], true), routeGitErrors)));
+      const blobs = A.filter(entries, (entry) => entry.type === "blob");
+      if (!A.some(blobs, (entry) => entry.path === path)) {
         return O.none<string>();
       }
-      return O.some(yield* runGitRawOutput(repoRoot, ["cat-file", "blob", blob.value.objectId], routeGitErrors));
+      return yield* git
+        .show(repoRoot, ref, path)
+        .pipe(Effect.mapError(adaptGitKitError(GitCommand.show(ref, path), routeGitErrors)));
     }).pipe(Effect.withSpan("RouteClassify.gitReadAt", { attributes: { ref, path } }));
 
-const decodeCommitCount = S.decodeUnknownOption(S.FiniteFromString.pipe(S.decodeTo(S.Natural)));
+const nameStatusUnparseable = (base: string, head: string) => () =>
+  RouteError.new("git", `git diff --name-status -z ${base} ${head} printed output that does not parse.`);
+
+const commitCountUnparseable = (range: string) => () =>
+  RouteError.new("git", `git rev-list --count ${range} printed a count that does not parse.`);
 
 const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(function* (input: ClassifyInput) {
+  const git = yield* Git;
   const base = yield* resolveGitCommit(input.repoRoot, input.base, routeGitErrors);
   const head = yield* resolveGitCommit(input.repoRoot, input.head, routeGitErrors);
-  const output = yield* runGitRawOutput(
-    input.repoRoot,
-    ["diff", "--name-status", "-z", "--no-renames", base, head, "--"],
-    routeGitErrors
+  const listing = { base, head, twoDot: true, noRenames: true } as const;
+  const listed = yield* git
+    .nameStatus(input.repoRoot, listing)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.nameStatus(base, head, false, listing),
+          routeGitErrors,
+          O.some(nameStatusUnparseable(base, head))
+        )
+      )
+    );
+  const range = `${base}..${head}`;
+  const commits = yield* git
+    .revListCount(input.repoRoot, range)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(GitCommand.revListCount(range), routeGitErrors, O.some(commitCountUnparseable(range)))
+      )
+    );
+  return yield* classifyChangedPaths(
+    ClassifyDiff.make({ base, head, entries: changedPathEntriesFromKit(listed), commits }),
+    gitReadAt(input.repoRoot)
   );
-  const entries = yield* Effect.fromOption(changedPathEntriesFromNameStatus(output), () =>
-    RouteError.new("git", `git diff --name-status -z ${base} ${head} printed output that does not parse.`)
-  );
-  const counted = yield* runGitRawOutput(input.repoRoot, ["rev-list", "--count", `${base}..${head}`], routeGitErrors);
-  const commits = yield* Effect.fromOption(decodeCommitCount(Str.trim(counted)), () =>
-    RouteError.new("git", `git rev-list --count ${base}..${head} printed a count that does not parse.`)
-  );
-  return yield* classifyChangedPaths(ClassifyDiff.make({ base, head, entries, commits }), gitReadAt(input.repoRoot));
 });
 
 /**
@@ -952,7 +913,7 @@ const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(funct
  * {@link ChangeSet} carries the resolved shas), lists the diff with
  * `git diff --name-status -z --no-renames`, counts the added commits with
  * `git rev-list --count <base>..<head>`, and reads files at either commit
- * with `git ls-tree` and `git cat-file blob`. Only a failing git command is
+ * with `git ls-tree` and `git show`. Only a failing git command is
  * an error (`RouteError` reason `git`).
  *
  * **Example** (Provide the live classifier)

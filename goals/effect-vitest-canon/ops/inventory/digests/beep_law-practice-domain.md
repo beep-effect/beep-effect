@@ -21,7 +21,7 @@ Top files (all files, at most ten; descending action count):
 - `packages/law-practice/domain/test/LegalPositionTransitions.test.ts`: 2 review items; full lines 1–312.
 - `packages/law-practice/domain/test/PatentDocument.test.ts`: 2 review items; full lines 1–342.
 - `packages/law-practice/domain/test/CourtReporterVocabulary.test.ts`: 1 review items; full lines 1–476.
-- `packages/law-practice/domain/test/Footnote.test.ts`: 1 review items; full lines 1–60.
+- [pre-retirement Footnote test snapshot](https://github.com/beep-effect/beep-effect/blob/453364b0af8f2646a97eb4c550cc323a90d97575/packages/law-practice/domain/test/Footnote.test.ts): 1 review items; full lines 1–60.
 
 Layer topology: these assigned tests build no resource-bearing suite layers. Schema values, fixed vocabulary artifacts and text parsing are the actual subjects. Effect evaluation here is in-memory computation. No database, process, native filesystem or external-provider acquisition was performed or proposed. MemoryFS would not strengthen these subjects. No layer rebuild costs or speedup are measured.
 

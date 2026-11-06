@@ -17,7 +17,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -40,7 +41,8 @@ it.effect.prop(
       assertTrue(S.is(PortableTsconfig)(portable));
       const encoded = yield* S.encodeEffect(PortableTsconfig)(portable);
       assert.deepStrictEqual(encoded, portable);
-      assert.deepStrictEqual(yield* S.decodeEffect(PortableTsconfig)(encoded), portable);
+      const value2 = yield* S.decodeEffect(PortableTsconfig)(encoded);
+      assert.deepStrictEqual(value2, portable);
       assert.strictEqual(portable.compilerOptions.noEmit, true);
       assert.strictEqual(portable.compilerOptions.composite, false);
       assert.isFalse("typeRoots" in portable.compilerOptions);
@@ -60,7 +62,8 @@ it.effect.prop(
       assert.isFalse("typeRoots" in value.compilerOptions);
       assert.isFalse("outDir" in value.compilerOptions);
       assert.deepStrictEqual(PortableTsconfig.make(value.compilerOptions, { includeTypes: true }), value);
-      assert.deepStrictEqual(yield* S.encodeEffect(PortableTsconfig)(value), value);
+      const value3 = yield* S.encodeEffect(PortableTsconfig)(value);
+      assert.deepStrictEqual(value3, value);
     }),
   runs
 );

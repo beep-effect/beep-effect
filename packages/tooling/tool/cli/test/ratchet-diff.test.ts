@@ -163,7 +163,8 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
   it.effect(
     "succeeds and emits the ok line when no regression is present",
     Effect.fnUntraced(function* () {
-      const logged = A.length(yield* TestConsole.logLines);
+      const logLines1 = yield* TestConsole.logLines;
+      const logged = A.length(logLines1);
       const exit = yield* Effect.exit(
         enforceRatchet({
           regressions: [{ present: false, lines: ["skipped"], error: RatchetTestError.make({ message: "unused" }) }],
@@ -173,7 +174,8 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
       );
 
       exit.pipe(Exit.isSuccess, assertTrue);
-      expect(A.drop(yield* TestConsole.logLines, logged)).toEqual([
+      const logLines2 = yield* TestConsole.logLines;
+      expect(A.drop(logLines2, logged)).toEqual([
         "[demo] ok: current=0 baseline=0 introduced=0",
         "[demo] tighten-baseline: 1 finding(s) are no longer present",
       ]);
@@ -181,7 +183,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
   );
 });
 
-describe("internal/artifacts/ArtifactIo renderTruncatedLines", () => {
+describe("artifacts/ArtifactIo renderTruncatedLines", () => {
   it("renders every item when within the limit", () => {
     const lines = renderTruncatedLines({
       items: ["a", "b"],

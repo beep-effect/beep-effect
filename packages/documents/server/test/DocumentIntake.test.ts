@@ -137,7 +137,8 @@ describe("@beep/documents-server DocumentIntake", () => {
           expect(result.failure._tag).toBe("DocumentMaterializationFailed");
           expect(result.failure.reason).toContain("escapes the allowed root");
         }
-        pipe(yield* fs.exists(path.join(outsideRootPath, "client-default-default-client")), assertFalse);
+        const exists1 = yield* fs.exists(path.join(outsideRootPath, "client-default-default-client"));
+        pipe(exists1, assertFalse);
       })
     );
   });
@@ -173,12 +174,16 @@ describe("@beep/documents-server DocumentIntake", () => {
         yield* fs.writeFileString(outsideVictimPath, "unchanged");
         yield* fs.symlink(outsideVictimPath, legacyTemporaryPath);
 
-        const document = yield* intake.intakeDroppedFile(yield* complaintInput(vaultRootPath));
+        const complaintInput2 = yield* complaintInput(vaultRootPath);
+        const document = yield* intake.intakeDroppedFile(complaintInput2);
 
         expect(document.vaultPath.relativePath).toBe(projectedPath.relativePath);
-        expect(yield* fs.readFileString(outsideVictimPath)).toBe("unchanged");
-        expect(yield* fs.readFileString(targetPath)).toBe("complaint body");
-        expect(yield* fs.readLink(legacyTemporaryPath)).toBe(outsideVictimPath);
+        const readFileString3 = yield* fs.readFileString(outsideVictimPath);
+        expect(readFileString3).toBe("unchanged");
+        const readFileString4 = yield* fs.readFileString(targetPath);
+        expect(readFileString4).toBe("complaint body");
+        const readLink5 = yield* fs.readLink(legacyTemporaryPath);
+        expect(readLink5).toBe(outsideVictimPath);
         yield* Effect.flip(fs.readLink(targetPath));
       })
     );
@@ -198,8 +203,10 @@ describe("@beep/documents-server DocumentIntake", () => {
         const targetPath = path.join(vaultRootPath, ...firstDocument.vaultPath.segments);
 
         expect(documents).toHaveLength(8);
-        expect(yield* fs.readFileString(targetPath)).toBe("complaint body");
-        expect(yield* fs.readDirectory(path.dirname(targetPath))).toEqual([firstDocument.vaultPath.fileName]);
+        const readFileString6 = yield* fs.readFileString(targetPath);
+        expect(readFileString6).toBe("complaint body");
+        const readDirectory7 = yield* fs.readDirectory(path.dirname(targetPath));
+        expect(readDirectory7).toEqual([firstDocument.vaultPath.fileName]);
       })
     );
   });

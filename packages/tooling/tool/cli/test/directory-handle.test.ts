@@ -50,7 +50,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("DirectoryHandle", (it) 
       yield* fs.writeFileString(file, "");
 
       const bound = yield* openDirectoryHandle(real);
-      const expected = directoryIdentity(yield* fs.stat(real));
+      const stat1 = yield* fs.stat(real);
+      const expected = directoryIdentity(stat1);
       bound.pipe(O.isSome, assertTrue);
       expected.pipe(O.isSome, assertTrue);
       expect(sameDirectoryIdentity(O.getOrThrow(bound).identity, O.getOrThrow(expected))).toBe(true);
@@ -69,11 +70,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("DirectoryHandle", (it) 
       const bystander = yield* seedBystander(root);
       const victim = yield* seedStaleTree(root, bystander);
 
-      const handle = O.getOrThrow(yield* openDirectoryHandle(victim));
-      expect(yield* removeThroughDirectoryHandle(handle, victim)).toBe("removed");
+      const openDirectoryHandle2 = yield* openDirectoryHandle(victim);
+      const handle = O.getOrThrow(openDirectoryHandle2);
+      const removeThroughDirectoryHandle3 = yield* removeThroughDirectoryHandle(handle, victim);
+      expect(removeThroughDirectoryHandle3).toBe("removed");
 
-      expect(yield* fs.exists(victim)).toBe(false);
-      expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
+      const exists4 = yield* fs.exists(victim);
+      expect(exists4).toBe(false);
+      const exists5 = yield* fs.exists(path.join(bystander, "keep.txt"));
+      expect(exists5).toBe(true);
     })
   );
 
@@ -84,7 +89,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("DirectoryHandle", (it) 
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "directory-handle-swap-" });
       const bystander = yield* seedBystander(root);
       const victim = yield* seedStaleTree(root, bystander);
-      const handle = O.getOrThrow(yield* openDirectoryHandle(victim));
+      const openDirectoryHandle6 = yield* openDirectoryHandle(victim);
+      const handle = O.getOrThrow(openDirectoryHandle6);
 
       // The race the handle exists for: after binding, the bound directory is moved
       // aside and its path now leads to a live directory through a link.
@@ -94,9 +100,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("DirectoryHandle", (it) 
 
       // Emptying followed the descriptor to the moved directory; the final step found a
       // link instead of the bound directory at the path and left it alone.
-      expect(yield* removeThroughDirectoryHandle(handle, victim)).toBe("identity-changed");
-      expect(yield* fs.readDirectory(moved)).toEqual([]);
-      expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
+      const removeThroughDirectoryHandle7 = yield* removeThroughDirectoryHandle(handle, victim);
+      expect(removeThroughDirectoryHandle7).toBe("identity-changed");
+      const readDirectory8 = yield* fs.readDirectory(moved);
+      expect(readDirectory8).toEqual([]);
+      const exists9 = yield* fs.exists(path.join(bystander, "keep.txt"));
+      expect(exists9).toBe(true);
       (yield* fs.readLink(victim).pipe(Effect.option)).pipe(O.isSome, assertTrue);
     })
   );
@@ -108,7 +117,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("DirectoryHandle", (it) 
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "directory-handle-rename-" });
       const bystander = yield* seedBystander(root);
       const victim = yield* seedStaleTree(root, bystander);
-      const handle = O.getOrThrow(yield* openDirectoryHandle(victim));
+      const openDirectoryHandle10 = yield* openDirectoryHandle(victim);
+      const handle = O.getOrThrow(openDirectoryHandle10);
 
       // Another (empty) directory now sits at the path: the bound one moved aside. The
       // final rmdir checks the entry's identity through the parent and refuses it.
@@ -116,9 +126,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("DirectoryHandle", (it) 
       yield* fs.rename(victim, moved);
       yield* fs.makeDirectory(victim);
 
-      expect(yield* removeThroughDirectoryHandle(handle, victim)).toBe("identity-changed");
-      expect(yield* fs.readDirectory(moved)).toEqual([]);
-      expect(yield* fs.exists(victim)).toBe(true);
+      const removeThroughDirectoryHandle11 = yield* removeThroughDirectoryHandle(handle, victim);
+      expect(removeThroughDirectoryHandle11).toBe("identity-changed");
+      const readDirectory12 = yield* fs.readDirectory(moved);
+      expect(readDirectory12).toEqual([]);
+      const exists13 = yield* fs.exists(victim);
+      expect(exists13).toBe(true);
     })
   );
 
@@ -130,44 +143,56 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("DirectoryHandle", (it) 
       const bystander = yield* seedBystander(root);
       const stale = path.join(root, "stale.jsonl");
       yield* fs.writeFileString(stale, "stale\n");
-      const assessed = O.getOrThrow(directoryIdentity(yield* fs.stat(stale)));
+      const stat14 = yield* fs.stat(stale);
+      const assessed = O.getOrThrow(directoryIdentity(stat14));
 
       // A replacement written while the original still exists has another inode; once
       // renamed over the original it is kept, not unlinked.
       const fresh = path.join(root, "fresh.jsonl");
       yield* fs.writeFileString(fresh, "fresh\n");
       yield* fs.rename(fresh, stale);
-      expect(yield* unlinkBoundFile(stale, assessed)).toBe("identity-changed");
-      expect(yield* fs.readFileString(stale)).toBe("fresh\n");
+      const unlinkBoundFile15 = yield* unlinkBoundFile(stale, assessed);
+      expect(unlinkBoundFile15).toBe("identity-changed");
+      const readFileString16 = yield* fs.readFileString(stale);
+      expect(readFileString16).toBe("fresh\n");
 
       // A link put in its place is never followed, and a missing entry reads the same way.
       yield* fs.remove(stale);
       yield* fs.symlink(path.join(bystander, "keep.txt"), stale);
-      expect(yield* unlinkBoundFile(stale, assessed)).toBe("identity-changed");
-      expect(yield* fs.exists(path.join(bystander, "keep.txt"))).toBe(true);
+      const unlinkBoundFile17 = yield* unlinkBoundFile(stale, assessed);
+      expect(unlinkBoundFile17).toBe("identity-changed");
+      const exists18 = yield* fs.exists(path.join(bystander, "keep.txt"));
+      expect(exists18).toBe(true);
       yield* fs.remove(stale);
-      expect(yield* unlinkBoundFile(stale, assessed)).toBe("identity-changed");
+      const unlinkBoundFile19 = yield* unlinkBoundFile(stale, assessed);
+      expect(unlinkBoundFile19).toBe("identity-changed");
 
       // The assessed inode itself goes.
       yield* fs.writeFileString(stale, "stale\n");
-      const current = O.getOrThrow(directoryIdentity(yield* fs.stat(stale)));
-      expect(yield* unlinkBoundFile(stale, current)).toBe("removed");
-      expect(yield* fs.exists(stale)).toBe(false);
+      const stat20 = yield* fs.stat(stale);
+      const current = O.getOrThrow(directoryIdentity(stat20));
+      const unlinkBoundFile21 = yield* unlinkBoundFile(stale, current);
+      expect(unlinkBoundFile21).toBe("removed");
+      const exists22 = yield* fs.exists(stale);
+      expect(exists22).toBe(false);
 
       // A parent that cannot be bound, or an unlink the directory forbids, fails closed.
-      expect(yield* unlinkBoundFile(path.join(bystander, "keep.txt", "child"), current)).toBe("removal-failed");
+      const unlinkBoundFile23 = yield* unlinkBoundFile(path.join(bystander, "keep.txt", "child"), current);
+      expect(unlinkBoundFile23).toBe("removal-failed");
       const sealed = path.join(root, "sealed");
       const pinned = path.join(sealed, "pinned.txt");
       yield* fs.makeDirectory(sealed);
       yield* fs.writeFileString(pinned, "stale\n");
-      const pinnedIdentity = O.getOrThrow(directoryIdentity(yield* fs.stat(pinned)));
+      const stat24 = yield* fs.stat(pinned);
+      const pinnedIdentity = O.getOrThrow(directoryIdentity(stat24));
       const forbidden = yield* Effect.acquireUseRelease(
         fs.chmod(sealed, 0o500),
         () => unlinkBoundFile(pinned, pinnedIdentity),
         () => fs.chmod(sealed, 0o700).pipe(Effect.ignore)
       );
       expect(forbidden).toBe("removal-failed");
-      expect(yield* fs.exists(pinned)).toBe(true);
+      const exists25 = yield* fs.exists(pinned);
+      expect(exists25).toBe(true);
     })
   );
 });

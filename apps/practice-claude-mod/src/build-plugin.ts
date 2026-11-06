@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-
 /**
  * Builds the practice plugin into `dist/`: a directory marketplace
  * (`dist/.claude-plugin/marketplace.json`) whose one plugin lives at
@@ -15,8 +14,10 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { flow, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -50,7 +51,11 @@ export class PluginBuildFailed extends S.TaggedError<PluginBuildFailed, { readon
   $I.annote("PluginBuildFailed", { description: "Bundling the plugin's hooks module failed." })
 ) {}
 
-const json = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
+const json = flow(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 })),
+  Result.getOrThrowWith(identity),
+  Str.concat("\n")
+);
 
 const bundle = (entry: string, outfile: string) =>
   Effect.tryPromise({

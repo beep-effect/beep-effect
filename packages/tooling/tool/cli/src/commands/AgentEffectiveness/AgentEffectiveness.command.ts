@@ -31,6 +31,9 @@ import {
   makeAgentEffectivenessPromptBundle,
   syncAgentEffectivenessPhoenix,
 } from "@beep/repo-ai-metrics";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "@beep/repo-cli-kit/cli/Flags";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { A } from "@beep/utils";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -44,9 +47,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { resolveDataRoot } from "../AIMetrics/AIMetrics.config.ts";
 import { runAgentConventionComparison } from "./internal/EvalComparison.ts";
 import {
@@ -191,7 +191,7 @@ const renderDoctorReport: {
   2,
   Effect.fn("AgentEffectiveness.renderDoctorReport")(function* (report: AgentEffectivenessDoctorReport, json: boolean) {
     if (json) {
-      yield* Console.log(yield* agentEffectivenessDoctorReportToJson(report));
+      yield* agentEffectivenessDoctorReportToJson(report).pipe(Effect.flatMap(Console.log));
       return;
     }
     yield* printLines([
@@ -213,7 +213,7 @@ const renderAnnotationPlan: {
     json: boolean
   ) {
     if (json) {
-      yield* Console.log(yield* agentEffectivenessAnnotationPlanToJson(plan));
+      yield* agentEffectivenessAnnotationPlanToJson(plan).pipe(Effect.flatMap(Console.log));
       return;
     }
 
@@ -511,7 +511,7 @@ const makeEvalScoreProgram = Effect.fn("AgentEffectiveness.makeEvalScoreProgram"
   taskPath,
 }: MakeEvalScoreProgramOptions) {
   const resolvedDataRoot = record
-    ? O.some(yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local))
+    ? yield* Effect.asSome(resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local))
     : O.none<string>();
   return yield* runAgentEffectivenessEvalScoreCommand(
     RunAgentEffectivenessEvalScoreCommandOptions.make({

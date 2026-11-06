@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "claim-performance-source-coverage-repair/v1",
+  "pullRequest": 2685,
+  "failedHostedJob": 125995252391,
+  "focusedTests": 38,
+  "addedCases": 15,
+  "runtimeChanged": false,
+  "thresholdsChanged": false,
+  "sourceOrResultsChanged": false,
+  "localAdapterCoverage": {
+    "lines": 98.94,
+    "statements": 99.0,
+    "branches": 96.0,
+    "functions": 98.59
+  },
+  "hostedPackageFailure": {
+    "lines": 98.85,
+    "statements": 98.67,
+    "branches": 93.63
+  },
+  "hostedPackageFloors": {
+    "lines": 99.0,
+    "statements": 98.84,
+    "branches": 93.67
+  },
+  "hostedPlusFocusedProjection": {
+    "lines": 99.22,
+    "statements": 99.07,
+    "branches": 94.65
+  },
+  "projectionReceiptSha256": "13682ef823f4d0c28b3c2cd98ed700d106843ca3d490be3147d43a83c655da5e",
+  "projectionIsHostedRerun": false,
+  "hostedNodeVersion": "22.23.4",
+  "localNodeVersion": "24.22.1",
+  "sourceAndCoverageLocationMapsIdentical": true,
+  "otherInheritedFailures": "Await accepted main repair PR2682; no unaccepted branch integration",
+  "goalComplete": false
+}

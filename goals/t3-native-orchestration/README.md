@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,11 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet — final PR [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (replaced #2574) passed `yeet final-check`; the proposed closeout `completed-retained` awaits exact-head hosted readiness and merge evidence.
+P4 Close — the implementation merged in [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (`6fad8f6d0f`); closeout PR [#2664](https://github.com/beep-effect/beep-effect/pull/2664) recorded the local-state cleanup but merged before its readiness job reported, and [#2671](https://github.com/beep-effect/beep-effect/pull/2671) was merged the same way, and [#2675](https://github.com/beep-effect/beep-effect/pull/2675) merged with no readiness job at all, so closeout PR [#2696](https://github.com/beep-effect/beep-effect/pull/2696) rebound the `completed-retained` proposal to its own readiness verdict, merged at merge-ready, verified, and was adopted as a committed `closeout` by `goals set-status` in [#2703](https://github.com/beep-effect/beep-effect/pull/2703).
 
 ## Latest Evidence
 
-2026-11-02: removal map re-verified against `6bb8584b6d` (every row still present); installed T3 tool listing captured in `history/2026-11-02-t3-tool-listing.md`; live round-trip receipt in `history/2026-11-02-t3-round-trip.md`; reflection `history/reflections/2026-11-02-claude.md`; final PR #2594 (#2574 was closed: a pushed over-long commit subject failed required Commitlint).
+2026-11-02: removal map re-verified against `6bb8584b6d` (every row still present); installed T3 tool listing captured in `history/2026-11-02-t3-tool-listing.md`; live round-trip receipt in `history/2026-11-02-t3-round-trip.md`; reflection `history/reflections/2026-11-02-claude.md`; implementation PR #2594 merged `6fad8f6d0f` (it replaced #2574); local-state cleanup in `history/2026-11-03-local-state-cleanup.md`.
 
 ## Notes
 

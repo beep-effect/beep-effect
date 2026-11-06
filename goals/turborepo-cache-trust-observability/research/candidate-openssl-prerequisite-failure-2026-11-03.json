@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "cache-candidate-build-failure/v1",
+  "recordedAt": "2026-11-03T09:42:06.247972+00:00",
+  "runId": 41610315729,
+  "jobId": 125830272148,
+  "sourceRevision": "fae5b2098c8a08b77df6f9e33e370e0e01f2ea68",
+  "classification": "introduced missing native OpenSSL build prerequisites",
+  "diagnostic": "OpenSSL Configure failed because FindBin.pm was missing from the runner Perl installation.",
+  "failureBeforeArtifactPublication": true,
+  "cleanupStepSucceeded": true,
+  "logSha256": "31935027e5fae998358a140e1e55814af19451c7680b5e51c80b084bb137fc33",
+  "runnerStartedAt": "2026-11-03T09:31:00Z",
+  "completedAt": "2026-11-03T09:32:14Z",
+  "artifactUploadStep": "skipped",
+  "cleanupStep": "success",
+  "repair": "Verify GNU make and the OpenSSL-required Perl core modules; use perl-core on dnf and perl on apt. Preserve source/tool pins and all time, CPU, scratch, artifact and authorization bounds.",
+  "rerunPerformed": false,
+  "approvalOrQualificationGranted": false,
+  "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/41610315729",
+  "jobUrl": "https://github.com/beep-effect/beep-effect/actions/runs/41610315729/job/125830272148",
+  "scope": "Actual credential-free candidate build failure only; no artifact, cache performance or producer qualification claim."
+}

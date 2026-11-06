@@ -17,6 +17,7 @@
 
 import * as NodeOS from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -45,7 +46,6 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { AccountsError } from "./Accounts.errors.ts";
 import {
@@ -789,9 +789,9 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
 
   const crypto = yield* Digest.Digest;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const junieHome = yield* Config.String("JUNIE_HOME").pipe(
-    Config.withDefault(path.join(yield* Config.String("HOME"), ".junie"))
-  );
+  const argument = Config.String("JUNIE_HOME");
+  const String1 = yield* Config.String("HOME");
+  const junieHome = yield* argument.pipe(Config.withDefault(path.join(String1, ".junie")));
   const bus = yield* Config.String("DBUS_SESSION_BUS_ADDRESS").pipe(
     Config.withDefault(
       `unix:path=/run/user/${yield* Config.String("UID").pipe(Config.withDefault(`${NodeOS.userInfo().uid}`))}/bus`
@@ -852,7 +852,8 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
         Effect.provideService(Digest.Digest, crypto)
       );
       // A credential whose refresh token rotated during cycle lookup is never sent to switch_audience again.
-      if (HashSet.has(yield* Ref.get(junieRotatedCredentials), credentialFingerprint)) return junieAudienceRotated;
+      const got = yield* Ref.get(junieRotatedCredentials);
+      if (HashSet.has(got, credentialFingerprint)) return junieAudienceRotated;
       const cached = yield* Ref.get(junieAccessToken);
       if (O.exists(cached, (value) => value.credentialFingerprint !== credentialFingerprint)) {
         yield* Ref.set(junieAccessToken, O.none());
@@ -915,33 +916,39 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             )
           );
           if (listing.status !== 200) return Result.succeed(O.none<Redacted.Redacted<string>>());
-          const options = JunieAccessOptionsBodyJson.decodeOption(yield* listing.text);
+          const text1 = yield* listing.text;
+          const options = JunieAccessOptionsBodyJson.decodeOption(text1);
           if (O.isNone(options)) return Result.succeed(O.none<Redacted.Redacted<string>>());
           const licenseId = selectJunieLicense(
             options.value,
             O.flatMap(JunieAuthTestBodyJson.decodeOption(response.body), (body) => body.licenseType),
             time
           );
-          if (O.isSome(licenseId))
+          if (O.isSome(licenseId)) {
             yield* Ref.update(junieLicenses, HashMap.set(credentialFingerprint, licenseId.value));
+          }
           return Result.succeed(licenseId);
         });
         const mintExchange = Effect.fnUntraced(function* (time: number) {
-          const cachedLicense = HashMap.get(yield* Ref.get(junieLicenses), credentialFingerprint);
+          const got2 = yield* Ref.get(junieLicenses);
+          const cachedLicense = HashMap.get(got2, credentialFingerprint);
           const loaded = O.isSome(cachedLicense) ? Result.succeed(cachedLicense) : yield* loadLicense(time);
           if (Result.isFailure(loaded)) return loaded;
           const selected = loaded.success;
           if (O.isNone(selected)) return Result.succeed(O.none<Redacted.Redacted<string>>());
-          const provided = yield* client.execute(
-            yield* HttpClientRequest.post("https://api.jetbrains.ai/auth/jetbrains-jwt/provide-access/license/v2").pipe(
-              HttpClientRequest.bearerToken(Redacted.value(idToken.value)),
-              HttpClientRequest.bodyJson({ licenseId: Redacted.value(selected.value) })
-            )
+          const pipe3 = yield* HttpClientRequest.post(
+            "https://api.jetbrains.ai/auth/jetbrains-jwt/provide-access/license/v2"
+          ).pipe(
+            HttpClientRequest.bearerToken(Redacted.value(idToken.value)),
+            HttpClientRequest.bodyJson({ licenseId: Redacted.value(selected.value) })
           );
-          if (provided.status >= 400 && provided.status < 500)
+          const provided = yield* client.execute(pipe3);
+          if (provided.status >= 400 && provided.status < 500) {
             yield* Ref.update(junieLicenses, HashMap.remove(credentialFingerprint));
+          }
           if (provided.status !== 200) return Result.succeed(O.none<Redacted.Redacted<string>>());
-          const decoded = JunieExchangeBodyJson.decodeOption(yield* provided.text);
+          const text4 = yield* provided.text;
+          const decoded = JunieExchangeBodyJson.decodeOption(text4);
           if (O.isNone(decoded)) return Result.succeed(O.none<Redacted.Redacted<string>>());
 
           const exp = pipe(
@@ -972,8 +979,9 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           return decoded.value.token.pipe(O.some, Result.succeed);
         });
         const currentExchange = Effect.fnUntraced(function* (time: number) {
+          const got5 = yield* Ref.get(junieExchangeToken);
           const cachedExchange = O.filter(
-            yield* Ref.get(junieExchangeToken),
+            got5,
             (value) => value.credentialFingerprint === credentialFingerprint && value.expiresAt > time
           );
           return O.isSome(cachedExchange)
@@ -983,16 +991,15 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
         const quotaRequest = Effect.fnUntraced(function* (exchange: Redacted.Redacted<string>, suffix: string) {
           // Extend the caller's rules for both request and response client-span attributes.
           const redactedNames = yield* Headers.CurrentRedactedNames;
+          const pipe6 = yield* HttpClientRequest.post(`https://api.jetbrains.ai/user/v5/quota/${suffix}`).pipe(
+            HttpClientRequest.setHeaders({
+              "Grazie-Authenticate-JWT": Redacted.value(exchange),
+              "Grazie-Agent": JUNIE_GRAZIE_AGENT,
+            }),
+            HttpClientRequest.bodyJson({})
+          );
           const result = yield* client
-            .execute(
-              yield* HttpClientRequest.post(`https://api.jetbrains.ai/user/v5/quota/${suffix}`).pipe(
-                HttpClientRequest.setHeaders({
-                  "Grazie-Authenticate-JWT": Redacted.value(exchange),
-                  "Grazie-Agent": JUNIE_GRAZIE_AGENT,
-                }),
-                HttpClientRequest.bodyJson({})
-              )
-            )
+            .execute(pipe6)
             .pipe(
               Effect.provideService(Headers.CurrentRedactedNames, A.append(redactedNames, "grazie-authenticate-jwt"))
             );
@@ -1011,15 +1018,17 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           quotaReplies(exchange).pipe(Effect.map(([quota, refill]) => junieCycleOutcome(balance, quota, refill)));
         const detail = Effect.fnUntraced(function* () {
           const time = yield* Clock.currentTimeMillis;
+          const currentExchange7 = yield* currentExchange(time);
           return yield* withExchange(
-            yield* currentExchange(time),
+            currentExchange7,
             Effect.fnUntraced(function* (exchange) {
               const [quota, refill] = yield* quotaReplies(exchange);
               if (!isJunieTokenRejected(quota.status) && !isJunieTokenRejected(refill.status))
                 return junieCycleOutcome(balance, quota, refill);
               // A rejected Grazie token is dropped and re-minted once within this poll.
               yield* Ref.set(junieExchangeToken, O.none());
-              return yield* withExchange(yield* mintExchange(time), cycleFrom);
+              const mintExchange8 = yield* mintExchange(time);
+              return yield* withExchange(mintExchange8, cycleFrom);
             })
           );
         });
@@ -1030,7 +1039,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
         );
       });
       const initial = yield* authTest(token);
-      if (!isJunieTokenRejected(initial.status))
+      if (!isJunieTokenRejected(initial.status)) {
         return yield* enrich(
           initial,
           O.flatMap(
@@ -1038,6 +1047,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             (value) => value.id_token
           )
         );
+      }
       yield* Ref.set(junieAccessToken, O.none());
       const refreshed = yield* client.execute(
         HttpClientRequest.post("https://oauth.account.jetbrains.com/oauth2/token").pipe(
@@ -1066,7 +1076,8 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           })
         )
       );
-      return yield* enrich(yield* authTest(refresh.success.access_token), refresh.success.id_token);
+      const authTest9 = yield* authTest(refresh.success.access_token);
+      return yield* enrich(authTest9, refresh.success.id_token);
     });
     return yield* attempt().pipe(
       Effect.timeoutOption(REQUEST_TIMEOUT),
@@ -1225,7 +1236,9 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
   );
 
   const poll = Effect.fn("AccountsUsage.poll")(function* (account: AccountRef) {
-    if (account.provider === "junie") return AccountUsage.make({ account, outcome: yield* pollJunie() });
+    if (account.provider === "junie") {
+      return AccountUsage.make({ account, outcome: yield* pollJunie() });
+    }
     const login = yield* readLogin(account.source);
     if (O.isNone(login)) {
       return AccountUsage.make({
@@ -1296,11 +1309,10 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     const home = yield* Config.String("HOME").pipe(Config.withDefault(""));
     const claudeDir = yield* Config.String("CLAUDE_CONFIG_DIR").pipe(Config.withDefault(home));
     const codexDir = yield* Config.String("CODEX_HOME").pipe(Config.withDefault(path.join(home, ".codex")));
-    const claude = O.flatMap(
-      yield* readOptional(path.join(claudeDir, ".claude.json")),
-      ClaudeCliConfigJson.decodeOption
-    );
-    const codex = O.flatMap(yield* readOptional(path.join(codexDir, "auth.json")), CodexCliAuthJson.decodeOption);
+    const readOptional10 = yield* readOptional(path.join(claudeDir, ".claude.json"));
+    const claude = O.flatMap(readOptional10, ClaudeCliConfigJson.decodeOption);
+    const readOptional11 = yield* readOptional(path.join(codexDir, "auth.json"));
+    const codex = O.flatMap(readOptional11, CodexCliAuthJson.decodeOption);
     return A.getSomes([
       signedInAs(
         "claude",
@@ -1348,8 +1360,10 @@ export const layerAccountsUsageLive = Layer.effect(AccountsUsage, makeAccountsUs
  */
 export const pollAccounts = Effect.gen(function* () {
   const usage = yield* AccountsUsage;
-  const polled = yield* Effect.forEach(yield* usage.accounts, usage.poll, { concurrency: POLL_CONCURRENCY });
-  return dedupeAccountUsages(A.appendAll(polled, yield* usage.snapshots));
+  const accounts12 = yield* usage.accounts;
+  const polled = yield* Effect.forEach(accounts12, usage.poll, { concurrency: POLL_CONCURRENCY });
+  const snapshots13 = yield* usage.snapshots;
+  return dedupeAccountUsages(A.appendAll(polled, snapshots13));
 }).pipe(Effect.withSpan("AccountsUsage.pollAll"));
 
 /**

@@ -91,7 +91,8 @@ const asOf = Effect.fnUntraced(function* (
   validAt: number,
   knownAt: number
 ) {
-  return yield* decodeAsOf({ knownAt, logicalKey: logicalEdgeKey(yield* decodeIdentity(identity)), validAt });
+  const decodedIdentity = yield* decodeIdentity(identity);
+  return yield* decodeAsOf({ knownAt, logicalKey: logicalEdgeKey(decodedIdentity), validAt });
 });
 
 const factOf = (version: O.Option<{ readonly fact: Record<string, unknown> }>, key: string): O.Option<unknown> =>
@@ -106,100 +107,85 @@ const writeHistory = Effect.fnUntraced(function* () {
   const db = yield* makeDrizzle();
   yield* migrate(db, { migrationsFolder, migrationsSchema: "drizzle" });
 
-  const claimRows = yield* db
-    .insert(DbSchema.candidateClaim)
-    .values(
-      yield* Effect.fromResult(
-        toCandidateClaimInsert(
-          yield* decodeClaim({
-            ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
-            fixtureKey: "claim.restart",
-            lifecycle: "candidate",
-            snapshot: {},
-          })
-        )
-      )
-    )
-    .returning();
-  const evidenceRows = yield* db
-    .insert(DbSchema.evidence)
-    .values(
-      yield* Effect.fromResult(
-        toEvidenceInsert(
-          yield* decodeEvidence({
-            ...productEntityFixtureInput("EpistemicEvidence", 1),
-            artifactFixtureKey: "artifact.restart",
-            span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
-            spanFixtureKey: "span.restart",
-          })
-        )
-      )
-    )
-    .returning();
+  const argument = db.insert(DbSchema.candidateClaim);
+  const decodedClaim = yield* decodeClaim({
+    ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
+    fixtureKey: "claim.restart",
+    lifecycle: "candidate",
+    snapshot: {},
+  });
+  const fromResult1 = yield* Effect.fromResult(toCandidateClaimInsert(decodedClaim));
+  const claimRows = yield* argument.values(fromResult1).returning();
+  const argument1 = db.insert(DbSchema.evidence);
+  const decodedEvidence = yield* decodeEvidence({
+    ...productEntityFixtureInput("EpistemicEvidence", 1),
+    artifactFixtureKey: "artifact.restart",
+    span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
+    spanFixtureKey: "span.restart",
+  });
+  const fromResult2 = yield* Effect.fromResult(toEvidenceInsert(decodedEvidence));
+  const evidenceRows = yield* argument1.values(fromResult2).returning();
   const claimRow = yield* requireHead(claimRows, "the seeded candidate claim row");
   const evidenceRow = yield* requireHead(evidenceRows, "the seeded evidence row");
   const identity = encodedIdentity(claimRow.id, evidenceRow.id);
 
   const repository = yield* makeDrizzleEdgeAuthorityRepository();
-  const former = yield* repository.record(
-    yield* decodeRecord({
-      fact: { amount: "100" },
-      identity,
-      orgId: 1,
-      recordedAt: 1_000,
-      recordedBy: systemPrincipal,
-      schemaVersion: "0.0.0",
-      source: "Agent",
-      validFrom: 1_000,
-      validTo: null,
-    })
-  );
-  const corrected = yield* repository.supersede(
-    yield* decodeSupersede({
-      expectedVersion: 1,
-      fact: { amount: "150" },
-      identity,
-      orgId: 1,
-      recordedAt: 2_000,
-      recordedBy: systemPrincipal,
-      schemaVersion: "0.0.0",
-      source: "Agent",
-      validFrom: 1_000,
-      validTo: null,
-    })
-  );
+  const decodedRecord = yield* decodeRecord({
+    fact: { amount: "100" },
+    identity,
+    orgId: 1,
+    recordedAt: 1_000,
+    recordedBy: systemPrincipal,
+    schemaVersion: "0.0.0",
+    source: "Agent",
+    validFrom: 1_000,
+    validTo: null,
+  });
+  const former = yield* repository.record(decodedRecord);
+  const decodedSupersede = yield* decodeSupersede({
+    expectedVersion: 1,
+    fact: { amount: "150" },
+    identity,
+    orgId: 1,
+    recordedAt: 2_000,
+    recordedBy: systemPrincipal,
+    schemaVersion: "0.0.0",
+    source: "Agent",
+    validFrom: 1_000,
+    validTo: null,
+  });
+  const corrected = yield* repository.supersede(decodedSupersede);
 
   // The resolver reads the clock for `resolvedAt`; pinning it makes the surviving row
   // assertable rather than merely present.
   yield* TestClock.setTime(resolvedAtMillis);
   const dispositions = yield* makeDrizzleClaimDispositionRepository();
   const resolver = makeClaimGateOutcomeResolver(dispositions, makeClaimTransition());
-  const outcome = yield* resolver.resolve(
-    yield* decodeOutcomeInput({
-      claim: {
-        ...productEntityFixtureInput("EpistemicCandidateClaim", claimRow.id),
-        fixtureKey: "claim.restart",
-        lifecycle: "candidate",
-        snapshot: {},
-      },
-      dispositionId: 1,
-      dispositionPublicId: "epistemic_claim_disposition_a1",
-      gateResult: {
-        verdict: "rejected",
-        violations: [
-          {
-            focusNode: $EpistemicId.create("claim/restart").iri,
-            message: "Expected at least 1 value(s) for evidence.",
-            path: $EpistemicId.create("hasEvidenceQuote").iri,
-            severity: "violation",
-          },
-        ],
-      },
-      resolvedBy: systemPrincipal,
-      schemaVersion: "0.0.0",
-      source: "Agent",
-    })
-  );
+  const decodedOutcomeInput = yield* decodeOutcomeInput({
+    claim: {
+      ...productEntityFixtureInput("EpistemicCandidateClaim", claimRow.id),
+      fixtureKey: "claim.restart",
+      lifecycle: "candidate",
+      snapshot: {},
+    },
+    dispositionId: 1,
+    dispositionPublicId: "epistemic_claim_disposition_a1",
+    gateResult: {
+      verdict: "rejected",
+      violations: [
+        {
+          focusNode: $EpistemicId.create("claim/restart").iri,
+          message: "Expected at least 1 value(s) for evidence.",
+          path: $EpistemicId.create("hasEvidenceQuote").iri,
+          severity: "violation",
+        },
+      ],
+    },
+    resolvedBy: systemPrincipal,
+    schemaVersion: "0.0.0",
+    source: "Agent",
+  });
+  const outcome = yield* resolver.resolve(decodedOutcomeInput);
 
   expect(corrected.version).toBe(2);
   assertSome(corrected.supersedesId, former.id);
@@ -231,8 +217,10 @@ if (!shouldRunPgliteIntegration) {
             const repository = yield* makeDrizzleEdgeAuthorityRepository();
             const dispositions = yield* makeDrizzleClaimDispositionRepository();
 
-            const before = yield* repository.readAsOf(yield* asOf(written.identity, 1_500, 1_500));
-            const after = yield* repository.readAsOf(yield* asOf(written.identity, 1_500, 2_500));
+            const asOf1 = yield* asOf(written.identity, 1_500, 1_500);
+            const before = yield* repository.readAsOf(asOf1);
+            const asOf2 = yield* asOf(written.identity, 1_500, 2_500);
+            const after = yield* repository.readAsOf(asOf2);
             assertSome(factOf(before, "amount"), "100");
             assertSome(factOf(after, "amount"), "150");
 
@@ -260,21 +248,18 @@ if (!shouldRunPgliteIntegration) {
             // catalog: a closed interval overlapping the surviving open head is still
             // refused, and the refusal still arrives as the typed conflict. Probe stays
             // LAST — it aborts the surrounding transaction chain.
-            const conflict = yield* Effect.flip(
-              repository.record(
-                yield* decodeRecord({
-                  fact: { amount: "999" },
-                  identity: written.identity,
-                  orgId: 1,
-                  recordedAt: 2_600,
-                  recordedBy: systemPrincipal,
-                  schemaVersion: "0.0.0",
-                  source: "Agent",
-                  validFrom: 1_200,
-                  validTo: 1_400,
-                })
-              )
-            );
+            const decodedRecord3 = yield* decodeRecord({
+              fact: { amount: "999" },
+              identity: written.identity,
+              orgId: 1,
+              recordedAt: 2_600,
+              recordedBy: systemPrincipal,
+              schemaVersion: "0.0.0",
+              source: "Agent",
+              validFrom: 1_200,
+              validTo: 1_400,
+            });
+            const conflict = yield* Effect.flip(repository.record(decodedRecord3));
             pipe(SupersessionConflict.is(conflict), assertTrue);
             expect(NodeUtil.inspect(conflict, { depth: 12 })).toContain("epistemic_edge_no_overlap");
           }).pipe(provideScopedLayer(makePersistentLayer(dataDir)));

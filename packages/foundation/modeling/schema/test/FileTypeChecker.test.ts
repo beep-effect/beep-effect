@@ -458,7 +458,9 @@ it.effect.prop(
       throw new Error("Missing generation transformation");
     expect(link.transformation._tag).toBe("Transformation");
     const encoded = yield* encodeFileSignatureLink(value);
-    expect(encoded).toEqual(yield* encodeFileSignature(value));
+    const expectation = expect(encoded);
+    const encodedFileSignature = yield* encodeFileSignature(value);
+    expectation.toEqual(encodedFileSignature);
 
     return true;
   }),
@@ -478,7 +480,9 @@ it.effect.prop(
       throw new Error("Missing generation transformation");
     expect(link.transformation._tag).toBe("Transformation");
     const encoded = yield* encodeDetectedFileInfoLink(value);
-    expect(encoded).toEqual(yield* encodeFileTypeInfo(value.info));
+    const expectation1 = expect(encoded);
+    const encodedFileTypeInfo = yield* encodeFileTypeInfo(value.info);
+    expectation1.toEqual(encodedFileTypeInfo);
     expect(value.mimeType).toBe(value.info.mimeType);
     expect(value.description).toBe(value.info.description);
 

@@ -92,7 +92,8 @@ export const FakeGraphLayer = Layer.unwrap(
     const fake = yield* FakeGraph;
     const call = Effect.fnUntraced(function* (verb: string, id: string) {
       yield* Ref.update(fake.calls, A.append(`${verb} ${id}`));
-      const failure = HashMap.get(yield* Ref.get(fake.failing), verb);
+      const got = yield* Ref.get(fake.failing);
+      const failure = HashMap.get(got, verb);
       if (O.isSome(failure)) {
         return yield* failure.value;
       }
@@ -102,7 +103,8 @@ export const FakeGraphLayer = Layer.unwrap(
     return makeM365Stub({
       deleteEvent: Effect.fnUntraced(function* (request) {
         yield* call("deleteEvent", request.eventId);
-        const current = yield* found(HashMap.get(yield* Ref.get(fake.events), request.eventId));
+        const got1 = yield* Ref.get(fake.events);
+        const current = yield* found(HashMap.get(got1, request.eventId));
         const expected = request.changeKey;
         if (O.isSome(expected) && !O.exists(current.changeKey, (key) => key === expected.value)) {
           return yield* preconditionFailed;
@@ -111,15 +113,18 @@ export const FakeGraphLayer = Layer.unwrap(
       }),
       getEvent: Effect.fnUntraced(function* (request) {
         yield* call("getEvent", request.eventId);
-        return yield* found(HashMap.get(yield* Ref.get(fake.events), request.eventId));
+        const got2 = yield* Ref.get(fake.events);
+        return yield* found(HashMap.get(got2, request.eventId));
       }),
       getMessage: Effect.fnUntraced(function* (request) {
         yield* call("getMessage", request.messageId);
-        return yield* found(HashMap.get(yield* Ref.get(fake.messages), request.messageId));
+        const got3 = yield* Ref.get(fake.messages);
+        return yield* found(HashMap.get(got3, request.messageId));
       }),
       updateMessageCategories: Effect.fnUntraced(function* (request) {
         yield* call("updateMessageCategories", request.messageId);
-        const current = yield* found(HashMap.get(yield* Ref.get(fake.messages), request.messageId));
+        const got4 = yield* Ref.get(fake.messages);
+        const current = yield* found(HashMap.get(got4, request.messageId));
         const stale = yield* Ref.getAndUpdate(fake.staleWrites, (count) => count - 1);
         if (stale > 0) {
           // Someone else changed the message in between: its change key moves on.

@@ -1,3 +1,4 @@
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   pullResearchNotionLinks,
   ResearchCognifyOptions,
@@ -30,6 +31,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import type { GitStubs } from "@beep/git/Git";
 
 // Nothing in this suite may reach a Cognee server: the one URL used points at
 // the loopback discard port so the login request is refused immediately.
@@ -39,7 +41,11 @@ const isCogneeApiUrl = S.is(CogneeApiUrl);
 const testLayer = Layer.mergeAll(
   ResearchCommandServiceLive.pipe(
     Layer.provideMerge(
-      FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+      Layer.mergeAll(
+        FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+        // The vault commit runs through the kit (W7b, SPEC D-19).
+        Git.layer.pipe(Layer.provide(NodeServices.layer))
+      )
     )
   ),
   Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
@@ -92,10 +98,8 @@ const seedPendingCard = Effect.fn("ResearchDailyTest.seedPendingCard")(function*
   const path = yield* Path.Path;
   const linksRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-links-" });
   const linksFile = path.join(linksRoot, "links.json");
-  yield* fs.writeFileString(
-    linksFile,
-    yield* encodeLinksFile([{ title: "Pending Card", url: "https://example.com/pending" }])
-  );
+  const encodedLinksFile = yield* encodeLinksFile([{ title: "Pending Card", url: "https://example.com/pending" }]);
+  yield* fs.writeFileString(linksFile, encodedLinksFile);
   const summary = yield* pullResearchNotionLinks(
     ResearchNotionPullOptions.make({ database: "Reading List", linksFile, vaultRoot })
   );
@@ -135,7 +139,45 @@ const initVault = Effect.fn("ResearchDailyTest.initVault")(function* (options: {
   return vaultRoot;
 });
 
+// Each kit operation of the vault commit, failed without an exit code (git never ran) and with one.
+const dailyDefaults: Partial<GitStubs> = {
+  checkIgnore: () => Effect.succeed([]),
+  add: () => Effect.void,
+  stagedChanges: () => Effect.succeed(["note.md"]),
+  commit: () => Effect.void,
+};
+const spawnFailure = { detail: "ENOENT" };
+const exitFailure = { exitCode: 2 };
+const dailyFailureCases = [
+  { operation: "checkIgnore", fields: spawnFailure, expected: "Failed running git" },
+  { operation: "checkIgnore", fields: exitFailure, expected: "exited with 2 in the vault." },
+  { operation: "add", fields: spawnFailure, expected: "Failed running git" },
+  { operation: "add", fields: exitFailure, expected: "exited with 2 in the vault." },
+  { operation: "stagedChanges", fields: spawnFailure, expected: "Failed checking vault staging state." },
+  { operation: "stagedChanges", fields: exitFailure, expected: "exited with 2 in the vault." },
+  { operation: "commit", fields: spawnFailure, expected: "Failed running git" },
+  { operation: "commit", fields: exitFailure, expected: "exited with 2 in the vault." },
+] as const;
+
 layer(testLayer, { timeout: "30 seconds" })("research daily commit", (it) => {
+  for (const { operation, fields, expected } of dailyFailureCases) {
+    it.effect(`preserves the ${operation} wording for ${expected}`, () =>
+      Effect.gen(function* () {
+        const failure = GitCommandError.make({
+          kind: "failed",
+          args: [operation],
+          cwd: "/vault",
+          stderr: "fixture",
+          ...fields,
+        });
+        const git = Git.makeTest({ ...dailyDefaults, [operation]: () => Effect.fail(failure) });
+        const error = yield* commitVault("/vault").pipe(Effect.provideService(Git, git), Effect.flip);
+        expect(error._tag).toBe("ResearchCommandError");
+        expect(error.message).toContain(expected);
+      })
+    );
+  }
+
   it.effect("commits the vault when its .gitignore already ignores the state directory", () =>
     Effect.gen(function* () {
       const vaultRoot = yield* initVault({ ignoreState: true });
@@ -149,11 +191,13 @@ layer(testLayer, { timeout: "30 seconds" })("research daily commit", (it) => {
       const subject = yield* git(vaultRoot, ["log", "-1", "--format=%s"]);
       expect(Str.startsWith("capture ")(subject)).toBe(true);
       // Machine captures are committed unsigned; a signing attempt would have failed above.
-      expect(yield* git(vaultRoot, ["log", "-1", "--format=%G?"])).toBe("N");
+      const git1 = yield* git(vaultRoot, ["log", "-1", "--format=%G?"]);
+      expect(git1).toBe("N");
 
       // A second run finds the vault clean and adds no commit.
       yield* commitVault(vaultRoot);
-      expect(yield* git(vaultRoot, ["rev-list", "--count", "HEAD"])).toBe("1");
+      const git2 = yield* git(vaultRoot, ["rev-list", "--count", "HEAD"]);
+      expect(git2).toBe("1");
     })
   );
 
@@ -166,7 +210,8 @@ layer(testLayer, { timeout: "30 seconds" })("research daily commit", (it) => {
       const tracked = yield* git(vaultRoot, ["ls-files"]);
       expect(tracked).toContain(NOTE_FILE);
       expect(tracked).not.toContain(VAULT_DIRS.state);
-      expect(yield* git(vaultRoot, ["rev-list", "--count", "HEAD"])).toBe("1");
+      const git3 = yield* git(vaultRoot, ["rev-list", "--count", "HEAD"]);
+      expect(git3).toBe("1");
       // The state directory stays untracked on disk rather than being deleted or staged.
       const status = yield* git(vaultRoot, ["status", "--porcelain"]);
       expect(status).toContain(`?? ${VAULT_DIRS.state}/`);

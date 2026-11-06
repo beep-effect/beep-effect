@@ -77,9 +77,11 @@ const testLayer = (
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-toolcache-" });
+      const argument1 = Layer.succeed(TestRoot, root);
+      const path = yield* Path.Path;
       return Layer.mergeAll(
-        Layer.succeed(TestRoot, root),
-        options.make?.(root, yield* Path.Path) ?? live(root, options.fetch ?? alwaysFails, options.env ?? {}),
+        argument1,
+        options.make?.(root, path) ?? live(root, options.fetch ?? alwaysFails, options.env ?? {}),
         nativePlatform
       );
     })
@@ -290,7 +292,8 @@ describe("ToolInstaller", () => {
             yield* fs.writeFileString(source, "source");
             const cacheError = yield* Effect.flip(installer.cacheFile(source, "../victim", "tool", "1"));
             assert.strictEqual(cacheError.reason, "cacheFailed");
-            assert.isFalse(yield* fs.exists(path.join(root, "victim")));
+            const exists1 = yield* fs.exists(path.join(root, "victim"));
+            assert.isFalse(exists1);
             for (const cached of [false, true]) {
               const directory = installer.cachePath("tool", "1");
               if (cached) {
@@ -306,9 +309,12 @@ describe("ToolInstaller", () => {
                 })
               );
               assert.strictEqual(error.reason, "cacheFailed");
-              if (cached)
-                assert.strictEqual(yield* fs.readFileString(path.join(directory, "..", "victim")), "untouched");
-              assert.isFalse(yield* fs.exists(`${directory}.complete`));
+              if (cached) {
+                const readFileString1 = yield* fs.readFileString(path.join(directory, "..", "victim"));
+                assert.strictEqual(readFileString1, "untouched");
+              }
+              const exists2 = yield* fs.exists(`${directory}.complete`);
+              assert.isFalse(exists2);
             }
             assert.strictEqual(requests.count(), 0);
             assert.strictEqual(copies, 0);
@@ -330,13 +336,15 @@ describe("ToolInstaller", () => {
         const directory = yield* installer.cacheFile(source, "tool", "tool", "1");
         // @actions/tool-cache.find checks both the tool path and its sibling <arch>.complete.
         assert.isTrue((yield* fs.exists(directory)) && (yield* fs.exists(`${directory}.complete`)));
-        assert.strictEqual(yield* fs.readFileString(`${directory}.complete`), "");
+        const readFileString3 = yield* fs.readFileString(`${directory}.complete`);
+        assert.strictEqual(readFileString3, "");
         const tree = path.join(root, "marker-tree");
         yield* fs.makeDirectory(tree);
         yield* fs.writeFileString(path.join(tree, "tool"), "directory tool");
         const treeDirectory = yield* installer.cacheDir(tree, "tree", "1");
         assert.isTrue((yield* fs.exists(treeDirectory)) && (yield* fs.exists(`${treeDirectory}.complete`)));
-        assert.strictEqual(yield* fs.readFileString(`${treeDirectory}.complete`), "");
+        const readFileString4 = yield* fs.readFileString(`${treeDirectory}.complete`);
+        assert.strictEqual(readFileString4, "");
       })
     );
   });
@@ -415,10 +423,13 @@ describe("ToolInstaller", () => {
             (yield* fs.exists(destination)) && (yield* fs.exists(`${destination}.complete`));
           assert.strictEqual(officiallyDiscoverable, failure === "invalidation");
           if (failure === "invalidation") {
-            assert.strictEqual(yield* fs.readFileString(path.join(destination, "old")), "old entry");
+            const readFileString5 = yield* fs.readFileString(path.join(destination, "old"));
+            assert.strictEqual(readFileString5, "old entry");
           } else {
-            assert.isFalse(yield* fs.exists(`${destination}.complete`));
-            assert.isFalse(yield* fs.exists(path.join(destination, "old")));
+            const exists6 = yield* fs.exists(`${destination}.complete`);
+            assert.isFalse(exists6);
+            const exists7 = yield* fs.exists(path.join(destination, "old"));
+            assert.isFalse(exists7);
           }
         })
       );
@@ -448,10 +459,8 @@ describe("ToolInstaller", () => {
               installer.cachePath("node", "22.11.0"),
               ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture })
             );
-            assert.isFalse(
-              yield* fs.exists(installer.cachePath("node", "22.11.0")),
-              "cachePath must not create anything"
-            );
+            const exists8 = yield* fs.exists(installer.cachePath("node", "22.11.0"));
+            assert.isFalse(exists8, "cachePath must not create anything");
           })
         )
       );
@@ -486,10 +495,8 @@ describe("ToolInstaller", () => {
             const source = join(root, "staged");
             yield* fs.makeDirectory(source, { recursive: true });
             yield* fs.writeFileString(join(source, "tool.txt"), "x");
-            assert.strictEqual(
-              yield* installer.cacheDir(source, "node", "1.2.3"),
-              installer.cachePath("node", "1.2.3")
-            );
+            const cacheDir9 = yield* installer.cacheDir(source, "node", "1.2.3");
+            assert.strictEqual(cacheDir9, installer.cachePath("node", "1.2.3"));
           })
         )
       );
@@ -509,7 +516,8 @@ describe("ToolInstaller", () => {
               arch: currentHostArchitecture,
             });
             yield* fs.makeDirectory(expected, { recursive: true });
-            assertSome(yield* (yield* ToolInstaller).find("node", "22.11.0"), expected);
+            const found10 = yield* (yield* ToolInstaller).find("node", "22.11.0");
+            assertSome(found10, expected);
           })
         )
       );
@@ -519,7 +527,8 @@ describe("ToolInstaller", () => {
       it.effect("reports nothing for a tool that is not there", () =>
         TestRoot.use(() =>
           Effect.gen(function* () {
-            assertNone(yield* (yield* ToolInstaller).find("node", "0.0.1"));
+            const found11 = yield* (yield* ToolInstaller).find("node", "0.0.1");
+            assertNone(found11);
           })
         )
       );
@@ -541,7 +550,8 @@ describe("ToolInstaller", () => {
             });
             yield* fs.makeDirectory(join(expected, ".."), { recursive: true });
             yield* fs.writeFileString(expected, "not a directory");
-            assertNone(yield* (yield* ToolInstaller).find("node", "1.0.0"));
+            const found12 = yield* (yield* ToolInstaller).find("node", "1.0.0");
+            assertNone(found12);
           })
         )
       );
@@ -565,11 +575,14 @@ describe("ToolInstaller", () => {
               cached,
               ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture })
             );
-            assert.strictEqual(yield* fs.readFileString(join(cached, "bin")), "#!/bin/sh\n");
-            assertSome(yield* installer.find("node", "22.11.0"), cached);
+            const readFileString13 = yield* fs.readFileString(join(cached, "bin"));
+            assert.strictEqual(readFileString13, "#!/bin/sh\n");
+            const found14 = yield* installer.find("node", "22.11.0");
+            assertSome(found14, cached);
             // The contract: `cacheDir` CONSUMES its source. On one filesystem the
             // tree is renamed into the cache, so nothing is left at the source path.
-            assert.isFalse(yield* fs.exists(source), "cacheDir must consume its source");
+            const exists15 = yield* fs.exists(source);
+            assert.isFalse(exists15, "cacheDir must consume its source");
           })
         )
       );
@@ -617,10 +630,14 @@ describe("ToolInstaller", () => {
                 1,
                 "exactly the source rename is refused; the swap into the cache stays real"
               );
-              assert.strictEqual(yield* fs.readFileString(join(cached, "bin")), "#!/bin/sh\n");
-              assert.strictEqual(yield* fs.readFileString(join(cached, "nested", "lib.js")), "module.exports = 1;\n");
-              assertSome(yield* installer.find("node", "22.11.0"), cached);
-              assert.isFalse(yield* fs.exists(source), "the copy path must consume the source too");
+              const readFileString16 = yield* fs.readFileString(join(cached, "bin"));
+              assert.strictEqual(readFileString16, "#!/bin/sh\n");
+              const readFileString17 = yield* fs.readFileString(join(cached, "nested", "lib.js"));
+              assert.strictEqual(readFileString17, "module.exports = 1;\n");
+              const found18 = yield* installer.find("node", "22.11.0");
+              assertSome(found18, cached);
+              const exists19 = yield* fs.exists(source);
+              assert.isFalse(exists19, "the copy path must consume the source too");
             })
           )
         );
@@ -670,8 +687,10 @@ describe("ToolInstaller", () => {
             assert.strictEqual(error.reason, "cacheFailed");
             // A copy fallback here would mask a real failure (a permission
             // problem, say) as a slow success — and would have consumed the source.
-            assert.isTrue(yield* fs.exists(join(source, "bin")), "a non-EXDEV failure must leave the source untouched");
-            assertNone(yield* installer.find("node", "22.11.0"));
+            const exists20 = yield* fs.exists(join(source, "bin"));
+            assert.isTrue(exists20, "a non-EXDEV failure must leave the source untouched");
+            const found21 = yield* installer.find("node", "22.11.0");
+            assertNone(found21);
           })
         )
       );
@@ -698,8 +717,10 @@ describe("ToolInstaller", () => {
               version: "22.11.0",
               arch: currentHostArchitecture,
             });
-            assert.isFalse(yield* fs.exists(destination), "a failed install must not leave a partial tool behind");
-            assertNone(yield* installer.find("node", "22.11.0"));
+            const exists22 = yield* fs.exists(destination);
+            assert.isFalse(exists22, "a failed install must not leave a partial tool behind");
+            const found23 = yield* installer.find("node", "22.11.0");
+            assertNone(found23);
           })
         )
       );
@@ -713,7 +734,8 @@ describe("ToolInstaller", () => {
             const { join } = yield* Path.Path;
             const installer = yield* ToolInstaller;
             yield* Effect.flip(installer.cacheDir(join(root, "does-not-exist"), "node", "22.11.0"));
-            const leftovers = A.filter(yield* fs.readDirectory(root), (entry) => Str.startsWith(".staging-")(entry));
+            const readDirectory24 = yield* fs.readDirectory(root);
+            const leftovers = A.filter(readDirectory24, (entry) => Str.startsWith(".staging-")(entry));
             assert.deepStrictEqual(leftovers, [], "the staging directory must be cleaned up on the failure path");
           })
         )
@@ -739,8 +761,10 @@ describe("ToolInstaller", () => {
 
             // A merge would leave `stale.txt` from the previous version's
             // layout sitting in the new install.
-            assert.isTrue(yield* fs.exists(join(cached, "fresh.txt")));
-            assert.isFalse(yield* fs.exists(join(cached, "stale.txt")), "a re-install must replace, not merge");
+            const exists25 = yield* fs.exists(join(cached, "fresh.txt"));
+            assert.isTrue(exists25);
+            const exists26 = yield* fs.exists(join(cached, "stale.txt"));
+            assert.isFalse(exists26, "a re-install must replace, not merge");
           })
         )
       );
@@ -755,7 +779,8 @@ describe("ToolInstaller", () => {
             const source = join(root, "downloaded-binary");
             yield* fs.writeFileString(source, "binary");
             const cached = yield* (yield* ToolInstaller).cacheFile(source, "mytool", "mytool", "1.0.0");
-            assert.strictEqual(yield* fs.readFileString(join(cached, "mytool")), "binary");
+            const readFileString27 = yield* fs.readFileString(join(cached, "mytool"));
+            assert.strictEqual(readFileString27, "binary");
           })
         )
       );
@@ -771,7 +796,8 @@ describe("ToolInstaller", () => {
             const { join } = yield* Path.Path;
             const archive = yield* makeTarball(root, "hello");
             const extracted = yield* (yield* ToolInstaller).extractTar(archive);
-            assert.strictEqual(yield* fs.readFileString(join(extracted, "tool.txt")), "hello");
+            const readFileString28 = yield* fs.readFileString(join(extracted, "tool.txt"));
+            assert.strictEqual(readFileString28, "hello");
           })
         )
       );
@@ -787,7 +813,8 @@ describe("ToolInstaller", () => {
             const destination = join(root, "nested", "target");
             const extracted = yield* (yield* ToolInstaller).extractTar(archive, { destination });
             assert.strictEqual(extracted, destination);
-            assert.strictEqual(yield* fs.readFileString(join(destination, "tool.txt")), "hello");
+            const readFileString29 = yield* fs.readFileString(join(destination, "tool.txt"));
+            assert.strictEqual(readFileString29, "hello");
           })
         )
       );
@@ -888,7 +915,8 @@ describe("ToolInstaller", () => {
             const installer = yield* ToolInstaller;
             yield* installer.extractZip(archive, { destination });
             yield* installer.extractZip(archive, { destination });
-            assert.strictEqual(yield* fs.readFileString(join(destination, "tool.txt")), "zipped");
+            const readFileString30 = yield* fs.readFileString(join(destination, "tool.txt"));
+            assert.strictEqual(readFileString30, "zipped");
           })
         )
       );
@@ -909,7 +937,8 @@ describe("ToolInstaller", () => {
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const file = yield* (yield* ToolInstaller).download("https://example.test/tool.tar.gz");
-            assert.strictEqual(yield* fs.readFileString(file), "archive-bytes");
+            const readFileString31 = yield* fs.readFileString(file);
+            assert.strictEqual(readFileString31, "archive-bytes");
           })
         )
       );
@@ -1003,7 +1032,8 @@ describe("ToolInstaller", () => {
             // For a single binary the cached directory IS the addPath target.
             assert.strictEqual(provisioned.binDir, provisioned.directory);
             const file = join(provisioned.directory, "biome");
-            assert.strictEqual(yield* fs.readFileString(file), binaryBody);
+            const readFileString32 = yield* fs.readFileString(file);
+            assert.strictEqual(readFileString32, binaryBody);
             // The executable bit is the difference between a cached tool and a
             // cached file, and it must be ON THE CACHED FILE — a chmod after
             // caching would mutate a swapped-in entry, and a skipped chmod
@@ -1033,7 +1063,8 @@ describe("ToolInstaller", () => {
               const provisioned = yield* (yield* ToolInstaller).provisionFile(options);
               assert.strictEqual(provisioned.directory, directory);
               assert.strictEqual(provisioned.binDir, directory);
-              assert.strictEqual(yield* fs.readFileString(join(directory, "biome")), "already cached");
+              const readFileString33 = yield* fs.readFileString(join(directory, "biome"));
+              assert.strictEqual(readFileString33, "already cached");
               assert.strictEqual(counting.count(), 0, "a hit must not download");
             })
           )
@@ -1063,7 +1094,8 @@ describe("ToolInstaller", () => {
               yield* fs.writeFileString(join(directory, "other-layout.txt"), "a different writer's idea of biome");
               const provisioned = yield* (yield* ToolInstaller).provisionFile(options);
               assert.strictEqual(counting.count(), 1, "a hit without the binary must reinstall");
-              assert.strictEqual(yield* fs.readFileString(join(provisioned.directory, "biome")), binaryBody);
+              const readFileString34 = yield* fs.readFileString(join(provisioned.directory, "biome"));
+              assert.strictEqual(readFileString34, binaryBody);
             })
           )
         );
@@ -1239,10 +1271,10 @@ describe("ProvisionedFile codec property", () => {
     [Arbitrary.schema(ProvisionedFile)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* S.decodeEffect(ProvisionedFile)(yield* S.encodeEffect(ProvisionedFile)(value)),
-          value
-        );
+        const argument2 = S.decodeEffect(ProvisionedFile);
+        const value2 = yield* S.encodeEffect(ProvisionedFile)(value);
+        const value35 = yield* argument2(value2);
+        assert.deepStrictEqual(value35, value);
       }),
     { arbitrary: fcRuns(100) }
   );

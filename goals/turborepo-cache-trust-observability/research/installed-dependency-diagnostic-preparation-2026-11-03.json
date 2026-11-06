@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "cache-dependency-diagnostic-preparation/v1",
+  "status": "authored-not-executed",
+  "observations": [
+    {
+      "runId": 41625676572,
+      "url": "https://github.com/beep-effect/beep-effect/actions/runs/41625676572",
+      "revision": "4d266aa55907265c158239b1ced56becd012c902",
+      "reportSha256": "45ad2689c578a36954fb00a05979ddf307246cace9c9e3ce3433a168c238929d",
+      "reportBytes": 2674106,
+      "installedDependencies": {
+        "format": "canonical-gnu-tar/v1",
+        "sha256": "8f02932a6cbc161d5d57fd195031870a034c32548057cd0f3281294269530f05",
+        "regularFiles": 225121,
+        "entries": 246290,
+        "bytes": 4130937152
+      },
+      "links": 400,
+      "sourceEntries": 15153,
+      "preservedCopy": {
+        "location": "~/.local/state/beep/r2-pilot/completion-2026-10-29/continuation-20261102/protected-source-successor-41625676572.json",
+        "storage": "Private local filesystem; independent of the GitHub artifact lifecycle.",
+        "sha256": "45ad2689c578a36954fb00a05979ddf307246cace9c9e3ce3433a168c238929d",
+        "bytes": 2674106,
+        "mode": "0600",
+        "verifiedAt": "2026-11-03T12:24:12.100953+00:00",
+        "retention": "Retained for the active goal with no configured expiry; preserve through closeout.",
+        "offsiteBackupClaimed": false
+      }
+    },
+    {
+      "runId": 41628708153,
+      "url": "https://github.com/beep-effect/beep-effect/actions/runs/41628708153",
+      "revision": "dc4bcb9b26e98d5eb487ea17e8ade1fe08a7bea8",
+      "reportSha256": "5c75a856316e76ec754b7f4e18011a1d6b5686711308439c6e9209899499b19d",
+      "reportBytes": 2674106,
+      "installedDependencies": {
+        "format": "canonical-gnu-tar/v1",
+        "sha256": "224a87de1a397484cc43d07942075b483fa572bfab139449482a4efaf1442eee",
+        "regularFiles": 225121,
+        "entries": 246290,
+        "bytes": 4130937152
+      },
+      "links": 400,
+      "sourceEntries": 15153,
+      "preservedCopy": {
+        "location": "~/.local/state/beep/r2-pilot/completion-2026-10-29/continuation-20261102/protected-source-successor-41628708153.json",
+        "storage": "Private local filesystem; independent of the GitHub artifact lifecycle.",
+        "sha256": "5c75a856316e76ec754b7f4e18011a1d6b5686711308439c6e9209899499b19d",
+        "bytes": 2674106,
+        "mode": "0600",
+        "verifiedAt": "2026-11-03T12:24:12.100953+00:00",
+        "retention": "Retained for the active goal with no configured expiry; preserve through closeout.",
+        "offsiteBackupClaimed": false
+      }
+    }
+  ],
+  "finding": "Two authenticated source inspections have equal dependency counts, byte totals and link records but different canonical dependency digests. The cause is unknown.",
+  "attribution": "Unattributed; not evidence of nondeterminism or permission to normalize the fingerprint.",
+  "implementation": {
+    "observer": "research/native-dependency-diagnostics.py",
+    "tests": "research/native-dependency-diagnostics.test.py",
+    "productionFingerprintChanged": false,
+    "approvalAuthorityAdded": false,
+    "taskBodiesExecuted": 0,
+    "localSuitesRun": false,
+    "localVerifyOrPublishRun": false,
+    "actualHostedDiagnosticRun": null
+  },
+  "bounds": {
+    "runners": 1,
+    "jobMinutes": 10,
+    "diagnosticSeconds": 300,
+    "passes": 2,
+    "archiveBytesPerPass": 6442450944,
+    "processMemoryBytes": 268435456,
+    "aggregateSourceAndDiagnosticArtifactBytes": 4194304,
+    "artifactRetentionDays": 1,
+    "capabilities": "None: no R2, issuer, artifact signing or application secrets."
+  },
+  "nextGates": [
+    "Hosted regressions pass on the exact pushed head; primary merges only at the existing PR gate.",
+    "Review the accepted source and workflow implementation before any existing source-only dispatcher call.",
+    "Capture two actual accepted-source diagnostic artifacts, authenticate their bindings and compare package rows.",
+    "Attribute and repair actual differences without weakening installed dependency verification; then independently freeze producer approval."
+  ],
+  "wholeGoalAcceptance": {
+    "trustCriteriaProven": 0,
+    "adoptionCriteriaProven": 0,
+    "completed": false
+  },
+  "retentionNote": "Both exact source reports are already retained at the private local locations listed per observation. GitHub artifact expiry does not remove these files. This records local preservation, not offsite backup or producer approval."
+}

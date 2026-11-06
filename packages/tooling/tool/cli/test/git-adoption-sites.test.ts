@@ -65,7 +65,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) =>
   it.effect("reads a file as the merge-base holds it, not as the branch rewrote it", () =>
     withRepository((_root, repoRoot) =>
       Effect.gen(function* () {
-        const mainSha = Str.trim(yield* runGit(repoRoot, ["rev-parse", "main"]));
+        const resultGit = yield* runGit(repoRoot, ["rev-parse", "main"]);
+        const mainSha = Str.trim(resultGit);
         const read = yield* readAtMergeBase(repoRoot, "main", "OWNERS", "the test");
         expect(read.base).toBe(mainSha);
         assertSome(read.text, "* @base\n");
@@ -98,7 +99,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const blob = Str.trim(yield* runGit(repoRoot, ["rev-parse", "main:OWNERS"]));
+        const resultGit1 = yield* runGit(repoRoot, ["rev-parse", "main:OWNERS"]);
+        const blob = Str.trim(resultGit1);
         yield* fs.remove(path.join(repoRoot, ".git", "objects", Str.slice(0, 2)(blob), Str.slice(2)(blob)));
         const error = yield* readAtMergeBase(repoRoot, "main", "OWNERS", "the test").pipe(Effect.flip);
         expect(error._tag).toBe("SkillsCommandError");
@@ -130,8 +132,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) =>
   it.effect("keeps a directory whose path looks like an option instead of handing it to git", () =>
     withRepository((_root, repoRoot) =>
       Effect.gen(function* () {
-        expect(yield* removeGitWorktree(repoRoot, "--help")).toBe(false);
-        assertSome(yield* isRegisteredWorktree(repoRoot, repoRoot), true);
+        const removeGitWorktree2 = yield* removeGitWorktree(repoRoot, "--help");
+        expect(removeGitWorktree2).toBe(false);
+        const isRegisteredWorktree3 = yield* isRegisteredWorktree(repoRoot, repoRoot);
+        assertSome(isRegisteredWorktree3, true);
       })
     )
   );
@@ -164,16 +168,22 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) =>
     withRepository((root, repoRoot) =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
-        assertTrue(yield* readProvenanceLabels(repoRoot));
+        const readProvenanceLabels4 = yield* readProvenanceLabels(repoRoot);
+        assertTrue(readProvenanceLabels4);
         yield* runGit(repoRoot, ["config", "beep.provenance.labels", "off"]);
-        assertFalse(yield* readProvenanceLabels(repoRoot));
+        const readProvenanceLabels5 = yield* readProvenanceLabels(repoRoot);
+        assertFalse(readProvenanceLabels5);
         yield* runGit(repoRoot, ["config", "beep.provenance.labels", " off "]);
-        assertFalse(yield* readProvenanceLabels(repoRoot));
+        const readProvenanceLabels6 = yield* readProvenanceLabels(repoRoot);
+        assertFalse(readProvenanceLabels6);
         yield* runGit(repoRoot, ["config", "beep.provenance.labels", "OFF"]);
-        assertTrue(yield* readProvenanceLabels(repoRoot));
+        const readProvenanceLabels7 = yield* readProvenanceLabels(repoRoot);
+        assertTrue(readProvenanceLabels7);
         yield* runGit(repoRoot, ["config", "beep.provenance.labels", "on"]);
-        assertTrue(yield* readProvenanceLabels(repoRoot));
-        assertTrue(yield* readProvenanceLabels(path.join(root, "vanished")));
+        const readProvenanceLabels8 = yield* readProvenanceLabels(repoRoot);
+        assertTrue(readProvenanceLabels8);
+        const readProvenanceLabels9 = yield* readProvenanceLabels(path.join(root, "vanished"));
+        assertTrue(readProvenanceLabels9);
       })
     )
   );

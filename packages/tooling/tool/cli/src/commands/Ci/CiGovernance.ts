@@ -7,6 +7,7 @@
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
+import { decodeYamlTextWith } from "@beep/repo-cli-kit/schema/TextCodec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -27,7 +28,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
-import { decodeYamlTextWith } from "../../internal/schema/TextCodec.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_DESCRIPTORS } from "./CiLane.ts";
 import { githubStatusSuffix, layerCiGithub } from "./LaneTimings.ts";
@@ -255,6 +255,7 @@ const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string)
     Layer.buildWithScope(layerCiGithub(root), scope).pipe(Effect.provideContext(capture))
   );
   const request = Effect.fn("CiGovernance.request")(function* (args: ReadonlyArray<string>) {
+    // KEEP (D-19): reads gh's own exit code, error line and --include headers (#249b).
     const result = yield* runRepoCommandCapture("gh", ["api", ...args], root).pipe(
       Effect.provide(capture),
       CiCommandError.mapError("GitHub policy request failed; state is unknown.")

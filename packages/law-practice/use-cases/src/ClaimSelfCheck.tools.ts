@@ -181,8 +181,11 @@ export const claimSelfCheckReview = Effect.fn("ClaimSelfCheck.review")(function*
   // Count the encoded wire representation, including UTF-8 and JSON escaping.
   // Fail during projection so repeated full-claim quotations cannot accumulate
   // into an arbitrarily amplified response before the limit is applied.
-  let responseBytes = textEncoder.encode(yield* encodeUnchecked(checked.undecomposed)).byteLength + 64;
-  if (responseBytes > maxReviewResponseBytes) return yield* oversized();
+  const encodedUnchecked = yield* encodeUnchecked(checked.undecomposed);
+  let responseBytes = textEncoder.encode(encodedUnchecked).byteLength + 64;
+  if (responseBytes > maxReviewResponseBytes) {
+    return yield* oversized();
+  }
   const items = yield* Effect.forEach(
     checked.candidates,
     Effect.fnUntraced(function* (mapped: ClaimFindingCandidate) {
@@ -209,11 +212,13 @@ export const claimSelfCheckReview = Effect.fn("ClaimSelfCheck.review")(function*
         text: `Claim ${number}: “${claim.claimText}”\nPhrase: “${finding.referring.anchor.quote}”. ${explanation(finding)}${dependencyContext(finding)}`,
         sourceRefs,
       });
-      responseBytes +=
-        textEncoder.encode(yield* encodeReviewItem(item)).byteLength +
-        textEncoder.encode(yield* encodeCandidate(mapped)).byteLength +
-        2;
-      if (responseBytes > maxReviewResponseBytes) return yield* oversized();
+      const encodedReviewItem = yield* encodeReviewItem(item);
+      const argument = textEncoder.encode(encodedReviewItem).byteLength;
+      const encodedCandidate = yield* encodeCandidate(mapped);
+      responseBytes += argument + textEncoder.encode(encodedCandidate).byteLength + 2;
+      if (responseBytes > maxReviewResponseBytes) {
+        return yield* oversized();
+      }
       return item;
     })
   );

@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -17,7 +18,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { expectPlanDigestFlag } from "./internal/PlanFlags.ts";
 import { SkillsCommandError } from "./Skills.errors.ts";
 import { SkillPatchRecorder, SkillPatchRecorderLive } from "./SkillsPatch.service.ts";
@@ -73,7 +73,7 @@ const readScript = Effect.fn("Skills.reviewCommand.readScript")(function* (file:
 // Listing needs no decider; `--decisions` answers from the file; `--interactive` asks the terminal.
 const deciderFor = Effect.fn("Skills.reviewCommand.deciderFor")(function* (flags: ReviewFlags) {
   if (O.isSome(flags.decisions)) {
-    return skillReviewDeciderFromScript(yield* readScript(flags.decisions.value));
+    return yield* readScript(flags.decisions.value).pipe(Effect.map(skillReviewDeciderFromScript));
   }
   return flags.interactive ? yield* makeSkillReviewDeciderPrompt : skillReviewDeciderFromScript(A.empty());
 });

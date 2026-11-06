@@ -42,7 +42,7 @@ vi.mock("@beep/repo-utils", (importOriginal) =>
 );
 const captured = vi.hoisted(() => vi.fn<typeof StepExec.runCaptured>());
 const execution = vi.hoisted(() => vi.fn<typeof StepExec.runToExit>());
-vi.mock("../src/internal/process/StepExec.ts", (importOriginal) =>
+vi.mock("@beep/repo-cli-kit/process/StepExec", (importOriginal) =>
   importOriginal<typeof StepExec>().then((original) => ({
     ...original,
     runToExit: execution,
@@ -51,7 +51,7 @@ vi.mock("../src/internal/process/StepExec.ts", (importOriginal) =>
   }))
 );
 // Dispatch tests own process execution; ambient secret-session probes are a separate boundary.
-vi.mock("../src/internal/cli/EnvConfig.ts", (importOriginal) =>
+vi.mock("@beep/repo-cli-kit/cli/EnvConfig", (importOriginal) =>
   importOriginal<object>().then((original) => ({
     ...original,
     readTurboCacheEnvironmentSync: () => readTurboCacheEnvironment({}),
@@ -166,7 +166,8 @@ describe("thin lint workers", { concurrent: false }, () => {
         captured.mockImplementation(() =>
           Effect.succeed(StepExec.CapturedStep.make({ exitCode: 0, output: "", truncated: false }))
         );
-        expect(yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.flip)).toMatchObject({
+        const pipe1 = yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.flip);
+        expect(pipe1).toMatchObject({
           _tag: "LintProgramAssignmentError",
           message: expect.stringContaining("summary missing"),
         });
@@ -185,7 +186,8 @@ describe("thin lint workers", { concurrent: false }, () => {
             })
           )
         );
-        expect(yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.flip)).toMatchObject({
+        const pipe2 = yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.flip);
+        expect(pipe2).toMatchObject({
           _tag: "LintProgramAssignmentError",
           message: expect.stringContaining("summary disagrees"),
         });
@@ -197,7 +199,8 @@ describe("thin lint workers", { concurrent: false }, () => {
         captured.mockImplementation(() =>
           Effect.succeed(StepExec.CapturedStep.make({ exitCode: 0, output: "", truncated: true }))
         );
-        expect(yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.flip)).toMatchObject({
+        const pipe3 = yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.flip);
+        expect(pipe3).toMatchObject({
           _tag: "LintProgramAssignmentError",
         });
       })
@@ -234,7 +237,8 @@ describe("thin lint workers", { concurrent: false }, () => {
         });
         yield* Effect.gen(function* () {
           selection.root = root;
-          expect(yield* driftMessage()).toContain(
+          const driftMessage4 = yield* driftMessage();
+          expect(driftMessage4).toContain(
             'Policy fingerprint drift: standards/policy-tools.fingerprint.json; turbo.json tasks["//#lint:policy-fingerprint"].inputs;'
           );
           yield* run(["policy-fingerprint", "--write"]);
@@ -258,8 +262,10 @@ describe("thin lint workers", { concurrent: false }, () => {
           yield* run(["policy-fingerprint", "--check"]);
           // Idempotent bytes.
           yield* run(["policy-fingerprint", "--write"]);
-          expect(yield* fs.readFileString(file)).toBe(declaration);
-          expect(yield* fs.readFileString(turboFile)).toBe(turbo);
+          const readFileString5 = yield* fs.readFileString(file);
+          expect(readFileString5).toBe(declaration);
+          const readFileString6 = yield* fs.readFileString(turboFile);
+          expect(readFileString6).toBe(turbo);
           // Contents and formatting of inputs are not part of the declaration.
           yield* fs.writeFileString(file, `  ${declaration}  `);
           yield* fs.writeFileString(`${root}/packages/helper/src/index.ts`, "export const value = 2;\n");
@@ -270,13 +276,16 @@ describe("thin lint workers", { concurrent: false }, () => {
             `${root}/packages/cli/src/commands/Bar/BarHelper.ts`,
             'export { value } from "@beep/other";\n'
           );
-          expect(yield* driftMessage()).toContain(`turbo.json tasks["${seal}bar"]`);
+          const driftMessage7 = yield* driftMessage();
+          expect(driftMessage7).toContain(`turbo.json tasks["${seal}bar"]`);
           yield* run(["policy-fingerprint", "--write"]);
-          expect(yield* fs.readFileString(file)).toContain("packages/other/src/index.ts");
+          const readFileString8 = yield* fs.readFileString(file);
+          expect(readFileString8).toContain("packages/other/src/index.ts");
           yield* run(["policy-fingerprint", "--check"]);
           // An edge the writer owns is restored; a stale seal is reported.
           yield* fs.writeFileString(turboFile, turboBefore);
-          expect(yield* driftMessage()).toContain('turbo.json tasks["//#foo:check"].dependsOn');
+          const driftMessage9 = yield* driftMessage();
+          expect(driftMessage9).toContain('turbo.json tasks["//#foo:check"].dependsOn');
           yield* run(["policy-fingerprint", "--write"]);
           yield* fs.writeFileString(file, "invalid json");
           const fileDrift = yield* driftMessage();
@@ -284,10 +293,13 @@ describe("thin lint workers", { concurrent: false }, () => {
             "Policy fingerprint drift: standards/policy-tools.fingerprint.json; run bun run beep"
           );
           yield* fs.writeFileString(turboFile, "invalid json");
-          expect(yield* run(["policy-fingerprint", "--write"]).pipe(Effect.isFailure)).toBe(true);
-          expect(yield* fs.readFileString(file)).toBe("invalid json");
+          const pipe10 = yield* run(["policy-fingerprint", "--write"]).pipe(Effect.isFailure);
+          expect(pipe10).toBe(true);
+          const readFileString11 = yield* fs.readFileString(file);
+          expect(readFileString11).toBe("invalid json");
           yield* fs.remove(turboFile);
-          expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+          const pipe12 = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure);
+          expect(pipe12).toBe(true);
         }).pipe(
           Effect.ensuring(
             Effect.sync(() => {
@@ -350,7 +362,8 @@ describe("thin lint workers", { concurrent: false }, () => {
         expect(execution.mock.calls[0]?.[0].env?.TURBO_SCM_BASE).toBe("origin/main");
         execution.mockClear();
         execution.mockImplementation(() => Effect.succeed(7));
-        expect(yield* run(["deprecated-apis"]).pipe(Effect.isFailure)).toBe(true);
+        const pipe13 = yield* run(["deprecated-apis"]).pipe(Effect.isFailure);
+        expect(pipe13).toBe(true);
       })
     );
   });
@@ -440,7 +453,8 @@ describe("thin lint workers", { concurrent: false }, () => {
         const invocation = execution.mock.calls[0]?.[0];
         expect(invocation?.args).toContain("--affected");
         expect(invocation?.env?.TURBO_SCM_BASE).toBe("refs/heads/caller-base");
-        expect(yield* Config.option(Config.String("TURBO_SCM_BASE"))).toEqual(ambientBase);
+        const option14 = yield* Config.option(Config.String("TURBO_SCM_BASE"));
+        expect(option14).toEqual(ambientBase);
       })
     );
   });
@@ -495,8 +509,10 @@ describe("thin lint workers", { concurrent: false }, () => {
     it.effect(
       "rejects missing or ambiguous jsdoc scope before spawning",
       Effect.fnUntraced(function* () {
-        expect(yield* run(["jsdoc"]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* run(["jsdoc", "--package", ".", "--root-only"]).pipe(Effect.isFailure)).toBe(true);
+        const pipe15 = yield* run(["jsdoc"]).pipe(Effect.isFailure);
+        expect(pipe15).toBe(true);
+        const pipe16 = yield* run(["jsdoc", "--package", ".", "--root-only"]).pipe(Effect.isFailure);
+        expect(pipe16).toBe(true);
         expect(execution).not.toHaveBeenCalled();
       })
     );
@@ -507,13 +523,12 @@ describe("thin lint workers", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lint-workers-" });
-        yield* fs.writeFileString(
-          `${fixtureRoot}/package.json`,
-          yield* jsonStringifyPretty({
-            name: "fixture",
-            workspaces: ["packages/*", "apps/*"],
-          })
-        );
+        const argument = `${fixtureRoot}/package.json`;
+        const jsonStringifyPretty1 = yield* jsonStringifyPretty({
+          name: "fixture",
+          workspaces: ["packages/*", "apps/*"],
+        });
+        yield* fs.writeFileString(argument, jsonStringifyPretty1);
         for (const dir of ["packages/member", "packages/unowned", "apps/labs/orphan", "infra"]) {
           yield* fs.makeDirectory(`${fixtureRoot}/${dir}`, { recursive: true });
           yield* fs.writeFileString(`${fixtureRoot}/${dir}/example.ts`, "export {};\n");
@@ -565,7 +580,8 @@ describe("thin lint workers", { concurrent: false }, () => {
           yield* fs.writeFileString(`${root}/packages/failing/package.json`, '{"name":"@beep/failing"}');
           yield* fs.writeFileString(`${root}/packages/failing/tsconfig.test.json`, '{"include":["src"]}');
           yield* fs.writeFileString(`${root}/packages/failing/src/index.ts`, "export const value = new Set();");
-          expect(yield* run(["laws", "--package", `${root}/packages/failing`]).pipe(Effect.isFailure)).toBe(true);
+          const pipe17 = yield* run(["laws", "--package", `${root}/packages/failing`]).pipe(Effect.isFailure);
+          expect(pipe17).toBe(true);
           expect(execution).not.toHaveBeenCalled();
         } finally {
           selection.root = "";
@@ -581,8 +597,10 @@ describe("thin lint workers", { concurrent: false }, () => {
         captured.mockImplementation(() =>
           Effect.succeed(StepExec.CapturedStep.make({ exitCode: 7, output: "", truncated: false }))
         );
-        expect(yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* run(["jsdoc", "--package", "."]).pipe(Effect.isFailure)).toBe(true);
+        const pipe18 = yield* run(["deprecated-apis", "--package", "."]).pipe(Effect.isFailure);
+        expect(pipe18).toBe(true);
+        const pipe19 = yield* run(["jsdoc", "--package", "."]).pipe(Effect.isFailure);
+        expect(pipe19).toBe(true);
       })
     );
   });

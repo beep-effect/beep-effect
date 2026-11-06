@@ -34,7 +34,8 @@ it.effect("JWT failure schema preserves conditional causes and plain-object deco
     ] satisfies ReadonlyArray<typeof JwtPayloadFailure.Encoded>) {
       const decoded = yield* S.decodeEffect(JwtPayloadFailure)(failure);
       assert.deepStrictEqual<unknown>(decoded, failure);
-      assert.deepStrictEqual<unknown>(yield* S.encodeEffect(JwtPayloadFailure)(decoded), failure);
+      const value = yield* S.encodeEffect(JwtPayloadFailure)(decoded);
+      assert.deepStrictEqual<unknown>(value, failure);
     }
     assert.isFalse(S.is(JwtPayloadFailure)({ kind: "payload", detail: "missing cause" }));
     assert.isFalse(S.is(JwtPayloadFailure)({ kind: "other", detail: "invalid kind" }));

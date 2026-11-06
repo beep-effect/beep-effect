@@ -7,6 +7,8 @@
 
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { formatDurationSeconds, makeTaggedLogger, printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Config from "effect/Config";
@@ -22,8 +24,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciGovernanceCommands } from "./CiGovernance.ts";
@@ -158,10 +158,8 @@ const turboSummaryTasks = (tasks: TurboSummary["tasks"]): ReadonlyArray<TurboSum
 const appendToSummary = Effect.fn("Ci.appendToSummary")(function* (
   renderedSummary: string
 ): Effect.fn.Return<void, CiCommandError, ActionOutputs> {
-  const summaryPath = pipe(
-    yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(Effect.orElseSucceed(O.none<string>)),
-    O.getOrUndefined
-  );
+  const pipe1 = yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(Effect.orElseSucceed(O.none<string>));
+  const summaryPath = pipe(pipe1, O.getOrUndefined);
 
   if (summaryPath === undefined || Str.isEmpty(summaryPath)) {
     yield* Console.log(renderedSummary);

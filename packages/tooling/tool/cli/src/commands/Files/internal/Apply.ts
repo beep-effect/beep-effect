@@ -5,6 +5,12 @@
  * @since 0.0.0
  */
 
+import {
+  bytesEqual,
+  hashFileSha256 as hashFileSha256Hex,
+  preflightOverwritableFile as preflightOverwritableFileShared,
+  renameOrFail as renameOrFailShared,
+} from "@beep/repo-cli-kit/cli/FsGuards";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -14,12 +20,6 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import {
-  bytesEqual,
-  hashFileSha256 as hashFileSha256Hex,
-  preflightOverwritableFile as preflightOverwritableFileShared,
-  renameOrFail as renameOrFailShared,
-} from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError, mapPlatformError, PlatformErrorOptions } from "../Files.errors.ts";
 import { formatIndex, makeStripMetadataTempEntries, selectedCanonicalPathSet } from "../Files.media.ts";
 import { FilesConcurrency, runFilesProgressForEach } from "../Files.progress.ts";
@@ -554,7 +554,7 @@ export const applyNormalizePlan = Effect.fn("Files.applyNormalizePlan")(function
                 formatPlatformError("Failed to stat normalized image", tempPath, PlatformErrorOptions.make({ cause }))
               )
             );
-          const outputHash = dedupe ? O.some(yield* hashFileSha256(tempPath)) : O.none<FileSha256Hash>();
+          const outputHash = dedupe ? yield* Effect.asSome(hashFileSha256(tempPath)) : O.none<FileSha256Hash>();
           const candidates = O.isSome(outputHash)
             ? pipe(HashMap.get(seenOutputs, outputHash.value), O.getOrElse(A.empty<NormalizeSeenOutput>))
             : A.empty<NormalizeSeenOutput>();

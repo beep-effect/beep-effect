@@ -47,7 +47,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(ScriptResult)(value);
       const decoded = yield* S.decodeEffect(ScriptResult)(encoded);
       assert.isTrue(S.toEquivalence(ScriptResult)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(ScriptResult)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(ScriptResult)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -60,7 +61,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(SpawnRecord)(record);
       const decoded = yield* S.decodeEffect(SpawnRecord)(encoded);
       assert.isTrue(S.toEquivalence(SpawnRecord)(decoded, record));
-      assert.deepStrictEqual(yield* S.encodeEffect(SpawnRecord)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(SpawnRecord)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );

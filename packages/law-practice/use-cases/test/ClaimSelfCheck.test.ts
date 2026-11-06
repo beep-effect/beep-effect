@@ -153,7 +153,9 @@ describe("ClaimSelfCheck", () => {
     (it) => {
       it.effect("checks a claim set where every claim decomposes", () =>
         Effect.gen(function* () {
-          const report = yield* (yield* ClaimSelfCheck).check(yield* normalizedClaims);
+          const argument = yield* ClaimSelfCheck;
+          const normalizedClaims1 = yield* normalizedClaims;
+          const report = yield* argument.check(normalizedClaims1);
           assert.deepStrictEqual(
             A.map(report.trees, ({ claimNumber }) => claimNumber),
             [1, 2, 3]
@@ -210,7 +212,9 @@ describe("ClaimSelfCheck", () => {
             UsptoClaimSource.cases.application.make({ applicationNumber: knownApplication })
           );
           assert.strictEqual(published.claimSet.documentIdentifier, "SYNTHETIC-CLM-1");
-          assert.isTrue(Equal.equals(published.report, yield* service.check(yield* normalizedClaims)));
+          const normalizedClaims5 = yield* normalizedClaims;
+          const check1 = yield* service.check(normalizedClaims5);
+          assert.isTrue(Equal.equals(published.report, check1));
           const missing = yield* Effect.flip(
             service.checkPublished(
               UsptoClaimSource.cases.application.make({
@@ -226,10 +230,14 @@ describe("ClaimSelfCheck", () => {
       it.effect("maps each finding to one candidate and referring-term evidence, deterministically", () =>
         Effect.gen(function* () {
           const service = yield* ClaimSelfCheck;
-          const result = yield* service.candidates(yield* input);
-          const report = yield* service.check(yield* normalizedClaims);
+          const input2 = yield* input;
+          const result = yield* service.candidates(input2);
+          const normalizedClaims3 = yield* normalizedClaims;
+          const report = yield* service.check(normalizedClaims3);
           const mapped = result.candidates;
-          assert.deepStrictEqual(result, yield* service.candidates(yield* input));
+          const input6 = yield* input;
+          const candidates4 = yield* service.candidates(input6);
+          assert.deepStrictEqual(result, candidates4);
           assert.strictEqual(result.undecomposed.length, 0);
           assert.isTrue(
             Equal.equals(

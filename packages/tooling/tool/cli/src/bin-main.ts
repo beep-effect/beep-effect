@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-
 /**
  * CLI entry point for the repo command suite.
  *
@@ -27,10 +26,10 @@ const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { Cli
     import("effect/Record"),
     import("effect/Runtime"),
     import("@beep/cli-kit/CliRuntime"),
-    import("./internal/cli/FailureRendering.ts"),
+    import("@beep/repo-cli-kit/cli/FailureRendering"),
   ]);
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
-  "./internal/cli/Stdout.ts"
+  "@beep/repo-cli-kit/cli/Stdout"
 );
 const [Dispatch, { loadQualityTasks }, HashSet, Command] = await Promise.all([
   import("./internal/dispatch/Dispatch.ts"),
@@ -136,7 +135,7 @@ const withHostTurboCacheDefaults = Effect.fn("RepoCli.withHostTurboCacheDefaults
   effect: import("effect/Effect").Effect<A, E, R>
 ) {
   const { configStringOption, isCiSync, loadHostTurboCacheDefaults } = yield* Effect.promise(
-    () => import("./internal/cli/EnvConfig.ts")
+    () => import("@beep/repo-cli-kit/cli/EnvConfig")
   );
   const defaults = yield* loadHostTurboCacheDefaults(Bun.env, isCiSync(), currentGitOrigin());
   const configuredApi = yield* configStringOption("TURBO_API");
@@ -211,9 +210,9 @@ const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
  */
 const runtimeLayerFor = Effect.fnUntraced(function* (services: HashSetType.HashSet<RuntimeService>) {
   const needsRepoUtils = HashSet.has(services, "fs-utils") || HashSet.has(services, "ts-morph");
-  const repoUtils = needsRepoUtils ? O.some(yield* Effect.promise(() => import("@beep/repo-utils"))) : O.none();
+  const repoUtils = needsRepoUtils ? yield* Effect.asSome(Effect.promise(() => import("@beep/repo-utils"))) : O.none();
   const scheduler = HashSet.has(services, "memory-stats")
-    ? O.some(yield* Effect.promise(() => import("./internal/repo-run/QualityScheduler.ts")))
+    ? yield* Effect.asSome(Effect.promise(() => import("./internal/repo-run/QualityScheduler.ts")))
     : O.none();
   const extras = A.getSomes([
     O.filter(
@@ -244,7 +243,7 @@ const runtimeLayerFor = Effect.fnUntraced(function* (services: HashSetType.HashS
  */
 const commandProgram = (target: DispatchTarget) =>
   Effect.scoped(
-    Effect.flatMap(runtimeLayerFor(Dispatch.dispatchRuntimeServices(target)), (layer) =>
+    Effect.flatMap(Dispatch.dispatchRuntimeServices(target).pipe(runtimeLayerFor), (layer) =>
       Layer.build(layer).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
@@ -275,7 +274,9 @@ if (O.isSome(qualityTaskInvocation)) {
   const { MemoryStatsLive } = await import("./internal/repo-run/QualityScheduler.ts");
   runRepoCliMain(
     Effect.scoped(
-      Layer.build(Layer.provideMerge(MemoryStatsLive, BaseLayers)).pipe(
+      MemoryStatsLive.pipe(
+        Layer.provideMerge(BaseLayers),
+        Layer.build,
         Effect.flatMap((context) =>
           qualityTaskInvocation.value.pipe(withHostTurboCacheDefaults, Effect.provide(context))
         )

@@ -2,7 +2,6 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research";
 import { discoverProfiles, historySiftImpl, VAULT_DIRS } from "@beep/repo-cli/test/Research";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -13,8 +12,9 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { NodeTestLayer } from "./support/CommandTest.ts";
 
-const TestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
+const TestLayer = Layer.mergeAll(NodeTestLayer, FetchHttpClient.layer);
 
 // Per-test configuration is a pure provider value, so HOME is provided as a
 // service instead of touching the real one: nothing here may read the
@@ -138,7 +138,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("discoverProfiles", (it) => {
   it.effect("finds nothing when no Chromium family is installed", () =>
     Effect.gen(function* () {
       const home = yield* makeHome([]);
-      expect(A.length(yield* discoverProfiles("all").pipe(withHome({ HOME: home })))).toBe(0);
+      const pipe1 = yield* discoverProfiles("all").pipe(withHome({ HOME: home }));
+      expect(A.length(pipe1)).toBe(0);
     })
   );
 });
@@ -161,7 +162,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("historySiftImpl", (it) => {
       expect(summary.skippedSeen).toBe(0);
       expect(summary.skippedFiltered).toBe(0);
       // The catalog is still created, so the next run reads a real seen-URL set.
-      expect(yield* fs.exists(path.join(vaultRoot, VAULT_DIRS.state))).toBe(true);
+      const exists2 = yield* fs.exists(path.join(vaultRoot, VAULT_DIRS.state));
+      expect(exists2).toBe(true);
     })
   );
 
@@ -186,9 +188,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("historySiftImpl", (it) => {
       expect(summary.skippedSeen).toBe(0);
 
       const inbox = path.join(vaultRoot, VAULT_DIRS.inbox);
-      const stubs = yield* Effect.forEach(yield* fs.readDirectory(inbox), (name) =>
-        fs.readFileString(path.join(inbox, name))
-      );
+      const readDirectory3 = yield* fs.readDirectory(inbox);
+      const stubs = yield* Effect.forEach(readDirectory3, (name) => fs.readFileString(path.join(inbox, name)));
       expect(A.length(stubs)).toBe(2);
       // The later visit of the same repository supplies the surviving title.
       expect(A.some(stubs, (stub) => Str.includes("title: Effect packages")(stub))).toBe(true);

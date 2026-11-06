@@ -151,8 +151,9 @@ describe("Toml", () => {
       Effect.gen(function* () {
         assert.strictEqual((yield* Effect.flip(Toml.stringify({ a: null }))).diagnostic.code, "UnsupportedValue");
         assert.strictEqual((yield* Effect.flip(Toml.stringify({ a: undefined }))).diagnostic.code, "UnsupportedValue");
+        const now1 = yield* DateTime.now;
         assert.strictEqual(
-          (yield* Effect.flip(Toml.stringify({ a: DateTime.toDateUtc(yield* DateTime.now) }))).diagnostic.code,
+          (yield* Effect.flip(Toml.stringify({ a: DateTime.toDateUtc(now1) }))).diagnostic.code,
           "UnsupportedValue"
         );
         assert.strictEqual((yield* Effect.flip(Toml.stringify({ a: 2n ** 63n }))).diagnostic.code, "IntegerOutOfRange");
@@ -161,7 +162,8 @@ describe("Toml", () => {
 
     it.effect("names the JS type and the key path in UnsupportedValue", () =>
       Effect.gen(function* () {
-        const e = yield* Effect.flip(Toml.stringify({ o: { d: DateTime.toDateUtc(yield* DateTime.now) } }));
+        const now2 = yield* DateTime.now;
+        const e = yield* Effect.flip(Toml.stringify({ o: { d: DateTime.toDateUtc(now2) } }));
         assert.instanceOf(e, TomlStringifyError);
         assert.include(e.diagnostic.message, "Date");
         assert.include(e.diagnostic.message, "o.d");
@@ -177,8 +179,10 @@ describe("Toml", () => {
 
     it.effect("accepts the exact int64 bounds and rejects one past them", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* Toml.stringify({ a: 2n ** 63n - 1n }), "a = 9223372036854775807\n");
-        assert.strictEqual(yield* Toml.stringify({ a: -(2n ** 63n) }), "a = -9223372036854775808\n");
+        const stringify3 = yield* Toml.stringify({ a: 2n ** 63n - 1n });
+        assert.strictEqual(stringify3, "a = 9223372036854775807\n");
+        const stringify4 = yield* Toml.stringify({ a: -(2n ** 63n) });
+        assert.strictEqual(stringify4, "a = -9223372036854775808\n");
         const under = yield* Effect.flip(Toml.stringify({ a: -(2n ** 63n) - 1n }));
         assert.strictEqual(under.diagnostic.code, "IntegerOutOfRange");
       })
@@ -186,43 +190,52 @@ describe("Toml", () => {
 
     it.effect("formats numbers: integral as integer, -0 as -0.0, specials, floats", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* Toml.stringify({ a: 1.0 }), "a = 1\n");
-        assert.strictEqual(yield* Toml.stringify({ a: -0 }), "a = -0.0\n");
-        assert.strictEqual(yield* Toml.stringify({ a: 0.5 }), "a = 0.5\n");
-        assert.strictEqual(
-          yield* Toml.stringify({ a: Number.POSITIVE_INFINITY, b: Number.NEGATIVE_INFINITY }),
-          "a = inf\nb = -inf\n"
-        );
+        const stringify5 = yield* Toml.stringify({ a: 1.0 });
+        assert.strictEqual(stringify5, "a = 1\n");
+        const stringify6 = yield* Toml.stringify({ a: -0 });
+        assert.strictEqual(stringify6, "a = -0.0\n");
+        const stringify7 = yield* Toml.stringify({ a: 0.5 });
+        assert.strictEqual(stringify7, "a = 0.5\n");
+        const stringify8 = yield* Toml.stringify({ a: Number.POSITIVE_INFINITY, b: Number.NEGATIVE_INFINITY });
+        assert.strictEqual(stringify8, "a = inf\nb = -inf\n");
         // Integral but past the int64 range: emitted as a float, so it
         // round-trips instead of overflowing at parse time.
-        assert.strictEqual(yield* Toml.stringify({ a: 1e21 }), "a = 1e+21\n");
+        const stringify9 = yield* Toml.stringify({ a: 1e21 });
+        assert.strictEqual(stringify9, "a = 1e+21\n");
       })
     );
 
     it.effect("quotes non-bare keys, the empty key included", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* Toml.stringify({ "": 1 }), '"" = 1\n');
-        assert.strictEqual(yield* Toml.stringify({ "a.b": 1 }), '"a.b" = 1\n');
+        const stringify10 = yield* Toml.stringify({ "": 1 });
+        assert.strictEqual(stringify10, '"" = 1\n');
+        const stringify11 = yield* Toml.stringify({ "a.b": 1 });
+        assert.strictEqual(stringify11, '"a.b" = 1\n');
       })
     );
 
     it.effect("emits empty structures: root, empty sub-table, empty array", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* Toml.stringify({}), "");
-        assert.strictEqual(yield* Toml.stringify({ t: {} }), "[t]\n");
-        assert.strictEqual(yield* Toml.stringify({ a: [] }), "a = []\n");
+        const stringify12 = yield* Toml.stringify({});
+        assert.strictEqual(stringify12, "");
+        const stringify13 = yield* Toml.stringify({ t: {} });
+        assert.strictEqual(stringify13, "[t]\n");
+        const stringify14 = yield* Toml.stringify({ a: [] });
+        assert.strictEqual(stringify14, "a = []\n");
       })
     );
 
     it.effect("renders mixed arrays inline with objects as inline tables", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* Toml.stringify({ a: [{ n: 1 }, 2] }), "a = [{ n = 1 }, 2]\n");
+        const stringify15 = yield* Toml.stringify({ a: [{ n: 1 }, 2] });
+        assert.strictEqual(stringify15, "a = [{ n = 1 }, 2]\n");
       })
     );
 
     it.effect("escapes control characters in basic strings", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* Toml.stringify({ a: "x\ny\u0001" }), 'a = "x\\ny\\u0001"\n');
+        const stringify16 = yield* Toml.stringify({ a: "x\ny\u0001" });
+        assert.strictEqual(stringify16, 'a = "x\\ny\\u0001"\n');
       })
     );
 
@@ -239,14 +252,15 @@ describe("Toml", () => {
       Effect.gen(function* () {
         const shared = { n: 1 };
         const sharedArray = [shared, 2];
+        const stringify17 = yield* Toml.stringify({
+          first: sharedArray,
+          second: sharedArray,
+          left: shared,
+          right: shared,
+          rows: [shared, shared],
+        });
         assert.strictEqual(
-          yield* Toml.stringify({
-            first: sharedArray,
-            second: sharedArray,
-            left: shared,
-            right: shared,
-            rows: [shared, shared],
-          }),
+          stringify17,
           "first = [{ n = 1 }, 2]\nsecond = [{ n = 1 }, 2]\n\n[left]\nn = 1\n\n[right]\nn = 1\n\n[[rows]]\nn = 1\n\n[[rows]]\nn = 1\n"
         );
       })
@@ -287,8 +301,10 @@ describe("Toml", () => {
         Effect.gen(function* () {
           const ServiceFromToml = Toml.schema(Service);
           const text = yield* S.encodeEffect(ServiceFromToml)(service);
-          assert.deepStrictEqual(yield* S.decodeEffect(ServiceFromToml)(text), service);
-          assert.deepStrictEqual(yield* S.decodeEffect(Toml.TomlFromString)(text), service);
+          const value18 = yield* S.decodeEffect(ServiceFromToml)(text);
+          assert.deepStrictEqual(value18, service);
+          const value19 = yield* S.decodeEffect(Toml.TomlFromString)(text);
+          assert.deepStrictEqual(value19, service);
         }),
       { arbitrary: fcRuns(100) }
     );

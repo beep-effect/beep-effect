@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -20,12 +21,11 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { DiffTotalsInput } from "../../../internal/ratchet/RatchetDiff.ts";
-import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
-import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
+import { jsdocCommentsFromSource, listGitVisiblePaths, tagsFromComment } from "./QualityArtifactSupport.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -592,25 +592,17 @@ export const isPackageSourceFileIncludingGenerated = (filePath: string): boolean
  *
  * @param repoRoot - Repository root the Git listing runs in.
  * @param includeGenerated - Whether generated sources join the corpus.
- * @returns Repo-relative source paths, in Git listing order.
+ * @returns Repo-relative source paths, sorted.
  * @category use-cases
  * @since 0.0.0
  */
 export const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(function* (
   repoRoot: string,
   includeGenerated: boolean
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  QualityScriptCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, Git> {
   // Untracked-but-not-ignored files count too: Turbo hashes them for
   // `//#jsdoc:ratchet:check`, so `git add` alone must not change the verdict.
-  const lines = yield* runGitLines(
-    repoRoot,
-    ["ls-files", "--cached", "--others", "--exclude-standard", "packages", "apps"],
-    jsdocGitErrorAdapter
-  );
+  const lines = yield* listGitVisiblePaths(repoRoot, ["packages", "apps"], jsdocGitErrorAdapter);
   const predicate = includeGenerated ? isPackageSourceFileIncludingGenerated : isPackageSourceFile;
   return A.filter(lines, predicate);
 });
@@ -621,7 +613,7 @@ const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function
 ): Effect.fn.Return<
   ReadonlyArray<JSDocLegacyFileFinding>,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -668,7 +660,7 @@ const enforceZeroLegacy = Effect.fn("JSDocRatchet.enforceZeroLegacy")(function* 
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const findings = yield* zeroLegacyFindings(repoRoot, includeGenerated);
   const scope = includeGenerated ? "include-generated" : "non-generated";
@@ -762,7 +754,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
 }: RunJSDocRatchetOptions): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const currentTotals = yield* readCurrentInventoryTotals(repoRoot, inventoryPath);

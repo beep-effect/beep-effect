@@ -139,18 +139,79 @@ const argumentAfter = (argv: ReadonlyArray<string>, flag: string): O.Option<stri
     A.head
   );
 
+// Each kit read of the bake guard, failed without an exit code (git never ran) and with one, and the wording it keeps.
+const bakeSpawnFailure = { detail: "ENOENT" };
+const bakeExitFailure = { exitCode: 128 };
+const NO_CANONICAL_REMOTE = "No Git remote points at github.com/beep-effect/beep-effect";
+const bakeGitFailureCases = [
+  {
+    operation: "configList",
+    fields: bakeSpawnFailure,
+    expected: "Failed to list Git remotes for the bake reachability check.",
+  },
+  { operation: "configList", fields: bakeExitFailure, expected: NO_CANONICAL_REMOTE },
+  { operation: "remoteUrl", fields: bakeSpawnFailure, expected: NO_CANONICAL_REMOTE },
+  { operation: "remoteUrl", fields: bakeExitFailure, expected: NO_CANONICAL_REMOTE },
+  {
+    operation: "branchList",
+    fields: bakeSpawnFailure,
+    expected: "Failed to check remote reachability of the bake revision.",
+  },
+  {
+    operation: "branchList",
+    fields: bakeExitFailure,
+    expected: "is not reachable from any github.com/beep-effect/beep-effect remote branch",
+  },
+  { operation: "status", fields: bakeSpawnFailure, expected: "Failed to inspect runner bake inputs in Git." },
+  { operation: "status", fields: bakeExitFailure, expected: "Failed to inspect runner bake inputs in Git." },
+] as const;
+
 // Unexpected commands exit nonzero with the old guard's message instead of dying.
-const makeBakeSpawner = (consoleOutput: string, git: { readonly remotes?: string; readonly contains?: string } = {}) =>
+// The scripted git answers the kit's argv: `config --list -z` names the remotes, `remote get-url` prints one, and
+// `branch --list --remotes --contains` prints `%(HEAD)%00%(refname:short)%00%(objectname)` lines (W7b).
+const BAKE_SHA = "0123456789abcdef0123456789abcdef01234567";
+const scriptedBakeGit = (
+  args: ReadonlyArray<string>,
+  remotes: ReadonlyArray<readonly [string, string]>,
+  containing: ReadonlyArray<string>
+): string =>
+  Match.value(args).pipe(
+    Match.when(A.contains("status"), () => ""),
+    Match.when(A.contains("--list"), () =>
+      A.contains(args, "config")
+        ? A.join(
+            A.map(remotes, ([name, url]) => `remote.${name}.url\n${url}\0`),
+            ""
+          )
+        : A.join(
+            A.map(containing, (name) => ` \0${name}\0${BAKE_SHA}\n`),
+            ""
+          )
+    ),
+    Match.when(A.contains("get-url"), () =>
+      O.getOrElse(
+        O.map(
+          A.findFirst(remotes, ([name]) => A.contains(args, name)),
+          ([, url]) => `${url}\n`
+        ),
+        () => ""
+      )
+    ),
+    Match.orElse(() => BAKE_SHA)
+  );
+
+const makeBakeSpawner = (
+  consoleOutput: string,
+  git: { readonly remotes?: ReadonlyArray<readonly [string, string]>; readonly contains?: ReadonlyArray<string> } = {}
+) =>
   ScriptedSpawner.make((command, args) =>
     Match.value(command).pipe(
       Match.when("git", () => ({
-        stdout: A.contains(args, "status")
-          ? ""
-          : A.contains(args, "remote")
-            ? (git.remotes ?? "origin\thttps://github.com/beep-effect/beep-effect.git (fetch)")
-            : A.contains(args, "--contains")
-              ? (git.contains ?? "  origin/main")
-              : "0123456789abcdef0123456789abcdef01234567",
+        stdout: scriptedBakeGit(
+          args,
+          git.remotes ?? [["origin", "https://github.com/beep-effect/beep-effect.git"]],
+          git.contains ?? ["origin/main"]
+        ),
       })),
       Match.when("aws", () =>
         Match.value(args).pipe(
@@ -201,7 +262,8 @@ describe("runner bake schemas", () => {
         steps: [],
       });
       const encoded = yield* BakePlanJson.encode(plan);
-      expect(yield* BakePlanJson.decode(encoded)).toStrictEqual(plan);
+      const decoded1 = yield* BakePlanJson.decode(encoded);
+      expect(decoded1).toStrictEqual(plan);
     })
   );
 
@@ -209,7 +271,8 @@ describe("runner bake schemas", () => {
     Effect.gen(function* () {
       const original = report(O.some("ami-00112233445566778"));
       const encoded = yield* BakeReportJson.encode(original);
-      expect(yield* BakeReportJson.decode(encoded)).toStrictEqual(original);
+      const decoded2 = yield* BakeReportJson.decode(encoded);
+      expect(decoded2).toStrictEqual(original);
     })
   );
 
@@ -219,7 +282,8 @@ describe("runner bake schemas", () => {
     ([original]) =>
       Effect.gen(function* () {
         const encoded = yield* BakeReportJson.encode(BakeReport.make(original));
-        expect(yield* BakeReportJson.decode(encoded)).toStrictEqual(BakeReport.make(original));
+        const decoded3 = yield* BakeReportJson.decode(encoded);
+        expect(decoded3).toStrictEqual(BakeReport.make(original));
       }),
     { arbitrary: fcRuns(100) }
   );
@@ -323,9 +387,8 @@ describe("runner image manifest checks", () => {
         )
       );
       expect(error.message).toBe("runners bake --check: intended AMI manifest is stale.");
-      expect(yield* TestConsole.logLines).toStrictEqual([
-        "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
-      ]);
+      const logLines4 = yield* TestConsole.logLines;
+      expect(logLines4).toStrictEqual(["AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });
@@ -368,9 +431,12 @@ describe("runner bake report writer", () => {
 describe("runner bake planning and argv", () => {
   it.effect("parses plan, check, and default bake modes", () =>
     Effect.gen(function* () {
-      expect(yield* resolveBakeMode(true, false)).toBe("plan");
-      expect(yield* resolveBakeMode(false, true)).toBe("check");
-      expect(yield* resolveBakeMode(false, false)).toBe("bake");
+      const resolvedBakeMode = yield* resolveBakeMode(true, false);
+      expect(resolvedBakeMode).toBe("plan");
+      const resolvedBakeMode5 = yield* resolveBakeMode(false, true);
+      expect(resolvedBakeMode5).toBe("check");
+      const resolvedBakeMode6 = yield* resolveBakeMode(false, false);
+      expect(resolvedBakeMode6).toBe("bake");
       const error = yield* Effect.flip(resolveBakeMode(true, true));
       expect(error.message).toBe("runners bake: --plan and --check are mutually exclusive.");
     })
@@ -381,7 +447,8 @@ describe("runner bake planning and argv", () => {
       yield* runWithStubService(true, { ...bakeOptions(), plan: true });
       yield* runWithStubService(true, { ...bakeOptions(), check: true });
       yield* runWithStubService(true, bakeOptions());
-      expect(yield* TestConsole.logLines).toStrictEqual([
+      const logLines7 = yield* TestConsole.logLines;
+      expect(logLines7).toStrictEqual([
         "lockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\ngit revision: 0123456789abcdef0123456789abcdef01234567\nrequired flags: --subnet, --security-group\nresolve-base-ami: aws ssm get-parameter",
         "AMI: ami-0123456789abcdef0\nlockfile: fresh\nbun version: fresh\nfresh: yes",
         "baked AMI: ami-0123456789abcdef0\nbase AMI: ami-0fedcba9876543210\nlockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\npin: cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
@@ -393,9 +460,8 @@ describe("runner bake planning and argv", () => {
     Effect.gen(function* () {
       const error = yield* Effect.flip(runWithStubService(false, { ...bakeOptions(), check: true }));
       expect(error.message).toBe("runners bake --check: live AMI is stale.");
-      expect(yield* TestConsole.logLines).toStrictEqual([
-        "AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no",
-      ]);
+      const logLines8 = yield* TestConsole.logLines;
+      expect(logLines8).toStrictEqual(["AMI: ami-0123456789abcdef0\nlockfile: stale\nbun version: stale\nfresh: no"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -467,7 +533,7 @@ describe("runner bake planning and argv", () => {
         const testLayer = RunnersServiceLive.pipe(
           Layer.provide(
             Layer.provideMerge(
-              Git.layerTest({ revParse: () => Effect.fail(failure) }),
+              Git.layerTest({ status: () => Effect.succeed([]), revParse: () => Effect.fail(failure) }),
               Layer.merge(spawner.layer, PlatformLayer)
             )
           )
@@ -484,6 +550,61 @@ describe("runner bake planning and argv", () => {
       })
     );
   }
+
+  for (const { operation, fields, expected } of bakeGitFailureCases) {
+    it.effect(`refuses bake after a ${operation} failure (${expected}) before AWS`, () =>
+      Effect.gen(function* () {
+        const spawner = makeBakeSpawner("BEEP_RUNNERS_BAKE_COMPLETE");
+        const failure = GitCommandError.make({
+          kind: "failed",
+          args: [operation],
+          cwd: "/repo",
+          stderr: "fixture",
+          ...fields,
+        });
+        const git = Git.make.pipe(
+          Effect.map((live) => Git.makeTest({ ...live, [operation]: () => Effect.fail(failure) }))
+        );
+        const testLayer = RunnersServiceLive.pipe(Layer.provide(Layer.mergeAll(spawner.layer, PlatformLayer)));
+        const error = yield* RunnersService.use((service) => service.bake(bakeConfig(), O.none())).pipe(
+          Effect.provideServiceEffect(
+            RunnersService,
+            testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
+          ),
+          Effect.provideServiceEffect(Git, git),
+          provideSpawner(spawner),
+          Effect.flip
+        );
+        expect(error.message).toContain(expected);
+        expect(A.some(spawnArgv(spawner), A.contains("aws"))).toBe(false);
+      })
+    );
+  }
+
+  it.effect("records git's exit code when the bake inputs cannot be inspected", () =>
+    Effect.gen(function* () {
+      const spawner = makeBakeSpawner("BEEP_RUNNERS_BAKE_COMPLETE");
+      const failure = GitCommandError.make({
+        kind: "failed",
+        args: ["status"],
+        cwd: "/repo",
+        stderr: "fixture",
+        exitCode: 128,
+      });
+      const git = Git.make.pipe(Effect.map((live) => Git.makeTest({ ...live, status: () => Effect.fail(failure) })));
+      const testLayer = RunnersServiceLive.pipe(Layer.provide(Layer.mergeAll(spawner.layer, PlatformLayer)));
+      const error = yield* RunnersService.use((service) => service.bake(bakeConfig(), O.none())).pipe(
+        Effect.provideServiceEffect(
+          RunnersService,
+          testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
+        ),
+        Effect.provideServiceEffect(Git, git),
+        provideSpawner(spawner),
+        Effect.flip
+      );
+      expect(error.exitCode).toBe(128);
+    })
+  );
 
   it.effect("plans and checks freshness through the live service with a scripted spawner", () =>
     Effect.gen(function* () {
@@ -581,7 +702,7 @@ describe("runner bake planning and argv", () => {
           // Only the bake mode ships the revision to a guest clone, and it must
           // prove reachability against the canonical remote before AWS calls.
           expect(A.some(captured, A.contains("--contains"))).toBe(true);
-          expect(A.some(captured, A.contains("remote"))).toBe(true);
+          expect(A.some(captured, A.contains("get-url"))).toBe(true);
           assertSome(
             argumentAfter(runInstances, "--block-device-mappings"),
             '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
@@ -662,7 +783,7 @@ describe("runner bake planning and argv", () => {
         Effect.fnUntraced(function* (tmpDir) {
           const path = yield* Path.Path;
           const spawner = makeBakeSpawner("BEEP_RUNNERS_BAKE_COMPLETE", {
-            remotes: "fork\thttps://github.com/someone/beep-effect-fork.git (fetch)",
+            remotes: [["fork", "https://github.com/someone/beep-effect-fork.git"]],
           });
           const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
           const error = yield* Effect.gen(function* () {
@@ -687,7 +808,7 @@ describe("runner bake planning and argv", () => {
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
           const path = yield* Path.Path;
-          const spawner = makeBakeSpawner("BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
+          const spawner = makeBakeSpawner("BEEP_RUNNERS_BAKE_COMPLETE", { contains: ["fork/feature"] });
           const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
           const error = yield* Effect.gen(function* () {
             const service = yield* RunnersService;
@@ -734,7 +855,8 @@ describe("runner bake planning and argv", () => {
 
   it.effect("refuses dirty lockfile inputs before making an AWS call", () =>
     Effect.gen(function* () {
-      const spawner = ScriptedSpawner.make(() => ({ stdout: " M bun.lock" }));
+      // `git status --porcelain=v1 -z`: one NUL-terminated record.
+      const spawner = ScriptedSpawner.make(() => ({ stdout: " M bun.lock\0" }));
       const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
       const error = yield* Effect.gen(function* () {
         const service = yield* RunnersService;
@@ -860,7 +982,8 @@ describe("runner bake planning and argv", () => {
           yield* fs.writeFileString(filePath, source);
           yield* fs.chmod(filePath, 0o755);
         });
-        const bunVersion = Str.trim(yield* fs.readFileString(path.join(repoRoot, ".bun-version")));
+        const readFileString9 = yield* fs.readFileString(path.join(repoRoot, ".bun-version"));
+        const bunVersion = Str.trim(readFileString9);
         yield* writeExecutable(
           "bun",
           `#!/bin/sh\n[ "$1" = "--version" ] && { printf '%s\\n' '${bunVersion}'; exit 0; }\nexit 0\n`
@@ -884,7 +1007,8 @@ describe("runner bake planning and argv", () => {
         });
 
         expect(result.exitCode).not.toBe(0);
-        expect(yield* fs.exists(curlCapture)).toBe(false);
+        const exists10 = yield* fs.exists(curlCapture);
+        expect(exists10).toBe(false);
       })
     );
   });

@@ -658,7 +658,8 @@ export const applyDocketUndo: (input: {
     })
   );
 
-  const cleared = clearDocketRun(yield* store.load, plan);
+  const loaded = yield* store.load;
+  const cleared = clearDocketRun(loaded, plan);
   yield* store.save(DocketIntakeState.make(cleared.state));
   return reportOf({ dryRun: false, eventActions, ledgerCleared: cleared.cleared, messageActions, runId: plan.runId });
 });

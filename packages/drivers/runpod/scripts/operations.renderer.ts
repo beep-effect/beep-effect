@@ -5,12 +5,13 @@ import { A, Str, Struct } from "@beep/utils";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
 import * as Bool from "effect/Boolean";
 import * as Effect from "effect/Effect";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import openApiPatchInput from "../openapi.patch.json" with { type: "json" };
 import type { ExtraRenderer, GenerateConfig } from "@beep/codegen-kit";
@@ -735,7 +736,7 @@ const renderAdvisoryEnums = (advisoryEnums: Readonly<Record<string, readonly str
  * @category constants
  * @since 0.1.0
  */
-export const ${constantName} = ${JSON.stringify(values)} as const;`;
+export const ${constantName} = ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(values), identity)} as const;`;
     }),
     A.join("\n\n")
   );
@@ -788,7 +789,7 @@ const renderOperationDescriptorClass = (operations: readonly Operation[]): strin
     )
   );
 
-  return `const RunpodHttpMethodBase = LiteralKit(${JSON.stringify(methods)});
+  return `const RunpodHttpMethodBase = LiteralKit(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(methods), identity)});
 /**
  * Supported Runpod HTTP methods.
  *
@@ -826,7 +827,7 @@ export const RunpodHttpMethod = RunpodHttpMethodBase.pipe(
  */
 export type RunpodHttpMethod = typeof RunpodHttpMethod.Type;
 
-const RunpodOperationIdBase = LiteralKit(${JSON.stringify(operationIds)});
+const RunpodOperationIdBase = LiteralKit(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(operationIds), identity)});
 /**
  * Operation ids exposed by Runpod REST API v1.
  *
@@ -864,7 +865,7 @@ export const RunpodOperationId = RunpodOperationIdBase.pipe(
  */
 export type RunpodOperationId = typeof RunpodOperationId.Type;
 
-const RunpodRequestBodyKindBase = LiteralKit(${JSON.stringify(OperationRequestBodyKind.literals)});
+const RunpodRequestBodyKindBase = LiteralKit(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(OperationRequestBodyKind.literals), identity)});
 /**
  * Request body encoding used by a Runpod operation.
  *
@@ -902,7 +903,7 @@ export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
  */
 export type RunpodRequestBodyKind = typeof RunpodRequestBodyKind.Type;
 
-const RunpodResponseBodyKindBase = LiteralKit(${JSON.stringify(OperationResponseBodyKind.literals)});
+const RunpodResponseBodyKindBase = LiteralKit(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(OperationResponseBodyKind.literals), identity)});
 /**
  * Response body decoding used by a Runpod operation.
  *
@@ -990,8 +991,16 @@ const renderAuthentication = Match.type<string>().pipe(
 const renderRequestBodyKind: (requestFields: readonly RequestField[]) => string = flow(
   A.some((field: RequestField) => field.name === "body"),
   Bool.match({
-    onFalse: () => JSON.stringify(OperationRequestBodyKind.Enum.none),
-    onTrue: () => JSON.stringify(OperationRequestBodyKind.Enum.json),
+    onFalse: () =>
+      Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))(OperationRequestBodyKind.Enum.none),
+        identity
+      ),
+    onTrue: () =>
+      Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))(OperationRequestBodyKind.Enum.json),
+        identity
+      ),
   })
 );
 
@@ -1027,11 +1036,11 @@ export const ${operation.descriptorName} = RunpodOperationDescriptor.make({
   methodName: "${operation.methodName}",
   operationId: "${operation.operationId}",
   path: "${operation.path}",
-  pathParams: ${JSON.stringify(pathParams)},
-  queryParams: ${JSON.stringify(queryParams)},
+  pathParams: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(pathParams), identity)},
+  queryParams: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(queryParams), identity)},
   requestBody: ${renderRequestBodyKind(operation.requestFields)},
   requestBodyRequired: ${renderBooleanLiteral(operation.requestBodyRequired)},
-  responseBody: ${JSON.stringify(operation.responseBody)},
+  responseBody: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(operation.responseBody), identity)},
   status: "${operation.status}",
 });`;
 };
@@ -1116,7 +1125,11 @@ const enumSchemaExpression = (schema: JsonSchema, hint: string): O.Option<string
       pipe(
         shouldTrackAdvisoryEnum(hint),
         Bool.match({
-          onFalse: () => wrapNullable(schema, `LiteralKit(${JSON.stringify(enumValues)})`),
+          onFalse: () =>
+            wrapNullable(
+              schema,
+              `LiteralKit(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(enumValues), identity)})`
+            ),
           onTrue: () => wrapNullable(schema, "S.String"),
         })
       )

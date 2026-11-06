@@ -263,19 +263,17 @@ describe("C0 gold proposer", () => {
         const reference = yield* fs
           .readFileString("fixtures/gold/v1/gold.json")
           .pipe(Effect.flatMap(decodeGoldRefJson));
-        const files = A.sort(
-          yield* Effect.forEach(
-            GOLD_SUBSETS,
-            (subset) =>
-              Effect.forEach(reference.subsets[subset], (paperId) =>
-                fs
-                  .readFileString(`fixtures/gold/v1/${paperId}.${subset}.json`)
-                  .pipe(Effect.flatMap(decodeGoldFileEncodedJson))
-              ),
-            { concurrency: 1 }
-          ).pipe(Effect.map(A.flatten)),
-          GoldArtifactSemantics.fileOrder
-        );
+        const pipe1 = yield* Effect.forEach(
+          GOLD_SUBSETS,
+          (subset) =>
+            Effect.forEach(reference.subsets[subset], (paperId) =>
+              fs
+                .readFileString(`fixtures/gold/v1/${paperId}.${subset}.json`)
+                .pipe(Effect.flatMap(decodeGoldFileEncodedJson))
+            ),
+          { concurrency: 1 }
+        ).pipe(Effect.map(A.flatten));
+        const files = A.sort(pipe1, GoldArtifactSemantics.fileOrder);
         const verified = A.reduce(files, 0, (total, file) => N.sum(total, verifiedGoldLabelCount(file)));
         const total = A.reduce(files, 0, (count, file) => N.sum(count, goldLabelCount(file)));
         const digest = yield* contentDigest(S.Array(GoldFileEncoded))(files);
@@ -329,7 +327,8 @@ describe("C0 gold proposer", () => {
         ).pipe(Effect.map(A.flatten));
 
         expect(GOLD_V1_PROPOSER_IDENTITY.artifactHash).toBe(GOLD_PROMPT_ARTIFACT_HASH);
-        expect(yield* ModelIdentity.encodeEffect(reference.proposer)).toEqual(expected);
+        const encodedEffect = yield* ModelIdentity.encodeEffect(reference.proposer);
+        expect(encodedEffect).toEqual(expected);
         expect(files).toHaveLength(18);
         pipe(
           A.every(files, (file) => GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, expected)),
@@ -463,7 +462,8 @@ describe("C0 gold proposer", () => {
           O.map(relationFile, (file) => A.length(file.labels)),
           1
         );
-        pipe(yield* fs.exists(path.join(outputDirectory, "gold.json")), assertFalse);
+        const exists2 = yield* fs.exists(path.join(outputDirectory, "gold.json"));
+        pipe(exists2, assertFalse);
       })
     );
   });
@@ -520,7 +520,8 @@ describe("C0 gold proposer", () => {
           })
         );
         const referencePath = path.join(outputDirectory, "gold.json");
-        pipe(yield* fs.exists(referencePath), assertTrue);
+        const exists3 = yield* fs.exists(referencePath);
+        pipe(exists3, assertTrue);
 
         const partial = yield* provideScopedLayer(layer)(
           proposeGold({
@@ -532,7 +533,8 @@ describe("C0 gold proposer", () => {
         );
 
         expect(partial.reference.status).toBe("not-written");
-        pipe(yield* fs.exists(referencePath), assertFalse);
+        const exists4 = yield* fs.exists(referencePath);
+        pipe(exists4, assertFalse);
       })
     );
   });
@@ -573,8 +575,10 @@ describe("C0 gold proposer", () => {
 
         expect(error).toBeInstanceOf(GoldUnavailable);
         expect(error.reason).toBe("provider-failed");
-        expect(yield* fs.readFileString(referencePath)).toBe(reference);
-        expect(yield* fs.readFileString(labelPath)).toBe("sentinel\n");
+        const readFileString5 = yield* fs.readFileString(referencePath);
+        expect(readFileString5).toBe(reference);
+        const readFileString6 = yield* fs.readFileString(labelPath);
+        expect(readFileString6).toBe("sentinel\n");
       })
     );
   });

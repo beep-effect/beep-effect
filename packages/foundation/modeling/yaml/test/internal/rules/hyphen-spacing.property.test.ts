@@ -16,7 +16,8 @@ describe("hyphen-spacing schema properties", () => {
         const encoded = yield* S.encodeEffect(hyphenSpacingOptions)(value);
         const decoded = yield* S.decodeEffect(hyphenSpacingOptions)(encoded);
         assert.isTrue(S.toEquivalence(hyphenSpacingOptions)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(hyphenSpacingOptions)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(hyphenSpacingOptions)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

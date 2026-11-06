@@ -13,7 +13,8 @@ describe("Requote structural schema regressions", () => {
     ([input]) =>
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(RequoteScalarInput)(input);
-        assert.deepStrictEqual(yield* S.decodeEffect(RequoteScalarInput)(encoded), input);
+        const value1 = yield* S.decodeEffect(RequoteScalarInput)(encoded);
+        assert.deepStrictEqual(value1, input);
       }),
     { arbitrary: fcRuns(100) }
   );
@@ -24,7 +25,8 @@ describe("Requote structural schema regressions", () => {
     ([mode]) =>
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(RequoteMode)(mode);
-        assert.strictEqual(yield* S.decodeEffect(RequoteMode)(encoded), mode);
+        const value2 = yield* S.decodeEffect(RequoteMode)(encoded);
+        assert.strictEqual(value2, mode);
       }),
     { arbitrary: fcRuns(100) }
   );

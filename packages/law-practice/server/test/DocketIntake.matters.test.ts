@@ -189,7 +189,8 @@ describe("@beep/law-practice-server DocketIntake matter lookup", () => {
           ["00000001"],
           ["0000001"],
         ]);
-        expect(yield* Ref.get(mentionAsked)).toStrictEqual([]);
+        const got = yield* Ref.get(mentionAsked);
+        expect(got).toStrictEqual([]);
       })
     );
 
@@ -214,7 +215,8 @@ describe("@beep/law-practice-server DocketIntake matter lookup", () => {
           ["0000.00001", false, "0000"],
           ["0000.00001", false, "0000"],
         ]);
-        expect(yield* Ref.get(asked)).toStrictEqual(["00001"]);
+        const got1 = yield* Ref.get(asked);
+        expect(got1).toStrictEqual(["00001"]);
       })
     );
 
@@ -253,7 +255,8 @@ describe("@beep/law-practice-server DocketIntake matter lookup", () => {
           ["0000.00001", true],
         ]);
         // A docket match settles it: the citing documents are not searched.
-        expect(yield* Ref.get(mentionAsked)).toStrictEqual([]);
+        const got2 = yield* Ref.get(mentionAsked);
+        expect(got2).toStrictEqual([]);
       })
     );
 
@@ -303,7 +306,8 @@ describe("@beep/law-practice-server DocketIntake matter lookup", () => {
         const result = yield* lookupOver({ matters: {} }, ["00/000,001", "FIX-0001"]);
 
         expect(keysOf(result)).toStrictEqual(["MatterNotFound"]);
-        expect(yield* Ref.get(mentionAsked)).toStrictEqual(["00/000,001", "FIX-0001"]);
+        const got3 = yield* Ref.get(mentionAsked);
+        expect(got3).toStrictEqual(["00/000,001", "FIX-0001"]);
       })
     );
 
@@ -337,7 +341,8 @@ describe("@beep/law-practice-server DocketIntake matter lookup", () => {
 
         expect(extractPracticeKgReferences("0000.01234")).toStrictEqual([]);
         expect(keysOf(result)).toStrictEqual(["MatterNotFound"]);
-        expect(yield* Ref.get(asked)).toStrictEqual([]);
+        const got4 = yield* Ref.get(asked);
+        expect(got4).toStrictEqual([]);
       })
     );
 
@@ -346,7 +351,8 @@ describe("@beep/law-practice-server DocketIntake matter lookup", () => {
       Effect.fnUntraced(function* () {
         yield* lookupOver({ matters: {} }, ["FA-77 / 0000.00001US01", "0000.00001wo01-ca1"]);
 
-        expect(yield* Ref.get(asked)).toStrictEqual(["0000.00001US01", "0000.00001WO01-CA1"]);
+        const got5 = yield* Ref.get(asked);
+        expect(got5).toStrictEqual(["0000.00001US01", "0000.00001WO01-CA1"]);
       })
     );
 
@@ -480,10 +486,11 @@ const bundleDirectory = Effect.fnUntraced(function* (options: {
 const syntheticLookup = (documents: boolean) =>
   Layer.unwrap(
     Effect.gen(function* () {
+      const fixtureManifest6 = yield* fixtureManifest;
       const bundleDir = yield* bundleDirectory({
         database: true,
         documents,
-        manifest: O.some(yield* fixtureManifest),
+        manifest: O.some(fixtureManifest6),
       });
       return makeDocketMatterLookupLayer(DocketKgBundleOptions.make({ bundleDir }));
     })
@@ -542,10 +549,12 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
         const path = yield* Path.Path;
         const noManifest = yield* bundleDirectory({ database: true, documents: false, manifest: O.none() });
         const garbage = yield* bundleDirectory({ database: true, documents: false, manifest: O.some("not json") });
+        const argument = Str.replace('"duckdb":"4"', '"duckdb":"3"');
+        const fixtureManifest1 = yield* fixtureManifest;
         const older = yield* bundleDirectory({
           database: true,
           documents: false,
-          manifest: O.some(Str.replace('"duckdb":"4"', '"duckdb":"3"')(yield* fixtureManifest)),
+          manifest: O.some(argument(fixtureManifest1)),
         });
         const noFormat = yield* bundleDirectory({
           database: true,
@@ -557,10 +566,11 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
           documents: false,
           manifest: O.some('{"schemaVersion":{"duckdb":"4","pglite":"4"}}'),
         });
+        const fixtureManifest7 = yield* fixtureManifest;
         const noDatabase = yield* bundleDirectory({
           database: false,
           documents: false,
-          manifest: O.some(yield* fixtureManifest),
+          manifest: O.some(fixtureManifest7),
         });
 
         const messages = yield* Effect.forEach(

@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
+import { renderPrettyCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { renderPrettyCommandJson } from "../../internal/cli/Json.ts";
 import { SkillPatchAddReceipt, SkillPatchLabelReceipt } from "./SkillsPatch.schemas.ts";
 import { SkillReviewSession } from "./SkillsReview.schemas.ts";
 import type { SkillReviewItem, SkillReviewSkill } from "./SkillsReview.schemas.ts";

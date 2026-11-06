@@ -40,7 +40,8 @@ describe("TsconfigValidator in memory", () => {
 
   it.effect("accepts a minimal document and a realistic one, canonicalizing enums", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* TsconfigValidator.validate({}), {});
+      const validate1 = yield* TsconfigValidator.validate({});
+      assert.deepStrictEqual(validate1, {});
       const document = yield* TsconfigValidator.validate({
         $schema: "https://json.schemastore.org/tsconfig",
         extends: "./tsconfig.base.json",
@@ -111,16 +112,12 @@ describe("TsconfigValidator in memory", () => {
 
   it.effect("rejects prototype-polluting keys in paths aliases and plugin extras", () =>
     Effect.gen(function* () {
-      yield* rejects(
-        yield* decodeJson('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}'),
-        'Key must not be "__proto__".',
-        '["compilerOptions"]["paths"]["__proto__"]'
+      const decodedJson = yield* decodeJson('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}');
+      yield* rejects(decodedJson, 'Key must not be "__proto__".', '["compilerOptions"]["paths"]["__proto__"]');
+      const decodedJson2 = yield* decodeJson(
+        '{"compilerOptions":{"plugins":[{"name":"p"},{"name":"q","__proto__":{"x":1}}]}}'
       );
-      yield* rejects(
-        yield* decodeJson('{"compilerOptions":{"plugins":[{"name":"p"},{"name":"q","__proto__":{"x":1}}]}}'),
-        'Key must not be "__proto__".',
-        '["compilerOptions"]["plugins"][1]["__proto__"]'
-      );
+      yield* rejects(decodedJson2, 'Key must not be "__proto__".', '["compilerOptions"]["plugins"][1]["__proto__"]');
     })
   );
 
@@ -152,28 +149,26 @@ describe("TsconfigValidator in memory", () => {
         "rewriteRelativeImportExtensions"
       );
       for (const enabler of ["noEmit", "emitDeclarationOnly", "rewriteRelativeImportExtensions"]) {
-        strictEqual(
-          yield* verdict({ compilerOptions: { allowImportingTsExtensions: true, [enabler]: true } }),
-          "accept"
-        );
+        const verdict3 = yield* verdict({ compilerOptions: { allowImportingTsExtensions: true, [enabler]: true } });
+        strictEqual(verdict3, "accept");
       }
       // Inverted from the legacy repo-utils model, which also demanded moduleResolution=bundler; tsc
       // 7 does not (tsc-probe A in the 3-A6 parity note), so a nodenext noEmit config is accepted.
-      strictEqual(
-        yield* verdict({
-          compilerOptions: { allowImportingTsExtensions: true, moduleResolution: "NodeNext", noEmit: true },
-        }),
-        "accept"
-      );
+      const verdict4 = yield* verdict({
+        compilerOptions: { allowImportingTsExtensions: true, moduleResolution: "NodeNext", noEmit: true },
+      });
+      strictEqual(verdict4, "accept");
     })
   );
 
   it.effect("enforces reactNamespace with jsx=react and maxNodeModuleJsDepth with allowJs", () =>
     Effect.gen(function* () {
       yield* rejects({ compilerOptions: { jsx: "react-jsx", reactNamespace: "React" } }, "reactNamespace", "jsx");
-      strictEqual(yield* verdict({ compilerOptions: { jsx: "react", reactNamespace: "React" } }), "accept");
+      const verdict5 = yield* verdict({ compilerOptions: { jsx: "react", reactNamespace: "React" } });
+      strictEqual(verdict5, "accept");
       yield* rejects({ compilerOptions: { maxNodeModuleJsDepth: 2 } }, "maxNodeModuleJsDepth", "allowJs");
-      strictEqual(yield* verdict({ compilerOptions: { allowJs: true, maxNodeModuleJsDepth: 0 } }), "accept");
+      const verdict6 = yield* verdict({ compilerOptions: { allowJs: true, maxNodeModuleJsDepth: 0 } });
+      strictEqual(verdict6, "accept");
     })
   );
 

@@ -36,6 +36,7 @@ import {
   VendoredSkillLockEntry,
 } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
+import { asArrayBufferView } from "@beep/repo-cli-kit/cli/Bytes";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -59,7 +60,6 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { asArrayBufferView } from "../../internal/cli/Bytes.ts";
 import { canonicalJsonText } from "../Goals/PacketCore/PacketDigest.ts";
 import { readSkillsLockText, SKILLS_LOCK_PATH } from "./internal/LockFile.ts";
 import { PATCH_ROOT } from "./internal/PatchStaging.ts";
@@ -1727,8 +1727,9 @@ export const compileSkillsLockMigration = Effect.fn("SkillsLock.compileSkillsLoc
 ): Effect.fn.Return<SkillsLockMigrationArtifacts, SkillsCommandError, ProvenanceRequirements> {
   const lock = yield* readSkillsLock(repoRoot);
   const resolutions = yield* ratifiedResolutions(lock.vendored);
+  const plannedSkills1 = yield* plannedSkills(repoRoot, lock);
   const planned = yield* Effect.forEach(
-    yield* plannedSkills(repoRoot, lock),
+    plannedSkills1,
     ([skill, sourceType]) => migrateSkill(repoRoot, skill, sourceType, resolutions),
     { concurrency: 1 }
   );

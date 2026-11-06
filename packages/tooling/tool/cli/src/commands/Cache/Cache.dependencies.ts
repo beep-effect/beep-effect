@@ -5,6 +5,9 @@
  * @since 0.0.0
  */
 
+import { hashFileSha256 } from "@beep/repo-cli-kit/cli/FsGuards";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
@@ -17,11 +20,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import {
   CacheDependencyLink,
@@ -34,6 +34,7 @@ import { CacheExecutablePin } from "./Cache.schemas.ts";
 import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import type { CacheCensusWorkspace } from "./Cache.schemas.ts";
 
+const equivalentToolPins = S.toEquivalence(CacheDependencyMaterialization.fields.tools);
 const tools = ["bash", "cp", "find", "tar", "sha256sum", "awk"];
 const countFields = S.Tuple([S.Natural, S.Natural, S.Natural, S.Natural, S.Natural]);
 const decodeCountFields = S.decodeUnknownEffect(countFields);
@@ -98,23 +99,21 @@ const capture = Effect.fn("CacheDependencies.capture")(function* (
 const hash = (file: string) =>
   hashFileSha256(file, (cause) => CacheCommandError.new("Cannot hash dependency evidence.", cause));
 const toolPins = Effect.fn("CacheDependencies.toolPins")(function* () {
-  return R.fromEntries(
-    yield* Effect.forEach(
-      tools,
-      Effect.fn("CacheDependencies.toolPin")(function* (name) {
-        const binary = `/usr/bin/${name}`;
-        const version = yield* capture("/", binary, ["--version"]).pipe(
-          Effect.map(Str.trim),
-          Effect.map(Str.split("\n")),
-          Effect.flatMap((lines) =>
-            Effect.fromOption(() => CacheCommandError.new("Missing integrity-tool version."))(A.head(lines))
-          )
-        );
-        return Tuple.make(name, CacheExecutablePin.make({ version, sha256: yield* hash(binary) }));
-      }),
-      { concurrency: 1 }
-    )
-  );
+  return yield* Effect.forEach(
+    tools,
+    Effect.fn("CacheDependencies.toolPin")(function* (name) {
+      const binary = `/usr/bin/${name}`;
+      const version = yield* capture("/", binary, ["--version"]).pipe(
+        Effect.map(Str.trim),
+        Effect.map(Str.split("\n")),
+        Effect.flatMap((lines) =>
+          Effect.fromOption(() => CacheCommandError.new("Missing integrity-tool version."))(A.head(lines))
+        )
+      );
+      return Tuple.make(name, CacheExecutablePin.make({ version, sha256: yield* hash(binary) }));
+    }),
+    { concurrency: 1 }
+  ).pipe(Effect.map(R.fromEntries));
 });
 const physicalTree = Effect.fn("CacheDependencies.physicalTree")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -243,7 +242,7 @@ export const verifyCacheDependencies = Effect.fn("CacheDependencies.verify")(fun
     (yield* hash(path.join(root, "package.json"))) !== receipt.rootManifestSha256
   )
     return yield* CacheCommandError.new("Dependency materialization has a stale lockfile or root manifest.");
-  if (!S.toEquivalence(CacheDependencyMaterialization.fields.tools)(yield* toolPins(), receipt.tools))
+  if (!(yield* Effect.zipWith(toolPins(), Effect.succeed(receipt.tools), equivalentToolPins)))
     return yield* CacheCommandError.new("Dependency integrity tools differ from the retained pins.");
   const census = yield* collectCacheCensus(root);
   const observed = yield* inspectCacheDependencyTree(receipt.directory, census.workspaces);

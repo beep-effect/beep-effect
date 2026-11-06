@@ -86,7 +86,8 @@ describe('quoteStyle "auto"', () => {
         const key = A.join(chars, "");
         if (startsWithDocumentMarker(key)) return;
         const document = { [key]: 1 };
-        strictEqual(yield* Yaml.stringify(document, auto), stringify(document, { lineWidth: 0 }));
+        const stringify1 = yield* Yaml.stringify(document, auto);
+        strictEqual(stringify1, stringify(document, { lineWidth: 0 }));
       }),
     runs
   );

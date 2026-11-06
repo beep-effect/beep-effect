@@ -229,7 +229,8 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
             if (A.contains(receipt.value.conflictIndices, index) || A.contains(receipt.value.expiredIndices, index))
               continue;
             const payload = yield* encodeNativeTraceMetadataJson(span);
-            yield* verifyMember(span.eventId, yield* hashPublicTextSha256(payload), true);
+            const hashPublicTextSha2561 = yield* hashPublicTextSha256(payload);
+            yield* verifyMember(span.eventId, hashPublicTextSha2561, true);
           }
           return A.dedupe(
             A.map(
@@ -343,8 +344,8 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
           registered: boolean
         ) {
           const unenrolledNativeOwnership = Str.startsWith("native:")(sourceKey)
-            ? O.some(
-                yield* readUnenrolledNativeOwnership(receiptId).pipe(Effect.provideService(SqlClient.SqlClient, sql))
+            ? yield* Effect.asSome(
+                readUnenrolledNativeOwnership(receiptId).pipe(Effect.provideService(SqlClient.SqlClient, sql))
               )
             : O.none();
           if (registered && O.isSome(unenrolledNativeOwnership) && unenrolledNativeOwnership.value.count > 0)

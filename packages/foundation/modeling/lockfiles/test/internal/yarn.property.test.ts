@@ -65,13 +65,15 @@ describe("Yarn parser property floor", () => {
     Effect.gen(function* () {
       const failure = yield* Effect.flip(parseYarn("__metadata:\n  version: 9007199254740992\n"));
       assert.strictEqual(failure.stage, "validation");
-      const parsed = yield* parseYarn(
-        yield* Yaml.stringify({
-          __metadata: { version: "9007199254740992" },
-        })
-      );
+      const stringify1 = yield* Yaml.stringify({
+        __metadata: { version: "9007199254740992" },
+      });
+      const parsed = yield* parseYarn(stringify1);
       assert.strictEqual(parsed.lockfileVersion, "9007199254740992");
-      assertTrue(S.toEquivalence(LockfileFields)(yield* parseYarn(yield* stringifyFields(parsed)), parsed));
+      const argument = S.toEquivalence(LockfileFields);
+      const stringifyFields3 = yield* stringifyFields(parsed);
+      const parsedYarn = yield* parseYarn(stringifyFields3);
+      assertTrue(argument(parsedYarn, parsed));
     })
   );
 
@@ -109,7 +111,8 @@ describe("Yarn parser property floor", () => {
         const text = yield* stringifyFields(parsed);
         const reparsed = yield* parseYarn(text);
         assertTrue(S.toEquivalence(LockfileFields)(reparsed, parsed));
-        assert.strictEqual(yield* stringifyFields(reparsed), text);
+        const stringifyFields2 = yield* stringifyFields(reparsed);
+        assert.strictEqual(stringifyFields2, text);
         assert.deepStrictEqual(
           A.map(parsed.packages, (pkg) => pkg.resolved),
           [R.fromEntries([[value.name, locator]]), {}]
@@ -152,9 +155,14 @@ describe("Yarn parser property floor", () => {
           [`lib@workspace:*, lib@workspace:${value.path}`]: { linkType: "soft" },
         });
         const parsed = yield* parseYarn(content);
-        const canonical = yield* Yaml.stringify(yield* Yaml.parse(content));
-        assert.strictEqual(yield* Yaml.stringify(yield* Yaml.parse(canonical)), canonical);
-        assertTrue(S.toEquivalence(LockfileFields)(yield* parseYarn(canonical), parsed));
+        const parsed3 = yield* Yaml.parse(content);
+        const canonical = yield* Yaml.stringify(parsed3);
+        const parsed5 = yield* Yaml.parse(canonical);
+        const stringify4 = yield* Yaml.stringify(parsed5);
+        assert.strictEqual(stringify4, canonical);
+        const argument1 = S.toEquivalence(LockfileFields);
+        const parsedYarn1 = yield* parseYarn(canonical);
+        assertTrue(argument1(parsedYarn1, parsed));
         assert.deepStrictEqual(
           A.map(parsed.workspaceDependencies, (edge) => [edge.from, edge.to, edge.depType, edge.constraint]),
           [["root", "lib", value.section, value.constraint]]

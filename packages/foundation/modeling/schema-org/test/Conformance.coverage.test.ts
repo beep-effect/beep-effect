@@ -58,14 +58,13 @@ it.effect("issues explain the node, offending term and successor or reference", 
 it.effect("the Effect conformance gate returns the graph or all typed issues", () =>
   Effect.gen(function* () {
     const valid = yield* JsonLdDocument.build([SoftwareSourceCode.make({ "@id": "_:pkg" })]);
-    assert.strictEqual(yield* Conformance.validate(valid), valid);
+    const validate1 = yield* Conformance.validate(valid);
+    assert.strictEqual(validate1, valid);
     const invalid = yield* JsonLdDocument.build([
       SoftwareSourceCode.make({ "@id": "_:pkg", additional: { softwareVersion: "1" } }),
     ]);
-    assertFailure(
-      yield* Effect.result(Conformance.validate(invalid)),
-      NonConformantGraphError.make({ issues: Conformance.check(invalid) })
-    );
+    const result2 = yield* Effect.result(Conformance.validate(invalid));
+    assertFailure(result2, NonConformantGraphError.make({ issues: Conformance.check(invalid) }));
   })
 );
 

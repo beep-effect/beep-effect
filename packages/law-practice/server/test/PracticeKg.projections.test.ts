@@ -1,6 +1,11 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import {
+  ClaimInputCollection,
+  ClaimInputRecord,
+  inspectClaimInput,
+} from "@beep/law-practice-domain/values/ClaimElement";
+import {
   normalizePatentApplicationDocument,
   normalizePatentClaims,
   PatentApplicationDocument,
@@ -43,7 +48,11 @@ import {
 } from "@beep/law-practice-server";
 import { runPracticeKgSelfCheck } from "@beep/law-practice-server/PracticeKgHost";
 import { DbSchema } from "@beep/law-practice-tables";
-import { ClaimSelfCheckInput } from "@beep/law-practice-use-cases/ClaimSelfCheck";
+import {
+  ClaimInspectionPage,
+  ClaimInspectionPageRequest,
+  ClaimSelfCheckInput,
+} from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import { OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import {
   ClaimSelfCheckReviewRequest,
@@ -77,7 +86,7 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
@@ -85,6 +94,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -94,6 +104,8 @@ import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
 import type { DuckDbShape } from "@beep/duckdb";
 import type { TestContext } from "@effect/vitest";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 class ConcurrentClaimsReader extends Context.Service<ConcurrentClaimsReader, DuckDbShape>()(
   "@beep/law-practice-server/test/PracticeKg.projections.test/ConcurrentClaimsReader"
 ) {}
@@ -101,7 +113,7 @@ class ConcurrentClaimsOptions extends Context.Service<ConcurrentClaimsOptions, P
   "@beep/law-practice-server/test/PracticeKg.projections.test/ConcurrentClaimsOptions"
 ) {}
 
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeUnknownEffect(UnknownJson);
 const json = (value: unknown): Effect.Effect<string> => Effect.orDie(encodeJson(value));
 
 const isPracticeKgCandidateClaimsNotLoadedResult = S.is(PracticeKgCandidateClaimsNotLoadedResult);
@@ -212,7 +224,11 @@ const fixtureLanguageModel = Layer.effect(
     generateText: (options) =>
       Effect.succeed([
         Response.makePart("text", {
-          text: Str.includes("without office action rejections")(JSON.stringify(options.prompt))
+          text: options.prompt.pipe(
+            S.encodeUnknownResult(UnknownJson),
+            Result.getOrThrowWith(identity),
+            Str.includes("without office action rejections")
+          )
             ? fixtureRejectionlessOutput
             : fixtureModelOutput,
         }),
@@ -685,30 +701,28 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
       )
   );
   yield* fs.writeFileString(path.join(mailRoot, "sources.jsonl"), `${A.join(mailLines, "\n")}\n`);
-  yield* fs.writeFileString(
-    path.join(mailRoot, "metadata", "operation:op-mail-filing.json"),
-    yield* json({
-      "Content-Type": "message/rfc822",
-      "Message-Cc": '"Docketing, Example" <Docketing@Example.com>',
-      "Message-From": "Pat Example <Pat@Example.com>",
-      "Message-To": [`Ann Attorney <ann@${practiceDomain}>`, "sam@other.test"],
-      "Message:Raw-Header:Message-ID": "<filing-1@example.com>",
-      "dcterms:created": "2026-02-01T10:00:00Z",
-    })
-  );
+  const argument = path.join(mailRoot, "metadata", "operation:op-mail-filing.json");
+  const json1 = yield* json({
+    "Content-Type": "message/rfc822",
+    "Message-Cc": '"Docketing, Example" <Docketing@Example.com>',
+    "Message-From": "Pat Example <Pat@Example.com>",
+    "Message-To": [`Ann Attorney <ann@${practiceDomain}>`, "sam@other.test"],
+    "Message:Raw-Header:Message-ID": "<filing-1@example.com>",
+    "dcterms:created": "2026-02-01T10:00:00Z",
+  });
+  yield* fs.writeFileString(argument, json1);
   // Recursive Tika output: an array whose first object is the message itself.
-  yield* fs.writeFileString(
-    path.join(mailRoot, "metadata", "operation:op-mail-answer.json"),
-    yield* json([
-      {
-        "Message-From": "Sam Other",
-        "Message-To": "Pat Example <pat@example.com>",
-        "Message:From-Email": "sam@other.test",
-        "dcterms:created": ["2026-03-01T09:00:00Z"],
-      },
-      { "Content-Type": "application/pdf" },
-    ])
-  );
+  const argument1 = path.join(mailRoot, "metadata", "operation:op-mail-answer.json");
+  const json2 = yield* json([
+    {
+      "Message-From": "Sam Other",
+      "Message-To": "Pat Example <pat@example.com>",
+      "Message:From-Email": "sam@other.test",
+      "dcterms:created": ["2026-03-01T09:00:00Z"],
+    },
+    { "Content-Type": "application/pdf" },
+  ]);
+  yield* fs.writeFileString(argument1, json2);
 
   const contactsPath = path.join(corpusRoot, "contacts.jsonl");
   const contact = (
@@ -871,6 +885,9 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
 });
 
 const claimSelfCheckReviewResultJson = S.fromJsonString(ClaimSelfCheckReviewResult);
+const claimInputInspectionReportJson = S.fromJsonString(ClaimInspectionPage);
+const encodeClaimInspectionInput = S.encodeEffect(ClaimInspectionPageRequest);
+const decodeClaimInspectionReport = S.decodeEffect(claimInputInspectionReportJson);
 
 describe("practice KG projections", () => {
   describe("generates schema-valid fixture source rows", () => {
@@ -953,10 +970,12 @@ describe("practice KG projections", () => {
         yield* Effect.gen(function* () {
           const db = yield* DuckDb;
           yield* buildDuckDb([], [], [], [], 2_097_152);
-          expect(
-            yield* db.query("SELECT table_name FROM duckdb_tables() WHERE temporary AND table_name = 'fts_tokens'")
-          ).toStrictEqual([]);
-          expect(yield* db.query("SELECT term FROM fts_terms")).toStrictEqual([]);
+          const query1 = yield* db.query(
+            "SELECT table_name FROM duckdb_tables() WHERE temporary AND table_name = 'fts_tokens'"
+          );
+          expect(query1).toStrictEqual([]);
+          const query2 = yield* db.query("SELECT term FROM fts_terms");
+          expect(query2).toStrictEqual([]);
           yield* db.run("CREATE TEMP TABLE fts_tokens (term VARCHAR)");
         }).pipe(withDuckDb(":memory:"));
       })
@@ -1160,6 +1179,88 @@ describe("practice KG projections", () => {
       { timeout: "2 minutes" }
     )((it) => {
       it.effect(
+        "serves failure-preserving source inspection over MCP without fetching or storing candidates",
+        Effect.fnUntraced(function* () {
+          const texts = A.make(
+            "A fixture comprising a panel.",
+            "Unsupported fragment.",
+            "A fixture comprising a sensor.",
+            "Fixture of claim 2 wherein a relay."
+          );
+          const input = ClaimInputCollection.make({
+            sourceKey: "synthetic-local-ledger",
+            records: A.map(texts, (canonicalText, index) =>
+              ClaimInputRecord.cases.text.make({
+                sourceOrdinal: index + 1,
+                numberText: O.some(`${index + 1}`),
+                sourceText: canonicalText,
+                canonicalText,
+              })
+            ),
+          });
+          const before = yield* callToolText("kg_candidate_claims", {});
+          const wire = yield* encodeClaimInspectionInput(ClaimInspectionPageRequest.make({ input }));
+          const encoded = yield* callToolText("claim_inspect_input", wire);
+          const report = yield* decodeClaimInspectionReport(encoded);
+          expect(report.input).toStrictEqual(input);
+          expect(report.indexStatus).toBe("incomplete");
+          expect(A.map(report.records, ({ status }) => status)).toStrictEqual([
+            "partial",
+            "unchecked",
+            "partial",
+            "unchecked",
+          ]);
+          const unavailable = ClaimInputCollection.make({
+            sourceKey: "synthetic-all-unusable",
+            records: [
+              ClaimInputRecord.cases.unavailable.make({
+                sourceOrdinal: 1,
+                numberText: O.none(),
+                sourceText: "&broken;",
+                reason: "invalid-text",
+              }),
+            ],
+          });
+          const failedWire = yield* encodeClaimInspectionInput(ClaimInspectionPageRequest.make({ input: unavailable }));
+          const failedEncoded = yield* callToolText("claim_inspect_input", failedWire);
+          const failedReport = yield* decodeClaimInspectionReport(failedEncoded);
+          expect(failedReport.input).toStrictEqual(unavailable);
+          expect(A.map(failedReport.records, ({ status }) => status)).toStrictEqual(["unchecked"]);
+          const largeInput = ClaimInputCollection.make({
+            ...input,
+            sourceKey: "synthetic-large-MCP-source",
+            records: A.map(input.records, (record) =>
+              ClaimInputRecord.make({ ...record, sourceText: Str.repeat(50_000)("界") })
+            ),
+          });
+          const full = yield* inspectClaimInput(largeInput);
+          const largeWire = yield* encodeClaimInspectionInput(ClaimInspectionPageRequest.make({ input: largeInput }));
+          const largeEncoded = yield* callToolText("claim_inspect_input", largeWire);
+          expect(new TextEncoder().encode(largeEncoded).byteLength).toBeLessThanOrEqual(1024 * 1024);
+          let page = yield* decodeClaimInspectionReport(largeEncoded);
+          expect(page.deliveryStatus).toBe("incomplete");
+          let collected = page.records;
+          while (O.isSome(page.nextCursor)) {
+            const nextWire = yield* encodeClaimInspectionInput(
+              ClaimInspectionPageRequest.make({ input: largeInput, cursor: page.nextCursor.value })
+            );
+            const nextEncoded = yield* callToolText("claim_inspect_input", nextWire);
+            expect(new TextEncoder().encode(nextEncoded).byteLength).toBeLessThanOrEqual(1024 * 1024);
+            const next = yield* decodeClaimInspectionReport(nextEncoded);
+            expect(next.range.startSourceOrdinal).toBe(page.range.endSourceOrdinal + 1);
+            expect(next.input).toStrictEqual(largeInput);
+            expect(next.summary).toStrictEqual(page.summary);
+            collected = A.appendAll(collected, next.records);
+            page = next;
+          }
+          expect(page.deliveryStatus).toBe("complete");
+          expect(collected).toStrictEqual(full.records);
+          const after = yield* callToolText("kg_candidate_claims", {});
+          expect(after).toBe(before);
+        })
+      );
+
+      it.effect(
         "serves source-quoted advisory claim findings over MCP without storing candidates",
         Effect.fnUntraced(function* () {
           const claimText = "A camera comprising a sensor and the shutter.";
@@ -1212,7 +1313,8 @@ describe("practice KG projections", () => {
           expect(item.sourceRefs).toHaveLength(0);
           expect(mapped.evidence.span.quote).toBe("the shutter");
           expect(mapped.candidate.lifecycle).toBe("candidate");
-          expect(yield* callToolText("kg_candidate_claims", {})).toBe(before);
+          const callToolText3 = yield* callToolText("kg_candidate_claims", {});
+          expect(callToolText3).toBe(before);
         })
       );
 
@@ -1491,21 +1593,19 @@ describe("practice KG projections", () => {
             const db = yield* DuckDb;
             const lines = (statement: string) =>
               db.query(statement).pipe(Effect.flatMap(decodeDumpLines), Effect.map(A.map((row) => row.line)));
-            expect(
-              yield* lines(
-                "SELECT to_json(x)::VARCHAR AS line FROM (SELECT family_key, address, contact_id, display_name, role_address, is_practice_address, message_count, from_count, to_count, cc_count, first_at, last_at, epistemic_status FROM matter_correspondents ORDER BY family_key, address) x"
-              )
-            ).toStrictEqual([
+            const lines4 = yield* lines(
+              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT family_key, address, contact_id, display_name, role_address, is_practice_address, message_count, from_count, to_count, cc_count, first_at, last_at, epistemic_status FROM matter_correspondents ORDER BY family_key, address) x"
+            );
+            expect(lines4).toStrictEqual([
               `{"family_key":"${fixtureClients.alpha}.20001","address":"ann@${practiceDomain}","contact_id":null,"display_name":"Ann Attorney","role_address":false,"is_practice_address":true,"message_count":1,"from_count":0,"to_count":1,"cc_count":0,"first_at":"2026-02-01T10:00:00Z","last_at":"2026-02-01T10:00:00Z","epistemic_status":"mention-derived"}`,
               `{"family_key":"${fixtureClients.alpha}.20001","address":"docketing@example.com","contact_id":"c_bbbbbbbbbbbb","display_name":"Example Docketing","role_address":true,"is_practice_address":false,"message_count":1,"from_count":0,"to_count":0,"cc_count":1,"first_at":"2026-02-01T10:00:00Z","last_at":"2026-02-01T10:00:00Z","epistemic_status":"mention-derived"}`,
               `{"family_key":"${fixtureClients.alpha}.20001","address":"pat@example.com","contact_id":"c_aaaaaaaaaaaa","display_name":"Pat Example","role_address":false,"is_practice_address":false,"message_count":2,"from_count":1,"to_count":1,"cc_count":0,"first_at":"2026-02-01T10:00:00Z","last_at":"2026-03-01T09:00:00Z","epistemic_status":"mention-derived"}`,
               `{"family_key":"${fixtureClients.alpha}.20001","address":"sam@other.test","contact_id":"c_cccccccccccc","display_name":"Sam Other","role_address":false,"is_practice_address":false,"message_count":2,"from_count":1,"to_count":1,"cc_count":0,"first_at":"2026-02-01T10:00:00Z","last_at":"2026-03-01T09:00:00Z","epistemic_status":"mention-derived"}`,
             ]);
-            expect(
-              yield* lines(
-                "SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS links FROM contact_client_links) x"
-              )
-            ).toStrictEqual(['{"links":9}']);
+            const lines5 = yield* lines(
+              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS links FROM contact_client_links) x"
+            );
+            expect(lines5).toStrictEqual(['{"links":9}']);
           }).pipe(withDuckDb(path.join(bundleOut, "practice.duckdb")));
 
           const bundleContext = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
@@ -1574,8 +1674,10 @@ describe("practice KG projections", () => {
             ],
             ["candidate", `${fixtureClients.beta}.20001`, fixtureClients.beta, 0, "org-name-match", false],
           ];
-          expect(yield* correspondent(" Pat@Example.com ")).toStrictEqual(patRows);
-          expect(yield* correspondent("Pat Example <pat@example.com>")).toStrictEqual(patRows);
+          const correspondent6 = yield* correspondent(" Pat@Example.com ");
+          expect(correspondent6).toStrictEqual(patRows);
+          const correspondent7 = yield* correspondent("Pat Example <pat@example.com>");
+          expect(correspondent7).toStrictEqual(patRows);
           // Under a budget that keeps one minimal row, the kept row is the decided one,
           // and the minimal tier still says decided; with room for two, the other is a candidate.
           const budgeted = (budgetBytes: number) =>
@@ -1601,10 +1703,12 @@ describe("practice KG projections", () => {
             [`${fixtureClients.beta}.20001`, false, "candidate"],
           ]);
           // A family key that is no matter, or is keyed to another client, never decides.
-          expect(yield* correspondent("lee@example.com")).toStrictEqual([
+          const correspondent8 = yield* correspondent("lee@example.com");
+          expect(correspondent8).toStrictEqual([
             ["ambiguous", `${fixtureClients.alpha}.00012`, fixtureClients.alpha, 0, "attorney-answer", false],
           ]);
-          expect(yield* correspondent("kim@example.com")).toStrictEqual([
+          const correspondent9 = yield* correspondent("kim@example.com");
+          expect(correspondent9).toStrictEqual([
             ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.beta, 0, "attorney-answer", false],
           ]);
           const spans = MutableRef.make<ReadonlyArray<Tracer.Span>>([]);
@@ -1629,19 +1733,23 @@ describe("practice KG projections", () => {
             "Expected one email address; the input holds 2.",
           ]);
           // A role mailbox never resolves, however clear its link.
-          expect(yield* correspondent("docketing@example.com")).toStrictEqual([
+          const correspondent10 = yield* correspondent("docketing@example.com");
+          expect(correspondent10).toStrictEqual([
             ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.alpha, 1, "attorney-pc-folder", false],
           ]);
           // Inferred links rank candidates; they never decide.
-          expect(yield* correspondent("sam@other.test")).toStrictEqual([
+          const correspondent11 = yield* correspondent("sam@other.test");
+          expect(correspondent11).toStrictEqual([
             ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.alpha, 2, "email-subject-ref", false],
             ["ambiguous", `${fixtureClients.beta}.20001`, fixtureClients.beta, 0, "org-name-match", false],
             ["ambiguous", null, fixtureClients.beta, 0, "org-name-match", false],
           ]);
-          expect(yield* correspondent(`ann@${practiceDomain}`)).toStrictEqual([
+          const correspondent12 = yield* correspondent(`ann@${practiceDomain}`);
+          expect(correspondent12).toStrictEqual([
             ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.alpha, 1, "", false],
           ]);
-          expect(yield* correspondent("nobody@nowhere.test")).toStrictEqual([]);
+          const correspondent13 = yield* correspondent("nobody@nowhere.test");
+          expect(correspondent13).toStrictEqual([]);
           const verified = yield* verifyPracticeKgBundle;
           expect([
             verified.ok,
@@ -1724,33 +1832,31 @@ describe("practice KG projections", () => {
             db.query(statement).pipe(Effect.flatMap(decodeDumpLines), Effect.map(A.map((row) => row.line)));
           // An organized file that the included run also holds still reports the organizer's
           // copy; the origin chain is where both runs show.
-          expect(
-            yield* lines(
-              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT run_label, size_bytes, mtime_iso, source_origin_chain FROM documents WHERE digest = '${fixtureDigests.family}') x`
-            )
-          ).toStrictEqual([
+          const lines14 = yield* lines(
+            `SELECT to_json(x)::VARCHAR AS line FROM (SELECT run_label, size_bytes, mtime_iso, source_origin_chain FROM documents WHERE digest = '${fixtureDigests.family}') x`
+          );
+          expect(lines14).toStrictEqual([
             `{"run_label":"base","size_bytes":11,"mtime_iso":"2026-01-02T03:04:05.000Z","source_origin_chain":"${workingRun}:source-b:Loose files/family-notes copy.txt <- base:fixture-source:family-notes.txt"}`,
           ]);
           // One docket in the path files the row under it; two leave it unsorted.
-          expect(
-            yield* lines(
-              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' ORDER BY digest) x`
-            )
-          ).toStrictEqual([
+          const lines15 = yield* lines(
+            `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' ORDER BY digest) x`
+          );
+          expect(lines15).toStrictEqual([
             '{"category":"unsorted","docket":null,"docket_family":null,"effective_name":"Combined.txt"}',
             '{"category":"docket","docket":"50005US01","docket_family":"50005","effective_name":"Letter.txt"}',
             '{"category":"docket","docket":"40004ZA01","docket_family":"40004","effective_name":"Notice.txt"}',
             '{"category":"docket","docket":"30002BR01","docket_family":"30002","effective_name":"Annuity notice.txt"}',
             '{"category":"docket","docket":"20001US01","docket_family":"20001","effective_name":"Filing receipt.txt"}',
           ]);
-          expect(
-            yield* lines("SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS text_rows FROM document_text) x")
-          ).toStrictEqual(['{"text_rows":6}']);
-          expect(
-            yield* lines(
-              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT family_key, client, client_name, attribution_source, document_count FROM matters ORDER BY family_key) x"
-            )
-          ).toStrictEqual([
+          const lines16 = yield* lines(
+            "SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS text_rows FROM document_text) x"
+          );
+          expect(lines16).toStrictEqual(['{"text_rows":6}']);
+          const lines17 = yield* lines(
+            "SELECT to_json(x)::VARCHAR AS line FROM (SELECT family_key, client, client_name, attribution_source, document_count FROM matters ORDER BY family_key) x"
+          );
+          expect(lines17).toStrictEqual([
             `{"family_key":"${fixtureClients.alpha}.20001","client":"${fixtureClients.alpha}","client_name":"Example Client","attribution_source":"folder-path","document_count":2}`,
             '{"family_key":"20001","client":null,"client_name":null,"attribution_source":"filename","document_count":2}',
             // the register lists another client for 20001US02, and names this client two ways
@@ -1955,7 +2061,8 @@ describe("practice KG projections", () => {
           );
           expect(summary).toMatchObject({ claims: 3, failedFiles: 0, files: 1 });
           expect(rows.length).toBeGreaterThan(0);
-          expect(yield* reader.query("SELECT digest FROM documents ORDER BY digest")).toStrictEqual(rows);
+          const query18 = yield* reader.query("SELECT digest FROM documents ORDER BY digest");
+          expect(query18).toStrictEqual(rows);
         }),
         { timeout: 120_000 }
       );
@@ -1997,9 +2104,12 @@ describe("practice KG projections", () => {
 
           const summary = yield* runPracticeKgClaimsBatch(matched).pipe(Effect.provideService(DuckDb, reader));
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-          const rows = yield* decodeCandidateClaimRows(
-            yield* sql.unsafe(PracticeKgQueries.candidateClaims, [null, `${fixtureClients.alpha}.20001`, null])
-          );
+          const unsafe19 = yield* sql.unsafe(PracticeKgQueries.candidateClaims, [
+            null,
+            `${fixtureClients.alpha}.20001`,
+            null,
+          ]);
+          const rows = yield* decodeCandidateClaimRows(unsafe19);
 
           expect(summary).toMatchObject({ failedFiles: 0, files: 1 });
           expect(A.map(rows, (row) => row.sourceDocumentDigest)).toContain(fixtureDigests.docket);

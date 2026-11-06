@@ -36,8 +36,10 @@ describe("Color", () => {
   it.effect(
     "normalizes shorthand and canonical hex inputs",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeColorNormalizeHexColor("#abc")).toBe("#aabbcc");
-      expect(yield* decodeColorNormalizeHexColor("#AABBCC")).toBe("#aabbcc");
+      const decodedColorNormalizeHexColor = yield* decodeColorNormalizeHexColor("#abc");
+      expect(decodedColorNormalizeHexColor).toBe("#aabbcc");
+      const decodedColorNormalizeHexColor1 = yield* decodeColorNormalizeHexColor("#AABBCC");
+      expect(decodedColorNormalizeHexColor1).toBe("#aabbcc");
     })
   );
 
@@ -49,14 +51,16 @@ describe("Color", () => {
 
       expect(black).toMatchObject({ r: 0, g: 0, b: 0 });
       expect(white).toMatchObject({ r: 1, g: 1, b: 1 });
-      expect(yield* decodeColorRgbToHex({ r: -1, g: 0.5, b: 2 })).toBe("#0080ff");
+      const decodedColorRgbToHex = yield* decodeColorRgbToHex({ r: -1, g: 0.5, b: 2 });
+      expect(decodedColorRgbToHex).toBe("#0080ff");
 
       const blueOklch = yield* decodeColorRgbToOklch({ r: 0, g: 0, b: 1 });
       const redOklch = yield* decodeColorRgbToOklch({ r: 1, g: 0, b: 0 });
 
       expect(blueOklch.h).toBeGreaterThan(0);
       expect(redOklch.h).toBeGreaterThan(0);
-      expect(yield* decodeColorOklchToHex(blueOklch)).toBe("#0000ff");
+      const decodedColorOklchToHex = yield* decodeColorOklchToHex(blueOklch);
+      expect(decodedColorOklchToHex).toBe("#0000ff");
       expect((yield* decodeColorOklchToRgb({ l: 0.001, c: 0, h: 0 })).r).toBeGreaterThanOrEqual(0);
     })
   );
@@ -77,10 +81,14 @@ describe("Color", () => {
       expect(lightNeutral).toHaveLength(12);
       expect(darkAlpha).toHaveLength(12);
       expect(lightAlpha).toHaveLength(12);
-      expect(yield* decodeColorMixColors({ color1: "#000", color2: "#fff", amount: 0.5 })).toMatch(/^#[0-9a-f]{6}$/);
-      expect(yield* decodeColorLighten({ color: "#000", amount: 1 })).toBe("#ffffff");
-      expect(yield* decodeColorDarken({ color: "#fff", amount: 1 })).toBe("#000000");
-      expect(yield* decodeColorWithAlpha({ color: "#336699", alpha: 0.25 })).toBe("rgba(51, 102, 153, 0.25)");
+      const decodedColorMixColors = yield* decodeColorMixColors({ color1: "#000", color2: "#fff", amount: 0.5 });
+      expect(decodedColorMixColors).toMatch(/^#[0-9a-f]{6}$/);
+      const decodedColorLighten = yield* decodeColorLighten({ color: "#000", amount: 1 });
+      expect(decodedColorLighten).toBe("#ffffff");
+      const decodedColorDarken = yield* decodeColorDarken({ color: "#fff", amount: 1 });
+      expect(decodedColorDarken).toBe("#000000");
+      const decodedColorWithAlpha = yield* decodeColorWithAlpha({ color: "#336699", alpha: 0.25 });
+      expect(decodedColorWithAlpha).toBe("rgba(51, 102, 153, 0.25)");
     })
   );
 
@@ -98,20 +106,22 @@ describe("Color", () => {
       const darker = yield* decodeColorDarken({ color: "#fff", amount: 1 });
       const translucent = yield* decodeColorWithAlpha({ color: "#336699", alpha: 0.25 });
 
-      expect(yield* forbiddenMessage(encodeColorRgbToHex(hex))).toContain("Encoding RgbToHex results back to RGB");
-      expect(yield* forbiddenMessage(encodeColorRgbToOklch(oklch))).toContain(
-        "Encoding RgbToOklch results back to RGB"
-      );
-      expect(yield* forbiddenMessage(encodeColorOklchToRgb(rgb))).toContain(
-        "Encoding OklchToRgb results back to OKLCH"
-      );
-      expect(yield* forbiddenMessage(encodeColorOklchToHex(oklchHex))).toContain(
-        "Encoding OklchToHex results back to OKLCH"
-      );
-      expect(yield* forbiddenMessage(encodeColorMixColors(mixed))).toContain("Encoding MixColors results back");
-      expect(yield* forbiddenMessage(encodeColorLighten(lighter))).toContain("Encoding Lighten results back");
-      expect(yield* forbiddenMessage(encodeColorDarken(darker))).toContain("Encoding Darken results back");
-      expect(yield* forbiddenMessage(encodeColorWithAlpha(translucent))).toContain("Encoding WithAlpha results back");
+      const forbiddenMessage2 = yield* forbiddenMessage(encodeColorRgbToHex(hex));
+      expect(forbiddenMessage2).toContain("Encoding RgbToHex results back to RGB");
+      const forbiddenMessage3 = yield* forbiddenMessage(encodeColorRgbToOklch(oklch));
+      expect(forbiddenMessage3).toContain("Encoding RgbToOklch results back to RGB");
+      const forbiddenMessage4 = yield* forbiddenMessage(encodeColorOklchToRgb(rgb));
+      expect(forbiddenMessage4).toContain("Encoding OklchToRgb results back to OKLCH");
+      const forbiddenMessage5 = yield* forbiddenMessage(encodeColorOklchToHex(oklchHex));
+      expect(forbiddenMessage5).toContain("Encoding OklchToHex results back to OKLCH");
+      const forbiddenMessage6 = yield* forbiddenMessage(encodeColorMixColors(mixed));
+      expect(forbiddenMessage6).toContain("Encoding MixColors results back");
+      const forbiddenMessage7 = yield* forbiddenMessage(encodeColorLighten(lighter));
+      expect(forbiddenMessage7).toContain("Encoding Lighten results back");
+      const forbiddenMessage8 = yield* forbiddenMessage(encodeColorDarken(darker));
+      expect(forbiddenMessage8).toContain("Encoding Darken results back");
+      const forbiddenMessage9 = yield* forbiddenMessage(encodeColorWithAlpha(translucent));
+      expect(forbiddenMessage9).toContain("Encoding WithAlpha results back");
     })
   );
 
@@ -121,7 +131,8 @@ describe("Color", () => {
     Effect.fnUntraced(function* ([hex]) {
       expect(hex).toMatch(/^#[0-9a-f]{6}$/);
       const rgb = yield* decodeUnknownColorHexToRgb(hex);
-      expect(yield* decodeUnknownColorRgbToHex({ r: rgb.r, g: rgb.g, b: rgb.b })).toBe(hex);
+      const decodedUnknownColorRgbToHex = yield* decodeUnknownColorRgbToHex({ r: rgb.r, g: rgb.g, b: rgb.b });
+      expect(decodedUnknownColorRgbToHex).toBe(hex);
 
       return true;
     }),
@@ -134,7 +145,9 @@ describe("Color", () => {
     Effect.fnUntraced(function* ([amount]) {
       expect(amount).toBeGreaterThanOrEqual(0);
       expect(amount).toBeLessThanOrEqual(1);
-      expect(yield* decodeUnknownColorColorAmount(yield* encodeColorColorAmount(amount))).toBe(amount);
+      const encodedColorColorAmount = yield* encodeColorColorAmount(amount);
+      const decodedUnknownColorColorAmount = yield* decodeUnknownColorColorAmount(encodedColorColorAmount);
+      expect(decodedUnknownColorColorAmount).toBe(amount);
 
       return true;
     }),

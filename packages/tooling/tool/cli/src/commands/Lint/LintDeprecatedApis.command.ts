@@ -5,6 +5,10 @@
  * @since 0.0.0
  */
 
+import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { isLabsWorkspaceDir } from "@beep/repo-cli-kit/cli/Labs/index";
+import { qualityStepOutputBound, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -16,10 +20,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import { isCi } from "../../internal/cli/EnvConfig.ts";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
-import { qualityStepOutputBound, runCaptured } from "../../internal/process/StepExec.ts";
 import { provideQualityConcurrency, qualityConcurrencyPlan } from "../Quality/Quality.plan.ts";
 import { readLintPolicySweeps, runRootDeprecatedApisTask } from "../Quality/Tasks.ts";
 import {
@@ -140,10 +140,13 @@ const runLintDeprecatedApis = Effect.fn("Lint.deprecatedApis")(function* (option
   }
   if (O.isNone(directory)) {
     const ci = yield* isCi;
-    const sweeps = yield* readLintPolicySweeps(yield* findRepoRoot());
-    if (!full && !ci) return yield* runRootDeprecatedApisTask(base);
+    const foundRepoRoot = yield* findRepoRoot();
+    const sweeps = yield* readLintPolicySweeps(foundRepoRoot);
+    if (!full && !ci) {
+      return yield* runRootDeprecatedApisTask(base);
+    }
     return yield* sweeps.deprecatedApis === "oxlint"
-      ? runDeprecatedApiLint(yield* findRepoRoot(), ["apps", "packages", "infra"])
+      ? yield* Effect.map(findRepoRoot(), (value) => runDeprecatedApiLint(value, ["apps", "packages", "infra"]))
       : runRootDeprecatedApisTask();
   }
   const root = yield* findRepoRoot();

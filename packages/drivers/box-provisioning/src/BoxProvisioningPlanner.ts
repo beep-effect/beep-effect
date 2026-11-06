@@ -244,7 +244,8 @@ const folderAction = Effect.fnUntraced(function* (
   adoptions: ReadonlyArray<BoxAdoption>,
   dependencies: ReadonlyArray<Sha256Hex>
 ) {
-  const afterDigest = O.some(yield* encodedDigest(BoxFolderIntent, desired));
+  const encodedDigest1 = yield* encodedDigest(BoxFolderIntent, desired);
+  const afterDigest = O.some(encodedDigest1);
   return yield* A.match(candidates, {
     onEmpty: () =>
       Effect.map(
@@ -290,20 +291,20 @@ const folderAction = Effect.fnUntraced(function* (
               reason: BoxBlockedByPolicy.make({ policy: "foreign-name-collision" }),
             });
           }
-          return BoxNoopAction.make(
-            yield* actionBase({
-              actionTag: "Noop",
-              afterDigest,
-              beforeDigest: O.some(yield* encodedDigest(BoxObservedFolder, observed)),
-              dependencies,
-              destructive: false,
-              etag: observed.etag,
-              logicalKey: desired.logicalKey,
-              providerId: O.some(observed.providerId),
-              resourceKind: "folder",
-              state: "unchanged",
-            })
-          );
+          const encodedDigest8 = yield* encodedDigest(BoxObservedFolder, observed);
+          const actionBase2 = yield* actionBase({
+            actionTag: "Noop",
+            afterDigest,
+            beforeDigest: O.some(encodedDigest8),
+            dependencies,
+            destructive: false,
+            etag: observed.etag,
+            logicalKey: desired.logicalKey,
+            providerId: O.some(observed.providerId),
+            resourceKind: "folder",
+            state: "unchanged",
+          });
+          return BoxNoopAction.make(actionBase2);
         }),
         onNonEmpty: Effect.fnUntraced(function* () {
           return BoxBlockedAction.make({
@@ -334,7 +335,8 @@ const collaborationAction = Effect.fnUntraced(function* (
   folder: FolderResolution,
   observed: ReadonlyArray<BoxObservedCollaboration>
 ) {
-  const afterDigest = O.some(yield* encodedDigest(BoxCollaborationIntent, desired));
+  const encodedDigest3 = yield* encodedDigest(BoxCollaborationIntent, desired);
+  const afterDigest = O.some(encodedDigest3);
   const candidates = O.match(folder.providerId, {
     onNone: A.empty<BoxObservedCollaboration>,
     onSome: (folderProviderId) =>
@@ -358,10 +360,12 @@ const collaborationAction = Effect.fnUntraced(function* (
     candidates,
     Effect.fnUntraced(function* (candidate) {
       const unchanged = Equal.equals(candidate.role, desired.role);
+      const argument = unchanged ? "Noop" : "Update";
+      const encodedDigest2 = yield* encodedDigest(BoxObservedCollaboration, candidate);
       const base = yield* actionBase({
-        actionTag: unchanged ? "Noop" : "Update",
+        actionTag: argument,
         afterDigest,
-        beforeDigest: O.some(yield* encodedDigest(BoxObservedCollaboration, candidate)),
+        beforeDigest: O.some(encodedDigest2),
         dependencies: [folder.actionKey],
         destructive: false,
         etag: O.none(),
@@ -381,7 +385,8 @@ const webhookAction = Effect.fnUntraced(function* (
   observed: ReadonlyArray<BoxObservedWebhook>
 ) {
   const canonicalDesired = canonicalWebhookIntent(desired);
-  const afterDigest = O.some(yield* encodedDigest(BoxWebhookIntent, canonicalDesired));
+  const encodedDigest4 = yield* encodedDigest(BoxWebhookIntent, canonicalDesired);
+  const afterDigest = O.some(encodedDigest4);
   const candidates = O.match(folder.providerId, {
     onNone: A.empty<BoxObservedWebhook>,
     onSome: (folderProviderId) =>
@@ -403,10 +408,12 @@ const webhookAction = Effect.fnUntraced(function* (
     Effect.fnUntraced(function* (candidate) {
       const canonicalCandidate = canonicalObservedWebhook(candidate);
       const unchanged = sameTriggers(canonicalCandidate.triggers, canonicalDesired.triggers);
+      const argument1 = unchanged ? "Noop" : "Update";
+      const encodedDigest5 = yield* encodedDigest(BoxObservedWebhook, canonicalCandidate);
       const base = yield* actionBase({
-        actionTag: unchanged ? "Noop" : "Update",
+        actionTag: argument1,
         afterDigest,
-        beforeDigest: O.some(yield* encodedDigest(BoxObservedWebhook, canonicalCandidate)),
+        beforeDigest: O.some(encodedDigest5),
         dependencies: [folder.actionKey],
         destructive: false,
         etag: O.none(),
@@ -458,7 +465,7 @@ const blockedCapabilityAction = Effect.fnUntraced(function* <A extends { readonl
   return BoxBlockedAction.make({
     ...(yield* actionBase({
       actionTag: "Blocked",
-      afterDigest: O.some(yield* encodedDigest(schema, desired)),
+      afterDigest: yield* Effect.asSome(encodedDigest(schema, desired)),
       beforeDigest: O.none(),
       dependencies: [folder.actionKey],
       destructive: false,
@@ -517,7 +524,7 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
         ? BoxBlockedAction.make({
             ...(yield* actionBase({
               actionTag: "Blocked",
-              afterDigest: O.some(yield* encodedDigest(BoxFolderIntent, folder)),
+              afterDigest: yield* Effect.asSome(encodedDigest(BoxFolderIntent, folder)),
               beforeDigest: O.none(),
               dependencies,
               destructive: false,
@@ -553,11 +560,8 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
   const collaborationActions = yield* Effect.forEach(
     canonicalDesired.collaborations,
     Effect.fnUntraced(function* (collaboration) {
-      const action = yield* collaborationAction(
-        collaboration,
-        yield* resolveFolder(collaboration.folderKey),
-        canonicalObserved.collaborations
-      );
+      const resolvedFolder = yield* resolveFolder(collaboration.folderKey);
+      const action = yield* collaborationAction(collaboration, resolvedFolder, canonicalObserved.collaborations);
       if (action._tag === "Noop" || action._tag === "Update") {
         O.match(action.precondition.providerId, {
           onNone: () => undefined,
@@ -571,7 +575,8 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
   const webhookActions = yield* Effect.forEach(
     canonicalDesired.webhooks,
     Effect.fnUntraced(function* (webhook) {
-      const action = yield* webhookAction(webhook, yield* resolveFolder(webhook.folderKey), canonicalObserved.webhooks);
+      const resolvedFolder5 = yield* resolveFolder(webhook.folderKey);
+      const action = yield* webhookAction(webhook, resolvedFolder5, canonicalObserved.webhooks);
       if (action._tag === "Noop" || action._tag === "Update") {
         O.match(action.precondition.providerId, {
           onNone: () => undefined,
@@ -585,6 +590,7 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
   const metadataActions = yield* Effect.forEach(
     canonicalDesired.metadata,
     Effect.fnUntraced(function* (metadata) {
+      const resolvedFolder6 = yield* resolveFolder(metadata.folderKey);
       return yield* blockedCapabilityAction(
         metadata,
         BoxMetadataIntent,
@@ -592,7 +598,7 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
         canonicalDesired.entitlements.planName,
         canonicalDesired.entitlements.metadata,
         canonicalObserved.metadata,
-        yield* resolveFolder(metadata.folderKey)
+        resolvedFolder6
       );
     }),
     { concurrency: 1 }
@@ -600,6 +606,7 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
   const retentionActions = yield* Effect.forEach(
     canonicalDesired.retention,
     Effect.fnUntraced(function* (retention) {
+      const resolvedFolder7 = yield* resolveFolder(retention.folderKey);
       return yield* blockedCapabilityAction(
         retention,
         BoxRetentionIntent,
@@ -607,7 +614,7 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
         canonicalDesired.entitlements.planName,
         canonicalDesired.entitlements.retention,
         canonicalObserved.retention,
-        yield* resolveFolder(retention.folderKey)
+        resolvedFolder7
       );
     }),
     { concurrency: 1 }

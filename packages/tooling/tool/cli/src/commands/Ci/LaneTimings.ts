@@ -41,6 +41,7 @@
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
+import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
@@ -70,7 +71,6 @@ import {
   layerGithubRepoFor,
   selectGithubIdentity,
 } from "../../internal/github/index.ts";
-import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -2360,7 +2360,8 @@ const rulesetPopulationChange = (
 // population the census measures; each in-window snapshot is diffed against
 // the one before it so a mid-window change can be named, not just detected.
 const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (options: CiLaneTimingWindowOptions) {
-  const history = A.sort(yield* collectCiRulesetHistory(), rulesetHistoryOrder);
+  const collectCiRulesetHistory1 = yield* collectCiRulesetHistory();
+  const history = A.sort(collectCiRulesetHistory1, rulesetHistoryOrder);
   const baseline = A.last(A.filter(history, isEffectiveAtOrBefore(options.since)));
   const inWindow = A.filter(
     history,

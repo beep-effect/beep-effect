@@ -20,9 +20,12 @@ describe("MemoryFileSystem.makeWith", () => {
         "/bytes.bin": new Uint8Array([0, 42, 255]),
       });
 
-      assert.strictEqual(yield* fs.readFileString("/repo/package.json"), `{ "name": "fixture" }`);
-      assert.strictEqual(yield* fs.readFileString("/repo/packages/a/index.ts"), "export {}");
-      assert.deepStrictEqual(yield* fs.readFile("/bytes.bin"), new Uint8Array([0, 42, 255]));
+      const readFileString1 = yield* fs.readFileString("/repo/package.json");
+      assert.strictEqual(readFileString1, `{ "name": "fixture" }`);
+      const readFileString2 = yield* fs.readFileString("/repo/packages/a/index.ts");
+      assert.strictEqual(readFileString2, "export {}");
+      const readFile3 = yield* fs.readFile("/bytes.bin");
+      assert.deepStrictEqual(readFile3, new Uint8Array([0, 42, 255]));
       assert.strictEqual((yield* fs.stat("/repo/packages/a")).type, "Directory");
     })
   );
@@ -30,7 +33,8 @@ describe("MemoryFileSystem.makeWith", () => {
   it.effect("encodes string seeds as UTF-8", () =>
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.makeWith({ "/utf8.txt": "héllo 👋" });
-      assert.strictEqual(yield* fs.readFileString("/utf8.txt"), "héllo 👋");
+      const readFileString4 = yield* fs.readFileString("/utf8.txt");
+      assert.strictEqual(readFileString4, "héllo 👋");
       assert.strictEqual(Number((yield* fs.stat("/utf8.txt")).size), new TextEncoder().encode("héllo 👋").length);
     })
   );
@@ -56,19 +60,23 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
         "/root/current": MemoryFileSystem.symlink("/root/.repos/blocked"),
       });
 
-      assert.strictEqual(yield* fs.readFileString("/root/.repos/blocked/src/a.ts"), "export {}\n");
+      const readFileString5 = yield* fs.readFileString("/root/.repos/blocked/src/a.ts");
+      assert.strictEqual(readFileString5, "export {}\n");
       assert.strictEqual((yield* fs.stat("/root/.git/modules/.repos/blocked")).type, "Directory");
       assert.strictEqual((yield* fs.stat("/root/tools/lock.sh")).mode & 0o7777, 0o755);
-      assert.strictEqual(yield* fs.readLink("/root/current"), "/root/.repos/blocked");
+      const readLink6 = yield* fs.readLink("/root/current");
+      assert.strictEqual(readLink6, "/root/.repos/blocked");
     })
   );
 
   it.effect("directory() seeds an empty directory — exists, is a directory, lists nothing", () =>
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.makeWith({ "/empty": MemoryFileSystem.directory() });
-      assert.isTrue(yield* fs.exists("/empty"));
+      const exists7 = yield* fs.exists("/empty");
+      assert.isTrue(exists7);
       assert.strictEqual((yield* fs.stat("/empty")).type, "Directory");
-      assert.deepStrictEqual(yield* fs.readDirectory("/empty"), []);
+      const readDirectory8 = yield* fs.readDirectory("/empty");
+      assert.deepStrictEqual(readDirectory8, []);
     })
   );
 
@@ -78,8 +86,10 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
         "/target.txt": "pointed-at",
         "/link.txt": MemoryFileSystem.symlink("/target.txt"),
       });
-      assert.strictEqual(yield* fs.readLink("/link.txt"), "/target.txt");
-      assert.strictEqual(yield* fs.readFileString("/link.txt"), "pointed-at");
+      const readLink9 = yield* fs.readLink("/link.txt");
+      assert.strictEqual(readLink9, "/target.txt");
+      const readFileString10 = yield* fs.readFileString("/link.txt");
+      assert.strictEqual(readFileString10, "pointed-at");
       // stat follows the link; the entry itself is a SymbolicLink to readLink.
       assert.strictEqual((yield* fs.stat("/link.txt")).type, "File");
     })
@@ -88,7 +98,8 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
   it.effect("a dangling symlink is legal — readLink answers, reading through fails NotFound", () =>
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.makeWith({ "/dangling": MemoryFileSystem.symlink("/absent.txt") });
-      assert.strictEqual(yield* fs.readLink("/dangling"), "/absent.txt");
+      const readLink11 = yield* fs.readLink("/dangling");
+      assert.strictEqual(readLink11, "/absent.txt");
       const error = yield* Effect.flip(fs.readFileString("/dangling"));
       assert.strictEqual(error.reason._tag, "NotFound");
     })
@@ -106,9 +117,11 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
       });
 
       assert.strictEqual((yield* fs.stat("/locked.txt")).mode & 0o7777, 0o444);
-      assert.strictEqual(yield* fs.readFileString("/locked.txt"), "read-only");
+      const readFileString12 = yield* fs.readFileString("/locked.txt");
+      assert.strictEqual(readFileString12, "read-only");
       assert.strictEqual((yield* fs.stat("/bin/run")).mode & 0o7777, 0o755);
-      assert.deepStrictEqual(yield* fs.readFile("/bin/run"), new Uint8Array([0x7f, 0x45]));
+      const readFile13 = yield* fs.readFile("/bin/run");
+      assert.deepStrictEqual(readFile13, new Uint8Array([0x7f, 0x45]));
       assert.strictEqual((yield* fs.stat("/plain.txt")).mode & 0o7777, 0o644);
       assert.strictEqual((yield* fs.stat("/legacy.txt")).mode & 0o7777, 0o644);
       assert.strictEqual((yield* fs.stat("/locked-dir")).mode & 0o7777, 0o555);
@@ -126,7 +139,8 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
       });
       assert.strictEqual((yield* fs.stat("/repo/src")).mode & 0o7777, 0o555);
       // The earlier child is untouched.
-      assert.strictEqual(yield* fs.readFileString("/repo/src/index.ts"), "export {}\n");
+      const readFileString14 = yield* fs.readFileString("/repo/src/index.ts");
+      assert.strictEqual(readFileString14, "export {}\n");
     })
   );
 
@@ -151,7 +165,8 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         assert.strictEqual((yield* fs.stat("/srv")).type, "Directory");
-        assert.strictEqual(yield* fs.readLink("/etc/alias"), "/srv");
+        const readLink15 = yield* fs.readLink("/etc/alias");
+        assert.strictEqual(readLink15, "/srv");
       })
     );
   });
@@ -219,7 +234,8 @@ describe("seed options: root", () => {
       it.effect("layerWith forwards options alongside faults", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          assert.strictEqual(yield* fs.readFileString("/ws/a.txt"), "x");
+          const readFileString16 = yield* fs.readFileString("/ws/a.txt");
+          assert.strictEqual(readFileString16, "x");
         })
       );
     }

@@ -5,6 +5,12 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { readContainedFileBytesNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
 import { CacheClientChannel, CachePolicyAuditReport } from "@beep/repo-configs/cache";
 import { A, Str, thunk0 } from "@beep/utils";
 import * as Clock from "effect/Clock";
@@ -29,11 +35,8 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
-import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CacheProducerAcceptanceReference, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
 import {
   cacheProducerImportMaxBytes,
@@ -125,6 +128,7 @@ import {
   loadCacheProducerExecutionRuntime,
   runCacheProducerWorkflow,
 } from "./Cache.workflow.ts";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { CacheConformanceBearers, CacheConformanceCorpus } from "./Cache.conformance.schemas.ts";
 
 const TurboTaskCache = S.Struct({
@@ -239,14 +243,26 @@ const assertWarmEnvironment = Effect.fn("Cache.assertWarmEnvironment")(function*
   }
 });
 
+// The capture's two wordings over the kit: git never ran, or git exited with its stderr.
+const cacheGitErrors: GitCommandErrorAdapter<CacheCommandError> = {
+  onSpawnFailure: (commandLine) => (cause) => CacheCommandError.new(`Unable to run ${commandLine}.`, cause),
+  onNonZeroExit: ({ commandLine, exitCode, output }) =>
+    CacheCommandError.new(`${commandLine} exited ${exitCode}: ${Str.trim(output)}`),
+  onTruncated: O.none(),
+};
+
 const readWarmGitIdentity = Effect.fn("Cache.readWarmGitIdentity")(function* (repoRoot: string) {
+  const git = yield* Git;
+  const tracked = { untrackedFiles: "normal" } as const;
+  const revision = (ref: string) =>
+    git.revParse(repoRoot, ref).pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse(ref), cacheGitErrors)));
   const [status, head, base, tree] = yield* Effect.all([
-    runText(["git", "status", "--porcelain=v1", "--untracked-files=normal"], repoRoot),
-    runText(["git", "rev-parse", "HEAD"], repoRoot),
-    runText(["git", "rev-parse", "origin/main"], repoRoot),
-    runText(["git", "rev-parse", "HEAD^{tree}"], repoRoot),
+    git.status(repoRoot, tracked).pipe(Effect.mapError(adaptGitKitError(GitCommand.status(tracked), cacheGitErrors))),
+    revision("HEAD"),
+    revision("origin/main"),
+    revision("HEAD^{tree}"),
   ]);
-  return { status, head, base, tree };
+  return { clean: A.isReadonlyArrayEmpty(status), head, base, tree };
 });
 
 const assertWarmPreconditions = Effect.fn("Cache.assertWarmPreconditions")(function* (repoRoot: string) {
@@ -258,7 +274,7 @@ const assertWarmPreconditions = Effect.fn("Cache.assertWarmPreconditions")(funct
       catch: (cause) => CacheCommandError.new("Failed to read .bun-version.", cause),
     }),
   ]);
-  if (!Str.isEmpty(identity.status)) return yield* CacheCommandError.new("cache warm requires a clean checkout.");
+  if (!identity.clean) return yield* CacheCommandError.new("cache warm requires a clean checkout.");
   if (identity.head !== identity.base) {
     return yield* CacheCommandError.new("cache warm requires HEAD to equal origin/main exactly.");
   }
@@ -275,7 +291,7 @@ const assertWarmIdentityUnchanged = Effect.fn("Cache.assertWarmIdentityUnchanged
 ) {
   const actual = yield* readWarmGitIdentity(repoRoot);
   if (
-    !Str.isEmpty(actual.status) ||
+    !actual.clean ||
     actual.head !== expected.head ||
     actual.base !== expected.base ||
     actual.tree !== expected.tree ||
@@ -312,8 +328,9 @@ const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
     repoRoot
   );
   yield* assertWarmIdentityUnchanged(repoRoot, preconditions);
+  const now1 = yield* DateTime.now;
   const receipt = CacheWarmReceipt.make({
-    generatedAt: DateTime.formatIso(yield* DateTime.now),
+    generatedAt: DateTime.formatIso(now1),
     revision: preconditions.head,
     bunVersion: preconditions.actualBun,
     lanes: [lane],
@@ -329,9 +346,10 @@ const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
  *
  * ```ts
  * import { CacheCommandError, CacheWarmReceipt, runCacheWarm } from "@beep/repo-cli/commands/Cache"
+ * import type { Git } from "@beep/git/Git"
  * import * as Effect from "effect/Effect";
  * import * as Option from "effect/Option";
- * const warm: Effect.Effect<CacheWarmReceipt, CacheCommandError> = runCacheWarm(".", Option.none())
+ * const warm: Effect.Effect<CacheWarmReceipt, CacheCommandError, Git> = runCacheWarm(".", Option.none())
  * console.log(Effect.isEffect(warm)) // true
  * ```
  *
@@ -541,8 +559,9 @@ export const buildCacheDashboard = Effect.fn("Cache.buildCacheDashboard")(functi
   lambdaLogs: O.Option<string>,
   changedFiles: ReadonlyArray<string>
 ) {
+  const readRunFiles2 = yield* readRunFiles(runsDir);
   const runs = A.sort(
-    yield* readRunFiles(runsDir),
+    readRunFiles2,
     Order.mapInput(Order.Number, (run: TurboRunSummary) => run.execution.startTime)
   );
   const aggregation: CacheDashboardAggregation = {
@@ -556,8 +575,9 @@ export const buildCacheDashboard = Effect.fn("Cache.buildCacheDashboard")(functi
   const observations = A.fromIterable(MutableHashMap.values(aggregation.firstTouches));
   const remoteHits = A.filter(observations, (row) => row.source === "REMOTE").length;
   const lambda = yield* parseLambdaLogs(lambdaLogs);
+  const now3 = yield* DateTime.now;
   return CacheDashboardReport.make({
-    generatedAt: DateTime.formatIso(yield* DateTime.now),
+    generatedAt: DateTime.formatIso(now3),
     runFiles: S.Natural.make(runs.length),
     eligibleFirstTouches: S.Natural.make(observations.length),
     remoteHits: S.Natural.make(remoteHits),
@@ -648,9 +668,10 @@ const cacheDashboardCommand = Command.make(
   },
   ({ lambdaLogs, output, runsDir }: CacheDashboardOptions) =>
     Effect.gen(function* () {
-      const changed = yield* runText(["git", "diff", "--name-only", "origin/main...HEAD", "--"], process.cwd()).pipe(
-        Effect.map((text) => A.filter(A.map(Str.split(/\r?\n/)(text), Str.trim), (line) => !Str.isEmpty(line)))
-      );
+      const git = yield* Git;
+      const changed = yield* git
+        .changedFiles(process.cwd(), { base: "origin/main", head: "HEAD" })
+        .pipe(Effect.mapError(adaptGitKitError(GitCommand.changedFiles("origin/main", "HEAD"), cacheGitErrors)));
       const report = yield* buildCacheDashboard(runsDir, lambdaLogs, changed);
       yield* writeEncoded(report, CacheDashboardReportJson, output);
     }).pipe(renderCacheFailure)
@@ -713,11 +734,10 @@ export const runCachePolicyAudit = Effect.fn("Cache.runPolicyAudit")(function* (
   const report = yield* cache.audit(root);
   const blocking = A.filter(report.findings, (finding) => finding.blocking);
   if (json) {
-    yield* Console.log(
-      yield* JsonStringCodec(CachePolicyAuditReport)
-        .encode(report)
-        .pipe(CacheCommandError.mapError("Cannot encode cache audit."))
-    );
+    const pipe4 = yield* JsonStringCodec(CachePolicyAuditReport)
+      .encode(report)
+      .pipe(CacheCommandError.mapError("Cannot encode cache audit."));
+    yield* Console.log(pipe4);
   } else {
     yield* Console.log(
       `Cache policy: ${A.length(blocking)} blocking findings; ${A.length(report.unassessed)} unassessed cached computations.`
@@ -948,7 +968,8 @@ const cacheProducerRunCommand = Command.make(
             return yield* CacheCommandError.new(
               "Hosted publication requires --output and a distinct cache-producer.json path."
             );
-          return Tuple.make(file, yield* readHostedProducerRun());
+          const readHostedProducerRun5 = yield* readHostedProducerRun();
+          return Tuple.make(file, readHostedProducerRun5);
         }, Effect.asSome),
       });
       const directory = yield* Config.String("BEEP_CACHE_PRODUCER_STORE").pipe(
@@ -971,7 +992,8 @@ const cacheProducerRunCommand = Command.make(
             Effect.asSome
           ),
       });
-      const privateOutput = O.some(yield* FileSystem.FileSystem);
+      const FileSystem6 = yield* FileSystem.FileSystem;
+      const privateOutput = O.some(FileSystem6);
       yield* writeEncoded(
         observation,
         JsonStringCodec(CacheProducerObservation),
@@ -1028,9 +1050,8 @@ const readProducerObjectInputs = Effect.fn("Cache.readProducerObjectInputs")(fun
     Effect.mapError(() => CacheCommandError.new("An independently provisioned producer store is required."))
   );
   yield* readCacheProducerExecutionProfile(directory);
-  const reference = CacheHostedProducerReference.make(
-    yield* readCacheRequest(referenceFile, CacheHostedProducerReference, 16 * 1024)
-  );
+  const readCacheRequest7 = yield* readCacheRequest(referenceFile, CacheHostedProducerReference, 16 * 1024);
+  const reference = CacheHostedProducerReference.make(readCacheRequest7);
   const archive = yield* readContainedFileBytesNoFollow(process.cwd(), archiveFile, 1024 * 1024).pipe(
     CacheCommandError.mapError("Cannot read the bounded contained producer archive.")
   );
@@ -1259,7 +1280,8 @@ const writeConformanceRun = Effect.fn("Cache.writeConformanceRun")(function* (
 });
 
 const readConformanceTarget = Effect.fn("Cache.readConformanceTarget")(function* (target: string) {
-  const descriptor = CacheConformanceTarget.make(yield* readCacheRequest(target, CacheConformanceTarget));
+  const readCacheRequest8 = yield* readCacheRequest(target, CacheConformanceTarget);
+  const descriptor = CacheConformanceTarget.make(readCacheRequest8);
   return { descriptor, bearers: yield* loadCacheConformanceBearers(descriptor) };
 });
 
@@ -1284,7 +1306,8 @@ const runConformanceTarget =
     Effect.gen(function* () {
       const { descriptor, bearers } = yield* readConformanceTarget(target);
       const corpus = yield* buildCacheConformanceCorpus(process.cwd());
-      yield* writeConformanceRun(yield* run(descriptor, bearers, corpus), output);
+      const result9 = yield* run(descriptor, bearers, corpus);
+      yield* writeConformanceRun(result9, output);
     }).pipe(renderCacheFailure);
 
 const cacheConformanceRunCommand = Command.make(
@@ -1314,10 +1337,14 @@ const cacheConformanceNativeCommand = Command.make(
       const { descriptor, bearers } = yield* readConformanceTarget(target);
       const corpus = yield* buildCacheConformanceCorpus(process.cwd());
       const resolved = yield* resolveCacheConformanceClient(process.cwd(), client, fetchClient);
-      yield* writeConformanceRun(
-        yield* runCacheConformanceNative(process.cwd(), corpus, descriptor, bearers, resolved),
-        output
+      const resultCacheConformanceNative = yield* runCacheConformanceNative(
+        process.cwd(),
+        corpus,
+        descriptor,
+        bearers,
+        resolved
       );
+      yield* writeConformanceRun(resultCacheConformanceNative, output);
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Run the exact pinned Turbo client's signed matrix (RC-017..RC-022) through the fault proxy"),
@@ -1421,7 +1448,8 @@ const cacheRemoteReadsCommand = Command.make(
       )
     );
     const service = yield* CacheQualificationService;
-    yield* Console.log(A.join(yield* service.remoteReads(checkout, input), "\n"));
+    const remoteReads10 = yield* service.remoteReads(checkout, input);
+    yield* Console.log(A.join(remoteReads10, "\n"));
   }, renderCacheFailure)
 ).pipe(Command.withDescription("Back up and configure the reference-only workstation remote-read dotenv quad"));
 

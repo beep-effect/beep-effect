@@ -90,6 +90,7 @@ export class ManagedControllerError extends S.TaggedError<ManagedControllerError
  * Deterministic one-event identity for one independently claimed invocation.
  * **Example** (Inspect the identity constructor)
  * ```ts
+ * import { ManagedControllerTraceIdentity } from "@beep/repo-ai-metrics/managed-controller"
  * console.log(typeof ManagedControllerTraceIdentity.make)
  * ```
  * @category models
@@ -112,19 +113,22 @@ export class ManagedControllerTraceIdentity extends S.Opaque<
  * Derive one stable span per launch; changed payloads conflict instead of minting another event.
  * **Example** (Build an identity effect)
  * ```ts
+ * import { managedControllerTraceIdentity } from "@beep/repo-ai-metrics/managed-controller"
  * console.log(typeof managedControllerTraceIdentity)
  * ```
  * @param launchId - Original independent claim identity.
  * @returns The domain-separated trace and span identifiers.
- * @category identity
+ * @category identifiers
  * @since 0.0.0
  */
 export const managedControllerTraceIdentity = Effect.fn("AiMetrics.managedControllerTraceIdentity")(function* (
   launchId: Sha256Hex
 ) {
+  const traceHash = yield* hashPublicTextSha256(`managed-controller-trace/v1:${launchId}`);
+  const spanHash = yield* hashPublicTextSha256(`managed-controller-canary/v1:${launchId}`);
   return ManagedControllerTraceIdentity.make({
-    traceId: Str.slice(0, 32)(yield* hashPublicTextSha256(`managed-controller-trace/v1:${launchId}`)),
-    spanId: Str.slice(0, 16)(yield* hashPublicTextSha256(`managed-controller-canary/v1:${launchId}`)),
+    traceId: Str.slice(0, 32)(traceHash),
+    spanId: Str.slice(0, 16)(spanHash),
   });
 });
 

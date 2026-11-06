@@ -5,6 +5,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -12,8 +15,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { GithubPolicyClientLive } from "./CiGovernance.ts";
 import {
   DependencyReview,

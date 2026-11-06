@@ -343,7 +343,8 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
     const created = yield* Ref.updateAndGet(uploads, A.append(request));
     const fileId = DocumentFileId.make(`file-${created.length}`);
     yield* Ref.update(storedFiles, HashMap.set(key, { fileId, bytes: request.bytes }));
-    if (O.contains(yield* Ref.get(lyingUpload), call)) {
+    const got = yield* Ref.get(lyingUpload);
+    if (O.contains(got, call)) {
       return yield* MailTaggingPortError.during("DocumentStore", "upload", "connection reset after the write");
     }
     return DocumentUploaded.make({ fileId });
@@ -357,9 +358,8 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
         return yield* MailTaggingPortError.during("Mailbox", "listMessagesSince", "HTTP 503");
       }
       const offset = O.match(request.cursor, { onNone: () => 0, onSome: Number });
-      const eligible = A.filter(yield* Ref.get(messages), (message) =>
-        DateTime.isGreaterThanOrEqualTo(message.receivedAt, request.since)
-      );
+      const got1 = yield* Ref.get(messages);
+      const eligible = A.filter(got1, (message) => DateTime.isGreaterThanOrEqualTo(message.receivedAt, request.since));
       const end = offset + pageSize;
       return MailPage.make({
         envelopes: A.take(A.drop(eligible, offset), pageSize),
@@ -457,16 +457,19 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
       return yield* categoriesById(`msg-${at}`);
     }),
     writesOf: Effect.fn("World.writesOf")(function* (prefix: string) {
-      return A.filter(yield* Ref.get(writes), Str.startsWith(prefix));
+      const got2 = yield* Ref.get(writes);
+      return A.filter(got2, Str.startsWith(prefix));
     }),
     documents: DocumentStoreShape.make({
       upload: Effect.fn("FakeDocumentStore.upload")(function* (request) {
         const call = yield* Ref.updateAndGet(uploadCalls, N.increment);
-        if (O.contains(yield* Ref.get(failingUpload), call)) {
+        const got3 = yield* Ref.get(failingUpload);
+        if (O.contains(got3, call)) {
           return yield* MailTaggingPortError.during("DocumentStore", "upload", "HTTP 503");
         }
         const key = `${request.folderId}/${request.fileName}`;
-        return yield* O.match(HashMap.get(yield* Ref.get(storedFiles), key), {
+        const got4 = yield* Ref.get(storedFiles);
+        return yield* O.match(HashMap.get(got4, key), {
           onNone: () => createFile(request, key, call),
           onSome: refuseTakenName,
         });
@@ -479,7 +482,8 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
     filingLedger: FilingLedgerShape.make({
       append: Effect.fn("FakeFilingLedger.append")(function* (record) {
         const call = yield* Ref.updateAndGet(filingAppendCalls, N.increment);
-        if (O.contains(yield* Ref.get(failingFilingAppend), call)) {
+        const got5 = yield* Ref.get(failingFilingAppend);
+        if (O.contains(got5, call)) {
           return yield* MailTaggingStateError.unavailable("filing-ledger", "filing-ledger.jsonl", "append");
         }
         yield* wrote(`filingLedger.append:${record._tag}`);

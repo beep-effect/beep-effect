@@ -262,7 +262,9 @@ describe("@beep/occt primitive line style", () => {
           ],
         });
         const views = yield* project(explicit, [top, front, persp], true);
-        expect(views).toEqual(yield* project(solidFlap, [top, front, persp], true));
+        const expectation = expect(views);
+        const project1 = yield* project(solidFlap, [top, front, persp], true);
+        expectation.toEqual(project1);
         expect(A.map(views, (view) => view.broken)).toEqual([[], [], []]);
       })
     );

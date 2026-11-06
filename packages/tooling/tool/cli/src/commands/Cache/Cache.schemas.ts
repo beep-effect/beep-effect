@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import {
   CacheActivationProjection,
   CachePolicyBaselineReview,
@@ -15,7 +16,6 @@ import {
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheCensusEntrypointReview } from "./Cache.entrypoints.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.schemas");
@@ -718,7 +718,40 @@ export class CacheRuntimeLinkerSnapshot extends S.Opaque<
 ) {}
 
 /**
+ * Permission bits removed when a process creates files or restores outputs.
+ *
+ * **Example** (Reject bits outside the POSIX creation mask)
+ * ```ts
+ * import { CacheFileCreationMask } from "@beep/repo-cli/commands/Cache"
+ * import * as S from "effect/Schema"
+ * console.assert(S.is(CacheFileCreationMask)(0o077))
+ * console.assert(!S.is(CacheFileCreationMask)(0o1000))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CacheFileCreationMask = S.Natural.check(S.isLessThanOrEqualTo(0o777)).pipe(
+  $I.annoteSchema("CacheFileCreationMask", {
+    description: "The observed POSIX process umask, bounded to nine permission bits.",
+  })
+);
+
+/**
+ * Observed POSIX permission mask carried by a cache runtime identity.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheFileCreationMask = typeof CacheFileCreationMask.Type;
+
+/**
  * Actual tools and platform for the explicitly supported qualification profiles.
+ *
+ * **Details**
+ * Historical observations omit the creation mask. New observations include it,
+ * producing a distinct identity instead of granting historical qualification
+ * to a runtime whose output permissions may differ.
  *
  * **Example** (Reject an unsupported profile)
  *
@@ -736,6 +769,7 @@ export class CacheToolchainSnapshot extends S.Opaque<CacheToolchainSnapshot, { r
     profile: LiteralKit(["local-linux-x64-bun1.4.1", "local-linux-x64-bun1.4.2", "local-linux-x64-bun1.4.4"]),
     kernel: S.NonEmptyString,
     libc: S.NonEmptyString,
+    fileCreationMask: S.OptionFromOptionalKey(CacheFileCreationMask).pipe(S.withConstructorDefault(Effect.succeedNone)),
     bun: CacheExecutablePin,
     node: CacheExecutablePin,
     turbo: CacheExecutablePin,

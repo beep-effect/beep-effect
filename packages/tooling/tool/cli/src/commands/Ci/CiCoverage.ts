@@ -6,6 +6,10 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
+import { isLabsWorkspaceDir } from "@beep/repo-cli-kit/cli/Labs/index";
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
+import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { toSortedRecord } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -18,10 +22,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
-import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
-import { runCaptured } from "../../internal/process/StepExec.ts";
-import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import {
   CoverageProducerCompareOptions,
   CoverageProducerPackage,
@@ -136,7 +136,8 @@ const coverageTestCommands = Effect.fn("CiCoverage.testCommands")(function* (
         (match) => match[0]
       );
       const [assignments, tokens] = A.span(words, isEnvironmentAssignment);
-      const args = A.flatten(yield* Effect.forEach(A.drop(tokens, 1), (word) => expandCanonicalWord(word, cwd)));
+      const forEach1 = yield* Effect.forEach(A.drop(tokens, 1), (word) => expandCanonicalWord(word, cwd));
+      const args = A.flatten(forEach1);
       const env = A.reduce(assignments, R.empty<string, string>(), (values, assignment) => {
         const name = A.headNonEmpty(Str.split("=")(assignment));
         return R.set(values, name, Str.slice(name.length + 1)(assignment));

@@ -30,12 +30,14 @@ for (const [name, backing, table] of [
           const persistence = yield* Persistence.BackingPersistence;
           const store = yield* persistence.make("widths");
           yield* store.set("snowflake", { id: 4294967296 }, Duration.seconds(10));
-          assert.deepStrictEqual(yield* store.get("snowflake"), { id: 4294967296 });
+          const got = yield* store.get("snowflake");
+          assert.deepStrictEqual(got, { id: 4294967296 });
           const sql = yield* SqlClient.SqlClient;
           const [row] = yield* sql<{ expires: number }>`SELECT expires FROM ${sql(table)} WHERE id = 'snowflake'`;
           assert.strictEqual(row?.expires, 1793151167372);
           yield* TestClock.adjust("10 seconds");
-          assert.strictEqual(yield* store.get("snowflake"), undefined);
+          const got1 = yield* store.get("snowflake");
+          assert.strictEqual(got1, undefined);
         })
       );
     }
@@ -87,7 +89,8 @@ it.layer(Layer.fresh(DuckDbTestLayer), { timeout: "30 seconds" })("DuckDB persis
       ]);
       const sql = yield* SqlClient.SqlClient;
       yield* sql`UPDATE effect_persistence SET value = 'not json' WHERE id = 'bad'`;
-      assert.deepStrictEqual(yield* store.getMany(["good", "bad"]), [{ ok: true }, undefined]);
+      const gotMany = yield* store.getMany(["good", "bad"]);
+      assert.deepStrictEqual(gotMany, [{ ok: true }, undefined]);
       yield* sql`DROP TABLE effect_persistence`;
       const error = yield* Effect.flip(store.clear);
       assert.strictEqual(error.message, "Failed to clear backing store");

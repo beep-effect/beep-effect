@@ -106,15 +106,14 @@ pipe(
         const prepare = Effect.fnUntraced(function* (subject: string) {
           const toolkit = yield* OutboxToolkit;
           const staged = yield* stagedAttachment;
-          const created = yield* head(
-            yield* toolkit.handle("m365_outbox_create_draft", {
-              attachmentPaths: [staged.file],
-              body: "Synthetic message written by the beep-m365-outbox live smoke. Safe to delete.",
-              bodyType: "text",
-              subject,
-              to: [env.mailbox],
-            })
-          );
+          const handle1 = yield* toolkit.handle("m365_outbox_create_draft", {
+            attachmentPaths: [staged.file],
+            body: "Synthetic message written by the beep-m365-outbox live smoke. Safe to delete.",
+            bodyType: "text",
+            subject,
+            to: [env.mailbox],
+          });
+          const created = yield* head(handle1);
           assert.isFalse(created.isFailure);
           assert.isTrue(isDraftCreated(created.result));
           return isDraftCreated(created.result)
@@ -149,9 +148,8 @@ pipe(
                   Effect.ignore(toolkit.handle("m365_outbox_delete_draft", { draftId: prepared.draft.draftId }))
                 )
               );
-              const deleted = yield* head(
-                yield* toolkit.handle("m365_outbox_delete_draft", { draftId: prepared.draft.draftId })
-              );
+              const handle2 = yield* toolkit.handle("m365_outbox_delete_draft", { draftId: prepared.draft.draftId });
+              const deleted = yield* head(handle2);
 
               yield* Effect.logInfo("M365 outbox live: draft prepared and deleted", {
                 attachmentCount: A.length(prepared.draft.attachments),
@@ -170,22 +168,21 @@ pipe(
               const toolkit = yield* OutboxToolkit;
               const prepared = yield* prepare(`beep outbox live smoke ${yield* Clock.currentTimeMillis}`);
 
-              const sent = yield* head(
-                yield* toolkit.handle("m365_outbox_send_draft", {
-                  draftId: prepared.draft.draftId,
-                  expect: {
-                    attachments: A.map(prepared.draft.attachments, (attachment) => ({
-                      name: attachment.name,
-                      sha256: attachment.sha256,
-                      size: attachment.size,
-                    })),
-                    bcc: [],
-                    cc: [],
-                    subject: prepared.subject,
-                    to: [env.mailbox],
-                  },
-                })
-              );
+              const handle3 = yield* toolkit.handle("m365_outbox_send_draft", {
+                draftId: prepared.draft.draftId,
+                expect: {
+                  attachments: A.map(prepared.draft.attachments, (attachment) => ({
+                    name: attachment.name,
+                    sha256: attachment.sha256,
+                    size: attachment.size,
+                  })),
+                  bcc: [],
+                  cc: [],
+                  subject: prepared.subject,
+                  to: [env.mailbox],
+                },
+              });
+              const sent = yield* head(handle3);
               assert.isFalse(sent.isFailure);
               assert.isTrue(isSendResult(sent.result));
               const result = isSendResult(sent.result)

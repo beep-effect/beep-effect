@@ -25,6 +25,15 @@ import type { DeliveryLedgerConfig } from "./delivery-ledger.ts";
 import type { NativeDeliveryPolicy, NativeDeliveryRequest } from "./native-delivery.ts";
 import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 
+class NativeReadbackOperationError extends S.TaggedError<
+  NativeReadbackOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "NativeReadbackOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in native-readback.ts." }
+) {}
+
 const $I = $RepoAiMetricsId.create("native-readback");
 /**
  * A verified historical backend observation or a non-conclusive query result.
@@ -235,9 +244,10 @@ export const makeNativeReadback = Effect.fn("AiMetrics.makeNativeReadback")(func
     encoded: Effect.Success<ReturnType<typeof pages.prepare>>,
     eventId: Sha256Hex
   ) {
-    const decoded = yield* Effect.try(() =>
-      nativeTraceWire.toObject(nativeTraceWire.decode(encoded.body), { longs: String })
-    ).pipe(
+    const decoded = yield* Effect.try({
+      try: () => nativeTraceWire.toObject(nativeTraceWire.decode(encoded.body), { longs: String }),
+      catch: (cause) => NativeReadbackOperationError.make({ cause }),
+    }).pipe(
       Effect.flatMap(decodeWire),
       Effect.mapError(() => fail("encoding"))
     );

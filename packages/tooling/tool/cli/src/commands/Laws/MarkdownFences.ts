@@ -50,6 +50,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { SKIP_TYPE_CHECKING_FENCE_METADATA } from "@beep/repo-docgen/Core";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunk0 } from "@beep/utils";
@@ -66,8 +68,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { runCaptured } from "../../internal/process/StepExec.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { readSkillsLockDocument } from "../Skills/internal/LockFile.ts";
 import { messageGitErrorAdapter, scanTrackedTextFiles } from "./internal/TrackedTextFiles.ts";
 import { typescriptFences } from "./internal/TypeScriptFences.ts";
@@ -79,6 +79,7 @@ import {
   MarkdownFenceVerdict,
   TypecheckFence,
 } from "./MarkdownFences.model.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -727,6 +728,7 @@ export const runMarkdownFences = Effect.fn("MarkdownFences.runMarkdownFences")(f
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > {
   const repoRoot = yield* findRepoRoot(options.cwd).pipe(
     MarkdownFencesExecutionError.mapError("Failed to locate the repository root")

@@ -166,21 +166,22 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
     const retainPublisherLanding = Effect.fn("Library.paper.retainPublisherLanding")(function* () {
       const landing = yield* saveImmutable(root, `${prefix}/landing.html`, bytes);
       artifacts.push(LibraryArtifact.make({ ...landing, mediaType: "text/html", role: "publisher-landing-page" }));
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/landing-target.json`,
-          yield* encodeLibraryJson({
-            requestedUrl: source.canonicalUrl,
-            resolvedUrl: response.url,
-            status: response.status,
-            contentType: response.headers["content-type"] ?? "",
-            fullText: false,
-          }),
-          "application/json",
-          "publisher-target-metadata"
-        )
+      const argument = `${prefix}/landing-target.json`;
+      const encodedLibraryJson = yield* encodeLibraryJson({
+        requestedUrl: source.canonicalUrl,
+        resolvedUrl: response.url,
+        status: response.status,
+        contentType: response.headers["content-type"] ?? "",
+        fullText: false,
+      });
+      const saveLibraryText1 = yield* saveLibraryText(
+        root,
+        argument,
+        encodedLibraryJson,
+        "application/json",
+        "publisher-target-metadata"
       );
+      artifacts.push(saveLibraryText1);
       return LibraryAdapterResult.make({
         artifacts,
         revision: source.revision,
@@ -204,20 +205,21 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
           role: "raw-response",
         })
       );
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/pdf-response-target.json`,
-          yield* encodeLibraryJson({
-            requestedUrl: source.canonicalUrl,
-            pdfUrl: fetchedUrl,
-            resolvedUrl: response.url,
-            status: response.status,
-          }),
-          "application/json",
-          "target-metadata"
-        )
+      const argument1 = `${prefix}/pdf-response-target.json`;
+      const encodedLibraryJson1 = yield* encodeLibraryJson({
+        requestedUrl: source.canonicalUrl,
+        pdfUrl: fetchedUrl,
+        resolvedUrl: response.url,
+        status: response.status,
+      });
+      const saveLibraryText2 = yield* saveLibraryText(
+        root,
+        argument1,
+        encodedLibraryJson1,
+        "application/json",
+        "target-metadata"
       );
+      artifacts.push(saveLibraryText2);
       return LibraryAdapterResult.make({
         artifacts,
         revision: source.revision,
@@ -263,27 +265,28 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
         LibraryArtifact.make({ ...versionedSaved, mediaType: "application/pdf", role: "versioned-pdf-response" })
       );
       const bound = successfulPdf(explicitResponse.status, explicitBytes) && explicitHash === pdf.sha256;
-      artifacts.push(
-        yield* saveLibraryText(
-          root,
-          `${prefix}/arxiv-version-proof.json`,
-          yield* encodeLibraryJson({
-            metadataUrl,
-            metadataStatus: metadataStatus,
-            metadataSha256: metadataSha256,
-            paperId: paperId,
-            observedRevision: observedRevision,
-            explicitUrl,
-            resolvedUrl: explicitResponse.url,
-            status: explicitResponse.status,
-            originalPdfSha256: pdf.sha256,
-            versionedPdfSha256: explicitHash,
-            identicalPdf: bound,
-          }),
-          "application/json",
-          "arxiv-version-proof"
-        )
+      const argument2 = `${prefix}/arxiv-version-proof.json`;
+      const encodedLibraryJson2 = yield* encodeLibraryJson({
+        metadataUrl,
+        metadataStatus: metadataStatus,
+        metadataSha256: metadataSha256,
+        paperId: paperId,
+        observedRevision: observedRevision,
+        explicitUrl,
+        resolvedUrl: explicitResponse.url,
+        status: explicitResponse.status,
+        originalPdfSha256: pdf.sha256,
+        versionedPdfSha256: explicitHash,
+        identicalPdf: bound,
+      });
+      const saveLibraryText3 = yield* saveLibraryText(
+        root,
+        argument2,
+        encodedLibraryJson2,
+        "application/json",
+        "arxiv-version-proof"
       );
+      artifacts.push(saveLibraryText3);
       if (bound) {
         capturedRevision = observedRevision ?? "";
         observedPaperId = paperId ?? "";
@@ -293,9 +296,9 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
     const observeHeaderlessVersion = Effect.fn("Library.paper.observeHeaderlessVersion")(function* (citedId: string) {
       const metadataUrl = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(citedId)}`;
       const metadataResponse = yield* client.get(metadataUrl).pipe(Effect.timeout("60 seconds"));
-      const atom = new TextDecoder().decode(
-        yield* readBoundedPaperBody(metadataResponse, false).pipe(Effect.timeout("90 seconds"))
-      );
+      const argument3 = new TextDecoder();
+      const pipe3 = yield* readBoundedPaperBody(metadataResponse, false).pipe(Effect.timeout("90 seconds"));
+      const atom = argument3.decode(pipe3);
       const originalMetadata = yield* saveLibraryText(
         root,
         `${prefix}/arxiv-metadata.xml`,
@@ -324,20 +327,22 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
     if (O.isSome(arxiv) && O.isNone(actual)) yield* observeHeaderlessVersion(arxiv.value[1] ?? "");
     const finishPaperReceipt = Effect.fn("Library.paper.finishReceipt")(function* () {
       const versionMatches = Str.isEmpty(source.revision) || source.revision === capturedRevision;
+      const argument4 = `${prefix}/target.json`;
+      const encodedLibraryJson4 = yield* encodeLibraryJson({
+        requestedUrl: source.canonicalUrl,
+        pdfUrl: fetchedUrl,
+        resolvedUrl: response.url,
+        status: response.status,
+        requestedRevision: source.revision,
+        capturedRevision,
+        paperId: observedPaperId,
+        paperIdentityMatches,
+        versionMatches,
+      });
       const metadata = yield* saveLibraryText(
         root,
-        `${prefix}/target.json`,
-        yield* encodeLibraryJson({
-          requestedUrl: source.canonicalUrl,
-          pdfUrl: fetchedUrl,
-          resolvedUrl: response.url,
-          status: response.status,
-          requestedRevision: source.revision,
-          capturedRevision,
-          paperId: observedPaperId,
-          paperIdentityMatches,
-          versionMatches,
-        }),
+        argument4,
+        encodedLibraryJson4,
         "application/json",
         "target-metadata"
       );

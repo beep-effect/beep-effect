@@ -97,7 +97,8 @@ describe("codec corpus", () => {
       Effect.gen(function* () {
         const { codec } = laneOf(lane);
         const parsed = yield* codec.parse(text);
-        const reparsed = yield* codec.parse(yield* codec.stringify(parsed));
+        const stringify1 = yield* codec.stringify(parsed);
+        const reparsed = yield* codec.parse(stringify1);
         expect(normalize(reparsed)).toEqual(normalize(parsed));
       })
     );

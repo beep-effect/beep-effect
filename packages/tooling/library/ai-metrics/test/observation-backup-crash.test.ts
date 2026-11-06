@@ -39,27 +39,36 @@ const run = Effect.fn("ObservationBackupCrashTest.run")(function* (
     killSignal: "SIGKILL",
   });
   while (!(yield* fs.exists(`${directory}/boundary`))) {
-    expect(yield* child.isRunning).toBe(true);
+    const isRunning1 = yield* child.isRunning;
+    expect(isRunning1).toBe(true);
     yield* Effect.sleep("10 millis");
   }
-  expect(yield* fs.readFileString(`${directory}/boundary`)).toBe(mode);
+  const readFileString2 = yield* fs.readFileString(`${directory}/boundary`);
+  expect(readFileString2).toBe(mode);
   yield* child.kill({ killSignal: "SIGKILL" });
-  expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
-  expect(yield* child.isRunning).toBe(false);
+  const exit3 = yield* Effect.exit(child.exitCode);
+  expect(Exit.isFailure(exit3)).toBe(true);
+  const isRunning4 = yield* child.isRunning;
+  expect(isRunning4).toBe(false);
   return { fs, directory };
 });
 const inspect = Effect.fn("ObservationBackupCrashTest.inspect")(function* (file: string) {
   const sql = yield* SqliteClient.make({ filename: file });
-  expect(yield* sql`PRAGMA integrity_check`).toEqual([{ integrity_check: "ok" }]);
-  expect(yield* sql`SELECT count(*) AS n FROM observation_intake_pages`).toEqual([{ n: 1 }]);
-  expect(yield* sql`SELECT count(*) AS n FROM observation_source_cursors`).toEqual([{ n: 1 }]);
+  const value = yield* sql`PRAGMA integrity_check`;
+  expect(value).toEqual([{ integrity_check: "ok" }]);
+  const value5 = yield* sql`SELECT count(*) AS n FROM observation_intake_pages`;
+  expect(value5).toEqual([{ n: 1 }]);
+  const value6 = yield* sql`SELECT count(*) AS n FROM observation_source_cursors`;
+  expect(value6).toEqual([{ n: 1 }]);
 });
 it.layer(layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("does not publish a snapshot killed before manifest publication and retains the source", () =>
     Effect.gen(function* () {
       const f = yield* run("capture-before");
-      expect(yield* f.fs.exists(`${f.directory}/backup/manifest.json`)).toBe(false);
-      expect(yield* f.fs.exists(`${f.directory}/backup/manifest.partial`)).toBe(true);
+      const exists7 = yield* f.fs.exists(`${f.directory}/backup/manifest.json`);
+      expect(exists7).toBe(false);
+      const exists8 = yield* f.fs.exists(`${f.directory}/backup/manifest.partial`);
+      expect(exists8).toBe(true);
       yield* inspect(`${f.directory}/source.sqlite`);
     }).pipe(Effect.timeout("20 seconds"))
   )
@@ -89,10 +98,13 @@ it.layer(layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("retains the backup and refuses to present an interrupted restoration as complete", () =>
     Effect.gen(function* () {
       const f = yield* run("restore-before");
-      expect(yield* f.fs.exists(`${f.directory}/restored/restore.json`)).toBe(false);
-      expect(yield* f.fs.exists(`${f.directory}/restored/restore.partial`)).toBe(true);
+      const exists9 = yield* f.fs.exists(`${f.directory}/restored/restore.json`);
+      expect(exists9).toBe(false);
+      const exists10 = yield* f.fs.exists(`${f.directory}/restored/restore.partial`);
+      expect(exists10).toBe(true);
       yield* inspect(`${f.directory}/backup/journal.sqlite`);
-      expect(yield* f.fs.readFileString(`${f.directory}/source.sqlite`)).toBe("synthetic database corruption");
+      const readFileString11 = yield* f.fs.readFileString(`${f.directory}/source.sqlite`);
+      expect(readFileString11).toBe("synthetic database corruption");
     }).pipe(Effect.timeout("20 seconds"))
   )
 );
@@ -100,9 +112,11 @@ it.layer(layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reopens a completed restoration after process death despite an unusable original database", () =>
     Effect.gen(function* () {
       const f = yield* run("restore-after");
-      expect(yield* f.fs.exists(`${f.directory}/restored/restore.json`)).toBe(true);
+      const exists12 = yield* f.fs.exists(`${f.directory}/restored/restore.json`);
+      expect(exists12).toBe(true);
       yield* inspect(`${f.directory}/restored/journal.sqlite`);
-      expect(yield* f.fs.readFileString(`${f.directory}/source.sqlite`)).toBe("synthetic database corruption");
+      const readFileString13 = yield* f.fs.readFileString(`${f.directory}/source.sqlite`);
+      expect(readFileString13).toBe("synthetic database corruption");
     }).pipe(Effect.timeout("20 seconds"))
   )
 );

@@ -67,7 +67,10 @@
  * blocked them. Under `--retire` the swept branch lives in the lane, so for the
  * owning clone the rule reads "not on `main`": a clone parked on another branch
  * keeps its checkout and receives only the ref-only steps (`fetch-prune`,
- * `ff-main`, the branch deletions). Gating on HEAD being `main` alone would be
+ * `ff-main`, the branch deletions). A sweep that runs inside a linked worktree
+ * (the readiness monitor's post-merge sweep in a lane) never moves it either:
+ * the lane keeps its pull request branch, so `yeet sweep --retire` can still
+ * judge and delete that branch. Gating on HEAD being `main` alone would be
  * wrong: the second pass above and `monitor --until-merged` both rely on
  * `end-state` moving a clone off the merged branch. (Receipt 2026-09-28: a
  * sweep switched a clone from a live branch to `main` under another session's
@@ -110,6 +113,7 @@ import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
 import {
   adaptGitKitError,
+  patientGit,
   RepoRunContext,
   runRepoCommandCapture,
   safeOriginBranchFromBase,
@@ -118,7 +122,7 @@ import { recordSweepDone } from "../../Session/SessionLedger.service.ts";
 import { runTmpfsReap } from "../../Worktree/internal/TmpfsReap.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext, writeTextFile } from "./ArtifactPaths.ts";
-import { optionFromNonEmpty, patientGit } from "./GitExec.ts";
+import { optionFromNonEmpty } from "./GitExec.ts";
 import {
   SweepPlan,
   SweepPlanStep,
@@ -237,6 +241,7 @@ export class SweepGitState extends S.Opaque<SweepGitState, { readonly brand: uni
     pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestHeadBranch: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestHeadOid: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    linkedWorktree: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("SweepGitState", {
       description: "Read-only git and GitHub facts one post-merge workspace sweep is planned from.",
@@ -397,9 +402,21 @@ const liveCheckoutPrecondition = (state: SweepGitState): SweepPrecondition =>
     headIsMovable(state)
   );
 
+// A linked worktree is a lane that `yeet sweep --retire` retires by its pull
+// request branch. Switching it to `main` (possible whenever the owning clone
+// stands on another branch, so `main` is free) made the retire judge `main`
+// instead and leave the lane's branch behind (#1939, #1985, #2017, #2700).
+const laneKeepsBranchPrecondition = (state: SweepGitState): SweepPrecondition =>
+  precondition(
+    `the checkout is the owning clone; a linked worktree keeps ${state.branch} for \`yeet sweep --retire\``,
+    !state.linkedWorktree
+  );
+
 // What `git switch main` needs when the clone is not on `main` already: a HEAD
-// the sweep may move, a clean tree, and `main` not held by another worktree.
+// the sweep may move, a clean tree, `main` not held by another worktree, and a
+// checkout that is the owning clone rather than a lane.
 const switchToMainPreconditions = (state: SweepGitState): ReadonlyArray<SweepPrecondition> => [
+  laneKeepsBranchPrecondition(state),
   liveCheckoutPrecondition(state),
   cleanWorktreePrecondition(state),
   mainFreePrecondition(state),
@@ -859,6 +876,27 @@ const lsRemoteTip = (output: string): O.Option<string> =>
     O.flatMap((line) => pipe(Str.split(line, "\t"), A.head, O.flatMap(flow(Str.trim, optionFromNonEmpty))))
   );
 
+// `ls-remote origin refs/heads/<branch>` on the patient instance (a network read), rendered back to
+// git's `<sha>\t<ref>` lines so `lsRemoteTip` reads it as before; an empty listing is a clean miss,
+// which is absence (W7a Y61/Y62, SPEC D-18).
+const probeRemoteBranch = (
+  cwd: string,
+  branch: string
+): Effect.Effect<CommandProbe, never, ChildProcessSpawner.ChildProcessSpawner> => {
+  const patterns = [`refs/heads/${branch}`];
+  return patientGit.pipe(
+    Effect.flatMap((git) =>
+      git
+        .lsRemote(cwd, "origin", { patterns })
+        .pipe(
+          sweepProbeFromGit(GitCommand.lsRemote("origin", false, false, patterns), (entries) =>
+            renderLines(A.map(entries, (entry) => `${entry.sha}\t${entry.ref}`))
+          )
+        )
+    )
+  );
+};
+
 const observeSha = (cwd: string, ref: string): Effect.Effect<O.Option<string>, never, Git> =>
   Effect.flatMap(Git, (git) =>
     git.revParse(cwd, ref, { quiet: true }).pipe(
@@ -873,6 +911,7 @@ const observePullRequest = Effect.fn("Yeet.observeSweepPullRequest")(function* (
   context: RepoRunContext,
   branch: string
 ): Effect.fn.Return<O.Option<GhPrView>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+  // KEEP (D-13): `gh pr view <branch>` finds the branch's pull request in any state.
   const output = yield* ghOutput({
     args: ["pr", "view", branch, "--json", "number,headRefName,state,headRefOid"],
     cwd: context.repoRoot,
@@ -1014,7 +1053,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
   // unreadable answer leaves both unknown, so the deletion stays blocked.
   const remote = O.isSome(trackedTip)
     ? { tip: trackedTip, absent: false }
-    : yield* captureCommand("git", ["ls-remote", "origin", `refs/heads/${branch}`], repoRoot).pipe(
+    : yield* probeRemoteBranch(repoRoot, branch).pipe(
         Effect.map((probe) => {
           const tip = probeUnreliable(probe) ? O.none<string>() : lsRemoteTip(probe.output);
           return { tip, absent: !probeUnreliable(probe) && O.isNone(tip) };
@@ -1055,6 +1094,11 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
     remoteBranchAbsent: remote.absent,
     pullRequestState: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.state)),
     pullRequestHeadBranch: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.headRefName)),
+    // `git worktree list` names the owning clone first, so any other top level
+    // is a linked lane. An unreadable list already blocks the switch through
+    // `mainCheckedOutElsewhere`, so it reads as the clone here.
+    linkedWorktree:
+      !probeUnreliable(worktreeList) && O.exists(A.head(worktrees), (first) => first.path !== toplevel.output),
     pullRequestHeadOid: O.flatMap(pullRequest, (view) =>
       O.flatMap(O.fromNullishOr(view.headRefOid), optionFromNonEmpty)
     ),
@@ -1092,7 +1136,8 @@ export const planSweep = Effect.fn("Yeet.planSweep")(function* (
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const createdAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  return buildSweepPlan(yield* observeSweepGitState(context), createdAt);
+  const observeSweepGitState1 = yield* observeSweepGitState(context);
+  return buildSweepPlan(observeSweepGitState1, createdAt);
 });
 
 const isPermissionDenial = (output: string): boolean => {
@@ -1269,7 +1314,7 @@ export const revalidateRemoteDeletion: {
     cwd: string,
     state: SweepGitState
   ): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
-    captureCommand("git", ["ls-remote", "origin", `refs/heads/${state.branch}`], cwd).pipe(
+    probeRemoteBranch(cwd, state.branch).pipe(
       Effect.map((probe) => {
         if (probeUnreliable(probe)) {
           return O.some(`could not re-verify origin/${state.branch} before deletion: ${probeFailureText(probe)}`);
@@ -1546,11 +1591,24 @@ const performSweepStep = (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > =>
   SweepStepId.match(planStep.id, {
-    // KEEP (W2b): `Git.fetch` needs a ref, and the bare `fetch --prune origin` fetches the configured refspecs.
-    "fetch-prune": () => runCommandStep("git", ["fetch", "--prune", "origin"], context.repoRoot, planStep.action),
+    // `Git.fetch` without a ref fetches the configured refspecs, as the bare `fetch --prune origin` did.
+    "fetch-prune": () =>
+      runGitStep(
+        patientGit.pipe(
+          Effect.flatMap((git) =>
+            git
+              .fetch(context.repoRoot, { remote: "origin", prune: true })
+              .pipe(
+                sweepProbeFromGit(GitCommand.fetch("origin", undefined, undefined, false, false, true), renderNothing)
+              )
+          )
+        ),
+        planStep.action
+      ),
     "ff-main": () =>
       state.headBranch === state.mainBranch
-        ? runCommandStep(
+        ? // KEEP (D-03): no `merge` member, and the fast-forward has a single consumer.
+          runCommandStep(
             "git",
             ["merge", "--ff-only", `refs/remotes/origin/${state.mainBranch}`],
             context.repoRoot,
@@ -1642,7 +1700,8 @@ export const sweepReportPath = Effect.fn("Yeet.sweepReportPath")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<string, never, Path.Path> {
   const path = yield* Path.Path;
-  return path.join(yield* artifactDirForContext(context), sweepReportFileName);
+  const artifactDirForContext2 = yield* artifactDirForContext(context);
+  return path.join(artifactDirForContext2, sweepReportFileName);
 });
 
 /**
@@ -1706,7 +1765,8 @@ export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
   const encoded = yield* SweepReportJson.encode(report).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode the yeet sweep report."))
   );
-  yield* writeTextFile(yield* sweepReportPath(context), encoded);
+  const sweepReportPath3 = yield* sweepReportPath(context);
+  yield* writeTextFile(sweepReportPath3, encoded);
   // Every sweep entrypoint (sweep, sweep --retire, merge, monitor
   // --until-merged) passes here, so this is where the session ledger learns
   // the checkout's work is done: a retired lane, whose gate already proved

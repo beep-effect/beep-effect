@@ -70,8 +70,10 @@ describe("package.json site readers reject JSONC", () => {
     Effect.gen(function* () {
       const error = yield* Effect.flip(readPackageManagerField(jsonc));
       strictEqual(error._tag, "VersionSyncError");
-      strictEqual(yield* readPackageManagerField(json), "bun@1.3.0");
-      strictEqual(yield* readPackageManagerField("{}"), "");
+      const readPackageManagerField1 = yield* readPackageManagerField(json);
+      strictEqual(readPackageManagerField1, "bun@1.3.0");
+      const readPackageManagerField2 = yield* readPackageManagerField("{}");
+      strictEqual(readPackageManagerField2, "");
     })
   );
 
@@ -86,7 +88,8 @@ describe("package.json site readers reject JSONC", () => {
 
   it.effect("PackageTestTypecheck reads JSONC as no package", () =>
     Effect.gen(function* () {
-      assertNone(yield* readTestTypecheckManifest(jsonc));
+      const readTestTypecheckManifest3 = yield* readTestTypecheckManifest(jsonc);
+      assertNone(readTestTypecheckManifest3);
       const manifest = yield* readTestTypecheckManifest(json);
       assertSome(
         O.flatMapNullishOr(manifest, (document) => document.name),

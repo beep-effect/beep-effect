@@ -16,7 +16,10 @@ it.effect.prop(
       const clean = normalize(raw);
       assert.deepStrictEqual(normalize(clean), clean);
       const codec = S.fromJsonString(S.Unknown);
-      assert.deepStrictEqual(normalize(yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(clean))), clean);
+      const argument = S.decodeEffect(codec);
+      const value1 = yield* S.encodeEffect(codec)(clean);
+      const value = yield* argument(value1);
+      assert.deepStrictEqual(normalize(value), clean);
     }),
   runs
 );

@@ -16,7 +16,8 @@ it.effect(
     ]) {
       const slug = yield* securityRepositoryFromRemote(remote);
       expect(slug).toBe("example/project");
-      expect(yield* encodeRemote(slug)).toBe("https://github.com/example/project.git");
+      const encodedRemote = yield* encodeRemote(slug);
+      expect(encodedRemote).toBe("https://github.com/example/project.git");
     }
   })
 );

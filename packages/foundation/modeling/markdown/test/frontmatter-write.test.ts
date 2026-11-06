@@ -47,19 +47,22 @@ const Meta = S.Struct({
 describe("codec encode", () => {
   it.effect("YamlFrontmatter.encode pins the empty object to the flow mapping body", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* YamlFrontmatter.encode({}), "{}\n");
+      const encoded1 = yield* YamlFrontmatter.encode({});
+      assert.strictEqual(encoded1, "{}\n");
     })
   );
 
   it.effect("TomlFrontmatter.encode pins the empty object to the empty body", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* TomlFrontmatter.encode({}), "");
+      const encoded2 = yield* TomlFrontmatter.encode({});
+      assert.strictEqual(encoded2, "");
     })
   );
 
   it.effect("JsonFrontmatter.encode pins the empty object to {}", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* JsonFrontmatter.encode({}), "{}");
+      const encoded3 = yield* JsonFrontmatter.encode({});
+      assert.strictEqual(encoded3, "{}");
     })
   );
 
@@ -206,15 +209,12 @@ describe("MarkdownFrontmatter.setToString", () => {
   it.effect("pins the empty-object block per codec on an empty document", () =>
     Effect.gen(function* () {
       const document = yield* parseDoc("");
-      assert.strictEqual(
-        yield* MarkdownFrontmatter.setToString(Empty, YamlFrontmatter)(document, {}),
-        "---\n{}\n---\n"
-      );
-      assert.strictEqual(yield* MarkdownFrontmatter.setToString(Empty, TomlFrontmatter)(document, {}), "+++\n+++\n");
-      assert.strictEqual(
-        yield* MarkdownFrontmatter.setToString(Empty, JsonFrontmatter)(document, {}),
-        "---json\n{}\n---\n"
-      );
+      const value4 = yield* MarkdownFrontmatter.setToString(Empty, YamlFrontmatter)(document, {});
+      assert.strictEqual(value4, "---\n{}\n---\n");
+      const value5 = yield* MarkdownFrontmatter.setToString(Empty, TomlFrontmatter)(document, {});
+      assert.strictEqual(value5, "+++\n+++\n");
+      const value6 = yield* MarkdownFrontmatter.setToString(Empty, JsonFrontmatter)(document, {});
+      assert.strictEqual(value6, "---json\n{}\n---\n");
     })
   );
 
@@ -269,7 +269,8 @@ describe("frontmatter write round-trip property", () => {
     [MetaArb],
     ([data]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* insertRoundTrip(YamlFrontmatter, data), data);
+        const insertRoundTrip7 = yield* insertRoundTrip(YamlFrontmatter, data);
+        assert.deepStrictEqual(insertRoundTrip7, data);
       }),
     { arbitrary: fcRuns(60) }
   );
@@ -279,7 +280,8 @@ describe("frontmatter write round-trip property", () => {
     [MetaArb],
     ([data]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* insertRoundTrip(TomlFrontmatter, data), data);
+        const insertRoundTrip8 = yield* insertRoundTrip(TomlFrontmatter, data);
+        assert.deepStrictEqual(insertRoundTrip8, data);
       }),
     { arbitrary: fcRuns(60) }
   );
@@ -289,7 +291,8 @@ describe("frontmatter write round-trip property", () => {
     [MetaArb],
     ([data]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* insertRoundTrip(JsonFrontmatter, data), data);
+        const insertRoundTrip9 = yield* insertRoundTrip(JsonFrontmatter, data);
+        assert.deepStrictEqual(insertRoundTrip9, data);
       }),
     { arbitrary: fcRuns(60) }
   );

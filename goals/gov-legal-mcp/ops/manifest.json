@@ -41,12 +41,7 @@
     "explorations/gov-legal-data-driver-codegen/MAP.md",
     "explorations/gov-legal-data-driver-codegen/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "../../explorations/gov-legal-data-driver-codegen/research/SOURCES.md",
-    "../../explorations/gov-legal-data-driver-codegen/research/conditional-mcp-registration-and-auth-gating.md",
-    "../../explorations/gov-legal-data-driver-codegen/research/openapi-to-effect-sdk-mcp-codegen.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -75,5 +70,10 @@
     "Collision safety would require unstable or order-dependent naming.",
     "Implementation would absorb delivery breadth, write-wall persistence, or a general-purpose generator.",
     "Installed MCP internals have drifted enough to invalidate shipped kit conventions."
+  ],
+  "researchReferences": [
+    "../../explorations/gov-legal-data-driver-codegen/research/SOURCES.md",
+    "../../explorations/gov-legal-data-driver-codegen/research/conditional-mcp-registration-and-auth-gating.md",
+    "../../explorations/gov-legal-data-driver-codegen/research/openapi-to-effect-sdk-mcp-codegen.md"
   ]
 }

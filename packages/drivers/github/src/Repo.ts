@@ -16,10 +16,13 @@ import { $GithubId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $GithubId.create("Repo");
 
@@ -68,7 +71,7 @@ export class InvalidRepoRefError extends S.TaggedError<InvalidRepoRefError, { re
    * @since 0.0.0
    */
   override get message(): string {
-    return `not an owner/repo slug: ${JSON.stringify(this.input)}`;
+    return `not an owner/repo slug: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(this.input), identity)}`;
   }
 }
 

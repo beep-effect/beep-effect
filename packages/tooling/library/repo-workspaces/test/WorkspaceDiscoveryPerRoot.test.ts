@@ -94,7 +94,8 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
         // host's own workspace change under it between calls.
         const info = yield* discovery.info;
         assert.strictEqual(info.root, "/primary");
-        assert.deepStrictEqual(names(yield* discovery.listPackages), ["@x/alpha", "@x/beta", "root"]);
+        const listPackages1 = yield* discovery.listPackages;
+        assert.deepStrictEqual(names(listPackages1), ["@x/alpha", "@x/beta", "root"]);
       })
     );
 
@@ -154,7 +155,8 @@ describe("WorkspaceDiscovery.infoIn", () => {
         const discovery = yield* WorkspaceDiscovery;
         const first = yield* discovery.listPackagesIn("/worktree");
         yield* discovery.infoIn("/worktree");
-        assert.strictEqual(yield* discovery.listPackagesIn("/worktree"), first);
+        const listPackagesIn2 = yield* discovery.listPackagesIn("/worktree");
+        assert.strictEqual(listPackagesIn2, first);
       })
     );
   });
@@ -188,10 +190,12 @@ describe("WorkspaceDiscovery.refreshIn", () => {
         yield* discovery.refreshIn("/worktree");
 
         // The named root re-discovers...
-        assert.notStrictEqual(yield* discovery.listPackagesIn("/worktree"), worktreeBefore);
+        const listPackagesIn3 = yield* discovery.listPackagesIn("/worktree");
+        assert.notStrictEqual(listPackagesIn3, worktreeBefore);
         // ...and its siblings do not. A `refreshIn` that cleared the whole map
         // would be indistinguishable from `refresh` and pass the line above.
-        assert.strictEqual(yield* discovery.listPackagesIn("/primary"), primaryBefore);
+        const listPackagesIn4 = yield* discovery.listPackagesIn("/primary");
+        assert.strictEqual(listPackagesIn4, primaryBefore);
       })
     );
 
@@ -200,7 +204,8 @@ describe("WorkspaceDiscovery.refreshIn", () => {
         const discovery = yield* WorkspaceDiscovery;
         const before = yield* discovery.listPackagesIn("/worktree");
         yield* discovery.refreshIn("/worktree/packages/gamma");
-        assert.notStrictEqual(yield* discovery.listPackagesIn("/worktree"), before);
+        const listPackagesIn5 = yield* discovery.listPackagesIn("/worktree");
+        assert.notStrictEqual(listPackagesIn5, before);
       })
     );
 
@@ -210,7 +215,8 @@ describe("WorkspaceDiscovery.refreshIn", () => {
         const before = yield* discovery.listPackages;
         yield* discovery.listPackagesIn("/worktree");
         yield* discovery.refreshIn("/worktree");
-        assert.strictEqual(yield* discovery.listPackages, before);
+        const listPackages6 = yield* discovery.listPackages;
+        assert.strictEqual(listPackages6, before);
       })
     );
 
@@ -225,7 +231,8 @@ describe("WorkspaceDiscovery.refreshIn", () => {
         // Never discovered, so there is nothing to drop — an ordinary fact,
         // not an error.
         yield* discovery.refreshIn("/worktree");
-        assert.deepStrictEqual(names(yield* discovery.listPackagesIn("/worktree")), ["@x/alpha", "@x/gamma", "root"]);
+        const listPackagesIn7 = yield* discovery.listPackagesIn("/worktree");
+        assert.deepStrictEqual(names(listPackagesIn7), ["@x/alpha", "@x/gamma", "root"]);
       })
     );
 
@@ -272,7 +279,8 @@ describe("WorkspaceDiscovery.makeTest — the per-root methods", () => {
       const double = WorkspaceDiscovery.makeTest({
         listPackagesIn: () => Effect.succeed([]),
       });
-      assert.deepStrictEqual(yield* double.listPackagesIn("/anywhere"), []);
+      const listPackagesIn8 = yield* double.listPackagesIn("/anywhere");
+      assert.deepStrictEqual(listPackagesIn8, []);
       // `refreshIn` DOES have an honest default: a double memoizes nothing, so
       // dropping one root's memo really is a no-op.
       yield* WorkspaceDiscovery.makeTest({}).refreshIn("/anywhere");

@@ -16,7 +16,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -174,7 +174,10 @@ describe("WorkspaceSnapshots.at — glob filtering over ls-tree", () => {
 
 const parityTree: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\ncatalog:\n  effect: ^4.0.0\n",
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", private: true }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+    identity
+  ),
   "/repo/packages/alpha/package.json": manifest("@x/alpha", { dependencies: { effect: "catalog:" } }),
   "/repo/packages/beta/package.json": manifest("@x/beta", {
     version: "2.0.0",
@@ -219,13 +222,16 @@ describe("WorkspaceSnapshots — at('HEAD') and worktree() parity on a clean tre
 // read returns empty, so this parity assertion fails.
 
 const bunNoLockTree: Tree = {
-  "/repo/package.json": JSON.stringify({
-    name: "root",
-    version: "0.0.0",
-    private: true,
-    packageManager: "bun@1.2.0",
-    workspaces: { packages: ["packages/*"], catalog: { effect: "^4.0.0" } },
-  }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      name: "root",
+      version: "0.0.0",
+      private: true,
+      packageManager: "bun@1.2.0",
+      workspaces: { packages: ["packages/*"], catalog: { effect: "^4.0.0" } },
+    }),
+    identity
+  ),
   "/repo/packages/alpha/package.json": manifest("@x/alpha", { dependencies: { effect: "catalog:" } }),
 };
 
@@ -389,8 +395,10 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
         assert.strictEqual(error.reason, "no-version");
         assert.isUndefined(error.cause);
         // Positive and negative controls on the same layer.
-        assertSome(yield* workspace.versionOf("@x/alpha"), "1.2.3");
-        assertNone(yield* workspace.versionOf("nope"));
+        const versionOf1 = yield* workspace.versionOf("@x/alpha");
+        assertSome(versionOf1, "1.2.3");
+        const versionOf2 = yield* workspace.versionOf("nope");
+        assertNone(versionOf2);
       })
     );
   });
@@ -403,8 +411,14 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 
 const versionlessTree: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
-  "/repo/package.json": JSON.stringify({ name: "root", private: true }),
-  "/repo/packages/bare/package.json": JSON.stringify({ name: "@x/bare", private: true }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", private: true }),
+    identity
+  ),
+  "/repo/packages/bare/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/bare", private: true }),
+    identity
+  ),
   "/repo/packages/alpha/package.json": manifest("@x/alpha", { dependencies: { "@x/bare": "workspace:^" } }),
 };
 
@@ -446,9 +460,12 @@ describe("WorkspaceStateSnapshot — snapshot-scoped resolver layers", () => {
       Effect.gen(function* () {
         const catalog = yield* CatalogResolver;
         const workspace = yield* WorkspaceResolver;
-        assertSome(yield* catalog.rangeOf("effect", O.none()), "^4.0.0");
-        assertSome(yield* catalog.rangeOf("vitest", O.some("build")), "^3.0.0");
-        assertSome(yield* workspace.versionOf("@x/beta"), "4.5.6");
+        const rangeOf3 = yield* catalog.rangeOf("effect", O.none());
+        assertSome(rangeOf3, "^4.0.0");
+        const rangeOf4 = yield* catalog.rangeOf("vitest", O.some("build"));
+        assertSome(rangeOf4, "^3.0.0");
+        const versionOf5 = yield* workspace.versionOf("@x/beta");
+        assertSome(versionOf5, "4.5.6");
       })
     );
 
@@ -456,8 +473,10 @@ describe("WorkspaceStateSnapshot — snapshot-scoped resolver layers", () => {
       Effect.gen(function* () {
         const catalog = yield* CatalogResolver;
         const workspace = yield* WorkspaceResolver;
-        assertNone(yield* catalog.rangeOf("nope", O.none()));
-        assertNone(yield* workspace.versionOf("nope"));
+        const rangeOf6 = yield* catalog.rangeOf("nope", O.none());
+        assertNone(rangeOf6);
+        const versionOf7 = yield* workspace.versionOf("nope");
+        assertNone(versionOf7);
       })
     );
   });
@@ -488,12 +507,15 @@ packages: {}
 
 // The peer is declared through a catalog NO committed source defines: the
 // workspace declares no catalogs, and the lockfile records no `catalogs:` block.
-const hookManifest = JSON.stringify({
-  name: "root",
-  version: "1.0.0",
-  peerDependencies: { effect: "catalog:effect:peers" },
-  devDependencies: { effect: "catalog:effect" },
-});
+const hookManifest = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    name: "root",
+    version: "1.0.0",
+    peerDependencies: { effect: "catalog:effect:peers" },
+    devDependencies: { effect: "catalog:effect" },
+  }),
+  identity
+);
 
 const hookTree: Tree = {
   "/repo/package.json": hookManifest,
@@ -946,7 +968,9 @@ describe("snapshot hook-version projection preserves own replay names", () => {
           assert.deepStrictEqual(R.toEntries(snapshot.hookReplays ?? {}), expected);
           assertSome(R.get(snapshot.hookReplays ?? {}, "__proto__"), "2.0.0");
           const codec = S.fromJsonString(WorkspaceStateSnapshot);
-          const stored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(snapshot));
+          const argument = S.decodeEffect(codec);
+          const value1 = yield* S.encodeEffect(codec)(snapshot);
+          const stored = yield* argument(value1);
           assert.deepStrictEqual(R.toEntries(stored.hookReplays ?? {}), expected);
         }
         assert.deepStrictEqual(
@@ -1062,7 +1086,9 @@ it.effect.prop(
   [Arbitrary.schema(PackageStateSnapshot)],
   ([value]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(PackageStateSnapshot)(yield* S.encodeEffect(PackageStateSnapshot)(value));
+      const argument1 = S.decodeEffect(PackageStateSnapshot);
+      const value2 = yield* S.encodeEffect(PackageStateSnapshot)(value);
+      const decoded = yield* argument1(value2);
       assert.isTrue(S.toEquivalence(PackageStateSnapshot)(decoded, value));
     }),
   { arbitrary: fcRuns(50) }

@@ -81,10 +81,8 @@ const program = Effect.gen(function* () {
     yield* writeJson(resultPath, { stats: yield* intake.journal.stats, pages, events, receipts, integrity });
     return;
   }
-  const server = Context.get(
-    yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 })),
-    HttpServer.HttpServer
-  );
+  const build1 = yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }));
+  const server = Context.get(build1, HttpServer.HttpServer);
   yield* server.serve(
     intake.handler.pipe(
       Effect.tap(() =>

@@ -134,7 +134,8 @@ describe("bounded short reads", () => {
       const text = "α😀\nβé\n";
       yield* fs.writeFileString("/journal", `\ufeff${text}`);
       const short = shortReads(fs, 1);
-      assert.strictEqual(yield* probeBomBytes(short, "/journal"), 3);
+      const probeBomBytes1 = yield* probeBomBytes(short, "/journal");
+      assert.strictEqual(probeBomBytes1, 3);
       const tail = yield* readTail(short, "/journal", 100, 3);
       assert.strictEqual(tail.text, text);
       assert.strictEqual(tail.start, 0);
@@ -155,7 +156,8 @@ describe("bounded short reads", () => {
         "",
         "an unterminated suffix is withheld"
       );
-      assert.strictEqual(yield* probeBomBytes(short, "/journal"), 0);
+      const probeBomBytes2 = yield* probeBomBytes(short, "/journal");
+      assert.strictEqual(probeBomBytes2, 0);
       assert.strictEqual((yield* readTail(short, "/journal", 100, 0)).text, "é");
     })
   );
@@ -187,7 +189,8 @@ describe("bounded short reads", () => {
             )
           ),
       };
-      assert.strictEqual(yield* probeBomBytes(stopped, "/journal"), 0);
+      const probeBomBytes3 = yield* probeBomBytes(stopped, "/journal");
+      assert.strictEqual(probeBomBytes3, 0);
       assert.strictEqual((yield* readTail(stopped, "/journal", 100, 0)).text, "");
       assert.strictEqual((yield* readRangeWindow(stopped, "/journal", 0, 100, 0)).text, "");
       assert.strictEqual(reads, 3);
@@ -199,7 +202,8 @@ describe("bounded short reads", () => {
       const content = "first\n\ufeffsecond\n";
       yield* fs.writeFileString("/journal", content);
       const short = shortReads(fs, 1);
-      assert.strictEqual(yield* probeBomBytes(short, "/journal"), 0);
+      const probeBomBytes4 = yield* probeBomBytes(short, "/journal");
+      assert.strictEqual(probeBomBytes4, 0);
       const tail = yield* readTail(short, "/journal", 11, 0);
       assert.strictEqual(tail.text, "\ufeffsecond\n");
       assert.strictEqual(tail.start, 6);
@@ -358,8 +362,11 @@ it.effect("reads a BOM width through a handle that outlives a rename over its pa
     yield* fs.writeFileString("/next", "42\n");
     yield* fs.rename("/next", "/journal");
     // Rewound before each read: the answer does not depend on the handle's position.
-    assert.strictEqual(yield* handleBomBytes(file), 3);
-    assert.strictEqual(yield* handleBomBytes(file), 3);
-    assert.strictEqual(yield* probeBomBytes(fs, "/journal"), 0);
+    const handleBomBytes5 = yield* handleBomBytes(file);
+    assert.strictEqual(handleBomBytes5, 3);
+    const handleBomBytes6 = yield* handleBomBytes(file);
+    assert.strictEqual(handleBomBytes6, 3);
+    const probeBomBytes7 = yield* probeBomBytes(fs, "/journal");
+    assert.strictEqual(probeBomBytes7, 0);
   })
 );

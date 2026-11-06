@@ -25,13 +25,14 @@ import { assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vi
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -41,7 +42,9 @@ const writeManifest = Effect.fn(function* (directory: string, manifest: unknown)
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs.makeDirectory(directory, { recursive: true });
-  yield* fs.writeFileString(path.join(directory, "package.json"), yield* encodeJson(manifest));
+  const argument = path.join(directory, "package.json");
+  const encodedJson1 = yield* encodeJson(manifest);
+  yield* fs.writeFileString(argument, encodedJson1);
 });
 
 const writeRepository = Effect.fn(function* (rootManifest: Record<string, unknown>) {
@@ -81,32 +84,28 @@ it.layer(Layer.provideMerge(MemoryFileSystem.layer, NodeServices.layer), { timeo
         Effect.gen(function* () {
           const { repoRoot, path } = yield* writeRepository({ workspaces: { packages: ["packages/*"] } });
 
-          deepStrictEqual(rows(yield* discoverWorkspacePackages(repoRoot, path)), [
-            "@beep/demo=packages/demo",
-            "@beep/root=.",
-          ]);
+          const discoverWorkspacePackages1 = yield* discoverWorkspacePackages(repoRoot, path);
+          deepStrictEqual(rows(discoverWorkspacePackages1), ["@beep/demo=packages/demo", "@beep/root=."]);
         })
       );
 
       it.effect("reads a root without workspaces, or with a catalog-only object, as the root alone", () =>
         Effect.gen(function* () {
           const bare = yield* writeRepository({});
-          deepStrictEqual(rows(yield* discoverWorkspacePackages(bare.repoRoot, bare.path)), ["@beep/root=."]);
+          const discoverWorkspacePackages2 = yield* discoverWorkspacePackages(bare.repoRoot, bare.path);
+          deepStrictEqual(rows(discoverWorkspacePackages2), ["@beep/root=."]);
 
           const catalogOnly = yield* writeRepository({ workspaces: { catalog: { effect: "4.0.0" } } });
-          deepStrictEqual(rows(yield* discoverWorkspacePackages(catalogOnly.repoRoot, catalogOnly.path)), [
-            "@beep/root=.",
-          ]);
+          const discoverWorkspacePackages3 = yield* discoverWorkspacePackages(catalogOnly.repoRoot, catalogOnly.path);
+          deepStrictEqual(rows(discoverWorkspacePackages3), ["@beep/root=."]);
         })
       );
 
       it.effect("skips a missing literal member and fails a wildcard whose base directory is absent", () =>
         Effect.gen(function* () {
           const literal = yield* writeRepository({ workspaces: ["packages/*", "tools/absent"] });
-          deepStrictEqual(rows(yield* discoverWorkspacePackages(literal.repoRoot, literal.path)), [
-            "@beep/demo=packages/demo",
-            "@beep/root=.",
-          ]);
+          const discoverWorkspacePackages4 = yield* discoverWorkspacePackages(literal.repoRoot, literal.path);
+          deepStrictEqual(rows(discoverWorkspacePackages4), ["@beep/demo=packages/demo", "@beep/root=."]);
 
           const wildcard = yield* writeRepository({ workspaces: ["packages/*", "absent/*"] });
           const error = yield* Effect.flip(discoverWorkspacePackages(wildcard.repoRoot, wildcard.path));
@@ -124,7 +123,8 @@ it.layer(Layer.provideMerge(MemoryFileSystem.layer, NodeServices.layer), { timeo
           yield* writeManifest(path.join(repoRoot, "packages", ".hidden"), { name: "@beep/hidden" });
           yield* writeManifest(path.join(repoRoot, "groups", "one", "nested"), { name: "@beep/nested" });
 
-          deepStrictEqual(rows(yield* discoverWorkspacePackages(repoRoot, path)), [
+          const discoverWorkspacePackages5 = yield* discoverWorkspacePackages(repoRoot, path);
+          deepStrictEqual(rows(discoverWorkspacePackages5), [
             "@beep/demo=packages/demo",
             "@beep/nested=groups/one/nested",
             "@beep/root=.",
@@ -169,7 +169,8 @@ it.layer(Layer.provideMerge(MemoryFileSystem.layer, NodeServices.layer), { timeo
             { name: "@beep/demo", version: "" },
             { name: "" },
           ]) {
-            yield* fs.writeFileString(memberManifest, yield* encodeJson(manifest));
+            const encodedJson = yield* encodeJson(manifest);
+            yield* fs.writeFileString(memberManifest, encodedJson);
             const error = yield* Effect.flip(discoverWorkspacePackages(repoRoot, path));
             strictEqual(error.message, `Failed to decode package manifest ${memberManifest}.`);
           }
@@ -183,10 +184,8 @@ it.layer(Layer.provideMerge(MemoryFileSystem.layer, NodeServices.layer), { timeo
           yield* writeManifest(path.join(repoRoot, "tools", "lint"), { name: "@beep/lint" });
           yield* fs.writeFileString(path.join(repoRoot, "pnpm-workspace.yaml"), "packages:\n  - tools/*\n");
 
-          deepStrictEqual(rows(yield* discoverWorkspacePackages(repoRoot, path)), [
-            "@beep/lint=tools/lint",
-            "@beep/root=.",
-          ]);
+          const discoverWorkspacePackages6 = yield* discoverWorkspacePackages(repoRoot, path);
+          deepStrictEqual(rows(discoverWorkspacePackages6), ["@beep/lint=tools/lint", "@beep/root=."]);
         })
       );
 
@@ -208,9 +207,18 @@ it.layer(Layer.provideMerge(MemoryFileSystem.layer, NodeServices.layer), { timeo
 const manifestReads: Array<string> = [];
 const CountedFileSystem = MemoryFileSystem.layerWith(
   {
-    "/repo/package.json": JSON.stringify({ name: "@beep/root", workspaces: ["packages/*"] }),
-    "/repo/packages/a/package.json": JSON.stringify({ name: "@beep/a" }),
-    "/repo/packages/b/package.json": JSON.stringify({ name: "@beep/b" }),
+    "/repo/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@beep/root", workspaces: ["packages/*"] }),
+      identity
+    ),
+    "/repo/packages/a/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@beep/a" }),
+      identity
+    ),
+    "/repo/packages/b/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@beep/b" }),
+      identity
+    ),
   },
   {
     // A spy, not a stub: every read is recorded, then answered by the volume.
@@ -231,11 +239,8 @@ it.layer(Layer.mergeAll(CountedFileSystem, Path.layer), { timeout: "30 seconds" 
         const path = yield* Path.Path;
         manifestReads.length = 0;
 
-        deepStrictEqual(rows(yield* discoverWorkspacePackages("/repo", path)), [
-          "@beep/a=packages/a",
-          "@beep/b=packages/b",
-          "@beep/root=.",
-        ]);
+        const discoverWorkspacePackages7 = yield* discoverWorkspacePackages("/repo", path);
+        deepStrictEqual(rows(discoverWorkspacePackages7), ["@beep/a=packages/a", "@beep/b=packages/b", "@beep/root=."]);
         strictEqual(A.filter(manifestReads, (read) => read === "/repo/packages/a/package.json").length, 1);
         strictEqual(A.filter(manifestReads, (read) => read === "/repo/packages/b/package.json").length, 1);
       })
@@ -249,8 +254,14 @@ const denied = (method: string, path: string) =>
   );
 
 const faultedRepository = {
-  "/repo/package.json": JSON.stringify({ name: "@beep/root", workspaces: ["packages/*"] }),
-  "/repo/packages/a/package.json": JSON.stringify({ name: "@beep/a" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@beep/root", workspaces: ["packages/*"] }),
+    identity
+  ),
+  "/repo/packages/a/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@beep/a" }),
+    identity
+  ),
 };
 
 // The member manifest exists but cannot be read.
@@ -304,7 +315,8 @@ it.layer(Layer.mergeAll(VanishingRoot, Path.layer), { timeout: "30 seconds" })(
 const scratchRepository = Effect.fn(function* (prefix: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const scratch = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix }));
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix });
+  const scratch = yield* fs.realPath(madeTempDirectoryScoped);
   return { fs, path, scratch, repoRoot: path.join(scratch, "repo") };
 });
 
@@ -360,10 +372,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("QualityArtifactSupport 
       yield* fs.symlink(path.join(scratch, "outside"), path.join(repoRoot, "packages", "out"));
       yield* fs.symlink(path.join(scratch, "outside"), path.join(repoRoot, "groups", "away"));
 
-      deepStrictEqual(rows(yield* discoverWorkspacePackages(repoRoot, path)), [
-        "@beep/local=groups/local",
-        "@beep/root=.",
-      ]);
+      const discoverWorkspacePackages8 = yield* discoverWorkspacePackages(repoRoot, path);
+      deepStrictEqual(rows(discoverWorkspacePackages8), ["@beep/local=groups/local", "@beep/root=."]);
     })
   );
 

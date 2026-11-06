@@ -66,7 +66,8 @@ Which question survives projection?
 `;
 
 const errorLines = Effect.fnUntraced(function* () {
-  return A.filter(yield* TestConsole.errorLines, P.isString);
+  const errorLines1 = yield* TestConsole.errorLines;
+  return A.filter(errorLines1, P.isString);
 });
 
 const writePacket = Effect.fnUntraced(function* (root: string, slug: string, document: unknown, readmeContent: string) {
@@ -129,7 +130,8 @@ describe("exploration projections", () => {
         ).pipe(Effect.flip);
 
         expect(failure).toBe("intentional fixture failure");
-        expect(yield* fs.exists(root)).toBe(false);
+        const exists2 = yield* fs.exists(root);
+        expect(exists2).toBe(false);
       })
     );
 
@@ -152,7 +154,8 @@ describe("exploration projections", () => {
         yield* writeExplorationAtlas(root);
         const after = yield* fs.stat(readmePath);
 
-        expect(yield* fs.readFileString(readmePath)).toBe(before);
+        const readFileString3 = yield* fs.readFileString(readmePath);
+        expect(readFileString3).toBe(before);
         expect(after.mode & 0o777).toBe(0o744);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -362,8 +365,10 @@ Does this fail closed?
         };
         expect(checkError).toMatchObject(sentinel);
         expect(writeError).toMatchObject(sentinel);
-        expect(yield* errorLines()).toEqual([...refusal, ...refusal]);
-        expect(yield* fs.exists(path.join(root, "explorations", "ATLAS.md"))).toBe(false);
+        const errorLines4 = yield* errorLines();
+        expect(errorLines4).toEqual([...refusal, ...refusal]);
+        const exists5 = yield* fs.exists(path.join(root, "explorations", "ATLAS.md"));
+        expect(exists5).toBe(false);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -393,12 +398,14 @@ Does this fail closed?
           // A stale or authored-into Atlas alone is git-ignored workstation state that may carry no
           // doctrine: the check rewrites it from the projection instead of failing.
           yield* checkExplorationAtlas(root);
-          strictEqual(yield* fs.readFileString(atlasPath), projected);
+          const readFileString6 = yield* fs.readFileString(atlasPath);
+          strictEqual(readFileString6, projected);
           // README drift still refuses; a stale Atlas beside it is named, not rewritten.
           yield* fs.writeFileString(readmePath, authoredReadme);
           yield* fs.writeFileString(atlasPath, staleAtlas);
           const bothDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
-          strictEqual(yield* fs.readFileString(atlasPath), staleAtlas);
+          const readFileString7 = yield* fs.readFileString(atlasPath);
+          strictEqual(readFileString7, staleAtlas);
           yield* writeExplorationAtlas(root);
           yield* checkExplorationAtlas(root);
 
@@ -409,7 +416,8 @@ Does this fail closed?
           });
           expect(readmeDrift).toMatchObject(sentinel(1));
           expect(bothDrift).toMatchObject(sentinel(2));
-          expect(yield* errorLines()).toEqual([
+          const errorLines8 = yield* errorLines();
+          expect(errorLines8).toEqual([
             driftHeader,
             `- ${readmePath}`,
             "[explore:atlas] 2 generated projection(s) drift; run `bun run beep explore atlas --write`:",
@@ -417,7 +425,8 @@ Does this fail closed?
             "- explorations/ATLAS.md",
             "[explore:atlas] explorations/ATLAS.md is a git-ignored local projection: it is rewritten with the README regions and never appears in git diff.",
           ]);
-          expect(A.filter(yield* TestConsole.logLines, P.isString)).toEqual([
+          const logLines9 = yield* TestConsole.logLines;
+          expect(A.filter(logLines9, P.isString)).toEqual([
             "[explore:atlas] refreshed stale git-ignored explorations/ATLAS.md from the D3 projection.",
             "[explore:atlas] OK: D3 Atlas and README projections are current.",
           ]);

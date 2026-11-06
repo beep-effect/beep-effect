@@ -16,6 +16,7 @@
  */
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as Config from "effect/Config";
@@ -26,8 +27,6 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import {
@@ -39,7 +38,7 @@ import {
   readHeavyAdmissionEvent,
   renderHeavyAdmissionSummary,
 } from "./HeavyAdmission.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type { Git } from "@beep/git/Git";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -121,18 +120,16 @@ const decodeEventName = S.decodeUnknownEffect(HeavyAdmissionEventName);
  * ```
  *
  * @param input - The resolved flags and environment.
- * @param capture - The command capture to run `git` through; the repo capture by default.
  * @returns The decided admission after printing it.
  * @category use-cases
  * @since 0.0.0
  */
 export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
-  input: CiAdmissionInput,
-  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+  input: CiAdmissionInput
 ): Effect.fn.Return<
   HeavyAdmission,
   CiCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner | ActionOutputs
+  FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner | Git | ActionOutputs
 > {
   const rawEventName = yield* Effect.fromOption(input.eventName, () =>
     CiCommandError.make({ message: "ci admission needs an event name: set GITHUB_EVENT_NAME or pass --event-name." })
@@ -141,8 +138,7 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
     CiCommandError.mapError(`ci admission does not decide "${rawEventName}" events (pull_request, push, merge_group).`)
   );
   const event = yield* readHeavyAdmissionEvent(
-    HeavyAdmissionReadInput.make({ eventName, eventPath: input.eventPath, base: input.base, cwd: input.cwd }),
-    capture
+    HeavyAdmissionReadInput.make({ eventName, eventPath: input.eventPath, base: input.base, cwd: input.cwd })
   );
   const admission = decideHeavyAdmission(event);
   yield* input.json
@@ -247,7 +243,7 @@ export const ciAdmissionCommand = Command.make(
   (flags) =>
     pipe(
       resolveCiAdmissionInput(flags),
-      Effect.flatMap((input) => runCiAdmission(input)),
+      Effect.flatMap(runCiAdmission),
       Effect.catchTag("CiCommandError", reportCiCommandError)
     )
 ).pipe(

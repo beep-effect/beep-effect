@@ -9,6 +9,15 @@ digests while retaining the originals.
 
 ## Next action
 
+Read the [2026-11-05 workstation consolidation handoff](history/2026-11-05-workstation-consolidation-handoff.md)
+before resuming. It records verified encrypted recovery, applied exact-copy
+retirement, changed legacy-path behavior, retired temporary backup inputs and
+an independent native extraction/publication job still in progress. Refresh its
+private receipts; do not replay sealed families or treat backup/native extraction
+as this packet's P2 acceptance. Lifecycle remains `active`.
+
+### Retained 2026-10-14 recovery stop
+
 Recovery ordinal 5 sealed failure with TikaSecondPassFailure (exit 1,
 empty output, no truncation), retained as unsupported recovery evidence;
 never a third attempt. Main integration imports JSDoc-only Corpus source
@@ -40,6 +49,11 @@ ingestion v2, enrichment v2, and practice-kg bundle v2 remain gated MAP
 re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
+
+The [workstation consolidation handoff](history/2026-11-05-workstation-consolidation-handoff.md)
+adds later operational context. The dated entries below retain their original
+outcomes and are not live job status.
+
 
 2026-10-14 reboot resume: recovery ordinal 5 sealed failure, exit one;
 TikaSecondPassFailure (empty stdout, no truncation), unsupported recovery

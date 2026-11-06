@@ -28,6 +28,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
@@ -75,7 +76,6 @@ import {
   scanProcessAttachments,
   sessionRootOf,
 } from "../../internal/repo-run/index.ts";
-import { PosInt } from "../../internal/schema/PosInt.ts";
 import { isRetainedCheckoutResidueName } from "./internal/ResidueReap.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
@@ -1141,12 +1141,13 @@ const describeMaterialTree = Effect.fn("WorktreeRemovalService.describeMaterialT
   });
   const top = yield* describe("");
   const relatives = top.isDirectory
-    ? A.sort(
-        yield* fs.readDirectory(root, { recursive: true }).pipe(materialError(step, "Could not list the entry.", root)),
-        Str.Order
+    ? yield* Effect.map(
+        fs.readDirectory(root, { recursive: true }).pipe(materialError(step, "Could not list the entry.", root)),
+        (value) => A.sort(value, Str.Order)
       )
     : A.empty<string>();
-  const nodes = A.prepend(yield* Effect.forEach(relatives, describe), top);
+  const forEach1 = yield* Effect.forEach(relatives, describe);
+  const nodes = A.prepend(forEach1, top);
   const digest = yield* decodeSha256HexFromBytes(
     textEncoder.encode(
       A.join(
@@ -1530,7 +1531,8 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
   }).pipe(
     Effect.catchCause(
       Effect.fnUntraced(function* (cause) {
-        const restored = yield* Effect.forEach(yield* Ref.get(rollback), Effect.exit);
+        const got = yield* Ref.get(rollback);
+        const restored = yield* Effect.forEach(got, Effect.exit);
         const cleanup = [
           fs
             .remove(plan.manifestPath, { force: true })
@@ -1954,7 +1956,8 @@ const pidsOutsideInvokerSession = Effect.fnUntraced(function* (
   const root = yield* invokerSessionRoot();
   if (root.rule === "chain-top") {
     const table = yield* ProcessTable;
-    const chain = A.takeWhile(yield* processLineage(table.self), (status) => status.pid !== root.pid);
+    const processLineage2 = yield* processLineage(table.self);
+    const chain = A.takeWhile(processLineage2, (status) => status.pid !== root.pid);
     const ancestry = HashSet.fromIterable(
       A.prepend(
         A.map(chain, (status) => status.pid),
@@ -2015,7 +2018,8 @@ const quietShellCount = Effect.fnUntraced(function* (
     return O.none();
   }
   const table = yield* ProcessTable;
-  const count = O.flatMap(yield* table.status(pid), (status) => status.contextSwitches);
+  const status3 = yield* table.status(pid);
+  const count = O.flatMap(status3, (status) => status.contextSwitches);
   return O.filter(count, (now) =>
     O.match(earlier, {
       onNone: () => true,
@@ -2185,7 +2189,8 @@ const scanFence = Effect.fnUntraced(function* (
   if (O.isSome(earlier)) {
     const table = yield* ProcessTable;
     for (const [pid, before] of HashMap.toEntries(earlier.value)) {
-      const now = O.flatMap(yield* table.status(pid), (status) => status.contextSwitches);
+      const status4 = yield* table.status(pid);
+      const now = O.flatMap(status4, (status) => status.contextSwitches);
       if (!O.exists(now, (count) => count === before)) {
         return yield* WorktreeCommandError.make({
           message: `Refusing to retire ${request.targetPath}: an initially exempted desktop Terminal shell changed or departed during capture, so the archive cannot be proven complete.`,
@@ -2193,11 +2198,8 @@ const scanFence = Effect.fnUntraced(function* (
       }
     }
   }
-  const holders = yield* setAsideIdleTerminalShells(
-    request,
-    yield* holdersOutsideInvoker(request, scan.value),
-    earlier
-  );
+  const holdersOutsideInvoker5 = yield* holdersOutsideInvoker(request, scan.value);
+  const holders = yield* setAsideIdleTerminalShells(request, holdersOutsideInvoker5, earlier);
   const standings = yield* sortHolders(holders.blocking);
   if (A.isReadonlyArrayNonEmpty(standings.holding)) {
     const described = yield* describeAttachedProcesses(standings.holding);
@@ -2328,7 +2330,8 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // directory as cwd or via open descriptors follow the inode into the fenced copy.
   // The fenced copy is captured only once no such holder remains (below), and its
   // quiescence is re-verified after capture before the destructive removal.
-  const stamp = DateTime.toEpochMillis(yield* DateTime.now);
+  const now6 = yield* DateTime.now;
+  const stamp = DateTime.toEpochMillis(now6);
   const retirePath = `${request.targetPath}.retiring-${stamp}`;
   yield* validateRemovalRequest(request);
   yield* fs
@@ -2386,15 +2389,10 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // the shared object store intact, and the branch ref falls only to this
   // compare-and-swap on the archived head.
   const branchDeleted = yield* deleteArchivedBranch(request, head);
-  return makeRemovalReceipt(
-    request,
-    reason,
-    manifest,
-    branchDeleted,
-    O.some(unpushedInspection),
-    A.sort(A.fromIterable(HashMap.keys(reQuiescent.success.quietShells)), N.Order),
-    yield* nameInotifyWatchers(reQuiescent.success.watchers)
-  );
+  const argument1 = O.some(unpushedInspection);
+  const argument2 = A.sort(A.fromIterable(HashMap.keys(reQuiescent.success.quietShells)), N.Order);
+  const nameInotifyWatchers1 = yield* nameInotifyWatchers(reQuiescent.success.watchers);
+  return makeRemovalReceipt(request, reason, manifest, branchDeleted, argument1, argument2, nameInotifyWatchers1);
 });
 
 const removeImpl = Effect.fn("WorktreeRemovalService.remove")(function* (
@@ -2447,11 +2445,12 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
   function* (checkout: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    if (!(yield* fs.exists(path.join(checkout, "scripts", "regenerate-merge-driver.sh"))))
+    if (!(yield* fs.exists(path.join(checkout, "scripts", "regenerate-merge-driver.sh")))) {
       return yield* WorktreeCommandError.make({
         message: "Projection merge-driver adapter is missing.",
         cause: undefined,
       });
+    }
     for (const [key, value] of R.toEntries({
       name: "Regenerate pure repository projections",
       driver: "bash scripts/regenerate-merge-driver.sh %O %A %B %P",

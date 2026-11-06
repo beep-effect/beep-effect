@@ -181,7 +181,8 @@ export const writeProjectFile = Effect.fn(function* (relativePath: string, conte
 
 export const readProjectFile = Effect.fn(function* (relativePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readFileString(yield* projectFilePath(relativePath));
+  const projectFilePath1 = yield* projectFilePath(relativePath);
+  return yield* fs.readFileString(projectFilePath1);
 });
 
 export const writeDefaultTsconfig = writeProjectFile(

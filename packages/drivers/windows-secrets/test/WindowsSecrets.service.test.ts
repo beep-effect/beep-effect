@@ -47,7 +47,8 @@ it.layer(WindowsSecretStore.layerMemory, { timeout: "10 seconds" })("WindowsSecr
   it.effect("returns none for a missing credential", () =>
     Effect.gen(function* () {
       const store = yield* WindowsSecretStore;
-      assertNone(yield* store.get(SecretTarget.make("beep/test/missing")));
+      const got = yield* store.get(SecretTarget.make("beep/test/missing"));
+      assertNone(got);
     })
   );
 
@@ -59,8 +60,10 @@ it.layer(WindowsSecretStore.layerMemory, { timeout: "10 seconds" })("WindowsSecr
       yield* store.set(target, Redacted.make("first-secret"));
       yield* store.set(otherTarget, Redacted.make("other-secret"));
       yield* store.set(target, Redacted.make("second-secret"));
-      assertSome(O.map(yield* store.get(target), Redacted.value), "second-secret");
-      assertSome(O.map(yield* store.get(otherTarget), Redacted.value), "other-secret");
+      const got1 = yield* store.get(target);
+      assertSome(O.map(got1, Redacted.value), "second-secret");
+      const got2 = yield* store.get(otherTarget);
+      assertSome(O.map(got2, Redacted.value), "other-secret");
     })
   );
 
@@ -71,7 +74,8 @@ it.layer(WindowsSecretStore.layerMemory, { timeout: "10 seconds" })("WindowsSecr
       yield* store.set(target, Redacted.make("secret"));
       yield* store.remove(target);
       yield* store.remove(target);
-      assertNone(yield* store.get(target));
+      const got3 = yield* store.get(target);
+      assertNone(got3);
     })
   );
 
@@ -81,7 +85,8 @@ it.layer(WindowsSecretStore.layerMemory, { timeout: "10 seconds" })("WindowsSecr
       const target = SecretTarget.make("beep/test/at-cap");
       const value = Str.repeat(CredentialBlobMaxBytes / 2)("x");
       yield* store.set(target, Redacted.make(value));
-      assertSome(O.map(yield* store.get(target), Redacted.value), value);
+      const got4 = yield* store.get(target);
+      assertSome(O.map(got4, Redacted.value), value);
     })
   );
 
@@ -98,7 +103,8 @@ it.layer(WindowsSecretStore.layerMemory, { timeout: "10 seconds" })("WindowsSecr
         expect(error.target).toBe(target);
       }
       expect(pipe(error.message, Str.includes("yyyy"))).toBe(false);
-      assertNone(yield* store.get(target));
+      const got5 = yield* store.get(target);
+      assertNone(got5);
     })
   );
 
@@ -106,7 +112,8 @@ it.layer(WindowsSecretStore.layerMemory, { timeout: "10 seconds" })("WindowsSecr
     Effect.gen(function* () {
       const store = yield* WindowsSecretStore;
       const input = new Uint8Array([1, 2, 3, 250]);
-      const restored = yield* store.unprotect(yield* store.protect(input));
+      const protect6 = yield* store.protect(input);
+      const restored = yield* store.unprotect(protect6);
       expect(restored).toEqual(input);
       expect(restored).not.toBe(input);
     })
@@ -123,7 +130,8 @@ describe("WindowsSecretStore layers", () => {
       const first = yield* buildStore(WindowsSecretStore.layerMemory);
       yield* first.set(target, Redacted.make("secret"));
       const second = yield* buildStore(WindowsSecretStore.layerMemory);
-      assertNone(yield* second.get(target));
+      const got7 = yield* second.get(target);
+      assertNone(got7);
     })
   );
 
@@ -131,7 +139,9 @@ describe("WindowsSecretStore layers", () => {
     Effect.gen(function* () {
       const error = yield* WindowsSecretStore.layerWindows.pipe(buildStore, Effect.flip);
       expect(error).toBeInstanceOf(SecretStoreUnsupported);
-      expect(error.platform).toBe(yield* HostProcessPlatform);
+      const expectation = expect(error.platform);
+      const HostProcessPlatform1 = yield* HostProcessPlatform;
+      expectation.toBe(HostProcessPlatform1);
     }).pipe(Effect.provideService(HostProcessPlatform, "linux"))
   );
 });

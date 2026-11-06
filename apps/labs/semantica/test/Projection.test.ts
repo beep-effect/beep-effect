@@ -245,7 +245,8 @@ describe("C1 embedding cache", () => {
         Embedder.pipe(Effect.flatMap((service) => service.embed([input, miss])))
       );
 
-      expect(yield* Ref.get(providerCalls)).toBe(1);
+      const got = yield* Ref.get(providerCalls);
+      expect(got).toBe(1);
       expect(liveBatch.vectors).toHaveLength(1);
       expect(liveBatch.degraded).toHaveLength(0);
       expect(replayBatch.vectors).toEqual(liveBatch.vectors);

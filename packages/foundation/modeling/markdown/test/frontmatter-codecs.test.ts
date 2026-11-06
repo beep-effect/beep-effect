@@ -465,10 +465,12 @@ describe("frontmatter codecs", () => {
         Effect.gen(function* () {
           for (const codec of [YamlFrontmatter, TomlFrontmatter, JsonFrontmatter]) {
             const body = codec.encodeResult(value);
-            assert.deepStrictEqual(yield* Effect.result(codec.encode(value)), body);
+            const result1 = yield* Effect.result(codec.encode(value));
+            assert.deepStrictEqual(result1, body);
             if (Result.isSuccess(body)) {
               const node = capture(codec.format, body.success);
-              assert.deepStrictEqual(yield* Effect.result(codec.decode(node)), codec.decodeResult(node));
+              const result2 = yield* Effect.result(codec.decode(node));
+              assert.deepStrictEqual(result2, codec.decodeResult(node));
             }
           }
         }),

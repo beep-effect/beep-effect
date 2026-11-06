@@ -71,11 +71,12 @@ it.effect("test layers retain every supplied method and result", () =>
         yield* Effect.gen(function* () {
           const service = yield* WorkflowDispatch;
           yield* service.dispatch("ci.yml", "main");
-          assert.strictEqual(yield* service.runStatus(1), run);
-          assert.deepStrictEqual(yield* service.list, [
-            WorkflowInfo.make({ id: 1, name: "CI", path: "ci.yml", state: "active" }),
-          ]);
-          assert.strictEqual(yield* service.dispatchAndWait("ci.yml", "main"), run);
+          const resultStatus = yield* service.runStatus(1);
+          assert.strictEqual(resultStatus, run);
+          const list1 = yield* service.list;
+          assert.deepStrictEqual(list1, [WorkflowInfo.make({ id: 1, name: "CI", path: "ci.yml", state: "active" })]);
+          const dispatchAndWait2 = yield* service.dispatchAndWait("ci.yml", "main");
+          assert.strictEqual(dispatchAndWait2, run);
         }).pipe(Effect.provideContext(context));
       })
     );

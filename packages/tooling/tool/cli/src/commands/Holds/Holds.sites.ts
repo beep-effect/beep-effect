@@ -6,6 +6,8 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { decodeTomlTextWith } from "@beep/repo-cli-kit/schema/TextCodec";
+import { createInMemoryTsMorphProject } from "@beep/repo-cli-kit/tsmorph/ProjectFactory";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -17,8 +19,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
-import { decodeTomlTextWith } from "../../internal/schema/TextCodec.ts";
-import { createInMemoryTsMorphProject } from "../../internal/tsmorph/ProjectFactory.ts";
 import { HoldsError, holdsPlatformError } from "./Holds.errors.ts";
 import { HoldAnchor, HoldSiteSnapshot } from "./Holds.schemas.ts";
 import { holdLedgerDirectory, syncpackHeldListFile } from "./Holds.service.ts";
@@ -156,7 +156,7 @@ export const makeHoldSites = Effect.fn("HoldSites.make")(function* (repoRoot: st
     const exists = yield* fs
       .exists(path.join(repoRoot, relative))
       .pipe(Effect.mapError(holdsPlatformError(`Could not stat ${relative}`)));
-    return exists ? O.some(yield* readText(relative)) : O.none();
+    return exists ? yield* Effect.asSome(readText(relative)) : O.none();
   });
 
   const manifestSites = Effect.fn("HoldSites.manifest")(function* (manifest: string) {

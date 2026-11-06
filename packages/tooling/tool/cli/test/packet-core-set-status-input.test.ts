@@ -51,7 +51,8 @@ const expectInputRejection = Effect.fnUntraced(function* (args: ReadonlyArray<st
   if (Exit.isFailure(exit)) {
     expect(exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode)).toBe(1);
   }
-  const errors = A.map(yield* TestConsole.errorLines, String);
+  const errorLines1 = yield* TestConsole.errorLines;
+  const errors = A.map(errorLines1, String);
   assertTrue(A.some(errors, (line) => Str.startsWith("[goals:set-status]")(line) && Str.includes(fragment)(line)));
 });
 
@@ -77,7 +78,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       "reports a slug with no goal packet directory",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
-        expect(yield* fs.exists("goals/zz-packet-core-coverage-missing")).toBe(false);
+        const exists2 = yield* fs.exists("goals/zz-packet-core-coverage-missing");
+        expect(exists2).toBe(false);
         yield* expectInputRejection(["zz-packet-core-coverage-missing", "active"], 'No goal packet directory "goals/');
       })
     );

@@ -55,7 +55,8 @@ describe("EncryptedCodec", () => {
     Effect.gen(function* () {
       const codec = EncryptedCodec(JsonCodec, key());
       const ciphertext = yield* codec.stringify({ port: 8080 });
-      assert.deepStrictEqual(yield* codec.parse(ciphertext), { port: 8080 });
+      const parsed = yield* codec.parse(ciphertext);
+      assert.deepStrictEqual(parsed, { port: 8080 });
     })
   );
 
@@ -82,8 +83,10 @@ describe("EncryptedCodec", () => {
       // The 12-byte IV prefix differs...
       assert.notStrictEqual(Str.slice(0, 12)(atob(a)), Str.slice(0, 12)(atob(b)));
       // ...and both still decrypt to the same plaintext.
-      assert.deepStrictEqual(yield* codec.parse(a), { port: 1 });
-      assert.deepStrictEqual(yield* codec.parse(b), { port: 1 });
+      const parsed1 = yield* codec.parse(a);
+      assert.deepStrictEqual(parsed1, { port: 1 });
+      const parsed2 = yield* codec.parse(b);
+      assert.deepStrictEqual(parsed2, { port: 1 });
     })
   );
 
@@ -274,7 +277,8 @@ describe("EncryptedCodec", () => {
 
       // The interrupt was not memoized: the codec re-resolves and still works.
       const ciphertext = yield* codec.stringify({ port: 8080 });
-      assert.deepStrictEqual(yield* codec.parse(ciphertext), { port: 8080 });
+      const parsed3 = yield* codec.parse(ciphertext);
+      assert.deepStrictEqual(parsed3, { port: 8080 });
       assert.strictEqual(attempts, 2);
     })
   );
@@ -292,10 +296,12 @@ describe("EncryptedCodec", () => {
       );
       const codec = EncryptedCodec(JsonCodec, flaky);
 
-      assert.instanceOf(yield* Effect.flip(codec.stringify({ a: 1 })), ConfigEncryptionError);
+      const flip4 = yield* Effect.flip(codec.stringify({ a: 1 }));
+      assert.instanceOf(flip4, ConfigEncryptionError);
       // The failure was not cached, so the retry derives a usable key.
       const ciphertext = yield* codec.stringify({ port: 8080 });
-      assert.deepStrictEqual(yield* codec.parse(ciphertext), { port: 8080 });
+      const parsed5 = yield* codec.parse(ciphertext);
+      assert.deepStrictEqual(parsed5, { port: 8080 });
       assert.strictEqual(attempts, 2);
     })
   );

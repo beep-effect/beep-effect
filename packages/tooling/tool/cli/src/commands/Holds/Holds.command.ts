@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -15,8 +17,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as Str from "effect/String";
-import { runGitOutput } from "../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../internal/repo-run/index.ts";
 import { HoldsError } from "./Holds.errors.ts";
 import {
   HoldsProbeInput,
@@ -53,7 +54,10 @@ const scratchRootFor = Effect.fn("Holds.scratchRoot")(function* () {
 
 const headCommitSha = Effect.fn("Holds.headCommitSha")(function* () {
   const root = yield* resolveRoot;
-  return Str.trim(yield* runGitOutput(root, ["rev-parse", "HEAD"], gitAdapter));
+  const git = yield* Git;
+  return yield* git
+    .revParse(root, "HEAD")
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), gitAdapter)));
 });
 
 const layerHoldLedgerLive = Layer.effect(HoldLedger, Effect.flatMap(resolveRoot, makeHoldLedger));

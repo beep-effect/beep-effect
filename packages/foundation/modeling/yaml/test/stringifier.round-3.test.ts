@@ -15,7 +15,8 @@ describe("round-3 stringifier fidelity", () => {
           YamlStringifyOptions.make({ defaultScalarStyle: "block-folded", lineWidth: 12 })
         );
         assert.strictEqual(parse(text), value);
-        assert.strictEqual(yield* Yaml.parse(text), value);
+        const parsed = yield* Yaml.parse(text);
+        assert.strictEqual(parsed, value);
       }
     })
   );
@@ -36,7 +37,9 @@ describe("round-3 stringifier fidelity", () => {
         const doc = yield* YamlDocument.parse(input);
         const text = yield* doc.stringify();
         assert.deepStrictEqual(parse(text), parse(input));
-        assert.deepStrictEqual(yield* Yaml.parse(text), yield* Yaml.parse(input));
+        const parsed1 = yield* Yaml.parse(text);
+        const parsed4 = yield* Yaml.parse(input);
+        assert.deepStrictEqual(parsed1, parsed4);
         assert.deepStrictEqual((yield* YamlDocument.parse(text)).toValue(), doc.toValue());
         assert.include(text, "# inner\n");
         assert.strictEqual(Str.split(text, "# inner").length, 2);
@@ -61,7 +64,9 @@ describe("round-3 stringifier fidelity", () => {
         const doc = yield* YamlDocument.parse(input);
         const text = yield* doc.stringify();
         assert.deepStrictEqual(parse(text), parse(input));
-        assert.deepStrictEqual(yield* Yaml.parse(text), yield* Yaml.parse(input));
+        const parsed2 = yield* Yaml.parse(text);
+        const parsed5 = yield* Yaml.parse(input);
+        assert.deepStrictEqual(parsed2, parsed5);
         assert.deepStrictEqual((yield* YamlDocument.parse(text)).toValue(), doc.toValue());
         if (Str.includes("*a")(input)) assert.include(text, "*a : val");
         if (Str.includes("!!str")(input)) assert.include(text, "!!str : val");
@@ -82,7 +87,8 @@ describe("round-3 stringifier fidelity", () => {
         );
         assert.strictEqual(withNewline, input);
         assert.strictEqual(withoutNewline, Str.slice(0, -1)(input));
-        assert.strictEqual(yield* doc.stringify(YamlStringifyOptions.make({ forceDefaultStyles: true })), input);
+        const stringify3 = yield* doc.stringify(YamlStringifyOptions.make({ forceDefaultStyles: true }));
+        assert.strictEqual(stringify3, input);
         assert.strictEqual(parse(withoutNewline), null);
         assert.strictEqual((yield* YamlDocument.parse(withoutNewline)).hasDocumentEnd, doc.hasDocumentEnd);
       }

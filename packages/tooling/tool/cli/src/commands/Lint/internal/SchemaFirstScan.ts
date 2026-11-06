@@ -5,6 +5,10 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import { todayYmd } from "@beep/repo-cli-kit/cli/Timing";
+import { createRepoTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -18,11 +22,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Struct from "effect/Struct";
 import { Node, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
-import { todayYmd } from "../../../internal/cli/Timing.ts";
 import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.ts";
-import { createRepoTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import {
   isActiveSchemaFirstRuleAdvisory,
   LiteralKitConstAssertionViolation,
@@ -410,10 +410,12 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     if (excluded) continue;
     appendLiteralKitConstAssertionViolations(literalKitConstAssertionViolations, sourceFile, filePath);
     A.appendInPlace(scannedFiles, filePath);
-    A.appendAllInPlace(
-      parityEntries,
-      yield* SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, filePath, owner)
+    const parityEntriesFromSourceFile1 = yield* SchemaFirstDetectors.parityEntriesFromSourceFile(
+      sourceFile,
+      filePath,
+      owner
     );
+    A.appendAllInPlace(parityEntries, parityEntriesFromSourceFile1);
     appendInterfaceEntries(entries, sourceFile, filePath, owner);
     appendTypeAliasEntries(entries, sourceFile, filePath, owner);
     appendCallEntries(entries, sourceFile, filePath, owner);
@@ -756,7 +758,8 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
   yield* SchemaFirstRender.logEnforcedCandidates(findings.enforcedCandidates);
   yield* SchemaFirstRender.logLiteralKitConstAssertionViolations(literalKitConstAssertionViolations);
   yield* SchemaFirstRender.logActiveAdvisories(findings.activeAdvisories);
-  yield* enforceRatchet(yield* SchemaFirstRender.parityRatchetInput(findings.parity, options));
+  const parityRatchetInput2 = yield* SchemaFirstRender.parityRatchetInput(findings.parity, options);
+  yield* enforceRatchet(parityRatchetInput2);
 
   if (schemaFirstLintHasFailures(options, findings, literalKitConstAssertionViolations)) {
     return yield* failWithReportedExit("schema-first: inventory enforcement failed.");

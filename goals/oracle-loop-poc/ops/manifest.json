@@ -6,7 +6,7 @@
     "title": "Oracle Loop POC",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-28",
+    "updated": "2026-11-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/oracle-loop-poc",
@@ -30,6 +30,7 @@
     "CLAUDE.md",
     "goals/oracle-loop-poc/README.md",
     "goals/oracle-loop-poc/SPEC.md",
+    "goals/oracle-loop-poc/QUESTION-BINDING.md",
     "goals/oracle-loop-poc/PLAN.md",
     "goals/oracle-loop-poc/GOAL.md",
     "goals/oracle-loop-poc/research/SOURCES.md"

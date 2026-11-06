@@ -93,7 +93,8 @@ describe("GitCommit", () => {
           ]);
           // Not forced: a branch that moved underneath you is a conflict worth
           // hearing about.
-          assert.deepStrictEqual(yield* Schema.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}"), {
+          const value1 = yield* Schema.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}");
+          assert.deepStrictEqual(value1, {
             sha: "newcommit",
             force: false,
           });
@@ -337,7 +338,8 @@ describe("GitHubRepository", () => {
         Effect.gen(function* () {
           yield* Effect.flatMap(GitHubRepository, (repo) => repo.updateSettings({ allow_auto_merge: false }));
           assert.strictEqual(script.calls[0]?.method, "PATCH");
-          assert.deepStrictEqual(yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), {
+          const value2 = yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
+          assert.deepStrictEqual(value2, {
             allow_auto_merge: false,
           });
         })

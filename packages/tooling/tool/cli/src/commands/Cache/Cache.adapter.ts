@@ -6,6 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -19,8 +21,6 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheAdapterHostEvent, CacheProducerAdapterReceipt } from "./Cache.adapter.schemas.ts";
 import { readCacheDependencyMaterialization } from "./Cache.dependencies.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
@@ -86,6 +86,7 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
       if ((yield* hashCacheExperimentExecutable(executable)) !== backendSha256)
         return yield* CacheCommandError.new("Owned adapter executable differs from its independently approved pin.");
       const dependencies = yield* readCacheDependencyMaterialization(request.sourceRoot, request.pilot.dependencies);
+      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],

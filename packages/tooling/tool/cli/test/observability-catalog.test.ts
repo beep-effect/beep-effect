@@ -351,7 +351,8 @@ layer(serviceLayer, { timeout: "60 seconds" })("InstrumentationCatalog.run", (it
           yield* writeCatalogFixture();
           const first = yield* runCatalog("write");
           expect(first.ok).toBe(true);
-          expect(yield* fs.exists(exampleShard)).toBe(true);
+          const exists1 = yield* fs.exists(exampleShard);
+          expect(exists1).toBe(true);
 
           yield* writeProjectFile(orphanShard, "// orphan\n{}\n");
           yield* writeProjectFile(retiredCatalog, "// retired\n{}\n");
@@ -361,15 +362,18 @@ layer(serviceLayer, { timeout: "60 seconds" })("InstrumentationCatalog.run", (it
             `orphaned ${retiredCatalog}`,
             `orphaned ${orphanShard}`,
           ]);
-          expect(yield* fs.exists(orphanShard)).toBe(true);
+          const exists2 = yield* fs.exists(orphanShard);
+          expect(exists2).toBe(true);
 
           const written = yield* runCatalog("write");
           expect(A.map(written.drifted, (file) => `${file.status} ${file.path}`)).toEqual([
             `removed ${retiredCatalog}`,
             `removed ${orphanShard}`,
           ]);
-          expect(yield* fs.exists(orphanShard)).toBe(false);
-          expect(yield* fs.exists(retiredCatalog)).toBe(false);
+          const exists3 = yield* fs.exists(orphanShard);
+          expect(exists3).toBe(false);
+          const exists4 = yield* fs.exists(retiredCatalog);
+          expect(exists4).toBe(false);
 
           const clean = yield* runCatalog("check");
           expect(clean.ok).toBe(true);

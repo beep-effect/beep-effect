@@ -180,7 +180,8 @@ describe("YamlDocument", () => {
         assert.isAbove(foldedLines.length, 1);
         for (const line of foldedLines) assert.isAtMost(line.length, 40);
         // The fold is semantically transparent: both spellings re-parse alike.
-        assert.deepStrictEqual(yield* Yaml.parse(viaValuePath), doc.toValue());
+        const parsed1 = yield* Yaml.parse(viaValuePath);
+        assert.deepStrictEqual(parsed1, doc.toValue());
       })
     );
   });

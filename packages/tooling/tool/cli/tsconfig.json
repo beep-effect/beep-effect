@@ -111,6 +111,9 @@
       "path": "../../../foundation/modeling/jsonc/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/jsonl/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/lockfiles/tsconfig.json"
     },
     {
@@ -124,6 +127,12 @@
     },
     {
       "path": "../../../foundation/modeling/package-json/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/provenance/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/schema/tsconfig.json"
@@ -157,6 +166,9 @@
     },
     {
       "path": "../../library/qa-capture/tsconfig.json"
+    },
+    {
+      "path": "../../library/repo-cli-kit/tsconfig.json"
     },
     {
       "path": "../../library/repo-tsconfig/tsconfig.json"

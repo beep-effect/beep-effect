@@ -16,7 +16,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(NamedColor)(value);
       const decoded = yield* S.decodeEffect(NamedColor)(encoded);
       assertTrue(S.toEquivalence(NamedColor)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(NamedColor)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(NamedColor)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -29,7 +30,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(Style)(value);
       const decoded = yield* S.decodeEffect(Style)(encoded);
       assertTrue(S.toEquivalence(Style)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(Style)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(Style)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );
@@ -42,7 +44,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(TokenName)(value);
       const decoded = yield* S.decodeEffect(TokenName)(encoded);
       assertTrue(S.toEquivalence(TokenName)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(TokenName)(decoded), encoded);
+      const value3 = yield* S.encodeEffect(TokenName)(decoded);
+      assert.deepStrictEqual(value3, encoded);
     }),
   runs
 );

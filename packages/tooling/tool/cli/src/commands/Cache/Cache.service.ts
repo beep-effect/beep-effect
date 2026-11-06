@@ -5,6 +5,10 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { readContainedFileBytesNoFollow, writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { TurboCacheEnvName } from "@beep/repo-cli-kit/cli/TurboCache";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import {
   auditCachePolicy,
   CacheActivationProjection,
@@ -39,10 +43,6 @@ import * as Rec from "effect/Record";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { TurboCacheEnvName } from "../../internal/cli/TurboCache.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
-import { PosInt } from "../../internal/schema/PosInt.ts";
 import { CacheProducerAcceptanceReference } from "./Cache.acceptance.schemas.ts";
 import { loadCacheProducerStoreConfiguration, readCacheProducerAcceptance } from "./Cache.acceptance.store.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
@@ -250,10 +250,8 @@ const audit = Effect.fn("CacheQualification.audit")(function* (root: string) {
       store.entries,
       Effect.fn("CacheQualification.validateActiveEntry")(function* (entry) {
         if (!CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(entry.status)) return;
-        yield* validateLiveContract(
-          entry.status.contract,
-          yield* contractIdentity(root, entry.status.contract, census, toolchain)
-        );
+        const contractIdentity1 = yield* contractIdentity(root, entry.status.contract, census, toolchain);
+        yield* validateLiveContract(entry.status.contract, contractIdentity1);
       }),
       { discard: true }
     );
@@ -342,6 +340,8 @@ const contractIdentity = Effect.fn("CacheQualification.contractIdentity")(functi
       return yield* CacheCommandError.new("Signed execution preview differs from the live source and activation.");
   });
   yield* verifySignedActivation();
+  const readRequired2 = yield* readRequired(root, "turbo.json");
+  const verifyReference6 = yield* verifyReference(root, execution.signedRootConfiguration);
   return yield* projectCacheSignedActivation(
     execution.sourceKey,
     census,
@@ -349,8 +349,8 @@ const contractIdentity = Effect.fn("CacheQualification.contractIdentity")(functi
     activation,
     before,
     after,
-    yield* readRequired(root, "turbo.json"),
-    yield* verifyReference(root, execution.signedRootConfiguration)
+    readRequired2,
+    verifyReference6
   );
 });
 
@@ -393,7 +393,9 @@ const fingerprint = Effect.fn("CacheQualification.fingerprint")(function* (root:
     profile: baseline.profile,
     epoch: baseline.epoch,
   });
-  return yield* fingerprintCacheComputation(key, yield* collectCacheCensus(root), yield* collectCacheToolchain(root));
+  const collectCacheCensus3 = yield* collectCacheCensus(root);
+  const collectCacheToolchain7 = yield* collectCacheToolchain(root);
+  return yield* fingerprintCacheComputation(key, collectCacheCensus3, collectCacheToolchain7);
 });
 
 // The directory is a cross-process mutex. Never steal a stale or live lock;
@@ -562,10 +564,9 @@ const validateAdoption = Effect.fn("CacheQualification.validateAdoption")(functi
   const { key, status } = request.entry;
   if (CacheQualificationStatus.isAnyOf(["candidate", "shadow", "qualified"])(status)) {
     const census = yield* collectCacheCensus(root);
-    yield* validateLiveContract(
-      status.contract,
-      yield* contractIdentity(root, status.contract, census, yield* collectCacheToolchain(root))
-    );
+    const collectCacheToolchain8 = yield* collectCacheToolchain(root);
+    const contractIdentity4 = yield* contractIdentity(root, status.contract, census, collectCacheToolchain8);
+    yield* validateLiveContract(status.contract, contractIdentity4);
     const current = projectCensus(census);
     if (!A.some(current.nodes, (node) => node.computation === key.computation))
       return yield* CacheCommandError.new("A missing script cannot enter qualification.");
@@ -699,7 +700,8 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
         if (!(yield* fs.exists(path.join(root, "turbo.json"))))
           return yield* CacheCommandError.new("Not a beep checkout: turbo.json is missing.");
         const envFile = path.join(root, ".env");
-        const original = O.getOrElse(yield* readOptional(root, envFile), () => "");
+        const readOptional5 = yield* readOptional(root, envFile);
+        const original = O.getOrElse(readOptional5, () => "");
         let lines = Str.split(original, "\n");
         let reports: ReadonlyArray<string> = A.empty();
         const values: Readonly<Record<TurboCacheEnvName, string>> = {

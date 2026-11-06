@@ -1,38 +1,40 @@
 {
   "schemaVersion": "cache-adoption-client-pin-observation/v1",
-  "authority": "Native binary identity observation; no runtime qualification granted.",
+  "authority": "Fresh published stable/canary native identity and documentation observation only; no feature semantics, task qualification, repository upgrade or runtime activation.",
   "stable": {
     "packageVersion": "2.11.10",
     "reportedVersion": "2.11.10",
     "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
   },
   "canary": {
-    "packageVersion": "2.11.9-canary.1",
-    "reportedVersion": "2.11.9-canary.1",
-    "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
-    "registryMetadata": "https://registry.npmjs.org/@turbo%2flinux-64/2.11.9-canary.1",
-    "tarball": "https://registry.npmjs.org/@turbo/linux-64/-/linux-64-2.11.9-canary.1.tgz",
-    "integrity": "sha512-/oz28k9JCTqzztuzD4oiyOPN692rLEoKePm5+n2zjyivej3ytEvQWL5M6qgSsw0f1Jx2pLJ7ucu+s4uC2C1OvQ==",
+    "packageVersion": "2.11.11-canary.1",
+    "reportedVersion": "2.11.11-canary.1",
+    "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2",
+    "registryMetadata": "https://registry.npmjs.org/@turbo%2flinux-64/2.11.11-canary.1",
+    "tarball": "https://registry.npmjs.org/@turbo/linux-64/-/linux-64-2.11.11-canary.1.tgz",
+    "integrity": "sha512-roWVD6C1Q90g3XPkhc/WpUCw1BtSQoZcBxAwwqJz7tH/me4b/zhomlkV+o/I0Mn4CSiNN34jnq3FGXmggQjykw==",
     "integrityVerified": true,
-    "packageAndReportedVersionMatch": true
+    "archiveMember": "turbo-linux-x64/bin/turbo",
+    "packageAndReportedVersionMatch": true,
+    "archiveBytes": 19665216
   },
   "sameBinaryBytes": false,
   "registryTagsObserved": {
-    "latest": "2.11.10",
-    "canary": "2.11.9-canary.1"
+    "next": "0.9.0-next.22",
+    "turbo-2.3": "2.3.7",
+    "canary": "2.11.11-canary.1",
+    "latest": "2.11.10"
   },
   "qualificationGate": "Binary pins established; runtime qualification still required.",
   "clientSelection": "pinned-native-skip-infer",
-  "delegationControl": {
-    "withoutSkipInferFromRepository": "2.11.10",
-    "withSkipInferFromRepository": "2.11.9-canary.1",
-    "outsideRepository": "2.11.9-canary.1",
-    "existingPilotOwner": "Cache.pilot.ts already adds --skip-infer"
-  },
   "canaryDocs": {
-    "registryMetadata": "https://registry.npmjs.org/turbo/2.11.9-canary.1",
-    "integrity": "sha512-SzpfiYzUudfnyOe1kbdQDLJeLNRs9hXVeZJYpXDhp+eGaB6vTUWHVmPJ858FVxz7PVOY/CEb4HCu+jU16EHSHQ==",
+    "observedAt": "2026-11-03T09:51:07.914386+00:00",
+    "version": "2.11.11-canary.1",
+    "metadataUrl": "https://registry.npmjs.org/turbo/2.11.11-canary.1",
+    "tarball": "https://registry.npmjs.org/turbo/-/turbo-2.11.11-canary.1.tgz",
+    "integrity": "sha512-jYlRIAXmTymrB9pB0X1Q/zlXbUL5IWO0sOBv7paWK3YYPOYP8Xyvw9HbSlcYO4qAMWB8r8kyFdH9qMknKA4GZw==",
     "integrityVerified": true,
+    "archiveBytes": 191391,
     "extractedPages": [
       "crafting-your-repository/caching.mdx",
       "crafting-your-repository/configuring-tasks.mdx",
@@ -44,6 +46,65 @@
       "reference/query.mdx",
       "reference/watch.mdx",
       "core-concepts/remote-caching.mdx"
+    ],
+    "sourceFiles": [
+      {
+        "path": "schema.json",
+        "sha256": "bdd984dd8575fc1dae811fb453637c472d13aff403a5c1486e16233756f48b71"
+      },
+      {
+        "path": "package.json",
+        "sha256": "04b0f7058f55ad3a9e13e17030e1b1b4476bca66dffed041a19de9774723019d"
+      },
+      {
+        "path": "docs/crafting-your-repository/caching.mdx",
+        "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e"
+      },
+      {
+        "path": "docs/crafting-your-repository/configuring-tasks.mdx",
+        "sha256": "090b1851ddd0d330ffe0d72850d4fa3fe6bcb71d7531bb79042472763596bebc"
+      },
+      {
+        "path": "docs/crafting-your-repository/using-environment-variables.mdx",
+        "sha256": "49ce6d27b0a6d30731a94c8cac3c683a797e6e08a8c3f0129cf9063542b3b959"
+      },
+      {
+        "path": "docs/reference/configuration.mdx",
+        "sha256": "83931582f49ac868d73981610f792452fc662a2e4cd128f546e94f79651b348a"
+      },
+      {
+        "path": "docs/reference/run.mdx",
+        "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731"
+      },
+      {
+        "path": "docs/reference/prune.mdx",
+        "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a"
+      },
+      {
+        "path": "docs/reference/boundaries.mdx",
+        "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380"
+      },
+      {
+        "path": "docs/reference/query.mdx",
+        "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65"
+      },
+      {
+        "path": "docs/reference/watch.mdx",
+        "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84"
+      },
+      {
+        "path": "docs/core-concepts/remote-caching.mdx",
+        "sha256": "96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052"
+      }
     ]
+  },
+  "observedAt": "2026-11-03T09:51:41.099233+00:00",
+  "historicalPins": {
+    "path": "client-pins-before-current-pair-refresh-2026-11-03.json",
+    "sha256": "daf3cd0b53edf45e209a7be2f8eea93981a56d133d95ed81b7f929ed82683ae3"
+  },
+  "historicalDelegationControl": {
+    "pins": "client-pins-before-current-pair-refresh-2026-11-03.json",
+    "authority": "Older delegation observation stays bound to its original versions; no replay inferred."
   }
 }

@@ -14,13 +14,14 @@
  * @since 0.0.0
  */
 import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ChangeDetector } from "@beep/repo-workspaces/ChangeDetector";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -30,7 +31,9 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
+import { runRepoCommandCaptureRaw } from "../../internal/repo-run/index.ts";
+import { patientGit } from "../../internal/repo-run/PatientGit.ts";
 import { sha256Hex } from "../Goals/PacketCore/PacketDigest.ts";
 import { githubCheckPrePushLanes } from "../Quality/internal/GithubChecks.ts";
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "../Yeet/internal/WaveOrder.ts";
@@ -51,9 +54,11 @@ import {
 import { ChangeClassifier, ClassifyInput, RouteCensusReader, VerificationRoute } from "./Route.service.ts";
 import { requiredLanes, routeFootprintCanonicalJson, skippedLanes } from "./RouteFootprints.ts";
 import type { GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
+import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitKitError } from "../../internal/repo-run/GitExec.ts";
 import type { GithubCheckLaneSpec } from "../Quality/Quality.schemas.ts";
 import type { WaveOrderShape } from "../Yeet/internal/WaveOrder.ts";
 import type { ChangeSet, HostedJob, HostedRun } from "./Route.schemas.ts";
@@ -557,7 +562,8 @@ export const ensureRouteHeads = (
       return A.empty<string>();
     }
     // Every head already local means no network at all: a local report runs offline.
-    if (A.isReadonlyArrayEmpty(yield* git.missingCommits(shas))) {
+    const missingCommits1 = yield* git.missingCommits(shas);
+    if (A.isReadonlyArrayEmpty(missingCommits1)) {
       return A.empty<string>();
     }
     yield* git.fetchPullHeads;
@@ -618,6 +624,9 @@ export class RouteGit extends Context.Service<RouteGit, RouteGitShape>()($I`Rout
 
 // The failed-run wording the route error carries for a `Git` failure: the exit code when git ran,
 // the refusal or unknown-object reason otherwise.
+// Every pull request head, mirrored under `refs/remotes/pull/*` (forced, since a head moves on each push).
+const PULL_HEADS_REFSPEC = "+refs/pull/*/head:refs/remotes/pull/*";
+
 const describeGitFailure = (error: GitCommandError | NotARepositoryError | UnknownRefError): string =>
   Match.valueTags(error, {
     GitCommandError: (failure) =>
@@ -627,15 +636,16 @@ const describeGitFailure = (error: GitCommandError | NotARepositoryError | Unkno
   });
 
 /**
- * The production {@link RouteGitShape} over the repo command capture.
+ * The production {@link RouteGitShape} over `@beep/git`, the batch check over the repo command capture.
  *
  * **Details**
  *
  * `ensureHeads` is {@link ensureRouteHeads} over git: one quiet `git fetch` of
  * every `refs/pull/<n>/head` into `refs/remotes/pull/<n>` (GitHub keeps those
  * refs after a branch is deleted), then `git cat-file --batch-check` over the
- * heads, then `git fetch origin <sha>` for each head still missing (a head a
- * force-push replaced has no pull ref but stays fetchable by sha). `mergeBase`
+ * heads, then `git fetch --no-write-fetch-head origin <sha>` for each head still
+ * missing (a head a force-push replaced has no pull ref but stays fetchable by
+ * sha). Both fetches run on the patient (15-minute) `Git` instance. `mergeBase`
  * reads stdout only, so a git warning on stderr never becomes part of the sha.
  *
  * **Example** (Build the git reads for a checkout)
@@ -663,13 +673,23 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
     Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >();
   const kit = yield* Git;
-  const spawnFailed = (args: ReadonlyArray<string>) =>
-    RouteError.mapError("git", `Failed to spawn git ${A.join(args, " ")}.`);
-  const git = (args: ReadonlyArray<string>) =>
-    runRepoCommandCapture("git", args, repoRoot).pipe(Effect.provide(context), Effect.mapError(spawnFailed(args)));
-  const gitStdout = (args: ReadonlyArray<string>) =>
-    runRepoCommandCaptureRaw("git", args, repoRoot).pipe(Effect.provide(context), Effect.mapError(spawnFailed(args)));
-  // The capture cannot feed stdin, so `sh` prints the shas (passed as positional
+  const patient = yield* patientGit;
+  const spawnFailed = (commandLine: string) => RouteError.mapError("git", `Failed to spawn ${commandLine}.`);
+  // A fetch's exit code, or the capture's spawn failure: a kit failure carrying an exit code is that code.
+  const fetchExit =
+    (invocation: GitInvocation) =>
+    <R>(fetch: Effect.Effect<void, GitKitError, R>): Effect.Effect<number, RouteError, R> =>
+      fetch.pipe(
+        Effect.as(0),
+        Effect.catch((error) =>
+          adaptGitKitError<Effect.Effect<number, RouteError>>(error, invocation, {
+            onSpawnFailure: (commandLine) => flow(spawnFailed(commandLine), Effect.fail),
+            onNonZeroExit: ({ exitCode }) => Effect.succeed(exitCode),
+            onTruncated: O.none(),
+          })
+        )
+      );
+  // KEEP (D-03): single-consumer plumbing; the capture cannot feed stdin, so `sh` prints the shas (passed as positional
   // arguments, never interpolated) into `git cat-file --batch-check`.
   const batchCheckMissing = Effect.fnUntraced(function* (shas: ReadonlyArray<string>) {
     const args = ["-c", 'printf "%s\\n" "$@" | git cat-file --batch-check', "route-batch-check", ...shas];
@@ -686,12 +706,16 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
   return RouteGit.of({
     repoRoot: Effect.succeed(repoRoot),
     mergeBase: Effect.fn("RouteGit.mergeBase")(function* (head: string) {
-      const result = yield* gitStdout(["merge-base", "origin/main", head]);
-      const sha = Str.trim(result.output);
-      if (result.exitCode !== 0 || Str.isEmpty(sha)) {
-        return yield* RouteError.new("git", `git merge-base origin/main ${head} exited ${result.exitCode}.`);
-      }
-      return sha;
+      return yield* kit.mergeBase(repoRoot, "origin/main", head).pipe(
+        Effect.mapError(
+          adaptGitKitError(GitCommand.mergeBase("origin/main", head), {
+            onSpawnFailure: spawnFailed,
+            onNonZeroExit: ({ exitCode }) =>
+              RouteError.new("git", `git merge-base origin/main ${head} exited ${exitCode}.`),
+            onTruncated: O.none(),
+          })
+        )
+      );
     }),
     isAncestor: Effect.fn("RouteGit.isAncestor")(function* (ancestor: string, descendant: string) {
       return yield* kit
@@ -707,17 +731,23 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
     }),
     ensureHeads: ensureRouteHeads({
       fetchCommit: Effect.fn("RouteGit.fetchCommit")(function* (sha: string) {
-        const result = yield* git(["fetch", "--quiet", "--no-write-fetch-head", "origin", sha]);
-        if (result.exitCode !== 0) {
+        // `FETCH_HEAD` stays untouched for concurrent readers of the clone.
+        const fetch = { ref: sha, noWriteFetchHead: true } as const;
+        const exitCode = yield* patient
+          .fetch(repoRoot, fetch)
+          .pipe(fetchExit(GitCommand.fetch("origin", sha, undefined, false, false, false, fetch)));
+        if (exitCode !== 0) {
           yield* Effect.logWarning("Route head is not fetchable by sha").pipe(
-            Effect.annotateLogs({ "route.head": sha, "git.exitCode": result.exitCode })
+            Effect.annotateLogs({ "route.head": sha, "git.exitCode": exitCode })
           );
         }
       }),
       fetchPullHeads: Effect.gen(function* () {
-        const result = yield* git(["fetch", "--quiet", "origin", "+refs/pull/*/head:refs/remotes/pull/*"]);
-        if (result.exitCode !== 0) {
-          return yield* RouteError.new("git", `git fetch of pull-request heads exited ${result.exitCode}.`);
+        const exitCode = yield* patient
+          .fetch(repoRoot, { ref: PULL_HEADS_REFSPEC })
+          .pipe(fetchExit(GitCommand.fetch("origin", PULL_HEADS_REFSPEC)));
+        if (exitCode !== 0) {
+          return yield* RouteError.new("git", `git fetch of pull-request heads exited ${exitCode}.`);
         }
       }).pipe(Effect.withSpan("RouteGit.fetchPullHeads")),
       missingCommits: Effect.fn("RouteGit.missingCommits")(function* (shas: ReadonlyArray<string>) {
@@ -978,7 +1008,8 @@ export const makeRouteCensusReader: Effect.Effect<
 
   const headEvidence = Effect.fn("RouteCensusReader.headEvidence")(function* (corpus: RouteCorpusLoaded) {
     const heads = pullRequestHeads(corpus.runs);
-    const unresolved = HashSet.fromIterable(yield* git.ensureHeads(A.map(heads, ([headSha]) => headSha)));
+    const ensureHeads2 = yield* git.ensureHeads(A.map(heads, ([headSha]) => headSha));
+    const unresolved = HashSet.fromIterable(ensureHeads2);
     if (HashSet.size(unresolved) > 0) {
       yield* Effect.logWarning("Route heads unresolvable after fetching; routing them as unknown").pipe(
         Effect.annotateLogs({ "route.unresolved": HashSet.size(unresolved) })
@@ -1035,7 +1066,8 @@ export const makeRouteCensusReader: Effect.Effect<
     // Main commits the checkout lacks are fetched by sha; one that stays missing
     // cannot be an ancestor candidate, so its base evidence reads as unknown.
     const mainShas = A.dedupe(A.map(A.sort(mainRuns, NEWEST_FIRST), (run) => run.headSha));
-    const missingMain = HashSet.fromIterable(yield* git.ensureHeads(mainShas));
+    const ensureHeads3 = yield* git.ensureHeads(mainShas);
+    const missingMain = HashSet.fromIterable(ensureHeads3);
     const mainShasNewestFirst = A.filter(mainShas, (sha) => !HashSet.has(missingMain, sha));
     const mainRunsAt = (sha: string): ReadonlyArray<HostedRun> =>
       A.filter(mainRuns, (run) => Str.Equivalence(run.headSha, sha));

@@ -61,7 +61,8 @@ const assertEscapedBlockIndentation = Effect.fn(function* (
       );
       assert.strictEqual(text, `${renderDoubleQuoted(value, forceDefaultStyles)}\n`);
       assert.strictEqual(parse(text), value);
-      assert.strictEqual(yield* Yaml.parse(text), value);
+      const parsed = yield* Yaml.parse(text);
+      assert.strictEqual(parsed, value);
     }
   }
 });
@@ -83,7 +84,8 @@ const assertFlowEscapes = Effect.fn(function* (
       })
     );
     assert.deepStrictEqual(parse(text), input);
-    assert.deepStrictEqual(yield* Yaml.parse(text), input);
+    const parsed1 = yield* Yaml.parse(text);
+    assert.deepStrictEqual(parsed1, input);
   }
   const leaf = YamlScalar.make({ value, style: defaultScalarStyle, offset: 0, length: value.length });
   const sequence = YamlSeq.make({ items: [leaf], style: "flow", offset: 0, length: 1 });
@@ -103,7 +105,8 @@ const assertFlowEscapes = Effect.fn(function* (
       })
     );
     assert.deepStrictEqual(parse(text), node.toValue());
-    assert.deepStrictEqual(yield* Yaml.parse(text), node.toValue());
+    const parsed2 = yield* Yaml.parse(text);
+    assert.deepStrictEqual(parsed2, node.toValue());
   }
 });
 
@@ -285,7 +288,8 @@ describe("scalar rendering fidelity", () => {
               YamlStringifyOptions.make({ defaultScalarStyle, forceDefaultStyles })
             );
             assert.strictEqual(parse(text), value);
-            assert.strictEqual(yield* Yaml.parse(text), value);
+            const parsed3 = yield* Yaml.parse(text);
+            assert.strictEqual(parsed3, value);
           }
         }
       }
@@ -301,7 +305,8 @@ describe("scalar rendering fidelity", () => {
           );
           assert.strictEqual(text, `${renderDoubleQuoted(value, true)}\n`);
           assert.strictEqual(parse(text), value);
-          assert.strictEqual(yield* Yaml.parse(text), value);
+          const parsed4 = yield* Yaml.parse(text);
+          assert.strictEqual(parsed4, value);
         }
       }
     })
@@ -352,12 +357,14 @@ describe("scalar rendering fidelity", () => {
             StringifyOptionsInput.make({ defaultScalarStyle: style, forceDefaultStyles: true })
           );
           assert.deepStrictEqual(parse(text), input);
-          assert.deepStrictEqual(yield* Yaml.parse(text), input);
+          const parsed5 = yield* Yaml.parse(text);
+          assert.deepStrictEqual(parsed5, input);
         }
         for (const node of [sequence, mapping]) {
           const text = stringifyDocument(document(node), StringifyOptionsInput.make({ forceDefaultStyles: true }));
           assert.deepStrictEqual(parse(text), node.toValue());
-          assert.deepStrictEqual(yield* Yaml.parse(text), node.toValue());
+          const parsed6 = yield* Yaml.parse(text);
+          assert.deepStrictEqual(parsed6, node.toValue());
         }
       }
     })
@@ -390,11 +397,13 @@ describe("scalar rendering fidelity", () => {
             );
             assert.strictEqual(text, `${renderDoubleQuoted(value, forceDefaultStyles)}\n`);
             assert.strictEqual(parse(text), value);
-            assert.strictEqual(yield* Yaml.parse(text), value);
+            const parsed7 = yield* Yaml.parse(text);
+            assert.strictEqual(parsed7, value);
             const node = YamlScalar.make({ value, style: defaultScalarStyle, offset: 0, length: value.length });
             const astText = stringifyDocument(document(node), StringifyOptionsInput.make({ forceDefaultStyles }));
             assert.strictEqual(astText, text);
-            assert.strictEqual(yield* Yaml.parse(astText), value);
+            const parsed8 = yield* Yaml.parse(astText);
+            assert.strictEqual(parsed8, value);
           }
         }
       }

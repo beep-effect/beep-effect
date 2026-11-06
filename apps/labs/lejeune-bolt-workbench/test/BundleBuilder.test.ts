@@ -115,9 +115,12 @@ describe("LeJeune transactional bundle builder", () => {
         );
 
         expect(error.stage).toBe("preflight");
-        pipe(yield* fs.exists(bundleRoot), assertFalse);
-        expect(yield* fs.readFileString(sentinel)).toBe("retain-me\n");
-        expect(yield* fs.readDirectory(mutableRoot)).toEqual(["sentinel.txt"]);
+        const exists1 = yield* fs.exists(bundleRoot);
+        pipe(exists1, assertFalse);
+        const readFileString2 = yield* fs.readFileString(sentinel);
+        expect(readFileString2).toBe("retain-me\n");
+        const readDirectory3 = yield* fs.readDirectory(mutableRoot);
+        expect(readDirectory3).toEqual(["sentinel.txt"]);
       })
     );
   });
@@ -140,9 +143,12 @@ describe("LeJeune transactional bundle builder", () => {
         );
 
         expect(error.stage).toBe("preflight");
-        pipe(yield* fs.exists(mutableRoot), assertFalse);
-        expect(yield* fs.readFileString(sentinel)).toBe("retain-me\n");
-        expect(yield* fs.readDirectory(bundleRoot)).toEqual(["sentinel.txt"]);
+        const exists4 = yield* fs.exists(mutableRoot);
+        pipe(exists4, assertFalse);
+        const readFileString5 = yield* fs.readFileString(sentinel);
+        expect(readFileString5).toBe("retain-me\n");
+        const readDirectory6 = yield* fs.readDirectory(bundleRoot);
+        expect(readDirectory6).toEqual(["sentinel.txt"]);
       })
     );
   });
@@ -160,8 +166,10 @@ describe("LeJeune transactional bundle builder", () => {
         );
 
         expect(error.stage).toBe("preflight");
-        pipe(yield* fs.exists(sharedRoot), assertFalse);
-        pipe(yield* fs.exists(path.join(parent, "publication")), assertFalse);
+        const exists7 = yield* fs.exists(sharedRoot);
+        pipe(exists7, assertFalse);
+        const exists8 = yield* fs.exists(path.join(parent, "publication"));
+        pipe(exists8, assertFalse);
       })
     );
   });
@@ -180,8 +188,10 @@ describe("LeJeune transactional bundle builder", () => {
         );
 
         expect(error.stage).toBe("preflight");
-        pipe(yield* fs.exists(bundleRoot), assertFalse);
-        pipe(yield* fs.exists(path.join(parent, "publication")), assertFalse);
+        const exists9 = yield* fs.exists(bundleRoot);
+        pipe(exists9, assertFalse);
+        const exists10 = yield* fs.exists(path.join(parent, "publication"));
+        pipe(exists10, assertFalse);
       })
     );
   });
@@ -200,8 +210,10 @@ describe("LeJeune transactional bundle builder", () => {
         );
 
         expect(error.stage).toBe("preflight");
-        pipe(yield* fs.exists(path.join(parent, "immutable-publication")), assertFalse);
-        pipe(yield* fs.exists(path.join(parent, "mutable-publication")), assertFalse);
+        const exists11 = yield* fs.exists(path.join(parent, "immutable-publication"));
+        pipe(exists11, assertFalse);
+        const exists12 = yield* fs.exists(path.join(parent, "mutable-publication"));
+        pipe(exists12, assertFalse);
       })
     );
   });
@@ -221,9 +233,11 @@ describe("LeJeune transactional bundle builder", () => {
         const error = yield* buildBundle(inputFor(bundleRoot, mutableRoot, invalidRecording)).pipe(Effect.flip);
 
         expect(error.stage).toBe("provider-recording");
-        pipe(yield* fs.exists(publicationRoot), assertFalse);
+        const exists13 = yield* fs.exists(publicationRoot);
+        pipe(exists13, assertFalse);
+        const readDirectory14 = yield* fs.readDirectory(parent);
         pipe(
-          A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry)),
+          A.every(readDirectory14, (entry) => !Str.includes(".staging-")(entry)),
           assertTrue
         );
       })
@@ -260,10 +274,13 @@ describe("LeJeune transactional bundle builder", () => {
         yield* Fiber.join(interrupt);
 
         pipe(exit, Exit.isSuccess, assertTrue);
-        pipe(yield* fs.exists(path.join(bundleRoot, "bundle.json")), assertTrue);
-        pipe(yield* fs.exists(path.join(mutableRoot, "review-ledger.json")), assertTrue);
+        const exists15 = yield* fs.exists(path.join(bundleRoot, "bundle.json"));
+        pipe(exists15, assertTrue);
+        const exists16 = yield* fs.exists(path.join(mutableRoot, "review-ledger.json"));
+        pipe(exists16, assertTrue);
+        const readDirectory17 = yield* fs.readDirectory(parent);
         pipe(
-          A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry)),
+          A.every(readDirectory17, (entry) => !Str.includes(".staging-")(entry)),
           assertTrue
         );
       })
@@ -297,12 +314,14 @@ describe("LeJeune transactional bundle builder", () => {
         );
 
         expect(secondReceipt.bundleIdentity).toBe(firstReceipt.bundleIdentity);
-        expect(yield* fs.readFileString(path.join(secondBundleRoot, "bundle.json"))).toBe(firstBundleText);
-        expect(yield* fs.readFileString(path.join(secondBundleRoot, "golden-replay.json"))).toBe(firstReceiptText);
-        expect(yield* fs.readFileString(path.join(secondMutableRoot, "review-ledger.json"))).toBe(firstLedgerText);
-        expect(yield* fs.readFileString(path.join(secondMutableRoot, "retention-metadata.json"))).toBe(
-          firstRetentionMetadataText
-        );
+        const readFileString18 = yield* fs.readFileString(path.join(secondBundleRoot, "bundle.json"));
+        expect(readFileString18).toBe(firstBundleText);
+        const readFileString19 = yield* fs.readFileString(path.join(secondBundleRoot, "golden-replay.json"));
+        expect(readFileString19).toBe(firstReceiptText);
+        const readFileString20 = yield* fs.readFileString(path.join(secondMutableRoot, "review-ledger.json"));
+        expect(readFileString20).toBe(firstLedgerText);
+        const readFileString21 = yield* fs.readFileString(path.join(secondMutableRoot, "retention-metadata.json"));
+        expect(readFileString21).toBe(firstRetentionMetadataText);
         yield* Effect.forEach(
           ["rfq-a-outlook-body.txt", "rfq-a-takeoff.xlsx", "rfq-b-prose-email.txt", "rfq-b-schedule.pdf"],
           (fixtureName) =>
@@ -313,8 +332,10 @@ describe("LeJeune transactional bundle builder", () => {
             }),
           { concurrency: 4, discard: true }
         );
-        pipe(yield* fs.exists(path.join(firstBundleRoot, "corpus.duckdb")), assertTrue);
-        pipe(yield* fs.exists(path.join(firstBundleRoot, "app-review.pglite")), assertTrue);
+        const exists22 = yield* fs.exists(path.join(firstBundleRoot, "corpus.duckdb"));
+        pipe(exists22, assertTrue);
+        const exists23 = yield* fs.exists(path.join(firstBundleRoot, "app-review.pglite"));
+        pipe(exists23, assertTrue);
         const projectionMetadata = yield* decodeProjectionStoreMetadataFromJsonString(firstProjectionMetadataText);
         expect(projectionMetadata.bundleIdentity).toBe(firstReceipt.bundleIdentity);
         expect(projectionMetadata.bundleVersion).toBe("lejeune-demo-bundle/v1");
@@ -387,8 +408,9 @@ describe("LeJeune transactional bundle builder", () => {
           const failure = yield* Effect.flip(verifyPublicationReadback(corruptedReadback));
           expect(failure.stage, name).toBe("validation");
         }
+        const readDirectory24 = yield* fs.readDirectory(parent);
         pipe(
-          A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry)),
+          A.every(readDirectory24, (entry) => !Str.includes(".staging-")(entry)),
           assertTrue
         );
       })
@@ -411,9 +433,11 @@ describe("LeJeune transactional bundle builder", () => {
         ).pipe(Effect.flip);
 
         expect(error.stage).toBe("retention");
-        pipe(yield* fs.exists(publicationRoot), assertFalse);
+        const exists25 = yield* fs.exists(publicationRoot);
+        pipe(exists25, assertFalse);
+        const readDirectory26 = yield* fs.readDirectory(parent);
         pipe(
-          A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry)),
+          A.every(readDirectory26, (entry) => !Str.includes(".staging-")(entry)),
           assertTrue
         );
       })
@@ -450,8 +474,10 @@ describe("LeJeune transactional bundle builder", () => {
           )
         );
 
-        pipe(yield* fs.exists(path.join(bundleRoot, "bundle.json")), assertTrue);
-        pipe(yield* fs.exists(path.join(mutableRoot, "review-ledger.json")), assertTrue);
+        const exists27 = yield* fs.exists(path.join(bundleRoot, "bundle.json"));
+        pipe(exists27, assertTrue);
+        const exists28 = yield* fs.exists(path.join(mutableRoot, "review-ledger.json"));
+        pipe(exists28, assertTrue);
         const retentionMetadata = yield* fs
           .readFileString(path.join(mutableRoot, "retention-metadata.json"))
           .pipe(Effect.flatMap(decodeMutableRetentionMetadataFromJsonString));
@@ -508,9 +534,11 @@ describe("LeJeune transactional bundle builder", () => {
         ).pipe(Effect.flip);
 
         expect(error.stage).toBe("retention");
-        pipe(yield* fs.exists(publicationRoot), assertFalse);
+        const exists29 = yield* fs.exists(publicationRoot);
+        pipe(exists29, assertFalse);
+        const readDirectory30 = yield* fs.readDirectory(parent);
         pipe(
-          A.every(yield* fs.readDirectory(parent), (entry) => !Str.includes(".staging-")(entry)),
+          A.every(readDirectory30, (entry) => !Str.includes(".staging-")(entry)),
           assertTrue
         );
       })

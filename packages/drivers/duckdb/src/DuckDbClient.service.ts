@@ -361,7 +361,8 @@ const makeFromNative = Effect.fnUntraced(function* (
     prepareCacheTTL: options.prepareCacheTTL ?? Duration.minutes(10),
   });
   yield* configureTimeZone(connection, options.timeZone, skipDefaultTimeZone);
-  const database = A.head(yield* connection.executeUnprepared(DATABASE_QUERY, [], undefined));
+  const executeUnprepared1 = yield* connection.executeUnprepared(DATABASE_QUERY, [], undefined);
+  const database = A.head(executeUnprepared1);
   const databaseName = O.getOrElse(
     O.flatMap(database, (row) => stringField(row, "database_name")),
     () => "memory"

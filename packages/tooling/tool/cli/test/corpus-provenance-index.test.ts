@@ -184,10 +184,8 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
         attachmentCount: 6,
         attachmentBytes: 2 * new TextEncoder().encode(pdf).length + jpeg.length + 21 + 8,
       });
-      const rows = yield* Effect.forEach(
-        lines(yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl"))),
-        MailMessageIndexRecordJson.decode
-      );
+      const readFileString1 = yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl"));
+      const rows = yield* Effect.forEach(lines(readFileString1), MailMessageIndexRecordJson.decode);
       const parent = O.getOrThrow(A.findFirst(rows, (row) => row.internet !== undefined));
       expect(parent).toMatchObject({
         folderPath: "Inbox",
@@ -206,9 +204,8 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
       ).toContain("Attachments/Attachment5/Message00001");
       expect(O.getOrThrow(A.findFirst(rows, (row) => row.embeddedDepth === 1)).messagePath).toContain("Attachment5");
       yield* indexMailExportTrees(ProvenanceMessagesOptions.make({ corpusRoot: root, trees: ["extract"] }));
-      expect(
-        lines(yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl")))
-      ).toHaveLength(3);
+      const readFileString2 = yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl"));
+      expect(lines(readFileString2)).toHaveLength(3);
     })
   );
 
@@ -245,8 +242,10 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
           })
         )
       );
-      expect(yield* fs.readFileString(target)).toBe("preserve this file\n");
-      expect(yield* fs.realPath(leaf)).toBe(leaf);
+      const readFileString3 = yield* fs.readFileString(target);
+      expect(readFileString3).toBe("preserve this file\n");
+      const realPath4 = yield* fs.realPath(leaf);
+      expect(realPath4).toBe(leaf);
     })
   );
 
@@ -269,10 +268,8 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
       );
       expect(summary.fileCount).toBe(5);
       expect(summary.engineVersion).not.toBe("");
-      const rows = yield* Effect.forEach(
-        lines(yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"))),
-        MetadataCensusRecordJson.decode
-      );
+      const readFileString5 = yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"));
+      const rows = yield* Effect.forEach(lines(readFileString5), MetadataCensusRecordJson.decode);
       expect(
         O.getOrThrow(A.findFirst(rows, (row) => Str.endsWith("1_report.p")(row.relativePath))).fields.fileType
       ).toBe("PDF");
@@ -296,25 +293,34 @@ it.layer(RepairServices, { timeout: "30 seconds" })((it) => {
         AttachmentRepairOptions.make({ corpusRoot: root, trees: ["extract"], mode: "plan" })
       );
       expect(plan.proposedRenames).toBe(4);
-      expect(yield* fs.exists(path.join(attachments, "1_report.pdf"))).toBe(false);
+      const exists6 = yield* fs.exists(path.join(attachments, "1_report.pdf"));
+      expect(exists6).toBe(false);
       const applied = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: ["extract"], mode: "apply", journalPath })
       );
       expect(applied.byOutcome.renamed).toBe(4);
-      expect(yield* fs.exists(path.join(attachments, "1_report.pdf"))).toBe(true);
-      expect(yield* fs.exists(path.join(attachments, "2_photo.jpg"))).toBe(true);
-      expect(yield* fs.exists(path.join(attachments, "5_memo\\draft.pdf"))).toBe(true);
+      const exists7 = yield* fs.exists(path.join(attachments, "1_report.pdf"));
+      expect(exists7).toBe(true);
+      const exists8 = yield* fs.exists(path.join(attachments, "2_photo.jpg"));
+      expect(exists8).toBe(true);
+      const exists9 = yield* fs.exists(path.join(attachments, "5_memo\\draft.pdf"));
+      expect(exists9).toBe(true);
       // text/plain has no file(1) extension; the fallback table completes the fully eaten name.
-      expect(yield* fs.exists(path.join(attachments, "3_notes.txt"))).toBe(true);
+      const exists10 = yield* fs.exists(path.join(attachments, "3_notes.txt"));
+      expect(exists10).toBe(true);
       const journal = yield* AttachmentRepairJournal;
-      expect(A.map(yield* journal.readAll(journalPath), (r) => r.outcome)).toEqual(A.makeBy(4, () => "renamed"));
+      const readAll11 = yield* journal.readAll(journalPath);
+      expect(A.map(readAll11, (r) => r.outcome)).toEqual(A.makeBy(4, () => "renamed"));
       const undo = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: [], mode: "undo", journalPath })
       );
       expect(undo.byOutcome.reverted).toBe(4);
-      expect(yield* fs.exists(path.join(attachments, "1_report.p"))).toBe(true);
-      expect(yield* fs.exists(path.join(attachments, "2_photo.j"))).toBe(true);
-      expect(yield* fs.exists(path.join(attachments, "5_memo\\draft.p"))).toBe(true);
+      const exists12 = yield* fs.exists(path.join(attachments, "1_report.p"));
+      expect(exists12).toBe(true);
+      const exists13 = yield* fs.exists(path.join(attachments, "2_photo.j"));
+      expect(exists13).toBe(true);
+      const exists14 = yield* fs.exists(path.join(attachments, "5_memo\\draft.p"));
+      expect(exists14).toBe(true);
       yield* fs.writeFileString(path.join(attachments, "1_report.pdf"), "collision content");
       const collision = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({
@@ -325,7 +331,8 @@ it.layer(RepairServices, { timeout: "30 seconds" })((it) => {
         })
       );
       expect(collision.byOutcome["skipped-collision"]).toBe(1);
-      expect(yield* fs.readFileString(path.join(attachments, "1_report.pdf"))).toBe("collision content");
+      const readFileString15 = yield* fs.readFileString(path.join(attachments, "1_report.pdf"));
+      expect(readFileString15).toBe("collision content");
       yield* fs.writeFile(path.join(attachments, "2_photo.jpg"), Uint8Array.of(1));
       const changed = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({
@@ -408,10 +415,8 @@ it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
         errorCount: 0,
         withAuthor: 1,
       });
-      const rows = yield* Effect.forEach(
-        lines(yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"))),
-        MetadataCensusRecordJson.decode
-      );
+      const readFileString16 = yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"));
+      const rows = yield* Effect.forEach(lines(readFileString16), MetadataCensusRecordJson.decode);
       expect(rows).toHaveLength(1);
       expect(rows[0]).toMatchObject({
         engineVersion: "fixture13",
@@ -458,7 +463,8 @@ it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
       const path = yield* Path.Path;
       const out = path.join(root, "staging", "provenance-cli");
       yield* runCorpus(["provenance", "messages", "--corpus-root", root, "--tree", "extract", "--out-dir", out]);
-      expect(yield* fs.exists(path.join(out, "messages-extract.jsonl"))).toBe(true);
+      const exists17 = yield* fs.exists(path.join(out, "messages-extract.jsonl"));
+      expect(exists17).toBe(true);
       yield* runCorpus([
         "provenance",
         "attachments",
@@ -473,7 +479,8 @@ it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
         "--journal",
         path.join(out, "journal.jsonl"),
       ]);
-      expect(yield* fs.exists(path.join(out, "proposals-extract.jsonl"))).toBe(true);
+      const exists18 = yield* fs.exists(path.join(out, "proposals-extract.jsonl"));
+      expect(exists18).toBe(true);
       if (!(yield* exiftoolPresent())) {
         ctx.skip("exiftool is absent on this host");
         return;
@@ -490,7 +497,8 @@ it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
         "--concurrency",
         "2",
       ]);
-      expect(yield* fs.exists(path.join(root, "staging", "provenance", "metadata.jsonl"))).toBe(true);
+      const exists19 = yield* fs.exists(path.join(root, "staging", "provenance", "metadata.jsonl"));
+      expect(exists19).toBe(true);
     })
   );
 });

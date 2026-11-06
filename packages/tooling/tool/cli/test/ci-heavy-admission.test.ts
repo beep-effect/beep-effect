@@ -1,5 +1,6 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
+import { Git, GitCommandError, UnknownRefError } from "@beep/git/Git";
 import { ActionEnvironment } from "@beep/github-actions/ActionEnvironment";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import {
@@ -28,10 +29,11 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { parseRunnerFile } from "./support/runnerFile.ts";
@@ -41,20 +43,42 @@ const code = ["packages/a/src/index.ts"];
 const docs = ["docs/runbooks/ci.md", "goals/x/PLAN.md"];
 const event = (values: Partial<HeavyAdmissionEvent> = {}) =>
   HeavyAdmissionEvent.make({ eventName: "pull_request", labels: [], draft: false, changedPaths: code, ...values });
+const UnknownJson = S.fromJsonString(S.Unknown);
 const payload = (labels: ReadonlyArray<string>, draft = false, base = "main") =>
-  JSON.stringify({
-    action: "synchronize",
-    number: 1,
-    pull_request: {
-      draft,
-      labels: A.map(labels, (name) => ({ name, color: "ededed" })),
-      head: { repo: { full_name: "beep-effect/beep-effect" } },
-      base: { ref: base, repo: { full_name: "beep-effect/beep-effect" } },
-    },
-  });
-// The scripted git: fetch succeeds silently, diff prints the scripted paths.
-const gitSpawner = (diff: string) =>
-  ScriptedSpawner.make((_command, args) => ({ stdout: args[0] === "diff" ? diff : "" }));
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      action: "synchronize",
+      number: 1,
+      pull_request: {
+        draft,
+        labels: A.map(labels, (name) => ({ name, color: "ededed" })),
+        head: { repo: { full_name: "beep-effect/beep-effect" } },
+        base: { ref: base, repo: { full_name: "beep-effect/beep-effect" } },
+      },
+    }),
+    identity
+  );
+// The scripted git: fetch succeeds silently, diff prints the scripted paths NUL-delimited, as `git diff -z` does.
+const gitSpawner = (paths: ReadonlyArray<string>) =>
+  ScriptedSpawner.make((_command, args) => ({
+    stdout: args[0] === "diff" ? A.join(A.map(paths, nulTerminated), "") : "",
+  }));
+const nulTerminated = (path: string): string => `${path}\0`;
+// The fetch and the diff, without the kit's own `config --get` probes ahead of a network call.
+const gitWork = (spawner: ScriptedSpawner) => A.filter(spawner.spawns, (spawn) => spawn.args[0] !== "config");
+// `Git` over the scripted spawner, which also serves the patient fetch instance.
+const provideScriptedGit =
+  (spawner: ScriptedSpawner) =>
+  <V, E, R>(effect: Effect.Effect<V, E, R>) =>
+    effect.pipe(provideScopedLayer(Git.layer), provideSpawner(spawner));
+// A `Git` whose `changedFiles` fails as given; the patient fetch still runs over a silent scripted spawner.
+const provideFailingDiff =
+  (error: GitCommandError | UnknownRefError) =>
+  <V, E, R>(effect: Effect.Effect<V, E, R>) =>
+    effect.pipe(
+      provideScopedLayer(Git.layerTest({ changedFiles: () => Effect.fail(error) })),
+      provideSpawner(gitSpawner([]))
+    );
 const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
 const lastLine = (lines: ReadonlyArray<string>): string => O.getOrElse(A.last(lines), () => "");
 const runAdmissionCommand = Command.runWith(ciAdmissionCommand, { version: "0.0.0" });
@@ -81,7 +105,8 @@ const roundTrips = Effect.fn("admissionTest.roundTrips")(function* <Schema exten
     Effect.fnUntraced(function* (value) {
       const encoded = yield* S.encodeEffect(schema)(value);
       const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-      expect(yield* S.encodeEffect(schema)(decoded)).toEqual(encoded);
+      const value1 = yield* S.encodeEffect(schema)(decoded);
+      expect(value1).toEqual(encoded);
     })
   );
 });
@@ -225,54 +250,76 @@ it.layer(platform, { timeout: "30 seconds" })("B8 heavy admission reader", (laye
   layerIt.effect("reads labels, draft and the merge-base diff from the payload, fetching the base first", () =>
     temporary((root) =>
       Effect.gen(function* () {
-        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const path = yield* writeEvent(root, payload([HEAVY_ADMISSION_LABEL, "size/S"], true));
-        const capture = (_command: string, args: ReadonlyArray<string>) =>
-          Ref.update(commands, A.append(["git", ...args])).pipe(
-            Effect.as({
-              exitCode: 0,
-              output: args[0] === "diff" ? " packages/a/src/index.ts\n\ndocs/x.md \n" : "",
-              truncated: false,
-            })
-          );
+        const spawner = gitSpawner(["packages/a/src/index.ts", "docs/x y.md"]);
         const read = yield* readHeavyAdmissionEvent(
-          HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root }),
-          capture
-        );
+          HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root })
+        ).pipe(provideScriptedGit(spawner));
         expect(read).toEqual(
           HeavyAdmissionEvent.make({
             eventName: "pull_request",
             labels: [HEAVY_ADMISSION_LABEL, "size/S"],
             draft: true,
-            changedPaths: ["packages/a/src/index.ts", "docs/x.md"],
+            changedPaths: ["packages/a/src/index.ts", "docs/x y.md"],
           })
         );
-        expect(yield* Ref.get(commands)).toEqual([
-          ["git", "fetch", "--quiet", "--no-tags", "origin", "+refs/heads/main:refs/remotes/origin/main"],
-          ["git", "diff", "--name-only", "origin/main...HEAD"],
+        expect(A.map(gitWork(spawner), (spawn) => spawn.args)).toEqual([
+          ["fetch", "--no-tags", "origin", "+refs/heads/main:refs/remotes/origin/main"],
+          ["diff", "--name-only", "-z", "--no-relative", "origin/main...HEAD"],
         ]);
         // `--base` overrides the payload ref, with or without the origin/ prefix.
-        yield* Ref.set(commands, []);
+        const release = gitSpawner([]);
         yield* readHeavyAdmissionEvent(
           HeavyAdmissionReadInput.make({
             eventName: "pull_request",
             eventPath: O.some(path),
             base: O.some("origin/release/2026"),
             cwd: root,
-          }),
-          capture
-        );
-        expect(A.map(yield* Ref.get(commands), lastLine)).toEqual([
+          })
+        ).pipe(provideScriptedGit(release));
+        expect(A.map(gitWork(release), (spawn) => lastLine(spawn.args))).toEqual([
           "+refs/heads/release/2026:refs/remotes/origin/release/2026",
           "origin/release/2026...HEAD",
         ]);
         // push and merge_group never read a payload or spawn git.
-        yield* Ref.set(commands, []);
+        const idle = gitSpawner([]);
         for (const eventName of ["push", "merge_group"] as const) {
-          const bare = yield* readHeavyAdmissionEvent(HeavyAdmissionReadInput.make({ eventName, cwd: root }), capture);
+          const bare = yield* readHeavyAdmissionEvent(HeavyAdmissionReadInput.make({ eventName, cwd: root })).pipe(
+            provideScriptedGit(idle)
+          );
           expect(bare).toEqual(HeavyAdmissionEvent.make({ eventName }));
         }
-        expect(yield* Ref.get(commands)).toEqual([]);
+        expect(idle.spawns).toEqual([]);
+      })
+    )
+  );
+
+  layerIt.effect("reads a payload whose head and base carry no repository as empty repositories", () =>
+    temporary((root) =>
+      Effect.gen(function* () {
+        const path = yield* writeEvent(
+          root,
+          '{"action":"opened","number":1,"pull_request":{"draft":false,"labels":[],"base":{"ref":"main"}}}'
+        );
+        const read = yield* readHeavyAdmissionEvent(
+          HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root })
+        ).pipe(provideScriptedGit(gitSpawner([])));
+        expect([read.headRepository, read.baseRepository]).toEqual(["", ""]);
+      })
+    )
+  );
+
+  layerIt.effect("keeps reading after a failed best-effort fetch", () =>
+    temporary((root) =>
+      Effect.gen(function* () {
+        const path = yield* writeEvent(root, payload([]));
+        const spawner = ScriptedSpawner.make((_command, args) =>
+          args[0] === "fetch" ? { exit: 128, stderr: "fatal: unable to access" } : { stdout: "docs/a.md\0" }
+        );
+        const read = yield* readHeavyAdmissionEvent(
+          HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root })
+        ).pipe(provideScriptedGit(spawner));
+        expect(read.changedPaths).toEqual(["docs/a.md"]);
       })
     )
   );
@@ -280,47 +327,45 @@ it.layer(platform, { timeout: "30 seconds" })("B8 heavy admission reader", (laye
   layerIt.effect("fails loudly on a missing payload, an undecodable payload, an unsafe base, and a failed diff", () =>
     temporary((root) =>
       Effect.gen(function* () {
-        const ok = () => Effect.succeed({ exitCode: 0, output: "", truncated: false });
+        const ok = provideScriptedGit(gitSpawner([]));
         const missing = yield* readHeavyAdmissionEvent(
-          HeavyAdmissionReadInput.make({ eventName: "pull_request", cwd: root }),
-          ok
-        ).pipe(Effect.flip);
+          HeavyAdmissionReadInput.make({ eventName: "pull_request", cwd: root })
+        ).pipe(ok, Effect.flip);
         expect(missing.message).toContain("GITHUB_EVENT_PATH");
         const broken = yield* writeEvent(root, '{"pull_request":{"labels":"nope"}}');
         const undecodable = yield* readHeavyAdmissionEvent(
-          HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(broken), cwd: root }),
-          ok
-        ).pipe(Effect.flip);
+          HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(broken), cwd: root })
+        ).pipe(ok, Effect.flip);
         expect(undecodable.message).toContain("Failed to decode the pull_request payload");
         const path = yield* writeEvent(root, payload([], false, "--upload-pack=evil"));
         const unsafe = yield* readHeavyAdmissionEvent(
-          HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root }),
-          ok
-        ).pipe(Effect.flip);
+          HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root })
+        ).pipe(ok, Effect.flip);
         expect(unsafe.message).toContain("unsafe base branch");
-        const failed = yield* readHeavyAdmissionEvent(
-          HeavyAdmissionReadInput.make({
-            eventName: "pull_request",
-            eventPath: O.some(path),
-            base: O.some("main"),
-            cwd: root,
-          }),
-          (_command, args) => Effect.succeed({ exitCode: args[0] === "diff" ? 128 : 0, output: "", truncated: false })
-        ).pipe(Effect.flip);
-        expect(failed.message).toContain("exited 128");
+        const mainBase = HeavyAdmissionReadInput.make({
+          eventName: "pull_request",
+          eventPath: O.some(path),
+          base: O.some("main"),
+          cwd: root,
+        });
+        const failed = yield* readHeavyAdmissionEvent(mainBase).pipe(
+          provideFailingDiff(UnknownRefError.make({ ref: "origin/main", cwd: root })),
+          Effect.flip
+        );
+        expect(failed.message).toContain("git diff --name-only origin/main...HEAD exited 128.");
         expect(failed.message).not.toContain("(truncated)");
-        // A capture that hit the repo-run bound is unreadable even at exit 0: an
-        // incomplete path list could classify a code head docs-only.
-        const truncated = yield* readHeavyAdmissionEvent(
-          HeavyAdmissionReadInput.make({
-            eventName: "pull_request",
-            eventPath: O.some(path),
-            base: O.some("main"),
-            cwd: root,
-          }),
-          (_command, args) => Effect.succeed({ exitCode: 0, output: "docs/a.md\n", truncated: args[0] === "diff" })
-        ).pipe(Effect.flip);
-        expect(truncated.message).toContain("exited 0 (truncated)");
+        // A read that overflowed the kit's bound is unreadable: an incomplete path
+        // list could classify a code head docs-only.
+        const truncated = yield* readHeavyAdmissionEvent(mainBase).pipe(
+          provideFailingDiff(GitCommandError.make({ kind: "truncated", args: ["diff"], cwd: root, stderr: "" })),
+          Effect.flip
+        );
+        expect(truncated.message).toContain("(truncated)");
+        const unspawned = yield* readHeavyAdmissionEvent(mainBase).pipe(
+          provideFailingDiff(GitCommandError.make({ kind: "failed", args: ["diff"], cwd: root, stderr: "" })),
+          Effect.flip
+        );
+        expect(unspawned.message).toContain("Failed to run git diff for heavy admission.");
       })
     )
   );
@@ -332,12 +377,12 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         // The layer shares one TestConsole across tests: read only this test's lines.
-        const priorLines = A.length(yield* logs);
+        const logs4 = yield* logs;
+        const priorLines = A.length(logs4);
         const path = yield* writeEvent(root, payload([]));
         const output = `${root}/github-output.txt`;
         yield* fs.writeFileString(output, "prior=1\n");
-        const docsCapture = () =>
-          Effect.succeed({ exitCode: 0, output: "docs/a.md\ngoals/x/PLAN.md\n", truncated: false });
+        const docsGit = provideScriptedGit(gitSpawner(["docs/a.md", "goals/x/PLAN.md"]));
         const outputs = ActionOutputs.layer.pipe(Layer.provide(ActionEnvironment.layerTest({ GITHUB_OUTPUT: output })));
         const held = yield* runCiAdmission(
           CiAdmissionInput.make({
@@ -345,9 +390,8 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
             eventPath: O.some(path),
             githubOutput: true,
             cwd: root,
-          }),
-          () => Effect.succeed({ exitCode: 0, output: "packages/a/src/index.ts\n", truncated: false })
-        ).pipe(provideScopedLayer(outputs));
+          })
+        ).pipe(provideScopedLayer(outputs), provideScriptedGit(gitSpawner(["packages/a/src/index.ts"])));
         expect(held.verdict).toBe("hold");
         const skipped = yield* runCiAdmission(
           CiAdmissionInput.make({
@@ -356,16 +400,18 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
             githubOutput: true,
             json: false,
             cwd: root,
-          }),
-          docsCapture
-        ).pipe(provideScopedLayer(outputs));
+          })
+        ).pipe(provideScopedLayer(outputs), docsGit);
         expect(skipped.verdict).toBe("skip-satisfied");
-        const printed = A.drop(yield* logs, priorLines);
-        expect(yield* HeavyAdmissionJson.decode(printed[0] ?? "")).toEqual(held);
+        const logs5 = yield* logs;
+        const printed = A.drop(logs5, priorLines);
+        const decoded6 = yield* HeavyAdmissionJson.decode(printed[0] ?? "");
+        expect(decoded6).toEqual(held);
         expect(printed[1]).toContain("heavy admission: skip-satisfied");
         // Parity: the entries the runner reads equal the key=value lines the
         // command appended before the write moved to `ActionOutputs.set`.
-        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+        const readFileString7 = yield* fs.readFileString(output);
+        expect(parseRunnerFile(readFileString7)).toEqual(
           parseRunnerFile(
             A.join(
               [
@@ -385,12 +431,12 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
           )
         );
         const unknown = yield* runCiAdmission(
-          CiAdmissionInput.make({ eventName: O.some("workflow_dispatch"), cwd: root }),
-          docsCapture
-        ).pipe(provideScopedLayer(outputs), Effect.flip);
+          CiAdmissionInput.make({ eventName: O.some("workflow_dispatch"), cwd: root })
+        ).pipe(provideScopedLayer(outputs), docsGit, Effect.flip);
         expect(unknown.message).toContain("workflow_dispatch");
-        const unnamed = yield* runCiAdmission(CiAdmissionInput.make({ cwd: root }), docsCapture).pipe(
+        const unnamed = yield* runCiAdmission(CiAdmissionInput.make({ cwd: root })).pipe(
           provideScopedLayer(outputs),
+          docsGit,
           Effect.flip
         );
         expect(unnamed.message).toContain("GITHUB_EVENT_NAME");
@@ -402,7 +448,7 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
     temporary((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const spawner = gitSpawner("packages/a/src/index.ts\n");
+        const spawner = gitSpawner(["packages/a/src/index.ts"]);
         const path = yield* writeEvent(root, payload([HEAVY_ADMISSION_LABEL], false, "develop"));
         const output = `${root}/github-output.txt`;
         const env = ConfigProvider.fromUnknown({
@@ -418,7 +464,7 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
           "--base",
           "main",
           "--github-output",
-        ]).pipe(provideSpawner(spawner), Effect.provideService(ConfigProvider.ConfigProvider, env));
+        ]).pipe(provideScriptedGit(spawner), Effect.provideService(ConfigProvider.ConfigProvider, env));
         const printed = yield* logs;
         const decoded = yield* HeavyAdmissionJson.decode(lastLine(printed));
         expect(decoded).toEqual(
@@ -430,22 +476,25 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
             changedPathCount: 1,
           })
         );
-        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+        const readFileString8 = yield* fs.readFileString(output);
+        expect(parseRunnerFile(readFileString8)).toEqual(
           parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
         );
-        expect(A.map(spawner.spawns, (spawn) => spawn.args[0])).toEqual(["fetch", "diff"]);
+        expect(A.map(gitWork(spawner), (spawn) => spawn.args[0])).toEqual(["fetch", "diff"]);
         // The environment alone drives a push: no payload, no git, exit 0.
-        const idle = gitSpawner("");
+        const idle = gitSpawner([]);
         yield* runAdmissionCommand([]).pipe(
-          provideSpawner(idle),
+          provideScriptedGit(idle),
           Effect.provideService(ConfigProvider.ConfigProvider, env)
         );
         expect(idle.spawns).toEqual([]);
-        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+        const readFileString9 = yield* fs.readFileString(output);
+        expect(parseRunnerFile(readFileString9)).toEqual(
           parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
         );
         const again = yield* logs;
-        expect(yield* HeavyAdmissionJson.decode(lastLine(again))).toMatchObject({
+        const decoded10 = yield* HeavyAdmissionJson.decode(lastLine(again));
+        expect(decoded10).toMatchObject({
           verdict: "run",
           sources: ["main-push"],
           changedPathCount: 0,
@@ -459,12 +508,13 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
       Effect.gen(function* () {
         const env = ConfigProvider.fromUnknown({});
         const exit = yield* runAdmissionCommand(["--event-name", "pull_request", "--github-output"]).pipe(
-          provideSpawner(gitSpawner("")),
+          provideScriptedGit(gitSpawner([])),
           Effect.provideService(ConfigProvider.ConfigProvider, env),
           Effect.exit
         );
         expect(exit._tag).toBe("Failure");
-        expect(yield* errors).toContain("GITHUB_OUTPUT");
+        const errors11 = yield* errors;
+        expect(errors11).toContain("GITHUB_OUTPUT");
         expect(root.length).toBeGreaterThan(0);
       })
     )

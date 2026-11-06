@@ -75,14 +75,17 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
         expect(count).toBe(1);
         expect((yield* fs.stat(input.output)).mode & 0o777).toBe(0o600);
         expect((yield* fs.stat(input.projection)).mode & 0o777).toBe(0o600);
-        expect(yield* fs.readFileString(input.projection)).not.toContain('"phones"');
+        const readFileString1 = yield* fs.readFileString(input.projection);
+        expect(readFileString1).not.toContain('"phones"');
         const before = yield* fs.readFileString(input.output);
         yield* Effect.flip(IdentificationStages.use((s) => s.contacts(input)));
-        expect(yield* fs.readFileString(input.output)).toBe(before);
+        const readFileString2 = yield* fs.readFileString(input.output);
+        expect(readFileString2).toBe(before);
         const bad = ContactsInput.make({ ...input, output: `${process.cwd()}/refused.jsonl` });
         const error = yield* Effect.flip(IdentificationStages.use((s) => s.contacts(bad)));
         expect(error.reason).toBe("unsafe-output");
-        expect(yield* fs.exists(bad.output)).toBe(false);
+        const exists3 = yield* fs.exists(bad.output);
+        expect(exists3).toBe(false);
       })
     );
     it.effect("appends only query shapes and counts, and stores results in a separate 0600 output", () =>
@@ -92,14 +95,16 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
           I.UsptoQuery.make({ kind: "application", number: "18900001" }),
           I.UsptoQuery.make({ kind: "patent", number: "99000001" }),
         ];
-        const text = A.join(yield* Effect.forEach(queries, (q) => encode(I.UsptoQuery, q)), "\n");
+        const forEach4 = yield* Effect.forEach(queries, (q) => encode(I.UsptoQuery, q));
+        const text = A.join(forEach4, "\n");
         yield* fs.writeFileString(file("queries.jsonl"), text);
         const input = UsptoInput.make({
           input: file("queries.jsonl"),
           output: file("results.jsonl"),
           ledger: file("ledger.jsonl"),
         });
-        expect(yield* IdentificationStages.use((s) => s.uspto(input))).toBe(2);
+        const use5 = yield* IdentificationStages.use((s) => s.uspto(input));
+        expect(use5).toBe(2);
         expect((yield* fs.stat(input.output)).mode & 0o777).toBe(0o600);
         yield* fs.chmod(input.ledger, 0o644);
         yield* IdentificationStages.use((s) =>
@@ -126,7 +131,9 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
           contactIds: [],
           source: "attorney-answer",
         });
-        yield* fs.writeFileString(file("assertions.jsonl"), yield* encode(I.IndexEvidence, assertion));
+        const argument = file("assertions.jsonl");
+        const encoded = yield* encode(I.IndexEvidence, assertion);
+        yield* fs.writeFileString(argument, encoded);
         yield* IdentificationStages.use((s) =>
           s.index(
             IndexInput.make({
@@ -136,15 +143,15 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
             })
           )
         );
-        const index = yield* decodeIndex(yield* fs.readFileString(file("index.json")));
+        const readFileString6 = yield* fs.readFileString(file("index.json"));
+        const index = yield* decodeIndex(readFileString6);
         expect(index.pairs).toHaveLength(1);
-        yield* fs.writeFileString(
-          file("context.json"),
-          yield* encode(
-            I.ResolverContext,
-            I.ResolverContext.make({ ...context, clients: index.clients, pairs: index.pairs })
-          )
+        const argument1 = file("context.json");
+        const encoded1 = yield* encode(
+          I.ResolverContext,
+          I.ResolverContext.make({ ...context, clients: index.clients, pairs: index.pairs })
         );
+        yield* fs.writeFileString(argument1, encoded1);
         const doc = I.IdentificationDocument.make({
           documentId: "synthetic-1",
           contentHash: I.ContentHash.make(Str.repeat(64)("0")),
@@ -159,8 +166,12 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
           clientNumber: I.ClientNumber.make("90001"),
           docket: O.some(I.DocketId.make("10001US01")),
         });
-        yield* fs.writeFileString(file("documents.jsonl"), yield* encode(I.IdentificationDocument, doc));
-        yield* fs.writeFileString(file("truth.jsonl"), yield* encode(I.TrainingDocument, truth));
+        const argument2 = file("documents.jsonl");
+        const encoded2 = yield* encode(I.IdentificationDocument, doc);
+        yield* fs.writeFileString(argument2, encoded2);
+        const argument3 = file("truth.jsonl");
+        const encoded3 = yield* encode(I.TrainingDocument, truth);
+        yield* fs.writeFileString(argument3, encoded3);
         yield* fs.writeFileString(file("training.jsonl"), "");
         yield* fs.writeFileString(file("uspto.jsonl"), "");
         yield* fs.writeFileString(file("batches.json"), "[]");
@@ -190,7 +201,8 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
             })
           )
         );
-        const report = yield* decodeReport(yield* fs.readFileString(file("report.json")));
+        const readFileString7 = yield* fs.readFileString(file("report.json"));
+        const report = yield* decodeReport(readFileString7);
         expect(report.testSize).toBe(1);
         assertSome(A.findFirst(report.tiers, (t) => t.tier === "identified").pipe(O.flatMap((t) => t.precision)), 1);
       })
@@ -220,8 +232,10 @@ it.layer(startupFailureStages, { timeout: "30 seconds" })("provider startup fail
       );
       expect(error).toMatchObject({ operation: "uspto-config", reason: "unavailable" });
       expect(error.message).not.toContain("private provider");
-      expect(yield* fs.exists(file("results.jsonl"))).toBe(false);
-      expect(yield* fs.exists(file("ledger.jsonl"))).toBe(false);
+      const exists8 = yield* fs.exists(file("results.jsonl"));
+      expect(exists8).toBe(false);
+      const exists9 = yield* fs.exists(file("ledger.jsonl"));
+      expect(exists9).toBe(false);
     })
   );
 });
@@ -254,7 +268,8 @@ it.layer(failedLookupStages, { timeout: "30 seconds" })("provider query failures
         )
       );
       expect(error).toBe(unavailable);
-      expect(yield* fs.exists(file("results.jsonl"))).toBe(false);
+      const exists10 = yield* fs.exists(file("results.jsonl"));
+      expect(exists10).toBe(false);
       const ledger = yield* fs.readFileString(file("ledger.jsonl"));
       expect(ledger).toContain('"application-number"');
       expect(ledger).not.toContain("18900001");

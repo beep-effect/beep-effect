@@ -16,6 +16,8 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { REPO_CLI_ENTRY_PATH } from "@beep/repo-cli-kit/cli/EntryPath";
+import { runCapturedStreams } from "@beep/repo-cli-kit/process/index";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -24,9 +26,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { REPO_CLI_ENTRY_PATH } from "../../../internal/cli/EntryPath.ts";
 import { ghOutput } from "../../../internal/github/index.ts";
-import { runCapturedStreams } from "../../../internal/process/index.ts";
 import {
   adaptGitKitError,
   fallowAuditCacheEnv,
@@ -136,7 +136,10 @@ const pullRequestLessVerdict = (plan: YeetRetirePlan, state: SweepGitState): Yee
  * never headed one is judged by git: its tip must already be contained in
  * `origin/<main>` and its tree clean (`pr-less-on-main`), the case of a
  * scratch checkout, a stacked parent, or a branch pushed straight to main.
- * Anything else is `refused` with the first reason an operator would check.
+ * A lane standing on the main branch itself is always `refused`: its own
+ * branch is elsewhere, and retiring it would delete `main` and leave that
+ * branch behind. Anything else is `refused` with the first reason an operator
+ * would check.
  *
  * **Example** (Read the gate)
  *
@@ -158,7 +161,13 @@ export const retireVerdict: {
 } = dual(
   2,
   (plan: YeetRetirePlan, state: SweepGitState): YeetRetireVerdict =>
-    O.isSome(state.pullRequestState) ? pullRequestVerdict(plan, state) : pullRequestLessVerdict(plan, state)
+    Eq.equals(plan.branch, state.mainBranch)
+      ? refused(
+          `the lane stands on ${state.mainBranch}, not on its own branch; run \`git switch -\` (or \`git switch <lane-branch>\`) in ${plan.worktreePath}, then retry`
+        )
+      : O.isSome(state.pullRequestState)
+        ? pullRequestVerdict(plan, state)
+        : pullRequestLessVerdict(plan, state)
 );
 
 /**
@@ -501,6 +510,7 @@ const packetSlugFromPath = (relativePath: string): O.Option<string> => {
 // GitHub's own list of the pull request's files is independent of how the
 // merge landed; a failed or truncated read contributes nothing.
 const pullRequestPaths = Effect.fn("Yeet.pullRequestPaths")(function* (plan: YeetRetirePlan) {
+  // KEEP (D-13): `gh pr view <branch>` finds the branch's pull request in any state.
   const output = yield* ghOutput({
     args: ["pr", "view", plan.branch, "--json", "files"],
     cwd: plan.worktreePath,

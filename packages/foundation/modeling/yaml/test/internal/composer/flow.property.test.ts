@@ -46,7 +46,9 @@ describe("flow composer properties", () => {
         const first = compose(source);
         assert.deepStrictEqual(first.state.errors, []);
         const value = first.node.toValue();
-        assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(value)), value);
+        const stringify1 = yield* Yaml.stringify(value);
+        const parsed = yield* Yaml.parse(stringify1);
+        assert.deepStrictEqual(parsed, value);
         const once = YamlFormat.formatToString(source);
         assert.strictEqual(YamlFormat.formatToString(once), once);
         assert.deepStrictEqual((yield* YamlDocument.parse(once)).toValue(), value);

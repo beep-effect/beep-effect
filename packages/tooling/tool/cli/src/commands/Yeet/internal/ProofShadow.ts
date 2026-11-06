@@ -1,6 +1,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import * as OptionUtils from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -19,7 +20,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ProofEnvProfile, ProofStage, YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { changedPackageNamesForPaths, collectWorkspaces } from "../../Quality/internal/PackageVerify.ts";
 import { GithubCheckLaneRunStatus } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -1415,7 +1415,8 @@ export const runYeetProofReport = Effect.fn("Yeet.runProofReportCommand")(functi
   options: YeetProofReportOptions,
   repoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> = locateRepoRoot
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const report = yield* loadProofShadowReport(yield* repoRoot, options.since);
+  const repoRoot1 = yield* repoRoot;
+  const report = yield* loadProofShadowReport(repoRoot1, options.since);
   if (options.json) {
     const json = yield* ProofShadowReportJson.encode(report).pipe(
       Effect.mapError(YeetCommandError.new("Failed to encode the proof shadow report."))

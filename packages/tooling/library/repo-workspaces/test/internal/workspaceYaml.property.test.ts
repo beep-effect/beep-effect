@@ -25,7 +25,9 @@ it.effect.prop(
       };
       assert.deepStrictEqual(configDependenciesOf(normalized), dependencies);
       assert.deepStrictEqual(inlinePeerDependencyRules(normalized), rules);
-      const decoded = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(normalized));
+      const argument = S.decodeEffect(codec);
+      const value = yield* S.encodeEffect(codec)(normalized);
+      const decoded = yield* argument(value);
       assert.deepStrictEqual(configDependenciesOf(decoded), dependencies);
       assert.deepStrictEqual(inlinePeerDependencyRules(decoded), rules);
     }),
@@ -45,7 +47,9 @@ it.effect.prop(
   [Arbitrary.schema(Document)],
   ([document]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(document));
+      const argument1 = S.decodeEffect(codec);
+      const value1 = yield* S.encodeEffect(codec)(document);
+      const decoded = yield* argument1(value1);
       assert.deepStrictEqual(configDependenciesOf(decoded), document.configDependencies);
       assert.deepStrictEqual(inlinePeerDependencyRules(decoded), document.peerDependencyRules);
     }),

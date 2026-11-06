@@ -44,7 +44,9 @@ const assertEndpoint = Effect.fn("ReferenceIntegrity.assertEndpoint")(function* 
   trees: ReadonlyArray<ClaimElementTree>
 ) {
   const contextOption = A.findFirst(source.claims, (c) => c.claimNumber === claimNumberOfPath(ref.path));
-  if (O.isNone(contextOption)) return yield* Effect.die(`Missing edge source claim ${ref.path}`);
+  if (O.isNone(contextOption)) {
+    return yield* Effect.die(`Missing edge source claim ${ref.path}`);
+  }
   assertAnchor(contextOption.value.claimText, ref.anchor);
   for (const owner of A.filter(trees, (t) => t.claimNumber === claimNumberOfPath(ref.path)))
     assertTrue(
@@ -74,8 +76,9 @@ const assertReferenceEdge = Effect.fn("ReferenceIntegrity.assertEdge")(function*
   trees: ReadonlyArray<ClaimElementTree>
 ) {
   if (edge.kind === "functional") assertFunctionalParts(edge, text);
-  if (edge.kind === "antecedent")
+  if (edge.kind === "antecedent") {
     yield* Effect.forEach([edge.referring, edge.introducing], (ref) => assertEndpoint(ref, source, trees));
+  }
 });
 
 const assertReferenceTree = Effect.fn("ReferenceIntegrity.assertTree")(function* (
@@ -87,7 +90,9 @@ const assertReferenceTree = Effect.fn("ReferenceIntegrity.assertTree")(function*
   const edgeValues = yield* Effect.forEach(tree.edges, (edge) => encodeReferenceEdge(edge));
   assert.strictEqual(A.dedupe(edgeValues).length, tree.edges.length);
   const claimOption = A.findFirst(source.claims, (c) => c.claimNumber === tree.claimNumber);
-  if (O.isNone(claimOption)) return yield* Effect.die(`Missing source claim ${tree.claimNumber}`);
+  if (O.isNone(claimOption)) {
+    return yield* Effect.die(`Missing source claim ${tree.claimNumber}`);
+  }
   for (const anchor of A.flatMap(tree.elements, (element) => [
     element.anchor,
     ...A.map(element.terms, (t) => t.anchor),
@@ -105,7 +110,9 @@ describe("Independent semantic reference integrity", () => {
         const manifestPath = yield* path.fromFileUrl(
           new URL("../../../../goals/claim-element-antecedent-check/research/positive-sampling.json", import.meta.url)
         );
-        const manifest = yield* S.decodeEffect(manifestJson)(yield* fs.readFileString(manifestPath));
+        const argument = S.decodeEffect(manifestJson);
+        const readFileString1 = yield* fs.readFileString(manifestPath);
+        const manifest = yield* argument(readFileString1);
         let referenceFamilies = 0;
         for (const { familyId } of manifest.families) {
           const directory = yield* path.fromFileUrl(
@@ -113,17 +120,15 @@ describe("Independent semantic reference integrity", () => {
           );
           const expectedPath = path.join(directory, "expected.json");
           referenceFamilies++;
-          const source = yield* S.decodeEffect(sourceJson)(
-            yield* fs.readFileString(path.join(directory, "claims.json"))
-          );
-          const receipt = yield* S.decodeEffect(receiptJson)(
-            yield* fs.readFileString(path.join(directory, "extractor.json"))
-          );
-          const trees = yield* ClaimElementTree.pipe(
-            S.Array,
-            S.fromJsonString,
-            S.decodeEffect
-          )(yield* fs.readFileString(expectedPath));
+          const argument1 = S.decodeEffect(sourceJson);
+          const readFileString2 = yield* fs.readFileString(path.join(directory, "claims.json"));
+          const source = yield* argument1(readFileString2);
+          const argument2 = S.decodeEffect(receiptJson);
+          const readFileString3 = yield* fs.readFileString(path.join(directory, "extractor.json"));
+          const receipt = yield* argument2(readFileString3);
+          const argument3 = ClaimElementTree.pipe(S.Array, S.fromJsonString, S.decodeEffect);
+          const readFileString4 = yield* fs.readFileString(expectedPath);
+          const trees = yield* argument3(readFileString4);
           assert.deepStrictEqual(
             A.map(trees, (t) => t.claimNumber),
             receipt.resolvedClaimNumbers

@@ -15,7 +15,8 @@ it.effect("catalog preserves rule order and validates every built-in's default o
     assert.strictEqual(builtinRules[0]?.id, "parse-validity");
     for (const [id, schema] of builtinOptionsEntries) {
       assert.isTrue(HashMap.has(builtinOptionsSchemas, id));
-      assert.deepStrictEqual(yield* S.decodeEffect(schema)({}), {});
+      const value = yield* S.decodeEffect(schema)({});
+      assert.deepStrictEqual(value, {});
     }
   })
 );

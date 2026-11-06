@@ -25,7 +25,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(ManifestVersion)(value);
       const decoded = yield* S.decodeEffect(ManifestVersion)(encoded);
       assert.isTrue(S.toEquivalence(ManifestVersion)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(ManifestVersion)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(ManifestVersion)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -74,10 +75,8 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
         yield* fs.writeFileString(path.join(dir, "package.json"), canonicalText);
         const second = yield* manifestVersion("config", dir);
         assert.deepStrictEqual(second, first);
-        assert.strictEqual(
-          yield* S.encodeEffect(json)(second._tag === "version" ? { version: second.version } : {}),
-          canonicalText
-        );
+        const value2 = yield* S.encodeEffect(json)(second._tag === "version" ? { version: second.version } : {});
+        assert.strictEqual(value2, canonicalText);
       }),
     runs
   );

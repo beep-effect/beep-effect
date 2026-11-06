@@ -1,4 +1,5 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   HoldLedger,
@@ -124,7 +125,7 @@ const layerFor = (files: Readonly<Record<string, string>>, spawner: ScriptedSpaw
   Layer.mergeAll(
     Layer.effect(HoldLedger, makeHoldLedger(root)),
     Layer.effect(HoldProbe, makeHoldProbe(scratchRoot))
-  ).pipe(Layer.provideMerge(platformFor(files, spawner)));
+  ).pipe(Layer.provideMerge(Layer.provideMerge(Git.layer, platformFor(files, spawner))));
 
 const probeInput = (holdId: string, dryRun: boolean) => HoldsProbeInput.make({ holdId, dryRun, commitSha });
 
@@ -225,10 +226,10 @@ layer(
 )("a runs file without a trailing newline", (it) => {
   it.effect("keeps both rows readable after an append", () =>
     Effect.gen(function* () {
-      expect(lastLine(yield* runHoldsProbe(probeInput("statelyai-model-testing-404", false)))).toContain(
-        "confirmed verdict: Flipped"
-      );
-      expect(yield* runHoldsList).toEqual([
+      const resultHoldsProbe = yield* runHoldsProbe(probeInput("statelyai-model-testing-404", false));
+      expect(lastLine(resultHoldsProbe)).toContain("confirmed verdict: Flipped");
+      const resultHoldsList = yield* runHoldsList;
+      expect(resultHoldsList).toEqual([
         "[holds] statelyai-model-testing-404 (exact-pin, statelyai): Flipped after 2 run(s)",
       ]);
     })
@@ -247,7 +248,8 @@ layer(layerFor(ledgerFiles), { timeout: "30 seconds" })("probing the statelyai h
         "[holds] dry run: nothing recorded.",
       ]);
       const fs = yield* FileSystem.FileSystem;
-      expect(yield* fs.exists(`${root}/hold-ledger/runs.jsonl`)).toBe(false);
+      const exists1 = yield* fs.exists(`${root}/hold-ledger/runs.jsonl`);
+      expect(exists1).toBe(false);
     })
   );
 
@@ -268,12 +270,10 @@ layer(layerFor(ledgerFiles), { timeout: "30 seconds" })("probing the statelyai h
 
   it.effect("records runs and flips only after two passes", () =>
     Effect.gen(function* () {
-      expect(lastLine(yield* runHoldsProbe(probeInput("statelyai-model-testing-404", false)))).toContain(
-        "confirmed verdict: Unconfirmed"
-      );
-      expect(lastLine(yield* runHoldsProbe(probeInput("statelyai-model-testing-404", false)))).toContain(
-        "confirmed verdict: Flipped"
-      );
+      const resultHoldsProbe2 = yield* runHoldsProbe(probeInput("statelyai-model-testing-404", false));
+      expect(lastLine(resultHoldsProbe2)).toContain("confirmed verdict: Unconfirmed");
+      const resultHoldsProbe3 = yield* runHoldsProbe(probeInput("statelyai-model-testing-404", false));
+      expect(lastLine(resultHoldsProbe3)).toContain("confirmed verdict: Flipped");
       const ledger = yield* HoldLedger;
       const versions = yield* ledger.currentVersions;
       const runs = yield* Effect.forEach(versions, ledger.runsFor);
@@ -386,7 +386,8 @@ const updateInput = (dryRun: boolean) => HoldsUpdateInput.make({ dryRun, commitS
 layer(layerFor(sweepLedger), { timeout: "30 seconds" })("deps:update over flipped and held holds", (it) => {
   it.effect("plans without recording on a dry run", () =>
     Effect.gen(function* () {
-      expect(yield* runHoldsUpdate(updateInput(true))).toEqual([
+      const resultHoldsUpdate = yield* runHoldsUpdate(updateInput(true));
+      expect(resultHoldsUpdate).toEqual([
         "[holds] probed glob-hold: candidate-passed (candidate latest)",
         "[holds] probed statelyai-model-testing-404: candidate-passed (candidate latest)",
         "[holds] flipped glob-hold: its exit (Unpin) needs a reviewed change",
@@ -394,10 +395,13 @@ layer(layerFor(sweepLedger), { timeout: "30 seconds" })("deps:update over flippe
         "[holds] update planned (dry run): 2 probed, 1 unpinned.",
       ]);
       const ledger = yield* HoldLedger;
-      expect(A.length(yield* ledger.allVersions)).toBe(3);
+      const allVersions4 = yield* ledger.allVersions;
+      expect(A.length(allVersions4)).toBe(3);
       const fs = yield* FileSystem.FileSystem;
-      expect(yield* fs.exists(`${root}/hold-ledger/syncpack-held.generated.json`)).toBe(false);
-      expect(Str.split(Str.trim(yield* fs.readFileString(`${root}/hold-ledger/runs.jsonl`)), "\n")).toHaveLength(4);
+      const exists5 = yield* fs.exists(`${root}/hold-ledger/syncpack-held.generated.json`);
+      expect(exists5).toBe(false);
+      const readFileString6 = yield* fs.readFileString(`${root}/hold-ledger/runs.jsonl`);
+      expect(Str.split(Str.trim(readFileString6), "\n")).toHaveLength(4);
     })
   );
 
@@ -409,13 +413,16 @@ layer(layerFor(sweepLedger), { timeout: "30 seconds" })("deps:update over flippe
 
   it.effect("tombstones the flipped catalog hold, keeps the rest and regenerates the held list", () =>
     Effect.gen(function* () {
-      expect(lastLine(yield* runHoldsUpdate(updateInput(false)))).toBe("[holds] update done: 2 probed, 1 unpinned.");
+      const resultHoldsUpdate7 = yield* runHoldsUpdate(updateInput(false));
+      expect(lastLine(resultHoldsUpdate7)).toBe("[holds] update done: 2 probed, 1 unpinned.");
       const ledger = yield* HoldLedger;
-      expect(A.map(yield* ledger.currentVersions, (version) => version.id)).toEqual(["glob-hold@1", "jsdom-hold@1"]);
+      const currentVersions8 = yield* ledger.currentVersions;
+      expect(A.map(currentVersions8, (version) => version.id)).toEqual(["glob-hold@1", "jsdom-hold@1"]);
       const all = yield* ledger.allVersions;
       expect(A.map(all, (version) => version.id)).toContain("statelyai-model-testing-404@3");
       const fs = yield* FileSystem.FileSystem;
-      expect(yield* fs.readFileString(`${root}/hold-ledger/syncpack-held.generated.json`)).toBe('[\n  "jsdom"\n]\n');
+      const readFileString9 = yield* fs.readFileString(`${root}/hold-ledger/syncpack-held.generated.json`);
+      expect(readFileString9).toBe('[\n  "jsdom"\n]\n');
       const why = yield* runHoldsWhy("statelyai");
       expect(why[0]).toBe(
         "[holds] statelyai-model-testing-404 (exact-pin, statelyai): tombstoned 1970-01-01: Flipped: the candidate passed twice, the newest run today; unpinned by deps:update."
@@ -440,7 +447,8 @@ layer(
       ]);
       const ledger = yield* HoldLedger;
       const [version] = yield* ledger.currentVersions;
-      expect(A.length(yield* ledger.runsFor(version!))).toBe(1);
+      const runsFor10 = yield* ledger.runsFor(version!);
+      expect(A.length(runsFor10)).toBe(1);
     })
   );
 });
@@ -489,7 +497,8 @@ layer(
       );
       expect(lexical).toContain("  probe: judgement: Is the ADR still right?");
       expect(lexical).toContain("  exit: Unpin; anchors: syncpack-held:@lexical/**");
-      expect(yield* runHoldsWhy("left-pad")).toEqual(["[holds] no hold record governs left-pad."]);
+      const resultHoldsWhy = yield* runHoldsWhy("left-pad");
+      expect(resultHoldsWhy).toEqual(["[holds] no hold record governs left-pad."]);
     })
   );
 
@@ -506,11 +515,13 @@ layer(layerFor({ "hold-ledger/claims.jsonl": `${jsdomHold}\n` }), { timeout: "30
     it.effect("escalates a hold past its lease, then past 180 days", () =>
       Effect.gen(function* () {
         yield* TestClock.adjust("2 seconds");
-        expect(yield* runHoldsUpdate(updateInput(true))).toContain(
+        const resultHoldsUpdate11 = yield* runHoldsUpdate(updateInput(true));
+        expect(resultHoldsUpdate11).toContain(
           "[holds] escalate jsdom-hold: lease ended; exit Unpin, or renew with fresh evidence"
         );
         yield* TestClock.adjust("181 days");
-        expect(yield* runHoldsUpdate(updateInput(true))).toContain(
+        const resultHoldsUpdate12 = yield* runHoldsUpdate(updateInput(true));
+        expect(resultHoldsUpdate12).toContain(
           "[holds] escalate jsdom-hold: older than 180 days; exit Unpin, or renew with fresh evidence"
         );
       })
@@ -560,12 +571,14 @@ layer(
 )("deps:update when a flipped hold cannot be probed again", (it) => {
   it.effect("keeps the hold whatever its earlier runs said", () =>
     Effect.gen(function* () {
-      expect(yield* runHoldsUpdate(updateInput(false))).toEqual([
+      const resultHoldsUpdate13 = yield* runHoldsUpdate(updateInput(false));
+      expect(resultHoldsUpdate13).toEqual([
         "[holds] probe of statelyai-model-testing-404 did not run; the hold stays: scratch directory is not writable",
         "[holds] update done: 1 probed, 0 unpinned.",
       ]);
       const ledger = yield* HoldLedger;
-      expect(A.map(yield* ledger.currentVersions, (version) => version.id)).toEqual(["statelyai-model-testing-404@2"]);
+      const currentVersions14 = yield* ledger.currentVersions;
+      expect(A.map(currentVersions14, (version) => version.id)).toEqual(["statelyai-model-testing-404@2"]);
     })
   );
 });
@@ -586,10 +599,12 @@ layer(
 )("deps:update with a flipped hold pinned in a workspace manifest", (it) => {
   it.effect("reports it for a reviewed change instead of unpinning it", () =>
     Effect.gen(function* () {
-      expect(yield* runHoldsUpdate(updateInput(true))).toContain(
+      const resultHoldsUpdate15 = yield* runHoldsUpdate(updateInput(true));
+      expect(resultHoldsUpdate15).toContain(
         "[holds] flipped tstyche-hold: its exit (EscalateToGoal goals/tsrs-gates) needs a reviewed change"
       );
-      expect(yield* runHoldsWhy("tstyche")).toContain(
+      const resultHoldsWhy16 = yield* runHoldsWhy("tstyche");
+      expect(resultHoldsWhy16).toContain(
         "  exit: EscalateToGoal goals/tsrs-gates; anchors: manifest:pkgs/drizzle/package.json#tstyche, syncpack-held:tstyche"
       );
     })

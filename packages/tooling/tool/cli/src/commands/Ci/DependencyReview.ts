@@ -512,7 +512,8 @@ export const makeDependencyReviewLayer = (settings: DependencyReviewSettings) =>
       // not know, which would pass review. Both commits must resolve first.
       const verifyCommit = Effect.fn("DependencyReview.verifyCommit")(function* (sha: string) {
         const endpoint = `repos/{owner}/{repo}/commits/${sha}`;
-        const resolved = Str.trim(yield* read(endpoint, ["--jq", ".sha"]));
+        const read1 = yield* read(endpoint, ["--jq", ".sha"]);
+        const resolved = Str.trim(read1);
         if (resolved !== sha)
           return yield* unavailable(
             "not-found",

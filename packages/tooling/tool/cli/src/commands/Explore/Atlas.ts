@@ -20,6 +20,8 @@ import { CommentStyle } from "@beep/managed-section/CommentStyle";
 import { SectionId } from "@beep/managed-section/Section";
 import { LiteralMarkerDialect, SectionDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
 import { SectionDocument } from "@beep/managed-section/SectionDocument";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -35,8 +37,6 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { PacketSlug } from "../Goals/PacketCore/PacketCore.schemas.ts";
 import { PacketEventStore, PacketStreamLocator } from "../Goals/PacketCore/PacketEventStore.ts";
 import { foldPacketEvents } from "../Goals/PacketCore/PacketFold.ts";
@@ -640,8 +640,9 @@ export const buildExplorationProjection = Effect.fn("Explore.buildExplorationPro
   const store = yield* PacketEventStore;
   const root = repoRoot ?? (yield* findRepoRoot());
   const explorationsRoot = path.join(root, "explorations");
+  const readDirectory1 = yield* fs.readDirectory(explorationsRoot);
   const entries = pipe(
-    yield* fs.readDirectory(explorationsRoot),
+    readDirectory1,
     A.filter((entry) => !Str.startsWith("_")(entry)),
     A.sort(Order.String)
   );

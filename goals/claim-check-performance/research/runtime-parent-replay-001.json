@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "claim-performance-runtime-replay/v1",
+  "implementationDigest": "2143f74b56534433583b3d42c40167b8232a7a43a4b0dff834bc7fa5ec1fada1",
+  "resultSha256": "4b36c295c1ed2d642faf9aaaf3f1adf5548b841310b707b78b2c3d19ddf4ac10",
+  "referenceSelectionDigest": "ffcffd914a33dbabbe6f878e375bf6d9d41f9f30487e835d7061760b1593b8ff",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "claims": 538,
+  "strict": 39,
+  "parsed": 537,
+  "abstained": 455,
+  "all538RowsEqualPriorParent": true,
+  "all60ServiceReportsByteIdentical": true,
+  "preservation": {
+    "filesChecked": 1213,
+    "originalPathFilesChecked": 1210,
+    "historicalRunnerArtifactsChecked": 3,
+    "activeRunners": [
+      {
+        "path": "packages/law-practice/server/test/evaluation/allowed.main.ts",
+        "sha256": "d774701ac7e444ce165d79d28535a9a556388c515f5859809abf2359fa1b0094"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/iprally-smoke.main.ts",
+        "sha256": "041e4c9ed71c372cc91951d6707c61640958ab490672efbf7d02c3e96bec0813"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/positive.main.ts",
+        "sha256": "061c8a578fca133ca7da71595271568906b2ff474664f6c2e31b60920a607d03"
+      }
+    ],
+    "changed": [],
+    "passingClaimsProtected": 37,
+    "lost": [],
+    "strictMatches": 39,
+    "retentionEvaluated": true,
+    "preserved": true
+  },
+  "privateOutput": "product-runtime-parent-001",
+  "limitations": [
+    "Static Bun module closure; not arbitrary environment/filesystem/network/OS library capture.",
+    "Historical manifests retain their original weaker provenance.",
+    "Parent replay is39 strict; nominal candidate41 requires its own fresh closure and replay.",
+    "No new independent references, alert correctness or legal validation established."
+  ]
+}

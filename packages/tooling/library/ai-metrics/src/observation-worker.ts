@@ -119,7 +119,7 @@ export const makeObservationWorker = Effect.fn("AiMetrics.makeObservationWorker"
   const payloads = yield* makePayloadReclaimer(config.intake, config.ledger, config.payloadRetention);
   const launches = yield* makeObservationLaunchFacts(config.intake);
   const launchHttp = O.isSome(config.launchHttp)
-    ? O.some(yield* makeObservationLaunchHttp(config.intake, config.launchHttp.value, control))
+    ? yield* Effect.asSome(makeObservationLaunchHttp(config.intake, config.launchHttp.value, control))
     : O.none();
   const evidence = yield* makeEvidenceRetention(config.intake, config.ledger, config.evidenceRetention);
   let sources = O.none<TranscriptDiscovery>();
@@ -150,10 +150,12 @@ export const makeObservationWorker = Effect.fn("AiMetrics.makeObservationWorker"
     discover: (discovery: TranscriptDiscovery, policy: TranscriptDiscoveryReadPolicy) =>
       control.run(
         Effect.gen(function* () {
-          if (discovery.namespaceId !== config.intake.namespaceId)
+          if (discovery.namespaceId !== config.intake.namespaceId) {
             return yield* TranscriptIntakeError.make({ reason: "namespace" });
-          if (O.isSome(sources) && sources.value !== discovery)
+          }
+          if (O.isSome(sources) && sources.value !== discovery) {
             return yield* TranscriptIntakeError.make({ reason: "configuration" });
+          }
           sources = O.some(discovery);
           return yield* runDiscoveredTranscriptSweep(config.intake, discovery, policy).pipe(
             Effect.provideService(SqlClient.SqlClient, sql)

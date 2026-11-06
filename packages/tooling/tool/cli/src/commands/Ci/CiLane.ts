@@ -14,6 +14,21 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import {
+  isCiSync,
+  readTurboCacheEnvironment,
+  resolveTurboCacheStep,
+  turboEnvExtendsAmbient,
+  turboEnvOverrides,
+} from "@beep/repo-cli-kit/cli/EnvConfig";
+import {
+  isLabsWorkspaceDir,
+  LABS_TURBO_EXCLUDE_FILTER,
+  LABS_TURBO_SELECT_FILTER,
+} from "@beep/repo-cli-kit/cli/Labs/index";
+import { resolveTurboCachePlan, turboCachePlanArgs } from "@beep/repo-cli-kit/cli/TurboCache";
+import { runCaptured, runToExit } from "@beep/repo-cli-kit/process/StepExec";
+import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -35,21 +50,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import {
-  isCiSync,
-  readTurboCacheEnvironment,
-  resolveTurboCacheStep,
-  turboEnvExtendsAmbient,
-  turboEnvOverrides,
-} from "../../internal/cli/EnvConfig.ts";
-import {
-  isLabsWorkspaceDir,
-  LABS_TURBO_EXCLUDE_FILTER,
-  LABS_TURBO_SELECT_FILTER,
-} from "../../internal/cli/Labs/index.ts";
-import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
-import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
-import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.step.ts";
 import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
@@ -2108,7 +2108,8 @@ const resolvePartitionedLaneRequest = Effect.fn("CiLane.resolvePartitionedLaneRe
   options: CiLaneRunOptions
 ): Effect.fn.Return<O.Option<PartitionedLaneRequest>, CiLanePartitionError> {
   if (options.partition !== undefined) {
-    return O.some(yield* validatePartitionedLaneRequest(laneId, options.partition, options));
+    const validatePartitionedLaneRequest1 = yield* validatePartitionedLaneRequest(laneId, options.partition, options);
+    return O.some(validatePartitionedLaneRequest1);
   }
 
   const proofOnlyFlags = proofOnlyPartitionFlags(options);

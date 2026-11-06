@@ -7,17 +7,20 @@
  * @since 0.0.0
  */
 
-import { Git } from "@beep/git/Git";
+import { Git, GitOptions } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
+import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, pipe } from "effect/Function";
+import { constTrue, dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -29,15 +32,15 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { isCi } from "../../internal/cli/EnvConfig.ts";
-import { runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
+  adaptGitKitError,
   readGitRenames,
   readGitTree,
   resolveGitCommit,
   resolveGitMergeBase,
-  runGitPathList,
+  sortedUniquePaths,
 } from "../../internal/repo-run/GitExec.ts";
+import { PATIENT_GIT_OPTIONS } from "../../internal/repo-run/PatientGit.ts";
 import { EXPLORATION_ATLAS_PATH } from "../Explore/Atlas.ts";
 import { PORTFOLIO_INDEX_PATH } from "../Goals/PortfolioIndex.ts";
 import { KnowledgeCommandSurface, KnowledgeStaticCommandFlag } from "./Knowledge.command-surface.ts";
@@ -92,9 +95,9 @@ import {
 } from "./KnowledgeDoctor.evaluators.ts";
 import {
   groupKnowledgeDoctorFindings,
-  KNOWLEDGE_PATH_REMOVAL_LOG_ARGS,
+  KNOWLEDGE_PATH_REMOVAL_LOG,
   knowledgeDelegatedRow,
-  parseKnowledgePathRemovals,
+  knowledgePathRemovalsFromLog,
 } from "./KnowledgeDoctor.grouping.ts";
 import {
   evaluateKnowledgeLeases,
@@ -126,11 +129,12 @@ import {
   ResolutionWitness,
   TreeEntryWitness,
 } from "./KnowledgeDoctor.schemas.ts";
+import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
+import type { GitCommandErrorAdapter, GitKitError } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
 import type { KnowledgeCloneAttributesError, KnowledgeMintRefusal, KnowledgeSealBroken } from "./Knowledge.errors.ts";
 import type { KnowledgeCommitSha, KnowledgeDocumentFenceLine, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
@@ -1281,7 +1285,7 @@ const evaluateSpan = Effect.fn("KnowledgeDoctor.evaluateSpan")(function* (
 // Every goals-doctor finding the tree's bytes determine, listed as delegated: the goals doctor keeps
 // the gate, and each one is a causal root for the claims beneath it.
 const delegatedFindings = Effect.fn("KnowledgeDoctor.delegatedFindings")(function* (tree: KnowledgeDoctorTree) {
-  const delegatedRows = A.map(yield* tree.domain.goalsDoctorFindings, knowledgeDelegatedRow);
+  const delegatedRows = yield* tree.domain.goalsDoctorFindings.pipe(Effect.map(A.map(knowledgeDelegatedRow)));
   const severities = HashMap.fromIterable(
     A.map(delegatedRows, (row) => [row.candidate.subject, row.severity] as const)
   );
@@ -1553,26 +1557,27 @@ const isAncestorLive = Effect.fn("KnowledgeDoctor.isAncestor")(function* (
     : false;
 });
 
+// The whole-history path-removal log measured 21.3 MB in November 2026, past the kit's default 16 MiB
+// bound, and it walks every commit with rename detection: read it on its own instance with a 64 MiB
+// fail-closed bound and the patient deadline, so it never goes partial.
+const KNOWLEDGE_HISTORY_GIT_OPTIONS = GitOptions.make({
+  maxOutputBytes: 64 * 1024 * 1024,
+  timeout: PATIENT_GIT_OPTIONS.timeout,
+});
+
 // The tree's deleted and renamed-away paths, newest first. History is optional evidence for root
-// attribution: a shallow clone, a failed spawn, or a non-zero exit yields `O.none()`, never a failure.
+// attribution: a shallow clone or any failed git run (an overflow of the 64 MiB bound included)
+// yields `O.none()`, never a failure.
 const pathRemovalsLive = Effect.fn("KnowledgeDoctor.pathRemovals")(function* (repoRoot: string, treeCommit: string) {
-  const shallow = yield* runCapturedStreams({
-    command: "git",
-    args: ["rev-parse", "--is-shallow-repository"],
-    cwd: repoRoot,
-    extendEnv: true,
-    trim: true,
-  });
-  if (shallow.exitCode !== 0 || Str.equivalence(shallow.stdout, "true")) {
+  const git = yield* Git;
+  const shallow = yield* git.isShallow(repoRoot).pipe(Effect.option);
+  if (O.getOrElse(shallow, constTrue)) {
     return O.none<ReadonlyArray<KnowledgePathRemoval>>();
   }
-  const log = yield* runCapturedStreams({
-    command: "git",
-    args: [...KNOWLEDGE_PATH_REMOVAL_LOG_ARGS, treeCommit],
-    cwd: repoRoot,
-    extendEnv: true,
-  });
-  return log.exitCode === 0 ? O.some(parseKnowledgePathRemovals(log.stdout)) : O.none();
+  const history = yield* Git.makeWith(KNOWLEDGE_HISTORY_GIT_OPTIONS);
+  return yield* history
+    .log(repoRoot, { ...KNOWLEDGE_PATH_REMOVAL_LOG, revisions: [treeCommit] })
+    .pipe(Effect.map(knowledgePathRemovalsFromLog), Effect.option);
 });
 
 type LiveTreeRequirements =
@@ -1597,13 +1602,7 @@ const liveDoctorTree = Effect.fn("KnowledgeDoctor.liveTree")(function* (
   const commandTree = yield* Effect.cached(liveCommandTree(materialized).pipe(Effect.provide(runtime)));
   const domain = yield* cacheKnowledgeDoctorDomain(deriveKnowledgeDoctorDomain(materialized.oracle));
   const pathRemovals = yield* Effect.cached(
-    pathRemovalsLive(materialized.repoRoot, materialized.oracle.commit).pipe(
-      Effect.catchTags({
-        PlatformError: () => Effect.succeed(O.none<ReadonlyArray<KnowledgePathRemoval>>()),
-        AdmissionWorkloadRegistrationError: () => Effect.succeed(O.none<ReadonlyArray<KnowledgePathRemoval>>()),
-      }),
-      Effect.provide(runtime)
-    )
+    pathRemovalsLive(materialized.repoRoot, materialized.oracle.commit).pipe(Effect.provide(runtime))
   );
   const tree: KnowledgeDoctorTree = {
     ...materialized.oracle,
@@ -1721,18 +1720,51 @@ export const knowledgeShallowHistoryError: {
 
 type DoctorRefs = { readonly repoRoot: string; readonly head: string; readonly mergeBase: string };
 
+// A kit failure with git's exit code becomes `onExit`; one without (git never ran) is the operational spawn failure.
+const exitCodeOr =
+  <A>(invocation: GitInvocation, spawnMessage: string, onExit: Effect.Effect<A>) =>
+  (error: GitKitError): Effect.Effect<A, KnowledgeOperationalError> =>
+    adaptGitKitError<Effect.Effect<A, KnowledgeOperationalError>>(error, invocation, {
+      onSpawnFailure: () => flow(KnowledgeOperationalError.new(spawnMessage), Effect.fail),
+      onNonZeroExit: () => onExit,
+      onTruncated: O.none(),
+    });
+
+// `git diff --name-only -z <mergeBase> <head>`: the paths the head changed since the merge-base, sorted and unique.
+const changedSinceMergeBase = Effect.fn("KnowledgeDoctor.changedSinceMergeBase")(function* (refs: DoctorRefs) {
+  const git = yield* Git;
+  const range = { base: refs.mergeBase, head: refs.head, twoDot: true } as const;
+  const paths = yield* git
+    .changedFiles(refs.repoRoot, range)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.changedFiles(refs.mergeBase, refs.head, false, range),
+          doctorGitAdapter(refs.mergeBase)
+        )
+      )
+    );
+  return sortedUniquePaths(paths);
+});
+
 const resolveDoctorRefs = Effect.fn("KnowledgeDoctor.resolveRefs")(function* (baseRef: string) {
   const repoRoot = yield* findRepoRoot().pipe(
     KnowledgeOperationalError.mapError("Failed to locate the repository root for the knowledge doctor.")
   );
-  const shallow = yield* runCapturedStreams({
-    command: "git",
-    args: ["rev-parse", "--is-shallow-repository"],
-    cwd: repoRoot,
-    extendEnv: true,
-    trim: true,
-  }).pipe(KnowledgeOperationalError.mapError("Failed to spawn git rev-parse --is-shallow-repository."));
-  yield* O.match(knowledgeShallowHistoryError(shallow.stdout, baseRef), {
+  const git = yield* Git;
+  // Only a git that ran and failed passes the gate (as an empty answer did); a spawn failure stays operational.
+  const shallow = yield* git
+    .isShallow(repoRoot)
+    .pipe(
+      Effect.catch(
+        exitCodeOr(
+          GitCommand.isShallow(),
+          "Failed to spawn git rev-parse --is-shallow-repository.",
+          Effect.succeed(false)
+        )
+      )
+    );
+  yield* O.match(knowledgeShallowHistoryError(String(shallow), baseRef), {
     onNone: () => Effect.void,
     onSome: Effect.fail,
   });
@@ -1855,43 +1887,57 @@ const mintAcceptance = Effect.fn("KnowledgeDoctor.mintAcceptance")(function* (
 });
 
 const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: KnowledgeDoctorCheckOptions) {
+  const ci = yield* isCi;
+  const progress = Effect.fn("KnowledgeDoctor.checkProgress")((phase: string) =>
+    ci ? Console.error(`[knowledge-doctor] phase: ${phase}`) : Effect.void
+  );
+  yield* progress("resolve-refs");
   const refs = yield* resolveDoctorRefs(options.baseRef);
-  return yield* Effect.scoped(
+  const checked = yield* Effect.scoped(
     Effect.gen(function* () {
+      yield* progress("materialize-head");
       const tree = yield* makeKnowledgeDoctorTree(refs.head);
+      yield* progress("read-head-seal");
       const head = yield* readKnowledgeSealFiles(tree);
+      yield* progress("materialize-base");
       const baseTree = yield* materializeKnowledgeTree(refs.mergeBase);
+      yield* progress("read-base-seal");
       const base = yield* readKnowledgeSealFiles(baseTree.oracle);
       const baseline = yield* Effect.fromOption(O.orElse(head.baseline, () => base.baseline)).pipe(
         Effect.mapError(missingBaseline)
       );
+      yield* progress("read-removals");
+      const removals = yield* tree.pathRemovals;
+      yield* progress("scan-tree");
       const report = yield* scanKnowledgeDoctorTree(tree);
       const adapter = doctorGitAdapter(`mintedAt ${baseline.mintedAt}`);
+      yield* progress("read-renames");
       const renames = yield* readGitRenames(refs.repoRoot, baseline.mintedAt, refs.head, [], adapter, () =>
         KnowledgeOperationalError.make({ message: "Malformed NUL-delimited rename output since mintedAt." })
       );
+      yield* progress("read-minted-paths");
       const mintedAtPaths = O.isSome(head.identity)
-        ? HashSet.fromIterable(
-            A.map(
-              yield* readGitTree(refs.repoRoot, baseline.mintedAt, adapter, () =>
+        ? yield* Effect.map(
+            Effect.map(
+              readGitTree(refs.repoRoot, baseline.mintedAt, adapter, () =>
                 KnowledgeOperationalError.make({ message: "Malformed NUL-delimited mintedAt ls-tree output." })
               ),
-              (entry) => entry.path
-            )
+              (value) => A.map(value, (entry) => entry.path)
+            ),
+            HashSet.fromIterable
           )
         : HashSet.empty<string>();
-      const changedPaths = yield* runGitPathList(
-        refs.repoRoot,
-        ["diff", "--name-only", "-z", refs.mergeBase, refs.head],
-        doctorGitAdapter(refs.mergeBase)
-      );
+      yield* progress("read-changes");
+      const changedPaths = yield* changedSinceMergeBase(refs);
+      yield* progress("accept-mint");
       const acceptMint = options.acceptMint
         ? yield* O.match(head.baseline, {
             onNone: () => Effect.succeedNone,
             onSome: (headBaseline) => Effect.asSome(mintAcceptance(refs, headBaseline, head.baselineText)),
           })
         : O.none<KnowledgeMintAcceptance>();
-      return yield* checkKnowledgeDoctorReport(
+      yield* progress("compare-baseline");
+      const checked = yield* checkKnowledgeDoctorReport(
         KnowledgeDoctorCheckInput.make({
           acceptMint,
           base,
@@ -1904,11 +1950,15 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
           now: options.now,
           renames: A.map(renames, (rename) => [rename.sourcePath, rename.targetPath] as const),
           report,
-          removals: yield* tree.pathRemovals,
+          removals,
         })
       );
+      yield* progress("release-archives");
+      return checked;
     })
   );
+  yield* progress("complete");
+  return checked;
 });
 
 const verifyMintLive = Effect.scoped(
@@ -1969,17 +2019,21 @@ const mintWriteContext = Effect.fn("KnowledgeDoctor.mintWriteContext")(function*
 ) {
   const head = yield* resolveGitCommit(repoRoot, "HEAD", doctorGitAdapter("HEAD"));
   const base = yield* resolveGitCommit(repoRoot, baseRef, doctorGitAdapter(baseRef));
-  const status = yield* runCapturedStreams({
-    command: "git",
-    args: ["status", "--porcelain", "--untracked-files=no"],
-    cwd: repoRoot,
-    extendEnv: true,
-    trim: true,
-  }).pipe(KnowledgeOperationalError.mapError("Failed to spawn git status --porcelain."));
+  const git = yield* Git;
+  const untracked = { untrackedFiles: "no" } as const;
+  // A git that ran and failed reads as not clean; one that never ran is the operational spawn failure.
+  const clean = yield* git
+    .status(repoRoot, untracked)
+    .pipe(
+      Effect.map(A.isReadonlyArrayEmpty),
+      Effect.catch(
+        exitCodeOr(GitCommand.status(untracked), "Failed to spawn git status --porcelain.", Effect.succeed(false))
+      )
+    );
   return KnowledgeMintWriteContext.make({
     baseRef,
     ci: yield* isCi,
-    clean: status.exitCode === 0 && Str.isEmpty(status.stdout),
+    clean,
     commit,
     headIsMinted: head === commit,
     onBase: yield* isAncestorLive(repoRoot, base, commit),
@@ -1994,7 +2048,9 @@ const mintLive = Effect.fn("KnowledgeDoctor.mintLive")(function* (options: Knowl
   );
   const commit = yield* resolveGitCommit(repoRoot, options.at, doctorGitAdapter(options.at));
   if (options.write) {
-    const reasons = knowledgeMintWriteRefusals(yield* mintWriteContext(repoRoot, commit, options.baseRef));
+    const reasons = yield* mintWriteContext(repoRoot, commit, options.baseRef).pipe(
+      Effect.map(knowledgeMintWriteRefusals)
+    );
     if (A.isReadonlyArrayNonEmpty(reasons)) {
       return yield* KnowledgeMintContextRefusal.make({
         message: `knowledge doctor mint --write: ${A.length(reasons)} condition(s) unmet at ${commit}.`,
@@ -2015,17 +2071,16 @@ const mintLive = Effect.fn("KnowledgeDoctor.mintLive")(function* (options: Knowl
 
 const ciModeLive = Effect.fn("KnowledgeDoctor.ciModeLive")(function* (baseRef: string) {
   const refs = yield* resolveDoctorRefs(baseRef);
-  const adapter = doctorGitAdapter(refs.mergeBase);
-  const changedPaths = yield* runGitPathList(
-    refs.repoRoot,
-    ["diff", "--name-only", "-z", refs.mergeBase, refs.head],
-    adapter
-  );
-  const sealed = yield* runGitPathList(
-    refs.repoRoot,
-    ["ls-tree", "--name-only", "-z", refs.mergeBase, "--", KNOWLEDGE_DOCTOR_BASELINE_PATH],
-    adapter
-  );
+  const git = yield* Git;
+  const changedPaths = yield* changedSinceMergeBase(refs);
+  const baselinePathspec = [KNOWLEDGE_DOCTOR_BASELINE_PATH];
+  const sealed = yield* git
+    .lsTree(refs.repoRoot, refs.mergeBase, { pathspec: baselinePathspec })
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(GitCommand.lsTree(refs.mergeBase, baselinePathspec), doctorGitAdapter(refs.mergeBase))
+      )
+    );
   return decideKnowledgeDoctorCiMode(
     KnowledgeDoctorCiModeInput.make({ sealedAtBase: A.isReadonlyArrayNonEmpty(sealed), changedPaths })
   );
@@ -2079,7 +2134,7 @@ const leasesLive = Effect.fn("KnowledgeDoctor.leasesLive")(function* (options: K
       const leases = O.match(head.leases, { onNone: A.empty<KnowledgeDebtLease>, onSome: (file) => file.leases });
       const base = A.isReadonlyArrayEmpty(leases)
         ? O.none<KnowledgeSealFiles>()
-        : O.some(yield* readKnowledgeSealFiles((yield* materializeKnowledgeTree(refs.mergeBase)).oracle));
+        : yield* Effect.asSome(readKnowledgeSealFiles((yield* materializeKnowledgeTree(refs.mergeBase)).oracle));
       const rows = yield* evaluateKnowledgeLeases(
         KnowledgeLeaseEvaluationInput.make({
           leases,

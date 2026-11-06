@@ -60,7 +60,8 @@ beforeAll(() =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       root = yield* fixture.tempDirectory("effected-replay-repo-");
-      store = join(yield* fixture.tempDirectory("effected-replay-store-"), "v11");
+      const tempDirectory1 = yield* fixture.tempDirectory("effected-replay-store-");
+      store = join(tempDirectory1, "v11");
       markerPath = join(dirname(store), "marker.txt");
 
       // 1.0.0 installed under .pnpm-config; 2.0.0 only in the store.
@@ -210,7 +211,8 @@ describe("Workspaces.layerWithGit — the default composite executes no config-d
         // Assembly ran — the committed catalog is there on every side.
         assertSome(before.resolve("effect", "catalog:"), "^4.0.0");
         // ...and no pnpmfile executed on any side: the ref reads, or the live one.
-        assert.isFalse(yield* (yield* FileSystem.FileSystem).exists(markerPath));
+        const exists2 = yield* (yield* FileSystem.FileSystem).exists(markerPath);
+        assert.isFalse(exists2);
         assertNone(before.resolve("hooked-dep", "catalog:"));
         assertNone(after.resolve("hooked-dep", "catalog:"));
         assertNone(live.resolve("hooked-dep", "catalog:"));

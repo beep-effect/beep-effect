@@ -164,7 +164,8 @@ export const makeMailTaggingPassesLayer = (
     Effect.gen(function* () {
       const settings = yield* practiceMailTaggingConfig;
       const driverLayer = yield* drivers(settings);
-      const platform = Layer.succeedContext(yield* Effect.context<Platform>());
+      const context1 = yield* Effect.context<Platform>();
+      const platform = Layer.succeedContext(context1);
       return makeMailTaggingPasses(
         MailTaggingPassSchedule.make({
           since: settings.since,
@@ -258,6 +259,7 @@ export const StateLockLive: Layer.Layer<StateLock, PracticeMailTaggingError, Fil
   Layer.effect(
     StateLock,
     Effect.gen(function* () {
-      return yield* makeStateLock(yield* stateDirectoryConfig);
+      const stateDirectoryConfig2 = yield* stateDirectoryConfig;
+      return yield* makeStateLock(stateDirectoryConfig2);
     }).pipe(Effect.mapError(PracticeMailTaggingError.fromConfig))
   ).pipe(Layer.provide(ProcessProbeLive));

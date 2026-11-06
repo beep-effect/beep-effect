@@ -6,6 +6,15 @@ Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Storage handoff — 2026-11-05
+
+Read the
+[workstation consolidation handoff](../oppold-corpus-salvage-restoration/history/2026-11-05-workstation-consolidation-handoff.md)
+before relying on this packet's historical source paths or extraction counts.
+The original pipeline remains `completed-retained`. Later exact-copy retirement,
+encrypted recovery and ongoing native extraction are separate evidence families;
+resolve current keepers and governed ledgers before consuming or rebuilding them.
+
 ## Mission
 
 Salvage, consolidate, dedupe, name-restore, extract, organize, and
@@ -60,9 +69,9 @@ identifiers, 99 docket-family anchors). Closeout reflection:
 - `goals/agentic-professional-runtime` — this corpus feeds its NEXT roadmap
   lane (corpus ingestion → epistemic claims); the runtime packet owns
   epistemic ingestion, not this one.
-- `goals/ip-law-knowledge-graph` — consumes the organized corpus; its
-  ontology grounding research now includes the corpus-adjacent sources (see
-  its `research/ontology-grounding-corpus.md`).
+- [`practice-kg-mcp`](../practice-kg-mcp/README.md) — current owner of the
+  queryable practice graph. The former IP-law graph packet was retired;
+  its historical references are not current launch targets.
 - `goals/agentic-cad-patent-tooling` — the Precision Planting CAD package
   directory is its active workspace; this packet catalogs a copy and leaves
   the original in place.

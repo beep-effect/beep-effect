@@ -11,14 +11,12 @@ import * as R from "effect/Record";
 describe("Yarn descriptor and identity boundaries", () => {
   it.effect("records a compound descriptor targeting a skipped row as unresolved", () =>
     Effect.gen(function* () {
-      const lockfile = yield* Lockfile.parse(
-        yield* Yaml.stringify({
-          __metadata: { version: 8 },
-          "consumer@npm:1": { version: "1", dependencies: { ghost: "npm:1" } },
-          ", ghost@npm:1": { version: "1", resolution: "ghost@npm:1" },
-        }),
-        { format: "yarn" }
-      );
+      const stringify1 = yield* Yaml.stringify({
+        __metadata: { version: 8 },
+        "consumer@npm:1": { version: "1", dependencies: { ghost: "npm:1" } },
+        ", ghost@npm:1": { version: "1", resolution: "ghost@npm:1" },
+      });
+      const lockfile = yield* Lockfile.parse(stringify1, { format: "yarn" });
       assert.deepStrictEqual(
         A.map(lockfile.packages, (pkg) => ({
           name: pkg.name,
@@ -37,14 +35,12 @@ describe("Yarn descriptor and identity boundaries", () => {
 
   it.effect("records an unsupported-protocol descriptor targeting a skipped row as unresolved", () =>
     Effect.gen(function* () {
-      const lockfile = yield* Lockfile.parse(
-        yield* Yaml.stringify({
-          __metadata: { version: 8 },
-          "ghost@not-a-protocol": {},
-          "real@npm:1.0.0": { dependencies: { ghost: "not-a-protocol" } },
-        }),
-        { format: "yarn" }
-      );
+      const stringify2 = yield* Yaml.stringify({
+        __metadata: { version: 8 },
+        "ghost@not-a-protocol": {},
+        "real@npm:1.0.0": { dependencies: { ghost: "not-a-protocol" } },
+      });
+      const lockfile = yield* Lockfile.parse(stringify2, { format: "yarn" });
       assert.deepStrictEqual(
         A.map(lockfile.packages, (pkg) => ({
           name: pkg.name,
@@ -63,16 +59,14 @@ describe("Yarn descriptor and identity boundaries", () => {
 
   it.effect("preserves skipped-row aliases to emitted locators and descriptor overwrite precedence", () =>
     Effect.gen(function* () {
-      const lockfile = yield* Lockfile.parse(
-        yield* Yaml.stringify({
-          __metadata: { version: 8 },
-          "consumer@npm:1": { dependencies: { ghost: "npm:1" } },
-          "ghost@npm:1": { resolution: "ghost@npm:previous" },
-          "real@npm:1": { resolution: "real@npm:1" },
-          ", ghost@npm:1": { resolution: "real@npm:1" },
-        }),
-        { format: "yarn" }
-      );
+      const stringify3 = yield* Yaml.stringify({
+        __metadata: { version: 8 },
+        "consumer@npm:1": { dependencies: { ghost: "npm:1" } },
+        "ghost@npm:1": { resolution: "ghost@npm:previous" },
+        "real@npm:1": { resolution: "real@npm:1" },
+        ", ghost@npm:1": { resolution: "real@npm:1" },
+      });
+      const lockfile = yield* Lockfile.parse(stringify3, { format: "yarn" });
       assert.strictEqual(lockfile.packages.length, 3);
       assert.deepStrictEqual(
         A.map(lockfile.packagesNamed("consumer"), (pkg) => ({
@@ -134,12 +128,11 @@ describe("Yarn descriptor and identity boundaries", () => {
 
   it.effect("omits workspace paths when all descriptors are wildcard, empty, or non-workspace", () =>
     Effect.gen(function* () {
-      const fields = yield* parseYarn(
-        yield* Yaml.stringify({
-          "root@workspace:*, root@workspace:, root@npm:1": { linkType: "soft" },
-          "npmsoft@npm:1": { linkType: "soft" },
-        })
-      );
+      const stringify4 = yield* Yaml.stringify({
+        "root@workspace:*, root@workspace:, root@npm:1": { linkType: "soft" },
+        "npmsoft@npm:1": { linkType: "soft" },
+      });
+      const fields = yield* parseYarn(stringify4);
       assert.deepStrictEqual(
         A.map(fields.packages, (pkg) => [pkg.name, pkg.isWorkspace, pkg.relativePath]),
         [

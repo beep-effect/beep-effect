@@ -258,7 +258,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("fleet mirror scan", (it) => {
       );
 
       expect(snapshot.target.materialized).toBe(false);
-      expect(yield* fs.exists(marker)).toBe(false);
+      const exists1 = yield* fs.exists(marker);
+      expect(exists1).toBe(false);
     }),
     SCAN_TIMEOUT_MILLIS
   );

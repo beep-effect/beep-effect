@@ -152,9 +152,11 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       );
 
       const failure = yield* acp.agent.initialize({ protocolVersion: 1 }).pipe(Effect.flip);
-      assert.strictEqual(yield* Deferred.await(termination), expectedError);
+      const await1 = yield* Deferred.await(termination);
+      assert.strictEqual(await1, expectedError);
       assert.strictEqual(failure, expectedError);
-      assert.isEmpty(yield* Ref.get(logs));
+      const got2 = yield* Ref.get(logs);
+      assert.isEmpty(got2);
     })
   );
 
@@ -208,23 +210,20 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       // A negotiating client takes the generation-2 path until `initialize` answers.
       const prompt = yield* acp.agent.prompt(helloPrompt("session-1")).pipe(Effect.forkScoped);
       // The first typed RPC of a connection takes the first typed id.
-      assert.include(yield* Queue.take(output), `"id":${RPC_REQUEST_ID_START}`);
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(SessionUpdateNotification, {
-          jsonrpc: "2.0",
-          method: "session/update",
-          params: { sessionId: "session-1", update: idle },
-        })
-      );
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(PromptResponse, {
-          jsonrpc: "2.0",
-          id: RPC_REQUEST_ID_START,
-          result: { messageId: "message-1" },
-        })
-      );
+      const take3 = yield* Queue.take(output);
+      assert.include(take3, `"id":${RPC_REQUEST_ID_START}`);
+      const encodedJsonl = yield* encodeJsonl(SessionUpdateNotification, {
+        jsonrpc: "2.0",
+        method: "session/update",
+        params: { sessionId: "session-1", update: idle },
+      });
+      yield* Queue.offer(input, encodedJsonl);
+      const encodedJsonl4 = yield* encodeJsonl(PromptResponse, {
+        jsonrpc: "2.0",
+        id: RPC_REQUEST_ID_START,
+        result: { messageId: "message-1" },
+      });
+      yield* Queue.offer(input, encodedJsonl4);
 
       const { update } = yield* Deferred.await(delivered);
       assert.deepEqual(update.sessionUpdate === "state_update" && update.state === "idle" ? update : undefined, idle);
@@ -255,13 +254,14 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       assert.deepStrictEqual(error.signal, expected.signal);
 
       // A success would surface as a defect here; only the failure is compared.
-      assert.strictEqual(yield* acp.raw.request("x/echo", {}).pipe(Effect.flip, Effect.orDie), error);
-      assert.strictEqual(yield* acp.raw.notify("x/notify", {}).pipe(Effect.flip), error);
-      assert.strictEqual(yield* acp.agent.cancel({ sessionId: "mock-session-1" }).pipe(Effect.flip), error);
-      assert.strictEqual(
-        yield* acp.agent.createSession({ cwd: process.cwd(), mcpServers: [] }).pipe(Effect.flip),
-        error
-      );
+      const pipe5 = yield* acp.raw.request("x/echo", {}).pipe(Effect.flip, Effect.orDie);
+      assert.strictEqual(pipe5, error);
+      const pipe6 = yield* acp.raw.notify("x/notify", {}).pipe(Effect.flip);
+      assert.strictEqual(pipe6, error);
+      const pipe7 = yield* acp.agent.cancel({ sessionId: "mock-session-1" }).pipe(Effect.flip);
+      assert.strictEqual(pipe7, error);
+      const pipe8 = yield* acp.agent.createSession({ cwd: process.cwd(), mcpServers: [] }).pipe(Effect.flip);
+      assert.strictEqual(pipe8, error);
     })
   );
 
@@ -318,8 +318,10 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       assert.equal(streamed[1]?._tag, "ElicitationComplete");
       assert.equal((yield* Ref.get(updates)).length, 2);
       assert.equal((yield* Ref.get(elicitationCompletions)).length, 1);
-      assert.deepEqual(yield* Ref.get(typedRequests), [{ message: "hello from typed request" }]);
-      assert.deepEqual(yield* Ref.get(typedNotifications), [{ count: 2 }]);
+      const got9 = yield* Ref.get(typedRequests);
+      assert.deepEqual(got9, [{ message: "hello from typed request" }]);
+      const got10 = yield* Ref.get(typedNotifications);
+      assert.deepEqual(got10, [{ count: 2 }]);
       const observedContexts = yield* Ref.get(requestContexts);
       assert.deepEqual(
         A.map(observedContexts, (context) => context.method),
@@ -370,10 +372,8 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       const session = yield* acp.agent.createSession({ cwd: process.cwd(), mcpServers: [] });
       yield* acp.agent.prompt({ sessionId: session.sessionId, prompt: [{ type: "text", text: "show the diff" }] });
 
-      const diffUpdate = A.findFirst(
-        yield* Ref.get(updates),
-        (notification) => notification.update.sessionUpdate === "tool_call_update"
-      );
+      const got11 = yield* Ref.get(updates);
+      const diffUpdate = A.findFirst(got11, (notification) => notification.update.sessionUpdate === "tool_call_update");
       assert.deepEqual(O.getOrUndefined(O.map(diffUpdate, (notification) => notification.update)), {
         sessionUpdate: "tool_call_update",
         toolCallId: "tool-diff",
@@ -449,9 +449,11 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       const session = yield* acp.agent.createSession({ cwd: process.cwd(), mcpServers: [] });
       yield* acp.agent.prompt({ sessionId: session.sessionId, prompt: [{ type: "text", text: "exercise MCP" }] });
 
-      assert.deepEqual(yield* Ref.get(methods), ["message"]);
+      const got12 = yield* Ref.get(methods);
+      assert.deepEqual(got12, ["message"]);
       yield* acp.agent.notifyMcp({ serverId: "test-server", requestId: "mcp-1", method: "notifications/progress" });
-      assert.equal(yield* Deferred.await(notified), "notifications/progress");
+      const await13 = yield* Deferred.await(notified);
+      assert.equal(await13, "notifications/progress");
     })
   );
 
@@ -487,8 +489,10 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
 
       assert.equal((yield* Ref.get(updates)).length, 2);
       assert.equal((yield* Ref.get(elicitationCompletions)).length, 1);
-      assert.deepEqual(yield* Ref.get(typedRequests), [{ message: "hello from typed request" }]);
-      assert.deepEqual(yield* Ref.get(typedNotifications), [{ count: 2 }]);
+      const got14 = yield* Ref.get(typedRequests);
+      assert.deepEqual(got14, [{ message: "hello from typed request" }]);
+      const got15 = yield* Ref.get(typedNotifications);
+      assert.deepEqual(got15, [{ count: 2 }]);
     })
   );
 
@@ -509,7 +513,8 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       yield* acp.agent.prompt(helloPrompt(session.sessionId));
 
       // The plan update and the idle state update each reach the healthy handler.
-      assert.equal(yield* Ref.get(successfulHandlers), 2);
+      const got16 = yield* Ref.get(successfulHandlers);
+      assert.equal(got16, 2);
     })
   );
 
@@ -525,12 +530,7 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
       const firstOutbound = yield* Queue.take(output);
       const secondOutbound = yield* Queue.take(output);
 
-      const firstIsInitialize = yield* decodeInitializeRequest(firstOutbound).pipe(
-        Effect.match({
-          onFailure: () => false,
-          onSuccess: () => true,
-        })
-      );
+      const firstIsInitialize = yield* decodeInitializeRequest(firstOutbound).pipe(Effect.isSuccess);
 
       const initializeRequest = firstIsInitialize
         ? yield* decodeInitializeRequest(firstOutbound)
@@ -541,25 +541,26 @@ it.layer(NodeServices.layer, { timeout: "20 seconds" })("effect-acp client", (it
 
       assert.notEqual(initializeRequest.id, extRequest.id);
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(InitializeResponse, {
-          jsonrpc: "2.0",
-          id: initializeRequest.id,
-          result: {
-            protocolVersion: 2,
-            capabilities: {},
-            info: { name: "mock-agent", version: "0.0.0" },
-          },
-        })
-      );
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: extRequest.id, result: { ok: true } })
-      );
+      const encodedJsonl17 = yield* encodeJsonl(InitializeResponse, {
+        jsonrpc: "2.0",
+        id: initializeRequest.id,
+        result: {
+          protocolVersion: 2,
+          capabilities: {},
+          info: { name: "mock-agent", version: "0.0.0" },
+        },
+      });
+      yield* Queue.offer(input, encodedJsonl17);
+      const encodedJsonl18 = yield* encodeJsonl(ExtResponse, {
+        jsonrpc: "2.0",
+        id: extRequest.id,
+        result: { ok: true },
+      });
+      yield* Queue.offer(input, encodedJsonl18);
 
       assert.equal((yield* Fiber.join(initializeFiber)).protocolVersion, 2);
-      assert.deepEqual(yield* Fiber.join(extFiber), { ok: true });
+      const join19 = yield* Fiber.join(extFiber);
+      assert.deepEqual(join19, { ok: true });
     })
   );
 });

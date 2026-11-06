@@ -302,7 +302,8 @@ describe("CacheKey", () => {
           // A digest of nothing would be a constant, so every run would key
           // against the same value and the cache would always hit with the
           // wrong contents.
-          assertNone(yield* CacheKey.hashFiles([]));
+          const hashFiles1 = yield* CacheKey.hashFiles([]);
+          assertNone(hashFiles1);
         })
       );
     });
@@ -425,10 +426,9 @@ describe("CacheKey", () => {
         Effect.gen(function* () {
           const root = WORKSPACE;
           const matched = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["**/pnpm-lock.yaml"] });
-          assert.deepStrictEqual(
-            yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/pnpm-lock.yaml"] }),
-            yield* CacheKey.hashFiles(matched)
-          );
+          const hashMatching2 = yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/pnpm-lock.yaml"] });
+          const hashFiles7 = yield* CacheKey.hashFiles(matched);
+          assert.deepStrictEqual(hashMatching2, hashFiles7);
         })
       );
     });
@@ -437,7 +437,8 @@ describe("CacheKey", () => {
       it.effect("reports nothing rather than a digest when the patterns match nothing", () =>
         Effect.gen(function* () {
           const root = WORKSPACE;
-          assertNone(yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/*.absent"] }));
+          const hashMatching3 = yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/*.absent"] });
+          assertNone(hashMatching3);
         })
       );
     });
@@ -466,7 +467,8 @@ describe("CacheKey", () => {
           assert.deepStrictEqual(wildcard, literal);
           const literalHash = yield* CacheKey.hashMatching({ workspace: root, patterns: ["..lock"] });
           assertSome(literalHash, O.getOrThrow(literalHash));
-          assert.deepStrictEqual(literalHash, yield* CacheKey.hashMatching({ workspace: root, patterns: ["..*"] }));
+          const hashMatching4 = yield* CacheKey.hashMatching({ workspace: root, patterns: ["..*"] });
+          assert.deepStrictEqual(literalHash, hashMatching4);
         })
       );
     });
@@ -486,10 +488,9 @@ describe("CacheKey", () => {
           const root = WORKSPACE;
           const matched = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["*.order"] });
           assert.deepStrictEqual(matched, ["/ws/Z.order", "/ws/a.order", "/ws/ä.order"]);
-          assert.deepStrictEqual(
-            yield* CacheKey.hashFiles(matched),
-            yield* CacheKey.hashFiles(["/ws/ä.order", "/ws/a.order", "/ws/Z.order"])
-          );
+          const hashFiles5 = yield* CacheKey.hashFiles(matched);
+          const hashFiles8 = yield* CacheKey.hashFiles(["/ws/ä.order", "/ws/a.order", "/ws/Z.order"]);
+          assert.deepStrictEqual(hashFiles5, hashFiles8);
         })
       );
     });
@@ -704,7 +705,10 @@ describe("CacheKey codec property", () => {
     [Arbitrary.schema(CacheKey)],
     ([value]) =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* S.decodeEffect(CacheKey)(yield* S.encodeEffect(CacheKey)(value)), value);
+        const argument = S.decodeEffect(CacheKey);
+        const value1 = yield* S.encodeEffect(CacheKey)(value);
+        const value6 = yield* argument(value1);
+        assert.deepStrictEqual(value6, value);
       }),
     { arbitrary: fcRuns(100) }
   );

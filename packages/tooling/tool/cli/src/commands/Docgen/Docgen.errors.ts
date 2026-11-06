@@ -4,9 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
 /**
  * Reports a Docgen command error using the historical terminal prefix.

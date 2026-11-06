@@ -52,14 +52,16 @@ describe("CST explicit mapping indentation regressions", () => {
           []
         );
       }
-      assert.deepStrictEqual(yield* Yaml.parse(source), { b: 2 });
+      const parsed = yield* Yaml.parse(source);
+      assert.deepStrictEqual(parsed, { b: 2 });
     })
   );
 
   it.effect("deeper explicit mappings recurse and same-indent entries share their map", () =>
     Effect.gen(function* () {
       const source = "? a\n: \n  ? b\n  : 1\n  ? c\n  : 2\n? d\n: 3\n";
-      assert.deepStrictEqual(yield* Yaml.parse(source), { a: { b: 1, c: 2 }, d: 3 });
+      const parsed1 = yield* Yaml.parse(source);
+      assert.deepStrictEqual(parsed1, { a: { b: 1, c: 2 }, d: 3 });
       const document = A.getUnsafe(parseCSTAll(source), 0);
       const maps = A.filter(document.children ?? [], (node) => node.type === "block-map");
       assert.strictEqual(maps.length, 1);

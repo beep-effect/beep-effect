@@ -381,7 +381,8 @@ const decodeBoundaryValue = S.decodeUnknownEffect(S.Option(FixtureSurface));
 const parentIdentity = Effect.fnUntraced(function* (parent: unknown, protobuf: boolean) {
   if (parent === undefined || parent === "") return O.none<string>();
   if (S.is(S.Uint8Array)(parent) && parent.byteLength === 0) return O.none<string>();
-  return O.some(yield* id(parent, 16, protobuf));
+  const id1 = yield* id(parent, 16, protobuf);
+  return O.some(id1);
 });
 const claudeSpanKind = Match.type<string | undefined>().pipe(
   Match.when("claude_code.llm_request", (): typeof SpanKind.Type => "LLM"),
@@ -430,7 +431,7 @@ const sourceUsage = Effect.fnUntraced(function* (
 const privateHash = (salt: string) => (value: string) =>
   hashPrivateIdentifier(value, O.some(salt)).pipe(Effect.mapError(() => failure("hash-failure")));
 const hashTextOption = Effect.fnUntraced(function* (value: O.Option<string>, hash: ReturnType<typeof privateHash>) {
-  return O.isSome(value) ? O.some(yield* hash(value.value)) : O.none();
+  return O.isSome(value) ? yield* Effect.asSome(hash(value.value)) : O.none();
 });
 const readManagedController = Effect.fnUntraced(function* (
   attributes: typeof Attributes.Type,
@@ -451,8 +452,8 @@ const readManagedController = Effect.fnUntraced(function* (
     sourceSessionId: yield* requiredText("beep.managed.session_hash"),
     evidenceId: yield* requiredText("beep.managed.evidence_id"),
     elapsedNanos: yield* requiredText("beep.managed.elapsed_nanos"),
-    startTimeUnixNano: O.getOrElse(timing.startTimeUnixNano, () => ""),
-    endTimeUnixNano: O.getOrElse(timing.endTimeUnixNano, () => ""),
+    startTimeUnixNano: yield* Effect.fromOption(timing.startTimeUnixNano),
+    endTimeUnixNano: yield* Effect.fromOption(timing.endTimeUnixNano),
   }).pipe(Effect.mapError(() => failure("invalid-envelope")));
 });
 const readSpanSource = Effect.fnUntraced(function* (
@@ -547,11 +548,13 @@ const projectSpan = Effect.fnUntraced(function* (
     timing,
     managed,
   } = source;
-  const controller = managed
-    ? O.some(yield* readManagedController(attributes, timing))
-    : O.none<ManagedControllerObservation>();
+  const controller = yield* managed
+    ? readManagedController(attributes, timing).pipe(Effect.asSome)
+    : Effect.succeed(O.none<ManagedControllerObservation>());
   if (O.isSome(controller)) {
-    const expectedIdentity = yield* managedControllerTraceIdentity(controller.value.launchId);
+    const expectedIdentity = yield* managedControllerTraceIdentity(controller.value.launchId).pipe(
+      Effect.mapError(() => failure("hash-failure"))
+    );
     if (traceId !== expectedIdentity.traceId || spanId !== expectedIdentity.spanId || O.isSome(parentSpanId))
       return yield* failure("invalid-envelope");
   }

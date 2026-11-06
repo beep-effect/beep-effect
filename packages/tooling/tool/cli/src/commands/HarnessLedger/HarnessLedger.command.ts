@@ -14,6 +14,10 @@ import {
   LedgerDisposition,
   MechanismClass,
 } from "@beep/repo-ai-metrics";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { jsonFlag } from "@beep/repo-cli-kit/cli/Flags";
+import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -24,10 +28,6 @@ import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { jsonFlag } from "../../internal/cli/Flags.ts";
-import { printCommandJson } from "../../internal/cli/Json.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { HarnessLedgerInputError, HarnessLedgerIoError } from "./HarnessLedger.errors.ts";
 import {
   HarnessLedgerAdmission,
@@ -174,7 +174,8 @@ export const harnessLedgerProposeCommand = Command.make(
         })
       );
       if (input.json) {
-        return yield* printCommandJson(yield* encodeLedgerRowValue(row));
+        const encodedLedgerRowValue = yield* encodeLedgerRowValue(row);
+        return yield* printCommandJson(encodedLedgerRowValue);
       }
       return yield* printLines([row.rowId, `Harness-Ledger: ${row.rowId}`]);
     }).pipe(
@@ -265,7 +266,8 @@ export const harnessLedgerDispositionCommand = Command.make(
         })
       );
       if (input.json) {
-        return yield* printCommandJson(yield* encodeLedgerRowValue(row));
+        const encodedLedgerRowValue1 = yield* encodeLedgerRowValue(row);
+        return yield* printCommandJson(encodedLedgerRowValue1);
       }
       return yield* printLines([
         `${row.rowId} ${row.disposition} (supersedes ${O.getOrElse(row.previousRowId, () => "-")})`,

@@ -1,15 +1,22 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   encodeManagedControllerObservation,
+  ManagedControllerError,
   ManagedControllerObservation,
 } from "@beep/repo-ai-metrics/managed-controller";
 import { encodeNativeTraceBatch, NativeExportInput } from "@beep/repo-ai-metrics/native-export";
-import { NativeTraceBatch, NativeTraceRequest, projectNativeTraceRequest } from "@beep/repo-ai-metrics/native-trace";
+import {
+  NativeTraceBatch,
+  NativeTraceError,
+  NativeTraceMetadata,
+  NativeTraceRequest,
+  projectNativeTraceRequest,
+} from "@beep/repo-ai-metrics/native-trace";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "@beep/repo-ai-metrics/privacy";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -18,7 +25,18 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { nativeTraceWire as wire } from "../src/internal/native-trace-wire.ts";
+import * as Protobuf from "protobufjs";
+
+// Independent OTLP v1.9.0 fixture codec: tests do not import a private production encoder.
+const wire = Protobuf.parse(`syntax="proto3";
+message Value { oneof value { string string_value=1; bool bool_value=2; int64 int_value=3; } }
+message Attribute { string key=1; Value value=2; }
+message Resource { repeated Attribute attributes=1; }
+message Status { int32 code=3; }
+message Span { bytes trace_id=1; bytes span_id=2; bytes parent_span_id=4; string name=5; int32 kind=6; fixed64 start_time_unix_nano=7; fixed64 end_time_unix_nano=8; repeated Attribute attributes=9; Status status=15; }
+message ScopeSpans { repeated Span spans=2; }
+message ResourceSpans { Resource resource=1; repeated ScopeSpans scope_spans=2; }
+message Request { repeated ResourceSpans resource_spans=1; }`).root.lookupType("Request");
 
 const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
 const salt = "synthetic-managed-controller-salt";
@@ -94,9 +112,8 @@ it.layer(NodeCrypto.layer)((it) => {
         const span = O.getOrThrow(A.head(batch.spans));
         expect(span.kind).toBe("AGENT");
         assertSome(span.sessionHash, observation.sourceSessionId);
-        assertFalse(
-          O.contains(span.sessionHash, yield* hashPrivateIdentifier(observation.sourceSessionId, O.some(salt)))
-        );
+        const doubleHashedSession = yield* hashPrivateIdentifier(observation.sourceSessionId, O.some(salt));
+        assertFalse(O.contains(span.sessionHash, doubleHashedSession));
         assertSome(span.managedController, observation);
         deepStrictEqual(span.usage, {
           convention: "unknown",
@@ -166,9 +183,9 @@ it.layer(NodeCrypto.layer)((it) => {
       );
       expect(batch.spans[0]?.eventId).toBe("187d56666add5c37ca70e7a31afed8dd622fe4531b8b74cdc89c2eb60765d0a7");
       expect(batch.requestId).toBe("cb3b993a865b8abd51649ecd00509d1c1a704af22d32d6a31cd37b01c66d88dd");
-      expect(yield* hashPublicTextSha256(yield* encodeBatch(batch))).toBe(
-        "08286b60b3777f70070d8412ca7e5b258f126c4780fe21da8efc0fdedc4201a4"
-      );
+      const batchJson = yield* encodeBatch(batch);
+      const batchHash = yield* hashPublicTextSha256(batchJson);
+      expect(batchHash).toBe("08286b60b3777f70070d8412ca7e5b258f126c4780fe21da8efc0fdedc4201a4");
       const encoded = yield* encodeNativeTraceBatch(
         NativeExportInput.make({
           project: "legacy-golden",
@@ -190,9 +207,11 @@ it.layer(NodeCrypto.layer)((it) => {
       const legacy = O.getOrThrow(A.head(native.spans));
       assertNone(legacy.managedController);
       assertNone(legacy.sessionHash);
-      expect(legacy.eventId).toBe(
-        yield* hashPrivateIdentifier(`native-span/v1:${id("e")}:${legacy.traceId}:${legacy.spanId}`, O.some(salt))
+      const legacyEventId = yield* hashPrivateIdentifier(
+        `native-span/v1:${id("e")}:${legacy.traceId}:${legacy.spanId}`,
+        O.some(salt)
       );
+      expect(legacy.eventId).toBe(legacyEventId);
       expect(legacy.eventId).not.toBe(managed.spans[0]?.eventId);
       const encoded = yield* encodeBatch(native);
       expect(encoded).not.toContain("managedController");
@@ -230,17 +249,168 @@ it.layer(NodeCrypto.layer)((it) => {
         NativeTraceRequest.make({ ...request(body), syntheticFixtureMetadata: O.some(true) })
       );
       expect(fixture.spans).toEqual([]);
-      expect(
-        yield* S.decodeEffect(ManagedControllerObservation)({
-          ...observation,
-          elapsedNanos: "120000000001",
-        }).pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(
-        yield* S.decodeEffect(ManagedControllerObservation)({ ...observation, endTimeUnixNano: "1" }).pipe(
-          Effect.isFailure
-        )
-      ).toBe(true);
+      const oversizedInterval = yield* S.decodeEffect(ManagedControllerObservation)({
+        ...observation,
+        elapsedNanos: "120000000001",
+      }).pipe(Effect.isFailure);
+      expect(oversizedInterval).toBe(true);
+      const reversedInterval = yield* S.decodeEffect(ManagedControllerObservation)({
+        ...observation,
+        endTimeUnixNano: "1",
+      }).pipe(Effect.isFailure);
+      expect(reversedInterval).toBe(true);
+    })
+  );
+  it.effect("refuses absent and malformed managed provenance without retaining private values", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeManagedControllerObservation(observation);
+      const value = yield* read(body);
+      const original = O.getOrThrow(
+        A.head(O.getOrThrow(A.head(O.getOrThrow(A.head(value.resourceSpans)).scopeSpans)).spans)
+      );
+      for (const key of [
+        "beep.managed.launch_id",
+        "beep.managed.launch_route_id",
+        "beep.managed.process_instance_id",
+        "beep.managed.session_hash",
+        "beep.managed.evidence_id",
+        "beep.managed.elapsed_nanos",
+      ]) {
+        for (const malformed of [false, true]) {
+          const attributes = A.filter(original.attributes, (attribute) => attribute.key !== key);
+          const changed = wire
+            .encode({
+              resourceSpans: [
+                {
+                  scopeSpans: [
+                    {
+                      spans: [
+                        {
+                          ...original,
+                          attributes: malformed
+                            ? [...attributes, { key, value: { stringValue: "PRIVATE_INVALID_BINDING" } }]
+                            : attributes,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            })
+            .finish();
+          const batch = yield* projectNativeTraceRequest(request(changed));
+          expect(batch.spans).toEqual([]);
+          expect(batch.rejections).toEqual([{ ordinal: 0, reason: "invalid-span" }]);
+          const rejectedBatch = yield* encodeBatch(batch);
+          expect(rejectedBatch).not.toContain("PRIVATE_INVALID_BINDING");
+        }
+      }
+    })
+  );
+
+  it.effect("refuses controller identity substitution, parent attachment and incomplete measured intervals", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeManagedControllerObservation(observation);
+      const value = yield* read(body);
+      const original = O.getOrThrow(
+        A.head(O.getOrThrow(A.head(O.getOrThrow(A.head(value.resourceSpans)).scopeSpans)).spans)
+      );
+      for (const changedSpan of [
+        { ...original, traceId: new Uint8Array(16).fill(1) },
+        { ...original, spanId: new Uint8Array(8).fill(1) },
+        { ...original, parentSpanId: new Uint8Array(8).fill(1) },
+        { ...original, startTimeUnixNano: "0" },
+        { ...original, endTimeUnixNano: "0" },
+        { ...original, status: { code: 2 } },
+      ]) {
+        const changed = wire.encode({ resourceSpans: [{ scopeSpans: [{ spans: [changedSpan] }] }] }).finish();
+        const batch = yield* projectNativeTraceRequest(request(changed));
+        expect(batch.spans).toEqual([]);
+        expect(batch.rejections).toEqual([{ ordinal: 0, reason: "invalid-span" }]);
+      }
+      const convention = yield* projectNativeTraceRequest(
+        NativeTraceRequest.make({ ...request(body), usageConvention: "openinference" })
+      );
+      expect(convention.spans).toEqual([]);
+      expect(convention.rejections).toHaveLength(1);
+    })
+  );
+
+  it.effect("metadata codec refuses inconsistent controller claims while native metadata stays valid", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeManagedControllerObservation(observation);
+      const batch = yield* projectNativeTraceRequest(request(body));
+      const valid = O.getOrThrow(A.head(batch.spans));
+      expect(S.is(NativeTraceMetadata)(valid)).toBe(true);
+      for (const invalid of [
+        { ...valid, kind: "LLM" },
+        { ...valid, status: "error" },
+        { ...valid, sessionHash: O.none() },
+        { ...valid, startTimeUnixNano: O.none() },
+        { ...valid, endTimeUnixNano: O.none() },
+        { ...valid, modelName: O.some("private-model") },
+        { ...valid, modelHash: O.some(id("a")) },
+        { ...valid, usage: { ...valid.usage, input: O.some(1) } },
+        { ...valid, usage: { ...valid.usage, convention: "openinference" } },
+      ])
+        expect(S.is(NativeTraceMetadata)(invalid)).toBe(false);
+      expect(S.is(NativeTraceMetadata)({ ...valid, managedController: O.none() })).toBe(true);
+      expect(NativeTraceError.make({ reason: "invalid-envelope" }).message).toBe(
+        "Native trace request refused (invalid-envelope)."
+      );
+    })
+  );
+});
+
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
+  it.effect("refuses invalid controller evidence before encoding or hashing it", () =>
+    Effect.gen(function* () {
+      const invalid = ManagedControllerObservation.make(
+        { ...observation, elapsedNanos: "120000000001" },
+        { disableChecks: true }
+      );
+      const error = yield* Effect.flip(encodeManagedControllerObservation(invalid));
+      expect(error).toEqual(ManagedControllerError.make({ reason: "evidence" }));
+    })
+  );
+
+  it.effect("retries the whole request when only the controller identity hash fails", () =>
+    Effect.gen(function* () {
+      const body = yield* encodeManagedControllerObservation(observation);
+      const subtle = globalThis.crypto.subtle;
+      const digest = subtle.digest.bind(subtle);
+      const isIdentityInput = (data: Parameters<SubtleCrypto["digest"]>[1]) => {
+        const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data.buffer);
+        return Str.startsWith("managed-controller-trace/v1:")(new TextDecoder().decode(bytes));
+      };
+      const spy = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(subtle, "digest").mockImplementation((algorithm, data) => {
+            if (isIdentityInput(data)) throw new Error("PRIVATE_DIGEST_FAILURE");
+            return digest(algorithm, data);
+          })
+        ),
+        (mock) => Effect.sync(() => mock.mockRestore())
+      );
+      const error = yield* Effect.flip(projectNativeTraceRequest(request(body)));
+      expect(error).toEqual(NativeTraceError.make({ reason: "hash-failure" }));
+      expect(spy).toHaveBeenCalled();
+    })
+  );
+
+  it.effect("returns a content-free encoding error when the protobuf writer fails", () =>
+    Effect.gen(function* () {
+      const writer = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          vi.spyOn(Protobuf.Writer.prototype, "finish").mockImplementationOnce(() => {
+            throw ManagedControllerError.make({ reason: "evidence" });
+          })
+        ),
+        (mock) => Effect.sync(() => mock.mockRestore())
+      );
+      const error = yield* Effect.flip(encodeManagedControllerObservation(observation));
+      expect(error).toEqual(ManagedControllerError.make({ reason: "encoding" }));
+      expect(writer).toHaveBeenCalledTimes(1);
     })
   );
 });

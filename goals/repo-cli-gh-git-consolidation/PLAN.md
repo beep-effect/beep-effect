@@ -30,7 +30,12 @@ zero unclassified differences). Each PR flips its own row.
 | W3 | G2 down-scoped App token; the `gh auth token` and `op read` spawns onto `@beep/commands` `Run` (D-05) | `Reviewer/*` (#74, #75, #76, #124, #247, #303), `Ci/LaneTimings.ts` (#248), `Ci/CiGovernance.ts` and `Ci/CiRerunRunnerLoss.ts` (#249) | kit merged (#2556); sites merged (#2614, D-12) |
 | W4 | G3 `ReviewThread` resource in `@beep/github` | `internal/github/GithubGraphql.ts` (#77) folds into the kit; `Yeet/internal/{Status,WatchMode,MergeGate,Reply,closeout/GhCollect}.ts` (#78 to #82) and the Yeet REST surface (#250) onto `GithubRest` and `PullRequest`; `GhCall.ts` deleted, `GhCommand.ts` (#83) shrinks | kit merged (#2600); sites merged (#2622, D-13) |
 | W5 | none (`@beep/commands` `ScriptedSpawner` as-is) | the hand-rolled scripted spawners in repo-cli tests (#125, #279), ai-metrics tests and `tailscale.test.ts` (#300); #291 records that `@beep/test-utils` adds no second double | merged, #2642 (D-14) |
-| W6 | none (the W4 kit; `GithubRest` merge title optional, check suites `per_page: 100`) | the Yeet `gh` sites D-13 deferred: `PullRequest.ts`, `ProvenanceFooter.ts`, `ReviewWindow.ts`, `Merge.ts`, `MonitorLoop.ts`, `MonitorComments.ts` and their `capture` seams | in review, this PR (D-15) |
+| W6 | none (the W4 kit; `GithubRest` merge title optional, check suites `per_page: 100`) | the Yeet `gh` sites D-13 deferred: `PullRequest.ts`, `ProvenanceFooter.ts`, `ReviewWindow.ts`, `Merge.ts`, `MonitorLoop.ts`, `MonitorComments.ts` and their `capture` seams | merged (#2648, D-15) |
+| W7 kit | `Git.revListCount`, `mergeTree` (+ `MergeTreeResult`, the `"differs"` classify kind), `upstream`, `updateRef`, `gitDir`, `diffPatch`; `fetch`, `log`, `nameStatus`, `stashPush`, `add`, `checkIgnore`, `commit`, `worktreeAdd`, `submoduleForeach`, `branchList` options; `internal/repo-run/PatientGit.ts` | none (Yeet's `patientGit` import moves to the repo-run barrel) | merged, #2665 (D-17) |
+| W7a | none (the W7 kit) | `R/commands/Yeet/**` census rows Y1-Y88 (`research/w7-site-census-2026-11-03.md`, D-16) | merged, #2708 (D-18) |
+| W7b | none (the W7 kit) | the other command groups plus Qa and Refs, census rows B1-B136 (D-16) | in review, #2721 (D-19) |
+| W7c | none (the W7 kit) | `R/commands/Worktree/**` census rows W1-W45 (D-16) | pending |
+| W7 retire | none | delete the generic runners from `internal/repo-run/GitExec.ts`, census rows X1-X10 (D-16) | pending |
 | C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `proposedCloseout` | pending |
 
 ## Closeout Checklist
