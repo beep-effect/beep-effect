@@ -3254,6 +3254,7 @@ const policyMediumTasks = [
   "lint:effect-imports-markdown",
   "lint:markdown-fences",
   "lint:retired-effect-paths",
+  "lint:entity-kit-freeze",
   "lint:retired-iri-authorities",
   "lint:schema-tag-idioms",
   "lint:holds",

@@ -12,6 +12,48 @@ in `packages/drivers/github/src/GitHubApp.ts` (`@beep/github`) establishes the r
 installation-token and early-refresh pattern; this CLI uses a separate cache with
 the requested five-minute margin and repository-scoped token request.
 
+## Review requests after a draft becomes ready
+
+The separate `pr-comment` routine is configured for `beep-effect/beep-effect`
+with `kriegcloud` in its user allowlist. Its request body is exactly:
+
+```text
+Requesting beep-reviewer review of this ready PR head.
+
+<!-- beep-reviewer:request sha=<40-character-current-head> -->
+```
+
+The routine verifies that the PR is open, ready for review, and still at that
+head, and that the requester is the PR author or a user with write access.
+Its existing claimed/reviewed guards suppress duplicate review work. The
+existing PR-opened and PR-pushed routine remains enabled; it ignores drafts
+and has no ready-event listener.
+
+`yeet ready` uses the comment route only for a PR authored by `kriegcloud` in
+that repository, while authenticated as `kriegcloud`. It first verifies the
+normal exact-head final-check receipt and ready gate. Before posting, it reads
+the complete comment and ready-event timelines and confirms the live head and
+ready state again. A previous request counts only when its entire body is the
+canonical visible sentence plus marker, its author is the authenticated account,
+and its timestamp is strictly later than the latest ready transition. A marker posted while draft,
+a marker before a later redraft/ready cycle, and an ambiguous same-second
+marker do not establish a delivered request. A missing ready transition, or a
+latest draft event without a later ready transition, is unknown and requires retry or a verified manual request.
+
+Running `yeet ready` again on an already-ready PR can repair a missing request
+after verifying its proof. Covered requests do not create commits, push, or
+change staged files. An API failure produces a warning and retry/manual-comment
+guidance; it never silently changes to a push or claims a review completed.
+For other known authors or repositories, the S32 empty-commit fallback remains
+available immediately after a real draft-to-ready flip. Already-ready calls
+never repeat that push. Expand the named code policy only after configuring
+and verifying the corresponding routine allowlist.
+
+The comment route has local scripted and real-Git safety controls. A live
+request and resulting exact-head reviewer check remain deployment acceptance
+steps; this documentation does not claim that a posted request is a completed
+review or a measured end-to-end speedup.
+
 ## Human setup checklist
 
 These steps are for Benjamin Oppold (`kriegcloud`). The implementation PR does

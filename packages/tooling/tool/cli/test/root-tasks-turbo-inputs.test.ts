@@ -117,6 +117,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "lint:effect-imports-markdown": ".patterns/c3-probe.md",
   "lint:markdown-fences": "packages/fixture/README.md",
   "lint:retired-effect-paths": "explorations/fixture/c3-probe.json",
+  "lint:entity-kit-freeze": "packages/fixture/src/c3-entity-probe.tsx",
   "lint:retired-iri-authorities": "goals/fixture/c3-probe.ttl",
   "lint:schema-tag-idioms": "scratchpad/fixture/c3-probe.cts",
   "lint:holds": "hold-ledger/claims.jsonl",
