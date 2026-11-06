@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActionEvent, decodeActionEventJson, RoundNumber, SessionId, SessionStore } from "@beep/qa-capture";
 import { LABS_WORKSPACE_ROOT } from "@beep/repo-cli-kit/cli/Labs/index";
@@ -565,14 +566,15 @@ export class CommitProvenance extends S.Opaque<CommitProvenance, { readonly bran
  */
 export const readCommitProvenance = Effect.fn("QaSession.readCommitProvenance")(function* (
   cwd: string
-): Effect.fn.Return<CommitProvenance, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const [sha, status] = yield* Effect.all(
-    [capturedText("git", ["-C", cwd, "rev-parse", "HEAD"]), capturedText("git", ["-C", cwd, "status", "--porcelain"])],
-    { concurrency: 2 }
-  );
+): Effect.fn.Return<CommitProvenance, never, Git> {
+  const git = yield* Git;
+  // Outside a checkout (or with git unavailable) both reads degrade: an unknown sha and a clean tree.
+  const [sha, status] = yield* Effect.all([Effect.option(git.revParse(cwd, "HEAD")), Effect.option(git.status(cwd))], {
+    concurrency: 2,
+  });
   return CommitProvenance.make({
-    dirty: O.match(status, { onNone: () => false, onSome: (text) => !Str.isEmpty(text) }),
-    sha: O.getOrElse(sha, () => "unknown"),
+    dirty: O.exists(status, A.isReadonlyArrayNonEmpty),
+    sha: O.getOrElse(sha, thunkUnknown),
   });
 });
 

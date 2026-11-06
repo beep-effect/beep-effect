@@ -31,12 +31,16 @@ const fixtureWorkspaceDirs: ReadonlyArray<string> = ["packages/demo", "apps/labs
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
+// One `ls-files --stage -z` record; the trailing empty entry gives the listing its final NUL.
+const stagedRecord = (path: string): string => `100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0\t${path}`;
+
 // Answers each git listing by its first matching argv flag, NUL-joined; anything else prints nothing.
 const gitFixtureSpawner = (changedFiles: ReadonlyArray<string>, addedChangesets: ReadonlyArray<string>) => {
   const replies: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
     ["--diff-filter=ACMRTUXBD", changedFiles],
     ["--diff-filter=A", addedChangesets],
-    ["ls-files", ["packages/demo/package.json", "apps/labs/cognee/package.json"]],
+    // `Git.lsFiles` reads `ls-files --stage -z` records (W7b, SPEC D-19).
+    ["ls-files", A.append(A.map(["packages/demo/package.json", "apps/labs/cognee/package.json"], stagedRecord), "")],
   ];
   return ScriptedSpawner.make((_command, args) => ({
     stdout: A.findFirst(replies, ([flag]) => A.contains(args, flag)).pipe(

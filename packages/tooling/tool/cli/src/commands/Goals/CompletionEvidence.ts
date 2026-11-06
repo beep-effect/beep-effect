@@ -14,7 +14,10 @@
  * @since 0.0.0
  */
 
-import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { Git } from "@beep/git/Git";
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { GitHubContent } from "@beep/github/GitHubContent";
+import { Repo } from "@beep/github/Repo";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -25,11 +28,28 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ghOutput } from "../../internal/github/index.ts";
-import { runGitOutput } from "../../internal/repo-run/index.ts";
-import { GhBranchRule, rulesetRequiredContextsFromRules, YeetRulesetRulesPayload } from "../Yeet/internal/Settle.ts";
+import {
+  GithubClientRequest,
+  GithubIdentity,
+  layerGithubClientFor,
+  layerGithubRepoFor,
+} from "../../internal/github/GithubIdentity.ts";
+import { rulesetRequiredContextsFromRules, YeetRulesetRulesPayload } from "../Yeet/internal/Settle.ts";
 import { YeetCommandError } from "../Yeet/Yeet.errors.ts";
-import { GoalMergeTimeEvidence } from "./CompletionEvidence.schemas.ts";
+import {
+  GoalCompletionCheckPages,
+  GoalCompletionCommit,
+  GoalCompletionPull,
+  GoalCompletionRuleSuite,
+  GoalCompletionRuleSuiteList,
+  GoalCompletionRulesetHistory,
+  GoalCompletionRulesetList,
+  GoalCompletionRulesetListEntry,
+  GoalCompletionRulesetVersion,
+  GoalCompletionSuitePages,
+  GoalCompletionTimelinePages,
+  GoalMergeTimeEvidence,
+} from "./CompletionEvidence.schemas.ts";
 import { GoalCompletionIo, GoalMergeTimeEvidenceProvider } from "./CompletionEvidence.service.ts";
 import {
   GoalCheckConclusion,
@@ -41,11 +61,9 @@ import {
   GoalMergeTimeRuleSource,
   GoalRequiredCheckFact,
   GoalRequiredCheckSnapshot,
-  GoalRuleEnforcement,
-  GoalRuleEvaluationResult,
-  GoalRuleSuiteResult,
 } from "./Goals.schemas.ts";
 import type * as Context from "effect/Context";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
   GoalCompletionEvidenceInput,
   GoalMergeTimeEvidenceRequest,
@@ -53,120 +71,204 @@ import type {
 } from "./CompletionEvidence.schemas.ts";
 import type { GoalCompletionEvidenceVerdict, GoalCompletionOutcome, GoalRuleSourceHistory } from "./Goals.schemas.ts";
 
-const gitAdapter = {
-  onSpawnFailure: (command: string) => (_cause: unknown) => YeetCommandError.make({ message: `Cannot run ${command}` }),
-  onNonZeroExit: ({ commandLine }: { readonly commandLine: string }) =>
-    YeetCommandError.make({ message: `${commandLine} failed` }),
-  onTruncated: O.none<(command: string) => YeetCommandError>(),
-};
+const decodeObservation =
+  <Schema extends S.Top & { readonly DecodingServices: never }>(schema: Schema) =>
+  (value: unknown) =>
+    S.decodeUnknownEffect(schema)(value).pipe(
+      Effect.mapError(() => YeetCommandError.make({ message: "Invalid goal completion GitHub payload" }))
+    );
 
 /**
- * Runs one read-only git command through the provided port, or the repository git adapter.
+ * Resolve typed completion reads from a fixture port or the git and GitHub kits.
  *
- * **Example** (Inspect the git reader)
+ * **Example** (Inspect the reader factory)
  *
  * ```ts
- * import { readGoalCompletionGit } from "@beep/repo-cli/commands/Goals/CompletionEvidence"
- * console.log(typeof readGoalCompletionGit)
+ * import { goalCompletionIo } from "@beep/repo-cli/commands/Goals/CompletionEvidence"
+ * console.log(typeof goalCompletionIo)
  * ```
  *
  * @category queries
  * @since 0.0.0
  */
-export const readGoalCompletionGit = Effect.fn("Goals.Completion.git")(function* (
+export const goalCompletionIo = Effect.fn("Goals.Completion.io")(function* () {
+  const supplied = yield* Effect.serviceOption(GoalCompletionIo);
+  if (O.isSome(supplied)) return supplied.value;
+  const context = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner>();
+  const error = () => YeetCommandError.make({ message: "goal completion GitHub observation: read failed" });
+  // Each read owns its scope: the returned port accepts roots later and outlives this factory.
+  const github = <A, E>(root: string, read: Effect.Effect<A, E, GitHubClient | Repo>) =>
+    Effect.flatMap(
+      Layer.build(
+        Layer.mergeAll(
+          layerGithubClientFor(GithubClientRequest.make({ identity: completionIdentity, cwd: root }), { retry: "off" }),
+          layerGithubRepoFor(root)
+        )
+      ),
+      (services) => Effect.provideContext(read, services)
+    ).pipe(Effect.scoped, Effect.provideContext(context), Effect.mapError(error));
+  const read = <A, I>(
+    root: string,
+    operation: (client: GitHubClient["Service"], at: { owner: string; repo: string }) => Effect.Effect<A, I>
+  ) =>
+    github(
+      root,
+      Effect.gen(function* () {
+        const client = yield* GitHubClient;
+        const repo = yield* Repo;
+        return yield* operation(client, { owner: repo.owner, repo: repo.repo });
+      })
+    );
+  const gitRead = <A, E>(operation: (git: Git["Service"]) => Effect.Effect<A, E>) =>
+    Effect.flatMap(Git, operation).pipe(
+      Effect.provideServiceEffect(Git, Git.make),
+      Effect.provideContext(context),
+      Effect.mapError(() => YeetCommandError.make({ message: "Goal completion git read failed" }))
+    );
+  return GoalCompletionIo.of({
+    manifestAtHead: Effect.fn("GoalCompletionIo.manifestAtHead")((root, head, path) =>
+      gitRead((git) => git.show(root, head, path))
+    ),
+    originUrl: Effect.fn("GoalCompletionIo.originUrl")((root) => gitRead((git) => git.remoteUrl(root))),
+    hostedManifest: Effect.fn("GoalCompletionIo.hostedManifest")((root, head, path) =>
+      github(
+        root,
+        Effect.flatMap(Layer.build(GitHubContent.layer), (services) =>
+          Effect.provideContext(
+            Effect.flatMap(GitHubContent, (content) => content.getFileOption(path, { ref: head })),
+            services
+          )
+        ).pipe(Effect.scoped)
+      )
+    ),
+    pullRequest: Effect.fn("GoalCompletionIo.pullRequest")((root, number) =>
+      read(root, (client, at) =>
+        client
+          .requestDecoded(
+            "GET /repos/{owner}/{repo}/pulls/{pull_number}",
+            { ...at, pull_number: number },
+            GoalCompletionPull
+          )
+          .pipe(Effect.map(GoalCompletionPull.make))
+      )
+    ),
+    commit: Effect.fn("GoalCompletionIo.commit")((root, sha) =>
+      read(root, (client, at) =>
+        client
+          .requestDecoded("GET /repos/{owner}/{repo}/commits/{ref}", { ...at, ref: sha }, GoalCompletionCommit)
+          .pipe(Effect.map(GoalCompletionCommit.make))
+      )
+    ),
+    checkRuns: Effect.fn("GoalCompletionIo.checkRuns")((root, sha) =>
+      read(root, (client, at) =>
+        client
+          .paginate("GET /repos/{owner}/{repo}/commits/{ref}/check-runs", {
+            ...at,
+            ref: sha,
+            filter: "all",
+            per_page: 100,
+          })
+          .pipe(Effect.map((check_runs) => [{ check_runs }]))
+      ).pipe(Effect.flatMap(decodeObservation(GoalCompletionCheckPages)))
+    ),
+    timeline: Effect.fn("GoalCompletionIo.timeline")((root, number) =>
+      read(root, (client, at) =>
+        client
+          .paginate("GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", {
+            ...at,
+            issue_number: number,
+            per_page: 100,
+          })
+          .pipe(Effect.map((rows) => [rows]))
+      ).pipe(Effect.flatMap(decodeObservation(GoalCompletionTimelinePages)))
+    ),
+    checkSuites: Effect.fn("GoalCompletionIo.checkSuites")((root, sha) =>
+      read(root, (client, at) =>
+        client
+          .paginate("GET /repos/{owner}/{repo}/commits/{ref}/check-suites", { ...at, ref: sha, per_page: 100 })
+          .pipe(Effect.map((check_suites) => [{ check_suites }]))
+      ).pipe(Effect.flatMap(decodeObservation(GoalCompletionSuitePages)))
+    ),
+    rulesetHistory: Effect.fn("GoalCompletionIo.rulesetHistory")((root, id) =>
+      read(root, (client, at) =>
+        client
+          .paginate("GET /repos/{owner}/{repo}/rulesets/{ruleset_id}/history", { ...at, ruleset_id: id, per_page: 100 })
+          .pipe(Effect.map((rows) => [rows]))
+      ).pipe(Effect.flatMap(decodeObservation(GoalCompletionRulesetHistory)))
+    ),
+    rulesetVersion: Effect.fn("GoalCompletionIo.rulesetVersion")((root, id, version) =>
+      read(root, (client, at) =>
+        client
+          .requestDecoded(
+            "GET /repos/{owner}/{repo}/rulesets/{ruleset_id}/history/{version_id}",
+            { ...at, ruleset_id: id, version_id: version },
+            GoalCompletionRulesetVersion
+          )
+          .pipe(Effect.map(GoalCompletionRulesetVersion.make))
+      )
+    ),
+    ruleSuites: Effect.fn("GoalCompletionIo.ruleSuites")((root, ref) =>
+      read(root, (client, at) =>
+        client
+          .paginate("GET /repos/{owner}/{repo}/rulesets/rule-suites", {
+            ...at,
+            ref,
+            time_period: "month",
+            per_page: 100,
+          })
+          .pipe(Effect.map((rows) => [rows]))
+      ).pipe(Effect.flatMap(decodeObservation(GoalCompletionRuleSuiteList)))
+    ),
+    ruleSuite: Effect.fn("GoalCompletionIo.ruleSuite")((root, id) =>
+      read(root, (client, at) =>
+        client
+          .requestDecoded(
+            "GET /repos/{owner}/{repo}/rulesets/rule-suites/{rule_suite_id}",
+            { ...at, rule_suite_id: id },
+            GoalCompletionRuleSuite
+          )
+          .pipe(Effect.map(GoalCompletionRuleSuite.make))
+      )
+    ),
+    rulesets: Effect.fn("GoalCompletionIo.rulesets")((root) =>
+      read(root, (client, at) =>
+        client
+          .paginate("GET /repos/{owner}/{repo}/rulesets", { ...at, includes_parents: true, per_page: 100 })
+          .pipe(Effect.map((rows) => [rows]))
+      ).pipe(Effect.flatMap(decodeObservation(GoalCompletionRulesetList)))
+    ),
+  });
+});
+
+const completionIdentity = GithubIdentity.make({
+  kind: "gh-cli",
+  tokenRef: O.none(),
+  appId: O.none(),
+  installationId: O.none(),
+  privateKeyRef: O.none(),
+});
+
+/**
+ * Read one decoded observation through the typed completion port.
+ *
+ * **Example** (Inspect the typed reader)
+ *
+ * ```ts
+ * import { readGoalCompletion } from "@beep/repo-cli/commands/Goals/CompletionEvidence"
+ * console.log(typeof readGoalCompletion)
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const readGoalCompletion = Effect.fn("Goals.Completion.read")(function* <A>(
   root: string,
-  args: ReadonlyArray<string>
+  read: (io: GoalCompletionIo["Service"], root: string) => Effect.Effect<A, YeetCommandError>
 ) {
-  const io = yield* Effect.serviceOption(GoalCompletionIo);
-  return yield* O.isSome(io) ? io.value.git(root, args) : runGitOutput(root, args, gitAdapter);
+  const io = yield* goalCompletionIo();
+  return yield* read(io, root);
 });
 
-/**
- * Runs one read-only GitHub request through the provided port, or the `gh` adapter.
- *
- * **Example** (Inspect the GitHub reader)
- *
- * ```ts
- * import { readGoalCompletionGithub } from "@beep/repo-cli/commands/Goals/CompletionEvidence"
- * console.log(typeof readGoalCompletionGithub)
- * ```
- *
- * @category queries
- * @since 0.0.0
- */
-export const readGoalCompletionGithub = Effect.fn("Goals.Completion.github")(function* (
-  root: string,
-  args: ReadonlyArray<string>
-) {
-  const io = yield* Effect.serviceOption(GoalCompletionIo);
-  return yield* O.isSome(io)
-    ? io.value.github(root, args)
-    : ghOutput({
-        cwd: root,
-        args,
-        label: "goal completion GitHub observation",
-        onFailure: (failure) => YeetCommandError.make({ message: `${failure.label}: ${failure._tag}` }),
-      });
-});
-
-/**
- * Reads one GitHub request and decodes its JSON body; a decode failure is a typed read failure.
- *
- * **Example** (Inspect the JSON reader)
- *
- * ```ts
- * import { readGoalCompletionJson } from "@beep/repo-cli/commands/Goals/CompletionEvidence"
- * console.log(typeof readGoalCompletionJson)
- * ```
- *
- * @category queries
- * @since 0.0.0
- */
-export const readGoalCompletionJson = Effect.fn("Goals.Completion.readJson")(function* <
-  Sch extends S.Codec<unknown, unknown>,
->(root: string, args: ReadonlyArray<string>, schema: Sch) {
-  const text = yield* readGoalCompletionGithub(root, args);
-  return yield* JsonStringCodec(schema)
-    .decode(text)
-    .pipe(Effect.mapError(() => YeetCommandError.make({ message: "Invalid goal completion GitHub payload" })));
-});
-
-const RulesetListEntry = S.Struct({
-  id: S.Int,
-  source_type: S.String,
-  created_at: S.optionalKey(S.DateTimeUtcFromString),
-});
-const RulesetList = RulesetListEntry.pipe(S.Array, S.Array);
-const RulesetHistory = S.Struct({ version_id: S.Int, updated_at: S.DateTimeUtcFromString }).pipe(S.Array, S.Array);
-const RulesetVersion = S.Struct({
-  state: S.Struct({
-    enforcement: S.String,
-    target: S.String,
-    conditions: S.Struct({ ref_name: S.Struct({ include: S.Array(S.String), exclude: S.Array(S.String) }) }),
-    rules: S.Array(GhBranchRule),
-  }),
-});
-const RuleSuiteList = S.Struct({ id: S.Int, ref: S.String, after_sha: S.String }).pipe(S.Array, S.Array);
-const RuleEvaluation = S.Struct({
-  rule_source: S.Struct({
-    type: S.NonEmptyString,
-    id: S.OptionFromOptionalNullOr(S.Int),
-    name: S.OptionFromOptionalNullOr(S.String),
-  }),
-  enforcement: GoalRuleEnforcement,
-  result: GoalRuleEvaluationResult,
-  rule_type: S.NonEmptyString,
-});
-const RuleSuite = S.Struct({
-  id: S.Int,
-  ref: S.NonEmptyString,
-  after_sha: S.NonEmptyString,
-  pushed_at: S.DateTimeUtcFromString,
-  result: GoalRuleSuiteResult,
-  rule_evaluations: S.Array(RuleEvaluation),
-});
-
-const RULESETS_ENDPOINT = "repos/{owner}/{repo}/rulesets?per_page=100&includes_parents=true";
 const REQUIRED_STATUS_CHECKS = "required_status_checks";
 
 // How a merge-time ruleset version relates to the base branch: it gated the
@@ -183,7 +285,7 @@ const applicabilityOfEnforcement = (enforcement: string): typeof HistoricalAppli
   );
 
 const historicalRulesetApplicability = Effect.fn("Goals.Completion.rulesetApplies")(function* (
-  state: typeof RulesetVersion.Type.state,
+  state: GoalCompletionRulesetVersion["state"],
   base: string
 ) {
   if (state.target !== "branch") return HistoricalApplicability.Enum.mismatch;
@@ -205,7 +307,7 @@ const historicalRulesetApplicability = Effect.fn("Goals.Completion.rulesetApplie
 
 const readHistoricalRuleset = Effect.fn("Goals.Completion.historicalRuleset")(function* (
   root: string,
-  ruleset: typeof RulesetListEntry.Type,
+  ruleset: GoalCompletionRulesetListEntry,
   base: string,
   mergedAt: DateTime.Utc
 ) {
@@ -213,15 +315,11 @@ const readHistoricalRuleset = Effect.fn("Goals.Completion.historicalRuleset")(fu
     return yield* YeetCommandError.make({
       message: "Inherited ruleset history is unavailable through the repository-only adapter",
     });
-  const readGoalCompletionJson1 = yield* readGoalCompletionJson(
-    root,
-    ["api", `repos/{owner}/{repo}/rulesets/${ruleset.id}/history?per_page=100`, "--paginate", "--slurp"],
-    RulesetHistory
-  );
-  const history = A.flatten(readGoalCompletionJson1);
+  const pages = yield* readGoalCompletion(root, (io, root) => io.rulesetHistory(root, ruleset.id));
+  const history = A.flatten(pages);
   const version = A.reduce(
     A.filter(history, (row) => DateTime.toEpochMillis(row.updated_at) <= DateTime.toEpochMillis(mergedAt)),
-    O.none<(typeof RulesetHistory.Type)[number][number]>(),
+    O.none<GoalCompletionRulesetHistory[number][number]>(),
     (found, row) =>
       O.isNone(found) || DateTime.isGreaterThan(row.updated_at, found.value.updated_at) ? O.some(row) : found
   );
@@ -230,7 +328,9 @@ const readHistoricalRuleset = Effect.fn("Goals.Completion.historicalRuleset")(fu
     return yield* YeetCommandError.make({ message: "No historical ruleset version covers this merge" });
   }
   const source = `repos/{owner}/{repo}/rulesets/${ruleset.id}/history/${version.value.version_id}`;
-  const { state } = yield* readGoalCompletionJson(root, ["api", source], RulesetVersion);
+  const { state } = yield* readGoalCompletion(root, (io, root) =>
+    io.rulesetVersion(root, ruleset.id, version.value.version_id)
+  );
   // An evaluate-mode version at merge is a recovered fact that the ruleset did not
   // gate this merge. An inactive or non-matching version contradicts the merge-push
   // rule suite that evaluated it on this branch, so it is a mismatch (unknown).
@@ -257,7 +357,7 @@ type HistoricalRead = O.Option<{
 }>;
 
 const SuiteLookup = S.Struct({
-  found: S.Option(S.Struct({ source: S.NonEmptyString, suite: RuleSuite })),
+  found: S.Option(S.Struct({ source: S.NonEmptyString, suite: GoalCompletionRuleSuite })),
   gap: S.Option(GoalCompletionEvidenceGap),
 });
 
@@ -269,17 +369,8 @@ const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(funct
   mergeCommit: string
 ) {
   const ref = `refs/heads/${base}`;
-  const readGoalCompletionJson2 = yield* readGoalCompletionJson(
-    root,
-    [
-      "api",
-      `repos/{owner}/{repo}/rulesets/rule-suites?ref=${ref}&time_period=month&per_page=100`,
-      "--paginate",
-      "--slurp",
-    ],
-    RuleSuiteList
-  );
-  const listed = A.flatten(readGoalCompletionJson2);
+  const pages = yield* readGoalCompletion(root, (io, root) => io.ruleSuites(root, ref));
+  const listed = A.flatten(pages);
   // Offset pagination can repeat a row when new pushes arrive mid-read; one suite id is one suite.
   const ids = A.dedupe(
     A.map(
@@ -294,7 +385,7 @@ const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(funct
       gap: O.some(A.isReadonlyArrayEmpty(ids) ? "rule-suite-unavailable" : "inventory-mismatch"),
     });
   const source = `repos/{owner}/{repo}/rulesets/rule-suites/${only.value}`;
-  const suite = yield* readGoalCompletionJson(root, ["api", source], RuleSuite);
+  const suite = yield* readGoalCompletion(root, (io, root) => io.ruleSuite(root, only.value));
   return SuiteLookup.make({ found: O.some({ source, suite }), gap: O.none() });
 });
 
@@ -505,10 +596,10 @@ export const describeGoalCompletionEvidence = (verdict: GoalCompletionEvidenceVe
   });
 
 const ruleSourcesOf = (
-  suite: typeof RuleSuite.Type,
+  suite: GoalCompletionRuleSuite,
   surviving: ReadonlyArray<number>
 ): ReadonlyArray<GoalMergeTimeRuleSource> => {
-  const keyOf = (evaluation: typeof RuleEvaluation.Type): string =>
+  const keyOf = (evaluation: GoalCompletionRuleSuite["rule_evaluations"][number]): string =>
     `${evaluation.rule_source.type}:${O.getOrElse(O.map(evaluation.rule_source.id, String), () => "")}`;
   const keys = A.dedupe(A.map(suite.rule_evaluations, keyOf));
   return A.getSomes(
@@ -560,12 +651,11 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
   request: GoalMergeTimeEvidenceRequest
 ) {
   const { base, mergeCommit, mergedAt, acceptedHead } = request;
-  const listed = yield* readGoalCompletionJson(
-    root,
-    ["api", RULESETS_ENDPOINT, "--paginate", "--slurp"],
-    RulesetList
-  ).pipe(Effect.map(A.flatten), Effect.option);
-  const current = O.getOrElse(listed, A.empty<typeof RulesetListEntry.Type>);
+  const listed = yield* readGoalCompletion(root, (io, root) => io.rulesets(root)).pipe(
+    Effect.map(A.flatten),
+    Effect.option
+  );
+  const current = O.getOrElse(listed, A.empty<GoalCompletionRulesetListEntry>);
   const reads = yield* Effect.forEach(
     current,
     Effect.fn("Goals.CompletionEvidence.survivingRuleset")(function* (ruleset) {
@@ -637,9 +727,12 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
       }
       // Deleted since merge: GitHub's ruleset history is the only authoritative
       // record of its rules. When history is gone, no contexts are invented.
-      const history = yield* readHistoricalRuleset(root, { id, source_type: "Repository" }, base, mergedAt).pipe(
-        Effect.option
-      );
+      const history = yield* readHistoricalRuleset(
+        root,
+        GoalCompletionRulesetListEntry.make({ id, source_type: "Repository" }),
+        base,
+        mergedAt
+      ).pipe(Effect.option);
       // Recovered history restores the ruleset's enforcement at merge: an active,
       // applicable version gates; an evaluate-mode version does not, so the
       // remaining evidence decides. An inactive or non-matching version
@@ -729,7 +822,7 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
 type MergeTimeEvidenceServices = Effect.Services<ReturnType<typeof observeGoalMergeTimeEvidence>>;
 
 /**
- * Live merge-time evidence provider over the existing `gh` REST adapter and {@link GoalCompletionIo} port.
+ * Live merge-time evidence provider over the typed GitHub kit observations and {@link GoalCompletionIo} port.
  *
  * **Example** (Provide the live provider)
  *

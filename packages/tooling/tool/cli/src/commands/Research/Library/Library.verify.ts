@@ -425,7 +425,8 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
         captureGood = false;
       }
       const object = cloneSafe
-        ? yield* runLibraryCommand(
+        ? // KEEP (D-19): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
+          yield* runLibraryCommand(
             root,
             "git",
             ["-C", path.resolve(root, pin.clone), "cat-file", "-t", pin.revision],
