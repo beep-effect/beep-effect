@@ -16,8 +16,10 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const Snapshot = S.Struct({
   width: S.Literals([1, 2, 4]),
@@ -210,5 +212,34 @@ it.effect("rejects malformed policy with a closed failure before installing oper
       expect(failure).toMatchObject({ reason: "invalid-input" });
       expect("cause" in failure).toBe(false);
     }
+  })
+);
+
+it.effect("uses the explicit annotation deadline rather than the default cleaning timer", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const unicode = yield* makeCitationPythonUnicode(
+      { ...policy.limits, cleanDeadline: Duration.millis(1), annotateDeadline: Duration.millis(50) },
+      "annotate"
+    );
+    const entered = yield* Deferred.make<void>();
+    const completed = yield* Ref.make(false);
+    const pending = yield* unicode
+      .fromStorageReserved(
+        { width: 1, bytes: new Uint8Array() },
+        Effect.fn("UnicodeTest.blockAnnotationAllocation")(() =>
+          Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never))
+        )
+      )
+      .pipe(Effect.flip, Effect.ensuring(Ref.set(completed, true)), Effect.forkChild);
+    yield* Deferred.await(entered);
+    yield* TestClock.adjust(Duration.millis(1));
+    const early = yield* Ref.get(completed);
+    expect(early).toBe(false);
+    yield* TestClock.adjust(Duration.millis(49));
+    const failure = yield* Fiber.join(pending);
+    expect(failure).toMatchObject({ reason: "deadline-exceeded" });
+    const invalid = yield* makeCitationPythonUnicode(policy.limits, "unknown").pipe(Effect.flip);
+    expect(invalid).toMatchObject({ reason: "invalid-input" });
   })
 );

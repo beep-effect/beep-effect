@@ -7,7 +7,6 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Rpc from "effect/rpc/Rpc";
-import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
 import {
@@ -22,8 +21,7 @@ import {
 import {
   citationNativeRpcExit,
   citationNativeRpcFailure,
-  makeCitationNativeRpcDelivery,
-  makeCitationNativeRpcTransport,
+  makeCitationNativeRpcClient,
   receiveCitationNativeConversation,
 } from "./NativeRpc.ts";
 import { CitationNativeWasmStartup } from "./NativeWasm.ts";
@@ -79,15 +77,9 @@ export const callCitationDiffRpc = Effect.fn("Citation.callDiffRpc")(
   ) =>
     Effect.scoped(
       Effect.gen(function* () {
-        const transport = yield* makeCitationNativeRpcTransport(child, frame, () =>
+        const { client, deliver } = yield* makeCitationNativeRpcClient(CitationDiffRpcs, child, frame, () =>
           CitationDiffWorkerFailure.make({ reason: "channel-failed" })
         );
-        const rpc = yield* RpcClient.makeNoSerialization(CitationDiffRpcs, transport.options);
-        const deliver = makeCitationNativeRpcDelivery({
-          sent: transport.sent,
-          write: rpc.write,
-          requestId: transport.requestId,
-        });
         const errorOf = citationNativeRpcFailure(CitationDiffWorkerReply.guards.Failure);
         const receive = receiveCitationNativeConversation<
           CitationDiffWorkerReply,
@@ -108,7 +100,7 @@ export const callCitationDiffRpc = Effect.fn("Citation.callDiffRpc")(
             ),
           invalid,
         }).pipe(Effect.flatMap(deliver));
-        return yield* Effect.zipWith(receive, rpc.client.Diff(job), (_received, value) => value, { concurrent: true });
+        return yield* Effect.zipWith(receive, client.Diff(job), (_received, value) => value, { concurrent: true });
       })
     )
 );

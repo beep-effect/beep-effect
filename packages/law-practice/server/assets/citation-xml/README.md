@@ -32,6 +32,6 @@ No signing key is required. A modified application can update its asset hash
 check. The original complete libiconv 1.17 source and license accompany the
 existing HTML relink material.
 
-Synchronous query execution must be installed inside an owned stoppable worker
-before live engine integration; this asset alone supplies no parent deadline,
-physical-retirement proof or full annotation skip/wrap behavior.
+The shared markup worker now supplies typed XML transport, captured annotation
+deadlines and physical retirement. This asset alone supplies none of that
+ownership and does not implement full annotation skip/wrap behavior.

@@ -7,6 +7,7 @@ import * as Exit from "effect/Exit";
 import { dual } from "effect/Function";
 import * as Headers from "effect/http/Headers";
 import * as O from "effect/Option";
+import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcMessage from "effect/rpc/RpcMessage";
 import * as RpcServer from "effect/rpc/RpcServer";
 import * as Stream from "effect/Stream";
@@ -182,4 +183,27 @@ export const runCitationNativeRpcJob = Effect.fn("Citation.runNativeRpcJob")(fun
   );
   yield* server.write(0, request);
   yield* Deferred.await(completed);
+});
+
+/** Compose the existing unbuffered transport, upstream typed client and delivery
+ * once. Procedure modules retain their own closed codecs/terminal interpretation.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationNativeRpcClient = Effect.fn("Citation.makeNativeRpcClient")(function* <
+  Rpcs extends Rpc.Any,
+  E,
+>(
+  group: RpcGroup.RpcGroup<Rpcs>,
+  child: Pick<ChildProcessHandle, "stdin" | "stdout">,
+  frame: Uint8Array,
+  failed: () => E
+) {
+  const transport = yield* makeCitationNativeRpcTransport(child, frame, failed);
+  const rpc = yield* RpcClient.makeNoSerialization(group, transport.options);
+  const deliver = makeCitationNativeRpcDelivery({
+    sent: transport.sent,
+    write: rpc.write,
+    requestId: transport.requestId,
+  });
+  return { client: rpc.client, deliver };
 });

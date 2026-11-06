@@ -7,6 +7,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineAbsoluteMaxima,
   CitationEngineLimits,
+  CitationEngineOperation,
   CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -433,16 +434,24 @@ export const replaceCitationPythonStorage = Effect.fn("Citation.replaceNativeSto
 });
 
 /**
- * Capture the intermediate ceiling and minimum operation/clean deadline.
+ * Capture the intermediate ceiling and minimum operation/selected-stage deadline.
+ * Cleaning is the default; explicit server stages select their own operation.
  * Storage input is copied before the first scan yield; output bytes belong to
  * the receiving adapter. Scans yield every 4096 source code points.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")(function* (input: unknown) {
+export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")(function* (
+  input: unknown,
+  operationInput: unknown = "clean"
+) {
   const limits = yield* S.decodeUnknownEffect(Limits)(input).pipe(Effect.mapError(invalidInput));
   const maximum = limits.producedTextUtf16;
   const clock = yield* Clock.Clock;
-  const deadline = Duration.min(limits.cleanDeadline, limits.operationDeadline).pipe(
+  const operation = yield* S.decodeUnknownEffect(CitationEngineOperation)(operationInput).pipe(
+    Effect.mapError(invalidInput)
+  );
+  const deadlineField = `${operation}Deadline` as const;
+  const deadline = Duration.min(limits[deadlineField], limits.operationDeadline).pipe(
     Duration.toMillis,
     Duration.millis
   );

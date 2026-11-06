@@ -194,7 +194,16 @@
     "packages/law-practice/server/src/internal/Citation/XmlBalanceKernel.ts",
     "packages/law-practice/server/assets/citation-xml/kernel.c",
     "packages/law-practice/server/assets/citation-xml/build-receipt.json",
-    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-xml.json"
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-xml.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-xml-worker-transport.md",
+    "packages/law-practice/server/src/internal/Citation/MarkupWorker.ts",
+    "packages/law-practice/server/src/internal/Citation/XmlWorker.ts",
+    "packages/law-practice/server/src/internal/Citation/XmlWorkerProgram.ts",
+    "packages/law-practice/server/src/internal/Citation/XmlWorkerProtocol.ts",
+    "packages/law-practice/server/src/internal/Citation/XmlWorkerRpc.ts",
+    "packages/law-practice/server/test/CitationXmlWorker.test.ts",
+    "packages/law-practice/server/test/CitationXmlWorkerProtocol.test.ts",
+    "packages/law-practice/server/test/integration/CitationXmlWorker.test.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

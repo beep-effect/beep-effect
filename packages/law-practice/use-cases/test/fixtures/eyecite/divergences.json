@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "a701ddc7ccf1fd21255adc00e4d28ac835e6976fff9b73dfc9c7d29f127d161b",
+  "planSha256": "3c89697791e861ec50ad33d4014ad6c003016879deecfa37888fd009d7022323",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -116,7 +116,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/NativeRpc.ts",
-          "sha256": "9dcfce3cc16e66235a36ca50485715e1f3b4096fbc6a2191ceb2bf1e14dc26fb"
+          "sha256": "e4192c34f9f5225dbb135c3807dd5d0c96e7dfabe9b0a8a251126ccdc63ebe75"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexWorker.ts",
@@ -468,7 +468,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/DiffWorkerRpc.ts",
-          "sha256": "f7e6e6454f50cec38aa9cf95e4fdc07f5f88bdd81cbc3e5f8c555ef4758eb817"
+          "sha256": "39c06fb1bbbfcb95893b0da3a28752bebd90dff83605249a808653969d02ec64"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/DiffWorkerProgram.ts",
@@ -1284,7 +1284,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/XmlBalanceKernel.ts",
-          "sha256": "677ad898e88630f72f0326d9a885aa88e19016c2a5bbfc0592031f88438befc0"
+          "sha256": "74e875f6c904f934cc4e53a16331b0fea6e2c4edf58e5b92c0a9af1eeed9395c"
         },
         {
           "path": "packages/law-practice/server/assets/citation-xml/kernel.c",
@@ -1297,6 +1297,42 @@
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-xml.json",
           "sha256": "8ecdd67731000b801254535338eca46e3329baa901cd16d6c49e285cf4c5bc99"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-xml-worker-transport.md",
+          "sha256": "83bed10e264b902d20c3240ac83c8b97111414d6f1c078a5332f1101f6a7ea63"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/MarkupWorker.ts",
+          "sha256": "c4e55c386bcc087d3229391dbe3c1fec4243ee1e99204b162470a71003b2b263"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/XmlWorker.ts",
+          "sha256": "97852d0a879d9662653f04ce481bf94601f956305d6d28907474c997d4d4c991"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/XmlWorkerProgram.ts",
+          "sha256": "3e7f3d63410e106e669e565bd8773ec086c0534407a41ecb2fd6cc01507b008a"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/XmlWorkerProtocol.ts",
+          "sha256": "dbdf9e957e31ee04e58c2dd6324e7233839240c84132fae4b0e975b5bf9fd542"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/XmlWorkerRpc.ts",
+          "sha256": "8a36bd16b9d2bbc1fa05b68056b6cf08217dffc8d23767dc570d41a7fab5014a"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationXmlWorker.test.ts",
+          "sha256": "108ca6c644456355b884c0e996861117a0bcc437d47b9b88dc24b3c8ea8fee73"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationXmlWorkerProtocol.test.ts",
+          "sha256": "d0c513c38230be509b4d04f3063fd89bdc818d4f9ae8daa4c60cc5fda30b641b"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationXmlWorker.test.ts",
+          "sha256": "f48377e10e7f4108f8c28d285625113635da8f207532eb6be269e7b27508e5a0"
         }
       ],
       "workflowState": "audit",
@@ -1737,11 +1773,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerRpc.ts",
-          "sha256": "b568c1808d30bc9493e3360d90831c6cff6b4e9859ed3af23cba2d35e10b8a1e"
+          "sha256": "5d128c03f0b33cbfcd7e12ca6c5ec44e07c31972f1860f3b8f4c815da81724ec"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
-          "sha256": "cbb9d287510ec62048ceba1049e9567781e8ddd91106681ae21cd4dde05c19d0"
+          "sha256": "252311bc2f3fe3a7755a11c24c3b6c70fc0560b19c5df606fe0f8942ba8c0ee8"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
@@ -1749,7 +1785,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-          "sha256": "9405d1d6df395a3d0797a22cb7ce9879da90fc6d67f082656dd8520992caa874"
+          "sha256": "fc67960f722d3522e4ff4776e42e3501b77d236dcfb610b56cd3660d8c9bdd06"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md",
@@ -1977,11 +2013,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
-          "sha256": "94e782b6cb9bee6ab5b801a554e77f541b435456299c6dd777a94fddbcd949ca"
+          "sha256": "07ea9f34ad6fef2ea25f36786e6a0b37f399ec0aa12f13d4fa893da63831d9a3"
         },
         {
           "path": "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
-          "sha256": "b8136e61b51d320ea10d49ed87b99554b09465677695eb7506f9b738e5508817"
+          "sha256": "614ecb2a6fc4265a88e3e8fe208f0a34df7b8d72e587f6e8f44c22b604ca554c"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-python-unicode-representation.md",
@@ -2162,7 +2198,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-          "sha256": "9405d1d6df395a3d0797a22cb7ce9879da90fc6d67f082656dd8520992caa874"
+          "sha256": "fc67960f722d3522e4ff4776e42e3501b77d236dcfb610b56cd3660d8c9bdd06"
         }
       ],
       "workflowState": "audit",

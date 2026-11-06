@@ -1,7 +1,7 @@
 /** Authenticated XML well-formedness query for original annotation handling.
  * Free Law Project eyecite 2.7.6 utils.py, BSD-2-Clause; unchanged libxml2 2.12.3.
- * Synchronous evaluation must run inside an owned stoppable worker before live
- * engine installation. This module alone supplies no parent-side deadline.
+ * Synchronous evaluation runs inside the shared owned markup worker. This
+ * kernel module alone supplies no parent-side deadline or retirement barrier.
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
@@ -28,7 +28,8 @@ import { validateCitationPythonStorage } from "./PythonHash.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/XmlBalanceKernel");
-const asset = CitationNativeWasmAsset.make({
+/** @internal @category models @since 0.0.0 */
+export const citationXmlKernelAsset = CitationNativeWasmAsset.make({
   byteLength: 1622787,
   sha256: Sha256Hex.make("10a71415bb305b1cac194ef9cc577253a35d40b5b22dc0b81ee2079e3c918b48"),
 });
@@ -68,7 +69,7 @@ const maximum = CitationEngineAbsoluteMaxima.sourceUtf16;
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationXmlBalanceKernel = Effect.fn("Citation.makeXmlBalanceKernel")(function* (input: unknown) {
-  const compiled = yield* compileCitationNativeWasm(input, asset, () => fail("invalid-asset"));
+  const compiled = yield* compileCitationNativeWasm(input, citationXmlKernelAsset, () => fail("invalid-asset"));
   const balance = Effect.fn("Citation.queryXmlBalance")(function* (raw: unknown) {
     const decoded = yield* S.decodeUnknownEffect(CitationPythonUnicodeStorage)(raw).pipe(
       Effect.mapError(() => fail("invalid-input"))

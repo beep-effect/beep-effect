@@ -10,7 +10,6 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Rpc from "effect/rpc/Rpc";
-import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
 import {
@@ -26,8 +25,7 @@ import {
 import {
   citationNativeRpcExit,
   citationNativeRpcFailure,
-  makeCitationNativeRpcDelivery,
-  makeCitationNativeRpcTransport,
+  makeCitationNativeRpcClient,
   receiveCitationNativeConversation,
 } from "./NativeRpc.ts";
 import { CitationNativeWasmStartup } from "./NativeWasm.ts";
@@ -78,15 +76,9 @@ export const prepareCitationHtmlRpc = Effect.fn("Citation.prepareHtmlRpc")(funct
   return Effect.fn("Citation.callHtmlRpc")((child: Pick<ChildProcessHandle, "stdin" | "stdout">) =>
     Effect.scoped(
       Effect.gen(function* () {
-        const transport = yield* makeCitationNativeRpcTransport(child, frame, () =>
+        const { client, deliver } = yield* makeCitationNativeRpcClient(CitationHtmlRpcs, child, frame, () =>
           CitationHtmlWorkerFailure.make({ reason: "channel-failed" })
         );
-        const rpc = yield* RpcClient.makeNoSerialization(CitationHtmlRpcs, transport.options);
-        const deliver = makeCitationNativeRpcDelivery({
-          sent: transport.sent,
-          write: rpc.write,
-          requestId: transport.requestId,
-        });
         const errorOf = citationNativeRpcFailure(CitationHtmlWorkerReply.guards.Failure);
         const receive = receiveCitationNativeConversation<
           CitationHtmlWorkerReply,
@@ -107,7 +99,7 @@ export const prepareCitationHtmlRpc = Effect.fn("Citation.prepareHtmlRpc")(funct
             ),
           invalid,
         }).pipe(Effect.flatMap(deliver));
-        return yield* Effect.zipWith(receive, rpc.client.Clean(job), (_received, value) => value, { concurrent: true });
+        return yield* Effect.zipWith(receive, client.Clean(job), (_received, value) => value, { concurrent: true });
       })
     )
   );
