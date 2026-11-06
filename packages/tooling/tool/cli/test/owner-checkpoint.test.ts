@@ -64,6 +64,9 @@ import { recordedGithub } from "./support/YeetGithub.ts";
 import type { OwnerCheckpointOutbox } from "@beep/repo-cli/test/Yeet";
 import type { GithubAnswer, GithubCall, GithubRoutes } from "./support/YeetGithub.ts";
 
+const CorruptOutboxJson = S.fromJsonString(S.Unknown);
+const encodeCorruptOutbox = S.encodeUnknownEffect(CorruptOutboxJson);
+
 const head = Str.repeat(40)("a");
 const merge = Str.repeat(40)("b");
 const digest = Sha256Hex.make(Str.repeat(64)("c"));
@@ -1109,9 +1112,7 @@ describe("dispatch actual base and causal release fence", () => {
         const store = yield* claimedStore;
         const sql = yield* SqlClient.SqlClient;
         const priorOption = yield* store.outbox(binding, 1);
-        const payload = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(
-          fixture.edit(O.getOrThrow(priorOption))
-        );
+        const payload = yield* encodeCorruptOutbox(fixture.edit(O.getOrThrow(priorOption)));
         yield* sql`UPDATE yeet_owner_checkpoint_outbox SET payload=${payload} WHERE revision=1`;
         yield* Effect.flip(store.prepareDispatch(binding, 2, snapshot().base));
         yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
