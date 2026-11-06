@@ -1,9 +1,10 @@
 /** Public bounded Linux peer observer, executed only by the owned Effect process boundary. */
 export const cursorPeerSource = String.raw`"""Pinned, isolated Linux metadata reader owning one private Unix listener.
 
-No callback body, argv, environment, auth, transcript or process memory is read.
+The callback body is read and projected transiently, never retained.
+No argv, environment, auth, transcript or process memory is read.
 The parent supplies public enrollment policy on stdin; stdout is transient
-kernel metadata, never a producer-authored verification flag.
+projected lifecycle and kernel metadata, never a caller verification flag.
 """
 import hashlib
 import json

@@ -10,10 +10,14 @@ Public documentation: <https://cursor.com/docs/hooks>. Its IDE/cloud distinction
 cannot establish local CLI behavior by themselves. The installed public source
 for **2026.11.05-86047df** does establish the local dispatch path:
 
-| File | SHA-256 | Relevant byte offsets |
+| File | SHA-256 | Decoded-text character offsets |
 |---|---|---|
 | `1212.index.js` | `15b18cb92aa4093acc886d1ef6f6f308bc97a9abca69b89cde805f91e9760042` | `run-agent.tsx` module 704886; end callback 716227; start callback 724929; memoized end dispatch 728667 |
 | `5504.index.js` | `02ddf6e240a6f229fcf6e2b414479b26dfd4ad64199fd33ce7a872a391d6fe9c` | `executeHookForStep` 74256; common payload construction 74743 |
+
+The `1212.index.js` character offsets above correspond to byte offsets 705842,
+717183, 725885 and 729623 respectively. The distinction matters because the
+preceding decoded source contains multibyte text.
 
 The local start callback runs for a new, unresumed conversation; it is asynchronous
 and reports `is_background_agent:false`. The local end callback supplies a reason,
