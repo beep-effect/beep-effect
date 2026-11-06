@@ -5,6 +5,7 @@
  */
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { LibraryError } from "./Library.errors.ts";
@@ -119,4 +120,26 @@ export const resolveLibraryInputRoots = Effect.fn("ResearchLibrary.resolveInputR
     Effect.mapError((cause) => LibraryError.make({ message: "Cannot resolve default corpus roots.", cause }))
   );
   return [path.resolve("research"), path.join(home, "Downloads/Research-10-6-26")];
+});
+
+/**
+ * Resolve the existing parent of a prospective output relative to the real library root.
+ *
+ * **Example** (Inspect output ancestry)
+ * ```ts
+ * import { libraryOutputAncestor } from "@beep/repo-cli/commands/Research/Library/Library.paths"
+ * console.log(libraryOutputAncestor("/library", "ontology/model.ttl").pipe !== undefined)
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const libraryOutputAncestor = Effect.fn("Library.outputAncestor")(function* (root: string, target: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = path.join(root, target);
+  const realRoot = yield* fs.realPath(root);
+  let ancestor = path.dirname(absolute);
+  while (!(yield* fs.exists(ancestor))) ancestor = path.dirname(ancestor);
+  const resolved = yield* fs.realPath(ancestor);
+  return { absolute, relative: path.relative(realRoot, resolved) };
 });

@@ -29,6 +29,9 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const SUnknownJson = S.fromJsonString(S.Unknown);
+const LibraryCatalogJson = S.fromJsonString(LibraryCatalog);
+
 const artifact = { path: "objects/a", sha256: Str.repeat(64)("a"), bytes: 3, mediaType: "text/plain", role: "content" };
 const source = {
   id: "s1",
@@ -252,7 +255,7 @@ describe("research library ontology", () => {
         );
         expect(invalid.conforms).toBe(false);
         expect(invalid.violations.length).toBeGreaterThan(0);
-        const json = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+        const json = yield* S.encodeEffect(SUnknownJson)({
           schema: "beep.research.library/v1",
           documents: [document],
           sources: [source],
@@ -260,7 +263,7 @@ describe("research library ontology", () => {
           occurrences: [occurrence],
           qualifications: [],
         });
-        const legacy = yield* S.decodeEffect(S.fromJsonString(LibraryCatalog))(json);
+        const legacy = yield* S.decodeEffect(LibraryCatalogJson)(json);
         const legacyDataset = yield* catalogDataset(legacy);
         const legacyResult = yield* validate(legacyDataset);
         expect(legacyResult.violations).toEqual([]);
@@ -305,7 +308,7 @@ describe("research library ontology", () => {
         for (const kind of ["goals", "explorations"]) {
           const dir = path.join(root, kind, "example", "ops");
           yield* fs.makeDirectory(dir, { recursive: true });
-          const json = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+          const json = yield* S.encodeEffect(SUnknownJson)({
             initiative: { id: "example", title: "Example" },
             ignored: "extra metadata",
           });

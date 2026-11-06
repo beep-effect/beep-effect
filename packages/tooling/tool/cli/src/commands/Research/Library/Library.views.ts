@@ -35,6 +35,8 @@ import {
 import type { LibraryTopic } from "./Library.projection.ts";
 import type { LibraryCatalog } from "./Library.schemas.ts";
 
+const LibraryDispositionImportPayloadJson = S.fromJsonString(LibraryDispositionImportPayload);
+
 const $I = $RepoCliId.create("commands/Research/Library/Library.views");
 const ViewKind = LiteralKit(["Report", "Source", "Capture", "Qualification", "Claim", "Occurrence", "Artifact"]).pipe(
   $I.annoteSchema("ViewKind", { description: "Library projection read-model partitions." })
@@ -227,11 +229,12 @@ export const privatePartition = `${prefixes} SELECT ?kind (COUNT(*) AS ?count) W
  * @category models
  * @since 0.0.0
  */
-export class LibraryViewRow extends S.Class<LibraryViewRow, { readonly brand: unique symbol }>($I`LibraryViewRow`)(
-  { payload: S.String, category: S.optionalKey(S.String), readable: S.optionalKey(S.String) },
-  $I.annote("LibraryViewRow", {
-    description: "Schema-encoded record payload and optional capture presentation metadata.",
-  })
+export class LibraryViewRow extends S.Opaque<LibraryViewRow, { readonly brand: unique symbol }>()(
+  S.Struct({ payload: S.String, category: S.optionalKey(S.String), readable: S.optionalKey(S.String) }).pipe(
+    $I.annoteSchema("LibraryViewRow", {
+      description: "Schema-encoded record payload and optional capture presentation metadata.",
+    })
+  )
 ) {}
 /**
  * Decoded non-negative grouped count.
@@ -243,9 +246,10 @@ export class LibraryViewRow extends S.Class<LibraryViewRow, { readonly brand: un
  * @category models
  * @since 0.0.0
  */
-export class LibraryCountRow extends S.Class<LibraryCountRow, { readonly brand: unique symbol }>($I`LibraryCountRow`)(
-  { kind: ViewKind, category: S.optionalKey(S.String), count: S.FiniteFromString },
-  $I.annote("LibraryCountRow", { description: "Decoded non-negative grouped count." })
+export class LibraryCountRow extends S.Opaque<LibraryCountRow, { readonly brand: unique symbol }>()(
+  S.Struct({ kind: ViewKind, category: S.optionalKey(S.String), count: S.FiniteFromString }).pipe(
+    $I.annoteSchema("LibraryCountRow", { description: "Decoded non-negative grouped count." })
+  )
 ) {}
 /**
  * Execute a SELECT and decode lexical RDF bindings through its row schema.
@@ -304,6 +308,34 @@ export const viewRecords = Effect.fn("Library.viewRecords")(function* <T, I>(
     )
   );
 });
+const captureDisplayCategory = Effect.fnUntraced(function* (
+  root: string,
+  catalog: LibraryCatalog,
+  capture: LibraryCapture
+) {
+  if (capture.status !== "blocked") return capture.status;
+  const source = A.findFirst(catalog.sources, (s) => s.id === capture.sourceId);
+  if (O.isNone(source)) return capture.status;
+  const valid = yield* libraryDispositionValid(root, catalog, source.value, capture).pipe(
+    Effect.orElseSucceed(() => false)
+  );
+  if (!valid) return capture.status;
+  const artifact = A.findFirst(capture.artifacts, (a) => a.role === "reviewed-disposition");
+  if (O.isNone(artifact)) return capture.status;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const review = yield* fs
+    .readFileString(path.resolve(root, artifact.value.path))
+    .pipe(Effect.flatMap(S.decodeEffect(LibraryDispositionImportPayloadJson)), Effect.option);
+  return O.getOrElse(
+    O.map(
+      O.filter(review, (r) => A.contains(["ambiguous", "incomplete", "tool-blocked"], r.disposition)),
+      (r) => r.disposition
+    ),
+    () => capture.status
+  );
+});
+
 /**
  * Assess filesystem evidence once and build one immutable dataset for a command.
  * **Example** (Inspect libraryViewDataset)
@@ -319,20 +351,19 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
   catalog: LibraryCatalog,
   topics?: ReadonlyArray<LibraryTopic>
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   let evidence = HashMap.empty<string, string>();
   let readable = HashSet.empty<string>();
   const claims: Array<{ readonly sourceId: string; readonly revision: string; readonly category: string }> = [];
-  for (const source of catalog.sources) {
+  const sourceEvidence = Effect.fnUntraced(function* (source: LibrarySource) {
     const current = yield* libraryEffectiveCaptures(root, catalog, source);
     evidence = HashMap.set(evidence, source.id, libraryEffectiveCategory(A.map(current, (claim) => claim.category)));
-    for (const claim of current) {
+    A.forEach(current, (claim) => {
       evidence = HashMap.set(evidence, `${source.id}@${claim.revision}`, claim.category);
       claims.push({ sourceId: source.id, revision: claim.revision, category: claim.category });
       if (claim.category === "readable" && claim.capture !== null) readable = HashSet.add(readable, claim.capture.id);
-    }
-  }
+    });
+  });
+  yield* Effect.forEach(catalog.sources, sourceEvidence);
   const repoRoot = yield* findRepoRoot().pipe(
     Effect.mapError((cause) => LibraryError.make({ message: "Cannot resolve library topic repository", cause }))
   );
@@ -357,6 +388,12 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
       (document) => document.id
     )
   );
+  const addMetadata = (node: Rdf.NamedNode, metadata: Readonly<Record<string, string>>) =>
+    A.forEach(R.toEntries(metadata), ([key, value]) =>
+      quads.push(
+        Rdf.makeQuad(node, Rdf.makeNamedNode(`${iri("term")}/${key}`), Rdf.makeLiteral(value, XSD_STRING.value))
+      )
+    );
   let sequence = 0;
   const add = <T, I>(
     kind: string,
@@ -381,10 +418,7 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
           )
         );
         const { nodeId: _nodeId, order: _order, ...annotations } = meta;
-        for (const [key, value] of R.toEntries({ payload, private: "false", ...annotations }))
-          quads.push(
-            Rdf.makeQuad(node, Rdf.makeNamedNode(`${iri("term")}/${key}`), Rdf.makeLiteral(value, XSD_STRING.value))
-          );
+        addMetadata(node, { payload, private: "false", ...annotations });
       })
     );
   yield* add("Report", catalog.documents, LibraryDocument, (d) => ({
@@ -407,23 +441,7 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
     catalog.captures,
     (c, i) => [i, c] satisfies readonly [number, LibraryCapture]
   )) {
-    let category: string = capture.status;
-    if (capture.status === "blocked") {
-      const source = A.findFirst(catalog.sources, (s) => s.id === capture.sourceId);
-      if (
-        O.isSome(source) &&
-        (yield* libraryDispositionValid(root, catalog, source.value, capture).pipe(Effect.orElseSucceed(() => false)))
-      ) {
-        const artifact = A.findFirst(capture.artifacts, (a) => a.role === "reviewed-disposition");
-        if (O.isSome(artifact)) {
-          const review = yield* fs
-            .readFileString(path.resolve(root, artifact.value.path))
-            .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(LibraryDispositionImportPayload))), Effect.option);
-          if (O.isSome(review) && A.contains(["ambiguous", "incomplete", "tool-blocked"], review.value.disposition))
-            category = review.value.disposition;
-        }
-      }
-    }
+    const category = yield* captureDisplayCategory(root, catalog, capture);
     yield* add("Capture", [capture], LibraryCapture, (c) => ({
       source: c.sourceId,
       id: c.id,
@@ -457,17 +475,14 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
       )
     );
   // Claims include legacy sources with no explicit versions array.
-  for (const claim of claims) {
+  A.forEach(claims, (claim) => {
     const node = Rdf.makeNamedNode(iri(`row/${sequence++}`));
-    for (const [key, value] of R.toEntries({
+    addMetadata(node, {
       kind: "Claim",
       category: claim.category,
       private: `${HashSet.has(privateSources, claim.sourceId)}`,
-    }))
-      quads.push(
-        Rdf.makeQuad(node, Rdf.makeNamedNode(`${iri("term")}/${key}`), Rdf.makeLiteral(value, XSD_STRING.value))
-      );
-  }
+    });
+  });
   return Rdf.makeDataset(quads);
 });
 

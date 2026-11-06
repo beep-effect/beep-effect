@@ -2092,6 +2092,7 @@
     {"name":"Library.nonReferenceOccurrenceValid","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.nonReferenceReportMatches","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.observeGithubRepositoryIdentity","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Library.outputAncestor","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.paper.bindVersionedPdf","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"Library.paper.finishReceipt","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"Library.paper.observeHeaderlessVersion","owner":"@beep/repo-cli","family":"tooling","conforms":false},

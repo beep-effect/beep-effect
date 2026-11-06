@@ -17,9 +17,11 @@ import {
   LibrarySourceVersion,
 } from "@beep/repo-cli/commands/Research/Library/Library.schemas";
 import { ShaclValidationServiceLive } from "@beep/shacl";
+import { fcRuns } from "@beep/test-utils";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -32,6 +34,11 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+
+const LibraryCatalogJson = S.fromJsonString(LibraryCatalog);
+const ReplayLines = S.Array(S.String);
+const ReplayManifest = S.fromJsonString(S.Record(S.String, S.String));
+const LibraryMigrationReceiptJson = S.fromJsonString(LibraryMigrationReceipt);
 
 const fixtureDirectory = "test/fixtures/research-library-replay";
 const fixture = Effect.fn("replay.fixture")(function* (date: string) {
@@ -123,7 +130,7 @@ const fixture = Effect.fn("replay.fixture")(function* (date: string) {
   });
   yield* fs.makeDirectory(path.join(root, "catalog"));
   // Write v1 directly: withCatalog also performs unrelated identity reconciliation.
-  const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryCatalog))(catalog);
+  const encoded = yield* S.encodeEffect(LibraryCatalogJson)(catalog);
   yield* fs.writeFileString(path.join(root, "catalog/library.json"), encoded);
   return { root, fs, path, catalog };
 });
@@ -174,14 +181,14 @@ it.layer(
     const console = yield* TestConsole.make;
     yield* libraryStatus(root).pipe(Effect.provideService(Console.Console, console));
     const lines = yield* console.logLines;
-    const strings = yield* S.decodeUnknownEffect(S.Array(S.String))(lines);
+    const strings = yield* S.decodeUnknownEffect(ReplayLines)(lines);
     const status = `${A.join(strings, "\n")}\n`;
     const index = yield* fs.readFileString(path.join(root, "index.md"));
     const manifest = yield* written(root);
     const goldenIndex = yield* fs.readFileString(`${fixtureDirectory}/index-${date}.md`);
     const goldenStatus = yield* fs.readFileString(`${fixtureDirectory}/status-${date}.txt`);
     const manifestText = yield* fs.readFileString(`${fixtureDirectory}/files-${date}.json`);
-    const goldenManifest = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.String)))(manifestText);
+    const goldenManifest = yield* S.decodeEffect(ReplayManifest)(manifestText);
     expect(index).toBe(goldenIndex);
     expect(status).toBe(`${goldenStatus}private partition: documents=0 sources=0 artifacts=0 occurrences=0\n`);
     expect(manifest).toEqual(goldenManifest);
@@ -213,7 +220,7 @@ it.layer(
     const receiptNames = yield* fs.readDirectory(path.join(root, "ops/migrations"));
     expect(receiptNames.length).toBe(1);
     const receiptText = yield* fs.readFileString(path.join(root, "ops/migrations", A.getUnsafe(receiptNames, 0)));
-    const persisted = yield* S.decodeEffect(S.fromJsonString(LibraryMigrationReceipt))(receiptText);
+    const persisted = yield* S.decodeEffect(LibraryMigrationReceiptJson)(receiptText);
     expect(persisted).toEqual(receipt);
     expect(receipt.fromSchema).toBe("beep.research.library/v1");
     expect(receipt.toSchema).toBe("beep.research.library/v2");
@@ -224,7 +231,7 @@ it.layer(
     const after = yield* fs.readFile(path.join(root, "catalog/library.json"));
     const afterSha = yield* hashBytes(after);
     expect(receipt.afterCatalogSha256).toBe(afterSha);
-    const next = yield* S.decodeEffect(S.fromJsonString(LibraryCatalog))(new TextDecoder().decode(after));
+    const next = yield* S.decodeEffect(LibraryCatalogJson)(new TextDecoder().decode(after));
     expect(next.schema).toBe("beep.research.library/v2");
     expect(next.sources).toEqual(catalog.sources);
     const backup = yield* fs.readFile(path.join(root, `catalog/history/${beforeSha}.json`));
@@ -293,7 +300,7 @@ it.layer(
           })
         ),
       });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryCatalog))(privateCatalog);
+      const encoded = yield* S.encodeEffect(LibraryCatalogJson)(privateCatalog);
       yield* fs.writeFileString(path.join(root, "catalog/library.json"), encoded);
       yield* renderLibrary(root);
       const index = yield* fs.readFileString(path.join(root, "index.md"));
@@ -327,7 +334,7 @@ it.layer(
         ...catalog,
         occurrences: A.map(catalog.occurrences, (o) => LibraryOccurrence.make({ ...o, sourceId: "unknown-source" })),
       });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryCatalog))(invalid);
+      const encoded = yield* S.encodeEffect(LibraryCatalogJson)(invalid);
       const target = path.join(root, "catalog/library.json");
       yield* fs.writeFileString(target, encoded);
       yield* renderLibrary(root);
@@ -363,7 +370,7 @@ it.layer(
           })
         ),
       });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryCatalog))(versioned);
+      const encoded = yield* S.encodeEffect(LibraryCatalogJson)(versioned);
       yield* fs.writeFileString(path.join(root, "catalog/library.json"), encoded);
       yield* renderLibrary(root);
       const receipt = yield* migrateLibrary(root, true);
@@ -371,3 +378,14 @@ it.layer(
     })
   );
 });
+
+it.effect.prop(
+  "property: schema-generated LibraryMigrationReceipt retains every field through JSON",
+  { value: Arbitrary.schema(LibraryMigrationReceipt) },
+  Effect.fnUntraced(function* ({ value }) {
+    const encoded = yield* S.encodeEffect(LibraryMigrationReceiptJson)(value);
+    const decoded = yield* S.decodeEffect(LibraryMigrationReceiptJson)(encoded);
+    expect(decoded).toEqual(value);
+  }),
+  { arbitrary: fcRuns(32) }
+);

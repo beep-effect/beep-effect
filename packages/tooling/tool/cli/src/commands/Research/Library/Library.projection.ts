@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -31,12 +32,13 @@ const text = (value: unknown, key: string): string => {
   const item = get(value, key);
   return P.isString(item) ? item : "";
 };
-class Packet extends S.Class<Packet, { readonly brand: unique symbol }>($I`TopicPacket`)(
-  {
+class Packet extends S.Opaque<Packet, { readonly brand: unique symbol }>()(
+  S.Struct({
     initiative: S.Struct({ id: S.String, title: S.String }),
-  },
-  $I.annote("TopicPacket", { description: "Minimal packet topic metadata." })
+  }).pipe($I.annoteSchema("TopicPacket", { description: "Minimal packet topic metadata." }))
 ) {}
+
+const PacketJson = S.fromJsonString(Packet);
 
 /**
  * Packet-backed SKOS concept metadata.
@@ -48,16 +50,15 @@ class Packet extends S.Class<Packet, { readonly brand: unique symbol }>($I`Topic
  * @category models
  * @since 0.0.0
  */
-export class LibraryTopic extends S.Class<LibraryTopic, { readonly brand: unique symbol }>($I`LibraryTopic`)(
-  {
+export class LibraryTopic extends S.Opaque<LibraryTopic, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: S.String,
     initiativeId: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
     ),
     title: S.String,
-  },
-  $I.annote("LibraryTopic", { description: "Packet identifier and preferred title." })
+  }).pipe($I.annoteSchema("LibraryTopic", { description: "Packet identifier and preferred title." }))
 ) {}
 
 /**
@@ -81,7 +82,7 @@ export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: st
     for (const slug of A.sort(entries, Str.Order)) {
       const packet = yield* fs
         .readFileString(path.join(directory, slug, "ops/manifest.json"))
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(Packet))), Effect.option);
+        .pipe(Effect.flatMap(S.decodeUnknownEffect(PacketJson)), Effect.option);
       if (O.isNone(packet)) {
         warnings++;
         continue;
@@ -151,51 +152,36 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
     A.map(catalog.intakes, (intake) => [intake.id, iri("Intake", intake.id)] satisfies readonly [string, Rdf.NamedNode])
   );
   const literal = (value: unknown): Rdf.Literal =>
-    P.isBoolean(value)
-      ? Rdf.makeLiteral(value ? "true" : "false", XSD_BOOLEAN.value)
-      : P.isNumber(value)
-        ? Rdf.makeLiteral(`${value}`, XSD_INTEGER.value)
-        : Rdf.makeLiteral(P.isString(value) ? value : "", XSD_STRING.value);
-  const project = (cls: AssembledClass, record: unknown, fallback: string, owner: string): Rdf.NamedNode => {
-    const sourceId = cls.name === "Source" ? text(record, "id") : owner;
-    const id =
-      cls.name === "Artifact"
-        ? `${fallback}/${text(record, "sha256")}`
-        : cls.name === "SourceVersion"
-          ? `${owner}@${text(record, "revision")}/${encodeURIComponent(text(record, "canonicalUrl"))}`
-          : Str.isNonEmpty(text(record, "id"))
-            ? text(record, "id")
-            : fallback;
-    const subject = iri(cls.name, id);
-    quads.push(Rdf.makeQuad(subject, RDF_TYPE, nn(cls.iri)));
-    for (const predicate of cls.predicates) {
-      const raw = get(record, predicate.key);
-      if (raw === undefined) continue;
-      const values = A.isArray(raw) ? raw : [raw];
-      for (const [index, value] of A.map(values, (v, i) => [i, v] satisfies readonly [number, unknown])) {
-        let object: Rdf.ObjectTerm;
-        if (predicate.kind === "object" && O.isSome(predicate.rangeIri)) {
-          const rangeIri = predicate.rangeIri.value;
-          const child = O.getOrThrow(A.findFirst(assembled.classes, (c) => c.iri === rangeIri));
-          object = project(child, value, `${id}/${predicate.key}/${index}`, sourceId);
-        } else {
-          const ref = libraryReferenceClass(cls.name, predicate.key);
-          const matched = P.isString(value)
-            ? HashMap.get(predicate.key === "intakeId" ? intakeNodes : known, value)
-            : O.none();
-          const contextual = A.contains(["derivedId", "intakeId"], predicate.key);
-          object =
-            contextual && O.isSome(matched)
-              ? matched.value
-              : O.isSome(ref) && P.isString(value) && Str.isNonEmpty(value)
-                ? ref.value === "Source"
-                  ? O.getOrElse(HashMap.get(sourcesByAlias, value), () => iri("Source", value))
-                  : iri(ref.value, value)
-                : literal(value);
-        }
-        quads.push(Rdf.makeQuad(subject, nn(predicate.termIri), object));
-      }
-    }
+    Match.value(value).pipe(
+      Match.when(P.isBoolean, (v) => Rdf.makeLiteral(`${v}`, XSD_BOOLEAN.value)),
+      Match.when(P.isNumber, (v) => Rdf.makeLiteral(`${v}`, XSD_INTEGER.value)),
+      Match.orElse((v) => Rdf.makeLiteral(P.isString(v) ? v : "", XSD_STRING.value))
+    );
+  const recordId = (name: string, record: unknown, fallback: string, owner: string) =>
+    Match.value(name).pipe(
+      Match.when("Artifact", () => `${fallback}/${text(record, "sha256")}`),
+      Match.when(
+        "SourceVersion",
+        () => `${owner}@${text(record, "revision")}/${encodeURIComponent(text(record, "canonicalUrl"))}`
+      ),
+      Match.orElse(() => O.getOrElse(O.filter(O.some(text(record, "id")), Str.isNonEmpty), () => fallback))
+    );
+  const reference = (name: string, key: string, value: unknown): Rdf.ObjectTerm => {
+    if (!P.isString(value)) return literal(value);
+    const matched = HashMap.get(key === "intakeId" ? intakeNodes : known, value);
+    if (A.contains(["derivedId", "intakeId"], key) && O.isSome(matched)) return matched.value;
+    const ref = libraryReferenceClass(name, key);
+    if (O.isNone(ref) || !Str.isNonEmpty(value)) return literal(value);
+    if (ref.value === "Source") return O.getOrElse(HashMap.get(sourcesByAlias, value), () => iri("Source", value));
+    return iri(ref.value, value);
+  };
+  const projectEvidence = (
+    cls: AssembledClass,
+    record: unknown,
+    subject: Rdf.NamedNode,
+    sourceId: string,
+    owner: string
+  ) => {
     if (cls.name === "SourceVersion")
       quads.push(Rdf.makeQuad(subject, nn(`${Prov.PROV_NAMESPACE}specializationOf`), iri("Source", owner)));
     const category = HashMap.get(
@@ -204,6 +190,31 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
     );
     if (A.contains(["Source", "SourceVersion"], cls.name) && O.isSome(category))
       quads.push(Rdf.makeQuad(subject, nn($I.create("effectiveCategory").iri), literal(category.value)));
+  };
+  const project = (cls: AssembledClass, record: unknown, fallback: string, owner: string): Rdf.NamedNode => {
+    const sourceId = cls.name === "Source" ? text(record, "id") : owner;
+    const id = recordId(cls.name, record, fallback, owner);
+    const subject = iri(cls.name, id);
+    quads.push(Rdf.makeQuad(subject, RDF_TYPE, nn(cls.iri)));
+    const projectPredicate = (predicate: AssembledClass["predicates"][number]) => {
+      const raw = get(record, predicate.key);
+      if (raw === undefined) return;
+      const values = A.isArray(raw) ? raw : [raw];
+      A.forEach(values, (value, index) => {
+        const object =
+          predicate.kind === "object" && O.isSome(predicate.rangeIri)
+            ? project(
+                O.getOrThrow(A.findFirst(assembled.classes, (c) => c.iri === O.getOrThrow(predicate.rangeIri))),
+                value,
+                `${id}/${predicate.key}/${index}`,
+                sourceId
+              )
+            : reference(cls.name, predicate.key, value);
+        quads.push(Rdf.makeQuad(subject, nn(predicate.termIri), object));
+      });
+    };
+    A.forEach(cls.predicates, projectPredicate);
+    projectEvidence(cls, record, subject, sourceId, owner);
     return subject;
   };
   const catalogNode = project(classByName("Catalog"), catalog, "catalog/library.json", "");
@@ -238,14 +249,15 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
       Rdf.makeQuad(concept, Skos.SKOS_PREF_LABEL, literal(topic.title))
     );
   }
-  for (const finding of catalog.findings) {
-    for (const id of finding.topicIds) {
+  const findingTopics = (finding: LibraryCatalog["findings"][number]) =>
+    A.forEach(finding.topicIds, (id) => {
       const matches = A.filter(topics, (topic) => topic.id === id || topic.initiativeId === id);
       const targets = A.isReadonlyArrayNonEmpty(matches) ? A.map(matches, (topic) => topic.id) : [id];
-      for (const target of targets)
-        quads.push(Rdf.makeQuad(iri("Finding", finding.id), Skos.SKOS_RELATED, nn(topicIri(target))));
-    }
-  }
+      A.forEach(targets, (target) =>
+        quads.push(Rdf.makeQuad(iri("Finding", finding.id), Skos.SKOS_RELATED, nn(topicIri(target))))
+      );
+    });
+  A.forEach(catalog.findings, findingTopics);
   let seen = HashSet.empty<string>();
   const unique = A.filter(quads, (quad) => {
     const key = Rdf.serializeQuad(quad);

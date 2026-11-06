@@ -15,6 +15,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
+import { libraryOutputAncestor } from "./Library.paths.ts";
 import {
   LibraryArtifact,
   LibraryCapture,
@@ -91,12 +92,7 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
   const relative = (from: string, target: string) =>
     linkPath(path.relative(path.resolve(root, from), path.resolve(root, target)));
   const write = Effect.fn("Research.Library.writeProjection")(function* (target: string, content: string) {
-    const absolute = path.join(root, target);
-    const realRoot = yield* fs.realPath(root);
-    let ancestor = path.dirname(absolute);
-    while (!(yield* fs.exists(ancestor))) ancestor = path.dirname(ancestor);
-    const resolved = yield* fs.realPath(ancestor);
-    const within = path.relative(realRoot, resolved);
+    const { absolute, relative: within } = yield* libraryOutputAncestor(root, target);
     if (path.isAbsolute(within) || within === ".." || Str.startsWith(`..${path.sep}`)(within)) {
       return yield* LibraryError.make({ message: "Projection directory escapes library", cause: target });
     }
@@ -150,7 +146,7 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
     catalog.sources,
     Effect.fnUntraced(function* (source) {
       const related = yield* viewRecords(dataset, relatedRepositories(source.id), LibrarySource, includePrivate);
-      return [source.id, A.head(related)] satisfies readonly [string, O.Option<LibrarySource>];
+      return [source.id, A.head(related)] as const;
     })
   );
   const repositoryBySource = HashMap.fromIterable(repositories);
@@ -163,9 +159,7 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
           ? ` · [Related repository](${relative(directory, path.join(path.dirname(sourcePage(repository.id)), "SOURCE.md"))}) (indirect provenance)`
           : ` · <a href="${relative(directory, sourcePage(repository.id))}">Related repository</a> (indirect provenance)`,
     });
-  const documentsById = HashMap.fromIterable(
-    A.map(catalog.documents, (document) => [document.id, document] satisfies readonly [string, LibraryDocument])
-  );
+  const documentsById = HashMap.fromIterable(A.map(catalog.documents, (document) => [document.id, document] as const));
   const reports = yield* Effect.forEach(
     catalog.documents,
     Effect.fnUntraced(function* (document) {

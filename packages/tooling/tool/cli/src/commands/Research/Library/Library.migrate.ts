@@ -20,7 +20,10 @@ import { LibraryCatalog, LibraryMigrationReceipt } from "./Library.schemas.ts";
 import { hashBytes, loadCatalog, saveImmutable, withCatalog } from "./Library.store.ts";
 import { libraryViewDataset } from "./Library.views.ts";
 
-const encodeCatalog = S.encodeEffect(S.fromJsonString(LibraryCatalog));
+const LibraryCatalogJson = S.fromJsonString(LibraryCatalog);
+const LibraryMigrationReceiptJson = S.fromJsonString(LibraryMigrationReceipt);
+
+const encodeCatalog = S.encodeEffect(LibraryCatalogJson);
 const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
 const failure = (message: string) => (cause: unknown) => LibraryError.make({ message, cause });
 
@@ -113,7 +116,7 @@ export const migrateLibrary = Effect.fn("Library.migrate")(function* (root: stri
     false
   );
   if (O.isSome(receipt)) {
-    const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryMigrationReceipt))(receipt.value).pipe(
+    const encoded = yield* S.encodeEffect(LibraryMigrationReceiptJson)(receipt.value).pipe(
       Effect.mapError(failure("Cannot encode migration receipt"))
     );
     yield* saveImmutable(

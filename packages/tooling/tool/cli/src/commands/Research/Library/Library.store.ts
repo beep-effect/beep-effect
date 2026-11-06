@@ -484,8 +484,8 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
           ]
         : [];
       // Legacy aliases predate the object store. Admit their bytes only against the recorded digest.
-      for (const artifact of artifacts) {
-        if (yield* fs.exists(path.join(root, "objects/sha256", artifact.sha256))) continue;
+      const migrateArtifact = Effect.fnUntraced(function* (artifact: LibraryArtifact) {
+        if (yield* fs.exists(path.join(root, "objects/sha256", artifact.sha256))) return;
         const bytes = yield* fs
           .readFile(path.resolve(root, artifact.path))
           .pipe(mapFailure("Cannot read legacy artifact for object migration."));
@@ -496,7 +496,8 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
           });
         }
         yield* saveImmutable(root, artifact.path, bytes);
-      }
+      });
+      yield* Effect.forEach(artifacts, migrateArtifact);
       const catalog = yield* update(migrated);
       if (migrateLegacyIdentities === false && catalog === migrated) return catalog;
       const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));

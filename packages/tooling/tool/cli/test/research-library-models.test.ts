@@ -8,13 +8,19 @@ import {
 } from "@beep/repo-cli/commands/Research";
 import { encodeLibraryCaptureJson } from "@beep/repo-cli/test/ResearchLibrary";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const SUnknownJson = S.fromJsonString(S.Unknown);
+const LibraryCaptureJson = S.fromJsonString(LibraryCapture);
+const LibraryCatalogJson = S.fromJsonString(LibraryCatalog);
 
 const source = {
   id: "source",
@@ -59,15 +65,15 @@ describe("research library models", () => {
         artifacts: [artifact],
         reason: "fixture",
       };
-      const original = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(legacy);
-      const decoded = yield* S.decodeEffect(S.fromJsonString(LibraryCapture))(original);
+      const original = yield* S.encodeEffect(SUnknownJson)(legacy);
+      const decoded = yield* S.decodeEffect(LibraryCaptureJson)(original);
       const encoded = yield* encodeLibraryCaptureJson(decoded);
       expect(encoded).toBe(original);
-      const privateText = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+      const privateText = yield* S.encodeEffect(SUnknownJson)({
         ...legacy,
         artifacts: [{ accessClass: "private", ...artifact }],
       });
-      const privateCapture = yield* S.decodeEffect(S.fromJsonString(LibraryCapture))(privateText);
+      const privateCapture = yield* S.decodeEffect(LibraryCaptureJson)(privateText);
       const privateEncoded = yield* encodeLibraryCaptureJson(privateCapture);
       expect(privateEncoded).toBe(privateText);
     })
@@ -75,12 +81,12 @@ describe("research library models", () => {
   it.effect(
     "decodes v1 catalog JSON with public visibility and empty provenance collections",
     Effect.fnUntraced(function* () {
-      const json = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(legacyCatalog);
-      const catalog = yield* S.decodeEffect(S.fromJsonString(LibraryCatalog))(json);
-      expect(catalog).toBeInstanceOf(LibraryCatalog);
+      const json = yield* S.encodeEffect(SUnknownJson)(legacyCatalog);
+      const catalog = yield* S.decodeEffect(LibraryCatalogJson)(json);
+      expect(S.is(LibraryCatalog)(catalog)).toBe(true);
       expect(catalog.schema).toBe("beep.research.library/v1");
-      expect(catalog.sources[0]).toBeInstanceOf(LibrarySource);
-      expect(catalog.artifacts[0]).toBeInstanceOf(LibraryArtifact);
+      expect(S.is(LibrarySource)(catalog.sources[0])).toBe(true);
+      expect(S.is(LibraryArtifact)(catalog.artifacts[0])).toBe(true);
       expect(catalog.sources[0]?.accessClass).toBe("public");
       expect(catalog.artifacts[0]?.accessClass).toBe("public");
       expect(catalog.findings).toEqual([]);
@@ -154,3 +160,14 @@ it.layer(Path.layer)("research library root resolution", (it) => {
     })
   );
 });
+
+it.effect.prop(
+  "property: schema-generated LibraryCapture retains every field through JSON",
+  { value: Arbitrary.schema(LibraryCapture) },
+  Effect.fnUntraced(function* ({ value }) {
+    const encoded = yield* S.encodeEffect(LibraryCaptureJson)(value);
+    const decoded = yield* S.decodeEffect(LibraryCaptureJson)(encoded);
+    expect(decoded).toEqual(value);
+  }),
+  { arbitrary: fcRuns(32) }
+);

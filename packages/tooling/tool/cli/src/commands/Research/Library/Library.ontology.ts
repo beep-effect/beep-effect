@@ -27,9 +27,9 @@ import * as S from "effect/Schema";
 import * as AST from "effect/SchemaAST";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
-import { LIBRARY_SHAPES_FILE, LIBRARY_TBOX_FILE } from "./Library.paths.ts";
+import { LIBRARY_SHAPES_FILE, LIBRARY_TBOX_FILE, libraryOutputAncestor } from "./Library.paths.ts";
 import * as M from "./Library.schemas.ts";
-import type { AssembledOntology, Triple } from "@beep/ontology";
+import type { AssembledClass, AssembledOntology, Triple } from "@beep/ontology";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
 const sh = (name: string) => Rdf.makeNamedNode(`http://www.w3.org/ns/shacl#${name}`);
@@ -176,48 +176,44 @@ export const libraryReferenceClass: {
  * @category projections
  * @since 0.0.0
  */
-export const libraryShapes = (assembled: AssembledOntology): ReadonlyArray<ShaclNodeShape> =>
-  A.map(assembled.classes, (cls) =>
+export const libraryShapes = (assembled: AssembledOntology): ReadonlyArray<ShaclNodeShape> => {
+  const propertyClass = (predicate: AssembledClass["predicates"][number], ref: O.Option<string>, flexible: boolean) => {
+    if (predicate.kind === "object") return O.map(predicate.rangeIri, nn);
+    if (flexible) return O.none();
+    return O.flatMap(ref, (name) =>
+      O.map(
+        A.findFirst(assembled.classes, (c) => c.name === name),
+        (c) => nn(c.iri)
+      )
+    );
+  };
+  const scalarDatatype = (scalar: O.Option<AST.AST>) => {
+    if (O.isSome(scalar) && AST.isNumber(scalar.value)) return XSD_INTEGER;
+    if (O.isSome(scalar) && AST.isBoolean(scalar.value)) return XSD_BOOLEAN;
+    return XSD_STRING;
+  };
+  const propertyShape = (cls: AssembledClass, predicate: AssembledClass["predicates"][number]) => {
+    const ast = fieldAst(cls.name, predicate.key);
+    const ref = referenceClass(cls.name, predicate.key);
+    const scalar = A.head(leaves(ast));
+    const flexible = A.contains(["findingId", "occurrenceId", "modelRunId", "intakeId", "derivedId"], predicate.key);
+    return ShaclPropertyShape.make({
+      path: nn(predicate.termIri),
+      minCount: AST.isOptional(ast) || AST.isArrays(ast) ? O.none() : O.some(1),
+      maxCount: AST.isArrays(ast) ? O.none() : O.some(1),
+      class: propertyClass(predicate, ref, flexible),
+      datatype:
+        predicate.kind === "object" || O.isSome(ref) || flexible ? O.none() : scalar.pipe(scalarDatatype, O.some),
+    });
+  };
+  return A.map(assembled.classes, (cls) =>
     ShaclNodeShape.make({
       id: O.some(nn(`${cls.iri}/Shape`)),
       targetClass: O.some(nn(cls.iri)),
-      properties: A.map(cls.predicates, (predicate) => {
-        const ast = fieldAst(cls.name, predicate.key);
-        const scalar = A.head(leaves(ast));
-        const ref = referenceClass(cls.name, predicate.key);
-        const flexible = A.contains(
-          ["findingId", "occurrenceId", "modelRunId", "intakeId", "derivedId"],
-          predicate.key
-        );
-        return ShaclPropertyShape.make({
-          path: nn(predicate.termIri),
-          minCount: AST.isOptional(ast) || AST.isArrays(ast) ? O.none() : O.some(1),
-          maxCount: AST.isArrays(ast) ? O.none() : O.some(1),
-          class:
-            predicate.kind === "object"
-              ? O.map(predicate.rangeIri, nn)
-              : flexible
-                ? O.none()
-                : O.flatMap(ref, (name) =>
-                    O.map(
-                      A.findFirst(assembled.classes, (c) => c.name === name),
-                      (c) => nn(c.iri)
-                    )
-                  ),
-          datatype:
-            predicate.kind === "object" || O.isSome(ref) || flexible
-              ? O.none()
-              : O.some(
-                  O.isSome(scalar) && AST.isNumber(scalar.value)
-                    ? XSD_INTEGER
-                    : O.isSome(scalar) && AST.isBoolean(scalar.value)
-                      ? XSD_BOOLEAN
-                      : XSD_STRING
-                ),
-        });
-      }),
+      properties: A.map(cls.predicates, (predicate) => propertyShape(cls, predicate)),
     })
   );
+};
 
 /**
  * Emit full SHACL constraints, including literal membership RDF lists.
@@ -231,55 +227,53 @@ export const libraryShapes = (assembled: AssembledOntology): ReadonlyArray<Shacl
  */
 export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf.Dataset => {
   const quads: Array<Rdf.Quad> = [];
-  for (const shape of shapes) {
+  const membership = (name: string, property: ShaclPropertyShape, p: Rdf.NamedNode) => {
+    const entry = A.findFirst(
+      fields,
+      (f) =>
+        f.schema.name === `Library${name === "Report" ? "Document" : name}` &&
+        property.path.value === `${$I.iri}/${f.key}`
+    );
+    const members = O.getOrElse(
+      O.map(entry, (f) => literals(AST.toType(f.field.ast))),
+      () => []
+    );
+    if (!A.isReadonlyArrayNonEmpty(members)) return;
+    quads.push(Rdf.makeQuad(p, sh("in"), nn(`${p.value}/list/0`)));
+    A.forEach(members, (member, i) => {
+      const item = nn(`${p.value}/list/${i}`);
+      quads.push(
+        Rdf.makeQuad(item, nn(`${RDF_NAMESPACE}first`), member),
+        Rdf.makeQuad(
+          item,
+          nn(`${RDF_NAMESPACE}rest`),
+          i + 1 === members.length ? nn(`${RDF_NAMESPACE}nil`) : nn(`${p.value}/list/${i + 1}`)
+        )
+      );
+    });
+  };
+  const propertyQuads = (node: Rdf.NamedNode, name: string, property: ShaclPropertyShape, index: number) => {
+    const p = nn(`${node.value}/property/${index}`);
+    quads.push(Rdf.makeQuad(node, sh("property"), p), Rdf.makeQuad(p, sh("path"), property.path));
+    A.forEach(
+      [
+        ["minCount", O.map(property.minCount, (v) => Rdf.makeLiteral(`${v}`, XSD_INTEGER.value))],
+        ["maxCount", O.map(property.maxCount, (v) => Rdf.makeLiteral(`${v}`, XSD_INTEGER.value))],
+        ["datatype", property.datatype],
+        ["class", property.class],
+      ] satisfies ReadonlyArray<readonly [string, O.Option<Rdf.ObjectTerm>]>,
+      ([key, value]: readonly [string, O.Option<Rdf.ObjectTerm>]) =>
+        O.map(value, (v) => quads.push(Rdf.makeQuad(p, sh(key), v)))
+    );
+    membership(name, property, p);
+  };
+  A.forEach(shapes, (shape) => {
     const node = O.getOrThrow(shape.id);
     const target = O.getOrThrow(shape.targetClass);
     quads.push(Rdf.makeQuad(node, RDF_TYPE, sh("NodeShape")), Rdf.makeQuad(node, sh("targetClass"), target));
     const name = O.getOrThrow(A.last(Str.split(target.value, "/")));
-    for (const [index, property] of A.map(
-      shape.properties,
-      (v, i) => [i, v] satisfies readonly [number, ShaclPropertyShape]
-    )) {
-      const p = nn(`${node.value}/property/${index}`);
-      quads.push(Rdf.makeQuad(node, sh("property"), p), Rdf.makeQuad(p, sh("path"), property.path));
-      for (const [key, value] of [
-        ["minCount", property.minCount],
-        ["maxCount", property.maxCount],
-      ] satisfies ReadonlyArray<readonly [string, O.Option<number>]>) {
-        if (O.isSome(value)) quads.push(Rdf.makeQuad(p, sh(key), Rdf.makeLiteral(`${value.value}`, XSD_INTEGER.value)));
-      }
-      for (const [key, value] of [
-        ["datatype", property.datatype],
-        ["class", property.class],
-      ] satisfies ReadonlyArray<readonly [string, O.Option<Rdf.NamedNode>]>) {
-        if (O.isSome(value)) quads.push(Rdf.makeQuad(p, sh(key), value.value));
-      }
-      // The property order is the deterministic fold order, not source declaration order.
-      const entry = A.findFirst(
-        fields,
-        (f) =>
-          f.schema.name === `Library${name === "Report" ? "Document" : name}` &&
-          property.path.value === `${$I.iri}/${f.key}`
-      );
-      if (O.isSome(entry)) {
-        const members = literals(AST.toType(entry.value.field.ast));
-        if (A.isReadonlyArrayNonEmpty(members)) {
-          quads.push(Rdf.makeQuad(p, sh("in"), nn(`${p.value}/list/0`)));
-          for (const [i, member] of A.map(members, (v, i) => [i, v] satisfies readonly [number, Rdf.Literal])) {
-            const item = nn(`${p.value}/list/${i}`);
-            quads.push(
-              Rdf.makeQuad(item, nn(`${RDF_NAMESPACE}first`), member),
-              Rdf.makeQuad(
-                item,
-                nn(`${RDF_NAMESPACE}rest`),
-                i + 1 === members.length ? nn(`${RDF_NAMESPACE}nil`) : nn(`${p.value}/list/${i + 1}`)
-              )
-            );
-          }
-        }
-      }
-    }
-  }
+    A.forEach(shape.properties, (property, index) => propertyQuads(node, name, property, index));
+  });
   return Rdf.makeDataset(Rdf.sortDatasetQuads(Rdf.makeDataset(quads)));
 };
 
@@ -330,12 +324,7 @@ export const renderLibraryOntology = Effect.fn("Library.renderOntology")(
     const shapes = yield* libraryShapesTurtle(libraryShapes(assembled));
     const tbox = toTurtle(assembled);
     const write = Effect.fn("Library.writeOntology")(function* (target: string, source: string) {
-      const absolute = path.join(root, target);
-      const realRoot = yield* fs.realPath(root);
-      let ancestor = path.dirname(absolute);
-      while (!(yield* fs.exists(ancestor))) ancestor = path.dirname(ancestor);
-      const resolved = yield* fs.realPath(ancestor);
-      const relative = path.relative(realRoot, resolved);
+      const { absolute, relative } = yield* libraryOutputAncestor(root, target);
       if (path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative))
         return yield* LibraryError.make({ message: "Ontology directory escapes library", cause: target });
       yield* fs.makeDirectory(path.dirname(absolute), { recursive: true });
