@@ -17,7 +17,7 @@ private orchestrator handoff.
   through `t3 update <version> --yes` (T3's staged updater verifies the
   checksum, trials the runtime, rolls back on failure) followed by
   `t3 service install` to move the launcher. `T3CODE_RELEASE_BASE_URL` is
-  pinned in `~/.t3/service.env`, so no official release can replace the fork.
+  pinned in `$HOME/.t3/service.env`, so no official release can replace the fork.
 
 ## Evidence
 
@@ -32,7 +32,7 @@ private orchestrator handoff.
 | Idempotent rerun | `current: t3@0.1.7-fork.20261105.2218` | not rerun |
 | Reachable from the hub | `:3773` 200 and Tailscale HTTPS 200 | loopback only (worker-boundary drop-in); HTTPS :443 belongs to another service |
 
-Hub: `~/.local/opt/t3code/source-version` = `0.1.7-fork.20261105.2218`,
+Hub: `$HOME/.local/opt/t3code/source-version` = `0.1.7-fork.20261105.2218`,
 `publish/latest.json` same version, fork commit `25b53299b7` (fast-forwarded to
 upstream that run). The running desktop stays on `0.1.7` until T3 Code is
 restarted.

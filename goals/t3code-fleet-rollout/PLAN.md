@@ -31,7 +31,7 @@ Before marking the packet closed:
 
 - 2026-11-05 P0 facts (live reads over the approved wrappers): beep-worker and
   dankserver each run the official `t3@0.1.5` as `t3code.service` under
-  `agent-runs.slice` from `~/.t3/runtime/versions/0.1.5/t3`, linger on, no
+  `agent-runs.slice` from `$HOME/.t3/runtime/versions/0.1.5/t3`, linger on, no
   `service.env`; DankStation runs the fork desktop build (`0.1.7` before the
   version stamp). The updater cannot overwrite a fork build once
   `T3CODE_RELEASE_BASE_URL` in `service.env` points at the mirror, because
