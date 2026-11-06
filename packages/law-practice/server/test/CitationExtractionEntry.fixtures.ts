@@ -15,7 +15,8 @@ import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtract
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 type SourceRow = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>["corpus"]["cases"][number];
-const rawRequest = Effect.fn("ExtractionEntryTest.request")(function* (
+/** Convert an authenticated source row into primitive request data for entry compositions. */
+export const citationExtractionRawRequest = Effect.fn("ExtractionEntryTest.request")(function* (
   unicode: Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>,
   row: SourceRow
 ) {
@@ -89,7 +90,7 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   const rows = A.filter(corpus.cases, (row) => full || A.contains([0, 4, 18, 20, 32], row.id));
   for (const row of rows) {
-    const request = yield* rawRequest(unicode, row);
+    const request = yield* citationExtractionRawRequest(unicode, row);
     const invocation = stage.extract(request);
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
     const result = yield* closed;

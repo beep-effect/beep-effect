@@ -90,6 +90,68 @@ const load = Effect.fnUntraced(function* () {
   );
 });
 
+type SourceRow = (typeof SourceModels.Type.cases)[number]["before"][number];
+type MappingRow = (typeof Mapping.Type.editions)[number];
+const sourceFamily = (row: MappingRow): "case" | "law" | "journal" =>
+  row.kind === "case-reporter" ? "case" : row.kind === "law-publication" ? "law" : "journal";
+const expectedBinding = (row: MappingRow) => {
+  const family = sourceFamily(row);
+  return family === "case"
+    ? { family, edition: row.artifactSha256, reporterId: row.reporterId }
+    : { family, edition: row.artifactSha256 };
+};
+const sourceModel = (row: SourceRow) => {
+  const metadata = R.mapKeys(row.metadata, (key) => O.getOrElse(R.get(fieldNames, key), () => key));
+  const outcome = {
+    _tag: row.kind,
+    metadata,
+    year: row.year,
+    editionGuess: row.editionGuess,
+    fullSpanStart: row.fullSpanStart,
+    fullSpanEnd: row.fullSpanEnd,
+    spanEnd: row.span[1],
+    usedHtml: false,
+    usedPlain: false,
+    reservedUnits: 0,
+  };
+  // Coordinates only satisfy the private model contract, without span proof.
+  return row.kind === "ReferenceCitation"
+    ? { ...outcome, token: row.token, index: 0, documentAttached: false, spanStart: row.span[0] }
+    : { index: row.index, token: row.token, outcome, reservedUnits: 0 };
+};
+const assertMetadataField = (actual: object, key: string, value: CitationNativeUnicodeHex | null) => {
+  const text = ascii(value);
+  const name = O.getOrElse(R.get(semanticFields, key), () => key);
+  const expected =
+    key === "court" && text !== null
+      ? { court: { status: "known", id: text, vocabularyVersion: "crv1:f353e51400a5:fad63b383b92" } }
+      : { [name]: text };
+  expect(actual).toMatchObject(expected);
+};
+const assertSourceMetadata = Effect.fnUntraced(function* (actual: object, row: SourceRow) {
+  const fields = R.remove(R.remove(row.metadata, "pin_cite_span_start"), "pin_cite_span_end");
+  for (const [key, value] of R.toEntries(fields)) {
+    if (typeof value === "number") return yield* Effect.die("Unexpected numeric legal metadata in sealed corpus");
+    assertMetadataField(actual, key, value);
+  }
+});
+const assertSourcePublication = (
+  actual: typeof Citation.Encoded,
+  row: SourceRow,
+  bindings: typeof SourceModels.Type.bindings
+) => {
+  if (!("publication" in actual)) return;
+  const expected = A.map(
+    A.appendAll(row.token.exact, row.token.variation),
+    (id) => O.getOrThrow(A.findFirst(bindings, (binding) => binding.id === id)).ref
+  );
+  const refs = A.map(actual.publication.editions, (edition) =>
+    typeof edition === "string" ? edition : edition.edition
+  );
+  expect(refs).toEqual(expected);
+  expect(actual.publication.selectedEdition).toBe(row.editionGuess);
+};
+
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic citation projection", (it) => {
   it.effect("resolves every reviewed edition and refuses corruption and family confusion", () =>
     Effect.gen(function* () {
@@ -101,13 +163,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic ci
       ).pipe(Effect.flatMap(S.decodeEffect(Mapping)));
       expect(vocabulary.vocabularyVersion).toBe(mapping.publicArtifactVersion);
       for (const row of mapping.editions) {
-        const family = row.kind === "case-reporter" ? "case" : row.kind === "law-publication" ? "law" : "journal";
-        const actual = yield* vocabulary.lookup(row.artifactSha256, family);
-        expect(actual).toEqual(
-          family === "case"
-            ? { family, edition: row.artifactSha256, reporterId: row.reporterId }
-            : { family, edition: row.artifactSha256 }
-        );
+        const actual = yield* vocabulary.lookup(row.artifactSha256, sourceFamily(row));
+        expect(actual).toEqual(expectedBinding(row));
       }
       expect(mapping.editions).toHaveLength(2533);
       const first = A.getUnsafe(mapping.editions, 0);
@@ -173,57 +230,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic ci
           editions: corpus.bindings,
           vocabulary: raw,
         }).pipe(Effect.provideContext(setup.provided));
-        let count = 0;
-        for (const document of corpus.cases)
-          for (const row of document.before) {
-            const metadata = R.mapKeys(row.metadata, (key) => O.getOrElse(R.get(fieldNames, key), () => key));
-            const outcome = {
-              _tag: row.kind,
-              metadata,
-              year: row.year,
-              editionGuess: row.editionGuess,
-              fullSpanStart: row.fullSpanStart,
-              fullSpanEnd: row.fullSpanEnd,
-              spanEnd: row.span[1],
-              usedHtml: false,
-              usedPlain: false,
-              reservedUnits: 0,
-            };
-            // Occurrence fields only satisfy the existing private model contract. This
-            // test projects captured models; it does not run the parser or verify spans.
-            const model =
-              row.kind === "ReferenceCitation"
-                ? { ...outcome, token: row.token, index: 0, documentAttached: false, spanStart: row.span[0] }
-                : { index: row.index, token: row.token, outcome, reservedUnits: 0 };
-            const actual = yield* stage.project(model).pipe(Effect.flatMap(encodeCitation));
-            expect(actual.type).toBe(O.getOrThrow(R.get(sourceTypes, row.kind)));
-            expect(actual.components).toEqual(R.map(row.token.groups, ascii));
-            for (const [key, value] of R.toEntries(row.metadata)) {
-              if (key === "pin_cite_span_start" || key === "pin_cite_span_end") continue;
-              if (typeof value === "number")
-                return yield* Effect.die("Unexpected numeric legal metadata in sealed corpus");
-              const text = ascii(value);
-              const name = O.getOrElse(R.get(semanticFields, key), () => key);
-              if (key === "court" && text !== null)
-                expect(actual.metadata).toMatchObject({
-                  court: { status: "known", id: text, vocabularyVersion: "crv1:f353e51400a5:fad63b383b92" },
-                });
-              else expect(actual.metadata).toMatchObject({ [name]: text });
-            }
-            if ("publication" in actual) {
-              const expected = A.map(
-                A.appendAll(row.token.exact, row.token.variation),
-                (id) => O.getOrThrow(A.findFirst(corpus.bindings, (binding) => binding.id === id)).ref
-              );
-              const refs = A.map(actual.publication.editions, (edition) =>
-                typeof edition === "string" ? edition : edition.edition
-              );
-              expect(refs).toEqual(expected);
-              expect(actual.publication.selectedEdition).toBe(row.editionGuess);
-            }
-            count++;
-          }
-        expect(count).toBe(80);
+        const rows = A.flatMap(corpus.cases, (document) => document.before);
+        for (const row of rows) {
+          const actual = yield* stage.project(sourceModel(row)).pipe(Effect.flatMap(encodeCitation));
+          expect(actual.type).toBe(O.getOrThrow(R.get(sourceTypes, row.kind)));
+          expect(actual.components).toEqual(R.map(row.token.groups, ascii));
+          yield* assertSourceMetadata(actual.metadata, row);
+          assertSourcePublication(actual, row, corpus.bindings);
+        }
+        expect(rows).toHaveLength(80);
         const observed = yield* setup.observed.snapshot;
         expect(observed).toEqual({ spawned: 0, confirmed: 0 });
       })

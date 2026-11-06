@@ -269,7 +269,12 @@
         "packages/law-practice/server/src/internal/Citation/SemanticProjection.ts",
         "packages/law-practice/server/src/internal/Citation/SemanticVocabulary.ts",
         "packages/law-practice/server/assets/citation/semantic-editions.json",
-        "packages/law-practice/server/test/CitationSemanticProjection.test.ts"
+        "packages/law-practice/server/test/CitationSemanticProjection.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-extraction.md",
+        "packages/law-practice/server/src/internal/Citation/SemanticExtraction.ts",
+        "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+        "packages/law-practice/server/test/CitationSemanticExtraction.test.ts",
+        "packages/law-practice/server/test/integration/CitationSemanticExtraction.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

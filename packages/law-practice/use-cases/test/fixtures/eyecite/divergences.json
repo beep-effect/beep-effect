@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "d9d6f80c2b10db86d83981254b6944ea9ae0e1a23dfce86f04ce4477a5119210",
+  "planSha256": "ecc2b9b5b9c766291f9ca51d8990e589c6bad6a546d550596eaf6f762e064dcf",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -980,7 +980,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationExtractionEntry.fixtures.ts",
-          "sha256": "d286e4f4da019d1386cd7761aa33fce117d2ffc6aa071150fb0f483522892b8f"
+          "sha256": "ae4a80c319a1f5b67f3a476168bb88226b97b18530a7b18db8be82d26ac8d4b5"
         },
         {
           "path": "packages/law-practice/server/test/CitationExtractionEntry.test.ts",
@@ -1056,7 +1056,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-projection.md",
-          "sha256": "5a8bdb7eb59185f9f5f45e1196caeab9598c9239a40a8515d3c2cb020b4b0ab6"
+          "sha256": "bb3d1bd377b2532315bcbfd8c4b1d419171af3ce2efeef24cea57ab26ab6b3dd"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SemanticProjection.ts",
@@ -1072,7 +1072,27 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticProjection.test.ts",
-          "sha256": "15d791d4d9d81097cd92acb84956830b19b7653b74787b74902471d78b52495e"
+          "sha256": "cd3c56bb50de133324566f59cf81622bb27466b53837d6b5b9d4844437b272bd"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-extraction.md",
+          "sha256": "63f0aaa55274990dfb97a010b955b06293ac132ac89af10303a10d0240bd252d"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/SemanticExtraction.ts",
+          "sha256": "f2eb602e7cc709fea639358856743bf037d25f04807dfba1588a88f94dd0b17c"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+          "sha256": "5c1544fd8a5b324e4bbcaa8098bccf466b001b4edc306265320fb6e7e2b58201"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationSemanticExtraction.test.ts",
+          "sha256": "af709b6f2d76dd076f2dc7dcb7ccbe3830ceb9868beb67f7a455a7a955ee5cfb"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationSemanticExtraction.test.ts",
+          "sha256": "c24f1a199a624529df2479ec10ec4c8d4dabeb609fd66a376c7bc46d2b4282f7"
         }
       ],
       "workflowState": "audit",

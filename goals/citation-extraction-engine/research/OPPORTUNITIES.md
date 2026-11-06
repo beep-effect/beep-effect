@@ -398,3 +398,9 @@ history/evidence/2026-11-03-edition-inference.md.
   flagged compound capture validation/projection and repeated release assertions;
   separate source checks and a shared real-exit/capacity assertion retain proof
   without suppressions or changed floors.
+
+- 2026-11-06 semantic extraction: parallel pre-commit catalog/formatter hooks
+  collided while staging fixed files (`index.lock: File exists`). The commit
+  failed; after its terminal result the lock was absent and intended changes
+  remained staged. Retrying normal hooks preserves validation. A single staging
+  owner after parallel generators would prevent this race.
