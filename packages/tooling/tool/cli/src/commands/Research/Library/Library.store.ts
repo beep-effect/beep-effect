@@ -21,7 +21,7 @@ import {
   LibraryCatalog,
   LibraryOccurrence,
   LibrarySource,
-  LibraryVersion,
+  LibrarySourceVersion,
 } from "./Library.schemas.ts";
 
 const mapFailure = (message: string) => Effect.mapError((cause: unknown) => LibraryError.make({ message, cause }));
@@ -65,7 +65,7 @@ export const loadCatalog = Effect.fn("ResearchLibrary.loadCatalog")(function* (r
     : legacyTarget;
   if (!(yield* fs.exists(target).pipe(mapFailure("Cannot inspect library catalog.")))) {
     return LibraryCatalog.make({
-      schema: "beep.research.library/v1",
+      schema: "beep.research.library/v2",
       documents: [],
       sources: [],
       occurrences: [],
@@ -232,8 +232,8 @@ export const saveImmutable = Effect.fn("ResearchLibrary.saveImmutable")(function
  * **Example** (Preserve locator aliases for one revision)
  * ```ts
  * import { mergeLibraryVersions } from "@beep/repo-cli/test/ResearchLibrary"
- * import { LibraryVersion } from "@beep/repo-cli/commands/Research"
- * const version = LibraryVersion.make({revision: "v1", canonicalUrl: "https://arxiv.org/abs/2610.00609v1", locators: ["arXiv:2610.00609v1"]})
+ * import { LibrarySourceVersion } from "@beep/repo-cli/commands/Research"
+ * const version = LibrarySourceVersion.make({revision: "v1", canonicalUrl: "https://arxiv.org/abs/2610.00609v1", locators: ["arXiv:2610.00609v1"]})
  * console.log(mergeLibraryVersions([version, version]).length) // 1
  * ```
  *
@@ -243,8 +243,10 @@ export const saveImmutable = Effect.fn("ResearchLibrary.saveImmutable")(function
  * @category normalization
  * @since 0.0.0
  */
-export const mergeLibraryVersions = (versions: ReadonlyArray<LibraryVersion>): ReadonlyArray<LibraryVersion> =>
-  A.reduce(versions, A.empty<LibraryVersion>(), (merged, version) => {
+export const mergeLibraryVersions = (
+  versions: ReadonlyArray<LibrarySourceVersion>
+): ReadonlyArray<LibrarySourceVersion> =>
+  A.reduce(versions, A.empty<LibrarySourceVersion>(), (merged, version) => {
     const existing = A.findFirst(
       merged,
       (item) => item.revision === version.revision && item.canonicalUrl === version.canonicalUrl
@@ -253,7 +255,7 @@ export const mergeLibraryVersions = (versions: ReadonlyArray<LibraryVersion>): R
       ? A.append(merged, version)
       : A.map(merged, (item) =>
           item === existing.value
-            ? LibraryVersion.make({ ...item, locators: A.dedupe([...item.locators, ...version.locators]) })
+            ? LibrarySourceVersion.make({ ...item, locators: A.dedupe([...item.locators, ...version.locators]) })
             : item
         );
   });
@@ -299,16 +301,16 @@ const migratedSourceRevision = (source: LibrarySource, paper: O.Option<RegExpMat
   return O.isSome(paper) ? matchedGroup(paper.value, 2) : source.revision;
 };
 
-const migratedVersion = (source: LibrarySource, revision: string, originalVersion: LibraryVersion) => {
-  const version = LibraryVersion.make({
+const migratedVersion = (source: LibrarySource, revision: string, originalVersion: LibrarySourceVersion) => {
+  const version = LibrarySourceVersion.make({
     ...originalVersion,
     canonicalUrl: repairedCitationUrl(originalVersion.canonicalUrl),
   });
   const paper = Str.match(/^https:\/\/arxiv\.org\/abs\/\d{4}\.\d{4,5}(v\d+)?$/i)(version.canonicalUrl);
-  if (O.isSome(paper)) return LibraryVersion.make({ ...version, revision: matchedGroup(paper.value, 1) });
-  if (source.kind === "youtube" && version.revision === "") return LibraryVersion.make({ ...version, revision });
+  if (O.isSome(paper)) return LibrarySourceVersion.make({ ...version, revision: matchedGroup(paper.value, 1) });
+  if (source.kind === "youtube" && version.revision === "") return LibrarySourceVersion.make({ ...version, revision });
   if (source.kind === "github-release")
-    return LibraryVersion.make({ ...version, revision: releaseRevision(version.canonicalUrl) });
+    return LibrarySourceVersion.make({ ...version, revision: releaseRevision(version.canonicalUrl) });
   return version;
 };
 
@@ -325,7 +327,11 @@ const migratedSource = Effect.fn("ResearchLibrary.migratedSource")(function* (so
   const revision = migratedSourceRevision(source, paper);
   const originals = A.match(source.versions, {
     onEmpty: () => [
-      LibraryVersion.make({ revision: source.revision, canonicalUrl: source.canonicalUrl, locators: source.locators }),
+      LibrarySourceVersion.make({
+        revision: source.revision,
+        canonicalUrl: source.canonicalUrl,
+        locators: source.locators,
+      }),
     ],
     onNonEmpty: A.fromIterable,
   });
@@ -452,7 +458,8 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
  */
 export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E, R>(
   root: string,
-  update: (catalog: LibraryCatalog) => Effect.Effect<LibraryCatalog, E, R>
+  update: (catalog: LibraryCatalog) => Effect.Effect<LibraryCatalog, E, R>,
+  migrateLegacyIdentities = true
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -468,15 +475,17 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
       ),
     Effect.fnUntraced(function* () {
       const loadedCatalog = yield* loadCatalog(root);
-      const migrated = yield* migrateCatalogIdentities(loadedCatalog);
-      const artifacts = [
-        ...migrated.artifacts,
-        ...A.flatMap(migrated.captures, (capture) => capture.artifacts),
-        ...A.flatMap(migrated.qualifications, (qualification) => qualification.evidence),
-      ];
+      const migrated = migrateLegacyIdentities ? yield* migrateCatalogIdentities(loadedCatalog) : loadedCatalog;
+      const artifacts = migrateLegacyIdentities
+        ? [
+            ...migrated.artifacts,
+            ...A.flatMap(migrated.captures, (capture) => capture.artifacts),
+            ...A.flatMap(migrated.qualifications, (qualification) => qualification.evidence),
+          ]
+        : [];
       // Legacy aliases predate the object store. Admit their bytes only against the recorded digest.
-      for (const artifact of artifacts) {
-        if (yield* fs.exists(path.join(root, "objects/sha256", artifact.sha256))) continue;
+      const migrateArtifact = Effect.fnUntraced(function* (artifact: LibraryArtifact) {
+        if (yield* fs.exists(path.join(root, "objects/sha256", artifact.sha256))) return;
         const bytes = yield* fs
           .readFile(path.resolve(root, artifact.path))
           .pipe(mapFailure("Cannot read legacy artifact for object migration."));
@@ -487,8 +496,10 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
           });
         }
         yield* saveImmutable(root, artifact.path, bytes);
-      }
+      });
+      yield* Effect.forEach(artifacts, migrateArtifact);
       const catalog = yield* update(migrated);
+      if (migrateLegacyIdentities === false && catalog === migrated) return catalog;
       const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
       const bytes = new TextEncoder().encode(encoded);
       const hash = yield* hashBytes(bytes);
