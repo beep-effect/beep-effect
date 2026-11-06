@@ -1029,3 +1029,19 @@ formatter failure, and forbid writes through the check's filesystem service.
 No cache or qualification transition is included. If this repair must be
 withdrawn, suspend the affected checks until repaired rather than restoring
 the destructive generate-then-diff wrappers.
+
+### Freeze the Storybook deployment install, 2026-11-04 UTC
+
+Require `bun install --frozen-lockfile` in Storybook's existing Vercel installer.
+Keep its full-monorepo working directory, build command and output directory.
+This prevents deployment-time lockfile changes; it does not establish the
+actual Vercel Bun version, deployment success or a qualified cache profile.
+Reverse with a reviewed revert while retaining the source finding.
+
+The source review names the actual Vercel, Alchemy and desktop build callers.
+Keep pruning pending until a real app install/build and missing-input comparison
+passes. Keep native boundaries pending until their package semantics are mapped
+to the existing manifest/doctrine owner and aliases. A text scan proves neither
+policy equivalence nor that a new tool has no useful application. Feature counts
+and all whole-goal gates remain unchanged. See
+`research/deployment-boundary-source-review-2026-11-04.json`.
