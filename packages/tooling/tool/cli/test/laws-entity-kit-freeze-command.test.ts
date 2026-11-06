@@ -101,6 +101,52 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
     );
 
     it.effect(
+      "fails with the law's execution error when the baseline cannot be read, decoded or written",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const checkout = Effect.fnUntraced(function* () {
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "entity-kit-freeze-" });
+          yield* fs.writeFileString(path.join(root, "bun.lock"), "");
+          expect(yield* git(root, ["init", "--quiet"])).toBe(0);
+          yield* fs.makeDirectory(path.join(root, "packages/a/src"), { recursive: true });
+          yield* fs.writeFileString(path.join(root, "packages/a/src/Old.ts"), KIT_IMPORT);
+          expect(yield* git(root, ["add", "--", "packages/a/src/Old.ts"])).toBe(0);
+          return root;
+        });
+        const failureOf = Effect.fnUntraced(function* (root: string, write: boolean) {
+          const exit = yield* runEntityKitFreeze(
+            EntityKitFreezeOptions.make({ cwd: root, strictCheck: !write, write })
+          ).pipe(Effect.exit);
+          exit.pipe(Exit.isFailure, assertTrue);
+          return failureText(exit);
+        });
+
+        const malformed = yield* checkout();
+        yield* fs.makeDirectory(path.join(malformed, "standards"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(malformed, "standards/entity-kit-freeze.baseline.jsonc"),
+          '{ "version": 2 }\n'
+        );
+        expect(yield* failureOf(malformed, false)).toContain(
+          "Failed to decode standards/entity-kit-freeze.baseline.jsonc"
+        );
+
+        const unreadable = yield* checkout();
+        yield* fs.makeDirectory(path.join(unreadable, "standards/entity-kit-freeze.baseline.jsonc"), {
+          recursive: true,
+        });
+        expect(yield* failureOf(unreadable, false)).toContain(
+          "Failed to read standards/entity-kit-freeze.baseline.jsonc"
+        );
+
+        const unwritable = yield* checkout();
+        yield* fs.writeFileString(path.join(unwritable, "standards"), "not a directory\n");
+        expect(yield* failureOf(unwritable, true)).toContain("EntityKitFreezeExecutionError");
+      })
+    );
+
+    it.effect(
       "fails with the law's execution error when the directory is not a git checkout",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
