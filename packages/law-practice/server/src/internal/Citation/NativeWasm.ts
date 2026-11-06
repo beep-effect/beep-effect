@@ -3,6 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
@@ -14,6 +15,19 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeWasm");
+/** Shared bounded asset location and message ceiling for trusted kernel startup.
+ * Protocol-specific schemas retain their own version tags; every asset still
+ * undergoes complete size/digest authentication before compilation.
+ * @internal @category models @since 0.0.0
+ */
+export const CitationNativeWasmStartup = S.Struct({
+  maximum: S.Int.check(S.isBetween({ minimum: 1, maximum: CitationEngineAbsoluteMaxima.processMessageBytes })),
+  assetPath: S.NonEmptyString.check(S.isMaxLength(4096)),
+}).pipe(
+  $I.annoteSchema("CitationNativeWasmStartup", {
+    description: "Common authenticated kernel startup fields; no ambient configuration.",
+  })
+);
 /** Authenticated ABI callable; shape is checked only after asset authentication.
  * @internal @category models @since 0.0.0
  */

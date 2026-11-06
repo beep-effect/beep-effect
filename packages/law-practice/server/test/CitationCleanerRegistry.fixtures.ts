@@ -128,6 +128,8 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
   );
   return {
     values,
+    protocols,
+    builtins: builtin,
     registry,
     pipeline,
     hashes: yield* makeCitationPythonHash(limits),

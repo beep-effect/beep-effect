@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Named Document protocol checkpoint (2026-11-05): production-owned named
+list/tuple handles now connect constructor protocols to the existing cleaner
+registry and fresh iteration. Real constructor smokes use the adapter for default
+and exact tuple cases; captured custom protocols remain. Original insertion
+failures, configuration snapshot/limits, foreign ownership and scope closure have
+focused controls. Hosted startup-schema duplication is consolidated in the shared
+native-WASM fields. See [protocol evidence](history/evidence/2026-11-05-document-cleaner-protocols.md).
+
 Node constructor checkpoint (2026-11-05): the shared replay now selects actual
 Bun or Node for HTML cleaning, regex discovery and diff geometry. The Node HTML
 entry reuses the same worker program and upstream platform services; explicit

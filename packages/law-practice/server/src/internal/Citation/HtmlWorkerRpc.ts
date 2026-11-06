@@ -7,7 +7,6 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Rpc from "effect/rpc/Rpc";
@@ -31,6 +30,7 @@ import {
   makeCitationNativeRpcTransport,
   receiveCitationNativeConversation,
 } from "./NativeRpc.ts";
+import { CitationNativeWasmStartup } from "./NativeWasm.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 
@@ -41,8 +41,7 @@ const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorkerRpc");
 export class CitationHtmlWorkerStartup extends S.Opaque<CitationHtmlWorkerStartup, { readonly brand: unique symbol }>()(
   S.Struct({
     version: S.tag("citation-html-startup/v1"),
-    maximum: S.Int.check(S.isBetween({ minimum: 1, maximum: CitationEngineAbsoluteMaxima.processMessageBytes })),
-    assetPath: S.NonEmptyString.check(S.isMaxLength(4096)),
+    ...CitationNativeWasmStartup.fields,
   }).pipe(
     $I.annoteSchema("CitationHtmlWorkerStartup", {
       description: "Explicit trusted HTML kernel asset path and complete message ceiling; no ambient configuration.",

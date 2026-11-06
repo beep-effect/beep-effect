@@ -3,11 +3,17 @@
  */
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
   CitationCleanerProduced,
   CitationCleanerRuntime,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import {
+  CitationCleanerProtocols,
+  makeCitationCleanerRegistry,
+} from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
 import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { makeCitationDocumentCleanerProtocols } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import {
   CitationDocumentInputFailure,
   CitationDocumentInputProtocols,
@@ -107,7 +113,7 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
     value.kind === "unicode" ? h.values.sourceUnicode(value.native) : h.values.retainHost(null);
   const plain = yield* makeValue(row.plainInput);
   const markup = yield* makeValue(row.markupInput);
-  const steps = yield* h.values.retainHost({ kind: row.stepsKind });
+  let steps = yield* h.values.retainHost({ kind: row.stepsKind });
   const callback = yield* h.values.retainHost("constructor-callback");
   const events: Array<string> = [];
   const tokens = tokensFor(row.stepsKind);
@@ -191,14 +197,43 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
       events.push("warning:html-added");
     }),
   });
+  const adapter = yield* makeCitationDocumentCleanerProtocols(setup.limits).pipe(
+    Effect.provideService(CitationCleanerValues, h.values),
+    Effect.provideService(CitationCleanerProtocols, h.protocols),
+    Effect.provideService(CitationDocumentInputProtocols, protocols)
+  );
+  const named = A.contains(["default", "tuple-empty", "tuple-html"], row.stepsKind);
+  if (named) steps = yield* adapter.create({ kind: row.stepsKind === "default" ? "list" : "tuple", names: tokens });
+  const cleaner = CitationCleanerProtocols.of({
+    ...adapter.cleaner,
+    open: Effect.fnUntraced(function* (plan, initial, work) {
+      const cursor = yield* adapter.cleaner.open(plan, initial, work);
+      if (!named) return cursor;
+      events.push("clean:start");
+      return {
+        next: cursor.next.pipe(
+          Effect.tap((next) =>
+            Effect.sync(() => {
+              if (O.isNone(next)) events.push("clean:end");
+            })
+          )
+        ),
+      };
+    }),
+  });
+  const registry = yield* makeCitationCleanerRegistry(setup.limits).pipe(
+    Effect.provideService(CitationCleanerValues, h.values),
+    Effect.provideService(CitationBuiltinCleaners, h.builtins),
+    Effect.provideService(CitationCleanerProtocols, cleaner)
+  );
   const stage = yield* makeCitationInputDocument(setup.limits, setup.runtime, {
     discovery,
     diffRuntime,
   }).pipe(
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationCleanerValues, h.values),
-    Effect.provideService(CitationCleanerRuntime, h.registry.runtime),
-    Effect.provideService(CitationDocumentInputProtocols, protocols)
+    Effect.provideService(CitationCleanerRuntime, registry.runtime),
+    Effect.provideService(CitationDocumentInputProtocols, adapter.document)
   );
   return { h, plain, markup, steps, stage, events: () => events, state: () => ({ generatorState, tokens }) };
 });
