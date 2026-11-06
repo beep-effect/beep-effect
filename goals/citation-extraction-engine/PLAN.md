@@ -1,5 +1,10 @@
 # Citation Extraction Engine Plan
 
+Hosted feedback checkpoint (2026-11-05): the parent-budget head reported one
+introduced Fallow cognitive finding in constructor test assertions. Extracted
+native/None checking into its own Effect helper without dropping assertions;
+the 30-case source smoke and package checks pass. Hosted repair proof is pending.
+
 Cleaner parent-budget checkpoint (2026-11-05): direct reservations and bounded
 producers now consume the captured invocation authority; Document cleaning
 constructs its executor inside that invocation. Native HTML refusal and exact

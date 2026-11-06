@@ -191,6 +191,20 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
   );
   return { h, plain, markup, steps, stage, events: () => events, state: () => ({ generatorState, tokens }) };
 });
+const checkValue = Effect.fn("InputDocumentTest.checkValue")(function* (
+  values: CitationCleanerValues["Service"],
+  handle: CitationCleanerObject,
+  expected: typeof Value.Type
+) {
+  const unicode = yield* values.getUnicode(handle);
+  if (expected.kind === "none") {
+    expect(O.isNone(unicode)).toBe(true);
+    const host = yield* values.getHost(handle);
+    expect(O.getOrThrow(host)).toBe(null);
+    return;
+  }
+  expect(O.getOrThrow(unicode).storage).toEqual(expected.native);
+});
 const checkCase = Effect.fn("InputDocumentTest.check")(function* (
   row: Row,
   fixture: Effect.Success<ReturnType<typeof makeCase>>
@@ -203,16 +217,8 @@ const checkCase = Effect.fn("InputDocumentTest.check")(function* (
     expect(error, `${row.id}:error`).toMatchObject({ sourceError: row.error });
   } else {
     const result = yield* closed;
-    const checkValue = Effect.fnUntraced(function* (handle: CitationCleanerObject, expected: typeof Value.Type) {
-      const unicode = yield* h.values.getUnicode(handle);
-      if (expected.kind === "none") {
-        expect(O.isNone(unicode)).toBe(true);
-        const host = yield* h.values.getHost(handle);
-        expect(O.getOrThrow(host)).toBe(null);
-      } else expect(O.getOrThrow(unicode).storage).toEqual(expected.native);
-    });
-    yield* checkValue(result.plain, row.plain);
-    yield* checkValue(result.source, row.source);
+    yield* checkValue(h.values, result.plain, row.plain);
+    yield* checkValue(h.values, result.source, row.source);
     expect(result.source === plain).toBe(row.sourceIsPlainInput);
     expect(result.source === markup).toBe(row.sourceIsMarkupInput);
     expect(result.plain === plain).toBe(row.plainIsPlainInput);

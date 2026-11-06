@@ -584,7 +584,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationInputDocument.fixtures.ts",
-          "sha256": "cf1962bc4b46eb1b181f1b37301ee642fb6d474e9da1a09a92fed510bd090506"
+          "sha256": "8b6dcf1cfbed1ed5bc945455651357fb68853548e0742610daac25039fca50f0"
         },
         {
           "path": "packages/law-practice/server/test/CitationInputDocument.test.ts",
@@ -620,7 +620,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md",
-          "sha256": "d74a9af03c674186b68687169cfa9e2d5563619bfc9ee23202708850c1bb7285"
+          "sha256": "3dfd9d0d20af312245209a47275d953e3c727c1dfa6263f70262ddbf2f5c6f2c"
         }
       ],
       "workflowState": "audit",

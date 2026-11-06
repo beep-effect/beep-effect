@@ -60,6 +60,14 @@ Package lint, source and test type checks pass. A boolean fixture diagnostic was
 resolved with the repository's explicit boolean comparison; no rule, limit,
 baseline or suppression changed.
 
+Hosted run 42168300081 on 6f05d5a40ee4ee4917fcbecd3f7753e3bae3ee17
+reported one introduced Fallow cognitive finding in the constructor replay's
+checkCase helper (11 against 8), confirmed from artifact 13480087000. The
+native/None value assertions are now a separate Effect helper, retaining all
+identity, budget, geometry, event and step-state assertions. The 30-case source
+smoke and package lint/source/test checks pass after this refactor. Hosted
+Fallow verification of the repair is pending; no baseline or threshold changed.
+
 Hosted exact-head proof, full constructor corpus and Node constructor replay
 remain pending. The default host-protocol adapter, all other engine stages,
 whole-engine allocation/scaling qualification and exhaustive parity/accounting
