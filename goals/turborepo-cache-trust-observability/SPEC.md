@@ -210,6 +210,26 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Retain source evidence when dependency diagnostics refuse, 2026-11-05
+
+Run42126399874 on accepted4975e29168 completed source inspection but refused
+dependency diagnostics with the generic `invalid-input-or-stream` code. The
+source artifact was skipped, preventing a bound comparison. Supersede the
+previous diagnostic decision's success-only source retention: upload an already
+successful source report whenever its output exists, even if the later
+diagnostic fails. Failed source inspection never qualifies for that upload.
+Retain the one-day limit and existing report-size bounds.
+
+Distinguish only fixed memory, subprocess deadline/failure, archive read,
+filesystem/process and invalid value/shape codes. Never retain exception
+messages, paths, command output or environment values. The old refusal does not
+identify the runtime cause; no package drift attribution or environment approval
+is inferred. Author redaction/retention controls for hosted CI and push directly,
+without local verify, publish or suites. After primary acceptance, obtain bound
+source and diagnostic reports before continuing producer approval. Reversal
+reverts this retention/classification delta and preserves the failed evidence.
+No fingerprint, credential, signing, capacity, qualification or goal-status change.
+
 ### Bound optional second-phase optimizer work, 2026-10-31 UTC
 
 - The expansion budget alone still permits quadratic pairwise processing below
@@ -1385,3 +1405,16 @@ qualify permission-sensitive computations. All whole-goal criteria remain open.
 Reverse through a reviewed revert after suspending affected tuples and restoring
 the prior reviewed profile; retain the new and historical observations. Do not
 purge shared artifacts, lower proof floors or enable unsigned fallback.
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-cache-trust-observability`; add a `kind: decision` file there, never edit this block._
+
+### Bound retained reports even when dependency diagnostics refuse, 2026-11-06
+
+Source inspection already permits a report up to four MiB. A later refusal adds bytes, so unconditional retention can exceed the existing aggregate cap at the boundary. Run one metadata-only publication selector after diagnostics, including failure, using the same ARTIFACT_LIMIT. Retain both reports only when they fit together; otherwise retain only the individually safe report selected by policy and fail the complete-pair gate. Reject missing, symlink and special-file candidates without reading payloads, mutating reports, or repeating archive passes. Author exact-boundary, overflow, missing/special-file and fixed-output CLI controls for hosted CI. No local quality suite or source-generator entrypoint is run. No profile, signing, credential, capacity or whole-goal acceptance change.
+
+Lane `codex/cache-diagnostic-refusal`
+
+Reverse: Remove the publication selector only after another gate enforces the same combined four-MiB cap; preserve all earlier failure evidence.
+
+<!-- beep:decisions:end -->

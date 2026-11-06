@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "installed-dependency-refusal-retention/v1",
+  "recordedAt": "2026-11-05T23:13:32.582462+00:00",
+  "sourceRevision": "4975e2916860c8b9abafe2d47fca9df5ced97efd",
+  "run": {
+    "id": 42126399874,
+    "attempt": 1,
+    "url": "https://github.com/beep-effect/beep-effect/actions/runs/42126399874",
+    "jobId": 127591603870,
+    "conclusion": "failure",
+    "resolvedHeavyRevision": "4975e2916860c8b9abafe2d47fca9df5ced97efd",
+    "sourceInspection": "success",
+    "dependencyDiagnostic": "failure",
+    "sourceArtifact": "skipped",
+    "jobLogSha256": "68fc172bbbcb6b205415115d48c0c3cfdd7eced6220f626e71d7c7d989e1bc2b"
+  },
+  "retainedRefusal": {
+    "artifactId": 13460943374,
+    "archiveSha256": "bf8676294e8afb851aba9e8100bbcc1314ae526f6b01e12e0ac57d492a2d63fc",
+    "reportSha256": "09f66bbe8655151c5efb64af554e2a51eb28a050e10450586c641c9081d45767",
+    "reportBytes": 104,
+    "status": "refused",
+    "code": "invalid-input-or-stream",
+    "privateCopyRetained": true,
+    "payloadPublished": false
+  },
+  "attribution": {
+    "retentionGap": "introduced in accepted diagnostic workflow2680; the source-upload step inherited success() after the diagnostic",
+    "diagnosticCause": "unknown; the old refusal collapses memory, archive, subprocess, filesystem and input exceptions",
+    "dependencyDigestDrift": "unresolved; no package comparison possible from the104-byte refusal"
+  },
+  "repair": {
+    "sourceRetention": "always() after successful source inspection, selected by a metadata-only combined-byte gate independent of diagnostic success",
+    "refusalCodes": [
+      "memory-limit",
+      "subprocess-deadline",
+      "subprocess-failed",
+      "archive-read-failed",
+      "filesystem-or-process-failed",
+      "invalid-value-or-shape"
+    ],
+    "exceptionMessagesOrPathsRetained": false,
+    "regressionsAuthored": [
+      "workflow source retention condition",
+      "nine exception cases with secret/path redaction and private bounded refusal output",
+      "workflow publication ordering, fixed flags and artifact selector guards",
+      "exact-cap and overflow pairs, individually oversized reports, missing paths, symlink and FIFO refusal",
+      "read-only publication CLI with exact fixed flags and missing-diagnostic exit 1"
+    ],
+    "preparedSourceSha256": {
+      ".github/workflows/heavy.yml": "36f7075347a2b4cd0d71874809ff587ee0369f81e4b71e6597033e6e8215ca3b",
+      "packages/tooling/tool/cli/test/ci-runner-security.test.ts": "ab60a7b890ee4fe4f553d00bac12dba4e47445bd917a5b6f6cae40a3817630b3",
+      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py": "c7f0fff307527fbf922c5b917c5d826b774aab41e757e7211253461aef3bd093",
+      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py": "70541701ddd9471f2772674eca80bde21d82a331d07fd6e353e7986a7bd9dea3"
+    },
+    "publicationBound": {
+      "aggregateReportBytes": 4194304,
+      "selection": "both regular nonempty reports when their sum fits; otherwise retain only the individually safe report selected by diagnostic-first policy",
+      "partialPairStatus": "refused with exit 1; fixed boolean selectors permit only safe partial evidence retention",
+      "payloadReadOrMutation": false,
+      "symlinksAndSpecialFiles": "refused with no payload read and nonblocking open",
+      "counterexample": "Source inspection can produce a report near four MiB; an added 104-byte diagnostic refusal must count toward the same aggregate cap."
+    }
+  },
+  "boundsUnchanged": {
+    "runnerJobsAtOnce": 1,
+    "jobMinutes": 10,
+    "diagnosticSeconds": 300,
+    "passesPerJob": 2,
+    "archiveBytesPerPass": 6442450944,
+    "processMemoryMiB": 256,
+    "entriesPerPass": 600000,
+    "groupsPerPass": 4096,
+    "aggregateReportBytes": 4194304,
+    "retentionDays": 1
+  },
+  "verification": {
+    "localQualityRuns": 0,
+    "localTestsRun": 0,
+    "localVerifyOrPublish": false,
+    "hostedRegressions": "pending on repair head",
+    "metadataAndSourceReviewOnly": true
+  },
+  "nextGate": "Primary acceptance and fresh bound observations with both reports before attributing or approving an installed environment. Do not repeat the unchanged failed source.",
+  "authority": {
+    "producerApprovalGranted": false,
+    "credentialsOrSigningActivated": false,
+    "taskBodiesExecuted": false,
+    "newCapacity": false,
+    "goalsRemainActive": true,
+    "wholeGoalAcceptanceCriteriaProven": 0
+  },
+  "rollback": "Revert only retention/refusal classification delta; preserve failed run and artifact. Keep production fingerprints and producer approval gates unchanged."
+}

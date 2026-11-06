@@ -1802,9 +1802,26 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         stepIndexByName(steps, diagnosticName)
       );
       expect(stepIndexByName(steps, diagnosticName)).toBeLessThan(
+        stepIndexByName(steps, "Bound inspection artifact publication")
+      );
+      const publication = stepByName(steps, "Bound inspection artifact publication");
+      expect(publication.if).toBe(
+        "always() && steps.inspection.outcome == 'success' && steps.inspection.outputs.report != ''"
+      );
+      expect(publication.env).toEqual({
+        SOURCE_REPORT: "${{ steps.inspection.outputs.report }}",
+        DIAGNOSTIC_REPORT: "${{ steps.dependency-diagnostics.outputs.report }}",
+      });
+      expect(publication.run).toContain('--publication-only --source-report "$SOURCE_REPORT"');
+      expect(publication.run).toContain('--output "$DIAGNOSTIC_REPORT"');
+      expect(publication.run).toContain('>> "$GITHUB_OUTPUT"');
+      expect(stepIndexByName(steps, "Bound inspection artifact publication")).toBeLessThan(
         stepIndexByName(steps, "Retain inspection for at most one day")
       );
       const retain = stepByName(steps, "Retain inspection for at most one day");
+      expect(retain.if).toBe(
+        "always() && steps.inspection.outcome == 'success' && steps.inspection-publication.outputs.source == 'true'"
+      );
       expect(retain.with).toEqual({
         name: "cache-producer-inspection-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.inspection.outputs.report }}",
@@ -1813,7 +1830,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "compression-level": 0,
       });
       const dependencyRetain = stepByName(steps, "Retain dependency diagnostic for at most one day");
-      expect(dependencyRetain.if).toBe("always() && steps.dependency-diagnostics.outputs.report != ''");
+      expect(dependencyRetain.if).toBe("always() && steps.inspection-publication.outputs.diagnostic == 'true'");
       expect(dependencyRetain.with).toEqual({
         name: "cache-producer-dependencies-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.dependency-diagnostics.outputs.report }}",
