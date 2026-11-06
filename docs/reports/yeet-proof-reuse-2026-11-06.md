@@ -11,8 +11,8 @@ Without `--resume`, commands execute again and refresh successful step proofs.
 This uses `LaneProofReuse` and its atomic write and before/after identity checks.
 It does not create another cache protocol. Codex's per-tool-call tracing ID is
 excluded from inherited input hashing; otherwise an unchanged command misses
-on every new shell invocation. Actual execution settings remain hashed. The final-check command still refuses
-a dirty or moved checkout, reruns expectation rewrites, and requires the complete
+on every new shell invocation. Actual execution settings remain hashed. The final-check command still
+refuses a dirty or moved checkout, reruns expectation rewrites, and requires the complete
 head-pinned final receipt before ready. Cheap composite gates and Repo Sanity
 always execute because they can contain checks of changing external state. Failed
 commands and explicit skips do not create reusable successes.
@@ -20,7 +20,10 @@ commands and explicit skips do not create reusable successes.
 Real-Git regression controls demonstrate reuse before a final receipt exists,
 retention of an earlier success after a later failure, failure replay, and
 invalidation after command/environment, untracked source, head or base changes.
-These controls establish avoided command executions, not an end-to-end time gain.
+On the real repository, a fresh docgen step took 55.516 seconds. A separate
+agent command with `--resume` reused that step without executing docgen (recorded
+step duration zero). This establishes avoided step execution, not zero total CLI
+startup time. The subset receipt remains incomplete and cannot authorize ready.
 
 ## Retry a publication without reinstalling the same head
 
@@ -53,7 +56,7 @@ unmeasured token or API percentage saving is claimed.
 
 The focused proof/final-check suite passed 45 tests. Full CLI package verification
 passed (audit 186.8s, docgen 43.8s), including lint and test type checking after the
-new controls. Hosted proof and operational before/after timings remain pending.
+new controls. Hosted proof remains pending; local retry timings are recorded above.
 
 Reversal removes `--resume` and the preflight receipt fast path, returning to
 fresh execution. Existing receipt files remain safe to ignore; no migration or
