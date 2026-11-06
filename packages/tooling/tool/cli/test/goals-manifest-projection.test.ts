@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   GoalExplorationPathState,
   goalPacketFindings,
@@ -5,7 +6,11 @@ import {
 } from "@beep/repo-cli/commands/Goals/Doctor";
 import { GoalResearchReportPath } from "@beep/repo-cli/commands/Goals/Goals.schemas";
 import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory";
-import { collectManifestProjectionRows, runGoalsManifest } from "@beep/repo-cli/commands/Goals/Manifest";
+import {
+  biomeManifestFormatter,
+  collectManifestProjectionRows,
+  runGoalsManifest,
+} from "@beep/repo-cli/commands/Goals/Manifest";
 import { GoalManifestFormatter } from "@beep/repo-cli/commands/Goals/Manifest.service";
 import {
   diffResearchReports,
@@ -33,6 +38,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GoalPacketReader } from "@beep/repo-cli/commands/Goals/Doctor";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -161,6 +167,49 @@ describe("goal manifest researchReports projection", () => {
     );
   });
 
+  it("renders reordered entries with no unlisted or missing paths", () => {
+    const line = renderResearchReportsDrift(
+      ResearchReportsDrift.make({ missing: [], unlisted: [], references: [], reordered: true })
+    );
+    assert.strictEqual(line, "researchReports drifts from research/: unsorted or duplicated entries");
+  });
+
+  it.layer(NodeCrypto.layer)((it) => {
+    it.effect("the retained formatter requests only the rewritten paths", () =>
+      Effect.gen(function* () {
+        const spawner = ScriptedSpawner.make(() => ({ exit: 0 }));
+        yield* biomeManifestFormatter
+          .format("/fixture", ["goals/demo/ops/manifest.json"])
+          .pipe(provideSpawner(spawner));
+        assert.strictEqual(spawner.spawns.length, 1);
+        const call = O.getOrThrow(A.head(spawner.spawns));
+        assert.strictEqual(call.command, "bunx");
+        assert.strictEqual(call.cwd, "/fixture");
+        assert.deepStrictEqual(call.args, ["biome", "format", "--write", "goals/demo/ops/manifest.json"]);
+      })
+    );
+    it.effect("formatter nonzero exit refuses the rewrite result", () =>
+      Effect.gen(function* () {
+        const spawner = ScriptedSpawner.make(() => ({ exit: 2 }));
+        const error = yield* biomeManifestFormatter
+          .format("/fixture", ["manifest.json"])
+          .pipe(provideSpawner(spawner), Effect.flip);
+        assertInstanceOf(error, CliReportedExit);
+        assertTrue(Str.includes("biome format failed")(error.message));
+      })
+    );
+    it.effect("a missing formatter is a reported failure instead of a successful rewrite", () =>
+      Effect.gen(function* () {
+        const spawner = ScriptedSpawner.make(() => ScriptedSpawner.notFound("bunx"));
+        const error = yield* biomeManifestFormatter
+          .format("/fixture", ["manifest.json"])
+          .pipe(provideSpawner(spawner), Effect.flip);
+        assertInstanceOf(error, CliReportedExit);
+        assert.strictEqual(spawner.spawns.length, 1);
+      })
+    );
+  });
+
   it("reads string arrays from a raw manifest", () => {
     assert.deepStrictEqual(listedManifestStrings({ researchReports: ["research/a.md", 1, null] }, "researchReports"), [
       "research/a.md",
@@ -240,6 +289,30 @@ describe("goal manifest researchReports projection", () => {
         assert.deepStrictEqual(researchFiles, ["research/SOURCES.md", "research/untracked.md"]);
         const opsFiles = yield* reader.opsFiles(packet);
         assert.deepStrictEqual(opsFiles, ["ops/bench.ts"]);
+      })
+    );
+
+    it.effect("write uses the retained formatter when no formatter override is supplied", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-manifest-default-formatter-" });
+        const packet = path.join(root, "goals", "demo");
+        yield* fs.makeDirectory(path.join(packet, "ops"), { recursive: true });
+        yield* fs.makeDirectory(path.join(packet, "research"), { recursive: true });
+        yield* fs.writeFileString(path.join(packet, "research", "SOURCES.md"), "");
+        const manifest = path.join(packet, "ops", "manifest.json");
+        yield* fs.writeFileString(manifest, manifestText({ researchReports: ["research/gone.md"] }));
+        const spawner = ScriptedSpawner.make(() => ({ exit: 0, stdout: "" }));
+        yield* runGoalsManifest({ write: true, check: false }, root).pipe(provideSpawner(spawner));
+        const calls = A.filter(spawner.spawns, (call) => call.command === "bunx");
+        assert.strictEqual(calls.length, 1);
+        assert.deepStrictEqual(O.getOrThrow(A.head(calls)).args, ["biome", "format", "--write", manifest]);
+        const rewritten = yield* fs.readFileString(manifest);
+        const parsed = Result.getOrThrow(
+          S.decodeUnknownResult(S.fromJsonString(S.Struct({ researchReports: S.Array(S.String) })))(rewritten)
+        );
+        assert.deepStrictEqual(parsed.researchReports, ["research/SOURCES.md"]);
       })
     );
 

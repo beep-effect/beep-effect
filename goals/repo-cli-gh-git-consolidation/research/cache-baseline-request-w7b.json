@@ -16,10 +16,5 @@
   ],
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3",
-  "subjects": [
-    "//",
-    "@beep/repo-cli",
-    "@beep/html",
-    "@beep/technical-drawing"
-  ]
+  "subjects": ["//", "@beep/repo-cli", "@beep/html", "@beep/technical-drawing"]
 }

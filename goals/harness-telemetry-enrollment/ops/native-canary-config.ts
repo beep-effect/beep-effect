@@ -68,7 +68,7 @@ const DestinationAllowlist = S.Struct({
 export class NativeCanaryConfigRequest extends S.Opaque<NativeCanaryConfigRequest, { readonly brand: unique symbol }>()(
   S.Struct({
     version: S.tag("native-canary-config-request/v1"),
-    harness: S.Literals(["codex-cli", "claude-code", "grok"]).pipe(
+    harness: S.Literals(["codex-cli", "claude-code", "grok", "muse"]).pipe(
       S.withConstructorDefault(Effect.succeed("codex-cli" as const)),
       S.withDecodingDefaultTypeKey(Effect.succeed("codex-cli" as const))
     ),

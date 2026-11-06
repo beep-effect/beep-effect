@@ -5,7 +5,10 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      include: ["goals/harness-telemetry-enrollment/ops/test-codex-*.ts"],
+      include: [
+        "goals/harness-telemetry-enrollment/ops/test-codex-*.ts",
+        "goals/harness-telemetry-enrollment/ops/test-claude-*.ts",
+      ],
       testTimeout: 30000,
     },
   })
