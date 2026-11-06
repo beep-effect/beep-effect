@@ -3,7 +3,8 @@
  *
  * Blocking findings (manifest missing/invalid, status↔lifecycle mismatch,
  * README status-line drift, oversized `GOAL.md`, all-phases-terminal-but-
- * active, invalid reflection frontmatter in any packet, a `researchReports`
+ * active, invalid reflection frontmatter in any packet, invalid decision files
+ * and a stale generated Decision log / Checkpoints block, a `researchReports`
  * array that drifts from the packet's `research/` listing) are checked against
  * the committed baseline `goals/goals-doctor.baseline.jsonc` following the
  * fallow ratchet pattern: inherited findings are advisory, new findings
@@ -45,6 +46,8 @@ import {
   observeGoalCompletion,
   storedGoalCompletion,
 } from "./Completion.ts";
+import { goalDecisionLogReport } from "./Decisions.projection.ts";
+import { GOAL_DECISIONS_DIR } from "./Decisions.schemas.ts";
 import { GoalsGitError } from "./Goals.errors.ts";
 import {
   decodeGoalManifest,
@@ -67,6 +70,7 @@ import {
 } from "./Inventory.ts";
 import { diffResearchReports, projectResearchReports, renderResearchReportsDrift } from "./ManifestProjection.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
+import type { GoalDecisionDocument, GoalDecisionReader } from "./Decisions.projection.ts";
 import type { GoalCompletionReceipt, GoalManifest, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { CapabilityProjection } from "./Graph.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
@@ -156,6 +160,8 @@ export const GoalDoctorFindingKind = LiteralKit([
   "ops-script-unregistered",
   "ops-script-unregistrable",
   "ops-script-duplicate",
+  "decision-file-invalid",
+  "decision-log-drift",
   "research-reports-drift",
 ]).pipe(
   $I.annoteSchema("GoalDoctorFindingKind", {
@@ -388,14 +394,15 @@ export type GoalExplorationPathState = typeof GoalExplorationPathState.Type;
  * directly under `<packetPath>/history/reflections` (empty when the directory is absent).
  * `opsFiles` lists every file under `<packetPath>/ops`, at any depth, as a packet-relative
  * `ops/...` path (empty when the directory is absent); it is read only for a manifest that
- * declares `opsScripts`. `researchFiles` lists every file under `<packetPath>/research` the same
+ * declares `opsScripts`. The inherited {@link GoalDecisionReader} reads feed the decision-log
+ * projection (`decisions/*.md` against `SPEC.md` and `PLAN.md`). `researchFiles` lists every file under `<packetPath>/research` the same
  * way, as `research/...` paths; it is read for every packet, because `researchReports` is a
  * generated projection of that directory.
  *
  * @category services
  * @since 0.0.0
  */
-export interface GoalPacketReader<E, R> {
+export interface GoalPacketReader<E, R> extends GoalDecisionReader<E, R> {
   readonly explorationPath: (exploration: string) => Effect.Effect<GoalExplorationPathState, E, R>;
   readonly opsFiles: (packetPath: string) => Effect.Effect<ReadonlyArray<string>, E, R>;
   readonly readReflection: (packetPath: string, file: string) => Effect.Effect<string, E, R>;
@@ -475,6 +482,42 @@ const filesystemReadReflection = Effect.fn("Goals.filesystemReadReflection")(fun
     .pipe(Effect.orElseSucceed(thunkEmptyStr));
 });
 
+const filesystemDecisionFiles = Effect.fn("Goals.filesystemDecisionFiles")(function* (packetPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const decisionsDir = path.join(packetPath, GOAL_DECISIONS_DIR);
+  const exists = yield* fs.exists(decisionsDir).pipe(Effect.orElseSucceed(thunkFalse));
+  if (!exists) {
+    return A.empty<string>();
+  }
+  const entries = yield* fs.readDirectory(decisionsDir).pipe(Effect.orElseSucceed(A.empty<string>));
+  return yield* Effect.filter(entries, (entry) =>
+    fs.stat(path.join(decisionsDir, entry)).pipe(
+      Effect.map((info) => info.type === "File"),
+      Effect.orElseSucceed(thunkFalse)
+    )
+  );
+});
+
+const filesystemReadDecision = Effect.fn("Goals.filesystemReadDecision")(function* (packetPath: string, file: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* fs
+    .readFileString(path.join(packetPath, GOAL_DECISIONS_DIR, file))
+    .pipe(Effect.orElseSucceed(thunkEmptyStr));
+});
+
+const filesystemReadDocument = Effect.fn("Goals.filesystemReadDocument")(function* (
+  packetPath: string,
+  document: GoalDecisionDocument
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* fs
+    .readFileString(path.join(packetPath, document))
+    .pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
+});
+
 /**
  * Builds the goal-packet reader over the working filesystem, the reader `beep goals doctor` uses.
  *
@@ -498,11 +541,47 @@ const filesystemReadReflection = Effect.fn("Goals.filesystemReadReflection")(fun
  * @since 0.0.0
  */
 export const makeGoalPacketFilesystemReader = () => ({
+  decisionFiles: filesystemDecisionFiles,
   explorationPath: filesystemExplorationPath,
   opsFiles: filesystemOpsFiles,
+  readDecision: filesystemReadDecision,
+  readDocument: filesystemReadDocument,
   researchFiles: filesystemResearchFiles,
   readReflection: filesystemReadReflection,
   reflectionFiles: filesystemReflectionFiles,
+});
+
+const decisionLogFindings = Effect.fn("Goals.decisionLogFindings")(function* <E, R>(
+  record: GoalPacketRecord,
+  reader: GoalPacketReader<E, R>
+) {
+  // Decision files are the lane-owned source; the SPEC.md / PLAN.md blocks are
+  // projections. A rejected file and a stale block both block, so a merged lane
+  // can never leave the rendered log behind its files.
+  const report = yield* goalDecisionLogReport(record, reader);
+  const invalid = A.map(report.invalid, (item) =>
+    finding(
+      record.slug,
+      "decision-file-invalid",
+      "blocking",
+      `${GOAL_DECISIONS_DIR}/${item.file}: ${item.message}`,
+      item.file
+    )
+  );
+  const drift = pipe(
+    report.projections,
+    A.filter((projection) => projection.applies && projection.drift),
+    A.map((projection) =>
+      finding(
+        record.slug,
+        "decision-log-drift",
+        "blocking",
+        `${projection.target.document} "## ${projection.target.heading}" block is stale; run \`bun run beep goals decisions write --slug ${record.slug}\`.`,
+        projection.target.document
+      )
+    )
+  );
+  return A.appendAll(invalid, drift);
 });
 
 /**
@@ -866,6 +945,8 @@ export const goalPacketFindings = Effect.fn("Goals.packetFindings")(function* <E
   reader: GoalPacketReader<E, R>
 ) {
   let findings = yield* reflectionArtifactFindings(record, reader);
+  const decisionFindings = yield* decisionLogFindings(record, reader);
+  findings = A.appendAll(findings, decisionFindings);
 
   if (record.goalMdChars !== undefined && record.goalMdChars > GOAL_MD_MAX_CHARS) {
     findings = A.append(
