@@ -15,7 +15,7 @@
   "preparedSourceBindings": [
     {
       "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
-      "sha256": "cc384c0ebebc3bd9f53274f8ba9d10aa13fddd0d63f926cee3846beca5cd1488"
+      "sha256": "7875deb96775a1dcd80f3e31fa4ec2a0c792c5e169ecbf7ee7faba9cdf15eb1a"
     },
     {
       "path": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
@@ -37,5 +37,29 @@
     "newCredentialsSigningOrCapacity": false,
     "goalCompleted": false
   },
-  "rollback": "Revert the counter and two assertions while preserving historical source and native evidence. No persisted schema or cloud state changes."
+  "rollback": "Revert the counter and two assertions while preserving historical source and native evidence. No persisted schema or cloud state changes.",
+  "hostedFailureAndRepair": {
+    "sourceRevision": "10501f37a184d16ee28e06d03290fcebcab540e5",
+    "attribution": "Introduced in the package counter: Effect v4 Array.filterMap consumes Result, but the callback returned Option. Runtime discarded all names and TypeScript rejected the callback.",
+    "failedJobs": [
+      {
+        "id": 127627642299,
+        "name": "Repo Sanity",
+        "logSha256": "e0a4baaecb1442a10089ec2fda19a8a7f7b10abfd4b3389809825890137c9ec8"
+      },
+      {
+        "id": 127627642233,
+        "name": "Test Unit (repo-cli-3)",
+        "logSha256": "8f75f15faf5172be18498172fde300c14965e64dfcbcd047f589a528ca03b5b2"
+      },
+      {
+        "id": 127631049391,
+        "name": "Heavy / Check",
+        "logSha256": "8b1f277d43a46546c344a37e50758592b41798e3762fba5e7a5d0411555ac03c"
+      }
+    ],
+    "correction": "Map existing Option guards and extract present names with Array.getSomes before deduplication. Verified current Array source and existing TurboLaneDigest usage; keep the positive and empty assertions unchanged.",
+    "localTestsOrQualitySuitesRun": 0,
+    "freshHostedProof": "pending on correction head"
+  }
 }

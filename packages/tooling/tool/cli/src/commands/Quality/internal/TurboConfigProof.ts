@@ -457,13 +457,14 @@ export const summarizeTurboQueryAffectedOutput = Effect.fn("TurboConfigProof.sum
     const items = document.data.affectedTasks.items;
     const packages = pipe(
       items,
-      A.filterMap((item) =>
+      A.map((item) =>
         pipe(
           O.fromUndefinedOr(item.package),
           O.flatMap(getRecord),
           O.flatMap((record) => getString(record.name))
         )
       ),
+      A.getSomes,
       A.dedupe,
       A.length
     );
