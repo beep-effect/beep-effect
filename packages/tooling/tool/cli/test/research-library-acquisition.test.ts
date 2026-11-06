@@ -24,6 +24,7 @@ import {
   acquireLibrarySource,
   acquireLibraryYoutube,
   correctLibraryCaptures,
+  encodeLibraryCaptureJson,
   LibraryCaptureCorrection,
   libraryCaptionProvenance,
   libraryQualificationValid,
@@ -640,7 +641,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       const hashBytes8 = yield* hashBytes(before);
       expect(hashBytes8).toBe(receipt.before.sha256);
       expect(receipt.after.status).toBe("blocked");
-      const afterText = yield* S.encodeEffect(UnknownJson)(receipt.after);
+      const afterText = yield* encodeLibraryCaptureJson(receipt.after);
       const hashBytes9 = yield* hashBytes(new TextEncoder().encode(afterText));
       expect(hashBytes9).toBe(receipt.afterSha256);
       const repeated = yield* withCatalog(fixture.root, (catalog) => correctLibraryCaptures(fixture.root, catalog));
