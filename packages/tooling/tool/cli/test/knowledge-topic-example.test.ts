@@ -55,7 +55,8 @@ it.layer(BunServices.layer)("TopicName documentation contract", (it) => {
               "\n"
             )
           );
-          const child = yield* ChildProcess.make("bun", [programPath], {
+          const executablePath = yield* fs.realPath(programPath);
+          const child = yield* ChildProcess.make("bun", [executablePath], {
             cwd: repoRoot,
             stdin: "ignore",
             stdout: "inherit",
@@ -63,7 +64,7 @@ it.layer(BunServices.layer)("TopicName documentation contract", (it) => {
           });
           const exitCode = yield* child.exitCode;
           expect(exitCode, `${sourcePath}:${fence.line}`).toBe(0);
-        }, Effect.scoped)
+        })
       );
     }
   );
