@@ -20,6 +20,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -197,12 +198,7 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goals decisions command", (i
       expect(rows).toEqual([]);
       yield* runGoalsCommand(["manifest"]);
       const logs = yield* TestConsole.logLines;
-      expect(
-        A.some(
-          A.map(logs, (line) => `${line}`),
-          Str.includes("OK: every researchReports array matches")
-        )
-      ).toBe(true);
+      expect(A.some(A.filter(logs, P.isString), Str.includes("OK: every researchReports array matches"))).toBe(true);
     })
   );
 
