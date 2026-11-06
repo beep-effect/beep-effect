@@ -18,6 +18,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
@@ -35,6 +36,7 @@ import {
   runMuseProxyCanary,
 } from "./muse-proxy-canary.ts";
 import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
+import { makeNativeDeadlineTestClock } from "./native-deadline-test-clock.ts";
 
 vi.mock("node:fs/promises", async (importOriginal) => {
   const original = await importOriginal<typeof import("node:fs/promises")>();
@@ -53,7 +55,12 @@ const compile = promisify(execFile);
 const nativeFixture =
   '#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <sys/stat.h>\nint main(int argc,char **argv){\n if(argc>1&&!strcmp(argv[1],"--version")){puts("2.1.318 (Claude Code)");return 0;}\n const char *home=getenv("HOME");if(!home)return 83;char p[8192],cwd[4096],mode[64]="ok";getcwd(cwd,sizeof(cwd));\n snprintf(p,sizeof(p),"%s/source-count",home);FILE *f=fopen(p,"a");if(f){fputs("1\\n",f);fclose(f);}\n snprintf(p,sizeof(p),"%s/fixture-mode",home);f=fopen(p,"r");if(f){fgets(mode,sizeof(mode),f);fclose(f);}\n if(!getenv("ANTHROPIC_BASE_URL")||strcmp(getenv("ANTHROPIC_BASE_URL"),"http://127.0.0.1:8317")||!getenv("ANTHROPIC_AUTH_TOKEN")||strcmp(getenv("ANTHROPIC_AUTH_TOKEN"),"synthetic-not-a-secret"))return 84;\n int model=0;for(int i=1;i+1<argc;i++)if(!strcmp(argv[i],"--model")&&!strcmp(argv[i+1],"muse-wonder-1.0(medium)"))model=1;if(!model)return 85;\n struct stat exe;stat("/proc/self/exe",&exe);char line[8192],ticks[128]="";FILE *self=fopen("/proc/self/stat","r");\n if(self){fgets(line,sizeof(line),self);fclose(self);char *save,*token=strtok_r(strrchr(line,\')\')+2," ",&save);for(int i=0;token&&i<19;i++)token=strtok_r(NULL," ",&save);if(token)snprintf(ticks,sizeof(ticks),"%s",token);}\n snprintf(p,sizeof(p),"%s/fixture-identity",home);FILE *identity=fopen(p,"w");if(identity){fprintf(identity,"%ld:%s:%llu:%llu",(long)getpid(),ticks,(unsigned long long)exe.st_dev,(unsigned long long)exe.st_ino);fclose(identity);}\n if(!strcmp(mode,"hang"))sleep(5);else usleep(300000);if(!strcmp(mode,"source-fail"))return 7;\nprintf("{\\"type\\":\\"system\\",\\"subtype\\":\\"init\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"claude_code_version\\":\\"2.1.318\\",\\"cwd\\":\\"%s\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"apiKeySource\\":\\"none\\",\\"tools\\":[],\\"mcp_servers\\":[],\\"plugins\\":[{\\"name\\":\\"cc-plugin-agents-md\\"},{\\"name\\":\\"cc-plugin-privacy\\"},{\\"name\\":\\"cc-plugin-plugin-authoring\\"}],\\"skills\\":[],\\"slash_commands\\":[],\\"agents\\":[\\"claude\\",\\"Explore\\",\\"general-purpose\\",\\"Plan\\"]}\\n",cwd);\nif(!strcmp(mode,"reported-error")){puts("{\\"type\\":\\"assistant\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"parent_tool_use_id\\":null,\\"error\\":\\"rate_limit\\",\\"uuid\\":\\"PRIVATE_UUID\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"PRIVATE_PROVIDER_MESSAGE\\"}]}}");puts("{\\"type\\":\\"result\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"subtype\\":\\"error_during_execution\\",\\"is_error\\":true,\\"errors\\":[\\"PRIVATE_ACCOUNT_OR_TOKEN\\"],\\"result\\":\\"PRIVATE_PROVIDER_RESULT\\"}");return 7;}\nif(!strcmp(mode,"wrong-reply"))puts("{\\"type\\":\\"tool_use\\",\\"content\\":\\"PRIVATE_CONTENT\\"}");\nputs("{\\"type\\":\\"assistant\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"parent_tool_use_id\\":null,\\"message\\":{\\"role\\":\\"assistant\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"ENROLLMENT_CANARY_OK\\"}]}}");\nputs("{\\"type\\":\\"result\\",\\"subtype\\":\\"success\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"is_error\\":false,\\"result\\":\\"ENROLLMENT_CANARY_OK\\",\\"duration_ms\\":1,\\"duration_api_ms\\":1,\\"num_turns\\":1,\\"permission_denials\\":[]}");\nputs("{\\"type\\":\\"rate_limit_event\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"rate_limit_info\\":{\\"status\\":\\"allowed_warning\\",\\"utilization\\":1.25},\\"message\\":\\"PRIVATE_PROXY_WARNING\\"}");\nreturn 0;}\n';
 const fixture = async (
-  options: { readonly rejectTraceOnce?: boolean; readonly mode?: string; readonly driftAuthAtPrepared?: boolean } = {}
+  options: {
+    readonly rejectTraceOnce?: boolean;
+    readonly mode?: string;
+    readonly driftAuthAtPrepared?: boolean;
+    readonly onFinished?: () => Promise<void>;
+  } = {}
 ) => {
   const directory = await Fs.mkdtemp(Path.join(Os.tmpdir(), "muse-canary-"));
   await Fs.chmod(directory, 0o700);
@@ -139,6 +146,7 @@ const fixture = async (
         const submission = await Effect.runPromise(S.decodeEffect(S.fromJsonString(ObservationLaunchSubmission))(body));
         facts.push(submission.fact._tag);
         if (submission.fact._tag === "Started") signalStarted();
+        if (submission.fact._tag === "Finished") await options.onFinished?.();
         response.end(
           await Effect.runPromise(
             S.encodeEffect(S.fromJsonString(ObservationLaunchReceipt))(
@@ -289,30 +297,38 @@ nativeCase("wrapper bytes drift refuses before consumer invocation", () =>
   })
 );
 
-nativeCase("external source interruption terminalizes after cleanup", () =>
-  Effect.tryPromise(async () => {
-    const f = await fixture({ mode: "hang" });
-    try {
-      const fiber = Effect.runFork(f.run);
-      await f.started;
-      await Effect.runPromise(Fiber.interrupt(fiber));
-      const result = await Effect.runPromise(Fiber.await(fiber));
-      expect(Exit.hasInterrupts(result)).toBe(true);
-      expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
-      const text = await Fs.readFile(
-        Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
-        "utf8"
-      );
-      const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
-      expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
-      expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
-      expect(diagnostic.nativeExitStatus).toEqual(O.none());
-      expect(text).not.toContain("PRIVATE_");
-    } finally {
-      await f.close();
-    }
-  })
-);
+for (const stop of ["interrupt", "deadline"] as const) {
+  nativeCase(`external source ${stop} terminalizes as cancelled after cleanup`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ mode: "hang" });
+      try {
+        if (stop === "interrupt") {
+          const fiber = Effect.runFork(f.run);
+          await f.started;
+          await Effect.runPromise(Fiber.interrupt(fiber));
+          expect(Exit.hasInterrupts(await Effect.runPromise(Fiber.await(fiber)))).toBe(true);
+        } else {
+          const result = await Effect.runPromise(f.run.pipe(Effect.timeout("300 millis"), Effect.result));
+          expect(result._tag).toBe("Failure");
+          if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "TimeoutError" });
+        }
+        expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+        const text = await Fs.readFile(
+          Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
+          "utf8"
+        );
+        const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
+        expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
+        expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
+        expect(diagnostic.nativeExitStatus).toEqual(O.none());
+        expect(text).not.toContain("PRIVATE_");
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+
 for (const mode of [
   "initial-exe-enoent",
   "changed-start-ticks",
@@ -388,3 +404,64 @@ for (const mode of [
     })
   );
 }
+
+nativeCase("internal source deadline cancels after its pinned synthetic child exits", () =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      let ownedPid = "";
+      let cleanupAtFinished = false;
+      const onFinished = () =>
+        Fs.stat(`/proc/${ownedPid}`).then(
+          () => {
+            cleanupAtFinished = false;
+          },
+          (error: unknown) => {
+            if (error instanceof Error && "code" in error && error.code === "ENOENT") cleanupAtFinished = true;
+            else throw error;
+          }
+        );
+      const f = yield* Effect.acquireRelease(
+        Effect.tryPromise(() => fixture({ mode: "hang", onFinished })),
+        (f) => Effect.promise(() => f.close())
+      );
+      const timer = yield* makeNativeDeadlineTestClock();
+      const fiber = yield* f.run.pipe(
+        Effect.provideService(Clock.Clock, timer.clock),
+        Effect.result,
+        Effect.forkScoped
+      );
+      yield* timer.bound(Effect.promise(() => f.started));
+      yield* timer.bound(
+        Effect.gen(function* () {
+          for (let attempt = 0; attempt < 100; attempt++) {
+            const identity = yield* Effect.tryPromise(() =>
+              Fs.readFile(Path.join(f.request.nativeHome, "fixture-identity"), "utf8")
+            ).pipe(Effect.option);
+            if (O.isSome(identity)) {
+              ownedPid = identity.value.split(":")[0] ?? "";
+              expect(ownedPid).toMatch(/^[1-9][0-9]*$/);
+              return;
+            }
+            yield* Effect.sleep("10 millis");
+          }
+          return yield* Effect.die("owned synthetic fixture identity did not arrive");
+        })
+      );
+      yield* timer.bound(timer.trigger);
+      const result = yield* timer.bound(Fiber.join(fiber));
+      expect(result._tag).toBe("Failure");
+      if (result._tag === "Failure") expect(failurePhase(result.failure)).toBe("source-timeout");
+      expect(timer.intercepted()).toBe(1);
+      expect(yield* Effect.promise(() => f.count("source-count"))).toBe(1);
+      expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+      expect(cleanupAtFinished).toBe(true);
+      const text = yield* Effect.promise(() =>
+        Fs.readFile(Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"), "utf8")
+      );
+      const diagnostic = yield* S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text);
+      expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
+      expect(diagnostic.nativeExitStatus).toEqual(O.none());
+      expect(f.traces()).toBe(0);
+    })
+  )
+);

@@ -695,7 +695,14 @@ export const runClaudeNativeCanary = Effect.fn("HarnessEnrollment.claudeNativeCa
     ).pipe(Effect.result);
     if (Result.isFailure(sourceResult)) {
       // Native process completion and collection refusal are different facts. Never infer task quality from exit0.
-      const outcome = O.isSome(nativeExit) && nativeExit.value !== 0 ? "failed" : "unknown";
+      // A deadline without an observed exit is a cancellation, as in the Codex and Grok canaries.
+      const outcome = O.isSome(nativeExit)
+        ? nativeExit.value !== 0
+          ? "failed"
+          : "unknown"
+        : sourceResult.failure.phase === "source-timeout"
+          ? "cancelled"
+          : "unknown";
       const failurePhase = O.some(sourceResult.failure.phase);
       const writeLifecycle = (stage: (typeof diagnostic.Type)["stage"], delivery: "pending" | "acknowledged") =>
         writeNativeAttemptDiagnostic(

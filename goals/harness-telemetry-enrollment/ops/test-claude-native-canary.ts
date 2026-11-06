@@ -12,18 +12,22 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { expect, it } from "@effect/vitest";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ClaudeNativeCanaryRequest, runClaudeNativeCanary } from "./claude-native-canary.ts";
+import { ClaudeNativeCanaryError, ClaudeNativeCanaryRequest, runClaudeNativeCanary } from "./claude-native-canary.ts";
 import { checkClaudeManagedPolicy, qualifyClaudeManagedPolicy } from "./claude-native-policy.ts";
 import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
+import { makeNativeDeadlineTestClock } from "./native-deadline-test-clock.ts";
 
+const isClaudeError = S.is(ClaudeNativeCanaryError);
 const id = (text: string) => Sha256Hex.make(Str.repeat(64)(text));
 const fixture = async (
   options: {
@@ -82,6 +86,8 @@ const fixture = async (
   });
   const context = { evidenceEpoch: options.staleEpoch ? 3 : 2, accepting: true };
   const facts: Array<string> = [];
+  let sourceReleased = false;
+  let cleanupBeforeFinished = false;
   let signalStarted = () => {};
   const started = new Promise<void>((resolve) => {
     signalStarted = resolve;
@@ -111,6 +117,7 @@ const fixture = async (
       facts.push(submitted.fact._tag);
       if (submitted.fact._tag === "Started") signalStarted();
       if (submitted.fact._tag === "Finished") {
+        cleanupBeforeFinished = sourceReleased;
         finishedOutcomes.push(submitted.fact.outcome);
         if (options.rejectFinished) {
           response.statusCode = 503;
@@ -231,9 +238,27 @@ const fixture = async (
     makeClaudeEnv: ({ baseEnv }) => baseEnv,
     resolveClaudeHome: () => request.nativeHome,
   });
+  const observedSpawner = Layer.effect(
+    ChildProcessSpawner.ChildProcessSpawner,
+    Effect.gen(function* () {
+      const underlying = yield* ChildProcessSpawner.ChildProcessSpawner;
+      return ChildProcessSpawner.make((command) =>
+        Effect.gen(function* () {
+          const handle = yield* underlying.spawn(command);
+          if (spawner.spawns.at(-1)?.args[0] !== "--version")
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                sourceReleased = true;
+              })
+            );
+          return handle;
+        })
+      );
+    })
+  ).pipe(Layer.provide(spawner.layer));
   const runFor = (admission: ClaudeNativeCanaryRequest) =>
     runClaudeNativeCanary(admission).pipe(
-      Effect.provide(Layer.mergeAll(spawner.layer, NodeCrypto.layer, NodePath.layer)),
+      Effect.provide(Layer.mergeAll(observedSpawner, NodeCrypto.layer, NodePath.layer)),
       Effect.provideService(AiProviderCliHome, home)
     );
   const run = runFor(request);
@@ -246,6 +271,7 @@ const fixture = async (
     traces,
     facts,
     finishedOutcomes,
+    cleanupBeforeFinished: () => cleanupBeforeFinished,
     started,
     dispatchIntents,
     restartFixtureSocket: async () => {
@@ -592,27 +618,71 @@ it.live("new invocation re-pins a replaced same-path fixture socket but does not
   })
 );
 
-it.live("external source interruption terminalizes after cleanup", () =>
-  Effect.tryPromise(async () => {
-    const f = await fixture({ hang: true });
-    try {
-      const fiber = Effect.runFork(f.run);
-      await f.started;
-      await Effect.runPromise(Fiber.interrupt(fiber));
-      const result = await Effect.runPromise(Fiber.await(fiber));
-      expect(Exit.hasInterrupts(result)).toBe(true);
-      expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
-      const text = await Fs.readFile(
-        Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
-        "utf8"
+for (const stop of ["interrupt", "deadline"] as const) {
+  it.live(`external source ${stop} terminalizes as cancelled after cleanup`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ hang: true });
+      try {
+        if (stop === "interrupt") {
+          const fiber = Effect.runFork(f.run);
+          await f.started;
+          await Effect.runPromise(Fiber.interrupt(fiber));
+          expect(Exit.hasInterrupts(await Effect.runPromise(Fiber.await(fiber)))).toBe(true);
+        } else {
+          const result = await Effect.runPromise(f.run.pipe(Effect.timeout("300 millis"), Effect.result));
+          expect(result._tag).toBe("Failure");
+          if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "TimeoutError" });
+        }
+        expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+        const text = await Fs.readFile(
+          Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
+          "utf8"
+        );
+        const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
+        expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
+        expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
+        expect(diagnostic.nativeExitStatus).toEqual(O.none());
+        expect(text).not.toContain("PRIVATE_");
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}
+
+it.live("internal source deadline preserves typed failure and cancels after source scope release", () =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const f = yield* Effect.acquireRelease(
+        Effect.tryPromise(() => fixture({ hang: true })),
+        (f) => Effect.promise(() => f.close())
       );
-      const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
+      const timer = yield* makeNativeDeadlineTestClock();
+      const fiber = yield* f.run.pipe(
+        Effect.provideService(Clock.Clock, timer.clock),
+        Effect.result,
+        Effect.forkScoped
+      );
+      yield* timer.bound(Effect.promise(() => f.started));
+      yield* timer.bound(timer.trigger);
+      const result = yield* timer.bound(Fiber.join(fiber));
+      expect(result._tag).toBe("Failure");
+      if (result._tag === "Failure") {
+        expect(isClaudeError(result.failure)).toBe(true);
+        expect(result.failure).toMatchObject({ phase: "source-timeout" });
+      }
+      expect(timer.intercepted()).toBe(1);
+      expect(f.spawner.spawns.filter((spawn) => spawn.args[0] !== "--version")).toHaveLength(1);
+      expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+      expect(f.finishedOutcomes).toEqual(["cancelled"]);
+      expect(f.cleanupBeforeFinished()).toBe(true);
+      const text = yield* Effect.promise(() =>
+        Fs.readFile(Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"), "utf8")
+      );
+      const diagnostic = yield* S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text);
       expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
-      expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
       expect(diagnostic.nativeExitStatus).toEqual(O.none());
-      expect(text).not.toContain("PRIVATE_");
-    } finally {
-      await f.close();
-    }
-  })
+      expect(f.traces).toHaveLength(0);
+    })
+  )
 );
