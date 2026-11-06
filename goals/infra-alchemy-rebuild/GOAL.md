@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: packages/tooling/infra/*, packages/tooling/library/alchemy-*, apps/{oip-web,storybook,beep-effect-web}/alchemy.run.ts, .github/workflows deploy jobs, docs/runbooks, standards/architecture (tooling kind `infra`), root package.json catalog and workspaces, and the deletion of infra/ and scratchpad/turbo-cache-r2.
+- In: new @beep/infra-* packages (tooling kind infra), @beep/alchemy-* tooling libraries, alchemy.run.ts files beside apps/oip-web, apps/storybook and apps/beep-effect-web, .github/workflows deploy jobs, docs/runbooks, standards/architecture (tooling kind `infra`), root package.json catalog and workspaces, and the deletion of infra/ and scratchpad/turbo-cache-r2.
 - Out: ./scripts and the Python ban (sibling packets scripts-to-beep-cli and python-free-repo), GitHub App minting, any hosting-platform or runner-economics change, in-place adoption of live Pulumi resources.
 
 Workflow:
