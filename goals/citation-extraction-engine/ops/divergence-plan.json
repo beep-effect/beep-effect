@@ -110,7 +110,11 @@
         "packages/law-practice/server/assets/citation-diff/kernel.cpp",
         "packages/law-practice/server/assets/citation-diff/kernel.wasm",
         "packages/law-practice/server/assets/citation-diff/build-receipt.json",
-        "packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json"
+        "packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-host.md",
+        "packages/law-practice/server/src/internal/Citation/NativeWasm.ts",
+        "packages/law-practice/server/src/internal/Citation/DiffKernel.ts",
+        "packages/law-practice/server/test/CitationDiffKernel.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -329,7 +333,9 @@
         "packages/law-practice/server/src/internal/Citation/MetadataValues.ts",
         "packages/law-practice/server/test/CitationCleanerRegistry.fixtures.ts",
         "packages/law-practice/use-cases/test/CitationOracleArtifact.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-hosted-quality-repair.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-hosted-quality-repair.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-host.md",
+        "packages/law-practice/server/src/internal/Citation/NativeWasm.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

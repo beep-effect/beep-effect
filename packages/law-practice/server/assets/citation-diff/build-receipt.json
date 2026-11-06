@@ -5,10 +5,10 @@
   "sdkArchiveSha256": "b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4",
   "sdkVersion": "34.0\nwasi-libc: 2e6fb9d8ee0c\nllvm: 895aa2c896ad\nllvm-version: 23.1.0\nconfig: f992bcc08219",
   "kernelSourceSha256": "babe92df9b5ebcfe9a3c0882a45f07238928066035073fe81174b25d8585ff15",
-  "producerSha256": "923deeccd8360cf571d0652adfaaff0145105058082f054bc7d0fe706006e435",
+  "producerSha256": "e1f9b97dcd5945786115750e36a1151c267c6c6ca529332e5a065516c16d4110",
   "target": "wasm32-wasip1",
   "optimization": "-O2 --no-wasm-opt",
-  "exceptions": "WebAssembly exceptions; libc++abi and libunwind",
+  "exceptions": "WebAssembly exceptions (non-legacy); libc++abi and libunwind",
   "canonicalBuildPrefix": "/citation-diff-build",
   "memoryMaximumBytes": 536870912,
   "exports": [
@@ -24,6 +24,6 @@
   "diffTimeout": 0,
   "checklines": false,
   "cleanup": "No",
-  "wasmBytes": 873066,
-  "wasmSha256": "f6075c21cd7bd6a88c66af53eb07a665b941d7ae6cbc2adaed6f64019d493918"
+  "wasmBytes": 874110,
+  "wasmSha256": "186b72b1410982b2b384e74c84fc448bddc16aa479fdcf85c01f493a5d8359ec"
 }

@@ -81,7 +81,12 @@ const Position = S.Int.check(S.isBetween({ minimum: -max.diffInputUtf16, maximum
 const Plan = S.toType(CitationSpanOffsetsPlan);
 const safety = (limit: "diffInputUtf16" | "diffSteps") =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
-const measure = Effect.fn("Citation.measureSpanOffsetRuns")(function* (steps: ReadonlyArray<CitationSpanDiffStep>) {
+/** Fold complete prepared edit steps using original consumed/emitted rules.
+ * @internal @category operations @since 0.0.0
+ */
+export const measureCitationSpanDiffSteps = Effect.fn("Citation.measureSpanOffsetRuns")(function* (
+  steps: ReadonlyArray<CitationSpanDiffStep>
+) {
   let consumed = 0;
   let emitted = 0;
   let entries = 0;
@@ -138,7 +143,7 @@ export const makeCitationSpanOffsets = Effect.fn("Citation.makeSpanOffsets")(fun
   const before = decoded.before.pythonLength;
   const after = decoded.after.pythonLength;
   const steps = A.map(decoded.steps, (step) => CitationSpanDiffStep.make({ ...step }));
-  const measured = yield* measure(steps);
+  const measured = yield* measureCitationSpanDiffSteps(steps);
   if (measured.consumed !== before || measured.emitted !== after) return yield* fail("invalid-plan");
   const count = measured.entries;
   const at = yield* build(steps, count);

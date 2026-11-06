@@ -76,7 +76,7 @@ def main():
     assets = root / 'packages/law-practice/server/assets/citation-diff'
     fixtures = root / 'packages/law-practice/use-cases/test/fixtures/eyecite'
     receipt = json.loads((assets / 'build-receipt.json').read_text())
-    expected_wasm = 'f6075c21cd7bd6a88c66af53eb07a665b941d7ae6cbc2adaed6f64019d493918'
+    expected_wasm = '186b72b1410982b2b384e74c84fc448bddc16aa479fdcf85c01f493a5d8359ec'
     assert sha(assets / 'kernel.wasm') == receipt['wasmSha256'] == expected_wasm
     assert sha(assets / 'kernel.cpp') == receipt['kernelSourceSha256']
     assert sha(Path(__file__).with_name('build-diff-kernel.py')) == receipt['producerSha256']

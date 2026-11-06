@@ -1,9 +1,7 @@
 import * as NodeURL from "node:url";
 import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
-import {
-  makeCitationClosedHtmlWasi,
-  makeCitationHtmlKernel,
-} from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import { makeCitationHtmlKernel } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import { makeCitationClosedNativeWasi } from "@beep/law-practice-server/internal/Citation/NativeWasm";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -49,7 +47,7 @@ const loadAsset = Effect.fn("HtmlKernelTest.loadAsset")(function* () {
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel", (it) => {
   it.effect("denies every descriptor/path call and supplies only empty environment and fixed time", () =>
     Effect.gen(function* () {
-      const host = yield* makeCitationClosedHtmlWasi();
+      const host = yield* makeCitationClosedNativeWasi();
       expect(R.keys(host.imports)).toEqual([
         "environ_get",
         "environ_sizes_get",

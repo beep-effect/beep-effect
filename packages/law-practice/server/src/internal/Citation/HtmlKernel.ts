@@ -8,16 +8,25 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { completeCitationHtml } from "./HtmlCompletion.ts";
 import { CitationHtmlInput } from "./HtmlInput.ts";
+import {
+  CitationNativeWasmAsset,
+  compileCitationNativeWasm,
+  CitationNativeWasmFn0 as Fn0,
+  CitationNativeWasmFn1 as Fn1,
+  CitationNativeWasmFn5 as Fn5,
+  CitationNativeWasmMemory as Memory,
+  CitationNativeWasmVoid0 as Void0,
+  CitationNativeWasmVoid1 as Void1,
+} from "./NativeWasm.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlKernel");
 const Reason = LiteralKit([
@@ -48,49 +57,6 @@ export class CitationHtmlKernelFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationHtmlKernelFailure.make({ reason });
-const Fn0 = S.declare<() => number>((value): value is () => number => P.isFunction(value)).pipe(
-  $I.annoteSchema("Fn0", { description: "Authenticated zero-argument WASM ABI function." })
-);
-const Fn1 = S.declare<(value: number) => number>((value): value is (value: number) => number =>
-  P.isFunction(value)
-).pipe($I.annoteSchema("Fn1", { description: "Authenticated one-argument WASM ABI function." }));
-const Fn5 = S.declare<(address: number, length: number, kind: number, ceiling: number, full: number) => number>(
-  (value): value is (address: number, length: number, kind: number, ceiling: number, full: number) => number =>
-    P.isFunction(value)
-).pipe($I.annoteSchema("Fn5", { description: "Authenticated five-integer HTML ABI entrypoint." }));
-const Void0 = S.declare<() => void>((value): value is () => void => P.isFunction(value)).pipe(
-  $I.annoteSchema("Void0", { description: "Authenticated zero-argument void WASM ABI function." })
-);
-const Void1 = S.declare<(value: number) => void>((value): value is (value: number) => void => P.isFunction(value)).pipe(
-  $I.annoteSchema("Void1", { description: "Authenticated one-argument void WASM ABI function." })
-);
-const MemoryFields = S.Struct({ buffer: S.instanceOf(ArrayBuffer) }).pipe(
-  $I.annoteSchema("MemoryFields", { description: "Unshared native memory buffer exposed by the authenticated module." })
-);
-const Memory = MemoryFields.pipe(
-  S.is,
-  S.declare<typeof MemoryFields.Type>,
-  $I.annoteSchema("Memory", {
-    description: "Preserve the live memory object so buffer growth is observed on each access.",
-  })
-);
-const Runtime = S.Struct({
-  WebAssembly: S.Struct({
-    Module: S.declare<new (bytes: Uint8Array<ArrayBuffer>) => unknown>(
-      (value): value is new (bytes: Uint8Array<ArrayBuffer>) => unknown => P.isFunction(value)
-    ),
-    Instance: S.declare<new (module: unknown, imports: unknown) => unknown>(
-      (value): value is new (module: unknown, imports: unknown) => unknown => P.isFunction(value)
-    ),
-  }),
-}).pipe(
-  $I.annoteSchema("Runtime", {
-    description: "Decode the server runtime's WebAssembly constructors without adding DOM globals to the package.",
-  })
-);
-const Instance = S.Struct({ exports: S.Unknown }).pipe(
-  $I.annoteSchema("Instance", { description: "Runtime instance before its pinned exports are decoded." })
-);
 const Exports = S.Struct({
   memory: Memory,
   _initialize: Void0,
@@ -110,65 +76,11 @@ const Request = S.Struct({
   input: CitationHtmlInput,
   outputUtf16: S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16)),
 }).pipe($I.annoteSchema("Request", { description: "Private prepared input plus effective produced-text ceiling." }));
-const Asset = S.Uint8Array.check(S.isMinLength(1753104), S.isMaxLength(1753104));
 const boundedBytes = S.is(S.Uint8Array.check(S.isMaxLength(4 * CitationEngineAbsoluteMaxima.producedTextUtf16)));
 const natural = S.is(S.Natural);
 const decodeText = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const nativeResource = () =>
   CitationSafetyLimitExceeded.make({ operation: "clean", limit: "nativeHtmlParserResource" });
-/**
- * Closed synchronous WASI callbacks for one native instance. Denied descriptor
- * and path calls return EBADF without inspecting arguments or host resources.
- * Memory must be bound before initialization. No OS clock or environment is read.
- * @internal
- * @category operations
- * @since 0.0.0
- */
-export const makeCitationClosedHtmlWasi = Effect.fn("Citation.makeClosedHtmlWasi")(() =>
-  Effect.sync(() => {
-    let memory = O.none<typeof Memory.Type>();
-    const write = (apply: (view: DataView) => void) =>
-      O.match(memory, {
-        onNone: () => 21,
-        onSome: (value) => {
-          apply(new DataView(value.buffer));
-          return 0;
-        },
-      });
-    const deny = (..._args: ReadonlyArray<unknown>) => 8;
-    return {
-      bindMemory: Effect.fn("Citation.bindHtmlMemory")((value: typeof Memory.Type) =>
-        Effect.sync(() => {
-          memory = O.some(value);
-        })
-      ),
-      imports: {
-        environ_get: () => 0,
-        environ_sizes_get: (count: number, size: number) =>
-          write((view) => {
-            view.setUint32(count, 0, true);
-            view.setUint32(size, 0, true);
-          }),
-        clock_time_get: (_clock: number, _precision: bigint, address: number) =>
-          write((view) => {
-            view.setBigUint64(address, BigInt(0), true);
-          }),
-        fd_close: deny,
-        fd_fdstat_get: deny,
-        fd_fdstat_set_flags: deny,
-        fd_prestat_get: deny,
-        fd_prestat_dir_name: deny,
-        fd_read: deny,
-        fd_seek: deny,
-        fd_write: deny,
-        path_filestat_get: deny,
-        path_open: deny,
-        // libc's noreturn exit path traps after this import returns.
-        proc_exit: () => {},
-      },
-    };
-  })
-);
 /**
  * Authenticate and compile an asset snapshot. Each run owns a new instance and
  * releases input/result allocations. R = never methods are synchronous inside
@@ -180,19 +92,14 @@ export const makeCitationClosedHtmlWasi = Effect.fn("Citation.makeClosedHtmlWasi
  */
 export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(function* (input: unknown) {
   const crypto = yield* Digest.Digest;
-  const asset = yield* S.decodeUnknownEffect(Asset)(input).pipe(Effect.mapError(() => fail("invalid-asset")));
-  const snapshot = new Uint8Array(asset);
-  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(snapshot).pipe(
-    Effect.mapError(() => fail("invalid-asset")),
-    Effect.catchDefect(() => Effect.fail(fail("invalid-asset")))
+  const compiled = yield* compileCitationNativeWasm(
+    input,
+    CitationNativeWasmAsset.make({
+      byteLength: 1753104,
+      sha256: Sha256Hex.make("99e76b7cdfe01e574886d7b93b685174cbe7cb5944f8ba964c97019d8f53156a"),
+    }),
+    () => fail("invalid-asset")
   );
-  if (digest !== "99e76b7cdfe01e574886d7b93b685174cbe7cb5944f8ba964c97019d8f53156a")
-    return yield* fail("invalid-asset");
-  const runtime = yield* S.decodeUnknownEffect(Runtime)(globalThis).pipe(Effect.mapError(() => fail("invalid-asset")));
-  const module = yield* Effect.try({
-    try: () => new runtime.WebAssembly.Module(snapshot),
-    catch: () => fail("invalid-asset"),
-  });
   return {
     run: Effect.fn("Citation.runHtmlKernel")(
       function* (request: unknown) {
@@ -200,18 +107,11 @@ export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(funct
           Effect.mapError(() => fail("invalid-input"))
         );
         if (!boundedBytes(input.bytes)) return yield* fail("invalid-input");
-        const host = yield* makeCitationClosedHtmlWasi();
-        const instance = yield* Effect.try({
-          try: () => new runtime.WebAssembly.Instance(module, { wasi_snapshot_preview1: host.imports }),
-          catch: () => fail("kernel-failed"),
-        });
-        const created = yield* S.decodeUnknownEffect(Instance)(instance).pipe(
-          Effect.mapError(() => fail("kernel-failed"))
-        );
+        const created = yield* compiled.instantiate(() => fail("kernel-failed"));
         const abi = yield* S.decodeUnknownEffect(Exports)(created.exports).pipe(
           Effect.mapError(() => fail("kernel-failed"))
         );
-        yield* host.bindMemory(abi.memory);
+        yield* created.bindMemory(abi.memory);
         yield* Effect.try({ try: () => abi._initialize(), catch: () => fail("kernel-failed") });
         if (abi.html_version() !== 21203 || abi.html_iconv_version() !== 0x111) return yield* fail("invalid-asset");
         const inventory = yield* Effect.try({

@@ -18,6 +18,8 @@ The source configuration fixes timeout=0, checklines=false and cleanup="No".
 The authored clock shim returns zero because the source's disabled deadline is
 the maximum clock value. No host clock is read. C++ exception/unwind support is
 linked without modifying the upstream header. Memory is capped at 512 MiB.
+The compiler explicitly selects non-legacy WASM exceptions so both Bun and Node
+accept the same binary; the default mixed exception model was rejected by Bun.
 
 Rebuild with `goals/citation-extraction-engine/ops/build-diff-kernel.py`, passing
 the checksum-verified WASI SDK 34 archive, scratch directory and output directory.
@@ -27,6 +29,8 @@ currently agree byte-for-byte. Run `python goals/citation-extraction-engine/ops/
 from any directory for the sealed portable exact-step and refusal replay.
 
 This core must run only inside an independently stoppable, parent-owned worker.
+The private Effect host authenticates a snapshot, validates native input and
+effective combined UTF-16, and releases fresh instance allocations through Scope.
 It is not yet connected to the production worker. Parent input ownership,
 effective UTF-16 limits, complete framing, admission, deadlines, retirement,
 quarantine and whole-engine accounting remain integration obligations. No

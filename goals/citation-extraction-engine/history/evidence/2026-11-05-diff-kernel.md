@@ -1,5 +1,9 @@
 # Exact default diff core
 
+Historical core receipt: the binary below was initially qualified under Node.
+The subsequent [Effect-host receipt](2026-11-05-diff-host.md) records a Bun
+exception-model finding, the corrected current binary and both-runtime replay.
+
 The pinned source SpanUpdater.get_diff_steps uses fast-diff-match-patch 2.0.1
 with timelimit=0, checklines=False and cleanup="No". Its CPython 3.11.15 Linux
 wrapper converts Unicode to four-byte std::wstring and returns each original

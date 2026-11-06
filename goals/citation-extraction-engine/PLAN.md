@@ -1,5 +1,14 @@
 # Citation Extraction Engine Plan
 
+Default diff-host checkpoint (2026-11-05): HTML and diff now share the existing
+restricted WASM environment. The authenticated Effect adapter checks native
+inputs and effective combined UTF-16 before native allocation, owns fresh
+instances with Scope, and verifies complete steps through the existing fold.
+Ten Bun regressions and six Node host tests pass. A Bun exception-model finding
+is fixed in the reproducible binary without changing the upstream algorithm.
+The owned worker/RPC integration and full engine acceptance remain open. See
+[diff-host evidence](history/evidence/2026-11-05-diff-host.md).
+
 Default diff-core checkpoint (2026-11-05): the unchanged pinned C++ dependency
 now builds reproducibly to a private source-point ABI. Both clean builds agree;
 all 1,052 source maps / 9,978 edit steps and step-refusal controls compare.

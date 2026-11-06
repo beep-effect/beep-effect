@@ -42,7 +42,8 @@ def main():
         shutil.copyfile(assets / 'kernel.cpp', work / 'kernel.cpp')
         command = [str(sdk / 'bin/clang++'), str(work / 'kernel.cpp'), '-I' + str(header.parent),
                    '--target=wasm32-wasip1', '-mexec-model=reactor', '-std=c++17',
-                   '-fwasm-exceptions', '-lunwind', '-O2', '--no-wasm-opt',
+                   '-fwasm-exceptions', '-mllvm', '-wasm-use-legacy-eh=false',
+                   '-lunwind', '-O2', '--no-wasm-opt',
                    '-ffile-prefix-map=' + str(work) + '=/citation-diff-build',
                    '-Wl,--max-memory=536870912']
         command.extend('-Wl,--export=' + name for name in EXPORTS)
@@ -53,7 +54,7 @@ def main():
                    'sdkArchiveSha256': SDK_SHA, 'sdkVersion': (sdk / 'VERSION').read_text().strip(),
                    'kernelSourceSha256': sha(assets / 'kernel.cpp'), 'producerSha256': sha(Path(__file__)),
                    'target': 'wasm32-wasip1', 'optimization': '-O2 --no-wasm-opt',
-                   'exceptions': 'WebAssembly exceptions; libc++abi and libunwind',
+                   'exceptions': 'WebAssembly exceptions (non-legacy); libc++abi and libunwind',
                    'canonicalBuildPrefix': '/citation-diff-build', 'memoryMaximumBytes': 536870912,
                    'exports': EXPORTS, 'wcharBytes': 4, 'diffTimeout': 0,
                    'checklines': False, 'cleanup': 'No',
