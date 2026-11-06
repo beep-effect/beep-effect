@@ -37,6 +37,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ArchiveRecord, RetentionReason } from "../Goals/Archive.schemas.ts";
 import { PacketSlug } from "../Goals/PacketCore/PacketCore.schemas.ts";
 import { PacketEventStore, PacketStreamLocator } from "../Goals/PacketCore/PacketEventStore.ts";
 import { foldPacketEvents } from "../Goals/PacketCore/PacketFold.ts";
@@ -214,6 +215,8 @@ export class ExplorationManifestEntry extends S.Opaque<ExplorationManifestEntry,
     stage: ExplorationStage,
     updated: S.NonEmptyString,
     links: S.optionalKey(ExplorationManifestLinks),
+    archive: S.optionalKey(ArchiveRecord),
+    retentionReason: S.optionalKey(RetentionReason),
   }).pipe(
     $I.annoteSchema("ExplorationManifestEntry", {
       description: "Manifest adoption fields and navigation metadata consumed by the exploration projector.",

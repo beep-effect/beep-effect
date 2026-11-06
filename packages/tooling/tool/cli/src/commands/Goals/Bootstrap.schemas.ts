@@ -789,6 +789,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "decision-file-invalid": ["doctor-clean"],
   "decision-log-drift": ["doctor-clean"],
   "research-reports-drift": ["doctor-clean"],
+  "archive-decision-missing": [],
 };
 
 /**

@@ -164,6 +164,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "decision-file-invalid",
   "decision-log-drift",
   "research-reports-drift",
+  "archive-decision-missing",
 ]).pipe(
   $I.annoteSchema("GoalDoctorFindingKind", {
     description:
@@ -848,6 +849,21 @@ const manifestAdvisoryFindings = (
         "schema-version-upgrade",
         "advisory",
         `manifest declares ${manifest.schemaVersion === undefined ? "no schemaVersion" : `"${manifest.schemaVersion}"`}; upgrade to "initiative-manifest/v2".`
+      )
+    );
+  }
+
+  if (
+    (GoalStatus.is["completed-retained"](status) || GoalStatus.is.superseded(status)) &&
+    manifest.archive === undefined &&
+    manifest.retentionReason === undefined
+  ) {
+    push(
+      finding(
+        record.slug,
+        "archive-decision-missing",
+        "advisory",
+        `${status} packet has neither an archive block nor a retentionReason; run bun run beep goals archive or declare retentionReason.`
       )
     );
   }

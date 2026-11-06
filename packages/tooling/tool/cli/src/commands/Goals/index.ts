@@ -13,6 +13,27 @@
  */
 export * from "./Adopt.ts";
 /**
+ * Packet archive schemas: manifest archive block, tombstone keep-set, plan and receipt.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Archive.schemas.ts";
+/**
+ * Packet archive planner service.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./Archive.service.ts";
+/**
+ * Packet archive command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Archive.ts";
+/**
  * Materialization-plan schema surface.
  *
  * @category schemas
