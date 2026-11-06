@@ -6,6 +6,15 @@ Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Storage handoff — 2026-11-05
+
+Read the
+[workstation consolidation handoff](../oppold-corpus-salvage-restoration/history/2026-11-05-workstation-consolidation-handoff.md)
+before relying on this packet's historical source paths or extraction counts.
+The original pipeline remains `completed-retained`. Later exact-copy retirement,
+encrypted recovery and ongoing native extraction are separate evidence families;
+resolve current keepers and governed ledgers before consuming or rebuilding them.
+
 ## Mission
 
 Salvage, consolidate, dedupe, name-restore, extract, organize, and
