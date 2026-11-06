@@ -7,6 +7,7 @@ import {
   NoteWrite,
   UnknownRefError,
 } from "@beep/git/Git";
+import { GitIdentEmail } from "@beep/git/Git.models";
 import { GitCommand } from "@beep/git/GitCommand";
 import { parseNotesList, parseObjectId } from "@beep/git/internal/parsers";
 import { assert, describe, it } from "@effect/vitest";
@@ -18,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { scripted } from "./fixtures.ts";
@@ -302,13 +304,22 @@ describe("Git.replaceNotes", () => {
     })
   );
 
+  it("rejects a git ident email with angle brackets or a line break at the schema", () => {
+    const isEmail = S.is(GitIdentEmail);
+    assert.isTrue(isEmail("noreply@beep-effect.com"));
+    assert.isFalse(isEmail(""));
+    assert.isFalse(isEmail("a>b"));
+    assert.isFalse(isEmail("a<b"));
+    assert.isFalse(isEmail("a\nb"));
+  });
+
   it.effect("refuses bad refs, object ids, duplicates and identities before spawning", () =>
     Effect.gen(function* () {
       const cases = [
         ["refs/heads/main", [note], commit],
         ["refs/notes/history", [NoteWrite.make({ object: "HEAD", body: "x\n" })], commit],
         ["refs/notes/history", [note, note], commit],
-        ["refs/notes/history", [note], NotesCommit.make({ ...commit, email: "a>b" })],
+        ["refs/notes/history", [note], NotesCommit.make({ ...commit, name: "a<b" })],
       ] as const;
       for (const [ref, notes, metadata] of cases) {
         const seen: Array<ReadonlyArray<string>> = [];

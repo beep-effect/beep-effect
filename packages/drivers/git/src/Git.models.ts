@@ -808,6 +808,46 @@ export class NoteWrite extends S.Opaque<NoteWrite, { readonly brand: unique symb
 ) {}
 
 /**
+ * The email half of a git identity (`Name <email>`), as git's ident line
+ * accepts it.
+ *
+ * **Details**
+ *
+ * An external-protocol field, deliberately not `@beep/schema` `Email`: git
+ * stores whatever sits between `<` and `>` verbatim, so the only hard rules
+ * are that it is non-empty and contains no `<`, `>` or line break. It is plain
+ * text because the value is written straight into a fast-import stream.
+ *
+ * **Example** (Accept a git identity email)
+ *
+ * ```ts
+ * import { GitIdentEmail } from "@beep/git/Git.models"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GitIdentEmail)("noreply@beep-effect.com")) // true
+ * console.log(S.is(GitIdentEmail)("a<b")) // false
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export const GitIdentEmail = S.String.check(
+  S.isPattern(
+    /^[^<>\r\n]+$/u,
+    $I.annote("GitIdentEmailPatternCheck", {
+      title: "Git Ident Email Pattern",
+      description: "A non-empty git ident email with no angle brackets or line breaks.",
+      message: "Expected a non-empty git ident email without '<', '>' or line breaks",
+    })
+  )
+).pipe(
+  $I.annoteSchema("GitIdentEmail", {
+    description: "The email half of a git identity, as git's ident line accepts it.",
+  })
+);
+
+/**
  * The fixed metadata of a notes commit: message, one identity used as both
  * author and committer, and a timestamp in seconds since the epoch (UTC).
  *
@@ -836,7 +876,7 @@ export class NotesCommit extends S.Opaque<NotesCommit, { readonly brand: unique 
     /** The author and committer name. */
     name: S.String.pipe($I.annoteKey("NotesCommit.name", { description: "The author and committer name." })),
     /** The author and committer email. */
-    email: S.String.pipe($I.annoteKey("NotesCommit.email", { description: "The author and committer email." })),
+    email: GitIdentEmail.pipe($I.annoteKey("NotesCommit.email", { description: "The author and committer email." })),
     /** Author and committer time, in whole seconds since the epoch, UTC. */
     timestamp: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
       $I.annoteKey("NotesCommit.timestamp", {
