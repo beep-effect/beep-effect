@@ -9,8 +9,18 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
-import { libraryEffectiveCaptures, libraryEffectiveCategory } from "./Library.evidence.ts";
 import { loadCatalog } from "./Library.store.ts";
+import {
+  LibraryCountRow,
+  LibraryViewRow,
+  libraryViewDataset,
+  occurrenceIndex,
+  privatePartition,
+  reportIndex,
+  runView,
+  sourceIndex,
+  statusCounts,
+} from "./Library.views.ts";
 
 /**
  * Show source and attempt categories separately without claiming integrity verification.
@@ -23,8 +33,18 @@ import { loadCatalog } from "./Library.store.ts";
  * @category use-cases
  * @since 0.0.0
  */
-export const libraryStatus = Effect.fn("Research.Library.status")(function* (root: string) {
+export const libraryStatus = Effect.fn("Research.Library.status")(function* (root: string, includePrivate = false) {
   const catalog = yield* loadCatalog(root);
+  const dataset = yield* libraryViewDataset(root, catalog);
+  const counts = yield* runView(dataset, statusCounts, LibraryCountRow, includePrivate);
+  const partition = yield* runView(dataset, privatePartition, LibraryCountRow, true);
+  const documents = yield* runView(dataset, reportIndex, LibraryViewRow, includePrivate);
+  const sources = yield* runView(dataset, sourceIndex, LibraryViewRow, includePrivate);
+  const occurrences = yield* runView(dataset, occurrenceIndex, LibraryViewRow, includePrivate);
+  const count = (kind: string, category: string) =>
+    A.reduce(counts, 0, (total, row) => total + (row.kind === kind && row.category === category ? row.count : 0));
+  const privateCount = (kind: string) =>
+    A.reduce(partition, 0, (total, row) => total + (row.kind === kind ? row.count : 0));
   const versionCategories: Record<string, number> = {
     readable: 0,
     unavailable: 0,
@@ -37,12 +57,9 @@ export const libraryStatus = Effect.fn("Research.Library.status")(function* (roo
     missing: 0,
   };
   const sourceCategories: Record<string, number> = { ...versionCategories };
-  for (const source of catalog.sources) {
-    const current = yield* libraryEffectiveCaptures(root, catalog, source);
-    const categories = A.map(current, (item) => item.category);
-    for (const category of categories) versionCategories[category] = (versionCategories[category] ?? 0) + 1;
-    const primary = libraryEffectiveCategory(categories);
-    sourceCategories[primary] = (sourceCategories[primary] ?? 0) + 1;
+  for (const row of counts) {
+    if (row.kind === "Claim" && row.category !== undefined) versionCategories[row.category] = row.count;
+    if (row.kind === "Source" && row.category !== undefined) sourceCategories[row.category] = row.count;
   }
   const format = (counts: Record<string, number>) =>
     A.join(
@@ -50,7 +67,7 @@ export const libraryStatus = Effect.fn("Research.Library.status")(function* (roo
       " "
     );
   yield* Console.log(
-    `library status: reports=${catalog.documents.length} sources=${catalog.sources.length} occurrences=${catalog.occurrences.length}`
+    `library status: reports=${documents.length} sources=${sources.length} occurrences=${occurrences.length}`
   );
   yield* Console.log(`current source claims (least complete required version): ${format(sourceCategories)}`);
   yield* Console.log(
@@ -66,11 +83,12 @@ export const libraryStatus = Effect.fn("Research.Library.status")(function* (roo
     "unavailable",
     "non-reference",
   ]) {
-    yield* Console.log(
-      `historical capture attempts ${status}=${A.filter(catalog.captures, (capture) => capture.status === status).length}`
-    );
+    yield* Console.log(`historical capture attempts ${status}=${count("Capture", status)}`);
   }
   yield* Console.log(
-    `route probes verified=${A.filter(catalog.qualifications, (item) => item.status === "verified").length} failed=${A.filter(catalog.qualifications, (item) => item.status === "failed").length}; run verify for the integrity gate`
+    `route probes verified=${count("Qualification", "verified")} failed=${count("Qualification", "failed")}; run verify for the integrity gate`
+  );
+  yield* Console.log(
+    `private partition: documents=${privateCount("Report")} sources=${privateCount("Source")} artifacts=${privateCount("Artifact")} occurrences=${privateCount("Occurrence")}`
   );
 });

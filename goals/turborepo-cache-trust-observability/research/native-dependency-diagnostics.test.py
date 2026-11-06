@@ -93,6 +93,51 @@ class DependencyDiagnostics(unittest.TestCase):
         self.assertEqual(first_link["first"]["groups"][1][4:6], second_link["first"]["groups"][1][4:6])
         self.assertNotEqual(first_link["first"]["groups"][1][6], second_link["first"]["groups"][1][6])
 
+    def test_selected_file_hashes_redact_names_and_payloads_and_locate_byte_changes(self):
+        package = self.root / "node_modules/node-gyp"
+        package.mkdir()
+        source = package / "PRIVATE_FILENAME_SENTINEL.py"
+        bytecode = package / "PRIVATE_BYTECODE_FILENAME_SENTINEL.pyc"
+        source.write_bytes(b"PRIVATE_SOURCE_PAYLOAD_SENTINEL")
+        bytecode.write_bytes(b"PRIVATE_BYTECODE_PAYLOAD_001")
+        (package / "outside").symlink_to("/etc/passwd")
+        before = self.observe()
+        details = before["first"]["fileDetails"]
+        self.assertEqual(details["group"], "node-gyp")
+        self.assertEqual(details["columns"], ["nameSha256", "kind", "bytes", "contentSha256"])
+        self.assertEqual(len(details["rows"]), 2)
+        rows = {row[0]: row for row in details["rows"]}
+        source_key = PROBE.hashlib.sha256(b"node_modules/node-gyp/PRIVATE_FILENAME_SENTINEL.py").hexdigest()
+        bytecode_key = PROBE.hashlib.sha256(b"node_modules/node-gyp/PRIVATE_BYTECODE_FILENAME_SENTINEL.pyc").hexdigest()
+        self.assertEqual(set(rows), {source_key, bytecode_key})
+        self.assertEqual(rows[source_key][1:], ["python-source", source.stat().st_size,
+                                              PROBE.hashlib.sha256(source.read_bytes()).hexdigest()])
+        self.assertEqual(rows[bytecode_key][1], "python-bytecode")
+        retained = json.dumps(before)
+        for private in [source.name, bytecode.name, "PRIVATE_SOURCE_PAYLOAD_SENTINEL",
+                        "PRIVATE_BYTECODE_PAYLOAD_001", "/etc/passwd"]:
+            self.assertNotIn(private, retained)
+        bytecode.write_bytes(b"PRIVATE_BYTECODE_PAYLOAD_002")
+        after = self.observe()
+        changed = {row[0]: row for row in after["first"]["fileDetails"]["rows"]}
+        self.assertEqual(rows[source_key], changed[source_key])
+        self.assertEqual(rows[bytecode_key][:3], changed[bytecode_key][:3])
+        self.assertNotEqual(rows[bytecode_key][3], changed[bytecode_key][3])
+        self.assertNotEqual(before["first"]["sha256"], after["first"]["sha256"])
+        self.assertLessEqual(len(PROBE.encoded(details["rows"])), PROBE.FILE_DETAIL_BYTES_LIMIT)
+
+    def test_selected_file_hash_entry_and_byte_limits_refuse_without_changing_digest_policy(self):
+        package = self.root / "node_modules/node-gyp"
+        package.mkdir()
+        (package / "one.pyc").write_bytes(b"first")
+        (package / "two.pyc").write_bytes(b"other")
+        with patch.object(PROBE, "FILE_DETAIL_ENTRY_LIMIT", 1):
+            with self.assertRaisesRegex(PROBE.Refusal, "file-detail-entry-bound"):
+                PROBE.snapshot(PROBE.time.monotonic() + 10)
+        with patch.object(PROBE, "FILE_DETAIL_BYTES_LIMIT", 1):
+            with self.assertRaisesRegex(PROBE.Refusal, "file-detail-byte-bound"):
+                PROBE.snapshot(PROBE.time.monotonic() + 10)
+
     def test_timestamp_changes_do_not_change_normalized_digest(self):
         before = self.observe()
         os.utime(self.payload, (1, 1))

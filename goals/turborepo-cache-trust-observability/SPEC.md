@@ -1409,6 +1409,25 @@ purge shared artifacts, lower proof floors or enable unsigned fallback.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-cache-trust-observability`; add a `kind: decision` file there, never edit this block._
 
+### Bound file-level evidence for the observed node-gyp mismatch, 2026-11-06
+
+Both source-only runs passed under the original process and artifact limits,
+but the retained cross-run comparison failed because only node-gyp content
+changed. Counts, sizes, modes, links and headers agree. File-level hash/kind
+evidence is required before treating generated Python bytecode as the cause
+or changing installation preparation.
+
+Retain opaque filename hashes and content hashes for at most 512 regular files
+in that observed package, bounded to 128 KiB of encoded rows inside the existing
+4 MiB combined report cap and existing two passes. Never retain path strings or
+payloads. The canonical stream digest still hashes every original byte. Add
+hosted redaction, same-size mutation and refusal-bound regressions, and declare
+both consumed Python files as inputs to the CLI test, test:property and coverage
+tasks while preserving inherited inputs and disabled coverage caching. This changes neither production
+trust nor qualification/signing authority.
+
+Reverse: Remove the bounded fileDetails addition and its fixtures; retain the repaired Python test inputs and both immutable paired-run observation receipts.
+
 ### Bound retained reports even when dependency diagnostics refuse, 2026-11-06
 
 Source inspection already permits a report up to four MiB. A later refusal adds bytes, so unconditional retention can exceed the existing aggregate cap at the boundary. Run one metadata-only publication selector after diagnostics, including failure, using the same ARTIFACT_LIMIT. Retain both reports only when they fit together; otherwise retain only the individually safe report selected by policy and fail the complete-pair gate. Reject missing, symlink and special-file candidates without reading payloads, mutating reports, or repeating archive passes. Author exact-boundary, overflow, missing/special-file and fixed-output CLI controls for hosted CI. No local quality suite or source-generator entrypoint is run. No profile, signing, credential, capacity or whole-goal acceptance change.
