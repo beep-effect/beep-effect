@@ -26,6 +26,25 @@ const Corpus = S.fromJsonString(
 ).pipe(
   $I.annoteSchema("Corpus", { description: "Sealed original name-validity calls and unmodified disallowed list." })
 );
+/** Construct the shared builtin metadata context for reference-name and pattern replay.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationReferenceNameMetadata = (
+  names: Pick<CitationCaseMetadataFields, "plaintiff" | "defendant" | "resolvedCaseNameShort" | "resolvedCaseName">
+) =>
+  CitationCaseMetadataFields.make({
+    ...names,
+    antecedentGuess: null,
+    court: null,
+    pinCite: null,
+    pinCiteSpanStart: null,
+    pinCiteSpanEnd: null,
+    extra: null,
+    parenthetical: null,
+    year: null,
+    month: null,
+    day: null,
+  });
 /** Complete captured validity replay, source-data authentication and original field ordering.
  * @internal @category testing @since 0.0.0
  */
@@ -47,19 +66,9 @@ export const replayCitationReferenceNames = Effect.fn("ReferenceNamesTest.replay
   }
   const roe = yield* unicode.fromText("Roe");
   const wade = yield* unicode.fromText("Wade");
-  const metadata = CitationCaseMetadataFields.make({
+  const metadata = makeCitationReferenceNameMetadata({
     plaintiff: roe.storage,
     defendant: wade.storage,
-    antecedentGuess: null,
-    court: null,
-    pinCite: null,
-    pinCiteSpanStart: null,
-    pinCiteSpanEnd: null,
-    extra: null,
-    parenthetical: null,
-    year: null,
-    month: null,
-    day: null,
     resolvedCaseNameShort: roe.storage,
     resolvedCaseName: wade.storage,
   });

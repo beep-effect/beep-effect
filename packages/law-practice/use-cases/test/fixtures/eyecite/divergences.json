@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "160dc89d0db734b5d21b7b4ce2e36e990dbe029dce50e639b2a19dade6294517",
+  "planSha256": "2f6b316ed3acc183669c4416cb038ed8374d217d5db08026a2edbf8f1e82a5c9",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -884,7 +884,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationReferenceNames.fixtures.ts",
-          "sha256": "988f224a3bdb6daef4ca9b091dbe8410666af94daeee79b580a8139a233c9c82"
+          "sha256": "1a681491bee9eb6bf9142b555eb282db7e4922025dd80f24abd8611109844669"
         },
         {
           "path": "packages/law-practice/server/test/CitationReferenceNames.test.ts",
@@ -893,6 +893,34 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-name-preparation.md",
           "sha256": "fb0bc9b07a2ed4e2de279d0a4e8f631699cbd17a194fdb542ae2f17177050c9b"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/ReferencePatterns.ts",
+          "sha256": "f13357eb0416e92df46f61416310fe411956f29c70e9d14abd521cbd399f362d"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationReferencePatterns.fixtures.ts",
+          "sha256": "0cbf57ac49506ec200778d487eea3005ef3a3a8e1506f6c0046bc5cdcdb1a8cc"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationReferencePatterns.test.ts",
+          "sha256": "185e8b2f6bb2aa9d141cb7f832e27f6c49222c570c334d7c89a25f6720c876aa"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/reference-template.json",
+          "sha256": "25b2e91fac26f724a24f9822d299169cdc2dde8cd55cb91f1210b01f97ff9e68"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-reference-template.py",
+          "sha256": "5dcc9681b7e99c839d5c91c5c04bd447ac582bb40d6d6ea500480734a5ec1f57"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-reference-template.py",
+          "sha256": "ee1ab2b1555d788afe0a04734f259691cf08fe60aaf14328921cc99138047a64"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-pattern-construction.md",
+          "sha256": "2d0b6e9938fc622939731c1480a3aaa80670e4ff39c430781231ea769efba569"
         }
       ],
       "workflowState": "audit",

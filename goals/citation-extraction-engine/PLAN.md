@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Reference-pattern checkpoint (2026-11-06): validated native names now expand
+source-authenticated pin/markup templates with exact Python escaping. All 65
+existing generated patterns and 278 additional original literal cases match
+complete profiles and bind through the existing compiler. The source capture
+observes re.escape across all 1,114,112 points. Actual generated-reference
+execution and the full extraction loop remain open. See
+[pattern evidence](history/evidence/2026-11-06-reference-pattern-construction.md).
+
 Reference-name runtime checkpoint (2026-11-06): the generated-reference path
 now has original name validation and ordered native candidate preparation using
 existing frozen Python character/lowercase and text-budget services. All 117
