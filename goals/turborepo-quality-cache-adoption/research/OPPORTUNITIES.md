@@ -856,6 +856,21 @@ observed schema difference changed the matrix and next qualification work.
   Fresh observations record the repaired driver bytes rather than re-hashing
   an older observation onto them. A new source binding requires its own replay.
 
+### Isolated selector expectation correction, 2026-11-04
+
+The first single-flag control reached a bare Git-range selector and exposed an
+incorrect dependent-closure expectation in the new harness. The installed run
+reference distinguishes a bare range from an ellipsis selector. Correct the
+explicit oracle rather than changing Turbo, its inputs or the current root
+flags. Retain the failed attempt privately and publish only completed controls;
+a native zero exit alone is not successful selection evidence.
+
+The next case falsified the harness assumption that the two selector flags act
+independently: stable with affectedUsingTaskInputs=false/filterUsingTasks=true
+still omitted an out-of-input change under --affected. Expand to the full
+two-by-two configuration matrix, including both flags false, before asserting
+the narrower model. Preserve both failed attempts; keep feature and computation
+acceptance pending. The experiment has no production task or network access.
 ### Query and dry-run source divergence, 2026-11-04
 
 While preparing current-root selector evidence, source review found that
