@@ -210,31 +210,42 @@ export const makeKbGraphExport = Effect.gen(function* () {
       claims: R.fromEntries(claims),
     });
   });
+  const canaryFailed = (where: string) => KbError.make({ message: `Outward canary check failed${where}` });
+  // The graph output must never resolve to one of the ledger inputs.
+  const refuseLedgerTarget = Effect.fnUntraced(function* (root: string, actual: string) {
+    for (const name of ["claims.jsonl", "assertions.jsonl", "registry.jsonl"]) {
+      const source = path.join(root, name);
+      if ((yield* fs.exists(source)) && (yield* fs.realPath(source)) === actual)
+        return yield* KbError.make({ message: "Graph output cannot replace ledger input" });
+    }
+  });
+  // True when the target already holds these bytes; a differing nonempty target needs --force.
+  const isUnchanged = Effect.fnUntraced(function* (target: string, json: string, force: boolean) {
+    const old = yield* fs.readFileString(target);
+    if (old === json) return true;
+    if (Str.isNonEmpty(old) && !force)
+      return yield* KbError.make({ message: "Output differs and is nonempty; use --force" });
+    return false;
+  });
+  const requireNoCanaryOnDisk = Effect.fnUntraced(function* (target: string) {
+    const written = yield* fs.readFileString(target);
+    if (hasKbCanary({ "graph.json": written })) return yield* canaryFailed(" on disk");
+  });
   return KbGraphExport.of({
     write: Effect.fn("KbGraphExport.write")(
       function* (root, view, out, force) {
         const graph = yield* project(root, view);
         const json = `${yield* S.encodeEffect(S.fromJsonString(KbGraph, { space: 2 }))(graph)}\n`;
-        if (view === "outward" && hasKbCanary({ "graph.json": json }))
-          return yield* KbError.make({ message: "Outward canary check failed" });
+        const outward = view === "outward";
+        if (outward && hasKbCanary({ "graph.json": json })) return yield* canaryFailed("");
         const target = path.resolve(out);
         const targetExists = yield* fs.exists(target);
         const actual = targetExists ? yield* fs.realPath(target) : target;
-        for (const name of ["claims.jsonl", "assertions.jsonl", "registry.jsonl"]) {
-          const source = path.join(root, name);
-          if ((yield* fs.exists(source)) && (yield* fs.realPath(source)) === actual)
-            return yield* KbError.make({ message: "Graph output cannot replace ledger input" });
-        }
-        if (targetExists) {
-          const old = yield* fs.readFileString(target);
-          if (old === json) return graph;
-          if (Str.isNonEmpty(old) && !force)
-            return yield* KbError.make({ message: "Output differs and is nonempty; use --force" });
-        }
+        yield* refuseLedgerTarget(root, actual);
+        if (targetExists && (yield* isUnchanged(target, json, force))) return graph;
         yield* fs.makeDirectory(path.dirname(target), { recursive: true });
         yield* fs.writeFileString(target, json);
-        if (view === "outward" && hasKbCanary({ "graph.json": yield* fs.readFileString(target) }))
-          return yield* KbError.make({ message: "Outward canary check failed on disk" });
+        if (outward) yield* requireNoCanaryOnDisk(target);
         return graph;
       },
       Effect.mapError((error) =>
