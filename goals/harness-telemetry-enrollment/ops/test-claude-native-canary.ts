@@ -13,16 +13,21 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ClaudeNativeCanaryRequest, runClaudeNativeCanary } from "./claude-native-canary.ts";
 import { checkClaudeManagedPolicy, qualifyClaudeManagedPolicy } from "./claude-native-policy.ts";
+import { NativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
 
 const id = (text: string) => Sha256Hex.make(Str.repeat(64)(text));
 const fixture = async (
   options: {
+    hang?: boolean;
     rejectTraceOnce?: boolean;
     badInventory?: boolean;
     staleEpoch?: boolean;
@@ -77,6 +82,10 @@ const fixture = async (
   });
   const context = { evidenceEpoch: options.staleEpoch ? 3 : 2, accepting: true };
   const facts: Array<string> = [];
+  let signalStarted = () => {};
+  const started = new Promise<void>((resolve) => {
+    signalStarted = resolve;
+  });
   const finishedOutcomes: Array<string> = [];
   const dispatchIntents: Array<boolean> = [];
   const traces: Array<Buffer> = [];
@@ -100,6 +109,7 @@ const fixture = async (
     } else if (incoming.url === "/v1/launch-facts") {
       const submitted = await Effect.runPromise(S.decodeEffect(S.fromJsonString(ObservationLaunchSubmission))(body));
       facts.push(submitted.fact._tag);
+      if (submitted.fact._tag === "Started") signalStarted();
       if (submitted.fact._tag === "Finished") {
         finishedOutcomes.push(submitted.fact.outcome);
         if (options.rejectFinished) {
@@ -207,6 +217,7 @@ const fixture = async (
       stdout: options.outputOverflow ? "x".repeat(262145) : reported,
       stderr: "PRIVATE_STDERR",
       exit: options.nativeExit ?? 0,
+      hang: options.hang ?? false,
     };
   });
   const home = AiProviderCliHome.of({
@@ -235,6 +246,7 @@ const fixture = async (
     traces,
     facts,
     finishedOutcomes,
+    started,
     dispatchIntents,
     restartFixtureSocket: async () => {
       await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
@@ -579,3 +591,35 @@ it.live("new invocation re-pins a replaced same-path fixture socket but does not
     }
   })
 );
+
+for (const stop of ["interrupt", "deadline"] as const) {
+  it.live(`external source ${stop} terminalizes as cancelled after cleanup`, () =>
+    Effect.tryPromise(async () => {
+      const f = await fixture({ hang: true });
+      try {
+        if (stop === "interrupt") {
+          const fiber = Effect.runFork(f.run);
+          await f.started;
+          await Effect.runPromise(Fiber.interrupt(fiber));
+          expect(Exit.hasInterrupts(await Effect.runPromise(Fiber.await(fiber)))).toBe(true);
+        } else {
+          const result = await Effect.runPromise(f.run.pipe(Effect.timeout("300 millis"), Effect.result));
+          expect(result._tag).toBe("Failure");
+          if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "TimeoutError" });
+        }
+        expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+        const text = await Fs.readFile(
+          Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
+          "utf8"
+        );
+        const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
+        expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
+        expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
+        expect(diagnostic.nativeExitStatus).toEqual(O.none());
+        expect(text).not.toContain("PRIVATE_");
+      } finally {
+        await f.close();
+      }
+    })
+  );
+}

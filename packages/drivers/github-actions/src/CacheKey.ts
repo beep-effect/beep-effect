@@ -347,7 +347,8 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
     S.makeFilter(
       // effect 4.0.6 renders a check's `message` annotation as the issue message,
       // ahead of any string the predicate returns, so the described text lives there.
-      (key) => key.restoreDepths === undefined || key.restoreDepths.every((depth) => depth <= key.segments.length - 1),
+      (key) =>
+        key.restoreDepths === undefined || A.every(key.restoreDepths, (depth) => depth <= key.segments.length - 1),
       $I.annote("RestoreDepthWithinSegments", {
         message:
           "every restore depth must be between 1 and segments.length - 1 — a rung keeping every segment would just repeat the primary key",

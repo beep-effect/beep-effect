@@ -22,6 +22,9 @@ pre-commit:
       glob: "*.{ts,tsx,js,jsx,md,json}"
       exclude: ".beep/**|goals/**|outputs/**|scratchpad/**"
       run: typos --exclude '.beep/**' --exclude 'scratchpad/**'
+    cache-profile:
+      glob: "{biome.jsonc,biome.identity.jsonc}"
+      run: bun run beep cache profile
     instructions-drift:
       glob: "{CLAUDE.md,AGENTS.md}"
       run: bun run instructions:drift

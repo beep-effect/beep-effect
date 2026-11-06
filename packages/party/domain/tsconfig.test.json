@@ -12,5 +12,22 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../foundation/modeling/epistemics/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../shared/domain/tsconfig.json"
+    }
+  ]
 }

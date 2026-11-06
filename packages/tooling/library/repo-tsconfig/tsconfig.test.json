@@ -12,5 +12,28 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../../foundation/capability/walker/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/jsonc/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/tsconfig/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/memfs/tsconfig.json"
+    }
+  ]
 }

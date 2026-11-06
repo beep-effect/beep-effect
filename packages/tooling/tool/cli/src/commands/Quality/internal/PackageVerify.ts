@@ -19,7 +19,7 @@ import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -928,7 +928,13 @@ export const renderPackageVerifyReportForTesting = (report: PackageVerifyReport)
 };
 
 /**
- * Run package verification and render the CLI result.
+ * Run package verification sequentially and render each CLI result.
+ *
+ * **Details**
+ *
+ * Repeated names run once. With no names, infer the package from the current
+ * directory or changed files. Diagnostic failures do not skip later packages;
+ * the command exits unsuccessfully if any requested package fails.
  *
  * **Example** (Run CLI package verify)
  *
@@ -962,23 +968,25 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
   | Digest.Digest
   | Git
 > {
-  if (A.length(packageArgs) > 1) {
-    return yield* fail(`pkg-verify: expected at most one package argument, received ${A.length(packageArgs)}.`);
-  }
-
-  const report = yield* runPackageVerify({
-    packageName: pipe(A.head(packageArgs), O.map(Str.trim), O.filter(Str.isNonEmpty)),
-    quick,
-  });
-
-  yield* recordPackageVerifyInboxForTesting(report).pipe(
-    Effect.catch((error) => Console.error(`[pkg-verify] failed to update the checkout inbox: ${error.message}`))
+  const names = A.dedupe(A.map(packageArgs, Str.trim));
+  const targets = A.isReadonlyArrayNonEmpty(names) ? A.map(names, O.some) : [O.none<string>()];
+  // Keep package work sequential: each check already admits its upstream build.
+  // A diagnostic failure must not hide the results of later requested packages.
+  const failures = yield* Effect.forEach(
+    targets,
+    Effect.fnUntraced(function* (packageName) {
+      const report = yield* runPackageVerify({ packageName, quick });
+      yield* recordPackageVerifyInboxForTesting(report).pipe(
+        Effect.catch((error) => Console.error(`[pkg-verify] failed to update the checkout inbox: ${error.message}`))
+      );
+      yield* Effect.forEach(renderPackageVerifyReportForTesting(report), (line) => Console.log(line), {
+        discard: true,
+      });
+      return A.some(report.results, (result) => !result.ok && !result.skipped);
+    }),
+    { concurrency: 1 }
   );
-
-  yield* Effect.forEach(renderPackageVerifyReportForTesting(report), (line) => Console.log(line), { discard: true });
-
-  const failed = A.filter(report.results, (result) => !result.ok && !result.skipped);
-  if (A.isReadonlyArrayNonEmpty(failed)) {
+  if (A.some(failures, identity)) {
     return yield* QualityScriptCommandError.make({ message: "pkg-verify failed.", exitCode: 1 });
   }
 });

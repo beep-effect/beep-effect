@@ -2,15 +2,16 @@
 
 ## State
 
-The campaign is paused. P0 is the authorized packet delivery; P1-P5 require
-explicit audit activation. [SPEC.md](./SPEC.md) is normative.
+The campaign is active under explicit operator authorization. P1-P3 have partial
+execution and reviewed local repair evidence; P4-P5 remain pending. See
+[the execution record](./history/2026-11-06-reviewed-local-repairs.md). [SPEC.md](./SPEC.md) is normative.
 
 | Phase | Status | Work | Exit |
 | --- | --- | --- | --- |
 | P0 | complete | Research, author, review, and publish the planning packet | Docs-only PR reaches mergeable; agent leaves it open at handoff; audit stays paused |
-| P1 | pending | Freeze census; build/reuse read-only extraction and evidence reports | All surface families accounted for; initial report and extraction-quality review recorded |
-| P2 | pending | Verify claims and evaluate optional Jev pilot | Typed determinations and reviewed evidence; Jev admitted or explicit fallback |
-| P3 | pending | Reconcile skills and repair confirmed discrepancies | Approved report scope, preserved customization, before/after proof |
+| P1 | in-progress | Freeze census; build/reuse read-only extraction and evidence reports | All surface families accounted for; initial report and extraction-quality review recorded |
+| P2 | in-progress | Verify claims and evaluate optional Jev pilot | Typed determinations and reviewed evidence; Jev admitted or explicit fallback |
+| P3 | in-progress | Reconcile skills and repair confirmed discrepancies | Approved report scope, preserved customization, before/after proof |
 | P4 | pending | Recheck final tree, complete coverage, and land precise gates | No unresolved required obligations; repairs and regressions verified |
 | P5 | pending | Final audit PR closeout and reflection | Exact-head mergeable proof; lifecycle closeout lands with final work |
 
@@ -97,8 +98,8 @@ publication tree so evidence-only additions cannot conceal unaudited source edit
 Land permanent deterministic protection for demonstrated finding classes using
 the parent initiative's existing gates. Keep new semantic model judgments
 advisory. Close each delivery PR through Yeet and confirm the final aggregate
-acceptance matrix. Write the final reflection and lifecycle change in the same
-PR as final audit work. The operator authorizes merging separately.
+acceptance matrix. Write the final reflection and proposed closeout in the final work PR; adopt
+verified completion afterward through the separate packet-state PR required by AGENTS.md. The operator authorizes merging separately.
 
 ## Packet verification commands
 

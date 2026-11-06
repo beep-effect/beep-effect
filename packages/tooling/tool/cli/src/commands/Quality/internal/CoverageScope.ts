@@ -78,6 +78,10 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["goals/ship-velocity/research/branch-protection-contexts.json", "@beep/repo-cli"],
   ["goals/*/ops/manifest.json", "@beep/repo-cli"],
   ["standards/schema-crispening.policy.jsonc", "@beep/repo-cli"],
+  // Generated governance data is consumed by tooling, not by every runtime package.
+  ["standards/effect-vitest.inventory.jsonc", "@beep/repo-cli"],
+  ["standards/schema-catalog/**/*.generated.jsonc", "@beep/repo-cli"],
+  ["standards/schema-catalog/**/*.generated.jsonc", "@beep/repo-cli-kit"],
   ["standards/effect-laws.allowlist.jsonc", "@beep/repo-configs"],
   [".claude/skills/effect-first-development/SKILL.md", "@beep/repo-configs"],
   [".claude/hooks/yeet-inbox.sh", "@beep/repo-cli"],

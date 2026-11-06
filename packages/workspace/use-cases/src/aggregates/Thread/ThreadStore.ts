@@ -96,7 +96,7 @@ export class CreateThreadInput extends S.Opaque<CreateThreadInput, { readonly br
  */
 export class AppendTurnInput extends S.Opaque<AppendTurnInput, { readonly brand: unique symbol }>()(
   S.Struct({
-    content: Document.annotateKey({
+    content: S.suspend(() => Document).annotateKey({
       description: "Message content appended as the turn's first visible message.",
     }),
     parentTurnId: S.Option(WorkspaceIdentity.TurnId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({

@@ -1036,35 +1036,42 @@ const planPackageReferenceSync = Effect.fn(function* (
   return plannedChanges;
 });
 
-// The check overlay extends `./tsconfig.json`, but `references` is not
+// Check and test overlays may extend `tsconfig.json`, but `references` is not
 // inherited through `extends`: an overlay with `"references": []` typechecks
 // every upstream package from source, while one that carries the canonical
 // references consumes their built declarations (quality-lane audit D3). The
-// planner therefore copies the canonical reference list verbatim, reading it
+// planner therefore copies the canonical reference targets, reading them
 // from the content planned for `tsconfig.json` in this run when there is one
 // so a single sync leaves both files in agreement.
 const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
   workspace: WorkspaceDescriptor,
-  plannedCanonicalContent: HashMap.HashMap<string, string>
+  plannedCanonicalContent: HashMap.HashMap<string, string>,
+  overlayRelativePath: string
 ) {
-  if (!workspace.hasCheckTsconfig || !workspace.hasProjectTsconfig) {
+  if (!workspace.hasProjectTsconfig) {
     return O.none<PlannedFileChange>();
   }
 
   const path = yield* Path.Path;
+  const fs = yield* FileSystem.FileSystem;
   // The overlay mirrors the project package-references maintains: the owner
   // tsconfig (tsconfig.build.json when one exists, else tsconfig.json), read
   // from this run's planned content so a same-run reference change lands in
   // both files.
   const canonicalPath = workspace.ownerTsconfigPath ?? path.join(workspace.absoluteDir, "tsconfig.json");
-  const overlayPath = path.join(workspace.absoluteDir, CHECK_TSCONFIG_FILENAME);
+  const overlayPath = path.join(workspace.absoluteDir, overlayRelativePath);
+  if (!(yield* fs.exists(overlayPath).pipe(Effect.orElseSucceed(thunkFalse)))) {
+    return O.none<PlannedFileChange>();
+  }
 
   const canonicalContent = yield* pipe(
     HashMap.get(plannedCanonicalContent, canonicalPath),
     O.match({ onNone: () => readFileString(canonicalPath), onSome: Effect.succeed })
   );
   const canonical = yield* parseJsonc(canonicalContent, canonicalPath, TsconfigJson);
-  const expected = compareReferencePathsInOrder(canonical);
+  const expected = A.map(compareReferencePathsInOrder(canonical), (reference) =>
+    toPosixPath(path.relative(path.dirname(overlayPath), path.resolve(path.dirname(canonicalPath), reference)))
+  );
 
   const original = yield* readFileString(overlayPath);
   const overlay = yield* parseJsonc(original, overlayPath, TsconfigJson);
@@ -1090,8 +1097,8 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
 });
 
 /**
- * Plan per-package `tsconfig.check.json` reference edits so every check
- * overlay carries exactly the references of its canonical `tsconfig.json`.
+ * Plan per-package check and test reference edits so every overlay consumes
+ * the built dependencies of its canonical project.
  *
  * **Details**
  *
@@ -1126,8 +1133,10 @@ const planPackageCheckReferenceSync = Effect.fn(function* (
   const plannedChanges = A.empty<PlannedFileChange>();
 
   for (const workspace of targetWorkspaces) {
-    const change = yield* planOnePackageCheckReferenceSync(workspace, plannedCanonicalContent);
-    pipe(change, O.match({ onNone: thunkUndefined, onSome: (planned) => A.appendInPlace(plannedChanges, planned) }));
+    for (const overlayRelativePath of [CHECK_TSCONFIG_FILENAME, "tsconfig.test.json", "test/tsconfig.json"]) {
+      const change = yield* planOnePackageCheckReferenceSync(workspace, plannedCanonicalContent, overlayRelativePath);
+      pipe(change, O.match({ onNone: thunkUndefined, onSome: (planned) => A.appendInPlace(plannedChanges, planned) }));
+    }
   }
 
   return plannedChanges;

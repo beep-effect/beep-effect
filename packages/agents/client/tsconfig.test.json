@@ -13,5 +13,40 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/observability/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/md/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../shared/domain/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    },
+    {
+      "path": "../../workspace/use-cases/tsconfig.json"
+    }
+  ]
 }

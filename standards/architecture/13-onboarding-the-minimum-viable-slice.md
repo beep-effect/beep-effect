@@ -69,9 +69,10 @@ The slice's tests run with the slice's `Layer` only — no app-wide composition,
 
 A second slice (`tasks`) needs to attach tasks to notes. It needs `NoteId` to
 reference a note and a `NoteCreated` event to react to new notes. The `notes`
-slice owner promotes both into future `shared/use-cases`. One PR. One promotion
-record per export. The package is created only if it does not already exist; it
-does not exist today because nothing has met that bar.
+slice owner promotes both into the existing `shared/use-cases` package. One PR.
+One promotion record per export. The existing
+[PromotionGate record](../../packages/shared/use-cases/README.md) does not
+authorize unrelated exports; the notes contracts need their own accepted records.
 
 After promotion, the exports land at canonical paths under `shared/use-cases`:
 

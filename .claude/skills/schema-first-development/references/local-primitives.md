@@ -47,7 +47,7 @@ What it gives you:
 - schema value
 - `.Enum`
 - `.is`
-- `$match`
+- `match`
 - `.toTaggedUnion(...)` for direct literal-to-member tagged unions
 - the inherited `S.Literals` members: `.literals`, `.pick(...)`, and
   `.mapMembers(...)` for tagged-union assembly
@@ -74,16 +74,18 @@ Good fits:
 
 ## Preserve Static Helpers After Rebuilds
 
-Schema annotations and transformations can rebuild schema values. If a
-`LiteralKit` value needs to keep its helper surface after a rebuild, use the
-repo helper that reattaches those statics instead of hand-copying properties:
+`LiteralKit` preserves its helpers across `annotate`, `annotateKey`, and
+`check` through its `Rebuild` member. Derivations that create a different
+schema, such as `S.brand`, need the repo helper to reattach the original
+kit statics instead of hand-copying properties:
 
 ```ts
 import { LiteralKit } from "@beep/schema";
+import * as S from "effect/Schema";
 import { withLiteralKitStatics } from "@beep/schema/SchemaUtils/withLiteralKitStatics"
 
 const StatusBase = LiteralKit(["draft", "published"])
-const Status = StatusBase.pipe(withLiteralKitStatics(StatusBase))
+const Status = StatusBase.pipe(S.brand("Status"), withLiteralKitStatics(StatusBase))
 ```
 
 ## Prefer Shared Schemas Before New Brands

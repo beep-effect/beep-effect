@@ -221,33 +221,59 @@ function UserCard({ userId }: { readonly userId: string }) {
 
 ## 9) Optimistic updates
 
+`Atom.optimistic` displays a transition's waiting `Success` value. Supply the
+local projection through `initialValue`; a pending mutation without that value
+does not show an immediate optimistic change. Render from the optimistic atom,
+not from the original query or a stale item snapshot.
+
+Here `todosAtom` is the caller's resolved list-query atom: refreshing it must
+reread the committed list after `toggle` succeeds. A failed transition rolls
+back to the latest source value. This example covers one pending transition;
+concurrent edits need an explicit reconciliation policy.
+
 ```tsx
 import { $SchemaId } from "@beep/identity/packages";
-const $I = $SchemaId.create("examples");
-import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Context from "effect/Context";
+import * as Match from "effect/Match";
+import * as S from "effect/Schema";
 import * as Atom from "effect/reactivity/Atom";
-import { useAtom } from "@effect/atom-react";
-type Todo = { readonly id: string; readonly title: string };
-class TodoService extends Context.Service<TodoService, { readonly list: Effect.Effect<ReadonlyArray<Todo>>; readonly create: (title: string) => Effect.Effect<Todo>; readonly toggle: (id: string) => Effect.Effect<ReadonlyArray<Todo>> }>()($I`TodoService`) {}
+import { useAtom, useAtomValue } from "@effect/atom-react";
+const $I = $SchemaId.create("examples");
+const Todo = S.Struct({ id: S.String, title: S.String, completed: S.Boolean });
+type Todo = typeof Todo.Type;
+class ToggleError extends S.TaggedError<ToggleError, { readonly brand: unique symbol }>()("ToggleError", { message: S.String }) {}
+class TodoService extends Context.Service<TodoService, {
+  readonly list: Effect.Effect<ReadonlyArray<Todo>>;
+  readonly toggle: (id: string) => Effect.Effect<ReadonlyArray<Todo>, ToggleError>;
+}>()($I`TodoService`) {}
 declare const todoRuntime: Atom.AtomRuntime<TodoService>;
 declare const todosAtom: Atom.Atom<ReadonlyArray<Todo>>;
 const optimisticTodos = Atom.optimistic(todosAtom)
 
 function TodoItem({ todo }: { readonly todo: Todo }) {
-  const [, setOptimistic] = useAtom(optimisticTodos)
+  const [todos, setOptimistic] = useAtom(optimisticTodos)
 
   const handleToggle = () => {
-    // Show optimistic value immediately, revert if mutation fails
+    const initialValue: ReadonlyArray<Todo> = A.map(todos, (current) => Match.value(current).pipe(
+      Match.when({ id: todo.id }, (item) => ({ ...item, completed: !item.completed })),
+      Match.orElse(() => current)
+    ))
     setOptimistic(
       todoRuntime.atom(
-        TodoService.use((_) => _.toggle(todo.id))
+        TodoService.use((_) => _.toggle(todo.id)),
+        { initialValue }
       )
     )
   }
 
-  return <div onClick={handleToggle}>{todo.title}</div>
+  return <label><input type="checkbox" checked={todo.completed} onChange={handleToggle} />{todo.title}</label>
+}
+
+function TodoList() {
+  const todos = useAtomValue(optimisticTodos)
+  return <ul>{A.map(todos, (todo) => <li key={todo.id}><TodoItem todo={todo} /></li>)}</ul>
 }
 ```
 

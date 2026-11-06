@@ -1254,6 +1254,7 @@ jobs:
     name: JSDoc Ratchet
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     steps:
@@ -1287,6 +1288,16 @@ jobs:
         uses: ./.github/actions/setup-monorepo-ci
         with:
           use-node: "false"
+          turbo-remote-cache: "true"
+          turbo-api: ${{ vars.TURBO_API }}
+          turbo-team: ${{ vars.TURBO_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
 
       - name: Run JSDoc inventory ratchet
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -1306,6 +1317,14 @@ jobs:
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping JSDoc Ratchet for this change set."
+
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi
 
   commitlint:
     name: Commitlint
