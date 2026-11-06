@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationSourceRole } from "@beep/law-practice-use-cases/server";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
@@ -9,7 +10,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
   CitationCanonicalSourceResult,
-  CitationSourceRole,
   deriveCitationCanonicalSource,
   retainCitationCanonicalSource,
 } from "./CanonicalSource.ts";

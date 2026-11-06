@@ -18,6 +18,17 @@ export {
   CitationOperationUnsupported,
   CitationPrerequisiteError,
 } from "./CitationEngine/CitationEngine.errors.ts";
+/** Server-only raw source components and named modes; no callback request fields.
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  CitationBuiltinCleanerName,
+  CitationCleanerContainerKind,
+  CitationEngineExtractionOptions,
+  CitationEngineSourceInput,
+  CitationSourceRole,
+} from "./CitationEngine/CitationEngine.input.ts";
 /**
  * Schema-owned citation safety ceilings and explicitly supplied execution policy.
  *
@@ -86,7 +97,8 @@ export * from "./ClaimSelfCheck.tools.ts";
  * @since 0.0.0
  */
 export * as DailyNotice from "./DailyNotice/index.ts";
-/** Document identification schemas, ports and pure pipeline. @category services @since 0.0.0 */
+/** Document identification schemas, ports and pure pipeline. @category services
+ * @since 0.0.0 */
 export * as DocumentIdentification from "./DocumentIdentification/index.ts";
 /**
  * IR-to-law mapping service contract exports.
@@ -134,7 +146,8 @@ export * as MailTagging from "./MailTagging/index.ts";
  * @since 0.0.0
  */
 export * as OfficeActionReview from "./OfficeActionReview/index.ts";
-/** Atomic office-action evidence exports. @category services @since 0.0.0 */
+/** Atomic office-action evidence exports. @category services
+ * @since 0.0.0 */
 export * as OfficeActionStructure from "./OfficeActionStructure/index.ts";
 /**
  * Typed patent-claim candidate mapping exports.

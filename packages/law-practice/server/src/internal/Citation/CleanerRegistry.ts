@@ -5,7 +5,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationBuiltinCleanerName,
+  CitationEngineLimits,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
@@ -18,7 +22,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { CitationBuiltinCleaners } from "./BuiltinCleaners.ts";
 import { CitationCleanerFailure, CitationCleanerRuntime, CitationLiveCleanerObject } from "./CleanerPipeline.ts";
-import { CitationBuiltinCleanerName, CitationCleanerValues } from "./CleanerValues.ts";
+import { CitationCleanerValues } from "./CleanerValues.ts";
 import { makeCitationPythonHash } from "./PythonHash.ts";
 import {
   CitationRuntimeDictionaryComparison,

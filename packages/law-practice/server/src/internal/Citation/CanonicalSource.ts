@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationSourceRole } from "@beep/law-practice-use-cases/server";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import {
   VerifiedSourceText,
@@ -38,14 +39,7 @@ export class CitationCanonicalSourceFailure extends S.TaggedError<
   })
 ) {}
 const failed = (reason: typeof Reason.Type) => CitationCanonicalSourceFailure.make({ reason });
-/** @internal @category models @since 0.0.0 */
-export const CitationSourceRole = LiteralKit(["plain", "markup"]).pipe(
-  $I.annoteSchema("CitationSourceRole", {
-    description: "Which original primitive argument receives the authenticated source text.",
-  })
-);
-/** @internal @category models @since 0.0.0 */
-export type CitationSourceRole = typeof CitationSourceRole.Type;
+
 /** @internal @category models @since 0.0.0 */
 export class CitationSourceDerivationModes extends S.Opaque<
   CitationSourceDerivationModes,

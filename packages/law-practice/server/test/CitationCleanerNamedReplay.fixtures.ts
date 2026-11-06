@@ -6,7 +6,7 @@ import {
   CitationCleanerFailure,
   CitationCleanerRuntime,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import { CitationBuiltinCleanerName } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { CitationBuiltinCleanerName } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
 import { expect } from "@effect/vitest";

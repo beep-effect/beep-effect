@@ -5,8 +5,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import { LiteralKit } from "@beep/schema";
+import {
+  CitationBuiltinCleanerName,
+  CitationEngineLimits,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -30,20 +33,7 @@ type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 const CitationCleanerTextOutputType = S.toType(CitationCleanerTextOutput);
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerValues");
-/** @internal @category models @since 0.0.0 */
-export const CitationBuiltinCleanerName = LiteralKit([
-  "html",
-  "inline_whitespace",
-  "all_whitespace",
-  "underscores",
-  "xml",
-]).pipe(
-  $I.annoteSchema("CitationBuiltinCleanerName", {
-    description: "Pinned builtin function selection, not the live clean_text step/registry domain.",
-  })
-);
-/** @internal @category models @since 0.0.0 */
-export type CitationBuiltinCleanerName = typeof CitationBuiltinCleanerName.Type;
+
 /** @internal @category models @since 0.0.0 */
 export class CitationCleanerValueSnapshot extends S.Opaque<
   CitationCleanerValueSnapshot,

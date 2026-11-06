@@ -3,13 +3,16 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationEngineExtractionOptions,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationBuiltinCleanerName } from "./CleanerValues.ts";
 import { CitationDocumentStepContainers } from "./DocumentCleanerProtocols.ts";
 import {
   CitationDocumentExtractionConfiguration,
@@ -53,13 +56,7 @@ export class CitationExtractionEntryInput extends S.Opaque<
   S.Struct({
     plain: Source.pipe(S.withDecodingDefaultKey(Effect.succeed(""))),
     markup: Source.pipe(S.withDecodingDefaultKey(Effect.succeed(""))),
-    cleanSteps: S.Array(CitationBuiltinCleanerName)
-      .check(S.isMaxLength(CitationEngineAbsoluteMaxima.resolutionIterations))
-      .pipe(S.NullOr, S.withDecodingDefaultKey(Effect.succeed(null))),
-    container: S.Literals(["list", "tuple", "generator"]).pipe(
-      S.withDecodingDefaultKey(Effect.succeed<"list">("list"))
-    ),
-    removeAmbiguous: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(false))),
+    ...CitationEngineExtractionOptions.fields,
   }).pipe(
     $I.annoteSchema("CitationExtractionEntryInput", {
       description:

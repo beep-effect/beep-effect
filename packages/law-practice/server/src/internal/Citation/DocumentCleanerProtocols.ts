@@ -4,7 +4,12 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationBuiltinCleanerName,
+  CitationCleanerContainerKind,
+  CitationEngineLimits,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -16,14 +21,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationCleanerFailure } from "./CleanerPipeline.ts";
 import { CitationCleanerProtocols } from "./CleanerRegistry.ts";
-import { CitationBuiltinCleanerName, CitationCleanerValues } from "./CleanerValues.ts";
+import { CitationCleanerValues } from "./CleanerValues.ts";
 import { CitationDocumentInputFailure, CitationDocumentInputProtocols } from "./InputDocument.ts";
 import type { CitationCleanerObject } from "./CleanerPipeline.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DocumentCleanerProtocols");
-const Kind = LiteralKit(["list", "tuple", "generator"]).pipe(
-  $I.annoteSchema("Kind", { description: "Explicit server-owned named list, tuple or one-shot generator." })
-);
 const GeneratorState = S.Struct({
   position: S.Natural,
   state: LiteralKit(["GEN_CREATED", "GEN_SUSPENDED", "GEN_CLOSED"]),
@@ -40,7 +42,7 @@ export class CitationDocumentCleanerContainerState extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    kind: Kind,
+    kind: CitationCleanerContainerKind,
     size: S.Natural,
     generator: S.Option(GeneratorState),
   }).pipe(
@@ -49,11 +51,11 @@ export class CitationDocumentCleanerContainerState extends S.Opaque<
     })
   )
 ) {}
-const Input = S.Struct({ kind: Kind, names: S.Array(CitationBuiltinCleanerName) }).pipe(
+const Input = S.Struct({ kind: CitationCleanerContainerKind, names: S.Array(CitationBuiltinCleanerName) }).pipe(
   $I.annoteSchema("Input", { description: "Trusted named-container configuration; no host iterator or callback data." })
 );
 type Entry = {
-  readonly kind: typeof Kind.Type;
+  readonly kind: CitationCleanerContainerKind;
   readonly names: ReadonlyArray<CitationBuiltinCleanerName>;
   readonly values: ReadonlyArray<CitationCleanerObject>;
   readonly plan: string;

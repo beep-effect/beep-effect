@@ -1325,6 +1325,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert server-only failure/operation exports and the narrow translator; preserve safety payloads and all goal requirements.
 
+### Verify raw source components through the existing resolver, 2026-11-06
+
+Server-only source/options components share builtin/container/role schemas with private implementation. The adapter reuses SourceTextResolver and the public provenance verifier, snapshots before resolver work, preflights sizes and preserves ignored shortcut getters. Connected replay now issues input proofs through that production boundary. Single-source scope is explicit; complete dual-source/retained-input dispatch, reports, ports and service/Layer remain open. Corrected hosted JSDoc/docgen missing-since failures by separating tags, without baseline changes. See history/evidence/2026-11-06-source-request-boundary.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the source adapter/shared mode ownership and replay wiring; retain original source proofs and every full-goal requirement.
+
 ### Verified primary occurrence adaptation, 2026-11-06
 
 Builtin semantic results now produce primary mentions only against genuine source capabilities for the exact tokenizer text. Existing canonical offset conversion, provenance verification and cm1 production are reused. Shortcut, invalid spans and native/JavaScript point-layout differences retain explicit unverified semantic data. Shared code-point conversion now scans cooperatively without whole-source arrays or prefix joins, with unchanged public contract. Forty prerequisite tests and both-runtime source/mention regression pass. Full-span/component evidence, warning translation, canonical source production for cleaning and the public service/Layer remain open. See history/evidence/2026-11-06-occurrence-projection.md.

@@ -13,11 +13,11 @@ import {
   makeCitationCleanerRegistry,
 } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
 import {
-  CitationBuiltinCleanerName,
   CitationCleanerValues,
   makeCitationCleanerValues,
 } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { CitationBuiltinCleanerName } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

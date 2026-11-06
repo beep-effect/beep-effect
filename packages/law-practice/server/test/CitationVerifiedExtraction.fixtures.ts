@@ -1,7 +1,9 @@
 /** Authenticated input artifact through the complete live extraction path.
  * @internal @packageDocumentation @since 0.0.0
  */
+import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
+import { makeCitationSourceRequestAdapter } from "@beep/law-practice-server/internal/Citation/SourceRequest";
 import { makeCitationVerifiedExtraction } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
@@ -15,6 +17,7 @@ import { assertCitationNativeRange, citationFixtureSourceProof } from "./Citatio
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 type Installed = Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>;
 type SourceRow = Installed["corpus"]["cases"][number];
@@ -49,22 +52,30 @@ const assertManifestation = (actual: VerifiedResult, source: VerifiedSourceText,
 };
 const inputForRow = Effect.fnUntraced(function* (
   unicode: Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>,
-  row: SourceRow
+  row: SourceRow,
+  limits: CitationEngineLimits
 ) {
   const markup = row.markup.bytes.length > 0;
   const rawText = yield* unicode.fromStorage(markup ? row.markup : row.plain);
   const source = yield* citationFixtureSourceProof(rawText.text);
-  return {
-    markup,
-    rawText: rawText.text,
-    source,
-    request: {
-      source,
-      role: markup ? "markup" : "plain",
-      cleanSteps: markup ? ["html"] : [],
-      removeAmbiguous: row.removeAmbiguous,
-    },
-  };
+  const adapter = yield* makeCitationSourceRequestAdapter(limits).pipe(
+    Effect.provideService(
+      SourceTextResolver,
+      SourceTextResolver.of({
+        resolve: Effect.fn("VerifiedExtractionTest.resolveSource")(() =>
+          Effect.succeed(ResolvedSourceText.make({ identity: source.source, text: source.sourceText }))
+        ),
+      })
+    )
+  );
+  const request = yield* adapter.prepare({
+    source: source.source,
+    sourceText: rawText.text,
+    role: markup ? "markup" : "plain",
+    cleanSteps: markup ? ["html"] : [],
+    removeAmbiguous: row.removeAmbiguous,
+  });
+  return { markup, rawText: rawText.text, source: request.source, request };
 });
 /** No test-generated output evidence: the production composition derives it. */
 export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTest.replay")(function* (
@@ -102,7 +113,7 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
   expect(forged).toMatchObject({ reason: "invalid-input" });
   const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   for (const row of rows) {
-    const input = yield* inputForRow(unicode, row);
+    const input = yield* inputForRow(unicode, row, setup.limits).pipe(Effect.provideContext(provided));
     const invocation = stage.extract(input.request);
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
     const actual = yield* closed;

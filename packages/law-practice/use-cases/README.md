@@ -29,6 +29,14 @@ payloads. Unknown/ambiguous/unresolved citation meanings remain domain data.
 These contracts do not publish a live `CitationEngine` service yet. Root and
 `/public` do not re-export them.
 
+Single-source `CitationEngineSourceInput` and named
+`CitationEngineExtractionOptions` components also export only from `/server`.
+Builtin cleaner names, container kinds and source roles have one schema owner
+there, reused by private server implementation. Decoding source data grants no
+verified-source capability. The private adapter uses the existing canonical
+`SourceTextResolver` and provenance verifier; full dual-source/retained-Document
+request dispatch and the complete service contract remain unfinished.
+
 Citation oracle corpus,
 accounting, divergence and benchmark schemas export only from `/test`;
 production code must not import that subpath. These test schemas are evidence

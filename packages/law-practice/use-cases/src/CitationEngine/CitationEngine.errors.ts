@@ -1,5 +1,6 @@
 /** Closed server-only citation failures; no client or protocol surface.
- * @packageDocumentation @since 0.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
@@ -19,7 +20,8 @@ const Dependency = LiteralKit(["source-evidence", "court-reporter-vocabulary"]).
  * import { CitationInputError } from "@beep/law-practice-use-cases/server"
  * console.log(CitationInputError.make({ operation: "extract" })._tag) // "CitationInputError"
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export class CitationInputError extends S.TaggedError<CitationInputError, { readonly brand: unique symbol }>(
   $I`CitationInputError`
@@ -37,7 +39,8 @@ export class CitationInputError extends S.TaggedError<CitationInputError, { read
  * console.log(CitationPrerequisiteError.make({ operation: "extract", dependency: "source-evidence" }).dependency)
  * // "source-evidence"
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export class CitationPrerequisiteError extends S.TaggedError<
   CitationPrerequisiteError,
@@ -55,7 +58,8 @@ export class CitationPrerequisiteError extends S.TaggedError<
  * import { CitationAnnotationError } from "@beep/law-practice-use-cases/server"
  * console.log(CitationAnnotationError.make({}).operation) // "annotate"
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export class CitationAnnotationError extends S.TaggedError<CitationAnnotationError, { readonly brand: unique symbol }>(
   $I`CitationAnnotationError`
@@ -73,7 +77,8 @@ export class CitationAnnotationError extends S.TaggedError<CitationAnnotationErr
  * import { CitationOperationUnsupported } from "@beep/law-practice-use-cases/server"
  * console.log(CitationOperationUnsupported.make({ operation: "annotate" })._tag) // "CitationOperationUnsupported"
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export class CitationOperationUnsupported extends S.TaggedError<
   CitationOperationUnsupported,
@@ -94,7 +99,8 @@ export class CitationOperationUnsupported extends S.TaggedError<
  * import * as S from "effect/Schema"
  * console.log(S.is(CitationEngineFailure)(CitationInputError.make({ operation: "extract" }))) // true
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export const CitationEngineFailure = S.Union([
   CitationInputError,
@@ -114,6 +120,7 @@ export const CitationEngineFailure = S.Union([
  * const failure: CitationEngineFailure = CitationInputError.make({ operation: "extract" })
  * console.log(failure.operation) // "extract"
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export type CitationEngineFailure = typeof CitationEngineFailure.Type;
