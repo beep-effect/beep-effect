@@ -4,7 +4,12 @@ Read when you submit a `--detach` job or wait on one with `bun run beep yeet job
 
 Use `--detach` for a proof expected to outlive the current repair loop. It runs
 as a transient systemd user service and reports completion or death through the
-checkout inbox. An unavailable user manager is an error.
+checkout inbox. Explicit `--detach` still requires an available user manager.
+The ordinary publish tail first reuses a live registered monitor. When none is
+available and the user manager cannot host a new one, publication continues with
+an attached `monitor --until-ready` instead of asking you to repeat a failed
+background submission. Keep that publish process alive; it is not durable and
+prints an attached-monitor continuation command if monitoring needs attention.
 
 ```bash
 bun run beep yeet verify --tier cheap-gates --detach
