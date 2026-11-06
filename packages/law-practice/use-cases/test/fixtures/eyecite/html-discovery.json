@@ -1,0 +1,4714 @@
+{
+  "cases": [
+    {
+      "family": "empty",
+      "id": 0,
+      "markup": {
+        "bytes": "",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "short-tags",
+      "id": 1,
+      "markup": {
+        "bytes": "3c3e203c693e203c2f3e203c2f693e203c613e203c2f613e203c493e203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c3e203c693e203c2f3e203c2f583e203c613e203c2f583e203c493e203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 15,
+          "start": 3,
+          "text": {
+            "bytes": "3c2f3e",
+            "width": 1
+          }
+        },
+        {
+          "end": 33,
+          "start": 25,
+          "text": {
+            "bytes": "",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "non-elements",
+      "id": 2,
+      "markup": {
+        "bytes": "3c212d2d782d2d3e3c21444f43545950452068746d6c3e3c3f783f3e3c610a783e626f64793c2f613e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c212d2d782d2d3e3c21444f43545950452068746d6c3e3c3f783f3e3c5858583e626f64793c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "nested-mixed",
+      "id": 3,
+      "markup": {
+        "bytes": "3c693e3c656d3e413c2f656d3e423c2f693e3c656d3e433c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e3c58583e413c2f58583e423c2f583e3c58583e433c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 0,
+          "text": {
+            "bytes": "3c656d3e413c2f656d3e42",
+            "width": 1
+          }
+        },
+        {
+          "end": 28,
+          "start": 18,
+          "text": {
+            "bytes": "43",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "nested-same",
+      "id": 4,
+      "markup": {
+        "bytes": "3c693e413c693e423c2f693e433c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e413c693e423c2f583e433c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "413c693e42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "mismatched-inner",
+      "id": 5,
+      "markup": {
+        "bytes": "3c656d3e413c2f693e423c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e413c2f583e423c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 15,
+          "start": 0,
+          "text": {
+            "bytes": "413c2f693e42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "adjacent",
+      "id": 6,
+      "markup": {
+        "bytes": "3c693e413c2f693e3c693e423c2f693e3c656d3e433c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e413c2f583e3c693e423c2f583e3c58583e433c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 8,
+          "start": 0,
+          "text": {
+            "bytes": "41",
+            "width": 1
+          }
+        },
+        {
+          "end": 16,
+          "start": 8,
+          "text": {
+            "bytes": "42",
+            "width": 1
+          }
+        },
+        {
+          "end": 26,
+          "start": 16,
+          "text": {
+            "bytes": "43",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "closing-prefix",
+      "id": 7,
+      "markup": {
+        "bytes": "3c693e413c2f69583e3c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e413c2f58583e3c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 13,
+          "start": 0,
+          "text": {
+            "bytes": "413c2f69583e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "closing-newline",
+      "id": 8,
+      "markup": {
+        "bytes": "3c693e413c2f690a3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e413c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "unterminated",
+      "id": 9,
+      "markup": {
+        "bytes": "3c693e756e7465726d696e61746564",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e756e7465726d696e61746564",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "quoted-angle",
+      "id": 10,
+      "markup": {
+        "bytes": "3c6920636c6173733d22613e62223e466f6f3c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e466f6f3c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 22,
+          "start": 0,
+          "text": {
+            "bytes": "62223e466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "overlapping-opening",
+      "id": 11,
+      "markup": {
+        "bytes": "3c613c656d3e466f6f3c2f656d3e3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c585858583e466f6f3c2f58583e3e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 2,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 12,
+      "markup": {
+        "bytes": "3c693e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 13,
+      "markup": {
+        "bytes": "3c693e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 14,
+      "markup": {
+        "bytes": "3c0069003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c693e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 15,
+      "markup": {
+        "bytes": "3c0069003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c693e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 16,
+      "markup": {
+        "bytes": "3c693e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 17,
+      "markup": {
+        "bytes": "3c693e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 18,
+      "markup": {
+        "bytes": "3c693e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 19,
+      "markup": {
+        "bytes": "3c693e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c693e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 20,
+      "markup": {
+        "bytes": "3c493e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c493e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 21,
+      "markup": {
+        "bytes": "3c493e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c493e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 22,
+      "markup": {
+        "bytes": "3c0049003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c493e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 23,
+      "markup": {
+        "bytes": "3c0049003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c493e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 24,
+      "markup": {
+        "bytes": "3c493e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c493e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 25,
+      "markup": {
+        "bytes": "3c493e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c493e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 26,
+      "markup": {
+        "bytes": "3c493e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c493e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 27,
+      "markup": {
+        "bytes": "3c493e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c493e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 28,
+      "markup": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0069003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 29,
+      "markup": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0049003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 30,
+      "markup": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 31,
+      "markup": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 32,
+      "markup": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0030013e00200041000a00420020003c002f00580058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 33,
+      "markup": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0045004d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0030013e00200041000a00420020003c002f00580058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 34,
+      "markup": {
+        "bytes": "3c0030013e00200041000a00420020003c002f0065006d0020003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0030013e00200041000a00420020003c002f005800580058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 35,
+      "markup": {
+        "bytes": "3c0030013e00200041000a00420020003c002f00200069003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0030013e00200041000a00420020003c002f00580058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 36,
+      "markup": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0069003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 37,
+      "markup": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0049003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 38,
+      "markup": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 39,
+      "markup": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 40,
+      "markup": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0031013e00200041000a00420020003c002f00580058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 41,
+      "markup": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0045004d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0031013e00200041000a00420020003c002f00580058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 42,
+      "markup": {
+        "bytes": "3c0031013e00200041000a00420020003c002f0065006d0020003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0031013e00200041000a00420020003c002f005800580058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 43,
+      "markup": {
+        "bytes": "3c0031013e00200041000a00420020003c002f00200069003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c0031013e00200041000a00420020003c002f00580058003e00",
+        "width": 2
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 44,
+      "markup": {
+        "bytes": "3c656d3e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 45,
+      "markup": {
+        "bytes": "3c656d3e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 46,
+      "markup": {
+        "bytes": "3c0065006d003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 47,
+      "markup": {
+        "bytes": "3c0065006d003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 48,
+      "markup": {
+        "bytes": "3c656d3e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 49,
+      "markup": {
+        "bytes": "3c656d3e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 50,
+      "markup": {
+        "bytes": "3c656d3e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 51,
+      "markup": {
+        "bytes": "3c656d3e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 52,
+      "markup": {
+        "bytes": "3c454d3e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c454d3e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 53,
+      "markup": {
+        "bytes": "3c454d3e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c454d3e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 54,
+      "markup": {
+        "bytes": "3c0045004d003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c454d3e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 55,
+      "markup": {
+        "bytes": "3c0045004d003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c454d3e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 56,
+      "markup": {
+        "bytes": "3c454d3e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c454d3e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 57,
+      "markup": {
+        "bytes": "3c454d3e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c454d3e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 58,
+      "markup": {
+        "bytes": "3c454d3e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c454d3e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 59,
+      "markup": {
+        "bytes": "3c454d3e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c454d3e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 60,
+      "markup": {
+        "bytes": "3c456d3e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c456d3e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 61,
+      "markup": {
+        "bytes": "3c456d3e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c456d3e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 62,
+      "markup": {
+        "bytes": "3c0045006d003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c456d3e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 63,
+      "markup": {
+        "bytes": "3c0045006d003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c456d3e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 64,
+      "markup": {
+        "bytes": "3c456d3e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c456d3e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 65,
+      "markup": {
+        "bytes": "3c456d3e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c456d3e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 66,
+      "markup": {
+        "bytes": "3c456d3e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c456d3e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 67,
+      "markup": {
+        "bytes": "3c456d3e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c456d3e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 68,
+      "markup": {
+        "bytes": "3c654d3e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 69,
+      "markup": {
+        "bytes": "3c654d3e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 70,
+      "markup": {
+        "bytes": "3c0065004d003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 71,
+      "markup": {
+        "bytes": "3c0065004d003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 72,
+      "markup": {
+        "bytes": "3c654d3e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 73,
+      "markup": {
+        "bytes": "3c654d3e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 74,
+      "markup": {
+        "bytes": "3c654d3e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 75,
+      "markup": {
+        "bytes": "3c654d3e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 76,
+      "markup": {
+        "bytes": "3c696d6167653e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 77,
+      "markup": {
+        "bytes": "3c696d6167653e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 78,
+      "markup": {
+        "bytes": "3c0069006d006100670065003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 79,
+      "markup": {
+        "bytes": "3c0069006d006100670065003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 80,
+      "markup": {
+        "bytes": "3c696d6167653e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 81,
+      "markup": {
+        "bytes": "3c696d6167653e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 82,
+      "markup": {
+        "bytes": "3c696d6167653e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858583e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 83,
+      "markup": {
+        "bytes": "3c696d6167653e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 84,
+      "markup": {
+        "bytes": "3c696d706f7274616e743e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 85,
+      "markup": {
+        "bytes": "3c696d706f7274616e743e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 86,
+      "markup": {
+        "bytes": "3c0069006d0070006f007200740061006e0074003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 87,
+      "markup": {
+        "bytes": "3c0069006d0070006f007200740061006e0074003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 88,
+      "markup": {
+        "bytes": "3c696d706f7274616e743e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 89,
+      "markup": {
+        "bytes": "3c696d706f7274616e743e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 90,
+      "markup": {
+        "bytes": "3c696d706f7274616e743e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 91,
+      "markup": {
+        "bytes": "3c696d706f7274616e743e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 92,
+      "markup": {
+        "bytes": "3c656d7068617369733e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 93,
+      "markup": {
+        "bytes": "3c656d7068617369733e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 94,
+      "markup": {
+        "bytes": "3c0065006d007000680061007300690073003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 95,
+      "markup": {
+        "bytes": "3c0065006d007000680061007300690073003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 96,
+      "markup": {
+        "bytes": "3c656d7068617369733e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 97,
+      "markup": {
+        "bytes": "3c656d7068617369733e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 98,
+      "markup": {
+        "bytes": "3c656d7068617369733e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858583e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 99,
+      "markup": {
+        "bytes": "3c656d7068617369733e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 100,
+      "markup": {
+        "bytes": "3c6920636c6173733d22613e62223e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 24,
+          "start": 0,
+          "text": {
+            "bytes": "62223e20410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 101,
+      "markup": {
+        "bytes": "3c6920636c6173733d22613e62223e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 24,
+          "start": 0,
+          "text": {
+            "bytes": "62223e20410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 102,
+      "markup": {
+        "bytes": "3c006900200063006c006100730073003d00220061003e00620022003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 24,
+          "start": 0,
+          "text": {
+            "bytes": "62223e20410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 103,
+      "markup": {
+        "bytes": "3c006900200063006c006100730073003d00220061003e00620022003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 104,
+      "markup": {
+        "bytes": "3c6920636c6173733d22613e62223e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 105,
+      "markup": {
+        "bytes": "3c6920636c6173733d22613e62223e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 106,
+      "markup": {
+        "bytes": "3c6920636c6173733d22613e62223e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 107,
+      "markup": {
+        "bytes": "3c6920636c6173733d22613e62223e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c585858585858585858583e62223e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 108,
+      "markup": {
+        "bytes": "3c656d20646174613d2278223e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 109,
+      "markup": {
+        "bytes": "3c656d20646174613d2278223e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 110,
+      "markup": {
+        "bytes": "3c0065006d00200064006100740061003d002200780022003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 111,
+      "markup": {
+        "bytes": "3c0065006d00200064006100740061003d002200780022003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 112,
+      "markup": {
+        "bytes": "3c656d20646174613d2278223e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 23,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 113,
+      "markup": {
+        "bytes": "3c656d20646174613d2278223e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 23,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 114,
+      "markup": {
+        "bytes": "3c656d20646174613d2278223e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858585858583e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 115,
+      "markup": {
+        "bytes": "3c656d20646174613d2278223e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58585858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 116,
+      "markup": {
+        "bytes": "3c690a636c6173733d783e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 117,
+      "markup": {
+        "bytes": "3c690a636c6173733d783e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 118,
+      "markup": {
+        "bytes": "3c0069000a0063006c006100730073003d0078003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 119,
+      "markup": {
+        "bytes": "3c0069000a0063006c006100730073003d0078003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 120,
+      "markup": {
+        "bytes": "3c690a636c6173733d783e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 121,
+      "markup": {
+        "bytes": "3c690a636c6173733d783e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 122,
+      "markup": {
+        "bytes": "3c690a636c6173733d783e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 123,
+      "markup": {
+        "bytes": "3c690a636c6173733d783e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c5858585858585858583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 124,
+      "markup": {
+        "bytes": "3c20693e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c20693e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 125,
+      "markup": {
+        "bytes": "3c20693e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c20693e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 126,
+      "markup": {
+        "bytes": "3c00200069003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c20693e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 127,
+      "markup": {
+        "bytes": "3c00200069003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c20693e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 128,
+      "markup": {
+        "bytes": "3c20693e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c20693e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 129,
+      "markup": {
+        "bytes": "3c20693e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c20693e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 130,
+      "markup": {
+        "bytes": "3c20693e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c20693e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 131,
+      "markup": {
+        "bytes": "3c20693e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c20693e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 132,
+      "markup": {
+        "bytes": "3c692f3e20410a42203c2f693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 13,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 133,
+      "markup": {
+        "bytes": "3c692f3e20410a42203c2f493e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 13,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 134,
+      "markup": {
+        "bytes": "3c0069002f003e00200041000a00420020003c002f0030013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 13,
+          "start": 0,
+          "text": {
+            "bytes": "410a42",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "opening-closing",
+      "id": 135,
+      "markup": {
+        "bytes": "3c0069002f003e00200041000a00420020003c002f0031013e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 136,
+      "markup": {
+        "bytes": "3c692f3e20410a42203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 137,
+      "markup": {
+        "bytes": "3c692f3e20410a42203c2f454d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 138,
+      "markup": {
+        "bytes": "3c692f3e20410a42203c2f656d203e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f5858583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "opening-closing",
+      "id": 139,
+      "markup": {
+        "bytes": "3c692f3e20410a42203c2f20693e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e20410a42203c2f58583e",
+        "width": 1
+      },
+      "tags": []
+    },
+    {
+      "family": "native-inner",
+      "id": 140,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 11,
+          "start": 4,
+          "text": {
+            "bytes": "",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 141,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e0000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e0000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 13,
+          "start": 4,
+          "text": {
+            "bytes": "",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 142,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 11,
+          "start": 4,
+          "text": {
+            "bytes": "",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 143,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 11,
+          "start": 4,
+          "text": {
+            "bytes": "",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 144,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e000000700000006c00000061000000690000006e0000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e000000700000006c00000061000000690000006e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "706c61696e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 145,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e000000700000006c00000061000000690000006e0000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e000000700000006c00000061000000690000006e0000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "706c61696e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 146,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e000000700000006c00000061000000690000006e0000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e000000700000006c00000061000000690000006e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "706c61696e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 147,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e000000700000006c00000061000000690000006e0000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e000000700000006c00000061000000690000006e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "706c61696e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 148,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e000000000000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e000000000000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 149,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e000000000000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e000000000000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 4,
+          "text": {
+            "bytes": "00",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 150,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e000000000000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e000000000000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 151,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e000000000000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e000000000000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 152,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000000f601003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000000f601003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00f60100",
+            "width": 4
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 153,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e00000000f601003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e00000000f601003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 4,
+          "text": {
+            "bytes": "00f60100",
+            "width": 4
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 154,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000000f601003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000000f601003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00f60100",
+            "width": 4
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 155,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000000f601003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000000f601003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00f60100",
+            "width": 4
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 156,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000003dd8000000de00003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000003dd8000000de00003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 13,
+          "start": 4,
+          "text": {
+            "bytes": "3dd800de",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 157,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e0000003dd8000000de00003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e0000003dd8000000de00003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 15,
+          "start": 4,
+          "text": {
+            "bytes": "3dd800de",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 158,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000003dd8000000de00003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000003dd8000000de00003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 13,
+          "start": 4,
+          "text": {
+            "bytes": "3dd800de",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 159,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000003dd8000000de00003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000003dd8000000de00003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 13,
+          "start": 4,
+          "text": {
+            "bytes": "3dd800de",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 160,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000000d800003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000000d800003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00d8",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 161,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e00000000d800003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e00000000d800003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 14,
+          "start": 4,
+          "text": {
+            "bytes": "00d8",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 162,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000000d800003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000000d800003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00d8",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 163,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000000d800003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000000d800003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 4,
+          "text": {
+            "bytes": "00d8",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 164,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000020000000460000006f0000006f000000200000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000020000000460000006f0000006f000000200000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 165,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e00000020000000460000006f0000006f000000200000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e00000020000000460000006f0000006f000000200000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 166,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000020000000460000006f0000006f000000200000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000020000000460000006f0000006f000000200000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 167,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000020000000460000006f0000006f000000200000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000020000000460000006f0000006f000000200000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 168,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000009000000460000006f0000006f0000000a0000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000009000000460000006f0000006f0000000a0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 169,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e00000009000000460000006f0000006f0000000a0000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e00000009000000460000006f0000006f0000000a0000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 170,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000009000000460000006f0000006f0000000a0000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000009000000460000006f0000006f0000000a0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 171,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000009000000460000006f0000006f0000000a0000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000009000000460000006f0000006f0000000a0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 172,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000001c000000460000006f0000006f0000001f0000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000001c000000460000006f0000006f0000001f0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 173,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e0000001c000000460000006f0000006f0000001f0000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e0000001c000000460000006f0000006f0000001f0000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 174,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000001c000000460000006f0000006f0000001f0000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000001c000000460000006f0000006f0000001f0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 175,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000001c000000460000006f0000006f0000001f0000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000001c000000460000006f0000006f0000001f0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 176,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e000000a0000000460000006f0000006f000000032000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e000000a0000000460000006f0000006f000000032000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 177,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e000000a0000000460000006f0000006f000000032000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e000000a0000000460000006f0000006f000000032000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 178,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e000000a0000000460000006f0000006f000000032000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e000000a0000000460000006f0000006f000000032000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 179,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e000000a0000000460000006f0000006f000000032000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e000000a0000000460000006f0000006f000000032000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "466f6f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 180,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000026000000610000006d000000700000003b0000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e00000026000000610000006d000000700000003b0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "26616d703b",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 181,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e00000026000000610000006d000000700000003b0000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e00000026000000610000006d000000700000003b0000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "26616d703b",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 182,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000026000000610000006d000000700000003b0000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e00000026000000610000006d000000700000003b0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "26616d703b",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 183,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000026000000610000006d000000700000003b0000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e00000026000000610000006d000000700000003b0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 16,
+          "start": 4,
+          "text": {
+            "bytes": "26616d703b",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 184,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000003c000000650000006d0000003e000000690000006e0000006e00000065000000720000003c0000002f000000650000006d0000003e0000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000003c00000058000000580000003e000000690000006e0000006e00000065000000720000003c0000002f00000058000000580000003e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 25,
+          "start": 4,
+          "text": {
+            "bytes": "3c656d3e696e6e65723c2f656d3e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 185,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e0000003c000000650000006d0000003e000000690000006e0000006e00000065000000720000003c0000002f000000650000006d0000003e0000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e0000003c00000058000000580000003e000000690000006e0000006e00000065000000720000003c0000002f00000058000000580000003e0000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 22,
+          "start": 4,
+          "text": {
+            "bytes": "3c656d3e696e6e6572",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 186,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000003c000000650000006d0000003e000000690000006e0000006e00000065000000720000003c0000002f000000650000006d0000003e0000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000003c00000058000000580000003e000000690000006e0000006e00000065000000720000003c0000002f00000058000000580000003e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 25,
+          "start": 4,
+          "text": {
+            "bytes": "3c656d3e696e6e65723c2f656d3e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 187,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000003c000000650000006d0000003e000000690000006e0000006e00000065000000720000003c0000002f000000650000006d0000003e0000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000003c00000058000000580000003e000000690000006e0000006e00000065000000720000003c0000002f00000058000000580000003e0000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 25,
+          "start": 4,
+          "text": {
+            "bytes": "3c656d3e696e6e65723c2f656d3e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 188,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000003c0000002f000000690000003e0000003c000000690000003e0000006e0000006500000078000000740000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000003c0000002f000000580000003e0000003c000000690000003e0000006e0000006500000078000000740000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 11,
+          "start": 4,
+          "text": {
+            "bytes": "",
+            "width": 1
+          }
+        },
+        {
+          "end": 22,
+          "start": 11,
+          "text": {
+            "bytes": "6e657874",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 189,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e0000003c0000002f000000690000003e0000003c000000690000003e0000006e0000006500000078000000740000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e0000003c0000002f000000580000003e0000003c000000690000003e0000006e0000006500000078000000740000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 24,
+          "start": 4,
+          "text": {
+            "bytes": "3c2f693e3c693e6e657874",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 190,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000003c0000002f000000690000003e0000003c000000690000003e0000006e0000006500000078000000740000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000003c0000002f000000580000003e0000003c000000690000003e0000006e0000006500000078000000740000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 11,
+          "start": 4,
+          "text": {
+            "bytes": "",
+            "width": 1
+          }
+        },
+        {
+          "end": 22,
+          "start": 11,
+          "text": {
+            "bytes": "6e657874",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 191,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000003c0000002f000000690000003e0000003c000000690000003e0000006e0000006500000078000000740000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000003c0000002f000000580000003e0000003c000000690000003e0000006e0000006500000078000000740000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 11,
+          "start": 4,
+          "text": {
+            "bytes": "",
+            "width": 1
+          }
+        },
+        {
+          "end": 22,
+          "start": 11,
+          "text": {
+            "bytes": "6e657874",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 192,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000000a000000410000000d0000000a0000004200000028200000430000003c0000002f000000690000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000690000003e0000000a000000410000000d0000000a0000004200000028200000430000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "41000d000a00420028204300",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 193,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000650000006d0000003e0000000a000000410000000d0000000a0000004200000028200000430000003c0000002f000000650000006d0000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c00000058000000580000003e0000000a000000410000000d0000000a0000004200000028200000430000003c0000002f00000058000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 20,
+          "start": 4,
+          "text": {
+            "bytes": "41000d000a00420028204300",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 194,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000000a000000410000000d0000000a0000004200000028200000430000003c0000002f000000490000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000490000003e0000000a000000410000000d0000000a0000004200000028200000430000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "41000d000a00420028204300",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "native-inner",
+      "id": 195,
+      "markup": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000000a000000410000000d0000000a0000004200000028200000430000003c0000002f000000300100003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "placeholder": {
+        "bytes": "00f601003dd8000000de0000000000003c000000300100003e0000000a000000410000000d0000000a0000004200000028200000430000003c0000002f000000580000003e0000007400000061000000690000006c000000",
+        "width": 4
+      },
+      "tags": [
+        {
+          "end": 18,
+          "start": 4,
+          "text": {
+            "bytes": "41000d000a00420028204300",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 196,
+      "markup": {
+        "bytes": "3c656d3e0058003c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0058003c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "005800",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 197,
+      "markup": {
+        "bytes": "3c656d3e0158013c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0158013c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "015801",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 198,
+      "markup": {
+        "bytes": "3c656d3e0258023c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0258023c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "025802",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 199,
+      "markup": {
+        "bytes": "3c656d3e0358033c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0358033c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "035803",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 200,
+      "markup": {
+        "bytes": "3c656d3e0458043c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0458043c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "045804",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 201,
+      "markup": {
+        "bytes": "3c656d3e0558053c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0558053c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "055805",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 202,
+      "markup": {
+        "bytes": "3c656d3e0658063c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0658063c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "065806",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 203,
+      "markup": {
+        "bytes": "3c656d3e0758073c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0758073c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "075807",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 204,
+      "markup": {
+        "bytes": "3c656d3e0858083c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0858083c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "085808",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 205,
+      "markup": {
+        "bytes": "3c656d3e0958093c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0958093c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 206,
+      "markup": {
+        "bytes": "3c656d3e0a580a3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0a580a3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 207,
+      "markup": {
+        "bytes": "3c656d3e0b580b3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0b580b3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 208,
+      "markup": {
+        "bytes": "3c656d3e0c580c3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0c580c3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 209,
+      "markup": {
+        "bytes": "3c656d3e0d580d3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0d580d3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 210,
+      "markup": {
+        "bytes": "3c656d3e0e580e3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0e580e3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "0e580e",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 211,
+      "markup": {
+        "bytes": "3c656d3e0f580f3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e0f580f3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "0f580f",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 212,
+      "markup": {
+        "bytes": "3c656d3e1058103c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1058103c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "105810",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 213,
+      "markup": {
+        "bytes": "3c656d3e1158113c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1158113c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "115811",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 214,
+      "markup": {
+        "bytes": "3c656d3e1258123c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1258123c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "125812",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 215,
+      "markup": {
+        "bytes": "3c656d3e1358133c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1358133c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "135813",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 216,
+      "markup": {
+        "bytes": "3c656d3e1458143c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1458143c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "145814",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 217,
+      "markup": {
+        "bytes": "3c656d3e1558153c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1558153c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "155815",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 218,
+      "markup": {
+        "bytes": "3c656d3e1658163c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1658163c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "165816",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 219,
+      "markup": {
+        "bytes": "3c656d3e1758173c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1758173c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "175817",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 220,
+      "markup": {
+        "bytes": "3c656d3e1858183c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1858183c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "185818",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 221,
+      "markup": {
+        "bytes": "3c656d3e1958193c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1958193c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "195819",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 222,
+      "markup": {
+        "bytes": "3c656d3e1a581a3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1a581a3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "1a581a",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 223,
+      "markup": {
+        "bytes": "3c656d3e1b581b3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1b581b3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "1b581b",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 224,
+      "markup": {
+        "bytes": "3c656d3e1c581c3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1c581c3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 225,
+      "markup": {
+        "bytes": "3c656d3e1d581d3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1d581d3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 226,
+      "markup": {
+        "bytes": "3c656d3e1e581e3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1e581e3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 227,
+      "markup": {
+        "bytes": "3c656d3e1f581f3c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e1f581f3c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 228,
+      "markup": {
+        "bytes": "3c656d3e2058203c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e2058203c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 229,
+      "markup": {
+        "bytes": "3c656d3e8558853c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583e8558853c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 230,
+      "markup": {
+        "bytes": "3c656d3ea058a03c2f656d3e",
+        "width": 1
+      },
+      "placeholder": {
+        "bytes": "3c58583ea058a03c2f58583e",
+        "width": 1
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 231,
+      "markup": {
+        "bytes": "3c0065006d003e008016580080163c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e008016580080163c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 232,
+      "markup": {
+        "bytes": "3c0065006d003e000020580000203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000020580000203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 233,
+      "markup": {
+        "bytes": "3c0065006d003e000120580001203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000120580001203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 234,
+      "markup": {
+        "bytes": "3c0065006d003e000220580002203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000220580002203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 235,
+      "markup": {
+        "bytes": "3c0065006d003e000320580003203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000320580003203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 236,
+      "markup": {
+        "bytes": "3c0065006d003e000420580004203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000420580004203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 237,
+      "markup": {
+        "bytes": "3c0065006d003e000520580005203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000520580005203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 238,
+      "markup": {
+        "bytes": "3c0065006d003e000620580006203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000620580006203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 239,
+      "markup": {
+        "bytes": "3c0065006d003e000720580007203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000720580007203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 240,
+      "markup": {
+        "bytes": "3c0065006d003e000820580008203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000820580008203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 241,
+      "markup": {
+        "bytes": "3c0065006d003e000920580009203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000920580009203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 242,
+      "markup": {
+        "bytes": "3c0065006d003e000a2058000a203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000a2058000a203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 243,
+      "markup": {
+        "bytes": "3c0065006d003e000b2058000b203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000b2058000b203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "0b2058000b20",
+            "width": 2
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 244,
+      "markup": {
+        "bytes": "3c0065006d003e002820580028203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e002820580028203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 245,
+      "markup": {
+        "bytes": "3c0065006d003e002920580029203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e002920580029203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 246,
+      "markup": {
+        "bytes": "3c0065006d003e002f2058002f203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e002f2058002f203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 247,
+      "markup": {
+        "bytes": "3c0065006d003e005f2058005f203c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e005f2058005f203c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 248,
+      "markup": {
+        "bytes": "3c0065006d003e000030580000303c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e000030580000303c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "58",
+            "width": 1
+          }
+        }
+      ]
+    },
+    {
+      "family": "strip-point",
+      "id": 249,
+      "markup": {
+        "bytes": "3c0065006d003e00fffe5800fffe3c002f0065006d003e00",
+        "width": 2
+      },
+      "placeholder": {
+        "bytes": "3c00580058003e00fffe5800fffe3c002f00580058003e00",
+        "width": 2
+      },
+      "tags": [
+        {
+          "end": 12,
+          "start": 0,
+          "text": {
+            "bytes": "fffe5800fffe",
+            "width": 2
+          }
+        }
+      ]
+    }
+  ],
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "4fe89ec688bd763d406cd90d658f8807e468ffa371c475baad348c39d352a01e",
+  "python": "3.11.15",
+  "schemaVersion": "citation-html-discovery/v1",
+  "sources": {
+    "eyecite/models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "eyecite/utils.py": "8e27eb1207f6c0fdb695530e3677a3e9f039986b2baf68461ba680ee2bff902e"
+  }
+}

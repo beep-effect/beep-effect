@@ -1,5 +1,12 @@
 # Citation Extraction Engine Plan
 
+HTML discovery checkpoint (2026-11-05): 250 direct original-source cases now
+freeze placeholder replacement and 162 emphasis tuples, including malformed
+tags, Unicode case-folded closing backreferences, stripping and native layout.
+A second hash-seed run is byte-identical. Target discovery still needs qualified
+execution; the existing compiler excludes DOTALL and identity-sensitive
+backreferences. See [discovery evidence](history/evidence/2026-11-05-html-discovery.md).
+
 Default diff-worker checkpoint (2026-11-05): the authenticated core now runs in
 owned Bun/Node children through shared Effect RPC, admission and retirement.
 Exact request/reply preflight bounds native packed emission before allocation.

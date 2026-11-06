@@ -95,7 +95,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-host.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-worker.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-worker.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -454,6 +455,10 @@
     {
       "path": "ops/probe-span-offsets.py",
       "purpose": "Observe actual DMP/builtin SpanUpdater construction, every left/right lookup and real Document emphasis geometry without claiming a target diff producer."
+    },
+    {
+      "path": "ops/probe-html-discovery.py",
+      "purpose": "Observe original placeholder replacement and emphasis discovery over malformed tags, native source points, case-folded backreferences and CPython stripping without DOM normalization."
     },
     {
       "path": "ops/build-diff-kernel.py",
