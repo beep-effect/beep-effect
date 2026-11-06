@@ -120,7 +120,11 @@ for row in results:
 
 ### Common query patterns
 
+Reuse the prefix prologue below with each query. Replace the illustrative
+`http://example.org/` namespace with the dataset's namespace.
+
 ```sparql
+PREFIX : <http://example.org/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -180,6 +184,8 @@ Common caution points:
 ### RDF-star patterns
 
 ```sparql
+PREFIX : <http://example.org/>
+
 # GraphDB: match asserted triple with metadata
 SELECT ?s ?p ?o ?metaValue WHERE {
   ?s ?p ?o .
@@ -196,6 +202,10 @@ SELECT ?s ?p ?o ?conf WHERE {
 ### Federated queries
 
 ```sparql
+PREFIX : <http://example.org/>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
 # Query across multiple endpoints
 SELECT ?local ?external WHERE {
   ?local a :LocalClass .

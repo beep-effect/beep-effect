@@ -187,3 +187,22 @@ missing evidence.
 - Prevention and ownership: wait for successful checkout completion before
   dependency setup. This audit owns the two reading notes only. Other owners,
   PM recovery and ADHD provenance remain separate.
+
+## P4 enforcement descriptions and ownership observation, 2026-11-06
+
+- Work: distinguish implemented checks, planned automation and continuing
+  manual obligations in architecture guidance.
+- Evidence: shared-kernel points to promotion-record lint as though the tooling
+  page specified it; the index and dated decisions say it is planned. The
+  ecosystem page still waits for its first member despite the effect-drizzle
+  manifest and registered polarity command. Two paragraph corrections preserve
+  every normative requirement and avoid claiming complete runtime enforcement.
+- Impact: current description discrepancies established; no missed promotion
+  review or escaped dependency violation was measured.
+- Observation friction: a fresh PR file census was unavailable during a GitHub
+  API rate limit. It remained unknown until the normal post-reset read; fourteen
+  current open PR file lists then showed no overlap with these targets or packet.
+- Prevention: require actual file ownership observations before admission;
+  neither a PR title nor an unavailable read proves a file is unowned.
+- Ownership: this isolated lane owns the two descriptions and audit records.
+  Existing main unblockers remain with their owners. PM and ADHD are separate.

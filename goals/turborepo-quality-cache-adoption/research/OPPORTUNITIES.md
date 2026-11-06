@@ -1,5 +1,13 @@
 # Friction and opportunities
 
+## Hosted Integration interrupted by runner loss, 2026-11-06
+
+PR #2804 Integration job 128166148577 failed on head 0bdabf78490c3ee2e8ac86fb356bbaa837d481b3 after the self-hosted runner lost communication. GitHub's sole failure annotation identifies runner loss; the verification step remains in progress in the terminal job record and no step reports a test failure. The completed-job log endpoint returns provider `BlobNotFound` instead of a test log; preserve that response separately and never claim it as captured test output. After rechecking the unchanged open PR head and completed failed run, request one retry of only the interrupted job. Its request was accepted; replacement-job execution still needs verification. Do not patch tests or rerun the whole workflow from this evidence. A subsequent REST status read hit the account's real API quota, so further REST verification waits for reset without changing credentials. This operational interruption is separate from the scoped integration routing omission prepared in this lane.
+
+## Scoped integration routing omits plain-only script owners, 2026-11-06
+
+While following the remaining hosted Integration jobs, source review found that the root Quality runner sets its plain integration bucket empty for every affected or explicit-filter invocation. Seven current plain-only owners contain integration source files. Preserve those owners under the original caller scope and exclude split owners to avoid duplicate execution. Native stable/canary metadata fixtures confirm that negative exclusions preserve both explicit and affected selection; the source resolver and helper regression are prepared in the unpublished integration-scope lane, with hosted correctness still required. This is a fresh-test coverage repair, not a reason to cache live integration verdicts.
+
 ## Captured output lost at timeout, 2026-11-03
 
 Heavy / Lint Policy on #2686 timed out in `knowledge doctor ci` after its
@@ -1270,3 +1278,25 @@ and economics inputs for each consumer; hosted CI remains the behavioral proof.
 No computation qualification or production-cache activation follows from this
 repair. Prevent recurrence by auditing the script's full executed suite rather
 than treating property tests or coverage as narrower without source evidence.
+
+
+## 2026-11-06 — Reference links enter identity's broad metadata inputs
+
+During actual-root strict-entrypoint review, pinned canary lint dry-run refused
+`input symlink leaves repository` before that flag was enabled. The observed
+identity lint input glob spans repository manifests and reaches ignored external
+`.repos` links. A source-bound negative reference-tree input lets that same dry
+run finish and preserves every observed stable lint input path. The original
+refusal is retained separately. A real-root baseline with canonical provisioned
+reference links before profile approval would have caught the mismatch earlier.
+No quality task body ran and no feature/qualification/production setting changed.
+
+
+## 2026-11-06 — Main advanced during the producer freshness preflight
+
+After #2793 and #2796 merged, the current-source inspection preflight at recorded
+revision `68d37217c6` refused `Main moved; review current source` before dispatch.
+No inspection or protected trial was submitted. Independent adoption metadata
+work continued in an isolated source-bound checkout. Retaining immutable hosted
+source bindings and coordinating a short exact-source approval interval would
+avoid repeated static reads while preserving the final live-ref check.
