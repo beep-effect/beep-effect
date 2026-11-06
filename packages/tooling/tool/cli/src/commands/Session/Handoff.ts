@@ -318,27 +318,18 @@ const carriedOver = (prior: O.Option<HandoffSection>, placeholder: string): O.Op
 const withCarry = (body: string, carry: O.Option<string>): string =>
   O.match(carry, { onNone: () => body, onSome: (text) => `${body}\n\n${CARRY_HEADING}\n\n${text}` });
 
-const placeholderOf = (key: HandoffSectionKey): string =>
-  O.getOrElse(
-    O.map(
-      A.findFirst(SECTIONS, (spec) => spec.key === key),
-      (spec) => spec.placeholder
-    ),
-    () => ""
-  );
-
 const generatedBody = (
   input: HandoffRenderInput,
-  key: HandoffSectionKey,
+  spec: SectionSpec,
   prior: O.Option<HandoffSection>
 ): O.Option<string> =>
-  HandoffSectionKey.match(key, {
+  HandoffSectionKey.match(spec.key, {
     rulings: () =>
       A.isReadonlyArrayNonEmpty(rulingsInForce(input.rulings))
         ? O.some(
             withCarry(
               `Rendered from \`session ruling list\`: dated, verbatim operator wording, newest first. Paraphrases are not rulings.\n\n${renderRulingsMarkdown(input.rulings)}`,
-              carriedOver(prior, placeholderOf(key))
+              carriedOver(prior, spec.placeholder)
             )
           )
         : O.none(),
@@ -352,7 +343,7 @@ const generatedBody = (
       O.some(
         withCarry(
           `Rendered from \`session register list --markdown\` at write time.\n\n${renderRegisterMarkdown(input.register)}`,
-          carriedOver(prior, placeholderOf(key))
+          carriedOver(prior, spec.placeholder)
         )
       ),
     journal: () => O.map(input.journalLine, (line) => `\`STATE.md\` last line at write time:\n\n> ${line}`),
@@ -466,7 +457,7 @@ export const renderHandoff = (input: HandoffRenderInput): string => {
   const known = A.map(
     SECTIONS,
     (spec): HandoffSection =>
-      O.match(generatedBody(input, spec.key, priorSection(spec.key)), {
+      O.match(generatedBody(input, spec, priorSection(spec.key)), {
         onSome: (body) => HandoffSection.make({ title: spec.title, body }),
         onNone: () =>
           O.getOrElse(priorSection(spec.key), () => HandoffSection.make({ title: spec.title, body: spec.placeholder })),

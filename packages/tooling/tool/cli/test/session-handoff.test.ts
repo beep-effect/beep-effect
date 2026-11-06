@@ -4,6 +4,8 @@ import {
   HandoffRenderInput,
   handoffBackupName,
   lastJournalLine,
+  layerOrchestratorRulingsMemory,
+  OrchestratorRulings,
   PrRepository,
   parseHandoffDocument,
   RegisterConvertInput,
@@ -15,11 +17,14 @@ import {
   renderRulingsMarkdown,
   rulingsFileName,
   rulingsInForce,
+  SessionLedgerRow,
 } from "@beep/repo-cli/test/Session";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -137,6 +142,28 @@ describe("HANDOFF.md rendering", () => {
     expect(text).toContain("## Scratch\n\n## Journal pointer");
   });
 
+  it("names a holder whose harness exposed no session id as unknown", () => {
+    const holder = SessionLedgerRow.make({
+      schemaVersion: "session-ledger/v1",
+      repository,
+      clone: "/work/beep-effect",
+      checkout: "/work/beep-effect",
+      lane: "beep-effect",
+      branch: "main",
+      state: "open",
+      next: "gate the queue",
+      summary: O.none(),
+      pr: O.none(),
+      harness: "codex",
+      sessionId: O.none(),
+      role: O.some("orchestrator"),
+      recordedAt: DateTime.makeUnsafe("2026-11-06T18:00:00Z"),
+    });
+    expect(renderHandoff(input({ holder: O.some(holder) }))).toContain(
+      "Holder: beep-effect (main) session unknown since 2026-11-06T18:00:00.000Z, per the session ledger."
+    );
+  });
+
   it("renders the register from rows, dropping retired units", () => {
     const text = renderHandoff(
       input({ register: [unit(), unit({ address: "agent-2", state: "retired", recordedAt: DateTime.makeUnsafe(3) })] })
@@ -224,6 +251,21 @@ describe("orchestrator rulings", () => {
     expect(S.is(RulingId)("fix--root")).toBe(false);
     expect(S.is(RulingDate)("2026-1-1")).toBe(false);
     expect(rulingsFileName(repository)).toBe("github.com__beep-effect__beep-effect.rulings.jsonl");
+  });
+});
+
+describe("orchestrator rulings memory layer", () => {
+  it.layer(Layer.fresh(layerOrchestratorRulingsMemory))((it) => {
+    it.effect("lists only the rows of the asked repository", () =>
+      Effect.gen(function* () {
+        const rulings = yield* OrchestratorRulings;
+        const elsewhere = PrRepository.make({ host: "github.com", owner: "someone", name: "else" });
+        yield* rulings.append(ruling());
+        yield* rulings.append(ruling({ id: "other", repository: elsewhere }));
+        const listed = yield* rulings.list(repository);
+        expect(A.map(listed, (row) => row.id)).toStrictEqual(["only-money-escalates"]);
+      })
+    );
   });
 });
 

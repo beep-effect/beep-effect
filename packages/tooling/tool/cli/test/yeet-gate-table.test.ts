@@ -228,6 +228,11 @@ describe("yeet gate-table rendering", () => {
     ]);
   });
 
+  it("prints an unknown review window as ?", () => {
+    const unknown = YeetReviewWindowUnknown.make({ reason: "timeline unreadable" });
+    expect(renderGateTableEntry(decideGateTableRow(read({ window: O.some(unknown) })))).toContain("\twindow=?\t");
+  });
+
   it("rounds the minutes left up and prints unreadable rows with their reason", () => {
     const open = YeetReviewWindowOpen.make({
       anchor: elapsed.anchor,
@@ -262,6 +267,7 @@ const brokenPull = { ...pullFixture, number: 1461, head: { ...pullFixture.head, 
 const windowClosed = DateTime.makeUnsafe("2026-10-06T11:00:00Z");
 
 interface Script {
+  readonly detail?: unknown;
   readonly pulls: ReadonlyArray<unknown>;
   readonly rulesFail?: boolean;
   readonly statuses: unknown;
@@ -272,7 +278,7 @@ interface Script {
 // Every REST path the read makes, by repository-relative path; anything else is a 404.
 const restRoutes = (script: Script): Readonly<Record<string, GithubAnswer>> => ({
   "{repo}/pulls": { body: script.pulls },
-  "{repo}/pulls/1459": { body: pullFixture },
+  "{repo}/pulls/1459": { body: script.detail ?? pullFixture },
   "{repo}/pulls/1460": { body: draftPull },
   "{repo}/rules/branches/main": script.rulesFail === true ? { status: 500, body: {} } : { body: rulesFixture },
   [`{repo}/commits/${pullFixture.head.sha}/check-runs`]: { body: checkRunsFixture },
@@ -348,6 +354,18 @@ describe("yeet gate-table recorded read", () => {
       assertNone(row.read.requiredContexts);
       expect(row.gateMet).toBe(false);
       expect(report.entries[1]?._tag).toBe("unreadable");
+    })
+  );
+
+  it.effect("a pull GitHub has not computed mergeability for reads as unknown", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runRead({
+        pulls: [pullFixture],
+        detail: { ...pullFixture, mergeable_state: null },
+        threads: threadsFixture,
+        statuses: noStatuses,
+      });
+      expect(rowAt(report, 0).read.mergeableState).toBe("unknown");
     })
   );
 

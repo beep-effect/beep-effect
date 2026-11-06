@@ -12,6 +12,9 @@ import {
   RegisterReportJson,
   RegisterRow,
   RegisterRowJson,
+  RulingRowJson,
+  RulingsReport,
+  RulingsReportJson,
   recordSweepDone,
   renderSessionRow,
   SessionLedger,
@@ -896,6 +899,19 @@ describe("beep session", () => {
           );
           const json = yield* captureOutput(withCwd(clone, runSession(["ruling", "list", "--json"])));
           expect(json).toContain('"schemaVersion":"orchestrator-rulings-report/v1"');
+          const cause = yield* S.encodeUnknownEffect(RulingsReport)(undefined).pipe(Effect.flip);
+          const reportEncoder = vi.spyOn(RulingsReportJson, "encode").mockReturnValue(Effect.fail(cause));
+          const reportError = yield* withCwd(clone, runSession(["ruling", "list", "--json"])).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.sync(() => reportEncoder.mockRestore()))
+          );
+          expect(reportError.message).toBe("[session] Failed to encode the rulings report.");
+          const rowEncoder = vi.spyOn(RulingRowJson, "encode").mockReturnValue(Effect.fail(cause));
+          const rowError = yield* withCwd(
+            lane,
+            runSession(["ruling", "add", "--id", "x", "--date", "2026-10-24", "--verbatim", "x", "--source", "y"])
+          ).pipe(Effect.flip, Effect.ensuring(Effect.sync(() => rowEncoder.mockRestore())));
+          expect(rowError.message).toBe("[session] Failed to encode the ruling row.");
           for (const [args, message] of [
             [
               ["--id", "Not Kebab", "--date", "2026-10-24", "--verbatim", "x", "--source", "y"],
@@ -998,6 +1014,15 @@ describe("beep session", () => {
           );
           assertInclude(blank, `[session] wrote ${defaultFile} (previous kept as `);
           const envFile = path.join(stateRoot, "env-handoff", "HANDOFF.md");
+          // Without HOME the XDG cache cannot be resolved and no --file was given.
+          const unresolved = yield* withEnv(
+            { HOME: "", BEEP_ORCHESTRATOR_STATE_ROOT: stateRoot },
+            withCwd(clone, runSession(["handoff"]))
+          ).pipe(Effect.flip);
+          assertInclude(
+            unresolved.message,
+            "Could not resolve HANDOFF.md: pass --file or set BEEP_ORCHESTRATOR_HANDOFF."
+          );
           const viaEnv = yield* captureOutput(
             withEnv({ BEEP_ORCHESTRATOR_HANDOFF: envFile }, withCwd(clone, runSession(["handoff", "--write"])))
           );
