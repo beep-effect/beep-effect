@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify / P3 Yeet. Everything in scope has landed: S.Opaque models with ontology annotations, the `ResearchLibrary`
+P3 Yeet / P4 Close. Final PR #2771 carries the reflection and `proposedCloseout` (completed-retained). After merge: run the real-library `migrate` and `ontology render`, run `goals completion refresh`, then adopt the status in a packet-state PR. Everything in scope has landed: S.Opaque models with ontology annotations, the `ResearchLibrary`
 service, the DCAT vocabulary, the T-Box/SHACL fold, the A-Box projection, SPARQL-backed render/status with a
 private partition, the hash-gated v2 `migrate` command, golden replay of both intakes, and the runbook.
 
