@@ -500,7 +500,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegexPolicy.ts",
-          "sha256": "9ecaa2e9a714afde5e77ee8f6ae5caf94493130626fe0de7b4500f34a93a11f9"
+          "sha256": "9ce1bc955ef4030134985f863dee48f5f6bf48aefebe5130cac0304b1eb3a47d"
         },
         {
           "path": "packages/law-practice/server/test/CitationDiffCorpus.fixtures.ts",
@@ -1392,7 +1392,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-wrap.md",
-          "sha256": "f17bcad421c6803d6f3a44d57d02dd4d7d0b65e3c5d2035c8b8f71d9f882afeb"
+          "sha256": "0e98f42a1c3f07a24d755d550a561c974c5ce87b88940bbb1a9e642fb963066e"
         },
         {
           "path": "goals/citation-extraction-engine/ops/probe-annotation-wrap-composition.py",
@@ -1400,7 +1400,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/AnnotationWrap.ts",
-          "sha256": "54e2d117cb2bc7bc7c73065b5ce6d98af756da849d1626f241b68f46f49ce3ff"
+          "sha256": "7b58173bb28374c9a5e585606da7c5abf70899dbdb64d917eb746a6673fe1ab4"
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationReplay.fixtures.ts",
@@ -1420,7 +1420,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationRegexOperation.test.ts",
-          "sha256": "5e290f6081efaa3d7dafac987f27bd4c8116078a1a1dcd04d123361815321129"
+          "sha256": "ee501622b0dbf8582d24130debfebc96ae7751ea12f4c54275e4cc1568a06934"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationAnnotationWrap.test.ts",

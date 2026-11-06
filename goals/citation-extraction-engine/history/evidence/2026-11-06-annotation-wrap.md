@@ -17,8 +17,9 @@ child is spawned; no partial assembled output is returned.
 
 ## Selected operation and ownership
 
-The private CitationRegexOperation service selects schema-owned operation data
-at installation. Extraction remains the default. Regex preparation, compiler
+The private CitationRegexOperation uses upstream Context.Reference to select
+schema-owned operation data at installation. Its built-in default is extraction;
+there is no optional-service lookup or custom fallback. Regex preparation, compiler
 and descriptor binding reuse the shared timing factory, capturing that selected
 operation and Clock. Unicode preparation uses the same selected operation.
 The existing worker uses it for native ownership/admission and maps runtime
@@ -73,6 +74,9 @@ controls and existing regex worker behavior. Server lint/types, declaration
 emission, blocking laws and scoped Fallow pass. No new dead-code, complexity or
 clone finding remains; nine inherited clone groups remain nonblocking under
 unchanged policy. No baseline, threshold or source expectation is weakened.
+After replacing the selector fallback with upstream Context.Reference, six
+actual Bun/Node wrap and Clock tests pass again in 23.16 seconds. Lint/types,
+declarations, blocking laws and scoped Fallow remain passing.
 
 ```sh
 bun run beep quality package-verify @beep/law-practice-server --quick

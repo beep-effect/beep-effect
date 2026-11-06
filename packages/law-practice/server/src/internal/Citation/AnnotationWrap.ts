@@ -52,7 +52,7 @@ export const makeCitationAnnotationWrap = Effect.fn("Citation.makeAnnotationWrap
 ) {
   const templates = yield* makeCitationAnnotationTemplates(limits);
   const worker = yield* makeCitationRegexWorker(limits, runtime, bindings, "python-re").pipe(
-    Effect.provideService(CitationRegexOperation, { operation: "annotate" })
+    Effect.provideService(CitationRegexOperation, "annotate")
   );
   const wrap = Effect.fn("Citation.wrapAnnotationTags")(function* (
     source: CitationPythonUnicodeStorage,

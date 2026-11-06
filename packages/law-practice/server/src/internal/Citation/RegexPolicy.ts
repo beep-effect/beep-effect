@@ -7,7 +7,6 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { CitationEngineOperation } from "@beep/law-practice-use-cases/server";
 
@@ -16,10 +15,9 @@ const $I = $LawPracticeServerId.create("internal/Citation/RegexPolicy");
  * from a later caller Context. Existing consumers default to extraction.
  * @internal @category services @since 0.0.0
  */
-export class CitationRegexOperation extends Context.Service<
-  CitationRegexOperation,
-  { readonly operation: CitationEngineOperation }
->()($I`CitationRegexOperation`) {}
+export const CitationRegexOperation = Context.Reference<CitationEngineOperation>($I`CitationRegexOperation`, {
+  defaultValue: () => "extract",
+});
 const deadlineName = <Op extends CitationEngineOperation>(operation: Op): `${Op}Deadline` => `${operation}Deadline`;
 const Limits = S.toType(CitationEngineLimits);
 /** Decode the schema-owned policy with the caller's closed boundary failure.
@@ -40,11 +38,7 @@ export const makeCitationRegexTiming = Effect.fn("Citation.makeRegexTiming")(fun
   millisecondPrecision: boolean
 ) {
   const clock = yield* Clock.Clock;
-  const selected = yield* Effect.serviceOption(CitationRegexOperation);
-  const operation = O.match(selected, {
-    onNone: () => CitationRegexOperation.of({ operation: "extract" }).operation,
-    onSome: (value) => value.operation,
-  });
+  const operation = yield* CitationRegexOperation;
   const stageLimit = deadlineName(operation);
   const stageDeadline = limits[stageLimit];
   const exact = Duration.min(stageDeadline, limits.operationDeadline);

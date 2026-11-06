@@ -23,9 +23,7 @@ it.effect("captures annotation regex preparation timing despite later operation 
       extractDeadline: Duration.millis(1),
       annotateDeadline: Duration.millis(50),
     };
-    const input = yield* makeCitationRegexInput(limits).pipe(
-      Effect.provideService(CitationRegexOperation, { operation: "annotate" })
-    );
+    const input = yield* makeCitationRegexInput(limits).pipe(Effect.provideService(CitationRegexOperation, "annotate"));
     const entered = yield* Deferred.make<void>();
     const completed = yield* Ref.make(false);
     const pending = yield* input
@@ -36,7 +34,7 @@ it.effect("captures annotation regex preparation timing despite later operation 
         )
       )
       .pipe(
-        Effect.provideService(CitationRegexOperation, { operation: "extract" }),
+        Effect.provideService(CitationRegexOperation, "extract"),
         Effect.flip,
         Effect.ensuring(Ref.set(completed, true)),
         Effect.forkChild
