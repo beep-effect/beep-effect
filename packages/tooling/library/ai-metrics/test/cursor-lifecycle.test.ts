@@ -1,4 +1,3 @@
-import { createServer } from "node:net";
 import { fcRuns } from "@beep/fc-runs";
 import {
   CursorLifecycleError,
@@ -20,6 +19,7 @@ import {
   nativeTraceWire,
 } from "@beep/repo-ai-metrics/test/cursor-lifecycle";
 import { cursorPeerDiagnosticBootstrap } from "@beep/repo-ai-metrics/test/cursor-peer-diagnostic";
+import { makeLifecycleAckServer } from "@beep/repo-ai-metrics/test/lifecycle-ack-server";
 import { makeSealedRuntimeFixture } from "@beep/repo-ai-metrics/test/sealed-runtime";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
@@ -34,7 +34,6 @@ import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vi
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
-import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
@@ -50,7 +49,6 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import type { Socket } from "node:net";
 
 const json = S.fromJsonString(S.Unknown);
 const encode = S.encodeUnknownEffect(json);
@@ -302,45 +300,6 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
   return { policy, journal, control, namespaceId, deliver, runtime };
 });
 
-const ackServer = Effect.fn("CursorLifecycleTest.syntheticAckServer")(function* (reply: string, hold: boolean) {
-  const fs = yield* FileSystem.FileSystem;
-  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "ack-contract-" });
-  yield* fs.chmod(directory, 0o700);
-  const canonical = yield* fs.realPath(directory);
-  const path = `${canonical}/s`;
-  const seen = yield* Deferred.make<void>();
-  let received = "";
-  let receivedBytes = 0;
-  let sockets: ReadonlyArray<Socket> = [];
-  const server = yield* Effect.acquireRelease(
-    Effect.sync(() =>
-      createServer({ allowHalfOpen: true }, (socket) => {
-        sockets = A.append(sockets, socket);
-        socket.on("data", (chunk: Uint8Array) => {
-          receivedBytes += chunk.byteLength;
-          if (receivedBytes > 8192) socket.destroy();
-          else received += new TextDecoder().decode(chunk);
-        });
-        socket.once("end", () => {
-          Deferred.doneUnsafe(seen, Effect.void);
-          if (!hold) socket.end(reply);
-        });
-        socket.once("error", () => socket.destroy());
-      })
-    ),
-    (server) =>
-      Effect.callback<void>((resume) => {
-        A.forEach(sockets, (socket) => socket.destroy());
-        server.close(() => resume(Effect.void));
-      })
-  );
-  yield* Effect.callback<void, CursorLifecycleError>((resume) => {
-    server.once("error", () => resume(Effect.fail(CursorLifecycleError.make({ reason: "transport" }))));
-    server.listen(path, () => resume(Effect.void));
-  });
-  return { path, received: Effect.sync(() => received), awaitRequest: Deferred.await(seen) };
-});
-
 it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.makeMemoMapUnsafe() })((it) => {
   for (const kind of ["valid", "malformed", "oversized"]) {
     it.effect(`production forwarder projects input and validates ${kind} synthetic ACK without durability claims`, () =>
@@ -348,7 +307,7 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.
         const body = yield* encode(start);
         const good = yield* encode({ receiptId: id, accepted: 1, rejected: 0 });
         const reply = kind === "valid" ? good : kind === "malformed" ? "{malformed" : Str.repeat(1025)("x");
-        const server = yield* ackServer(reply, false);
+        const server = yield* makeLifecycleAckServer(reply, false);
         const result = yield* forwardCursorLifecycleHook(server.path, body).pipe(Effect.result);
         const projected = yield* server.received;
         for (const marker of ["PRIVATE-", "private@example", "/private", "callerVerified", "forged-root"])
@@ -362,10 +321,12 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const absent = yield* fs.makeTempDirectoryScoped({ prefix: "missing-ack-" });
+      // The Node socket opens an actual OS path, including on hosts whose temporary root is an alias.
+      const canonical = yield* fs.realPath(absent);
       const body = yield* encode(start);
-      const connectionError = yield* forwardCursorLifecycleHook(`${absent}/s`, body).pipe(Effect.flip);
+      const connectionError = yield* forwardCursorLifecycleHook(`${canonical}/s`, body).pipe(Effect.flip);
       expect(connectionError.reason).toBe("transport");
-      const oversized = yield* forwardCursorLifecycleHook(`${absent}/s`, Str.repeat(8193)("x")).pipe(Effect.flip);
+      const oversized = yield* forwardCursorLifecycleHook(`${canonical}/s`, Str.repeat(8193)("x")).pipe(Effect.flip);
       expect(oversized.reason).toBe("callback");
     })
   );
@@ -386,7 +347,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
   it.effect("interrupting a waiting peer send preserves interruption and closes only its owned process and copy", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const server = yield* ackServer("", true);
+      const server = yield* makeLifecycleAckServer("", true);
       const runtime = yield* makeSealedRuntimeFixture();
       const body = yield* encode(start);
       const sending = yield* Effect.forkChild(runtime.send(server.path, body, false));

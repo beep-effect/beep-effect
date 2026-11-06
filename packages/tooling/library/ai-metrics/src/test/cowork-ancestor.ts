@@ -17,7 +17,7 @@ import { failure } from "../internal/cursor-lifecycle-schemas.ts";
 import { makeSealedRuntimeFixture, sealedRuntimeSocketPeerSource } from "./sealed-runtime.ts";
 
 const $I = $RepoAiMetricsId.create("test/cowork-ancestor");
-const identity = S.Struct({ appPid: S.Int, appStartTicks: S.String }).pipe(
+const identity = S.Struct({ appPid: S.Int, appStartTicks: S.String, peerPid: S.Int }).pipe(
   $I.annoteSchema("SyntheticAppIdentity", { description: "Transient metadata of the exact owned synthetic parent." })
 );
 const scriptResult = S.Struct({ code: S.Int, stdout: S.String, stderr: S.String }).pipe(
@@ -50,7 +50,7 @@ input.on("line", line => {
     engine.stdout.pipe(process.stdout,{end:false});
     const stat=fs.readFileSync("/proc/self/stat","utf8");
     const fields=stat.slice(stat.lastIndexOf(")")+2).split(" ");
-    process.stdout.write(JSON.stringify({appPid:process.pid,appStartTicks:fields[19]})+"\n");
+    process.stdout.write(JSON.stringify({appPid:process.pid,appStartTicks:fields[19],peerPid:engine.pid})+"\n");
   } else if (command.kind === "peer") {
     engine.stdin.write((command.drop?"drop":"ack")+"|"+command.path+"\n"+command.body+"\n");
   } else {
@@ -84,7 +84,7 @@ export const makeCoworkAncestorFixture = Effect.fn("CoworkTest.ancestor")(functi
   const runtime = yield* makeSealedRuntimeFixture();
   const parent = yield* Effect.scope;
   const owned = yield* Scope.fork(parent);
-  const close = Scope.close(owned, Exit.void);
+  const close = Scope.close(owned, Exit.void).pipe(Effect.andThen(runtime.close));
   return yield* Effect.gen(function* () {
     const commands = yield* Effect.acquireRelease(Queue.bounded<Uint8Array>(1), Queue.shutdown);
     const child = yield* ChildProcess.make(runtime.executable, ["--eval", appSource], {
@@ -123,7 +123,14 @@ export const makeCoworkAncestorFixture = Effect.fn("CoworkTest.ancestor")(functi
       const result = yield* exchange({ kind: "script", script, path, body, selector });
       return yield* decodeScriptResult(result).pipe(Effect.mapError(() => failure("transport")));
     });
-    return { ...app, runtime, send, runScript, close };
+    const runtimeStopped = runtime.closed.pipe(Effect.mapError(() => failure("transport")));
+    const closed = child.exitCode.pipe(
+      Effect.result,
+      Effect.andThen(child.isRunning),
+      Effect.flatMap((running) => (running ? Effect.fail(failure("transport")) : runtimeStopped)),
+      Effect.mapError(() => failure("transport"))
+    );
+    return { ...app, runtime, send, runScript, close, closed };
   }).pipe(
     Scope.provide(owned),
     Effect.onError(() => close),

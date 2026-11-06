@@ -19,6 +19,7 @@ import {
 } from "@beep/repo-ai-metrics/test/claude-cowork-lifecycle";
 import { makeCoworkAncestorFixture } from "@beep/repo-ai-metrics/test/cowork-ancestor";
 import { cursorLifecycleFixtureCodecs } from "@beep/repo-ai-metrics/test/cursor-lifecycle";
+import { makeLifecycleAckServer } from "@beep/repo-ai-metrics/test/lifecycle-ack-server";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -28,8 +29,16 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
-import { assertFalse, assertNone, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import {
+  assertFailure,
+  assertFalse,
+  assertNone,
+  assertSuccess,
+  assertTrue,
+  deepStrictEqual,
+} from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
@@ -179,6 +188,128 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
   yield* control.resume;
   return { policy, journal, control, namespaceId, ancestor, deliver: makeDelivery(policy, journal, control, ancestor) };
 });
+
+it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), { memoMap: Layer.makeMemoMapUnsafe() })(
+  (it) => {
+    for (const kind of ["valid", "malformed", "oversized"]) {
+      it.effect(`production Cowork preparation projects metadata and validates ${kind} synthetic ACK`, () =>
+        Effect.gen(function* () {
+          const good = yield* encode({ receiptId: id, accepted: 1, rejected: 0 });
+          const reply = kind === "valid" ? good : kind === "malformed" ? "{malformed" : Str.repeat(1025)("x");
+          const server = yield* makeLifecycleAckServer(reply, false);
+          const body = yield* encode(start);
+          const prepared = yield* prepareCoworkLifecycleFixtureHook(
+            server.path,
+            body,
+            "local-agent",
+            "synthetic-ack-occurrence"
+          );
+          const result = yield* prepared.send.pipe(Effect.result);
+          if (kind === "valid") assertSuccess(result, { receiptId: id, accepted: 1, rejected: 0 });
+          else assertFailure(result, CoworkLifecycleError.make({ reason: "transport" }));
+          const forwarded = yield* server.received;
+          for (const marker of [
+            "PRIVATE-prompt",
+            "PRIVATE-title",
+            "/PRIVATE/transcript",
+            "forged-root",
+            "PRIVATE-secret",
+          ])
+            expect(Str.includes(marker)(forwarded)).toBe(false);
+          expect(Str.includes("synthetic-ack-occurrence")(forwarded)).toBe(true);
+          // This server observes transport only; it creates no journal or durable ACK.
+        })
+      );
+    }
+    it.effect("production Cowork preparation refuses absent transport and oversized input without admission", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const absent = yield* fs.makeTempDirectoryScoped({ prefix: "missing-cowork-ack-" });
+        const body = yield* encode(start);
+        const prepared = yield* prepareCoworkLifecycleFixtureHook(
+          `${absent}/s`,
+          body,
+          "local-agent",
+          "synthetic-ack-occurrence"
+        );
+        const failed = yield* prepared.send.pipe(Effect.flip);
+        expect(failed.reason).toBe("transport");
+        const oversized = yield* prepareCoworkLifecycleFixtureHook(
+          `${absent}/s`,
+          Str.repeat(8193)("x"),
+          "local-agent",
+          "synthetic-ack-occurrence"
+        ).pipe(Effect.flip);
+        expect(oversized.reason).toBe("callback");
+      })
+    );
+    it.effect("owned Cowork application and callback exit before their sealed copy is removed", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const ancestor = yield* makeCoworkAncestorFixture();
+        assertTrue(ancestor.appPid !== process.pid && ancestor.peerPid !== ancestor.appPid);
+        yield* ancestor.close;
+        yield* ancestor.closed;
+        const remains = yield* Effect.all({
+          app: fs.exists(`/proc/${ancestor.appPid}`),
+          peer: fs.exists(`/proc/${ancestor.peerPid}`),
+          copy: fs.exists(ancestor.runtime.executable),
+        });
+        expect(remains).toEqual({ app: false, peer: false, copy: false });
+        const source = yield* fs.realPath(process.execPath);
+        const sourceStat = yield* fs.stat(source);
+        expect(sourceStat.mode).toBe(ancestor.runtime.sourceMode);
+      })
+    );
+    it.effect("interrupting a waiting Cowork callback preserves interruption and closes both owned descendants", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const server = yield* makeLifecycleAckServer("", true);
+        const ancestor = yield* makeCoworkAncestorFixture();
+        const body = yield* encode({ callback: start });
+        const sending = yield* Effect.forkChild(ancestor.send(server.path, body));
+        yield* server.awaitRequest;
+        yield* Fiber.interrupt(sending);
+        const outcome = yield* Fiber.await(sending);
+        if (outcome._tag !== "Failure") return yield* Effect.die("unexpected-cowork-peer-success");
+        outcome.cause.pipe(Cause.hasInterruptsOnly, assertTrue);
+        yield* ancestor.closed;
+        const remains = yield* Effect.all({
+          app: fs.exists(`/proc/${ancestor.appPid}`),
+          peer: fs.exists(`/proc/${ancestor.peerPid}`),
+          copy: fs.exists(ancestor.runtime.executable),
+        });
+        expect(remains).toEqual({ app: false, peer: false, copy: false });
+      })
+    );
+  }
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
+  timeout: "45 seconds",
+})((it) =>
+  it.effect(
+    "a writable private application/runtime artifact refuses without changing bytes or shared permissions",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const digest = yield* sha(f.ancestor.runtime.executable);
+        yield* fs.chmod(f.ancestor.runtime.executable, 0o770);
+        const refused = yield* f.deliver(start);
+        refused.result.pipe(Result.isFailure, assertTrue);
+        expect((yield* f.journal.stats).pages).toBe(0);
+        const writableDigest = yield* sha(f.ancestor.runtime.executable);
+        expect(writableDigest).toBe(digest);
+        yield* fs.chmod(f.ancestor.runtime.executable, 0o500);
+        const admitted = yield* f.deliver(start);
+        admitted.result.pipe(Result.isSuccess, assertTrue);
+        expect((yield* f.journal.stats).pages).toBe(1);
+        const sealedDigest = yield* sha(f.ancestor.runtime.executable);
+        expect(sealedDigest).toBe(digest);
+      })
+  )
+);
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
   timeout: "45 seconds",
