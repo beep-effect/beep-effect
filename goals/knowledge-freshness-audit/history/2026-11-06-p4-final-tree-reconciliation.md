@@ -20,9 +20,10 @@ claim to contain the hash of its own publication commit.
 
 ## Publication boundary
 
-The delivery lane subsequently integrated main PRs #2760, #2754 and #2763.
-Those commits changed 37 paths beyond the source snapshot, including other
-owners' generated inventories, CI tooling and agent instructions. Their changes
+The delivery lane subsequently integrated main PRs #2760, #2754, #2763,
+#2761, #2762 and #2768. Those commits changed 69 paths beyond the source
+snapshot, including other owners' generated inventories, CI tooling, agent
+instructions, packet records and source/tests. Their changes
 remain intact and create additional final-tree review obligations. This pass
 does not claim to re-extract or accept their substantive content.
 
