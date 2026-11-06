@@ -1,5 +1,13 @@
 # Citation Extraction Engine Plan
 
+Reference-name runtime checkpoint (2026-11-06): the generated-reference path
+now has original name validation and ordered native candidate preparation using
+existing frozen Python character/lowercase and text-budget services. All 117
+source validity observations match; source-list authentication and budget controls
+pass. Literal pattern construction and actual generated-reference execution remain
+open. Hosted Fallow on c524b436b9 passes. See
+[name preparation evidence](history/evidence/2026-11-06-reference-name-preparation.md).
+
 Generated-reference source checkpoint (2026-11-06): 121 actual original pin/
 markup/combined calls now retain 77 references, 108 regex calls and 65 source
 patterns with CPython profiles. All four ordered name fields and 117 original

@@ -220,7 +220,11 @@
         "goals/citation-extraction-engine/ops/probe-generated-references.py",
         "goals/citation-extraction-engine/ops/verify-generated-references.py",
         "packages/law-practice/use-cases/test/fixtures/eyecite/generated-references.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-reference-source.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-reference-source.md",
+        "packages/law-practice/server/src/internal/Citation/ReferenceNames.ts",
+        "packages/law-practice/server/test/CitationReferenceNames.fixtures.ts",
+        "packages/law-practice/server/test/CitationReferenceNames.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-name-preparation.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

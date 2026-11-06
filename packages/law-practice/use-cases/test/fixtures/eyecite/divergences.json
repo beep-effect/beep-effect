@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "7b7cbff6b8751b0abc9bf3064c2b87e0cc64c31e8b061a96dd9baead2a7677d2",
+  "planSha256": "160dc89d0db734b5d21b7b4ce2e36e990dbe029dce50e639b2a19dade6294517",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -877,6 +877,22 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-reference-source.md",
           "sha256": "29bfc42425a5505a1b7796f5ef69c8ee7c4e05b4a0f515d61cf494e3d5334f58"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/ReferenceNames.ts",
+          "sha256": "55fcceaa0e94209dcc9ea83f9293f92326c2391af5fb691209fde9eadf7cfb15"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationReferenceNames.fixtures.ts",
+          "sha256": "988f224a3bdb6daef4ca9b091dbe8410666af94daeee79b580a8139a233c9c82"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationReferenceNames.test.ts",
+          "sha256": "067fb5a81fe1f133b9105ebbbb6b1fa9a49027bc1f436580c34b307552bbbea1"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-name-preparation.md",
+          "sha256": "fb0bc9b07a2ed4e2de279d0a4e8f631699cbd17a194fdb542ae2f17177050c9b"
         }
       ],
       "workflowState": "audit",
@@ -1337,7 +1353,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerCorpus.test.ts",
-          "sha256": "3032a67234cc7cbfac911dd37c0d6e21d34490d60ef5180bf2c80938f26a14ba"
+          "sha256": "324fa900285c621c1520fb40a10abb9a2d94fb2ca765840f1def68cccda8eced"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-html-worker-qualification.md",
@@ -1706,7 +1722,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
-          "sha256": "f4632bec4b9f7a4765cf45ed5b764468042c40626af9032a7c06e23c28c6efa5"
+          "sha256": "f1eef5487a22c1daeec15c5de04e2b3453f4403ddbc23a0b635c3900a26840e6"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts",
