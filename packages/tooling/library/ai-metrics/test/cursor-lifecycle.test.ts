@@ -1,5 +1,6 @@
 import { createConnection } from "node:net";
 import {
+  CursorLifecycleError,
   CursorLifecyclePolicy,
   CursorLifecycleRuntime,
   forwardCursorLifecycleHook,
@@ -16,6 +17,7 @@ import {
   makeCursorLifecycleFixtureReceiver,
   nativeTraceWire,
 } from "@beep/repo-ai-metrics/test/cursor-lifecycle";
+import { cursorPeerDiagnosticBootstrap } from "@beep/repo-ai-metrics/test/cursor-peer-diagnostic";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -31,10 +33,15 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
+import * as References from "effect/References";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 
@@ -59,6 +66,158 @@ const decodeWire = S.decodeUnknownEffect(
       })
     ),
   })
+);
+const diagnosticGuard = S.String.check(
+  S.isPattern(
+    /^(?:(?:source|runtime|unknown)\.)?(?:bounded_json|public_digest|process|observe|serve)\.(?:enter|i\d+|r\d+|b\d+\.\d+)$/
+  )
+);
+const diagnosticReport = S.Struct({
+  diagnostic: S.tag("cursor-peer-diagnostic/v1"),
+  ok: S.Boolean,
+  phase: S.Literals(["bootstrap", "bounded_json", "public_digest", "process", "observe", "serve", "complete"]),
+  predicate: S.String.check(
+    S.isPattern(
+      /^(?:bootstrap|(?:(?:source|runtime|unknown)\.)?(?:bounded_json|public_digest|process|observe|serve)\.(?:enter|i\d+|r\d+|b\d+\.\d+))$/
+    )
+  ),
+  exceptionClass: S.Literals([
+    "None",
+    "ValueError",
+    "PermissionError",
+    "FileNotFoundError",
+    "ProcessLookupError",
+    "TimeoutError",
+    "OSError",
+    "JSONDecodeError",
+    "UnicodeDecodeError",
+    "AttributeError",
+    "KeyError",
+    "StopIteration",
+    "ConnectionResetError",
+    "BrokenPipeError",
+    "Unknown",
+  ]),
+  sourceHashMatches: S.Boolean,
+  predicateAstPreserved: S.Boolean,
+  shortCircuitOrderPreserved: S.Boolean,
+  projectedPrintSuppressed: S.Boolean,
+  checks: S.Record(diagnosticGuard, S.Struct({ observedTrue: S.Boolean, observedFalse: S.Boolean })),
+});
+const diagnosticReady = S.Struct({ ready: S.tag(true) });
+const isDiagnosticReady = S.is(diagnosticReady);
+const decodeDiagnosticLine = S.decodeEffect(S.fromJsonString(S.Union([diagnosticReady, diagnosticReport])), {
+  onExcessProperty: "error",
+});
+const decodeDiagnosticReport = S.decodeUnknownEffect(diagnosticReport, { onExcessProperty: "error" });
+const encodeDiagnosticError = S.encodeEffect(S.fromJsonString(CursorLifecycleError));
+const diagnosticObservation = S.Struct({
+  listenerReady: S.Boolean,
+  diagnosticAckObserved: S.Boolean,
+  helperExitZero: S.Boolean,
+  report: diagnosticReport,
+});
+const diagnosticEvidence = S.Struct({
+  ...diagnosticObservation.fields,
+  evidence: S.Literals(["synthetic-diagnostic-occurrence-not-retrodiagnosis", "synthetic-regression-fixture"]),
+  testProcessReportsBun: S.Boolean,
+  testProcessReportsNode22: S.Boolean,
+});
+const encodeDiagnosticEvidence = S.encodeEffect(S.fromJsonString(diagnosticEvidence));
+const decodeAssertionMessage = S.decodeUnknownOption(S.Struct({ message: S.String }));
+const diagnosticContext = Effect.fnUntraced(function* (
+  observed: typeof diagnosticObservation.Type,
+  evidence: typeof diagnosticEvidence.Type.evidence = "synthetic-diagnostic-occurrence-not-retrodiagnosis"
+) {
+  const encoded = yield* encodeDiagnosticEvidence({
+    ...observed,
+    evidence,
+    testProcessReportsBun: O.isSome(O.fromUndefinedOr(process.versions.bun)),
+    testProcessReportsNode22: Str.startsWith("22.")(process.versions.node),
+  });
+  return `[cursor-peer-diagnostic] ${encoded}`;
+});
+
+const inspectSyntheticPeer = Effect.fn("CursorLifecycleTest.inspectSyntheticPeer")(
+  function* (policy: CursorLifecyclePolicy) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "cursor-lifecycle-" });
+    const socketPath = `${directory}/s`;
+    const header = yield* encode({ source: cursorPeerSource, sha256: policy.helperSha256 });
+    const publicPolicy = yield* encode({
+      workspace: policy.workspace,
+      runtimeExecutable: policy.runtimeExecutable,
+      runtimeSha256: policy.runtimeSha256,
+      sourcePins: policy.sourcePins,
+    });
+    const stdin = new TextEncoder().encode(`${header}\n${publicPolicy}\n{}\n`);
+    const child = yield* ChildProcess.make(
+      policy.pythonExecutable,
+      ["-I", "-B", "-c", cursorPeerDiagnosticBootstrap, socketPath],
+      { extendEnv: false, stdin: Stream.make(stdin), stderr: "ignore", killSignal: "SIGKILL" }
+    );
+    let output = "";
+    let outputBytes = 0;
+    const next = yield* child.stdout.pipe(
+      Stream.mapEffect((chunk) => {
+        outputBytes += chunk.byteLength;
+        if (outputBytes > 16384) return Effect.fail("diagnostic-bounds");
+        output += new TextDecoder().decode(chunk);
+        return Effect.succeed(chunk);
+      }),
+      Stream.decodeText(),
+      Stream.splitLines,
+      Stream.rechunk(1),
+      Stream.toPull
+    );
+    const first = yield* next;
+    const firstValue = yield* decodeDiagnosticLine(first[0]).pipe(Effect.mapError(() => "diagnostic-envelope"));
+    const listenerReady = isDiagnosticReady(firstValue);
+    let diagnosticAckObserved = false;
+    let reportValue: unknown = firstValue;
+    if (listenerReady) {
+      const body = yield* encode(start);
+      const sending = yield* Effect.forkChild(
+        Effect.callback<void, "diagnostic-socket">((resume) => {
+          const socket = createConnection({ path: socketPath, allowHalfOpen: true });
+          let received = 0;
+          let reply = "";
+          socket.once("connect", () => socket.end(body));
+          socket.on("data", (chunk: Uint8Array) => {
+            received += chunk.byteLength;
+            reply += new TextDecoder().decode(chunk);
+            if (received > 1024) {
+              socket.destroy();
+              resume(Effect.fail("diagnostic-socket"));
+            }
+          });
+          socket.once("end", () => resume(reply === "{}\n" ? Effect.void : Effect.fail("diagnostic-socket")));
+          socket.once("error", () => resume(Effect.fail("diagnostic-socket")));
+          return Effect.sync(() => socket.destroy());
+        }).pipe(
+          Effect.timeoutOrElse({ duration: "6 seconds", orElse: () => Effect.fail("diagnostic-socket") }),
+          Effect.result
+        )
+      );
+      const final = yield* next;
+      reportValue = yield* decodeDiagnosticLine(final[0]).pipe(Effect.mapError(() => "diagnostic-envelope"));
+      const acknowledged = yield* Fiber.join(sending);
+      diagnosticAckObserved = Result.isSuccess(acknowledged);
+    }
+    const report = yield* decodeDiagnosticReport(reportValue).pipe(Effect.mapError(() => "diagnostic-envelope"));
+    const exit = yield* child.exitCode;
+    for (const marker of [
+      policy.workspace,
+      policy.runtimeExecutable,
+      "PRIVATE-PROMPT",
+      "private@example",
+      "native-session",
+      "forged-root",
+    ])
+      expect(Str.includes(marker)(output)).toBe(false);
+    return { listenerReady, diagnosticAckObserved, helperExitZero: exit === 0, report };
+  },
+  Effect.mapError(() => CursorLifecycleError.make({ reason: "transport" }))
 );
 const salt = "synthetic-cursor-passive-salt";
 const id = Sha256Hex.make(Str.repeat(64)("a"));
@@ -409,5 +568,141 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(error.reason).toBe("enrollment");
       expect((yield* f.journal.stats).pages).toBe(0);
     })
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("reports closed synthetic peer predicates without retaining callback or process values", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const observed = yield* inspectSyntheticPeer(f.policy);
+        const message = yield* diagnosticContext(observed);
+        // This schema-closed metadata has no paths, PIDs, argv, environment, callback body or stderr.
+        yield* Effect.logInfo(message);
+        expect(observed.report.sourceHashMatches, message).toBe(true);
+        expect(observed.report.predicateAstPreserved, message).toBe(true);
+        expect(observed.report.shortCircuitOrderPreserved, message).toBe(true);
+        expect(observed.report.projectedPrintSuppressed, message).toBe(true);
+        expect(observed.report.ok, message).toBe(true);
+        expect(observed.diagnosticAckObserved, message).toBe(true);
+        expect(observed.helperExitZero, message).toBe(true);
+        expect((yield* f.journal.stats).pages, message).toBe(0);
+      })
+    ).pipe(Effect.timeout("15 seconds"))
+  )
+);
+
+it.effect("closed diagnostic assertion context survives when all info logging is filtered", () =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const report = diagnosticReport.make({
+        ok: false,
+        phase: "public_digest",
+        predicate: "source.public_digest.b40.1",
+        exceptionClass: "ValueError",
+        sourceHashMatches: true,
+        predicateAstPreserved: true,
+        shortCircuitOrderPreserved: true,
+        projectedPrintSuppressed: true,
+        checks: { "source.public_digest.b40.1": { observedTrue: true, observedFalse: false } },
+      });
+      const message = yield* diagnosticContext(
+        { listenerReady: true, diagnosticAckObserved: false, helperExitZero: false, report },
+        "synthetic-regression-fixture"
+      );
+      let infoLogs = 0;
+      const logger = Logger.make(() => {
+        infoLogs++;
+      });
+      const loggerContext = yield* Layer.build(Logger.layer([logger]));
+      const assertion = yield* Effect.gen(function* () {
+        yield* Effect.logInfo(message);
+        return yield* Effect.try({
+          try: () => expect(report.ok, message).toBe(true),
+          catch: (error) =>
+            decodeAssertionMessage(error).pipe(
+              O.map((value) => value.message),
+              O.getOrElse(() => "unclassified-assertion")
+            ),
+        }).pipe(Effect.flip);
+      }).pipe(Effect.provideService(References.MinimumLogLevel, "None"), Effect.provideContext(loggerContext));
+      expect(infoLogs).toBe(0);
+      expect(Str.includes(message)(assertion)).toBe(true);
+      expect(Str.includes("source.public_digest.b40.1")(assertion)).toBe(true);
+      for (const forbidden of [
+        "PRIVATE-PROMPT",
+        "private@example",
+        "native-session",
+        "forged-root",
+        "/home/",
+        "argv",
+        "stderr",
+      ])
+        expect(Str.includes(forbidden)(assertion)).toBe(false);
+    })
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("refuses a diagnostic source digest mismatch before observing a peer", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const observed = yield* inspectSyntheticPeer(CursorLifecyclePolicy.make({ ...f.policy, helperSha256: id }));
+        expect(observed.listenerReady).toBe(false);
+        expect(observed.diagnosticAckObserved).toBe(false);
+        expect(observed.report.sourceHashMatches).toBe(false);
+        expect(observed.report.phase).toBe("bootstrap");
+        expect(R.size(observed.report.checks)).toBe(0);
+        expect((yield* f.journal.stats).pages).toBe(0);
+      })
+    ).pipe(Effect.timeout("15 seconds"))
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("attributes an owned synthetic writable source refusal to a closed digest predicate", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const pin = yield* Effect.fromOption(A.head(f.policy.sourcePins));
+        yield* fs.chmod(pin.path, 0o660);
+        const observed = yield* inspectSyntheticPeer(f.policy);
+        expect(observed.listenerReady).toBe(true);
+        expect(observed.report.ok).toBe(false);
+        expect(observed.report.phase).toBe("public_digest");
+        expect(observed.report.exceptionClass).toBe("ValueError");
+        expect(observed.diagnosticAckObserved).toBe(false);
+        expect(
+          A.some(
+            R.toEntries(observed.report.checks),
+            ([name, value]) => name === "source.public_digest.b40.1" && value.observedTrue
+          )
+        ).toBe(true);
+        expect(observed.report.predicateAstPreserved).toBe(true);
+        expect(observed.report.shortCircuitOrderPreserved).toBe(true);
+        expect((yield* f.journal.stats).pages).toBe(0);
+      })
+    ).pipe(Effect.timeout("15 seconds"))
+  )
+);
+
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+  it.effect("diagnostic transport errors cannot expose helper arguments or raw exceptions", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const failed = yield* inspectSyntheticPeer(
+          CursorLifecyclePolicy.make({ ...f.policy, pythonExecutable: "/nonexistent/PRIVATE-HELPER" })
+        ).pipe(Effect.flip);
+        expect(failed.reason).toBe("transport");
+        const encoded = yield* encodeDiagnosticError(failed);
+        expect(Str.includes("PRIVATE-HELPER")(encoded)).toBe(false);
+        expect(Str.includes("_closed_probe")(encoded)).toBe(false);
+        expect((yield* f.journal.stats).pages).toBe(0);
+      })
+    ).pipe(Effect.timeout("15 seconds"))
   )
 );
