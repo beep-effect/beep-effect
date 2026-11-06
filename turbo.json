@@ -16,7 +16,12 @@
       "tsconfig.base.json",
       "tsconfig.packages.json"
     ],
-    "env": ["VITE_COSMOS_SPIKE", "REGEN_GOLDENS"],
+    "env": [
+      "VITE_COSMOS_SPIKE",
+      "REGEN_GOLDENS",
+      "BEEP_LINT_TSGOLINT",
+      "TSRS_FAST"
+    ],
     "passThroughEnv": [
       "BEEP_AGENT_SESSION_ID",
       "BEEP_NODE_BIN",
