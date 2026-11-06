@@ -111,6 +111,7 @@ const read = (offset = -10, ownSuccess = false) =>
 const snapshot = (offset = -10, ownSuccess = false) =>
   OwnerCheckpointSnapshot.make({
     repository: binding.repository,
+    base: { repository: binding.repository, ref: "main", sha: merge },
     state: "open",
     read: read(offset, ownSuccess),
     selfCheck: { id: 2, applicationId: 123, run: O.getOrThrow(A.get(read(offset, ownSuccess).checkRuns, 1)) },
@@ -194,6 +195,9 @@ const livePull = (merged = false) => ({
   merged,
   merged_at: merged ? DateTime.formatIso(now) : null,
   draft: false,
+  title: "feat: fixed fixture",
+  mergeable_state: "clean",
+  base: { ...pullFixture.base, repo: { full_name: binding.repository } },
   head: { ...pullFixture.head, sha: head },
 });
 
@@ -578,7 +582,7 @@ describe("owner checkpoint refusal and recovery boundaries", () => {
       });
       const released = OwnerCheckpointRecord.make({
         ...held,
-        state: OwnerCheckpointState.cases.Released.make({ releaseId, evidenceDigest: digest }),
+        state: OwnerCheckpointState.cases.Released.make({ releaseId, evidenceDigest: digest, base: snapshot().base }),
       });
       const claimed = OwnerCheckpointRecord.make({
         ...held,

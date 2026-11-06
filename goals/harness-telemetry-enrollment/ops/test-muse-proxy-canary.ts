@@ -289,7 +289,7 @@ nativeCase("wrapper bytes drift refuses before consumer invocation", () =>
   })
 );
 
-it.live("external source interruption terminalizes after cleanup", () =>
+nativeCase("external source interruption terminalizes after cleanup", () =>
   Effect.tryPromise(async () => {
     const f = await fixture({ mode: "hang" });
     try {
