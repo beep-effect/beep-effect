@@ -58,13 +58,11 @@ import {
   collectChangedFiles,
   collectDirtyWorktreeFiles,
 } from "../../../packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts";
-import {
-  adaptGitKitError,
-  runGitOutput,
-  runGitPathList,
-} from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
+import { adaptGitKitError } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 import { runRepoCommandCapture } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts";
 import { RepoRunContext } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts";
+// The retired generic runners, frozen verbatim at the lane base (runner retirement, SPEC D-21).
+import { runGitOutput, runGitPathList } from "./frozen-w7b/GitRunners.old.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type { GitCommandErrorAdapter } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 

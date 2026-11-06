@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Codex performance publication review",
-      "reason": "Record hashed compiler/backend selectors, CLI checker scheduling caches and generated policy inputs; preserve qualification scope and trust boundaries.",
+      "reviewer": "Claude Fable 5.1 (repo-cli-gh-git-consolidation runner retirement, feat/gh-git-w7-retire)",
+      "reason": "Record the runner-retirement seal drift: Goals/Doctor.ts moved its ls-files --others --ignored read onto runRepoCommandCaptureRaw and dropped the GoalsGitError adapter, so Goals.errors.ts leaves the goals-doctor and knowledge policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/tsrs-performance-cache-review-2026-11-06.md",
-        "sha256": "ac73c5881cd2a6a55fb7cf74c20cc4df752735eab0b1d2ff675f92c0c39df235"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-retire.md",
+        "sha256": "c14e38648002c31df4e58392feb338f33a97457f0a78205e3d21288bbe76f170"
       }
     },
     "@beep/acp": {
@@ -1162,11 +1162,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Codex performance publication review",
-      "reason": "Record hashed compiler/backend selectors, CLI checker scheduling caches and generated policy inputs; preserve qualification scope and trust boundaries.",
+      "reviewer": "Claude Fable 5.1 (repo-cli-gh-git-consolidation runner retirement, feat/gh-git-w7-retire)",
+      "reason": "Record the runner-retirement seal drift: Goals/Doctor.ts moved its ls-files --others --ignored read onto runRepoCommandCaptureRaw and dropped the GoalsGitError adapter, so Goals.errors.ts leaves the goals-doctor and knowledge policy seals; commands, outputs, cache flags and environment are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/tsrs-performance-cache-review-2026-11-06.md",
-        "sha256": "ac73c5881cd2a6a55fb7cf74c20cc4df752735eab0b1d2ff675f92c0c39df235"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w7-retire.md",
+        "sha256": "c14e38648002c31df4e58392feb338f33a97457f0a78205e3d21288bbe76f170"
       }
     },
     "@beep/repo-cli-kit": {
@@ -121773,7 +121773,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "fce69b39ea839fcfc240dd94d01e1df361f007e1296ce4d99693ae1fea0ef697"
+        "sha256": "4f8e35a6e90c9d1d6b1eb57180fb0f8079d1bafe9224e3207630410b204bca05"
       }
     ]
   }

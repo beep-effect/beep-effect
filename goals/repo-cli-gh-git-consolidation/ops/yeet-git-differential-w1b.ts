@@ -45,9 +45,10 @@ import {
   refreshBaseRef,
 } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts";
 import { YeetCommandError } from "../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
-import { runGitOutput } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 import { runRepoCommandCapture } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts";
 import { RepoRunContext } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts";
+// The retired generic runner, frozen verbatim at the lane base (runner retirement, SPEC D-21).
+import { runGitOutput } from "./frozen-w7b/GitRunners.old.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
