@@ -45,3 +45,15 @@ never acknowledges wave rows.
 Use `yeet inbox ack <id> --observed` to acknowledge a job result manually.
 The finalizer records abnormal deaths in the attempt journal; job records and
 logs remain under `.beep/yeet/jobs/`, with the newest 50 terminal jobs retained.
+
+## Admission scopes and detached proofs (moved from `AGENTS.md`)
+
+Heavy admitted work runs in `agent-run-<ticket>.scope` under
+`agent-runs.slice` when the user manager allows it; `scheduler reap --apply`
+stops scopes backed by dead leases. A loaded scope without a dead lease is
+left alone because it may belong to an admission racing with the reaper.
+Without the installed slice file, systemd uses a transient slice with defaults.
+Detached proofs run in `beep-proof-<jobId>.service`: use `--detach` for a proof
+expected to outlive the repair loop, then `yeet job wait <jobId>`; the systemd finalizer journals dead runners
+(`signal`, `oom-killed`, `timeout`, `cancelled`, `unrecorded-failure`);
+start failures have a terminal job record and inbox row, without an attempt.
