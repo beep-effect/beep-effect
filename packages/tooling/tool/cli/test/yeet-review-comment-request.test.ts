@@ -8,6 +8,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -17,7 +18,8 @@ import { provideSpawner } from "./support/ScriptedProcess.ts";
 const sha = Str.repeat(40)("a");
 const marker = `<!-- beep-reviewer:request sha=${sha} -->`;
 const body = `Requesting beep-reviewer review of this ready PR head.\n\n${marker}`;
-const json = (value: unknown) => Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value));
+const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const json = (value: unknown) => Result.getOrThrow(encodeJson(value));
 const pull = (overrides = {}) => ({
   state: "open",
   created_at: "2026-11-06T10:00:00Z",
@@ -44,6 +46,35 @@ const context = RepoRunContext.make({
   originalArgv: [],
   packetDir: ".beep/yeet",
 });
+const requestStage = (args: ReadonlyArray<string>) =>
+  Match.value(args).pipe(
+    Match.when(
+      (args) => A.contains(args, "POST"),
+      () => "post"
+    ),
+    Match.when(
+      (args) => A.contains(args, "user"),
+      () => "auth"
+    ),
+    Match.when(
+      (args) => A.some(args, Str.includes("/timeline?")),
+      () => "timeline"
+    ),
+    Match.when(
+      (args) => A.contains(args, "--paginate"),
+      () => "census"
+    ),
+    Match.orElse(() => "pull")
+  );
+const scriptedOutput = (args: ReadonlyArray<string>, comments: unknown) =>
+  Match.value(requestStage(args)).pipe(
+    Match.when("post", () => "{}"),
+    Match.when("auth", () => "kriegcloud"),
+    Match.when("timeline", () => timeline),
+    Match.when("census", () => json(comments)),
+    Match.orElse(() => json(pull()))
+  );
+
 const platform = Git.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (it) => {
@@ -93,17 +124,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
       Effect.gen(function* () {
         const runner = ScriptedSpawner.make((command, args) => {
           expect(command).toBe("gh");
-          return {
-            stdout: A.contains(args, "POST")
-              ? "{}"
-              : A.contains(args, "user")
-                ? "kriegcloud"
-                : A.some(args, Str.includes("/timeline?"))
-                  ? timeline
-                  : A.contains(args, "--paginate")
-                    ? json(scenario.comments)
-                    : json(pull()),
-          };
+          return { stdout: scriptedOutput(args, scenario.comments) };
         });
         const message = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(provideSpawner(runner));
         const seen = A.map(runner.spawns, (spawn) => spawn.args);
@@ -128,27 +149,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
       Effect.gen(function* () {
         const runner = ScriptedSpawner.make((command, args) => {
           expect(command).toBe("gh");
-          const current = A.contains(args, "POST")
-            ? "post"
-            : A.contains(args, "user")
-              ? "auth"
-              : A.some(args, Str.includes("/timeline?"))
-                ? "timeline"
-                : A.contains(args, "--paginate")
-                  ? "census"
-                  : "pull";
-          return current === stage
-            ? { stdout: "denied", exit: 1 }
-            : {
-                stdout:
-                  current === "auth"
-                    ? "kriegcloud"
-                    : current === "timeline"
-                      ? timeline
-                      : current === "census"
-                        ? "[[]]"
-                        : json(pull()),
-              };
+          return requestStage(args) === stage ? { stdout: "denied", exit: 1 } : { stdout: scriptedOutput(args, [[]]) };
         });
         const error = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
           provideSpawner(runner),
@@ -289,13 +290,9 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
           return { stdout: "{}" };
         }
         return {
-          stdout: A.contains(args, "user")
-            ? "kriegcloud"
-            : A.some(args, Str.includes("/timeline?"))
-              ? timeline
-              : A.contains(args, "--paginate")
-                ? json([posted ? [{ body, created_at: "2026-11-06T12:00:01Z", user: { login: "kriegcloud" } }] : []])
-                : json(pull()),
+          stdout: scriptedOutput(args, [
+            posted ? [{ body, created_at: "2026-11-06T12:00:01Z", user: { login: "kriegcloud" } }] : [],
+          ]),
         };
       });
       const first = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(provideSpawner(runner));
@@ -335,17 +332,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
       const dirty = yield* git(work, ["diff", "--binary"]);
       const runner = ScriptedSpawner.make((command, args) => {
         expect(command).toBe("gh");
-        return {
-          stdout: A.contains(args, "POST")
-            ? "{}"
-            : A.contains(args, "user")
-              ? "kriegcloud"
-              : A.some(args, Str.includes("/timeline?"))
-                ? timeline
-                : A.contains(args, "--paginate")
-                  ? "[[]]"
-                  : json(pull()),
-        };
+        return { stdout: scriptedOutput(args, [[]]) };
       });
       yield* requestReviewerReviewForTesting(
         RepoRunContext.make({ ...context, repoRoot: work, cwd: work }),

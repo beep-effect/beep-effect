@@ -833,51 +833,31 @@ const decodeReviewerResponse = Effect.fnUntraced(function* <T, I>(schema: S.Code
   );
 });
 
-const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* (
-  context: RepoRunContext,
-  prNumber: number,
-  confirmedHead: string,
-  allowPush: boolean
-) {
-  if (!S.is(ReviewerRequestHead)(confirmedHead)) {
-    return yield* YeetCommandError.make({
-      message: "reviewer request requires a full 40-hex proven head; no request attempted",
-      exitCode: 1,
-    });
-  }
-  const read = (args: ReadonlyArray<string>) =>
-    ghOutput({
-      args,
-      cwd: context.repoRoot,
-      label: "gh reviewer request",
-      onFailure: (failure) =>
-        YeetCommandError.make({ message: `${failure.label} failed (${failure._tag})`, exitCode: 1 }),
-    });
-  const pullArgs = ["api", `repos/{owner}/{repo}/pulls/${prNumber}`];
-  const pull = yield* read(pullArgs).pipe(
+const reviewerRequestOutput = Effect.fnUntraced(function* (context: RepoRunContext, args: ReadonlyArray<string>) {
+  return yield* ghOutput({
+    args,
+    cwd: context.repoRoot,
+    label: "gh reviewer request",
+    onFailure: (failure) =>
+      YeetCommandError.make({ message: `${failure.label} failed (${failure._tag})`, exitCode: 1 }),
+  });
+});
+
+const readReviewerPull = Effect.fnUntraced(function* (context: RepoRunContext, prNumber: number) {
+  return yield* reviewerRequestOutput(context, ["api", `repos/{owner}/{repo}/pulls/${prNumber}`]).pipe(
     Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestPull, value))
   );
-  if (pull.state !== "open" || pull.draft || pull.head.sha !== confirmedHead) {
-    return yield* YeetCommandError.make({
-      message: "reviewer request refused: pull request is no longer open and ready at the proven head",
-      exitCode: 1,
-    });
-  }
-  if (pull.user.login !== REVIEWER_COMMENT_AUTHOR || pull.base.repo.full_name !== REVIEWER_COMMENT_REPOSITORY) {
-    return allowPush
-      ? yield* pushReviewerRequest(context, prNumber, confirmedHead)
-      : `[yeet] no comment routine configured for this pull request author/repository; no repeated review-trigger push`;
-  }
-  const login = yield* read(["api", "user", "--jq", ".login"]).pipe(Effect.map(Str.trim));
-  if (login !== REVIEWER_COMMENT_AUTHOR) {
-    return yield* YeetCommandError.make({
-      message: `reviewer comment requires authenticated ${REVIEWER_COMMENT_AUTHOR}; no comment or fallback push attempted`,
-      exitCode: 1,
-    });
-  }
+});
+
+const reviewerPullReady = (pull: typeof ReviewerRequestPull.Type, head: string) =>
+  pull.state === "open" && !pull.draft && pull.head.sha === head;
+const reviewerCommentCovered = (pull: typeof ReviewerRequestPull.Type) =>
+  pull.user.login === REVIEWER_COMMENT_AUTHOR && pull.base.repo.full_name === REVIEWER_COMMENT_REPOSITORY;
+
+const readReviewerReadyAt = Effect.fnUntraced(function* (context: RepoRunContext, prNumber: number) {
   // Match ReviewWindow's latest ready_for_review event. A missing transition
   // is unknown: an eventually consistent timeline must not validate a draft-era request.
-  const events = yield* read([
+  const events = yield* reviewerRequestOutput(context, [
     "api",
     `repos/{owner}/{repo}/issues/${prNumber}/timeline?per_page=100`,
     "--paginate",
@@ -912,8 +892,24 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
       exitCode: 1,
     });
   }
+  return readyAt;
+});
+
+const requestReviewerComment = Effect.fnUntraced(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  confirmedHead: string
+) {
+  const login = yield* reviewerRequestOutput(context, ["api", "user", "--jq", ".login"]).pipe(Effect.map(Str.trim));
+  if (login !== REVIEWER_COMMENT_AUTHOR) {
+    return yield* YeetCommandError.make({
+      message: `reviewer comment requires authenticated ${REVIEWER_COMMENT_AUTHOR}; no comment or fallback push attempted`,
+      exitCode: 1,
+    });
+  }
+  const readyAt = yield* readReviewerReadyAt(context, prNumber);
   const body = reviewerCommentBody(confirmedHead);
-  const pages = yield* read([
+  const pages = yield* reviewerRequestOutput(context, [
     "api",
     `repos/{owner}/{repo}/issues/${prNumber}/comments?per_page=100`,
     "--paginate",
@@ -928,23 +924,15 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
   ) {
     return `[yeet] trusted beep-reviewer request already exists for #${prNumber} at ${confirmedHead}; nothing posted`;
   }
-  const latest = yield* read(pullArgs).pipe(
-    Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestPull, value))
-  );
-  if (
-    latest.state !== "open" ||
-    latest.draft ||
-    latest.head.sha !== confirmedHead ||
-    latest.user.login !== pull.user.login ||
-    latest.base.repo.full_name !== pull.base.repo.full_name
-  ) {
+  const latest = yield* readReviewerPull(context, prNumber);
+  if (!reviewerPullReady(latest, confirmedHead) || !reviewerCommentCovered(latest)) {
     return yield* YeetCommandError.make({
       message:
         "reviewer request refused: pull request changed before the comment; no comment or fallback push attempted",
       exitCode: 1,
     });
   }
-  yield* read([
+  yield* reviewerRequestOutput(context, [
     "api",
     `repos/{owner}/{repo}/issues/${prNumber}/comments`,
     "--method",
@@ -953,6 +941,33 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
     `body=${body}`,
   ]);
   return `[yeet] posted beep-reviewer request for #${prNumber} at ${confirmedHead}; checkout and head unchanged`;
+});
+
+const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  confirmedHead: string,
+  allowPush: boolean
+) {
+  if (!S.is(ReviewerRequestHead)(confirmedHead)) {
+    return yield* YeetCommandError.make({
+      message: "reviewer request requires a full 40-hex proven head; no request attempted",
+      exitCode: 1,
+    });
+  }
+  const pull = yield* readReviewerPull(context, prNumber);
+  if (!reviewerPullReady(pull, confirmedHead)) {
+    return yield* YeetCommandError.make({
+      message: "reviewer request refused: pull request is no longer open and ready at the proven head",
+      exitCode: 1,
+    });
+  }
+  if (!reviewerCommentCovered(pull)) {
+    return allowPush
+      ? yield* pushReviewerRequest(context, prNumber, confirmedHead)
+      : `[yeet] no comment routine configured for this pull request author/repository; no repeated review-trigger push`;
+  }
+  return yield* requestReviewerComment(context, prNumber, confirmedHead);
 });
 
 /**
