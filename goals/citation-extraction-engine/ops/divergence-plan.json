@@ -264,7 +264,12 @@
         "packages/law-practice/use-cases/test/fixtures/eyecite/extraction-loop.json",
         "packages/law-practice/server/src/internal/Citation/ExtractionLoop.ts",
         "packages/law-practice/server/test/CitationExtractionLoop.fixtures.ts",
-        "packages/law-practice/server/test/CitationExtractionLoop.test.ts"
+        "packages/law-practice/server/test/CitationExtractionLoop.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-projection.md",
+        "packages/law-practice/server/src/internal/Citation/SemanticProjection.ts",
+        "packages/law-practice/server/src/internal/Citation/SemanticVocabulary.ts",
+        "packages/law-practice/server/assets/citation/semantic-editions.json",
+        "packages/law-practice/server/test/CitationSemanticProjection.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

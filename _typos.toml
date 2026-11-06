@@ -241,3 +241,9 @@ extend-ignore-re = ['"bytes": "[0-9a-f]*"']
 [type.citation-court-data]
 extend-glob = ["court-table.json", "court-lookup.json", "post-case-metadata.json"]
 extend-ignore-re = ['"(?:payload|keys|cases|courtTable)": "(?:\\.|[^"\\])*"']
+
+# Reviewed reporter identities are hexadecimal data; retain checks on provenance.
+# The semantic-editions verifier authenticates complete ordered source equality.
+[type.citation-semantic-editions]
+extend-glob = ["semantic-editions.json"]
+extend-ignore-re = ['"reporterId": "reporter:[0-9a-f]{24}"']

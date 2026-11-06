@@ -1231,3 +1231,18 @@ accounting checker.
   8192-unit policy; the default 4096-unit refusal remains. Repeated captures,
   full metadata composition and broader acceptance stay open. See the logical
   capture-reuse evidence receipt.
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-extraction-engine`; add a `kind: checkpoint` file there, never edit this block._
+
+### Builtin semantic citation projection, 2026-11-06
+
+Builtin parsed models now project legal meaning through the domain Citation structured codec and a complete authenticated runtime projection of the reviewed edition mapping. Five focused tests cover all 80 captured models across eight families, all 2533 edition identities, shortcut semantics, short plaintiff absence/null/text, unmapped courts and refusal controls. This is projection evidence, not parser or full-engine acceptance. Public service/Layer, mention adaptation, broader behavioral qualification and all unfinished proof obligations remain open. See history/evidence/2026-11-06-semantic-projection.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the semantic projection wave; retain the sealed source mapping and private extraction pipeline.
+
+<!-- beep:decisions:end -->

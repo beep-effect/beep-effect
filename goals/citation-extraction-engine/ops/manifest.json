@@ -122,7 +122,12 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-loop.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenized-extraction.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-document-extraction.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-entry.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-entry.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-projection.md",
+    "packages/law-practice/server/src/internal/Citation/SemanticProjection.ts",
+    "packages/law-practice/server/src/internal/Citation/SemanticVocabulary.ts",
+    "packages/law-practice/server/assets/citation/semantic-editions.json",
+    "packages/law-practice/server/test/CitationSemanticProjection.test.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -215,7 +220,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-generated-references.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-reference-template.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-extraction-loop.py --self-test",
-    "python3 goals/citation-extraction-engine/ops/verify-extraction-shortcut.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-extraction-shortcut.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-semantic-editions.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -608,6 +614,14 @@
     {
       "path": "ops/verify-extraction-shortcut.py",
       "purpose": "Seal shortcut/default evidence and corruption controls; optionally replay the pinned original."
+    },
+    {
+      "path": "ops/export-semantic-editions.py",
+      "purpose": "Project the complete reviewed P0 edition-to-public identity mapping into a production artifact."
+    },
+    {
+      "path": "ops/verify-semantic-editions.py",
+      "purpose": "Verify exact source-derived semantic identities, producer seal and five corruption controls."
     }
   ]
 }
