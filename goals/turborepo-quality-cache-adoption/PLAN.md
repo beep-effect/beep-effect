@@ -1057,3 +1057,28 @@ Read `research/selector-flag-isolation-checkpoint-2026-11-04.json` before any
 flag change. Actual root/caller coverage and qualification remain next; the
 eleven accepted scoped reviews, 25 pending feature reviews and every whole-goal
 acceptance criterion stay unchanged.
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: checkpoint` file there, never edit this block._
+
+### Refresh the current-main population without renewing historical grants, 2026-11-06
+
+Accepted source 845d9f136911daac97ad82ca1a5d8eeab6a5aabb has 194 workspaces, 4,528 configured graph nodes and 2,438 executable computations. Both pinned native clients reconcile all 4,239 manifest scripts and 6,329 catalogue nodes against 463 source bindings verified before and after each query. The additional 1,801 script-only entrypoints include 1,310 with literal configured callers and 491 without that simple caller form. No task body executed. The canonical refresh recipe retained the reviewed population byte-identically; 205 historical dispositions remain in its archive chain, with 204 computations still present. Current semantic reviews are pending and no qualification is renewed. See research/nested-entrypoint-inventory-2026-11-06.json. The qualification ledger retains five excluded tuples and zero qualified tuples; configured cache flags are not grants. All whole-goal criteria and observation requirements remain open.
+
+Reverse: Restore the prior current-population bytes from the retained review archive; runtime and qualification policy are unchanged.
+
+### Keep current mutating fixers fresh and retain pure lint qualification work, 2026-11-06
+
+Fresh source review binds all 190 configured lint:fix wrappers to current manifest implementations and disabled effective cache flags at accepted source 845d9f1. 186 run biome check . --write; four use explicit path or shell forms with --write. A cached verdict would skip the requested source mutations. Keep these whole tasks fresh while retaining each nonwriting lint counterpart for qualification. See research/current-mutating-fixer-review-2026-11-06.json. No task bodies or tests ran, no cache settings changed, and no qualification is granted. 2248 configured current semantic reviews remain pending; all broader goal requirements remain open.
+
+Reverse: Remove the current review and return its 190 semantic rows to pending; runtime cache flags stay false.
+
+### Keep live services and external security verdicts fresh, 2026-11-06
+
+Current-source review confirms 13 persistent portless server or watcher tasks and one live bun-audit security verdict with caching already disabled. A replay cannot restore a running service or establish current external advisory data. LaneProofReuse independently rejects reuse of the security verdict. Source/configuration bindings and pure prerequisite obligations are in research/current-service-security-boundaries-2026-11-06.json. This brings current whole-task reviews to 204, leaving 2234 configured computation reviews pending. Pure prerequisites, full qualification, runtime trust, observations and all whole-goal criteria remain open. No task bodies ran and no runtime cache setting changed.
+
+Reverse: Return the 14 current semantic decisions to pending; effective cache flags remain disabled.
+
+<!-- beep:decisions:end -->

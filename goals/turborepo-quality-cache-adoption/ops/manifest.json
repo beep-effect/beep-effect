@@ -69,12 +69,14 @@
     "research/current-feature-client-refresh-2026-11-03.json",
     "research/current-feature-matrix.json",
     "research/current-fresh-disposition-review-2026-11-02.json",
+    "research/current-mutating-fixer-review-2026-11-06.json",
     "research/current-population.json",
     "research/current-runtime-baseline-checkpoint.json",
     "research/current-runtime-baseline-review.md",
     "research/current-runtime-profile-checkpoint.json",
     "research/current-runtime-profile-control.ts",
     "research/current-runtime-profile-observation.json",
+    "research/current-service-security-boundaries-2026-11-06.json",
     "research/current-source-fresh-disposition-review-2026-11-02.json",
     "research/current-source-fresh-disposition-review-2026-11-03.json",
     "research/deployment-boundary-source-review-2026-11-04.json",
@@ -156,6 +158,7 @@
     "research/native-worktree-controls-2026-11-03.json",
     "research/native-worktree-controls.py",
     "research/nested-entrypoint-inventory-2026-11-03.json",
+    "research/nested-entrypoint-inventory-2026-11-06.json",
     "research/nested-source-fixer-review-2026-11-03.json",
     "research/observability-driver-controls.json",
     "research/observability-feature-review.json",
@@ -173,6 +176,7 @@
     "research/population-preservation-controls-2026-11-02.json",
     "research/population-refresh-checkpoint-2026-11-02.json",
     "research/population-source-refresh-checkpoint.json",
+    "research/prior-reviewed-population-2026-11-06.json",
     "research/proof-scm-ref-binding-review-2026-11-04.json",
     "research/prune-driver-controls.json",
     "research/prune-global-feature-review.json",
@@ -269,5 +273,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. The source-bound native census at fae5b2098c has 191 workspaces, 4,459 graph nodes, 2,400 executable computations and 1,646 configured cache-enabled computations; those flags grant no qualification. Current literal-source reviews keep 198 whole-task boundaries fresh, with 2,202 native reviews pending and five original qualification exclusions unchanged. Retired entries remain in preserved history. Two entrypoint obligations and non-Turbo/nested coverage remain open. Eleven of 36 feature decisions have scoped reviews and 25 remain pending. Qualification, supported adoption, measured value, real observation windows and every whole-goal criterion remain incomplete. The published current canary adds the canary-only permission-hash flag; 64 configuration dry runs executed no task bodies. A separate 132-case Linux hash observation asserts regular-file mode/content controls and records alias differences; it executes no tasks and leaves the permission feature pending. Review repair binds parsed inputs to their captured bytes; 196 fresh dry plans and six source-change prefix controls execute no tasks. Original observations remain historical. The repaired signature-key driver now has a separate source-bound 168-case offline semantic replay (162 fixture task executions and six early refusals), matching historical behavior. The separate thirteen metadata controls execute no native clients. Signing, feature and tuple qualification remain pending. A related nine-driver source-capture repair has 151 metadata-only prefix controls; historical native evidence is retained and semantic replays for those changed drivers remain pending. No feature disposition, qualification or runtime setting changes. The subsequent descriptor-containment repair changes thirteen drivers/shared inputs:208 actual-reader prefix cases and13 separate stubbed-reader binding cases execute no native clients/tasks. All changed-driver semantic replays, including the signature driver, are pending; the earlier168-case replay retains its original source envelope. Fresh native replays of all thirteen repaired experiment drivers completed in13.690s under one existing admission token. Source/client bindings and800 retained raw captures match; current behavior is synthetic-only. Earlier reports remain immutable, feature decisions stay11scoped/25pending and all real-task, protected rollout and whole-goal requirements remain open. A separate 36-invocation exact-client local Git-worktree matrix checks bidirectional portable sharing, explicit cache-directory isolation, replay and invalidation. Both clients reproduce absolute-path and private-umask executable-mode counterexamples against forced fresh execution. All 36 native summaries and retained output/log digests join. Feature decisions remain 11 scoped / 25 pending; no real computation, independent-clone/remote-box or permission-sensitive qualification is granted. The two new drivers now unconditionally reject disabled assertions and non-Linux startup. Twelve actual refusals create no output parents; fresh guarded 24 boundary and 36 worktree observations match their captured source digests. Historical reports stay immutable, all 13 older repaired drivers stay unchanged, feature decisions remain 11 scoped / 25 pending and no real-task or rollout qualification is granted."
+  "statusNote": "Active. Current-main population at 845d9f1: 194 workspaces, 2438 configured executable computations and 1801 additional script-only entrypoints. 204 current whole-task dispositions are reviewed (190 mutators, 13 services, one live security verdict); 2234 configured reviews remain pending; 205 historical dispositions are retained byte-identically in the archive chain. Both exact native query clients reconcile 4239 manifest scripts against 463 source bindings. The feature matrix retains 25 pending entries. No task qualification, production trust, observation window or whole-goal acceptance is granted by this metadata refresh."
 }
