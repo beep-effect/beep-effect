@@ -67,7 +67,7 @@ Verification:
 ```sh
 test "$(wc -m < goals/fleet-root-registry/GOAL.md)" -le 4000
 jq . goals/fleet-root-registry/ops/manifest.json
-bun run beep worktree fleet --json > /tmp/fleet-before.json  # roots unset; diff after
+bun run beep worktree fleet --json > "$HOME/.cache/beep/fleet-before.json"  # roots unset; diff after
 bun run beep quality package-verify @beep/repo-cli
 git diff --check -- goals/fleet-root-registry
 ```
