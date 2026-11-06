@@ -1095,7 +1095,11 @@ describe("owner checkpoint refusal and recovery boundaries", () => {
       });
       const released = OwnerCheckpointRecord.make({
         ...held,
-        state: OwnerCheckpointState.cases.Released.make({ releaseId, evidenceDigest: digest }),
+        state: OwnerCheckpointState.cases.Released.make({
+          releaseId,
+          evidenceDigest: digest,
+          base: { repository: binding.repository, ref: "main", sha: merge },
+        }),
       });
       const claimed = OwnerCheckpointRecord.make({
         ...held,
