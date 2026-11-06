@@ -33,6 +33,17 @@
       {
         "number": 2541,
         "role": "supporting"
+      },
+      {
+        "number": 2812,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_orchestrator-handoff-p2-7432465c256f/verdict.json",
+        "gating": true
       }
     ]
   },
@@ -80,5 +91,9 @@
   "stopConditions": [
     "A hand-off step would require the operator to relay messages between sessions.",
     "The merge gate would merge over an unattributed red or an unknown thread count."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2812
+  }
 }
