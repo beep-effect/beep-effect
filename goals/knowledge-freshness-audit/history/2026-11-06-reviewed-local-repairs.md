@@ -62,6 +62,17 @@ changeset notes naming private workspaces, so this delivery records the migratio
 here instead of adding an invalid private-package changeset. Future activation of
 publication must audit the compatibility/versioning policy before exposing it.
 
+## Consumer correction found by hosted checks
+
+The first hosted check exposed brand erasure at seven document-field annotations
+in chat, Pandoc results and workspace message schemas. Effect Opaque delegates
+rebuild to its underlying struct: directly calling its annotation method returns
+the structural schema. A suspended document schema preserves the nominal decoded
+type while carrying the same key metadata and encoded representation. The fields
+now annotate that wrapper; chat draft reconciliation behavior is unchanged.
+Focused checks across the five consumer packages pass after this correction.
+The failed first hosted head remains evidence, not an inherited/environment red.
+
 ## Rejected and qualified inferences
 
 Retained distinctions include historical versus current assertions, norms versus
