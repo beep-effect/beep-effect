@@ -31,7 +31,7 @@ Scope:
   `Fleet.command.ts`, new `internal/FleetRoots.*` and `internal/FleetRegistry.*`,
   `commands/Yeet/internal/Economics.ts` (`projectsRootOf`, `fleetCandidates`),
   `commands/Worktree/internal/ResidueReap.ts` discovery, a fixture fleet test,
-  `docs/runbooks/fleet-root-and-registry.md`.
+  a new fleet roots and registry runbook under `docs/runbooks/`.
 - Out: any checkout move, clone or delete; `worktree add` managed-root rewrite
   and the AGENTS.md worktree bullet (`lane-bootstrap`); timer units;
   `standards/git-worktrees.md`; plain `beep worktree fleet` output.

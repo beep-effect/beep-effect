@@ -49,7 +49,7 @@ Amended 2026-11-06 (see `DECISIONS.md` amendments and
   `--fleet` and residue-reap discovery, from `BEEP_FLEET_ROOTS` or
   `~/.local/state/beep/fleet/<repo-key>/roots.json`;
 - an Effect Vitest fixture fleet with legacy clones, `-worktrees` and
-  `.claude/worktrees` lanes, `beep/seats/main` and `beep/lanes/x` is fully
+  Claude Code nested worktree lanes, `beep/seats/main` and `beep/lanes/x` is fully
   discovered with the roots configured, and `fleet --json` is byte-identical
   with roots unset (fixture and this workstation);
 - `fleet --join` prints each checkout's mirror facts beside the registry's

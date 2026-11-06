@@ -113,7 +113,7 @@ Higher sources outrank lower sources when they conflict.
   discovery roots
 - new `packages/tooling/tool/cli/src/commands/Worktree/internal/FleetRoots.*`
   and `FleetRegistry.*` (schema -> `Context.Service` -> store)
-- `docs/runbooks/fleet-root-and-registry.md` (new)
+- a new fleet roots and registry runbook under `docs/runbooks/`
 
 ## Constraints
 
@@ -131,7 +131,7 @@ Higher sources outrank lower sources when they conflict.
 ## Acceptance Criteria
 
 - [ ] Effect Vitest fixture fleet (temp projects dir with `beep-effectN`
-      clones, `<clone>-worktrees` lanes, `.claude/worktrees` lanes, and
+      clones, `<clone>-worktrees` lanes, Claude Code nested worktree lanes, and
       `beep/seats/main` plus `beep/lanes/x`, all origin-matched): with the
       three roots configured, `fleet --json` lists every checkout; with roots
       unset, output is byte-identical to the pre-change build on the fixture
@@ -147,7 +147,7 @@ Higher sources outrank lower sources when they conflict.
 - [ ] The `beep-effect0-worktrees` count matches
       `git -C beep-effect0 worktree list` or the discrepancy has a named cause
       recorded in the reflection.
-- [ ] `docs/runbooks/fleet-root-and-registry.md` documents roots, registry,
+- [ ] A new fleet roots and registry runbook under `docs/runbooks/` documents roots, registry,
       adoption and the three views.
 - [ ] `bun run beep quality package-verify @beep/repo-cli` passes.
 - [ ] No unrelated refactors or formatting churn.
