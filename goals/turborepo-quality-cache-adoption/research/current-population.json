@@ -21,8 +21,8 @@
     "configuredGraphExecutableComputations": 2438,
     "additionalScriptOnlyEntrypoints": 1801,
     "queryCatalogueNodes": 6329,
-    "currentReviewedWholeTaskDispositions": 190,
-    "remainingCurrentSemanticReviews": 2248
+    "currentReviewedWholeTaskDispositions": 204,
+    "remainingCurrentSemanticReviews": 2234
   },
   "provenance": {
     "censusSha256": "a2a425c2566355bd465a996cb46d9255acc4f0e569b61d922eecfb87e90b131e",
@@ -7759,8 +7759,16 @@
         "repository-dispatch"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "required-live-security-verdict",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/repo-cli#lint:policy-fingerprint:quality-bun-audit"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -10764,8 +10772,24 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/codegen-kit#build",
+          "@beep/ecfr#build",
+          "@beep/govinfo#build",
+          "@beep/identity#build",
+          "@beep/pacer#build",
+          "@beep/qa-capture#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build",
+          "@beep/utils#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -13810,8 +13834,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/public-site#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -15240,8 +15272,19 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/identity#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build",
+          "@beep/test-utils#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -32221,8 +32264,31 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/anthropic#build",
+          "@beep/doc-text#build",
+          "@beep/duckdb#build",
+          "@beep/file-processing#build",
+          "@beep/identity#build",
+          "@beep/langextract#build",
+          "@beep/nlp#build",
+          "@beep/oxigraph#build",
+          "@beep/pglite#build",
+          "@beep/provenance#build",
+          "@beep/rdf#build",
+          "@beep/schema#build",
+          "@beep/semantic-web#build",
+          "@beep/test-runner#build",
+          "@beep/test-utils#build",
+          "@beep/ui#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -38389,8 +38455,25 @@
         "service"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/hubspot#build",
+          "@beep/identity#build",
+          "@beep/repo-configs#build",
+          "@beep/repo-utils#build",
+          "@beep/sanity#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build",
+          "@beep/test-utils#build",
+          "@beep/ui#build",
+          "@beep/utils#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -46729,8 +46812,22 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/identity#build",
+          "@beep/law-practice-server#build",
+          "@beep/law-practice-use-cases#build",
+          "@beep/m365#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build",
+          "@beep/xdg#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -47225,8 +47322,24 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/identity#build",
+          "@beep/law-practice-domain#build",
+          "@beep/law-practice-server#build",
+          "@beep/law-practice-use-cases#build",
+          "@beep/m365#build",
+          "@beep/mcp-kit#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build",
+          "@beep/utils#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -48200,8 +48313,65 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/agents-client#build",
+          "@beep/agents-domain#build",
+          "@beep/agents-server#build",
+          "@beep/agents-use-cases#build",
+          "@beep/anthropic#build",
+          "@beep/box#build",
+          "@beep/cosmos#build",
+          "@beep/doc-text#build",
+          "@beep/dock#build",
+          "@beep/dock-react#build",
+          "@beep/documents-domain#build",
+          "@beep/documents-server#build",
+          "@beep/documents-use-cases#build",
+          "@beep/editor#build",
+          "@beep/epistemic-client#build",
+          "@beep/epistemic-config#build",
+          "@beep/epistemic-domain#build",
+          "@beep/epistemic-server#build",
+          "@beep/epistemic-tables#build",
+          "@beep/epistemic-ui#build",
+          "@beep/epistemic-use-cases#build",
+          "@beep/epistemics#build",
+          "@beep/file-processing#build",
+          "@beep/graph-3d#build",
+          "@beep/identity#build",
+          "@beep/lexical-schema#build",
+          "@beep/mcp-kit#build",
+          "@beep/md#build",
+          "@beep/memfs#build",
+          "@beep/observability#build",
+          "@beep/ontology-client#build",
+          "@beep/ontology-config#build",
+          "@beep/ontology-domain#build",
+          "@beep/ontology-server#build",
+          "@beep/ontology-ui#build",
+          "@beep/ontology-use-cases#build",
+          "@beep/pglite#build",
+          "@beep/postgres#build",
+          "@beep/provenance#build",
+          "@beep/rdf#build",
+          "@beep/schema#build",
+          "@beep/shared-domain#build",
+          "@beep/test-runner#build",
+          "@beep/test-utils#build",
+          "@beep/ui#build",
+          "@beep/utils#build",
+          "@beep/workspace-domain#build",
+          "@beep/workspace-server#build",
+          "@beep/workspace-use-cases#build",
+          "@beep/xstate#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -55324,8 +55494,34 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/anthropic#build",
+          "@beep/doc-text#build",
+          "@beep/duckdb#build",
+          "@beep/epistemics#build",
+          "@beep/file-processing#build",
+          "@beep/identity#build",
+          "@beep/langextract#build",
+          "@beep/nlp#build",
+          "@beep/nlp-processing#build",
+          "@beep/openai#build",
+          "@beep/oxigraph#build",
+          "@beep/pglite#build",
+          "@beep/provenance#build",
+          "@beep/rdf#build",
+          "@beep/schema#build",
+          "@beep/semantic-web#build",
+          "@beep/test-runner#build",
+          "@beep/test-utils#build",
+          "@beep/wink#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -57531,8 +57727,14 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": []
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -57574,8 +57776,16 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/storybook#storybook:build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -59388,8 +59598,17 @@
         "service"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/identity#build",
+          "@beep/schema#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -59863,8 +60082,18 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/current-service-security-boundaries-2026-11-06.json",
+        "purePrerequisitesPendingQualification": [
+          "@beep/brand#build",
+          "@beep/test-runner#build",
+          "@beep/ui#build"
+        ]
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {

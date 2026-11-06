@@ -1075,4 +1075,10 @@ Fresh source review binds all 190 configured lint:fix wrappers to current manife
 
 Reverse: Remove the current review and return its 190 semantic rows to pending; runtime cache flags stay false.
 
+### Keep live services and external security verdicts fresh, 2026-11-06
+
+Current-source review confirms 13 persistent portless server or watcher tasks and one live bun-audit security verdict with caching already disabled. A replay cannot restore a running service or establish current external advisory data. LaneProofReuse independently rejects reuse of the security verdict. Source/configuration bindings and pure prerequisite obligations are in research/current-service-security-boundaries-2026-11-06.json. This brings current whole-task reviews to 204, leaving 2234 configured computation reviews pending. Pure prerequisites, full qualification, runtime trust, observations and all whole-goal criteria remain open. No task bodies ran and no runtime cache setting changed.
+
+Reverse: Return the 14 current semantic decisions to pending; effective cache flags remain disabled.
+
 <!-- beep:decisions:end -->

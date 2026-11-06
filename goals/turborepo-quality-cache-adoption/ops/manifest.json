@@ -76,6 +76,7 @@
     "research/current-runtime-profile-checkpoint.json",
     "research/current-runtime-profile-control.ts",
     "research/current-runtime-profile-observation.json",
+    "research/current-service-security-boundaries-2026-11-06.json",
     "research/current-source-fresh-disposition-review-2026-11-02.json",
     "research/current-source-fresh-disposition-review-2026-11-03.json",
     "research/deployment-boundary-source-review-2026-11-04.json",
@@ -272,5 +273,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. Current-main population at 845d9f1: 194 workspaces, 2438 configured executable computations and 1801 additional script-only entrypoints. 190 current whole-task mutating-fixer dispositions are reviewed; 2248 configured reviews remain pending; 205 historical dispositions are retained byte-identically in the archive chain. Both exact native query clients reconcile 4239 manifest scripts against 463 source bindings. The feature matrix retains 25 pending entries. No task qualification, production trust, observation window or whole-goal acceptance is granted by this metadata refresh."
+  "statusNote": "Active. Current-main population at 845d9f1: 194 workspaces, 2438 configured executable computations and 1801 additional script-only entrypoints. 204 current whole-task dispositions are reviewed (190 mutators, 13 services, one live security verdict); 2234 configured reviews remain pending; 205 historical dispositions are retained byte-identically in the archive chain. Both exact native query clients reconcile 4239 manifest scripts against 463 source bindings. The feature matrix retains 25 pending entries. No task qualification, production trust, observation window or whole-goal acceptance is granted by this metadata refresh."
 }
