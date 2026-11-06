@@ -200,4 +200,7 @@ A promotion record is a fillable section in the affected `shared/*` package's `R
 
 A package may carry multiple promotion records (one per promoted export). Records are part of the durable history of the export and are not deleted when the export is retired — instead, the record receives a `**Retired:** YYYY-MM-DD — <reason>` field.
 
-Records are checked at PR review (see lint spec `lint:promotion-records` referenced in `07-non-slice-families.md`).
+Promotion records require PR review. `lint:promotion-records` remains a planned
+enforcement target, not an implemented command; see
+[Known Unknowns](./README.md#known-unknowns). The record schema and promotion bar
+above remain mandatory.

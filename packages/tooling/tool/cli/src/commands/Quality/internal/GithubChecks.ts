@@ -910,6 +910,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     rootTaskLane(repoRoot, "lint:retired-effect-paths", "lint:retired-effect-paths")
   ),
   githubCheckLane(
+    "lint:entity-kit-freeze",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    rootTaskLane(repoRoot, "lint:entity-kit-freeze", "lint:entity-kit-freeze")
+  ),
+  githubCheckLane(
     "lint:retired-iri-authorities",
     "cheap-gates",
     "repo-quality",

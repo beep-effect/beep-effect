@@ -3,9 +3,11 @@
  * @since 0.0.0
  */
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Queue from "effect/Queue";
@@ -57,6 +59,48 @@ lines.on("line", line => {
 });
 `;
 
+const sealRuntimeCopy = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const source = yield* fs.realPath(process.execPath);
+  const before = yield* fs.stat(source);
+  if (before.type !== "File" || before.size > 268435456n) return yield* failure("runtime");
+  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "sealed-runtime-" });
+  yield* fs.chmod(directory, 0o700);
+  const executable = `${directory}/runtime`;
+  // Fresh exclusive directory + copyFile creates distinct bytes/inode, never a hardlink.
+  yield* fs.copyFile(source, executable);
+  yield* fs.chmod(executable, 0o500);
+  const copied = yield* fs.stat(executable);
+  const uid = process.getuid?.();
+  if (uid === undefined) return yield* failure("runtime");
+  const copiedBytes = yield* fs.readFile(executable);
+  const sha256 = yield* hashObservationPayload(copiedBytes);
+  const sourceBytes = yield* fs.readFile(source);
+  const sourceHash = yield* hashObservationPayload(sourceBytes);
+  const after = yield* fs.stat(source);
+  const canonical = yield* fs.realPath(executable);
+  const valid = A.every(
+    [
+      copied.type === "File",
+      (copied.mode & 0o022) === 0,
+      O.contains(uid)(copied.uid),
+      O.contains(1n)(copied.nlink),
+      O.isSome(before.ino),
+      O.isSome(copied.ino),
+      before.dev !== copied.dev || O.getOrElse(before.ino, () => -1n) !== O.getOrElse(copied.ino, () => -1n),
+      before.mode === after.mode,
+      before.dev === after.dev,
+      before.size === after.size,
+      O.getOrElse(before.ino, () => -1n) === O.getOrElse(after.ino, () => -2n),
+      sha256 === sourceHash,
+      canonical === executable,
+    ],
+    identity
+  );
+  if (!valid) return yield* failure("runtime");
+  return { executable, sha256, sourceMode: before.mode };
+});
+
 /**
  * Copy and seal the actual test executable, then launch that same byte-identical copy as a peer.
  * Source/system/cache permissions are never changed and no hardlink is created.
@@ -73,40 +117,8 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
   const owned = yield* Scope.fork(parent);
   const close = Scope.close(owned, Exit.void);
   return yield* Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const source = yield* fs.realPath(process.execPath);
-    const before = yield* fs.stat(source);
-    if (before.type !== "File" || before.size > 268435456n) return yield* failure("runtime");
-    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "sealed-runtime-" });
-    yield* fs.chmod(directory, 0o700);
-    const executable = `${directory}/runtime`;
-    // Fresh exclusive directory + copyFile creates distinct bytes/inode, never a hardlink.
-    yield* fs.copyFile(source, executable);
-    yield* fs.chmod(executable, 0o500);
-    const copied = yield* fs.stat(executable);
-    const uid = process.getuid?.();
-    const copiedBytes = yield* fs.readFile(executable);
-    const sha256 = yield* hashObservationPayload(copiedBytes);
-    const sourceBytes = yield* fs.readFile(source);
-    const sourceHash = yield* hashObservationPayload(sourceBytes);
-    const after = yield* fs.stat(source);
-    if (
-      uid === undefined ||
-      copied.type !== "File" ||
-      (copied.mode & 0o022) !== 0 ||
-      !O.contains(uid)(copied.uid) ||
-      !O.contains(1n)(copied.nlink) ||
-      O.isNone(before.ino) ||
-      O.isNone(copied.ino) ||
-      (before.dev === copied.dev && O.getOrElse(before.ino, () => -1n) === O.getOrElse(copied.ino, () => -1n)) ||
-      before.mode !== after.mode ||
-      before.dev !== after.dev ||
-      before.size !== after.size ||
-      O.getOrElse(before.ino, () => -1n) !== O.getOrElse(after.ino, () => -2n) ||
-      sha256 !== sourceHash ||
-      (yield* fs.realPath(executable)) !== executable
-    )
-      return yield* failure("runtime");
+    const sealed = yield* sealRuntimeCopy();
+    const { executable, sha256 } = sealed;
     const commands = yield* Effect.acquireRelease(Queue.bounded<Uint8Array>(1), Queue.shutdown);
     const semaphore = yield* Semaphore.make(1);
     const child = yield* ChildProcess.make(executable, ["--eval", sealedRuntimeSocketPeerSource], {
@@ -157,7 +169,7 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
       Effect.flatMap((running) => (running ? Effect.fail(failure("runtime")) : Effect.void)),
       Effect.mapError(() => failure("runtime"))
     );
-    return { executable, sha256, sourceMode: before.mode, send, close, closed };
+    return { ...sealed, send, close, closed };
   }).pipe(
     Scope.provide(owned),
     Effect.onError(() => close)
