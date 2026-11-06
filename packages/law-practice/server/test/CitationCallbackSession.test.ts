@@ -220,30 +220,34 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
         Effect.provideService(CitationFrozenEditions, frozen)
       );
-      for (const authorities of [1, 2]) {
-        const prepared = yield* prepareCitationResolution({
-          ...input,
-          mentions,
-          limits: { ...input.limits, authorities, resolutionEdges: 2 },
-        });
-        const work = yield* makeCitationResolutionWork(prepared.limits);
-        const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work),
-          Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
-        );
-        yield* dictionary.start;
-        const members = A.map(prepared.mentions, (mention) => member(mention.id));
-        const first = yield* dictionary.canonicalResource(A.getUnsafe(members, 0));
-        const second = yield* dictionary.canonicalResource(A.getUnsafe(members, 1));
-        const list = yield* dictionary.get(first);
-        yield* dictionary.write(list, members);
-        const attempt = authorities === 1 ? dictionary.get(second).pipe(Effect.asVoid) : dictionary.set(second, list);
-        const failure = yield* attempt.pipe(Effect.flip);
-        expect(failure.reason).toBe("limit-exceeded");
-        const groups = yield* dictionary.read;
-        expect(A.map(groups, (group) => group.members)).toEqual([members]);
-        yield* dictionary.close;
-      }
+      yield* Effect.forEach(
+        [1, 2],
+        Effect.fnUntraced(function* (authorities) {
+          const prepared = yield* prepareCitationResolution({
+            ...input,
+            mentions,
+            limits: { ...input.limits, authorities, resolutionEdges: 2 },
+          });
+          const work = yield* makeCitationResolutionWork(prepared.limits);
+          const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+          );
+          yield* dictionary.start;
+          const members = A.map(prepared.mentions, (mention) => member(mention.id));
+          const first = yield* dictionary.canonicalResource(A.getUnsafe(members, 0));
+          const second = yield* dictionary.canonicalResource(A.getUnsafe(members, 1));
+          const list = yield* dictionary.get(first);
+          yield* dictionary.write(list, members);
+          const attempt = authorities === 1 ? dictionary.get(second).pipe(Effect.asVoid) : dictionary.set(second, list);
+          const failure = yield* attempt.pipe(Effect.flip);
+          expect(failure.reason).toBe("limit-exceeded");
+          const groups = yield* dictionary.read;
+          expect(A.map(groups, (group) => group.members)).toEqual([members]);
+          yield* dictionary.close;
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
 

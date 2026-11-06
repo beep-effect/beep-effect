@@ -32,7 +32,7 @@ import { GraphEvent } from "@beep/m365";
 import { LocalDate } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
@@ -224,9 +224,9 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         const calls = yield* Ref.get(fake.calls);
         expect(A.some(calls, Str.startsWith(`deleteEvent ${original.id}`))).toBe(false);
         const entries = yield* readDocketJournal(DIRECTORY);
-        expect(
+        assertTrue(
           A.some(entries, (entry) => entry.kind === "undo-event-kept" && O.contains(original.id)(entry.eventId))
-        ).toBe(true);
+        );
       })
     );
   });

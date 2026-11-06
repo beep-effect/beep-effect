@@ -499,14 +499,18 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       );
       yield* owner.start;
       const resource = yield* owner.hostResource(A.getUnsafe(host.states, 0));
-      for (const attempt of [
-        owner.get(resource).pipe(Effect.asVoid),
-        owner.isTruthy(resource).pipe(Effect.asVoid),
-        owner.resourceKey(resource).pipe(Effect.asVoid),
-      ]) {
-        const failure = yield* attempt.pipe(Effect.flip);
-        expect(failure.reason).toBe("identity-failed");
-      }
+      yield* Effect.forEach(
+        [
+          owner.get(resource).pipe(Effect.asVoid),
+          owner.isTruthy(resource).pipe(Effect.asVoid),
+          owner.resourceKey(resource).pipe(Effect.asVoid),
+        ],
+        Effect.fnUntraced(function* (attempt) {
+          const failure = yield* attempt.pipe(Effect.flip);
+          expect(failure.reason).toBe("identity-failed");
+        }),
+        { concurrency: 1, discard: true }
+      );
       const groups = yield* owner.read;
       expect(groups).toEqual([]);
       yield* owner.close;

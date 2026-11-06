@@ -118,10 +118,14 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
       yield* owner.start;
       const mention = A.getUnsafe(prepared.mentions, 0);
       const fulls = CitationFullsCallbackInput.make({ mention, fulls: [] });
-      for (const attempt of [callbacks.shortCase(fulls), callbacks.supra(fulls), callbacks.reference(fulls)]) {
-        const failure = yield* attempt.pipe(Effect.flip);
-        expect(failure.reason).toBe("invalid-input");
-      }
+      yield* Effect.forEach(
+        [callbacks.shortCase(fulls), callbacks.supra(fulls), callbacks.reference(fulls)],
+        Effect.fnUntraced(function* (attempt) {
+          const failure = yield* attempt.pipe(Effect.flip);
+          expect(failure.reason).toBe("invalid-input");
+        }),
+        { concurrency: 1, discard: true }
+      );
       const idFailure = yield* callbacks
         .id(CitationIdCallbackInput.make({ mention, last: CitationCallbackResource.cases.None.make({}), groups: [] }))
         .pipe(Effect.flip);
