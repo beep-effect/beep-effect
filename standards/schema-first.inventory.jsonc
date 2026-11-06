@@ -1714,16 +1714,6 @@
       "reason": "Integration fixtures create specific Git repositories/worktrees and declared retired, missing or inaccessible roots to verify pseudonymous identity, attribution and privacy. Codecs serialize declarations and inspect inventory evidence, not schema laws. Exit: pure schema laws move here or are separated; preserve retired-root no-access and private-path assertions. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
     {
-      "file": "packages/tooling/library/ai-metrics/test/observation-worker.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 63,
-      "owner": "@beep/repo-ai-metrics",
-      "reason": "Composed-worker regressions exercise native SQLite, actual listeners, pause/drain ownership, scheduler delivery and private maintenance/backup/retirement. Codecs support exact requests and receipts at controlled lifecycle boundaries. Exit: reusable schema laws move here or a meaningful independent worker reference model is designed; preserve refusal and resource-ordering cases. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
-    },
-    {
       "file": "packages/tooling/library/ai-metrics/test/transcript-page.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
