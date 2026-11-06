@@ -289,6 +289,38 @@
     {
       "path": "ops/yeet-differential-w7.ts",
       "purpose": "Retained W7a fixed-world Yeet differential harness; research/yeet-differential-w7.json records 81 scenarios (72 same, 9 classified, zero unclassified). No production activation."
+    },
+    {
+      "path": "ops/frozen-w7b/Completion.old.ts",
+      "purpose": "Frozen pre-W7b Goals completion GitHub reads consumed by the retained W7b differential fixture."
+    },
+    {
+      "path": "ops/frozen-w7b/CompletionEvidence.old.ts",
+      "purpose": "Frozen pre-W7b completion evidence GitHub reads consumed by the retained W7b differential fixture."
+    },
+    {
+      "path": "ops/frozen-w7b/GitRunners.old.ts",
+      "purpose": "Frozen pre-W7b generic Git runners used by the retained Groups comparator."
+    },
+    {
+      "path": "ops/frozen-w7b/Groups.old.ts",
+      "purpose": "Frozen pre-W7b command-group Git behavior compared by the retained W7b differential driver."
+    },
+    {
+      "path": "ops/frozen-w7b/RepoCards.old.ts",
+      "purpose": "Frozen pre-W7b research repository-card GitHub reads consumed by the retained W7b differential fixture."
+    },
+    {
+      "path": "ops/frozen-w7b/RouteCorpus.old.ts",
+      "purpose": "Frozen pre-W7b CI route corpus GitHub reads consumed by the retained W7b differential fixture."
+    },
+    {
+      "path": "ops/groups-differential-w7.github.ts",
+      "purpose": "Scripted GitHub fixture half of the retained W7b command-group differential; imported by its fixed driver."
+    },
+    {
+      "path": "ops/groups-differential-w7.ts",
+      "purpose": "Retained W7b command-group Git and GitHub differential driver documenting 100 scenarios with zero unclassified differences."
     }
   ]
 }
