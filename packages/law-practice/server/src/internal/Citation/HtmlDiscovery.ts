@@ -138,19 +138,48 @@ const emphasisTags = Effect.fn("Citation.discoverHtmlEmphasis")(function* (
   }
   return tags;
 });
+/** Use only inside an enclosing captured operation, Scope and text budget.
+ * Separate calls preserve Document's placeholder/diffs/emphasis source order.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationHtmlDiscoveryRunner = Effect.fn("Citation.prepareHtmlDiscoveryRunner")(function* (
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  config: CitationHtmlDiscoveryConfiguration
+) {
+  const budget = yield* CitationTextBudget;
+  const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings);
+  const placeholder = Effect.fn("Citation.runHtmlPlaceholder")(function* (raw: unknown) {
+    const evaluated = yield* worker.evaluate(config.patterns.placeholder, raw, 0);
+    const placeholder = yield* placeholderText(evaluated).pipe(Effect.provideService(CitationTextBudget, budget));
+    return { placeholder, source: evaluated.source };
+  });
+  const emphasis = Effect.fn("Citation.runHtmlEmphasis")(function* (raw: unknown) {
+    const evaluated = yield* worker.evaluate(config.patterns.emphasis, raw, 2);
+    return yield* emphasisTags(limits, evaluated);
+  });
+  return { placeholder, emphasis };
+});
 const discover = Effect.fn("Citation.prepareHtmlDiscovery")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationHtmlDiscoveryConfiguration,
   raw: unknown
 ) {
-  const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings);
-  const masked = yield* worker.evaluate(config.patterns.placeholder, raw, 0);
-  const placeholder = yield* placeholderText(masked);
-  const emphasized = yield* worker.evaluate(config.patterns.emphasis, masked.source.value.storage, 2);
-  const tags = yield* emphasisTags(limits, emphasized);
-  return { placeholder, tags };
+  const runner = yield* makeCitationHtmlDiscoveryRunner(limits, runtime, config);
+  const masked = yield* runner.placeholder(raw);
+  const tags = yield* runner.emphasis(masked.source.value.storage);
+  return { placeholder: masked.placeholder, tags };
 });
+/** Authenticate and own installation data before any enclosing invocation.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationHtmlDiscoveryConfiguration = Effect.fn("Citation.copyHtmlDiscoveryConfiguration")(
+  (limits: CitationEngineLimits, config: CitationHtmlDiscoveryConfiguration) =>
+    copyCitationMetadataPatternConfiguration(limits, Patterns, config.patterns, config.bindings, fingerprints, () =>
+      fail("invalid-configuration")
+    ).pipe(Effect.map(CitationHtmlDiscoveryConfiguration.make))
+);
 /** Reuse captured operation admission, Clock, text budget, Effect RPC and owned
  * regex retirement. Both fixed jobs complete and retire before publication.
  * Native source identity and Python coordinates survive all transformations;
@@ -161,10 +190,7 @@ export const makeCitationHtmlDiscovery = makeCitationMetadataStage({
   method: "discover",
   schema: S.toType(CitationHtmlDiscoveryConfiguration),
   invalid: () => fail("invalid-configuration"),
-  own: (limits, config) =>
-    copyCitationMetadataPatternConfiguration(limits, Patterns, config.patterns, config.bindings, fingerprints, () =>
-      fail("invalid-configuration")
-    ).pipe(Effect.map(CitationHtmlDiscoveryConfiguration.make)),
+  own: copyCitationHtmlDiscoveryConfiguration,
   prepare: discover,
   project: (patch, reservedUnits) => CitationHtmlDiscoveryResult.make({ ...patch, reservedUnits }),
 });

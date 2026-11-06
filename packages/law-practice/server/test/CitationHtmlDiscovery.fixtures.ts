@@ -53,7 +53,7 @@ const Corpus = S.fromJsonString(
     description: "Original native placeholder/emphasis observations, independently byte sealed.",
   })
 );
-const load = Effect.fn("HtmlDiscoveryTest.load")(function* () {
+export const readCitationHtmlDiscoveryCorpus = Effect.fn("HtmlDiscoveryTest.load")(function* () {
   const configuration = yield* readCitationOracleFixture(
     "html-discovery-patterns",
     "95830f0e880b234b2b5ada632e94a1b88abc67c69d825148226dcdcea8b8a230"
@@ -64,7 +64,7 @@ const load = Effect.fn("HtmlDiscoveryTest.load")(function* () {
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   return { configuration: configuration.configuration, corpus };
 });
-const install = makeCitationMetadataFixture({ load, make: makeCitationHtmlDiscovery });
+const install = makeCitationMetadataFixture({ load: readCitationHtmlDiscoveryCorpus, make: makeCitationHtmlDiscovery });
 /** Replay complete original observations and independently confirm both exits per call. */
 export const replayCitationHtmlDiscovery = Effect.fn("HtmlDiscoveryTest.replay")(function* (
   kind: CitationNativeRuntimeKind,

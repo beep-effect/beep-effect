@@ -1,5 +1,17 @@
 # Citation engine friction receipts
 
+## 2026-11-05 — two real Node worker fixtures shared one compiled output
+
+- Work: run regex and diff workers together in HTML geometry preparation.
+- Evidence: the first Node replay returned invalid-frame because the shared
+  runtime builder emitted node-worker.mjs for both families in one directory;
+  the second build replaced the first entry. Bun's distinct source paths passed.
+- Resolution: give each actual-runtime build a distinct scoped directory while
+  sharing the same native admission and observed process spawner. Both runtime
+  geometry replays and independent exit checks then pass.
+- Prevention: isolate compiled entry artifacts by runtime family or use separate
+  build directories when composing actual worker fixtures.
+
 ## 2026-11-05 — shared-layout assumption concealed asymmetric document maps
 
 - Work: compose HTML discovery with original Document diff geometry.

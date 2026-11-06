@@ -19,12 +19,11 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 import type { CitationSpanDiffStep } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
-export const makeCitationDiffWorkerFixture = Effect.fn("DiffWorkerTest.fixture")(function* (
+/** Use the actual runtime entry without creating another admission owner. */
+export const makeCitationDiffTestRuntime = Effect.fn("DiffWorkerTest.runtime")(function* (
   kind: CitationNativeRuntimeKind,
-  policy: unknown
+  cwd: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-diff-worker-" });
   const runtime =
     kind === "node"
       ? yield* makeCitationNodeTestRuntime(
@@ -37,6 +36,15 @@ export const makeCitationDiffWorkerFixture = Effect.fn("DiffWorkerTest.fixture")
           cwd,
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/DiffWorker.entry.ts", import.meta.url)),
         });
+  return runtime;
+});
+export const makeCitationDiffWorkerFixture = Effect.fn("DiffWorkerTest.fixture")(function* (
+  kind: CitationNativeRuntimeKind,
+  policy: unknown
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-diff-worker-" });
+  const runtime = yield* makeCitationDiffTestRuntime(kind, cwd);
   const admission = yield* makeCitationNativeProcessAdmission(policy);
   const observed = yield* makeCitationObservedSpawner();
   const worker = yield* makeCitationDiffWorker(policy, runtime).pipe(

@@ -11,6 +11,7 @@ import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -135,6 +136,7 @@ export const copyCitationMetadataPatternConfiguration = Effect.fn("Citation.copy
 );
 type Dependencies =
   | Digest.Digest
+  | Path.Path
   | ChildProcessSpawner
   | CitationNativeProcessAdmission
   | CitationTextBudget
@@ -144,9 +146,11 @@ const captureDependencies = Effect.fn("Citation.captureMetadataDependencies")(fu
   const admission = O.isSome(supplied) ? supplied.value : yield* makeCitationNativeProcessAdmission(limits);
   const clock = yield* Clock.Clock;
   const digest = yield* Digest.Digest;
+  const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner;
   return Context.make(Clock.Clock, clock).pipe(
     Context.add(Digest.Digest, digest),
+    Context.add(Path.Path, path),
     Context.add(ChildProcessSpawner, spawner),
     Context.add(CitationNativeProcessAdmission, admission)
   );

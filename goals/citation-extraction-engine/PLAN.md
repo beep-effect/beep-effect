@@ -1,5 +1,12 @@
 # Citation Extraction Engine Plan
 
+Connected geometry checkpoint (2026-11-05): post-cleaning native preparation
+now runs placeholder, forward diff, original-markup backward diff and emphasis
+in source order through existing shared owners. Both runtime source smoke and
+forward-refusal retirement controls pass; full 16-Document hosted replay is
+pending. This does not yet implement cleaning or Document argument modes.
+See [preparation evidence](history/evidence/2026-11-05-html-geometry-preparation.md).
+
 HTML document map correction (2026-11-05): source composition uses placeholder
 markup only in the forward direction; backward mapping starts from original
 markup. The earlier probe and complete-layout equality assumption are corrected.
