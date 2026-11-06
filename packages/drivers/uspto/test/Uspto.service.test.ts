@@ -297,6 +297,26 @@ describe("Uspto service", () => {
     });
   }
 
+  for (const malformed of [
+    { name: "malformed continuity JSON", body: "not JSON" },
+    {
+      name: "a continuity bag with an invalid wire shape",
+      body: '{"patentFileWrapperDataBag":[{"childContinuityBag":{}}]}',
+    },
+  ]) {
+    it.layer(usptoLayer(respondWith(malformed.body)), { timeout: "5 seconds" })((it) => {
+      it.effect(
+        `rejects ${malformed.name} instead of reporting an empty family`,
+        Effect.fnUntraced(function* () {
+          const uspto = yield* Uspto;
+          const error = yield* uspto.getContinuity("16295098").pipe(Effect.flip);
+          expect(error._tag).toBe("UsptoError");
+          expect(error.reason).toBe("response-decoding");
+        })
+      );
+    });
+  }
+
   it.layer(usptoLayer(respondWith(documentsEnvelope)), { timeout: "5 seconds" })((it) => {
     it.effect(
       "extracts document references with download urls and skips id-less rows",
