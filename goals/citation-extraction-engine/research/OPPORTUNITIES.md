@@ -425,3 +425,24 @@ history/evidence/2026-11-03-edition-inference.md.
   exporter and full metadata comparison. An exact digest/path/detector exception
   preserves every other value and rule; changing provenance bytes to evade the
   detector would obscure the source relationship.
+
+## 2026-11-06 — shared API quota after successful publication
+
+- Work: publish native wrap composition and its upstream context reference.
+- Evidence: `beep yeet open` pushed the expected head, then its PR lookup failed
+  with `403: API rate limit exceeded`. The connected GitHub integration still
+  verified the exact head, ready state, provenance and review threads.
+- Resolution: verify through that integration and preserve the published work;
+  the post-push lookup failure is not a failed push or a reason to replay it.
+- Prevention: distinguish publication from follow-up API inspection and support
+  the available integration when the CLI credential's shared quota is exhausted.
+
+## 2026-11-06 — distinct native test roles shared a bundle pathname
+
+- Work: compose actual Node XML and regex workers in one annotation operation.
+- Evidence: the XML conversation received an invalid frame after the test regex
+  bundler overwrote the XML bundle in the same temporary directory.
+- Resolution: give the two generated worker bundles separate scoped directories.
+  Both-runtime output/refusal and physical-retirement regression then passed.
+- Prevention: allocate a directory per generated worker role when a test owns
+  multiple bundled entrypoints; production runtime paths remain explicit.
