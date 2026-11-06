@@ -22,6 +22,9 @@
     },
     {
       "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../pglite/tsconfig.json"
     }
   ]
 }
