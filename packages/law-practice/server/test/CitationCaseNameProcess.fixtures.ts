@@ -151,7 +151,9 @@ export const replayCitationCaseNameProcess = Effect.fn("CaseNameProcessTest.repl
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const setup = yield* install(kind);
+  // Source parity is independent of host scheduling; the lifetime test below
+  // explicitly triggers and verifies this same captured extraction deadline.
+  const setup = yield* install(kind, undefined, false, true);
   const smoke = [13, 55, 137, 185, 197, 201, 239, 243, 251, 293, 301, 305, 313, 321];
   const rows = A.filter(setup.corpus.cases, (row) => full || row.error === "TypeError" || A.contains(smoke, row.id));
   for (const row of rows) yield* assertRow(setup.stage, row);
