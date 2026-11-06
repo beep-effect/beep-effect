@@ -57,11 +57,11 @@ compiler (3.7× faster at half the RSS) is in `goals/tsc-rs-gates`. Rules of the
   proxy command that 0.59.0 added runs the same Effect build without patching,
   but its Node start-up costs about 160 ms per invocation, so the generated
   scripts call the patched `tsrs` bin directly.
-- `--fast` stays off in generated scripts and CI: tsrs documents it as
-  "performance modes that may differ from pinned TypeScript behavior", and the
-  tsc-rs measurement (−7 % wall for +35 % CPU and +4.7 GB peak on the test
-  projects) has not been repeated on tsrs. If it is ever added, it goes after
-  `-b`: `tsrs -b --fast`, never `--fast -b`.
+- The quality runner enables the qualified fast preset through `TSRS_FAST=1`;
+  explicit `TSRS_FAST=0` restores reference behavior. Generated scripts do not
+  hard-code `--fast`. See [Compiler performance defaults](#compiler-performance-defaults)
+  for the tsrs measurements and diagnostic limitations. If invoking the flag
+  manually with build mode, place it after `-b`: `tsrs -b --fast`.
 - A failing `tsrs` exits 2, not 1. Yeet's issue parser keys on the
   diagnostic text, so the code does not matter to the gates.
 - `tsrs --version` prints the `+effect-tsgo.<version>` suffix and the installed
