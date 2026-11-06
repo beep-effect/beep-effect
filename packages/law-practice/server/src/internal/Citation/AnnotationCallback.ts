@@ -3,7 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
@@ -44,10 +44,11 @@ export const CitationAnnotationCallbackResult = S.TaggedUnion({
 /** @internal @category models @since 0.0.0 */
 export type CitationAnnotationCallbackResult = typeof CitationAnnotationCallbackResult.Type;
 /** Trusted native-string callback profile. Inputs are borrowed immutable words;
- * adapters must reserve through their captured enclosing budget before producing
+ * adapters must reserve through the supplied invocation budget before producing
  * new text. The receiver separately admits and snapshots returned text. This
  * does not implement arbitrary before/after host-object ordering or coercion.
- * No callable is request data and annotate requires R=never.
+ * The budget must not escape its invocation Scope. No callable is request data
+ * and annotate requires R=never.
  * @internal @category services @since 0.0.0
  */
 export class CitationAnnotationAnnotator extends Context.Service<
@@ -56,7 +57,8 @@ export class CitationAnnotationAnnotator extends Context.Service<
     readonly annotate: (
       before: CitationPythonUnicodeStorage,
       span: CitationPythonUnicodeStorage,
-      after: CitationPythonUnicodeStorage
+      after: CitationPythonUnicodeStorage,
+      work: CitationTextBudget["Service"]
     ) => Effect.Effect<
       CitationAnnotationCallbackResult,
       CitationAnnotationCallbackFailure | CitationSafetyLimitExceeded
@@ -74,6 +76,7 @@ export const captureCitationAnnotationCallback = Effect.fn("Citation.captureAnno
 ) {
   const port = yield* Effect.serviceOption(CitationAnnotationAnnotator);
   if (O.isNone(port)) return O.none();
+  const budget = yield* CitationTextBudget;
   const reserve = yield* captureCitationAnnotationReservation;
   const unicode = yield* makeCitationPythonUnicode(limits, "annotate").pipe(Effect.mapError(invalid));
   const render = Effect.fn("Citation.renderAnnotationCallback")(function* (
@@ -81,7 +84,7 @@ export const captureCitationAnnotationCallback = Effect.fn("Citation.captureAnno
     span: CitationPythonUnicodeStorage,
     after: CitationPythonUnicodeStorage
   ) {
-    const result = yield* port.value.annotate(before, span, after).pipe(
+    const result = yield* port.value.annotate(before, span, after, budget).pipe(
       Effect.catchTag("CitationSafetyLimitExceeded", flow(citationAnnotationSafety, Effect.fail)),
       Effect.flatMap(S.decodeEffect(ResultType, { onExcessProperty: "error" })),
       Effect.catchTag("SchemaError", () => Effect.fail(invalid()))

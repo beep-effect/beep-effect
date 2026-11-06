@@ -32,8 +32,6 @@ import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from ".
 
 const $I = $LawPracticeServerId.create("internal/Citation/DiffWorker");
 const failure = (reason: CitationDiffWorkerFailure["reason"]) => CitationDiffWorkerFailure.make({ reason });
-const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
-  CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const invalidInput = () => CitationDiffKernelFailure.make({ reason: "invalid-input" });
 const layout = (source: CitationPythonUnicodeStorage, units: number) =>
   CitationPythonSliceLayout.make({
@@ -59,16 +57,27 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
   const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, () =>
     failure("invalid-runtime")
   );
-  const { timed, deadline, deadlineLimit, operationTimed } = yield* makeCitationRegexTiming(limits, false);
-  const unicode = yield* makeCitationPythonUnicode({
-    ...limits,
-    producedTextUtf16: limits.diffInputUtf16,
-    cleanDeadline: deadline,
-    operationDeadline: deadline,
-  });
+  const {
+    operation: engineOperation,
+    timed,
+    deadline,
+    deadlineLimit,
+    operationTimed,
+    failSafety,
+  } = yield* makeCitationRegexTiming(limits, false);
+  const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
+    CitationSafetyLimitExceeded.make({ operation: engineOperation, limit });
+  const unicode = yield* makeCitationPythonUnicode(
+    {
+      ...limits,
+      producedTextUtf16: limits.diffInputUtf16,
+      operationDeadline: deadline,
+    },
+    engineOperation
+  );
   const reserve = yield* captureCitationTextReservation;
   const admission = yield* captureCitationNativeAdmission(limits, () => failure("invalid-runtime"));
-  const owner = yield* makeCitationNativeProcessOwner(limits, "extract", failure);
+  const owner = yield* makeCitationNativeProcessOwner(limits, engineOperation, failure);
   const path = yield* Path.Path;
   const assetPath = yield* path
     .fromFileUrl(new URL("../../../assets/citation-diff/kernel.wasm", import.meta.url))
@@ -87,7 +96,7 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
     (beforeInput: unknown, afterInput: unknown, maximumSteps: unknown = limits.diffSteps) =>
       withCitationNativeProcess(
         owner,
-        acquireCitationNativeLease(admission, "extract", false, failure),
+        acquireCitationNativeLease(admission, engineOperation, false, failure),
         () => failure("invalid-runtime"),
         (operation) =>
           Effect.gen(function* () {
@@ -148,7 +157,7 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
             const bytes = yield* callCitationDiffRpc(child, job, frame, limits.processMessageBytes);
             return yield* unpackCitationDiffSteps(bytes, quota, before.pythonLength, afterValue.pythonLength);
           }).pipe(timed)
-      ).pipe(operationTimed)
+      ).pipe(operationTimed, Effect.catchTag("CitationSafetyLimitExceeded", failSafety))
   );
   return { evaluate, snapshot: owner.snapshot, reap: owner.reap };
 });

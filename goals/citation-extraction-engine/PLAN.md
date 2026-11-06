@@ -1349,6 +1349,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert this checkpoint and accounting change together; restore the parent-budget regression before changing the source reservation contract.
 
+### Compose admitted native annotation operation, 2026-11-06
+
+The private annotation entry composes original sorting/mapping, skip/wrap and captured callback behavior through the existing admitted metadata owner. All 214 original unchecked cases pass twice with fresh budgets. Actual Bun/Node markup and default mapping controls confirm child retirement. Eleven entry/callback/operation tests pass in 53.10s; lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Complete raw-source/public engine composition and all eleven laws, four fidelity questions and fifteen proof rows remain open. See history/evidence/2026-11-06-admitted-annotation-entry.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the native entry and shared child-permit extraction together while retaining source corpora and all remaining acceptance requirements.
+
 ### Commit installed engine configuration with explicit build trust, 2026-11-06
 
 The versioned engine commitment combines trusted installer build/runtime/selected-port metadata with actual authenticated default assets, captured calendar and encoded policy. Existing Schema snapshot and SHA-256 primitives are reused. Build metadata is snapshotted before asset loading; runtime kind matches the installed diff backend. This commits installer claims rather than attesting arbitrary code. Connected extraction uses the producer with explicit fake deployment metadata; actual deployment/Layer port binding and all broader acceptance remain open. See history/evidence/2026-11-06-engine-artifact.md.

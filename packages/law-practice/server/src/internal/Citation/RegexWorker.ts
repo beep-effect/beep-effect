@@ -43,7 +43,7 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
   engineInput: unknown = "python-re"
 ) {
   const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, invalidRuntime);
-  const { operation: engineOperation, timed } = yield* makeCitationRegexTiming(limits, false);
+  const { operation: engineOperation, timed, failSafety } = yield* makeCitationRegexTiming(limits, false);
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: engineOperation, limit });
   const admission = yield* captureCitationNativeAdmission(limits, invalidRuntime);
@@ -91,10 +91,7 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
             Effect.timeoutOrElse({ duration: regexDeadline, orElse: () => Effect.fail(safety("regexDeadline")) })
           );
         })
-      ).pipe(
-        timed,
-        Effect.catchTag("CitationSafetyLimitExceeded", (error) => Effect.fail(safety(error.limit)))
-      )
+      ).pipe(timed, Effect.catchTag("CitationSafetyLimitExceeded", failSafety))
   );
   return { evaluate, snapshot: owner.snapshot, reap: owner.reap };
 });

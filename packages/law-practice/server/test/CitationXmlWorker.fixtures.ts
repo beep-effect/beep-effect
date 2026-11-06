@@ -17,8 +17,9 @@ import {
 import { readCitationXmlCorpus } from "./CitationXmlBalanceKernel.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 /** @internal @category testing @since 0.0.0 */
-export const installCitationXmlWorker = Effect.fn("XmlWorkerTest.install")(function* (kind: CitationNativeRuntimeKind) {
-  const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
+export const makeCitationXmlTestRuntime = Effect.fn("XmlWorkerTest.runtime")(function* (
+  kind: CitationNativeRuntimeKind
+) {
   const fs = yield* FileSystem.FileSystem;
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-xml-worker-" });
   const runtime =
@@ -33,6 +34,12 @@ export const installCitationXmlWorker = Effect.fn("XmlWorkerTest.install")(funct
           cwd,
           workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/XmlWorker.entry.ts", import.meta.url)),
         });
+  return runtime;
+});
+/** @internal @category testing @since 0.0.0 */
+export const installCitationXmlWorker = Effect.fn("XmlWorkerTest.install")(function* (kind: CitationNativeRuntimeKind) {
+  const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
+  const runtime = yield* makeCitationXmlTestRuntime(kind);
   const worker = yield* makeCitationXmlWorker(setup.limits, runtime).pipe(Effect.provideContext(setup.provided));
   return { ...setup, runtime, worker };
 });

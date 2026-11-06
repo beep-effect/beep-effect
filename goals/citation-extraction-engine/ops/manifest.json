@@ -238,7 +238,10 @@
     "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-callback.json",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-shared-source-evidence.md",
     "packages/law-practice/server/src/internal/Citation/SourceEvidence.ts",
-    "packages/law-practice/server/test/CitationSourceEvidence.test.ts"
+    "packages/law-practice/server/test/CitationSourceEvidence.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-annotation-entry.md",
+    "packages/law-practice/server/src/internal/Citation/AnnotationEntry.ts",
+    "packages/law-practice/server/test/CitationAnnotationEntry.test.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
