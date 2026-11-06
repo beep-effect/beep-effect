@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "c89b8fdabef15932eb73694411336c130fcc09b3809ca5bcc7196b3b4b109c48",
+  "planSha256": "7ee638fa469e0d88aafb47ea15515b93e275f7380451621f5a3eab6d52f1aa54",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1096,15 +1096,15 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-occurrence-projection.md",
-          "sha256": "4e027111ebc8bfd19bb787238d88de8034dde3144d56f6c4d22e7a8580126d1c"
+          "sha256": "e3d9c2ff5e690a67803f0048ab60b92324926d55a6001dcf9a32dde77d089c6f"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/OccurrenceProjection.ts",
-          "sha256": "3b6549432f7320896087b68b716cade4dc6fc4cf42ff7d5e9ab68127044a633b"
+          "sha256": "c718c51be26becebfd79453101e6e0079f9b927f4687f7e98fca7fdddef7065d"
         },
         {
           "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
-          "sha256": "37106c0e09638b059a10912cb4c667aa0d6b2b3b56c319116f62fd8f8f52de71"
+          "sha256": "6efc35c23c7ea8ad2cd437897f62120398e97dff909d23d7d31aad761edb1a2f"
         },
         {
           "path": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts",
@@ -1113,6 +1113,10 @@
         {
           "path": "packages/foundation/capability/langextract/test/VerifiedSpanOffsets.test.ts",
           "sha256": "aaec04b59fab3fd18561cdbddb8d5029ec4e471309e94f60b514866ee8159184"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-full-span-warnings.md",
+          "sha256": "5619c874e02cb635b8e1dc1a89fde5ffcfd535dac64ee702818577cea027a855"
         }
       ],
       "workflowState": "audit",

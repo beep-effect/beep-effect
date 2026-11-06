@@ -1245,6 +1245,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the semantic projection wave; retain the sealed source mapping and private extraction pipeline.
 
+### Full-span evidence and overlap warning binding, 2026-11-06
+
+Verified primary occurrences now retain original full spans as canonical component anchors. Equal primary/full spans share evidence without a second quote allocation; invalid full spans remain explicit component issues. Source overlap warnings bind original model IDs to verified cm1 endpoints after validating returned model views; unavailable or identical occurrence endpoints remain explicit unbound events. Source-backed Bun/Node and mention regression passes 15 tests. Final component/footnote detection, canonical source production for cleaning, public service/Layer and exhaustive goal qualification remain open. See history/evidence/2026-11-06-full-span-warnings.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the full-span/warning adaptation wave; retain primary occurrence projection and original raw warning pairs.
+
 ### Raw extraction to semantic values, 2026-11-06
 
 Raw primitive input now reaches domain Citation values under one admitted operation, deadline and cumulative text budget. Seven source documents on both actual runtimes cover all eight families, Unicode and HTML; complete 36-document replay is registered for hosted integration. Configuration binds the same edition mapping to parsing and projection. Exact/one-unit-short shortcut budget controls and complete original raw model checks pass. Hosted Fallow findings on the preceding head identified test-function complexity; focused model/metadata/publication assertion helpers repair those functions without threshold or baseline changes. See history/evidence/2026-11-06-semantic-extraction.md. Public service/Layer, verified mentions and full goal qualification remain open.
