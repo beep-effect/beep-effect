@@ -340,7 +340,8 @@ describe("goal manifest researchReports projection", () => {
         yield* temporaryWorkingDirectory;
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const handle = yield* spawner.spawn(ChildProcess.make("git", ["init", "-q"]));
-        assert.strictEqual(yield* handle.exitCode, 0);
+        const exitCode = yield* handle.exitCode;
+        assert.strictEqual(exitCode, 0);
         yield* writeProjectFile("goals/demo/research/SOURCES.md", "");
         yield* writeProjectFile(
           "goals/demo/ops/manifest.json",
@@ -348,9 +349,9 @@ describe("goal manifest researchReports projection", () => {
         );
         const run = Command.runWith(goalsManifestCommand, { version: "0.0.0" });
         const exclusive = yield* Effect.exit(run(["--write", "--check"]));
-        assertTrue(Exit.isFailure(exclusive));
+        exclusive.pipe(Exit.isFailure, assertTrue);
         const checked = yield* Effect.exit(run(["--check"]));
-        assertTrue(Exit.isFailure(checked));
+        checked.pipe(Exit.isFailure, assertTrue);
       })
     );
   });

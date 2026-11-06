@@ -106,7 +106,7 @@ it("git errors preserve custom spawn wording and omit an unspecified truncation 
       truncated: "exceeded the read bound.",
     })
   );
-  expect(adapter.onSpawnFailure("git status").message).toBe("Cannot inspect the checkout.");
+  expect(adapter.onSpawnFailure("git status")("spawn refused").message).toBe("Cannot inspect the checkout.");
   const truncated = O.getOrThrow(adapter.onTruncated)("git status");
   expect(truncated.message).toBe("git status exceeded the read bound.");
   expect(truncated.command).toBe("git status");
