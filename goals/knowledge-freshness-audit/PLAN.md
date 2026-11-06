@@ -150,6 +150,14 @@ Lane `codex/knowledge-audit-p4-linked`
 
 Reverse: Revert this checkpoint and its scoped documentation repairs; retain original private evidence and historical receipts.
 
+### Distinguish implemented architecture checks from planned enforcement, 2026-11-06
+
+Parent review of original T5 t5-f8e5feb0d8e0f72d and T3 kfa-t3-003 at source 6dbf4e543148c1ac30838fa9a72d7a2cc6047d62 validated two description corrections. Source hashes still match at fresh base ff3970ddf0c0848d65830d60af080ad903ed4b6a. Promotion-record lint is planned; required manual PR review and record schema remain binding. The effect-drizzle member and ecosystem-polarity command exist; member-local boundary tests and configured CI proof remain required, without inferring their execution from a command registration. Fresh file census found no overlap in 14 open PRs. Use a direct Git worktree in canonical sibling placement to avoid the optional worktree helper's local-only file copying under this task's no-credential-copy constraint. No root switch, source package change, cloud work or spending. PM, ADHD, other owners and broader P4 obligations remain separate.
+
+Lane `codex/knowledge-audit-p4-enforcement-context`
+
+Reverse: Restore the two original enforcement paragraphs and remove this checkpoint; preserve the binding promotion schema, dependency rules and private parent review.
+
 ### Begin final-tree reconciliation with explicit unresolved coverage, 2026-11-06
 
 P4 is in progress under the operator instruction of 2026-11-06. Reconcile frozen inventory e462bc12 against source snapshot 914ede95a490cf26e1fe435762ec191fd2e69da1. Keep raw per-entry ledgers and full reports in the private archive; publish compact accounting and review limits. Inventory, entry linkage, whole-body reading, claim acceptance and delivery readiness are separate obligations. PM and ADHD remain separate holds; no spending or cloud work is admitted.
