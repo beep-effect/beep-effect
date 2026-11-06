@@ -1192,7 +1192,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-source-extraction.md",
-          "sha256": "53779671c5bff26b6f0eda2dce5ce57c19e295e8d0c9a2e00f06034ad0b94bb1"
+          "sha256": "6b1c208cabc221a02c3960e36fc57b210f9a48847123fc33328ae595f708e237"
         }
       ],
       "workflowState": "audit",

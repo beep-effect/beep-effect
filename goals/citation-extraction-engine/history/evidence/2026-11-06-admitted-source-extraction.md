@@ -18,8 +18,9 @@ capability symbols. Deployment binding and final public service remain required.
 
 Initial connected Bun/Node replay passes both tests in 83.57 seconds. Package
 lint/type checks and declaration build pass. Blocking laws, scoped codec lint
-and Markdown lint pass. The final added refusal control is running; scoped
-Fallow and exact-head hosted confirmation remain pending at publication.
+and Markdown lint pass. Final replay including the refusal control
+passes both tests in 118.31 seconds. Scoped Fallow and exact-head hosted
+confirmation remain pending at publication.
 
 Connected regression compares the composed raw-source route to the existing
 verified route for plain, Unicode and HTML cases on both Bun and Node. The
