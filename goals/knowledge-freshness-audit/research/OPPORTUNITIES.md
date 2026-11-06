@@ -149,3 +149,22 @@ missing evidence.
 - Ownership: the audit owns these completed-packet qualifications. The retired
   Glob example is routed separately to the active DECISIONS owner in PR #2780;
   no competing source edit or unverified repair claim is included here.
+
+## P4 memory context and checkout setup ordering, 2026-11-06
+
+- Work: distinguish dated research from current memory configuration while
+  preserving the original assessments and decisions.
+- Evidence: T8 K2 compares an explicitly dated July 8 pending condition with a
+  July 25 retirement decision. Automatic contradiction is rejected; current
+  orientation is supplied without rewriting either historical statement.
+- Impact: reader ambiguity established; no incorrect service deployment or
+  runtime impact established. Current root policy remains authoritative.
+- Setup friction: dependency setup began before the new checkout completed.
+  It failed because a lockfile workspace was not yet on disk. The failed setup
+  log was retained privately; preparation had not run. After checkout completion,
+  frozen installation and canonical preparation passed, without manifest edits.
+- Attribution: local operation ordering, high confidence. The measured impact
+  is one failed setup attempt; total delay is unknown.
+- Prevention and ownership: wait for successful checkout completion before
+  dependency setup. This audit owns the two reading notes only. Other owners,
+  PM recovery and ADHD provenance remain separate.
