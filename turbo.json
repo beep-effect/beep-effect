@@ -5816,7 +5816,7 @@
       ]
     },
     "//#lint:entity-kit-freeze": {
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
       "inputs": [

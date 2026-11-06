@@ -1,0 +1,9 @@
+# Keep entity-kit freeze discovery fresh until its key is complete
+
+The accepted entity-kit freeze check uses `scanTrackedTextFiles`, which selects Git index entries in regular modes 100644/100755, then scans in-scope TS/TSX files under packages/apps against its committed baseline. Its cache inputs bind file contents while explicitly excluding Git metadata. Index-only membership changes can therefore alter discovery without changing the observed native file-content task key.
+
+Four additional isolated metadata-only observations compare an unchanged source under packages/sample/src before and after `git add`. Pinned stable and canary clients keep the same task hash and input paths despite a changed tracked-source list. The fixture source is harmless; neither its command nor the real law runs, so these observations establish metadata behavior and support a source-based risk inference, not an observed stale repository verdict. They are separate from the earlier four test-membership observations.
+
+Keep this one check fresh with cache:false, preserving command, baseline, policy edge, inputs and fresh hosted execution. This is a temporary correctness boundary and unfinished adoption, not a final exclusion. The prepared test-path membership collector does not cover this law's broader source paths or regular-mode selection. Qualification must bind the actual path/mode/scope/baseline/content semantics and portability/concurrency controls before reuse is restored. Do not treat raw `.git/index` bytes or a caller-provided digest as a portable discovery identity.
+
+The JSON report binds actual source and raw metadata digests. No local law, lint, test, check, docgen, package verification, verify, publish or manual source-generator entrypoint ran. Ordinary hooks remain allowed. No baseline, threshold, suppression, grant, signing or production setting changes. Both whole Turbo goals remain active.

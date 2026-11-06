@@ -1278,3 +1278,7 @@ Source review found that opaque-roundtrip discovery uses Git tracking membership
 ## Script-map digest changes are not literal command changes, 2026-11-06
 
 A fresh accepted-source native census adds thirteen executable computations. Fifty-three root rows change their workspace script-map digest despite identical literal commands. Compare the recorded digest semantics and source text before discarding earlier reviews. Preserve exact unchanged evidence and explicitly renew changed manifests rather than redoing all earlier classification. No task was executed and the canonical population was not replaced.
+
+## New tracked-source law repeats the discovery-key gap, 2026-11-06
+
+Source review of the added entity-kit freeze check finds Git index path and regular-mode selection outside its native content key. Four isolated metadata plans preserve the key across a changed tracked-source list. Prepare a fresh boundary while complete discovery identity and qualification remain unfinished. The test-only membership collector must not be presented as covering all source discovery. No law body was executed.

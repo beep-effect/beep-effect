@@ -1100,6 +1100,12 @@ Prepare an optional tracked-test membership digest in the existing observed tool
 
 Reverse: Remove the optional collector and native input declaration while preserving the fresh cache hold, historical evidence and qualification requirement.
 
+### Keep entity-kit discovery fresh pending complete index-state qualification, 2026-11-06
+
+The new check selects Git-tracked regular source files, but the native content key excludes Git metadata. Four additional isolated metadata plans keep the hash unchanged across changed source membership. Keep this check fresh until complete path/mode/scope/baseline/content discovery identity is qualified. The existing test-only collector is insufficient for general source and regular-mode discovery; do not promote this check through it. No law body was run and no final exclusion, baseline change or qualification is granted.
+
+Reverse: Restore caching only after path, regular-mode, scope, baseline and content discovery semantics are bound and qualified; retain the isolated metadata evidence.
+
 ### Keep tracked-test discovery fresh until membership is bound, 2026-11-06
 
 The scanner selects tracked tests through git ls-files. Four native metadata fixture observations show that index membership can change while task inputs and hash stay equal in both pinned clients. Keep only this command fresh until portable discovery identity and membership perturbation controls are qualified. Preserve scanner behavior, dependency edges and every whole-goal obligation; this temporary hold is unfinished adoption work, not a final exclusion. No local task or quality suite ran; hosted CI and primary acceptance remain required.
