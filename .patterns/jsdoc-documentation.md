@@ -95,6 +95,10 @@ Document the owning declaration rather than inventing a barrel Example.
 
 ## Canonical templates
 
+The templates use self-contained illustration Examples. In a real package,
+import the documented symbol through its actual public package alias rather
+than relying on names outside the fence or inventing an example package.
+
 ### Value-level export
 
 ````ts
@@ -113,14 +117,15 @@ import * as S from "effect/Schema"
  *
  * **Example** (Decode a user name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Decode a user name"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
+ * const decodeUserName = S.decodeUnknownOption(S.Trimmed.check(S.isNonEmpty()))
  * const decoded = decodeUserName("Ada")
  *
- * console.log(O.isSome(decoded)) // true
- * console.log(O.isNone(decodeUserName(""))) // true
+ * O.isSome(decoded) // => true
+ * O.isNone(decodeUserName("")) // => true
  * ```
  *
  * @see {@link S.decodeUnknownOption} for the underlying decoding operation.
@@ -181,11 +186,14 @@ titled and observable:
  *
  * **Example** (Inspect success and failure)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect success and failure"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * console.log(O.isSome(decodeUserName("Ada"))) // true
- * console.log(O.isNone(decodeUserName(""))) // true
+ * const decodeUserName = S.decodeUnknownOption(S.Trimmed.check(S.isNonEmpty()))
+ *
+ * O.isSome(decodeUserName("Ada")) // => true
+ * O.isNone(decodeUserName("")) // => true
  * ```
  *
  * @category decoding
@@ -254,6 +262,9 @@ Every `@deprecated` includes a `{@link}` replacement and a concise migration
 instruction.
 
 ## TSDoc grammar
+
+These spellings apply to new or touched documentation. This scope does not
+relax the separate repo-wide prohibition on `@example` and `@remarks`.
 
 1. Do not put `{type}` blobs in `@param`, `@returns`, or `@throws`; the TypeScript
    signature is authoritative.

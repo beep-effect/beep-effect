@@ -60,9 +60,10 @@ the annotation reference for schemas and the grep reference for multi-file audit
 - Tags follow all body sections.
 
 `**Example** (Title)` is canonical everywhere. The legacy `@example`/`@remarks`
-carriers are retired repo-wide: `beep quality jsdoc-ratchet` fails on any
-occurrence in `packages/**/src` (generated files included). The generated
-residual allowlist is currently empty.
+carriers are retired repo-wide. The default `beep quality jsdoc-ratchet` scan
+covers non-generated `{packages,apps}/**/src`; use `--include-generated` when
+proving generator output. A default pass does not prove generated compliance.
+The generated residual allowlist is currently empty.
 
 ## Kind split
 

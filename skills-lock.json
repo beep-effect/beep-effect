@@ -147,7 +147,7 @@
         ".claude/skills/jsdoc-annotation-specialist",
         ".agents/skills/jsdoc-annotation-specialist"
       ],
-      "installedTreeHash": "c3ed113538fc164e1cddd99479d39671e5884d2774a8ed84a6cf20e3eb7bb17a"
+      "installedTreeHash": "7da2a1873e0ef10ef23191eec49e3d2ee415ca1f91073655d9d474549610b6df"
     },
     "motion-evidence-review": {
       "_tag": "local",
