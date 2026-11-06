@@ -9,6 +9,7 @@ import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -16,6 +17,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -90,6 +92,24 @@ const install = Effect.fn("CourtLookupTest.install")(function* (maximum?: number
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source court lookup", (it) => {
+  it.effect("rejects malformed policy, table payload and digest output", () =>
+    Effect.gen(function* () {
+      const { limits, table } = yield* install();
+      const invalidPolicy = yield* makeCitationCourtLookup(null, table.payload).pipe(Effect.flip);
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+      const invalidPayload = yield* makeCitationCourtLookup(limits, null).pipe(Effect.flip);
+      expect(invalidPayload).toMatchObject({ reason: "invalid-table" });
+      const invalidDigest = yield* makeCitationCourtLookup(limits, table.payload).pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
+        ),
+        Effect.flip
+      );
+      expect(invalidDigest).toMatchObject({ reason: "invalid-table" });
+      expect("cause" in invalidDigest).toBe(false);
+    })
+  );
   it.effect(
     "matches every frozen exact/prefix observation and native normalization",
     () =>

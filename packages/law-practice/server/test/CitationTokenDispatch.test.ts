@@ -149,6 +149,34 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         }),
       { timeout: 60000 }
     );
+    it.effect("rejects invalid bindings, requests and candidate budgets before source lookup", () =>
+      Effect.gen(function* () {
+        const corpus = yield* load();
+        const limits = { ...(yield* defaultCitationEnginePolicy).limits, candidates: 1 };
+        const owner = CitationFrozenEditions.of({ source: unavailable, lookup: unavailable, lookupMany: unavailable });
+        const invalidPolicy = yield* makeCitationTokenDispatch(null, corpus.bindings).pipe(
+          Effect.provideService(CitationFrozenEditions, owner),
+          Effect.flip
+        );
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
+        const invalidBindings = yield* makeCitationTokenDispatch(limits, null).pipe(
+          Effect.provideService(CitationFrozenEditions, owner),
+          Effect.flip
+        );
+        expect(invalidBindings).toMatchObject({ reason: "invalid-bindings" });
+        const dispatch = yield* makeCitationTokenDispatch(limits, corpus.bindings).pipe(
+          Effect.provideService(CitationFrozenEditions, owner)
+        );
+        const seedFailure = yield* dispatch.classify(null).pipe(Effect.flip);
+        expect(seedFailure).toMatchObject({ reason: "invalid-input" });
+        const planFailure = yield* dispatch.plan(null).pipe(Effect.flip);
+        expect(planFailure).toMatchObject({ reason: "invalid-input" });
+        const overflow = yield* dispatch
+          .classify({ ...corpus.tokenTemplate, kind: "CitationToken", exact: [0, 1], variation: [], short: false })
+          .pipe(Effect.flip);
+        expect(overflow).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "candidates" });
+      })
+    );
     it.effect("preserves mixed-output indices and rejects incoherent token references without partial plans", () =>
       Effect.gen(function* () {
         const corpus = yield* load();
@@ -185,6 +213,7 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         expect(plan.decisions).toEqual([{ index: 1, id: 7, action: "IdCitation" }]);
         for (const value of [
           { ...input, assembly: { ...input.assembly, citations: [[0, 7]] } },
+          { ...input, assembly: { ...input.assembly, citations: [[9, 7]] } },
           { ...input, tokens: [] },
           { ...input, tokens: [...input.tokens, ...input.tokens] },
         ]) {
