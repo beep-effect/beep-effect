@@ -124,9 +124,7 @@ const build = Effect.fn("Citation.buildSpanOffsetIndex")(function* (
   }
   return (index: number) => table.getInt32(index * 4, true);
 });
-// The validated, nonempty packed index bounds this pure bisect lookup. Preserve
-// Python's negative-index selection when the insertion point precedes every key.
-const selectSpanOffsetEntry = (
+const bisectOffsetEntries = (
   at: (index: number) => number,
   count: number,
   position: number,
@@ -140,6 +138,7 @@ const selectSpanOffsetEntry = (
     if (side === "left" ? key < position : key <= position) lower = middle + 1;
     else upper = middle;
   }
+  // Python index -1 deliberately chooses the final source updater.
   return lower === 0 ? count - 1 : lower - 1;
 };
 /** Build only from prepared steps/layouts. UTF-16 and step checks precede packed
@@ -168,7 +167,7 @@ export const makeCitationSpanOffsets = Effect.fn("Citation.makeSpanOffsets")(fun
       Effect.mapError(() => fail("invalid-offset"))
     );
     if (count === 0) return yield* fail("empty-map");
-    const selected = selectSpanOffsetEntry(at, count, position, side);
+    const selected = bisectOffsetEntries(at, count, position, side);
     const value = at(selected * 3 + 2);
     return at(selected * 3 + 1) === 0 ? position + value : value;
   });
