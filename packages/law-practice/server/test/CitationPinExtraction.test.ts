@@ -2,12 +2,14 @@ import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Ci
 import { it } from "@beep/test-runner";
 import {
   assertCitationPinExtractionBudget,
+  assertCitationPinExtractionConfiguration,
   assertCitationPinExtractionLifetime,
   replayCitationPinExtraction,
 } from "./CitationPinExtraction.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source pin extraction", (it) => {
+  it.effect("rejects malformed installation and oversized enclosing budgets", assertCitationPinExtractionConfiguration);
   it.effect("owns exact budgets and immutable source configuration", assertCitationPinExtractionBudget, {
     timeout: 120000,
   });

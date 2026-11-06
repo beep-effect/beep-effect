@@ -13,7 +13,11 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { makeCitationNodeTestRuntime, makeCitationObservedSpawner } from "../CitationNativeSpawner.fixtures.ts";
+import {
+  citationBunTestExecutable,
+  makeCitationNodeTestRuntime,
+  makeCitationObservedSpawner,
+} from "../CitationNativeSpawner.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/integration/CitationRegexTranslator");
 const Reply = S.fromJsonString(
@@ -62,7 +66,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native regex transla
               ? yield* fs
                   .makeTempDirectoryScoped({ prefix: "citation-node-corpus-" })
                   .pipe(Effect.flatMap((cwd) => makeCitationNodeTestRuntime(NodeURL.fileURLToPath(subjectUrl), cwd)))
-              : { executable: process.execPath, workerFile: NodeURL.fileURLToPath(subjectUrl) };
+              : { executable: yield* citationBunTestExecutable, workerFile: NodeURL.fileURLToPath(subjectUrl) };
           const native = yield* makeCitationObservedSpawner();
           const runSubject = Effect.fn("Qualification.runRegexSubject")(function* (subject: number) {
             const completed = yield* Effect.scoped(

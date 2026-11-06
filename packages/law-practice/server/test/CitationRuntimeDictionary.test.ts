@@ -16,6 +16,7 @@ import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { constant } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -211,3 +212,61 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
     })
   );
 });
+
+it.effect("rejects malformed dictionary policy before invoking a comparison capability", () =>
+  Effect.gen(function* () {
+    const comparison = CitationRuntimeDictionaryComparison.of({
+      step: Effect.die("invalid policy reached comparison work"),
+      equal: constant(Effect.die("invalid policy reached equality")),
+    });
+    for (const policy of [null, {}, { entries: 0, iterations: 100 }, { entries: 1, iterations: -1 }]) {
+      const failure = yield* makeCitationRuntimeDictionary(policy).pipe(
+        Effect.provideService(CitationRuntimeDictionaryComparison, comparison),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "CitationRuntimeDictionaryFailure", reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
+
+it.effect("rejects tampered keys and invalid values atomically before consuming comparison work", () =>
+  Effect.gen(function* () {
+    let steps = 0;
+    const comparison = CitationRuntimeDictionaryComparison.of({
+      step: Effect.sync(() => {
+        steps++;
+      }),
+      equal: constant(Effect.die("invalid key reached comparison")),
+    });
+    const table = yield* makeCitationRuntimeDictionary({ entries: 4, iterations: 100 }).pipe(
+      Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+    );
+    const key = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(7) });
+    const inserted = yield* table.set(key, 42);
+    const before = steps;
+    for (const { field, value } of [
+      { field: "objectId", value: -1 },
+      { field: "hash", value: "7" },
+      { field: "hash", value: BigInt(-1) },
+    ]) {
+      const malformed = CitationRuntimeDictionaryKey.make({ objectId: 1, hash: BigInt(7) });
+      Reflect.set(malformed, field, value);
+      for (const operation of [
+        table.get(malformed),
+        table.remove(malformed),
+        table.set(malformed, 0).pipe(Effect.as(O.none())),
+      ]) {
+        const failure = yield* operation.pipe(Effect.flip);
+        expect(failure).toMatchObject({ reason: "invalid-input" });
+      }
+    }
+    for (const value of [-1, 0.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      const failure = yield* table.set(key, value).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-input" });
+    }
+    expect(steps).toBe(before);
+    const entries = yield* table.read;
+    expect(entries).toEqual([inserted]);
+  })
+);

@@ -175,11 +175,9 @@ export const readCitationRegexFrames = makeCitationNativeFrameReader({
 export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobPreparation")(function* (
   policy: unknown
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
-    CitationRegexWorkerFailure.make({ reason: "invalid-runtime" })
-  );
-  const { timed } = yield* makeCitationRegexTiming(limits, true);
   const badRuntime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
+  const limits = yield* decodeCitationRegexPolicy(policy, badRuntime);
+  const { timed } = yield* makeCitationRegexTiming(limits, true);
   const patternInput = yield* makeCitationRegexInput(limits, "pattern").pipe(Effect.mapError(badRuntime));
   const sourceInput = yield* makeCitationRegexInput(limits).pipe(Effect.mapError(badRuntime));
   const prepare = Effect.fn("Citation.prepareRegexJob")(function* (

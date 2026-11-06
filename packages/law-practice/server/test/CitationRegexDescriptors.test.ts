@@ -84,6 +84,8 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
   );
   it.effect("binds native words, flags and fresh compiler facts against owned installed metadata", () =>
     Effect.gen(function* () {
+      const invalidPolicy = yield* makeCitationRegexDescriptorRegistry(null, []).pipe(Effect.flip);
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-bindings" });
       const source = descriptor();
       const citationResult3 = yield* defaultCitationEnginePolicy;
       const registry = yield* makeCitationRegexDescriptorRegistry(citationResult3.limits, [source]);
@@ -93,6 +95,11 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
       expect(bound.descriptor.profile).toEqual(descriptor().profile);
       expect(bound.program.groups).toBe(2);
       expect(bound.prepared.value.storage.bytes).toEqual(pattern().bytes);
+      const invalidFlags = yield* registry.bind(pattern(), -1).pipe(Effect.flip);
+      expect(invalidFlags).toMatchObject({ reason: "unknown-pattern" });
+      const invalidStorage = yield* registry.bind({ width: 2, bytes: new Uint8Array([98]) }, 0).pipe(Effect.flip);
+      expect(invalidStorage).toMatchObject({ reason: "unknown-pattern" });
+
       const citationResult4 = yield* registry.bind(pattern(), 2).pipe(Effect.flip);
       expect(citationResult4).toMatchObject({ reason: "unknown-pattern" });
       const citationResult5 = yield* registry.bind({ width: 1, bytes: new Uint8Array([98]) }, 0).pipe(Effect.flip);

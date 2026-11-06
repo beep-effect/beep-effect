@@ -152,4 +152,18 @@ it.layer(BunCrypto.layer)("canonical authority identity", (it) => {
       expect(Str.includes("private-document-text")(String(failure))).toBe(false);
     })
   );
+  it.effect("rejects malformed digest bytes without exposing input or nested causes", () =>
+    Effect.gen(function* () {
+      const row = A.getUnsafe((yield* inputs).cases, 0).input;
+      const failure = yield* makeCitationAuthorityId(row).pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
+        ),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ reason: "digest-failed" });
+      expect("cause" in failure).toBe(false);
+    })
+  );
 });

@@ -28,6 +28,7 @@ import {
 } from "./RegexWorkerRpc.ts";
 
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
+const invalidRuntime = () => failure("invalid-runtime");
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 /** Capture trusted descriptors, runtime, policy, Digest, Clock, admission and
@@ -43,10 +44,8 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
   bindings: unknown,
   engineInput: unknown = "python-re"
 ) {
-  const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, () =>
-    failure("invalid-runtime")
-  );
-  const admission = yield* captureCitationNativeAdmission(limits, () => failure("invalid-runtime"));
+  const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, invalidRuntime);
+  const admission = yield* captureCitationNativeAdmission(limits, invalidRuntime);
   const owner = yield* makeCitationNativeProcessOwner(limits, "extract", failure);
   const registry = yield* makeCitationRegexDescriptorRegistry(limits, bindings, engineInput);
   const preparation = yield* makeCitationRegexJobPreparation(limits);

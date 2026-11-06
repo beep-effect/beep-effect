@@ -32,6 +32,7 @@ import type {
   CitationCleanerProduced,
   CitationCleanerWork,
 } from "./CleanerPipeline.ts";
+import type { CitationPythonHashFailure } from "./PythonHash.ts";
 
 const crossPrimitiveKinds = (leftText: boolean, rightText: boolean, leftBytes: boolean, rightBytes: boolean) =>
   (leftText && rightBytes) || (rightText && leftBytes);
@@ -50,6 +51,8 @@ const RegistryEntry = S.Tuple([
 );
 type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 const fail = (reason: CitationCleanerFailure["reason"]) => CitationCleanerFailure.make({ reason });
+const invalidInput = () => fail("invalid-input");
+const unissuedValue = () => fail("unissued-value");
 const exceeded = () => CitationSafetyLimitExceeded.make({ operation: "clean", limit: "resolutionIterations" });
 /**
  * Trusted server object protocols. Hash/equality include Python reflection,
@@ -85,7 +88,7 @@ export class CitationCleanerProtocols extends Context.Service<
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegistry")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(Effect.mapError(() => fail("invalid-input")));
+  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(Effect.mapError(invalidInput));
   const values = yield* CitationCleanerValues;
   const builtins = yield* CitationBuiltinCleaners;
   const protocols = yield* CitationCleanerProtocols;
@@ -95,6 +98,10 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
   const operationMillis = Duration.toMillis(limits.operationDeadline);
   const deadline = Duration.millis(cleanMillis <= operationMillis ? cleanMillis : operationMillis);
   const deadlineLimit = cleanMillis <= operationMillis ? "cleanDeadline" : "operationDeadline";
+  const translateHashFailure = (error: CitationPythonHashFailure): Failure =>
+    error.reason === "deadline-exceeded"
+      ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: deadlineLimit })
+      : fail("runtime-failed");
   const maximum = limits.resolutionIterations;
   let remaining = maximum;
   let closed = false;
@@ -110,7 +117,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     remaining--;
     return Effect.yieldNow;
   });
-  const lookup = (id: number) => Effect.fromOption(HashMap.get(refs, id), () => fail("unissued-value"));
+  const lookup = (id: number) => Effect.fromOption(HashMap.get(refs, id), unissuedValue);
   const capture = <T>(effect: Effect.Effect<T, Failure>) =>
     effect.pipe(
       Effect.mapError((error) => {
@@ -144,9 +151,9 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     // and other host values still use reflected adapter protocols.
     if (aPlain && bPlain) {
       const citationResult2 = yield* values.getUnicode(a);
-      const x = yield* Effect.fromOption(citationResult2, () => fail("unissued-value"));
+      const x = yield* Effect.fromOption(citationResult2, unissuedValue);
       const citationResult3 = yield* values.getUnicode(b);
-      const y = yield* Effect.fromOption(citationResult3, () => fail("unissued-value"));
+      const y = yield* Effect.fromOption(citationResult3, unissuedValue);
       return x.storage.width === y.storage.width && (yield* equalBytes(x.storage.bytes, y.storage.bytes));
     }
     const aBytes = yield* values.getBytes(a);
@@ -161,7 +168,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
       equal: (a, b) => capture(equal(a, b)),
       step: capture(step),
     }),
-    Effect.mapError(() => fail("invalid-input"))
+    Effect.mapError(invalidInput)
   );
   const translate = (error: CitationRuntimeDictionaryFailure): Failure =>
     O.getOrElse(callbackFailure, () =>
@@ -241,26 +248,11 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
                     .unicode(
                       (yield* values
                         .getUnicode(key)
-                        .pipe(Effect.flatMap((unicode) => Effect.fromOption(unicode, () => fail("unissued-value")))))
-                        .storage
+                        .pipe(Effect.flatMap((unicode) => Effect.fromOption(unicode, unissuedValue)))).storage
                     )
-                    .pipe(
-                      Effect.mapError((error) =>
-                        error.reason === "deadline-exceeded"
-                          ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: deadlineLimit })
-                          : fail("runtime-failed")
-                      )
-                    )
+                    .pipe(Effect.mapError(translateHashFailure))
                 : O.isSome(bytes)
-                  ? yield* hashes
-                      .bytes(bytes.value)
-                      .pipe(
-                        Effect.mapError((error) =>
-                          error.reason === "deadline-exceeded"
-                            ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: deadlineLimit })
-                            : fail("runtime-failed")
-                        )
-                      )
+                  ? yield* hashes.bytes(bytes.value).pipe(Effect.mapError(translateHashFailure))
                   : yield* protocols.hash(key);
             const normalized = yield* S.decodeEffect(Hash)(hash).pipe(Effect.mapError(() => fail("callback-failed")));
             return yield* body(CitationRuntimeDictionaryKey.make({ objectId: key.slot, hash: normalized }));

@@ -320,7 +320,7 @@ export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")
           NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.node.entry.ts", import.meta.url)),
           htmlDirectory
         )
-      : citationHtmlWorkerTestRuntime();
+      : yield* citationHtmlWorkerTestRuntime();
   const rows = A.filter(
     corpus.cases,
     (row) =>

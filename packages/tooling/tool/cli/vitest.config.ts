@@ -62,6 +62,7 @@ const isolatedSuites = [
   "test/goals-doctor.test.ts",
   "test/goals-graph.test.ts",
   "test/goals-manifest-capabilities.test.ts",
+  "test/goals-manifest-projection.test.ts",
   "test/goals-materialize.test.ts",
   "test/goals-set-risk-tier.test.ts",
   "test/goals-set-status-stream.test.ts",

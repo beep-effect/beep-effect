@@ -4,13 +4,18 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -24,13 +29,47 @@ import type * as PlatformError from "effect/PlatformError";
 /** The actual owned HTML entrypoint, resolved from the test fixture location.
  * @internal @category testing @since 0.0.0
  */
-export const citationHtmlWorkerTestRuntime = () =>
-  CitationNativeProcessRuntime.make({
+export const citationHtmlWorkerTestRuntime = Effect.fn("NativeSourceTest.htmlRuntime")(function* () {
+  const executable = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const context = yield* Layer.build(
+        NodeChildProcessSpawner.layer.pipe(Layer.provide(Layer.merge(NodeFileSystem.layer, NodePath.layer)))
+      );
+      return yield* citationBunTestExecutable.pipe(Effect.provideContext(context));
+    })
+  );
+  return CitationNativeProcessRuntime.make({
     kind: "bun",
-    executable: process.execPath,
+    executable,
     cwd: process.cwd(),
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   });
+});
+
+/** Resolve the Bun executable the "bun" runtime leg spawns. Under the Bun test
+ * runner it is the process itself; under Node (every test runs on both runtimes)
+ * it is the installed `bun` on `PATH`, resolved here because worker launches
+ * receive an empty environment and cannot search `PATH` themselves.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationBunTestExecutable: Effect.Effect<string, PlatformError.PlatformError, ChildProcessSpawner> =
+  process.versions.bun !== undefined
+    ? Effect.succeed(process.execPath)
+    : Effect.gen(function* () {
+        const spawner = yield* ChildProcessSpawner;
+        const candidates = yield* spawner.lines(ChildProcess.make("which", ["bun"]));
+        const candidate = yield* O.match(A.head(A.map(candidates, Str.trim)), {
+          onNone: () => Effect.die("Citation qualification requires an installed Bun executable"),
+          onSome: Effect.succeed,
+        });
+        const resolved = yield* spawner.string(
+          ChildProcess.make(candidate, ["-p", 'process.versions.bun ? process.execPath : ""'])
+        );
+        const executable = Str.trim(resolved);
+        if (!S.is(S.NonEmptyString)(executable))
+          return yield* Effect.die("Citation qualification requires an actual installed Bun executable");
+        return executable;
+      });
 
 /** Reject Bun's test-runner node shim and resolve an actual installed Node
  * executable through fixed probes. Effect owns probe processes and timeouts.
@@ -63,49 +102,75 @@ export const citationNodeTestExecutable = Effect.gen(function* () {
   });
 });
 
-/** Bundle a trusted test subject for the installed Node executable. The caller
- * owns the scoped output directory; actual worker launches receive empty env.
- * @internal @category testing @since 0.0.0
- */
-export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRuntime")(function* (
+/** Bundle one trusted entrypoint per scoped installation, retaining the actual runtime's platform layers. */
+const makeCitationBundledTestRuntime = Effect.fn("NativeSourceTest.bundledRuntime")(function* (
+  kind: CitationNativeRuntimeKind,
   entrypoint: string,
   cwd: string
 ) {
   const path = yield* Path.Path;
-  const executable = yield* citationNodeTestExecutable;
-  const bundle = yield* Effect.promise(() =>
-    Bun.build({
-      entrypoints: [entrypoint],
-      target: "node",
-      format: "esm",
-      packages: "bundle",
-      outdir: cwd,
-      naming: "worker.mjs",
-    })
-  );
-  expect(bundle.success).toBe(true);
-  return CitationNativeProcessRuntime.make({ kind: "node", executable, cwd, workerFile: path.join(cwd, "worker.mjs") });
+  const executable = yield* kind === "node" ? citationNodeTestExecutable : citationBunTestExecutable;
+  const workerFile = path.join(cwd, "worker.mjs");
+  if (process.versions.bun !== undefined) {
+    const bundle = yield* Effect.promise(() =>
+      Bun.build({
+        entrypoints: [entrypoint],
+        target: kind,
+        format: "esm",
+        packages: "bundle",
+        outdir: cwd,
+        naming: "worker.mjs",
+      })
+    );
+    expect(bundle.success).toBe(true);
+  } else {
+    const spawner = yield* ChildProcessSpawner;
+    const bundler = yield* citationBunTestExecutable;
+    const exitCode = yield* spawner.exitCode(
+      ChildProcess.make(
+        bundler,
+        [
+          "build",
+          entrypoint,
+          `--target=${kind}`,
+          "--format=esm",
+          "--packages=bundle",
+          `--outdir=${cwd}`,
+          "--entry-naming=worker.mjs",
+        ],
+        { stdout: "ignore", stderr: "inherit" }
+      )
+    );
+    expect(exitCode).toBe(0);
+  }
+  return CitationNativeProcessRuntime.make({ kind, executable, cwd, workerFile });
 });
 
-/** Share actual regex runtime selection across worker and tokenizer controls.
+/** Bundle a trusted test subject for the installed Node executable. The caller
+ * owns the scoped output directory; actual worker launches receive empty env.
+ * Bun's in-process builder and CLI use identical target, ESM and package settings.
  * @internal @category testing @since 0.0.0
  */
-export const makeCitationRegexTestRuntime = Effect.fn("NativeSourceTest.regexRuntime")(function* (
-  kind: CitationNativeRuntimeKind,
-  cwd: string
-) {
-  if (kind === "node")
-    return yield* makeCitationNodeTestRuntime(
-      NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)),
+export const makeCitationNodeTestRuntime = Effect.fn("NativeSourceTest.nodeRuntime")(
+  (entrypoint: string, cwd: string) => makeCitationBundledTestRuntime("node", entrypoint, cwd)
+);
+
+/** Share actual regex runtime selection and once-per-installation bundling.
+ * Both legs launch the unchanged isolated worker program under the same limits.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationRegexTestRuntime = Effect.fn("NativeSourceTest.regexRuntime")(
+  (kind: CitationNativeRuntimeKind, cwd: string) =>
+    makeCitationBundledTestRuntime(
+      kind,
+      NodeURL.fileURLToPath(
+        kind === "node"
+          ? new URL("../src/internal/Citation/RegexWorker.node.entry.ts", import.meta.url)
+          : new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)
+      ),
       cwd
-    );
-  return CitationNativeProcessRuntime.make({
-    kind: "bun",
-    executable: process.execPath,
-    cwd,
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/RegexWorker.entry.ts", import.meta.url)),
-  });
-});
+    )
+);
 
 const $I = $LawPracticeServerId.create("test/CitationNativeSpawner");
 const MissingProcess = S.Struct({ code: S.tag("ESRCH") }).pipe(
@@ -247,7 +312,7 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
     workerFile,
     `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('end',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
   );
-  const executable = runtimeKind === "node" ? yield* citationNodeTestExecutable : process.execPath;
+  const executable = yield* runtimeKind === "node" ? citationNodeTestExecutable : citationBunTestExecutable;
   return { fs, cwd, workerFile, marker, release, kind: runtimeKind, executable };
 });
 

@@ -89,14 +89,18 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const good = yield* registry.bind(0, descriptor(ref, 0));
         expect(good.extra).toEqual({ exact_editions: [7, 7], variation_editions: [7], short: false });
         for (const input of [
+          [-1, descriptor(ref, 0)],
           [1, descriptor(ref, 0)],
+          [0, {}],
           [0, descriptor(Str.repeat(64)("0"), 0)],
           [0, descriptor(ref, 2)],
         ]) {
           const failed = yield* registry.bind(input[0], input[1]).pipe(Effect.flip);
-          expect(failed).toMatchObject({ reason: input[0] === 1 ? "unknown-extractor" : "program-mismatch" });
+          expect(failed).toMatchObject({ reason: input[0] !== 0 ? "unknown-extractor" : "program-mismatch" });
         }
         for (const [recipes, editions] of [
+          [null, bindings],
+          [[row], null],
           [[row, row], bindings],
           [[row], []],
           [[row], [...bindings, ...bindings]],
@@ -114,4 +118,14 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
       })
     );
   }
+);
+
+it.effect("rejects malformed policy with a closed failure before installing operations", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationExtractorRecipes(policy, [], []).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-bindings" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
 );

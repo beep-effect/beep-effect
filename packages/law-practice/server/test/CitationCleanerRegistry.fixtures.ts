@@ -51,7 +51,7 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     Effect.die("Registry unit tests must not start native workers")
   ),
   observe: BuiltinObservation = (_name, _value, body) => body,
-  htmlRuntime: CitationNativeProcessRuntime = citationHtmlWorkerTestRuntime()
+  htmlRuntime?: CitationNativeProcessRuntime
 ) {
   const base = (yield* defaultCitationEnginePolicy).limits;
   const limits = {
@@ -60,8 +60,9 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     resolutionIterations: O.getOrElse(O.fromUndefinedOr(iterations), () => base.resolutionIterations),
   };
   const values = yield* makeCitationCleanerValues(limits);
+  const selectedRuntime = htmlRuntime === undefined ? yield* citationHtmlWorkerTestRuntime() : htmlRuntime;
   const paths = yield* Layer.build(Path.layer);
-  const builtin = yield* makeCitationBuiltinCleaners(limits, htmlRuntime).pipe(
+  const builtin = yield* makeCitationBuiltinCleaners(limits, selectedRuntime).pipe(
     Effect.provideContext(paths),
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)

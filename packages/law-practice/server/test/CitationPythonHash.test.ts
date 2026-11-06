@@ -151,3 +151,13 @@ it.effect("captures policy/clock, interrupts a cooperative scan and returns no p
     expect(Exit.hasInterrupts(citationResult15)).toBe(true);
   })
 );
+
+it.effect("rejects malformed policy with a closed failure before installing operations", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationPythonHash(policy).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);

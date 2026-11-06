@@ -29,6 +29,7 @@ import {
   assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
   makeCitationMetadataTestContext,
+  setupCitationMetadataRuntime,
   setupCitationRegexRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -183,6 +184,8 @@ export const assertCitationJournalMetadataBudget = Effect.fn("JournalMetadataTes
 export const assertCitationJournalMetadataLifetime = Effect.fn("JournalMetadataTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  const invalid = yield* closed.metadata.apply({}).pipe(Effect.flip);
+  expect(invalid).toMatchObject({ reason: "invalid-input" });
   const input = A.getUnsafe(closed.corpus.inputs, 11);
   const raw = { ...input.request, ...A.getUnsafe(closed.corpus.controls, 0) };
   yield* assertCitationWorkerClosedLifetime(scope, closed.metadata.apply(raw), closed.observed.snapshot);
@@ -195,5 +198,52 @@ export const assertCitationJournalMetadataLifetime = Effect.fn("JournalMetadataT
     timed.timer.trigger
   );
   const observed = yield* timed.observed.snapshot;
+  expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+});
+
+/** Installation rejects malformed policy/configuration and mismatched fixed patterns before spawning. */
+export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMetadataTest.configuration")(function* () {
+  const corpus = yield* load();
+  const setup = yield* setupCitationMetadataRuntime("bun");
+  const { bundle } = yield* loadCitationFrozenEditionFixtures();
+  const editions = yield* makeCitationFrozenEditions(bundle);
+  const installed = Context.add(setup.provided, CitationFrozenEditions, editions);
+  const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
+  for (const [policy, runtime, configuration] of [
+    [{}, setup.runtime, corpus.configuration],
+    [setup.limits, setup.runtime, {}],
+    [setup.limits, {}, corpus.configuration],
+    [setup.limits, setup.runtime, { ...corpus.configuration, journalPattern: changedPattern }],
+  ]) {
+    const failed = yield* makeCitationJournalMetadata(policy, runtime, configuration).pipe(
+      Effect.provideContext(installed),
+      DateTime.withCurrentZoneOffset(0),
+      Effect.flip
+    );
+    expect(failed).toMatchObject({ reason: "invalid-configuration" });
+  }
+  const oversized = yield* makeCitationTextBudget({
+    ...setup.limits,
+    producedTextUtf16: setup.limits.producedTextUtf16 + 1,
+  });
+  const failed = yield* makeCitationJournalMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.provideContext(Context.add(installed, CitationTextBudget, oversized)),
+    DateTime.withCurrentZoneOffset(0),
+    Effect.flip
+  );
+  expect(failed).toMatchObject({ reason: "invalid-configuration" });
+  const valid = yield* install("bun");
+  const request = A.getUnsafe(valid.corpus.inputs, 11).request;
+  const invalidInput = yield* valid.metadata
+    .apply({
+      ...request,
+      ...A.getUnsafe(valid.corpus.controls, 0),
+      words: "malformed",
+    })
+    .pipe(Effect.flip);
+  expect(invalidInput).toMatchObject({ reason: "invalid-input" });
+  const inputObserved = yield* valid.observed.snapshot;
+  expect(inputObserved).toEqual({ spawned: 0, confirmed: 0 });
+  const observed = yield* setup.observed.snapshot;
   expect(observed).toEqual({ spawned: 0, confirmed: 0 });
 });
