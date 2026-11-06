@@ -53,7 +53,7 @@ const sealRuntimeCopy = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const source = yield* fs.realPath(process.execPath);
   const before = yield* fs.stat(source);
-  if (before.type !== "File" || before.size > 268435456n) return yield* failure("runtime");
+  if (before.type !== "File" || before.size > BigInt(268435456)) return yield* failure("runtime");
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "sealed-runtime-" });
   yield* fs.chmod(directory, 0o700);
   const executable = `${directory}/runtime`;
@@ -74,14 +74,15 @@ const sealRuntimeCopy = Effect.fnUntraced(function* () {
       copied.type === "File",
       (copied.mode & 0o022) === 0,
       O.contains(uid)(copied.uid),
-      O.contains(1n)(copied.nlink),
+      O.contains(BigInt(1))(copied.nlink),
       O.isSome(before.ino),
       O.isSome(copied.ino),
-      before.dev !== copied.dev || O.getOrElse(before.ino, () => -1n) !== O.getOrElse(copied.ino, () => -1n),
+      before.dev !== copied.dev ||
+        O.getOrElse(before.ino, () => -BigInt(1)) !== O.getOrElse(copied.ino, () => -BigInt(1)),
       before.mode === after.mode,
       before.dev === after.dev,
       before.size === after.size,
-      O.getOrElse(before.ino, () => -1n) === O.getOrElse(after.ino, () => -2n),
+      O.getOrElse(before.ino, () => -BigInt(1)) === O.getOrElse(after.ino, () => BigInt(-2)),
       sha256 === sourceHash,
       canonical === executable,
     ],
@@ -108,7 +109,7 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
   const close = Scope.close(owned, Exit.void);
   return yield* Effect.gen(function* () {
     const sealed = yield* sealRuntimeCopy();
-    const { executable, sha256 } = sealed;
+    const { executable } = sealed;
     const commands = yield* Effect.acquireRelease(Queue.bounded<Uint8Array>(1), Queue.shutdown);
     const semaphore = yield* Semaphore.make(1);
     const child = yield* ChildProcess.make(executable, ["--eval", socketPeer], {
