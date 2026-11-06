@@ -207,13 +207,17 @@ const metadataFromWrapper = (
   }).pipe(Effect.mapError(() => UsptoError.fromReason("response-decoding")));
 };
 
-const continuityNumbers = (records: ReadonlyArray<Readonly<Record<string, unknown>>>): Array<UsptoApplicationNumber> =>
+const continuityNumbers = (
+  records: ReadonlyArray<Readonly<Record<string, unknown>>>,
+  directionalField: "parentApplicationNumberText" | "childApplicationNumberText"
+): Array<UsptoApplicationNumber> =>
   A.flatMap(records, (record) =>
     O.toArray(
-      stringField(record, "applicationNumberText").pipe(
-        O.orElse(() => stringField(record, "parentApplicationNumberText")),
-        O.orElse(() => stringField(record, "childApplicationNumberText")),
-        O.flatMap(S.decodeUnknownOption(UsptoApplicationNumber))
+      stringField(record, directionalField).pipe(
+        O.flatMap(S.decodeUnknownOption(UsptoApplicationNumber)),
+        O.orElse(() =>
+          stringField(record, "applicationNumberText").pipe(O.flatMap(S.decodeUnknownOption(UsptoApplicationNumber)))
+        )
       )
     )
   );
@@ -395,8 +399,12 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig)
       );
       const wrapper = A.head(envelope.patentFileWrapperDataBag);
       return UsptoContinuity.make({
-        childApplicationNumbers: O.isNone(wrapper) ? [] : continuityNumbers(wrapper.value.childContinuityBag),
-        parentApplicationNumbers: O.isNone(wrapper) ? [] : continuityNumbers(wrapper.value.parentContinuityBag),
+        childApplicationNumbers: O.isNone(wrapper)
+          ? []
+          : continuityNumbers(wrapper.value.childContinuityBag, "childApplicationNumberText"),
+        parentApplicationNumbers: O.isNone(wrapper)
+          ? []
+          : continuityNumbers(wrapper.value.parentContinuityBag, "parentApplicationNumberText"),
       });
     }),
     getDocuments: Effect.fn("Uspto.getDocuments")(function* (applicationNumber: string) {
