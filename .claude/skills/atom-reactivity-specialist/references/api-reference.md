@@ -149,7 +149,7 @@ import * as Atom from "effect/reactivity/Atom";
 declare const MyServiceLayer: Layer.Layer<never>;
 declare const ServiceLayer1: Layer.Layer<never>;
 declare const ServiceLayer2: Layer.Layer<never>;
-// Default runtime (uses Atom.defaultMemoMap)
+// Default runtime (uses a registry-scoped MemoMap)
 const myAtom = Atom.runtime(MyServiceLayer)
 
 // Custom factory with shared MemoMap

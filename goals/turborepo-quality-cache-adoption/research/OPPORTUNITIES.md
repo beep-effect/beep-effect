@@ -10,6 +10,13 @@ Resolution at 21:50 UTC: the installed GitHub CLI 2.102.1 [check command](https:
 ## Types lint ignore-policy input gap, 2026-11-06
 
 While preparing the next reviewed pilot, source inspection found `biome check .` reads Git ignore files but inherited types lint inputs omit the root ignore policy. Twelve bounded stable/canary native `run lint --filter=@beep/types --dry=json` plans confirm that adding a types source exclusion to that policy leaves the original task hash unchanged, while the explicit candidate invalidates. Caching remains disabled, so this is a pre-adoption input gap, not evidence of a stale artifact served in production. The input-profile correction and source-bound reports are prepared in the local types pilot lane. Include ignore-policy perturbation in computation qualification before enabling reuse; metadata coverage alone does not establish semantic correctness.
+## Hosted Integration interrupted by runner loss, 2026-11-06
+
+PR #2804 Integration job 128166148577 failed on head 0bdabf78490c3ee2e8ac86fb356bbaa837d481b3 after the self-hosted runner lost communication. GitHub's sole failure annotation identifies runner loss; the verification step remains in progress in the terminal job record and no step reports a test failure. The completed-job log endpoint returns provider `BlobNotFound` instead of a test log; preserve that response separately and never claim it as captured test output. After rechecking the unchanged open PR head and completed failed run, request one retry of only the interrupted job. Its request was accepted; replacement-job execution still needs verification. Do not patch tests or rerun the whole workflow from this evidence. A subsequent REST status read hit the account's real API quota, so further REST verification waits for reset without changing credentials. This operational interruption is separate from the scoped integration routing omission prepared in this lane.
+
+## Scoped integration routing omits plain-only script owners, 2026-11-06
+
+While following the remaining hosted Integration jobs, source review found that the root Quality runner sets its plain integration bucket empty for every affected or explicit-filter invocation. Seven current plain-only owners contain integration source files. Preserve those owners under the original caller scope and exclude split owners to avoid duplicate execution. Native stable/canary metadata fixtures confirm that negative exclusions preserve both explicit and affected selection; the source resolver and helper regression are prepared in the unpublished integration-scope lane, with hosted correctness still required. This is a fresh-test coverage repair, not a reason to cache live integration verdicts.
 
 ## Captured output lost at timeout, 2026-11-03
 
@@ -1289,3 +1296,24 @@ Hosted #2824 Lint found expanded singleton arrays in types/turbo.json left by an
 ## Hosted diagnostics reject sequential channel and Option wrappers, 2026-11-06
 
 #2824 Check, Build and Integration all fail on the same two introduced Effect diagnostics in Cache.pilot.ts: mapMapErrorToMapBoth and mapSomeToAsSome. Replace the sequential success/error mappings with mapBoth and the success wrapper with asSome, preserving failures and values. Three completed logs are retained once under their actual jobs. No signature, baseline, threshold, test expectation or local quality suite changes.
+
+## 2026-11-06 — Reference links enter identity's broad metadata inputs
+
+During actual-root strict-entrypoint review, pinned canary lint dry-run refused
+`input symlink leaves repository` before that flag was enabled. The observed
+identity lint input glob spans repository manifests and reaches ignored external
+`.repos` links. A source-bound negative reference-tree input lets that same dry
+run finish and preserves every observed stable lint input path. The original
+refusal is retained separately. A real-root baseline with canonical provisioned
+reference links before profile approval would have caught the mismatch earlier.
+No quality task body ran and no feature/qualification/production setting changed.
+
+
+## 2026-11-06 — Main advanced during the producer freshness preflight
+
+After #2793 and #2796 merged, the current-source inspection preflight at recorded
+revision `68d37217c6` refused `Main moved; review current source` before dispatch.
+No inspection or protected trial was submitted. Independent adoption metadata
+work continued in an isolated source-bound checkout. Retaining immutable hosted
+source bindings and coordinating a short exact-source approval interval would
+avoid repeated static reads while preserving the final live-ref check.

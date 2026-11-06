@@ -3,14 +3,14 @@
   "initiative": {
     "id": "orchestrator-handoff",
     "title": "Orchestrator Hand-off",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-06",
     "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/orchestrator-handoff",
-  "lifecycle": "active",
-  "statusNote": "P1 (register, role, HANDOFF format, skill procedures, merge gate) merged; P2 shipped yeet gate-table, session handoff, session ruling and session register convert (the Codex-lane comment helper was dropped under T3-only messaging); P3 ran as a files-alone take-over drill whose findings were fixed in the same PR. Proposed completed-retained.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Completed-retained 2026-11-06: P1 (register, role, HANDOFF format, skill procedures, merge gate) and P2 (yeet gate-table, session handoff, session ruling, session register convert; the Codex-lane comment helper dropped under T3-only messaging) merged; P3 ran as a files-alone take-over drill whose findings were fixed in final PR #2812 (merged 6d99cb00b5, completion gate verified).",
   "mission": "Codify the orchestrator session role so a successor session can take it over from files alone without orphaning the sessions, agents, lanes, jobs and people it coordinates.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -78,7 +78,7 @@
     {
       "id": "P3",
       "name": "First take-over from files alone; close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -92,7 +92,7 @@
     "A hand-off step would require the operator to relay messages between sessions.",
     "The merge gate would merge over an unattributed red or an unknown thread count."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2812
   }

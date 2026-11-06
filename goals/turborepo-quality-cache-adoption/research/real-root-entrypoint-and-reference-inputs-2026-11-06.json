@@ -1,0 +1,1227 @@
+{
+  "schemaVersion": "cache-real-root-strict-entrypoint-observation/v1",
+  "at": "2026-11-06T19:15:07.890498+00:00",
+  "sourceRevision": "68d37217c6ab10f6b1ca70316ab6544c87d23c38",
+  "sourceState": "working-tree-overlay",
+  "identityConfigSha256": "91fae88ab5bd2b458852a0bde1d2cee7fc81e2045ad0256c63bf2b10d66cfed3",
+  "identityConfigBeforeSha256": "1c694094dcfeef53b714e7980f8193cf93b2c34690f9a9a4dcd5936f328456e8",
+  "rootConfigSha256": "4f8e35a6e90c9d1d6b1eb57180fb0f8079d1bafe9224e3207630410b204bca05",
+  "clients": {
+    "stable": {
+      "packageVersion": "2.11.10",
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "packageVersion": "2.11.11-canary.1",
+      "reportedVersion": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2",
+      "registryMetadata": "https://registry.npmjs.org/@turbo%2flinux-64/2.11.11-canary.1",
+      "tarball": "https://registry.npmjs.org/@turbo/linux-64/-/linux-64-2.11.11-canary.1.tgz",
+      "integrity": "sha512-roWVD6C1Q90g3XPkhc/WpUCw1BtSQoZcBxAwwqJz7tH/me4b/zhomlkV+o/I0Mn4CSiNN34jnq3FGXmggQjykw==",
+      "integrityVerified": true,
+      "archiveMember": "turbo-linux-x64/bin/turbo",
+      "packageAndReportedVersionMatch": true,
+      "archiveBytes": 19665216
+    }
+  },
+  "fixedFutureFlags": {
+    "affectedUsingTaskInputs": true,
+    "filterUsingTasks": true,
+    "globalConfiguration": true
+  },
+  "onlyChangedFlag": "strictTaskEntrypointSelection",
+  "taskBodiesExecuted": false,
+  "secretValuesLoaded": false,
+  "qualitySuitesRun": false,
+  "trackedConfigRestoredExactly": true,
+  "observations": [
+    {
+      "channel": "stable",
+      "strict": false,
+      "requestedTask": "build",
+      "exit": 0,
+      "seconds": 0.209,
+      "rawBytes": 1406276,
+      "rawSha256": "8e84f796fc760744444aaf6d2f986cd7d58888755fbe03c417f2d495e0259914",
+      "tasks": 193,
+      "executableTasks": 191,
+      "graphOnlyTasks": 2
+    },
+    {
+      "channel": "stable",
+      "strict": false,
+      "requestedTask": "check",
+      "exit": 0,
+      "seconds": 0.164,
+      "rawBytes": 3299130,
+      "rawSha256": "0f6ac2e3f51eb3f0110df758727f7b964ac3f64087ed0fcd54c71a75b47e92c5",
+      "tasks": 344,
+      "executableTasks": 342,
+      "graphOnlyTasks": 2
+    },
+    {
+      "channel": "stable",
+      "strict": false,
+      "requestedTask": "lint",
+      "exit": 0,
+      "seconds": 0.234,
+      "rawBytes": 2371884,
+      "rawSha256": "c2d9ce8af376ca4e2c23c4ad70f5298706f43bd17eb03a405b7c70ba3c28af94",
+      "tasks": 193,
+      "executableTasks": 191,
+      "graphOnlyTasks": 2
+    },
+    {
+      "channel": "canary",
+      "strict": false,
+      "requestedTask": "build",
+      "exit": 0,
+      "seconds": 0.348,
+      "rawBytes": 1406285,
+      "rawSha256": "3c84c182cd1c2ce001c53c84b0d667ac518b2d4eae53ce0c5acca94754cd9011",
+      "tasks": 193,
+      "executableTasks": 191,
+      "graphOnlyTasks": 2
+    },
+    {
+      "channel": "canary",
+      "strict": false,
+      "requestedTask": "check",
+      "exit": 0,
+      "seconds": 0.789,
+      "rawBytes": 3988663,
+      "rawSha256": "bbd5d786f928c1b74e8b716af389fbbd75217296935fa42b004836b7b0ffc349",
+      "tasks": 344,
+      "executableTasks": 342,
+      "graphOnlyTasks": 2
+    },
+    {
+      "channel": "canary",
+      "strict": false,
+      "requestedTask": "lint",
+      "exit": 0,
+      "seconds": 0.942,
+      "rawBytes": 3061417,
+      "rawSha256": "569729d37f34a4bffa21316deeca63e0cb5a23f508d0c7ae27d93c6568202c08",
+      "tasks": 193,
+      "executableTasks": 191,
+      "graphOnlyTasks": 2
+    },
+    {
+      "channel": "stable",
+      "strict": true,
+      "requestedTask": "build",
+      "exit": 0,
+      "seconds": 0.148,
+      "rawBytes": 1348574,
+      "rawSha256": "1cedf657cc0d173acf59359776bf4b2ee9ddd93236cf70037c3ce2e6381edece",
+      "tasks": 191,
+      "executableTasks": 191,
+      "graphOnlyTasks": 0
+    },
+    {
+      "channel": "stable",
+      "strict": true,
+      "requestedTask": "check",
+      "exit": 0,
+      "seconds": 0.169,
+      "rawBytes": 3123548,
+      "rawSha256": "8373588a34d5da4b4ce8feb613454d3958a9bd703693bdb3e9af0b89ac21fd23",
+      "tasks": 340,
+      "executableTasks": 340,
+      "graphOnlyTasks": 0
+    },
+    {
+      "channel": "stable",
+      "strict": true,
+      "requestedTask": "lint",
+      "exit": 0,
+      "seconds": 0.187,
+      "rawBytes": 2308249,
+      "rawSha256": "27cd4bd0075e83e41f86bad1e63d386f65faba285417968d2b0b7b719c3f5ab2",
+      "tasks": 191,
+      "executableTasks": 191,
+      "graphOnlyTasks": 0
+    },
+    {
+      "channel": "canary",
+      "strict": true,
+      "requestedTask": "build",
+      "exit": 0,
+      "seconds": 0.419,
+      "rawBytes": 1348583,
+      "rawSha256": "eb3f477c1c9c4dd75cd43dba13449bc90a4b1237c907ac1c49b5766ecf7f1e31",
+      "tasks": 191,
+      "executableTasks": 191,
+      "graphOnlyTasks": 0
+    },
+    {
+      "channel": "canary",
+      "strict": true,
+      "requestedTask": "check",
+      "exit": 0,
+      "seconds": 1.283,
+      "rawBytes": 3813081,
+      "rawSha256": "3520cc9f22e4696e5905eebe47769d3e600d543398980c904fa14e39e4a0e88e",
+      "tasks": 340,
+      "executableTasks": 340,
+      "graphOnlyTasks": 0
+    },
+    {
+      "channel": "canary",
+      "strict": true,
+      "requestedTask": "lint",
+      "exit": 0,
+      "seconds": 0.991,
+      "rawBytes": 2997782,
+      "rawSha256": "8c0a697a8a3b962622755d82ff2a7b1e6d4ccc3f89a7636abcd671ba412ab558",
+      "tasks": 191,
+      "executableTasks": 191,
+      "graphOnlyTasks": 0
+    }
+  ],
+  "comparisons": [
+    {
+      "channel": "stable",
+      "requestedTask": "build",
+      "removedTaskIds": ["@beep/scratchpad#build", "@beep/tsgo-shim#build"],
+      "addedTaskIds": [],
+      "removedExecutableTaskIds": [],
+      "addedExecutableTaskIds": [],
+      "retainedTaskDefinitionChanges": [
+        {
+          "taskId": "@beep/dock#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/dock-react#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/drizzle#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/effect-drizzle#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/epistemic-domain#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/epistemics#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/file-processing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/identity#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/law-practice-use-cases#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/m365#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/md#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/n3#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/nlp#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/nlp-processing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/ontology#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/oxigraph#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pglite#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/postgres#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pretext#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/provenance#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/rdf#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-cli#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/schema#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/semantic-web#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/shacl#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/test-utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/wink#build",
+          "columns": ["dependents"]
+        }
+      ]
+    },
+    {
+      "channel": "stable",
+      "requestedTask": "check",
+      "removedTaskIds": [
+        "@beep/drizzle#build",
+        "@beep/repo-cli#build",
+        "@beep/scratchpad#check",
+        "@beep/tsgo-shim#check"
+      ],
+      "addedTaskIds": [],
+      "removedExecutableTaskIds": [
+        "@beep/drizzle#build",
+        "@beep/repo-cli#build"
+      ],
+      "addedExecutableTaskIds": [],
+      "retainedTaskDefinitionChanges": [
+        {
+          "taskId": "@beep/ai-sync#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/chalk#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/cli-kit#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/colors#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/commands#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/config-file#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/dock#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/dock-react#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/duckdb#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/effect-drizzle#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/epistemic-domain#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/epistemics#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/exiftool#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/fc-runs#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/ffmpeg#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/file-processing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/git#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/github#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/github-actions#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/github-commands#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/github-reporting#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/glob#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/identity#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/jsonc#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/jsonl#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/law-practice-use-cases#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/libpff#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/lockfiles#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/m365#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/managed-section#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/markdown#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/mcp-kit#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/md#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/memfs#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/n3#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/nlp#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/nlp-processing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/obs#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/observability#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/occt#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/ontology#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/oxigraph#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/package-json#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/palantiri#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pdf-tools#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pglite#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/phoenix#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/poppler#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/postgres#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pretext#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/provenance#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/qa-capture#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/rdf#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-ai-metrics#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-cli-kit#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-configs#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-docgen#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-tsconfig#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-workspaces#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/runtime-env#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/schema#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/semantic-web#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/semver#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/shacl#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/skill-contract#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/spdx#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/technical-drawing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/tesseract#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/test-runner#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/test-utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/tika#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/tsconfig#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/uspto#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/walker#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/wink#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/xdg#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/yaml#build",
+          "columns": ["dependents"]
+        }
+      ]
+    },
+    {
+      "channel": "stable",
+      "requestedTask": "lint",
+      "removedTaskIds": ["@beep/scratchpad#lint", "@beep/tsgo-shim#lint"],
+      "addedTaskIds": [],
+      "removedExecutableTaskIds": [],
+      "addedExecutableTaskIds": [],
+      "retainedTaskDefinitionChanges": []
+    },
+    {
+      "channel": "canary",
+      "requestedTask": "build",
+      "removedTaskIds": ["@beep/scratchpad#build", "@beep/tsgo-shim#build"],
+      "addedTaskIds": [],
+      "removedExecutableTaskIds": [],
+      "addedExecutableTaskIds": [],
+      "retainedTaskDefinitionChanges": [
+        {
+          "taskId": "@beep/dock#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/dock-react#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/drizzle#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/effect-drizzle#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/epistemic-domain#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/epistemics#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/file-processing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/identity#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/law-practice-use-cases#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/m365#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/md#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/n3#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/nlp#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/nlp-processing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/ontology#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/oxigraph#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pglite#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/postgres#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pretext#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/provenance#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/rdf#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-cli#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/schema#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/semantic-web#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/shacl#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/test-utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/wink#build",
+          "columns": ["dependents"]
+        }
+      ]
+    },
+    {
+      "channel": "canary",
+      "requestedTask": "check",
+      "removedTaskIds": [
+        "@beep/drizzle#build",
+        "@beep/repo-cli#build",
+        "@beep/scratchpad#check",
+        "@beep/tsgo-shim#check"
+      ],
+      "addedTaskIds": [],
+      "removedExecutableTaskIds": [
+        "@beep/drizzle#build",
+        "@beep/repo-cli#build"
+      ],
+      "addedExecutableTaskIds": [],
+      "retainedTaskDefinitionChanges": [
+        {
+          "taskId": "@beep/ai-sync#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/chalk#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/cli-kit#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/colors#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/commands#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/config-file#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/dock#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/dock-react#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/duckdb#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/effect-drizzle#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/epistemic-domain#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/epistemics#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/exiftool#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/fc-runs#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/ffmpeg#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/file-processing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/git#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/github#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/github-actions#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/github-commands#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/github-reporting#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/glob#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/identity#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/jsonc#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/jsonl#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/law-practice-use-cases#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/libpff#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/lockfiles#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/m365#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/managed-section#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/markdown#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/mcp-kit#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/md#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/memfs#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/n3#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/nlp#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/nlp-processing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/obs#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/observability#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/occt#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/ontology#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/oxigraph#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/package-json#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/palantiri#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pdf-tools#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pglite#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/phoenix#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/poppler#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/postgres#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/pretext#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/provenance#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/qa-capture#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/rdf#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-ai-metrics#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-cli-kit#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-configs#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-docgen#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-tsconfig#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/repo-workspaces#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/runtime-env#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/schema#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/semantic-web#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/semver#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/shacl#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/skill-contract#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/spdx#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/technical-drawing#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/tesseract#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/test-runner#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/test-utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/tika#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/tsconfig#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/uspto#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/utils#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/walker#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/wink#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/xdg#build",
+          "columns": ["dependents"]
+        },
+        {
+          "taskId": "@beep/yaml#build",
+          "columns": ["dependents"]
+        }
+      ]
+    },
+    {
+      "channel": "canary",
+      "requestedTask": "lint",
+      "removedTaskIds": ["@beep/scratchpad#lint", "@beep/tsgo-shim#lint"],
+      "addedTaskIds": [],
+      "removedExecutableTaskIds": [],
+      "addedExecutableTaskIds": [],
+      "retainedTaskDefinitionChanges": []
+    }
+  ],
+  "bounds": {
+    "calls": 12,
+    "secondsPerCall": 30,
+    "overallSeconds": 210,
+    "rawBytesPerCall": 16777216,
+    "aggregateRawBytes": 268435456,
+    "virtualMemoryBytesPerCall": 2147483648
+  },
+  "scope": "Source-bound real-root graph and input-containment observations only. Candidate excludes untracked external reference links while retaining every observed stable lint input. Strict entrypoint flag remains absent; no execution equivalence, task qualification, runtime adoption, time savings or whole-goal acceptance.",
+  "baselineRefusal": {
+    "at": "2026-11-06T19:15:29.496319+00:00",
+    "sourceRevision": "68d37217c6ab10f6b1ca70316ab6544c87d23c38",
+    "sourceState": "clean-before-observation",
+    "strictFlagEnabled": false,
+    "observations": [
+      {
+        "channel": "stable",
+        "strict": false,
+        "requestedTask": "build",
+        "exit": 0,
+        "rawBytes": 1406276,
+        "rawSha256": "62c25f2954514b90478682cc738ef0dfd9ce2ff8901a5ea69c361fdba6e1fa64",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": 193
+      },
+      {
+        "channel": "stable",
+        "strict": false,
+        "requestedTask": "check",
+        "exit": 0,
+        "rawBytes": 3299130,
+        "rawSha256": "49e3d92045eae1c62c379487e95d231fef11981b30c8b4185cd534f14869893d",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": 344
+      },
+      {
+        "channel": "stable",
+        "strict": false,
+        "requestedTask": "lint",
+        "exit": 0,
+        "rawBytes": 2371848,
+        "rawSha256": "fb4368061278f33a444f74b0c2e0cefbd943c9a8537f9149d468f578e099ba9b",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": 193
+      },
+      {
+        "channel": "canary",
+        "strict": false,
+        "requestedTask": "build",
+        "exit": 0,
+        "rawBytes": 1406285,
+        "rawSha256": "e6d4602b3d85c21eee00804d259085efe0f7cec01e95f83ed2feb0b3d9c32da4",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": 193
+      },
+      {
+        "channel": "canary",
+        "strict": false,
+        "requestedTask": "check",
+        "exit": 0,
+        "rawBytes": 3988663,
+        "rawSha256": "e0d301de009486bead3a775be780a4c97ee0c50db4958c2dd6210fa6fb4cac64",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": 344
+      },
+      {
+        "channel": "canary",
+        "strict": false,
+        "requestedTask": "lint",
+        "exit": 1,
+        "rawBytes": 0,
+        "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "b48833ae7efa1f70e8601e0b27b7f00db378aa69d35afd506c06d21bc698942a",
+        "refusal": "input symlink leaves repository"
+      }
+    ],
+    "rootConfigRestoredByFinally": true,
+    "qualityTasksExecuted": false,
+    "noComparisonWithStrictTrueCompleted": true,
+    "scope": "Partial actual-root baseline capture; canary lint refusal is not a strict flag regression. Five earlier baseline dry runs succeeded. No time savings or qualification claimed."
+  },
+  "canaryContainmentCandidate": {
+    "exit": 0,
+    "elapsedSeconds": 1.716,
+    "bytes": 3061417,
+    "rawSha256": "d07a23a892ff1713720e4c184a38c5670874d587cf834b1eba5a6b68af293622",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "taskBodiesExecuted": false,
+    "rootStrictFlagEnabled": false
+  },
+  "stableBeforeAfterContainment": {
+    "taskIdsEqual": true,
+    "allInputPathsPreserved": true,
+    "changedInputContent": [
+      {
+        "taskId": "@beep/identity#lint",
+        "changedInputPaths": ["turbo.json"]
+      }
+    ],
+    "taskCount": 193
+  },
+  "identityCacheEnabled": false,
+  "strictEntrypointFlagActivated": false
+}

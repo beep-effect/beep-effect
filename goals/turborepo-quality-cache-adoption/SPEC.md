@@ -1094,6 +1094,18 @@ links together to reverse this component; runtime configuration is unchanged.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
 
+### Exclude external reference links from identity lint metadata inputs, 2026-11-06
+
+At source 68d37217c6ab10f6b1ca70316ab6544c87d23c38, real-root stable build/check/lint dry runs succeed, while pinned canary lint refuses an external .repos manifest link before strict entrypoint selection is enabled. Only identity lint contributes the observed broad manifest input. Its generated package command is biome check . and the reference tree contains no tracked files.
+
+Add only !$TURBO_ROOT$/.repos/** to identity lint inputs. Keep cache:false, all other inputs/exclusions, dependency graph and profile routing. The same canary dry run now succeeds. Stable retains every observed lint task ID and input path; only the edited identity turbo.json input content hash changes. Record the original refusal, exact client/source/config hashes and all actual metadata in research/real-root-entrypoint-and-reference-inputs-2026-11-06.json.
+
+Twelve candidate-bound root dry runs compare build/check/lint across both pinned clients with strict entrypoint selection absent/true. Both clients remove two build commands from check, so leave that flag absent until execution/caller/value proof is complete. This source repair requires hosted acceptance and a newly bound identity input profile before protected trials. No quality task, feature activation, qualification, credential or production setting changed. No manual local verify, publish, check, tests, docgen or package-quality suite.
+
+Lane `codex/cache-strict-entrypoint-review-20261106`
+
+Reverse: Remove the one .repos input exclusion while retaining the source-bound original refusal and candidate metadata observations.
+
 ### Prepare an unpublished local types pilot behind the recipe parent, 2026-11-06
 
 Prepare the next implementation while three owned PRs remain open. The publication cap does not forbid an unpublished dependent worktree: start from parent #2813 head 563b0b210647b6909ea9f3de8638a28c5513bf86, then replay only this unpublished work onto accepted main after the parent lands, before opening another PR. Select the reviewed recipe from the verified activation preview. Types lint has no dependency tasks, uses local-only observations, rejects identity scanner routing and signed execution, and does not fabricate a dependency-source control. Unknown computations fail before task execution. Existing input, native plan, runtime key, capture and integrity checks remain required; failed candidate comparisons remain failed observations. Nine process-boundary cases are authored but unrun locally: five named cases and four fault-refusal cases. No local verify, publish, tests, check, docgen, package verification or manual source generator is run, per operator instruction; ordinary hooks are allowed. Syntax parsing alone is not type or runtime proof. Types caching remains disabled, and no qualification, signing, credential or production grant changes. Types input-profile review and admitted native comparisons remain necessary before any adoption.
@@ -1129,6 +1141,12 @@ it grants no computation qualification or production trust. Hosted CI remains
 authoritative, with no local task bodies or quality suites executed.
 
 Reverse: Restore the prior property-test and coverage input arrays while retaining the diagnostic Python inputs, metadata receipt and unchanged coverage cache false policy.
+
+### Preserve unsplit integration owners in scoped quality execution, 2026-11-06
+
+The existing scoped branch drops the plain integration bucket, including current owners with integration source. Retain caller scope and prepend only split-owner exclusions; do not add positive unsplit filters to an affected selection because native Turbo unions them and could broaden scope. Keep the empty-owner no-op and existing unscoped owner filters. Twenty pinned native metadata plans (default and repository-enabled flag fixtures) validate the negative-filter behavior without task execution. The helper regression is authored but unrun; no local quality suites or source-generator entrypoints are used. Prepare unpublished until an owned PR slot opens, then consume accepted main and push for hosted proof. See research/scoped-unsplit-integration-selection-2026-11-06.json and its limitations.
+
+Reverse: Revert the integration argument resolver and its regression controls; retain uncached integration policy and all historical evidence.
 
 ### Count native query packages and bind prepared-source history, 2026-11-06
 
