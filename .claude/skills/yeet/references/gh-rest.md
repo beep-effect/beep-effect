@@ -58,3 +58,11 @@ its own budget. Use `bun run beep yeet gh <command>` instead of those `gh pr` co
   `ready-for-heavy` label, the provenance footer read/write, and the Greptile
   re-trigger comment. Still GraphQL: review-thread resolution state and
   replies (`closeout`, `reply`, `status`, `watch`).
+
+## Read a failed job's log without waiting for the run (moved from `AGENTS.md`)
+
+Read a completed red job's log at once with
+`gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`;
+never wait for the run to finish. `gh run view --log` refuses mid-run, and
+plain `gh api` prints nothing on ANSI output. Commands: yeet skill, "Read a
+failed job's log without waiting for the run".

@@ -215,3 +215,26 @@ Rollout: `review-thread` rows that an earlier wave superseded read live again
 under the wave-exempt rule. Clear the answered ones once: list them with
 `bun run beep yeet inbox list --unacked` and acknowledge each with
 `bun run beep yeet inbox ack <id> --thread-url <url>`.
+
+## PR closeout loop (moved from `AGENTS.md`)
+
+PR closeout: flip the PR ready at content-final, then, from the checkout you
+are working in, run
+`bun run beep yeet monitor --until-ready --detach` and block on
+`bun run beep yeet job wait <jobId>` (attached `--until-ready` when the user
+manager is unreachable; re-submit after a reboot) until it exits 0 with
+`merge-ready: yes`. Required reds and base conflicts do not end the
+monitor: it writes them as inbox rows and keeps polling, so pass
+`--job-max-runtime "<duration>"` when it may be abandoned. Exit 2 is a wave
+(new P0/P1 rows on the PR): act on the rows, push any fix, and re-run
+`job wait` on the same job; the attached fallback also exits 2, so re-run it
+after the push. Any other non-zero exit ended the job: read its summary,
+fix, and re-submit. A code PR must carry the `ready-for-heavy` label before
+the `Heavy / *` matrix runs (docs-only PRs skip it); `yeet publish` applies
+it when it creates the draft PR, so add it by hand only for a PR that
+already existed or whose label edit failed — `--until-ready` prints the
+`gh pr edit` command while it holds.
+Unanswered review threads are a hard merge gate — answer every one and resolve
+every actionable one via `bun run beep yeet reply`
+(drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
+them.

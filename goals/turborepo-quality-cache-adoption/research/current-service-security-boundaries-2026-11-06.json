@@ -1,0 +1,606 @@
+{
+  "schemaVersion": "cache-adoption-current-fresh-review/v1",
+  "sourceBaseRevision": "845d9f136911daac97ad82ca1a5d8eeab6a5aabb",
+  "censusSha256": "a2a425c2566355bd465a996cb46d9255acc4f0e569b61d922eecfb87e90b131e",
+  "verifiedCensusSourceBindings": 463,
+  "authority": "Current source whole-task exclusion decisions only; no runtime execution or pure prerequisite qualification.",
+  "rows": [
+    {
+      "computation": "@beep/api-docs#dev",
+      "command": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'",
+      "manifest": {
+        "path": "apps/labs/api-docs/package.json",
+        "sha256": "a05e0ba5ace8de7fdd7a6a5b9daae97e556340c19f350354147ab1ca4d39a8f6"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../../.bun-version",
+          "../../../.nvmrc",
+          "../../../package.json",
+          "../../../tsconfig.base.json",
+          "../../../tsconfig.json",
+          "../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/codegen-kit#build",
+        "@beep/ecfr#build",
+        "@beep/govinfo#build",
+        "@beep/identity#build",
+        "@beep/pacer#build",
+        "@beep/qa-capture#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/utils#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/beep-effect-web#dev",
+      "command": "portless beep-effect-web.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "manifest": {
+        "path": "apps/beep-effect-web/package.json",
+        "sha256": "6bb77f1d9539f890c69238bd1fdf4d2a7f13ad0363a1d6116a024ed5c2e91c9c"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": ["@beep/public-site#build"],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/ciops#dev",
+      "command": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'",
+      "manifest": {
+        "path": "apps/labs/ciops/package.json",
+        "sha256": "5e7885517e5f4b2038191e4c8fdd4ed07c22df9587ed21321d4138f4760c24d3"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../../.bun-version",
+          "../../../.nvmrc",
+          "../../../package.json",
+          "../../../tsconfig.base.json",
+          "../../../tsconfig.json",
+          "../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#dev",
+      "command": "portless lejeune-bolt-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "manifest": {
+        "path": "apps/labs/lejeune-bolt-workbench/package.json",
+        "sha256": "8f225a6b3daa1353861613993dba119896d1d29ae1f7f0848b366dc757d6ba29"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../../.bun-version",
+          "../../../.nvmrc",
+          "../../../package.json",
+          "../../../tsconfig.base.json",
+          "../../../tsconfig.json",
+          "../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/anthropic#build",
+        "@beep/doc-text#build",
+        "@beep/duckdb#build",
+        "@beep/file-processing#build",
+        "@beep/identity#build",
+        "@beep/langextract#build",
+        "@beep/nlp#build",
+        "@beep/oxigraph#build",
+        "@beep/pglite#build",
+        "@beep/provenance#build",
+        "@beep/rdf#build",
+        "@beep/schema#build",
+        "@beep/semantic-web#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build",
+        "@beep/ui#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/oip-web#dev",
+      "command": "NEXT_DISABLE_PWA=1 portless oip-web.beep next dev --turbopack",
+      "manifest": {
+        "path": "apps/oip-web/package.json",
+        "sha256": "6b26f64e8deb30f761ad8212f6fb03754247b34c269bcb366a53711a90882060"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/hubspot#build",
+        "@beep/identity#build",
+        "@beep/repo-configs#build",
+        "@beep/repo-utils#build",
+        "@beep/sanity#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build",
+        "@beep/ui#build",
+        "@beep/utils#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/practice-m365-contacts#dev",
+      "command": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'",
+      "manifest": {
+        "path": "apps/practice-m365-contacts/package.json",
+        "sha256": "df4f21aef64273dca20447c1c5e8c6e4f041b1def442de7ac3e52249d5383eb1"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/identity#build",
+        "@beep/law-practice-server#build",
+        "@beep/law-practice-use-cases#build",
+        "@beep/m365#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/xdg#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/practice-review-hub#dev",
+      "command": "portless practice-review-hub.beep sh -c 'bun --watch src/main.ts'",
+      "manifest": {
+        "path": "apps/practice-review-hub/package.json",
+        "sha256": "d697ab8ac58a6eeca4f774059cca0c06fb3662a00e5b062a5835f8c773859751"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/identity#build",
+        "@beep/law-practice-domain#build",
+        "@beep/law-practice-server#build",
+        "@beep/law-practice-use-cases#build",
+        "@beep/m365#build",
+        "@beep/mcp-kit#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/utils#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/professional-desktop#dev",
+      "command": "portless professional-desktop.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1421}\" --strictPort'",
+      "manifest": {
+        "path": "apps/professional-desktop/package.json",
+        "sha256": "e1c50b6ccfcad0ae207e7d460dd92294ec4bd69d6d3dc0f897df35685e9e61bf"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/agents-client#build",
+        "@beep/agents-domain#build",
+        "@beep/agents-server#build",
+        "@beep/agents-use-cases#build",
+        "@beep/anthropic#build",
+        "@beep/box#build",
+        "@beep/cosmos#build",
+        "@beep/doc-text#build",
+        "@beep/dock#build",
+        "@beep/dock-react#build",
+        "@beep/documents-domain#build",
+        "@beep/documents-server#build",
+        "@beep/documents-use-cases#build",
+        "@beep/editor#build",
+        "@beep/epistemic-client#build",
+        "@beep/epistemic-config#build",
+        "@beep/epistemic-domain#build",
+        "@beep/epistemic-server#build",
+        "@beep/epistemic-tables#build",
+        "@beep/epistemic-ui#build",
+        "@beep/epistemic-use-cases#build",
+        "@beep/epistemics#build",
+        "@beep/file-processing#build",
+        "@beep/graph-3d#build",
+        "@beep/identity#build",
+        "@beep/lexical-schema#build",
+        "@beep/mcp-kit#build",
+        "@beep/md#build",
+        "@beep/memfs#build",
+        "@beep/observability#build",
+        "@beep/ontology-client#build",
+        "@beep/ontology-config#build",
+        "@beep/ontology-domain#build",
+        "@beep/ontology-server#build",
+        "@beep/ontology-ui#build",
+        "@beep/ontology-use-cases#build",
+        "@beep/pglite#build",
+        "@beep/postgres#build",
+        "@beep/provenance#build",
+        "@beep/rdf#build",
+        "@beep/schema#build",
+        "@beep/shared-domain#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build",
+        "@beep/ui#build",
+        "@beep/utils#build",
+        "@beep/workspace-domain#build",
+        "@beep/workspace-server#build",
+        "@beep/workspace-use-cases#build",
+        "@beep/xstate#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/semantica#dev",
+      "command": "portless semantica.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
+      "manifest": {
+        "path": "apps/labs/semantica/package.json",
+        "sha256": "86d076adabc366c9e3e2237a9df183faf18aeaa02a3e2e667b8959da8601b1b3"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../../.bun-version",
+          "../../../.nvmrc",
+          "../../../package.json",
+          "../../../tsconfig.base.json",
+          "../../../tsconfig.json",
+          "../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/anthropic#build",
+        "@beep/doc-text#build",
+        "@beep/duckdb#build",
+        "@beep/epistemics#build",
+        "@beep/file-processing#build",
+        "@beep/identity#build",
+        "@beep/langextract#build",
+        "@beep/nlp#build",
+        "@beep/nlp-processing#build",
+        "@beep/openai#build",
+        "@beep/oxigraph#build",
+        "@beep/pglite#build",
+        "@beep/provenance#build",
+        "@beep/rdf#build",
+        "@beep/schema#build",
+        "@beep/semantic-web#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build",
+        "@beep/wink#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/storybook#storybook",
+      "command": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
+      "manifest": {
+        "path": "apps/storybook/package.json",
+        "sha256": "3199b811de7d3faf93ec04ea77f80fed2cc25890acdff01926bbd9a19e3d9d64"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": ["PORTLESS", "PORTLESS_URL"],
+        "outputs": [],
+        "dependsOn": [],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/storybook#storybook:start",
+      "command": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
+      "manifest": {
+        "path": "apps/storybook/package.json",
+        "sha256": "3199b811de7d3faf93ec04ea77f80fed2cc25890acdff01926bbd9a19e3d9d64"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["storybook:build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": ["@beep/storybook#storybook:build"],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/todox#dev",
+      "command": "portless todox.beep next dev --turbopack",
+      "manifest": {
+        "path": "apps/todox/package.json",
+        "sha256": "a6ee3a3ed1169a5e8a70fbcac9ba27a5b7ccaeb5d8ff85224c3793f85a9a220b"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../package.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": ["@beep/identity#build", "@beep/schema#build"],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#dev",
+      "command": "portless trustgraph-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "manifest": {
+        "path": "apps/labs/trustgraph-workbench/package.json",
+        "sha256": "75d23bdb017222fbccf79e3a957810257856b17b42d8cc861c7f028d2c530048"
+      },
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "../../../.bun-version",
+          "../../../.nvmrc",
+          "../../../package.json",
+          "../../../tsconfig.base.json",
+          "../../../tsconfig.json",
+          "../../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["^build"],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "persistent-development-service",
+      "basis": "A completed cached result cannot restore the requested live server or watcher.",
+      "purePrerequisites": [
+        "@beep/brand#build",
+        "@beep/test-runner#build",
+        "@beep/ui#build"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    },
+    {
+      "computation": "//#repo-sanity:bun-audit",
+      "command": "bun run beep quality bun-audit",
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "./.bun-version",
+          "./.nvmrc",
+          "./package.json",
+          "./tsconfig.base.json",
+          "./tsconfig.json",
+          "./tsconfig.packages.json",
+          "bun.lock",
+          "osv-scanner.toml"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "@beep/repo-cli#lint:policy-fingerprint:quality-bun-audit"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "reason": "required-live-security-verdict",
+      "basis": "The command invokes bun audit against current advisory data, and LaneProofReuse independently forbids reusing this verdict. Repository-tree equality cannot establish current external advisories.",
+      "sourceBindings": [
+        {
+          "path": "package.json",
+          "sha256": "738764eb820b7d9e2b532ce180420d2988196c9cede4e81c5c6de6a6388bd02f"
+        },
+        {
+          "path": "turbo.json",
+          "sha256": "791db0feb4b41bd0eeb0616c1eeb4136b97eb8e8107c5bd64687b12097877c72"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "sha256": "182315c4deec15c411ddd8f6c51631f34519e4aa0619fa92a17f190ab0826bc4"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+          "sha256": "68a4707d672ba73d5890e86f8f54e5cd14b01b3ddad0ceca2e68cc113d12313c"
+        }
+      ],
+      "purePrerequisites": [
+        "@beep/repo-cli#lint:policy-fingerprint:quality-bun-audit"
+      ],
+      "purePrerequisiteQualificationGranted": false
+    }
+  ],
+  "counts": {
+    "persistentServices": 13,
+    "liveSecurityVerdicts": 1,
+    "reviewedWholeTasks": 14
+  },
+  "taskBodiesExecuted": 0,
+  "qualificationGranted": false
+}

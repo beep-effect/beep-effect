@@ -1,5 +1,6 @@
 ---
 name: jsdoc-annotation-specialist
+model: claude-opus-5-5
 description: JSDoc/TSDoc quality specialist — brings exported symbols up to the repo's documentation rubric (meaningful compilable **Example** (Title) sections, conditional **Details**/@param/@returns/@throws/@see, @category/@since), fixes TSDoc grammar violations and docgen failures, and runs documentation post-passes on refactored files.
 ---
 
