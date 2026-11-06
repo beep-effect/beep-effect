@@ -3,14 +3,14 @@
   "initiative": {
     "id": "orchestrator-handoff",
     "title": "Orchestrator Hand-off",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-06",
-    "updated": "2026-10-14",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/orchestrator-handoff",
-  "lifecycle": "active",
-  "statusNote": "P1 lands the register, the role on the session ledger, the HANDOFF format, the orchestrate skill procedures and the CLI merge gate; P2 follow-ups are listed in the skill.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Completed-retained 2026-11-06: P1 (register, role, HANDOFF format, skill procedures, merge gate) and P2 (yeet gate-table, session handoff, session ruling, session register convert; the Codex-lane comment helper dropped under T3-only messaging) merged; P3 ran as a files-alone take-over drill whose findings were fixed in final PR #2812 (merged 6d99cb00b5, completion gate verified).",
   "mission": "Codify the orchestrator session role so a successor session can take it over from files alone without orphaning the sessions, agents, lanes, jobs and people it coordinates.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -24,7 +24,28 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until the register, role, HANDOFF format, skill procedures and merge gate are merged and a take-over has been performed from files alone.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 1678,
+        "role": "supporting"
+      },
+      {
+        "number": 2541,
+        "role": "supporting"
+      },
+      {
+        "number": 2812,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_orchestrator-handoff-p2-7432465c256f/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -47,27 +68,32 @@
     {
       "id": "P1",
       "name": "Register, role, HANDOFF format, skill procedures, merge gate",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Handoff renderer, gate table port, register convert, codex-lane comment helper",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "First take-over from files alone; close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/orchestrator-handoff/GOAL.md)\" -le 4000",
     "jq . goals/orchestrator-handoff/ops/manifest.json",
     "bun run beep goals doctor",
-    "bun run beep quality package-verify @beep/repo-cli"
+    "bun run beep quality package-verify @beep/repo-cli",
+    "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
     "A hand-off step would require the operator to relay messages between sessions.",
     "The merge gate would merge over an unattributed red or an unknown thread count."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2812
+  }
 }

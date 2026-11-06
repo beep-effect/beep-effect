@@ -1668,7 +1668,7 @@ export declare namespace P {
  * @category models
  * @since 0.0.0
  */
-export const HeadingLevel = S.Literals([1, 2, 3, 4, 5, 6]).pipe(
+export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
   $I.annoteSchema("HeadingLevel", {
     description: "Markdown heading level from one (largest) to six (smallest).",
   })

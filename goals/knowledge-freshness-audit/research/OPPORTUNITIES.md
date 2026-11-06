@@ -150,6 +150,25 @@ missing evidence.
   Glob example is routed separately to the active DECISIONS owner in PR #2780;
   no competing source edit or unverified repair claim is included here.
 
+## P4 named-domain omission and focused-test navigation, 2026-11-06
+
+- Work: check T11 C2 against current Markdown models rather than repeating
+  an already landed opaque-brand repair.
+- Evidence: HeadingLevel remained the sole S.Literals occurrence in Md.model.ts,
+  a named domain for which current guidance prescribes LiteralKit. A new
+  keyed-helper test failed before the one-expression repair; the previous
+  24 tests passed. All 25 passed after repair.
+- Impact: missing keyed domain helpers established by the focused test. No
+  rendering failure or production impact established.
+- Test friction: the first root-level invocation found no tests because this
+  package config resolves test globs from its working directory. Corrected to
+  the package directory. An edit then used a repo-relative path from that
+  directory and failed before writing; source remained unchanged, and its
+  repeated red run was retained. The corrected path produced the passing run.
+- Prevention: use an explicit package working directory for focused tests and
+  make edit paths relative to that same directory. Total delay is unknown.
+- Ownership: this lane owns only the named-domain expression, its regression
+  test and audit record. Other owners, PM and ADHD remain separate.
 ## P4 memory context and checkout setup ordering, 2026-11-06
 
 - Work: distinguish dated research from current memory configuration while
@@ -168,3 +187,22 @@ missing evidence.
 - Prevention and ownership: wait for successful checkout completion before
   dependency setup. This audit owns the two reading notes only. Other owners,
   PM recovery and ADHD provenance remain separate.
+
+## P4 enforcement descriptions and ownership observation, 2026-11-06
+
+- Work: distinguish implemented checks, planned automation and continuing
+  manual obligations in architecture guidance.
+- Evidence: shared-kernel points to promotion-record lint as though the tooling
+  page specified it; the index and dated decisions say it is planned. The
+  ecosystem page still waits for its first member despite the effect-drizzle
+  manifest and registered polarity command. Two paragraph corrections preserve
+  every normative requirement and avoid claiming complete runtime enforcement.
+- Impact: current description discrepancies established; no missed promotion
+  review or escaped dependency violation was measured.
+- Observation friction: a fresh PR file census was unavailable during a GitHub
+  API rate limit. It remained unknown until the normal post-reset read; fourteen
+  current open PR file lists then showed no overlap with these targets or packet.
+- Prevention: require actual file ownership observations before admission;
+  neither a PR title nor an unavailable read proves a file is unowned.
+- Ownership: this isolated lane owns the two descriptions and audit records.
+  Existing main unblockers remain with their owners. PM and ADHD are separate.

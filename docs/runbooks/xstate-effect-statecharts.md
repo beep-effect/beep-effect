@@ -10,11 +10,11 @@ the `@beep/xstate` driver in `packages/drivers/xstate`.
 
 | Package | Pin | Note |
 | --- | --- | --- |
-| `xstate` | `6.0.0-alpha.71` | v6 alpha: inline transition functions, `schemas`, state contracts. |
-| `@xstate/effect` | `1.0.0-alpha.10` | Peers `effect ^4.0.0` and `xstate ^6.0.0-alpha.70`. No patch: alpha.10 exports the public `"~xstate/effect/action"` key itself. |
-| `@xstate/test` | `2.0.0-alpha.4` | Model-based testing. Declares Vitest 3 or 4 as an optional peer. |
-| `@statelyai/sdk` | `0.43.0` | Inspector client. `@statelyai/inspect` peers xstate v5 and is not used. |
-| `statelyai` | `0.14.3` | CLI, root dev dependency. |
+| `xstate` | `6.0.0-beta.1` | v6 beta (core API stable): inline transition functions, `schemas`, state contracts. `snapshotSchema(machine)` / `eventSchema(machine)` are standalone functions. |
+| `@xstate/effect` | `1.0.0-beta.0` | Peers `effect ^4.0.0` and `xstate ^6.0.0-beta.0`. npm `latest` still points at an alpha, so pin the beta explicitly. |
+| `@xstate/test` | `2.0.0-beta.0` | Model-based testing. Declares Vitest 3 or 4 as an optional peer. |
+| `@statelyai/sdk` | `0.46.0` | Inspector client. `@statelyai/inspect` peers xstate v5 and is not used. |
+| `statelyai` | `0.21.1` | CLI, root dev dependency. |
 
 All five are catalog entries in the root `package.json`. Keep this table in sync when updating the catalog.
 
