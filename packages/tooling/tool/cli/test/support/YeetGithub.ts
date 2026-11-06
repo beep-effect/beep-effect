@@ -56,6 +56,7 @@ export interface GithubCall {
  */
 export interface GithubAnswer {
   readonly body?: unknown;
+  readonly headers?: Readonly<Record<string, string>>;
   readonly status?: number;
   readonly unreachable?: string;
 }
@@ -80,7 +81,7 @@ const respond = (url: string, answer: GithubAnswer): Response => {
       ? new Response(null, { status })
       : new Response(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(answer.body ?? null), identity), {
           status,
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", ...answer.headers },
         });
   // octokit reads `response.url` back on paginated reads; a hand-built Response has none.
   Object.defineProperty(response, "url", { value: url });
