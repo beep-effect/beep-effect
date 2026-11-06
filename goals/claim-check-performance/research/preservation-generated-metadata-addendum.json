@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "claim-performance-generated-metadata-location/v1",
+  "acceptedMain": "5bcabe84bc964b8d75d8015144ac99acfb6e1ff2",
+  "reason": "Accepted native researchReports regeneration; exact historical manifest remains archived. No label/scorer/result/gate change.",
+  "mappings": [
+    {
+      "originalPath": "goals/claim-element-antecedent-check/ops/manifest.json",
+      "archivePath": "goals/claim-check-performance/research/legacy-protocol/claim-element-antecedent-manifest.json.txt",
+      "historicalSha256": "94b0a58c0b645cb7b3166ff03bd1e631a1377b1d19818f10f140d655b1b10db3",
+      "activeSha256": "50efdf496ea523190a0ee4a7fc6ff7f21692a16e8c2521c6664c8e666c916907",
+      "onlyGeneratedField": "researchReports"
+    }
+  ]
+}

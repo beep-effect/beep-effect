@@ -21,6 +21,18 @@ than silently updated. The independent preservation verifier must also pass.
 Use the actual latest accepted baseline for later candidates; the example is
 not an instruction to replace a newer accepted baseline.
 
+When accepted main changes dependency metadata, retain every historical freeze
+and lock. `implementation-accepted-main-metadata-001.json` is a separate
+prospective baseline for the accepted #2686/#2511 metadata changes. It inherits
+all file pins from the integrated-policy freeze, changes only its active lock
+pin, and adds exact pins for the archived previous lock, admission document and
+previous baseline. The admission binds accepted revisions and affected package
+manifests; independent metadata comparison verifies unchanged external package
+resolutions, versions, catalog, overrides and patches. The old closure is
+historical provenance, not a current execution claim. The capture tool's
+immutable-binding checks remain unchanged and a fresh installed capture,
+verification and actual cohort replay are still required before measurement.
+
 The build uses `target: bun`, bundled packages, an object metafile, disabled tree
 shaking, ignored DCE annotations, and `allowUnresolved: []`. It sets `write:false`
 and omits `outdir`, retaining build outputs in memory. In installed Bun 1.4.4,
