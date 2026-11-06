@@ -129,6 +129,11 @@ const userRuntime = factory(UserServiceLive.pipe(Layer.provide(FetchHttpClient.l
 
 ## Step 4: Create atoms
 
+Register the query with the same runtime factory and key that the mutation
+invalidates. `reactivityKeys` does not discover queries automatically. Using
+`todoRuntime.factory` also keeps this registration in the shared factory's
+reactivity context when using the alternative runtime setup above.
+
 ```ts
 import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
@@ -145,7 +150,7 @@ declare const todoRuntime: Atom.AtomRuntime<TodoService>;
 // Query: auto-fetches when runtime resolves
 const todosAtom = todoRuntime.atom(
   TodoService.use((_) => _.list)
-)
+).pipe(todoRuntime.factory.withReactivity(["todos"]))
 
 // Mutation: invoked on write
 const createTodoFn = todoRuntime.fn<string>()(
