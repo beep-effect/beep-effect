@@ -594,11 +594,14 @@ describe("knowledge doctor scan", () => {
             "goals/demo/history/b.md": "`goals/y.md`",
           },
         });
-        const first = yield* encodeKnowledgeDoctorReportJson(yield* scanKnowledgeDoctorTree(tree));
-        const second = yield* encodeKnowledgeDoctorReportJson(yield* scanKnowledgeDoctorTree(tree));
+        const scanKnowledgeDoctorTree1 = yield* scanKnowledgeDoctorTree(tree);
+        const first = yield* encodeKnowledgeDoctorReportJson(scanKnowledgeDoctorTree1);
+        const scanKnowledgeDoctorTree2 = yield* scanKnowledgeDoctorTree(tree);
+        const second = yield* encodeKnowledgeDoctorReportJson(scanKnowledgeDoctorTree2);
         assert.strictEqual(first, second);
         const decoded = yield* decodeKnowledgeDoctorReportJson(first);
-        assert.strictEqual(yield* encodeKnowledgeDoctorReportJson(decoded), first);
+        const encodedKnowledgeDoctorReportJson = yield* encodeKnowledgeDoctorReportJson(decoded);
+        assert.strictEqual(encodedKnowledgeDoctorReportJson, first);
         // goals/demo tracks a file but no manifest, so the goals doctor's manifest-missing is listed as delegated.
         assert.include(renderKnowledgeDoctorHumanReport(decoded), "blocking findings (3) under 3 root(s):");
       })
@@ -680,9 +683,11 @@ describe("knowledge doctor counterfactual harness", () => {
         const withoutGlobal = overlayWithout(tree, CommandNodeWitness.make({ commandPath: [], option: "help" }));
         assert.strictEqual(A.length(withoutGlobal.globalOptions), A.length(KNOWLEDGE_CLI_GLOBAL_FLAGS) - 1);
         const withoutRoot = overlayWithout(tree, CommandNodeWitness.make({ commandPath: [] }));
-        assertNone(yield* withoutRoot.commandTree);
+        const commandTree3 = yield* withoutRoot.commandTree;
+        assertNone(commandTree3);
         const withoutRefs = overlayWithout(tree, CommandNodeWitness.make({ commandPath: ["knowledge", "refs"] }));
-        const resolution = O.map(yield* withoutRefs.commandTree, (root) =>
+        const commandTree4 = yield* withoutRefs.commandTree;
+        const resolution = O.map(commandTree4, (root) =>
           KnowledgeCommandSurface.resolveStaticCommand(root, ["knowledge", "refs"])
         );
         assert.deepStrictEqual(O.getOrNull(resolution), ["unknown", ["knowledge", "refs"]]);
@@ -701,7 +706,7 @@ class RuntimeCommandFlags extends S.Opaque<RuntimeCommandFlags, { readonly brand
 ) {}
 
 const RuntimeCommandFlagsJson = RuntimeCommandFlags.pipe(S.Array, S.fromJsonString);
-const SHARED_FLAGS_PATH = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
+const SHARED_FLAGS_PATH = "packages/tooling/library/repo-cli-kit/src/cli/Flags.ts";
 
 describe("knowledge static option surface", () => {
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
@@ -727,7 +732,7 @@ describe("knowledge static option surface", () => {
           doc(
             'import { Argument, Command, Flag } from "effect/cli"',
             'import { pipe } from "effect/Function"',
-            'import { jsonFlag } from "../internal/cli/Flags.ts"',
+            'import { jsonFlag } from "@beep/repo-cli-kit/cli/Flags"',
             'const treeFlag = Flag.String("tree").pipe(Flag.withAlias("-t"), Flag.withDefault("HEAD"))',
             'const shared = { verbose: Flag.optional(Flag.Boolean("verbose")) }',
             "const json = jsonFlag",
@@ -775,6 +780,41 @@ describe("knowledge static option surface", () => {
         ]);
         assert.strictEqual(KnowledgeCommandSurface.pruneStaticCommand(tree, []), tree);
         assert.deepStrictEqual(options("bare"), []);
+      })
+    );
+
+    it.effect(
+      "reads the shared flags from a checkout that predates the repo-cli-kit move",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-option-surface-legacy-" });
+        const legacyFlagsPath = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
+        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, ROOT_MODULE_PATH)), { recursive: true });
+        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, legacyFlagsPath)), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(tempRoot, legacyFlagsPath),
+          doc('import { Flag } from "effect/cli"', 'export const jsonFlag = Flag.Boolean("json")', "")
+        );
+        yield* fs.writeFileString(
+          path.join(tempRoot, ROOT_MODULE_PATH),
+          doc(
+            'import { Command } from "effect/cli"',
+            'import { jsonFlag } from "../internal/cli/Flags.ts"',
+            'const legacy = Command.make("legacy", { json: jsonFlag })',
+            'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([legacy]))',
+            ""
+          )
+        );
+        const tree = yield* KnowledgeCommandSurface.buildStaticCommandTree(tempRoot);
+        const legacy = A.findFirst(tree.children, (child) => child.name === "legacy");
+        assert.deepStrictEqual(
+          A.map(
+            O.getOrNull(O.flatMap(legacy, (child) => O.fromUndefinedOr(child.options))) ?? [],
+            (option) => option.name
+          ),
+          ["json"]
+        );
       })
     );
 

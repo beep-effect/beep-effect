@@ -6,6 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "@beep/repo-cli-kit/cli/ShardScope";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -26,9 +29,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "../../internal/cli/ShardScope.ts";
 import { literalMemberEquals, makeSchemaFirstOwnerResolver, SchemaFirstIncludedGlobs } from "./SchemaFirst.ts";
 import type {
   CallExpression,
@@ -756,17 +756,15 @@ export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDo
     // Enumerate through FsUtils so the scan is anchored at the repo root even
     // when the command runs from a workspace subdirectory (ts-morph resolves
     // relative globs against the process cwd).
-    const sourcePaths = A.filter(
-      yield* fsUtils.globFiles(
-        SchemaFirstIncludedGlobs,
-        GlobOptions.make({
-          absolute: true,
-          cwd: repoRoot,
-          ignore: "**/docs/**",
-        })
-      ),
-      includes
+    const globFiles1 = yield* fsUtils.globFiles(
+      SchemaFirstIncludedGlobs,
+      GlobOptions.make({
+        absolute: true,
+        cwd: repoRoot,
+        ignore: "**/docs/**",
+      })
     );
+    const sourcePaths = A.filter(globFiles1, includes);
     const project = new Project({
       skipAddingFilesFromTsConfig: true,
       tsConfigFilePath: path.join(repoRoot, "tsconfig.json"),
@@ -945,7 +943,7 @@ const syncShard = Effect.fn("SchemaCatalog.syncShard")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const absolute = path.join(repoRoot, shard.path);
-  const current = (yield* fs.exists(absolute)) ? O.some(yield* fs.readFileString(absolute)) : O.none<string>();
+  const current = (yield* fs.exists(absolute)) ? yield* Effect.asSome(fs.readFileString(absolute)) : O.none<string>();
   if (O.contains(current, shard.content)) {
     return O.none<ShardDrift>();
   }
@@ -1033,7 +1031,8 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
     return SchemaCatalogSummary.make({ entries: 0, shards: 0, wroteCatalog: options.write, changed: [] });
   }
   const document = yield* generateSchemaCatalogDocument(shardScopeIncludes(scope, ownerResolver));
-  const shards = A.filter(yield* generateSchemaCatalogShards(document), (shard) =>
+  const generateSchemaCatalogShards2 = yield* generateSchemaCatalogShards(document);
+  const shards = A.filter(generateSchemaCatalogShards2, (shard) =>
     A.some(owners, (owner) => shard.path === schemaCatalogShardPath(owner))
   );
   const fs = yield* FileSystem.FileSystem;
@@ -1083,7 +1082,8 @@ export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (option
     const document = yield* generateSchemaCatalogDocument();
     const shards = yield* generateSchemaCatalogShards(document);
     const expected = A.map(shards, (shard) => shard.path);
-    const orphans = A.filter(yield* existingCatalogFiles(repoRoot), (file) => !A.contains(expected, file));
+    const existingCatalogFiles3 = yield* existingCatalogFiles(repoRoot);
+    const orphans = A.filter(existingCatalogFiles3, (file) => !A.contains(expected, file));
     const drifted = A.getSomes([
       ...(yield* Effect.forEach(shards, (shard) => syncShard(options.write, repoRoot, shard))),
       ...(yield* Effect.forEach(orphans, (file) => retireFile(options.write, repoRoot, file))),

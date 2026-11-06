@@ -6,6 +6,9 @@
  */
 
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
+import { isLabsWorkspaceDir } from "@beep/repo-cli-kit/cli/Labs/index";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { collectTsConfigPaths, DomainError, decodePackageJsonEffect, topologicalSort } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import {
@@ -37,9 +40,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
-import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
-import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { FALLOW_BOUNDARY_CONFIG_PATH, renderFallowBoundaryConfig } from "../Fallow/Fallow.command.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import {
@@ -657,7 +657,8 @@ const planRootVitestAliasSync = Effect.fn(function* (rootDir: string, plannedRoo
     onSome: Effect.succeed,
   });
   const expectedPaths = (yield* parseJsonc(tsconfigContent, tsconfigPath, TsconfigJson)).compilerOptions?.paths ?? {};
-  const currentPaths = yield* parseJsonObject(yield* readFileString(filePath), filePath);
+  const readFileString1 = yield* readFileString(filePath);
+  const currentPaths = yield* parseJsonObject(readFileString1, filePath);
 
   if (aliasPathEntriesEqual(currentPaths, expectedPaths)) {
     return O.none<PlannedFileChange>();
@@ -710,7 +711,8 @@ const planRootFallowBoundarySync = Effect.fn(function* (rootDir: string) {
     Effect.mapError(DomainError.newCause(`Failed to render the Fallow boundary config for "${filePath}"`))
   );
 
-  if (Str.equivalence(yield* readFileString(filePath), content)) {
+  const readFileString2 = yield* readFileString(filePath);
+  if (Str.equivalence(readFileString2, content)) {
     return O.none<PlannedFileChange>();
   }
 

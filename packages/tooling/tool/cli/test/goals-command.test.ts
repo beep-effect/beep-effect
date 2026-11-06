@@ -145,7 +145,8 @@ describe("planGoalPacketMigration", () => {
       expect(plan.manifestText).toBeDefined();
       expect(plan.readmeText).toBeDefined();
 
-      const migrated = yield* decodeManifest(yield* Jsonc.parse(plan.manifestText ?? ""));
+      const parsed = yield* Jsonc.parse(plan.manifestText ?? "");
+      const migrated = yield* decodeManifest(parsed);
       expect(migrated.initiative.status).toBe("completed-retained");
       expect(migrated.lifecycle).toBe("completed-retained");
       expect(migrated.statusNote).toBe("legacy status: complete");
@@ -202,7 +203,8 @@ describe("planGoalPacketMigration", () => {
         completionGate: COMPLETION_GATE,
       })}\n`;
       const plan = planGoalPacketMigration(packetRecord({ slug: "sup-demo", manifestText: manifest }));
-      const migrated = yield* decodeManifest(yield* Jsonc.parse(plan.manifestText ?? ""));
+      const parsed1 = yield* Jsonc.parse(plan.manifestText ?? "");
+      const migrated = yield* decodeManifest(parsed1);
       expect(migrated.supersededBy).toBe("standards-remediation");
       expect(migrated.supersededNote).toBe("remaining ledger (2026-07-07)");
     })
@@ -234,7 +236,8 @@ describe("planGoalPacketMigration", () => {
           backfill,
           O.some(`# Title Of ${backfill.slug}\n\n## Mission\n\nDo it.\n`)
         );
-        const manifest = yield* decodeManifest(yield* Jsonc.parse(text));
+        const parsed2 = yield* Jsonc.parse(text);
+        const manifest = yield* decodeManifest(parsed2);
         expect(manifest.schemaVersion).toBe("initiative-manifest/v2");
         expect(manifest.initiative.status).toBe(backfill.status);
         expect(manifest.lifecycle).toBe(backfill.status);

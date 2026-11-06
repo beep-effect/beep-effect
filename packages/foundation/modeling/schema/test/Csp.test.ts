@@ -18,7 +18,8 @@ describe("CspDirectives", () => {
       Effect.fnUntraced(function* ([directives]) {
         const encoded = yield* encodeCspDirectivesEffect(directives);
         const decoded = yield* decodeUnknownCspDirectivesEffect(encoded);
-        expect(yield* encodeCspDirectivesEffect(decoded)).toEqual(encoded);
+        const encodedCspDirectivesEffect = yield* encodeCspDirectivesEffect(decoded);
+        expect(encodedCspDirectivesEffect).toEqual(encoded);
 
         return true;
       }),

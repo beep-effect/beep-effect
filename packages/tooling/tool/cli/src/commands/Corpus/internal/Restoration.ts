@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { bytesEqual } from "@beep/repo-cli-kit/cli/FsGuards";
 import { Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
@@ -22,7 +23,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { bytesEqual } from "../../../internal/cli/FsGuards.ts";
 import { CorpusCommandError } from "../Corpus.errors.ts";
 import {
   ArchiveLedgerRecord,
@@ -236,7 +236,8 @@ const objectIdFor = (sourceLabel: string, sourceRelativePath: string): string =>
   digestText(`${sourceLabel}\u0000${sourceRelativePath}`);
 
 const recordedAt = Effect.fn("CorpusRestoration.recordedAt")(function* () {
-  return DateTime.formatIso(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  return DateTime.formatIso(now1);
 });
 
 const sourceStat = (info: FileSystem.File.Info) => ({
@@ -297,9 +298,13 @@ const inspectCanonicalPath = Effect.fn("CorpusRestoration.inspectCanonicalPath")
   const path = yield* Path.Path;
   const resolved = path.resolve(candidate);
   const canonical = yield* fs.realPath(resolved).pipe(CorpusCommandError.mapError(message));
-  if (canonical !== resolved) return yield* archiveError(symbolicLinkMessage);
+  if (canonical !== resolved) {
+    return yield* archiveError(symbolicLinkMessage);
+  }
   const info = yield* fs.stat(resolved).pipe(CorpusCommandError.mapError(message));
-  if (info.type !== expectedType) return yield* archiveError(message);
+  if (info.type !== expectedType) {
+    return yield* archiveError(message);
+  }
   return { info, resolved };
 });
 
@@ -312,7 +317,9 @@ const requireContainedPath = Effect.fn("CorpusRestoration.requireContainedPath")
 ): Effect.fn.Return<string, CorpusCommandError> {
   const resolved = path.resolve(candidate);
   const contained = isContainedPath(path, parent, resolved);
-  if (!contained || (!allowEqual && resolved === parent)) return yield* archiveError(message);
+  if (!contained || (!allowEqual && resolved === parent)) {
+    return yield* archiveError(message);
+  }
   return resolved;
 });
 
@@ -483,7 +490,8 @@ const currentBootId = Effect.fn("CorpusRestoration.currentBootId")(function* ():
 const writerClaimOwnerIsAlive = Effect.fn("CorpusRestoration.writerClaimOwnerIsAlive")(function* (
   claim: typeof RestorationWriterClaim.Type
 ): Effect.fn.Return<boolean, CorpusCommandError, FileSystem.FileSystem> {
-  if (!Str.Equivalence(yield* currentBootId(), claim.bootId)) return false;
+  const currentBootId2 = yield* currentBootId();
+  if (!Str.Equivalence(currentBootId2, claim.bootId)) return false;
   const observedStart = yield* processStartTime(claim.pid);
   return O.isSome(observedStart) && Str.Equivalence(observedStart.value, claim.procStart);
 });
@@ -538,7 +546,8 @@ const readCanonicalCoordinationFile = Effect.fn("CorpusRestoration.readCanonical
       ) {
         return yield* archiveError("Preservation writer coordination state changed before safe observation.");
       }
-      return O.some(yield* readOpenedCoordinationText(file));
+      const readOpenedCoordinationText3 = yield* readOpenedCoordinationText(file);
+      return O.some(readOpenedCoordinationText3);
     })
   );
 });
@@ -561,7 +570,9 @@ const tryWriteExclusiveCoordinationFile = Effect.fn("CorpusRestoration.tryWriteE
       )
     )
   );
-  if (written) yield* syncRestorationDirectory(path.dirname(filePath));
+  if (written) {
+    yield* syncRestorationDirectory(path.dirname(filePath));
+  }
   return written;
 });
 
@@ -650,7 +661,9 @@ const tryClaimWriterReapClaim = Effect.fn("CorpusRestoration.tryClaimWriterReapC
 ): Effect.fn.Return<boolean, CorpusCommandError, RestorationRequirements> {
   if (yield* tryWriteExclusiveCoordinationFile(reapClaimPath, claimText)) return true;
   const observedText = yield* readCanonicalCoordinationFile(reapClaimPath);
-  if (O.isNone(observedText)) return yield* tryWriteExclusiveCoordinationFile(reapClaimPath, claimText);
+  if (O.isNone(observedText)) {
+    return yield* tryWriteExclusiveCoordinationFile(reapClaimPath, claimText);
+  }
   const observedClaim = yield* decodeObservedWriterClaim(
     observedText.value,
     "Preservation writer reclamation claim is unreadable; ownership fails closed."
@@ -884,8 +897,8 @@ export const appendRestorationTextDurably = Effect.fn("CorpusRestoration.appendT
     .exists(resolvedFilePath)
     .pipe(CorpusCommandError.mapError("Failed checking durable restoration append destination."));
   const expectedInfo = exists
-    ? O.some(
-        yield* inspectCanonicalArchiveFile(
+    ? yield* Effect.asSome(
+        inspectCanonicalArchiveFile(
           resolvedFilePath,
           "Durable restoration append destination must be one canonical regular file."
         )
@@ -1019,7 +1032,9 @@ const maybeCrash = Effect.fn("CorpusRestoration.maybeCrash")(function* (
   actual: RestorationPreserveOptions["crashPoint"],
   expected: string
 ): Effect.fn.Return<void, CorpusCommandError> {
-  if (actual === expected) return yield* archiveError(`Synthetic preservation interruption at ${expected}.`);
+  if (actual === expected) {
+    return yield* archiveError(`Synthetic preservation interruption at ${expected}.`);
+  }
 });
 
 const sourceIdentityToken = (identity: SourceIdentity): string =>
@@ -1418,7 +1433,9 @@ const inspectArchiveAttemptSource = Effect.fn("CorpusRestoration.inspectArchiveA
   object: ArchiveSourceObject,
   allowStableRebaseline: boolean
 ): Effect.fn.Return<FileSystem.File.Info, CorpusCommandError, RestorationRequirements> {
-  if (!allowStableRebaseline) return yield* inspectExpectedSourceFile(object, "Failed inspecting source before copy.");
+  if (!allowStableRebaseline) {
+    return yield* inspectExpectedSourceFile(object, "Failed inspecting source before copy.");
+  }
   const info = yield* inspectCanonicalArchiveFile(
     object.sourcePath,
     "Failed inspecting changed preservation source before stable recopy."
@@ -1543,7 +1560,8 @@ const reconcileCompleteArchiveDestination = Effect.fn("CorpusRestoration.reconci
   ]);
   const postCopySource = sourceStat(postInfo);
   if (!sameSourceIdentity(sourceIdentity(preInfo), sourceIdentity(postInfo))) {
-    return O.some(yield* recordArchiveSourceChange(context, preCopySource, postCopySource));
+    const recordArchiveSourceChange4 = yield* recordArchiveSourceChange(context, preCopySource, postCopySource);
+    return O.some(recordArchiveSourceChange4);
   }
   yield* inspectExpectedSourceFile(context.object, "Failed validating complete archive source evidence.");
   if (
@@ -1553,9 +1571,14 @@ const reconcileCompleteArchiveDestination = Effect.fn("CorpusRestoration.reconci
   ) {
     yield* syncRestorationFile(context.destinationPath);
     yield* syncRestorationDirectory(context.destinationDirectory);
-    return O.some(
-      yield* makeArchiveFilePass(context, preCopySource, postCopySource, destinationHash, destinationHash.sizeBytes)
+    const madeArchiveFilePass = yield* makeArchiveFilePass(
+      context,
+      preCopySource,
+      postCopySource,
+      destinationHash,
+      destinationHash.sizeBytes
     );
+    return O.some(madeArchiveFilePass);
   }
   const partialExists = yield* fs
     .exists(context.partialPath)
@@ -1612,7 +1635,9 @@ const hashResumedArchivePrefix = Effect.fn("CorpusRestoration.hashResumedPrefix"
     const chunk = yield* prefix
       .readAlloc(Math.min(chunkSize, remaining))
       .pipe(CorpusCommandError.mapError("Failed hashing resumed source prefix."));
-    if (O.isNone(chunk)) return yield* archiveError("Source ended before the verified partial prefix.");
+    if (O.isNone(chunk)) {
+      return yield* archiveError("Source ended before the verified partial prefix.");
+    }
     hasher.update(chunk.value);
     remaining -= chunk.value.length;
   }
@@ -1838,14 +1863,11 @@ const appendProvenance = Effect.fn("CorpusRestoration.appendProvenance")(functio
   });
   const fs = yield* FileSystem.FileSystem;
   if (yield* fs.exists(provenancePath).pipe(CorpusCommandError.mapError("Failed checking restoration provenance."))) {
-    const existingLines = A.filter(
-      Str.split(/\r?\n/u)(
-        yield* fs
-          .readFileString(provenancePath)
-          .pipe(CorpusCommandError.mapError("Failed reading restoration provenance for resume reconciliation."))
-      ),
-      Str.isNonEmpty
-    );
+    const argument = Str.split(/\r?\n/u);
+    const pipe1 = yield* fs
+      .readFileString(provenancePath)
+      .pipe(CorpusCommandError.mapError("Failed reading restoration provenance for resume reconciliation."));
+    const existingLines = A.filter(argument(pipe1), Str.isNonEmpty);
     const existing = yield* Effect.forEach(existingLines, (line) =>
       decodeCorpusProvenanceRecordJson(line).pipe(
         CorpusCommandError.mapError("Existing restoration provenance failed resume decoding.")
@@ -2185,7 +2207,8 @@ const writePreservationArchive = Effect.fn("CorpusRestoration.writeArchive")(fun
   };
   yield* validateFinalArchiveInventory(context, expectedFinalInventory);
   yield* sealArchiveManifest(context.manifestPath, context.runId, Math.max(1, context.options.chunkSizeBytes));
-  const completedAt = DateTime.toEpochMillis(yield* DateTime.now);
+  const now5 = yield* DateTime.now;
+  const completedAt = DateTime.toEpochMillis(now5);
   const sourceCount = context.inventory.files.length + context.inventory.directories.length;
   const summary = RestorationRunSummary.make({
     elapsedMillis: nonNegative(completedAt - context.startedAt),
@@ -2215,7 +2238,8 @@ const writePreservationArchive = Effect.fn("CorpusRestoration.writeArchive")(fun
 export const preserveRestorationArchiveImpl = Effect.fn("CorpusRestoration.preserveArchive")(function* (
   options: RestorationPreserveOptions
 ): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, RestorationRequirements> {
-  const startedAt = DateTime.toEpochMillis(yield* DateTime.now);
+  const now6 = yield* DateTime.now;
+  const startedAt = DateTime.toEpochMillis(now6);
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const canonicalPaths = yield* validateCanonicalArchivePaths(options);
@@ -2228,15 +2252,17 @@ export const preserveRestorationArchiveImpl = Effect.fn("CorpusRestoration.prese
     .exists(manifestPath)
     .pipe(CorpusCommandError.mapError("Failed checking prior preservation manifest."));
   const priorManifestRows = priorManifestExists
-    ? A.length(
-        A.filter(
-          Str.split(/\r?\n/u)(
-            yield* fs
+    ? yield* Effect.map(
+        Effect.map(
+          Effect.map(
+            fs
               .readFileString(manifestPath)
-              .pipe(CorpusCommandError.mapError("Failed reading prior preservation manifest."))
+              .pipe(CorpusCommandError.mapError("Failed reading prior preservation manifest.")),
+            Str.split(/\r?\n/u)
           ),
-          Str.isNonEmpty
-        )
+          (value) => A.filter(value, Str.isNonEmpty)
+        ),
+        A.length
       )
     : 0;
   const runId = `${options.runLabel}:${startedAt}:${priorManifestRows}`;
@@ -2309,7 +2335,9 @@ const persistVerificationReport = Effect.fn("CorpusRestoration.persistVerificati
     const existing = yield* fs
       .readFileString(destinationPath)
       .pipe(CorpusCommandError.mapError("Failed reading existing verification report."));
-    if (existing !== text) return yield* archiveError("Content-addressed verification report bytes drifted.");
+    if (existing !== text) {
+      return yield* archiveError("Content-addressed verification report bytes drifted.");
+    }
     return;
   }
   if (yield* fs.exists(partialPath).pipe(CorpusCommandError.mapError("Failed checking partial verification report."))) {
@@ -2320,7 +2348,9 @@ const persistVerificationReport = Effect.fn("CorpusRestoration.persistVerificati
     const partial = yield* fs
       .readFileString(partialPath)
       .pipe(CorpusCommandError.mapError("Failed reading partial verification report."));
-    if (partial !== text) return yield* archiveError("Partial verification report bytes drifted.");
+    if (partial !== text) {
+      return yield* archiveError("Partial verification report bytes drifted.");
+    }
   } else {
     yield* appendRestorationTextDurably(partialPath, text);
   }
@@ -2555,7 +2585,9 @@ const requireArchivePayloadOwned = Effect.fn("CorpusRestoration.requireArchivePa
         );
       }
       actual.push(path.relative(archiveRoot, absolutePath));
-      if (info.type === "Directory") yield* walkAt(absolutePath);
+      if (info.type === "Directory") {
+        yield* walkAt(absolutePath);
+      }
     }
   });
   yield* walkAt(payloadRoot);
@@ -2777,7 +2809,8 @@ export const restorationArchiveTesting = {
 export const verifyRestorationArchiveImpl = Effect.fn("CorpusRestoration.verifyArchive")(function* (
   options: RestorationVerifyOptions
 ): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, RestorationRequirements> {
-  const startedAt = DateTime.toEpochMillis(yield* DateTime.now);
+  const now7 = yield* DateTime.now;
+  const startedAt = DateTime.toEpochMillis(now7);
   const path = yield* Path.Path;
   const archiveRoot = yield* resolveVerificationArchiveRoot(options);
   const manifestPath = path.join(archiveRoot, "archive-ledger.jsonl");
@@ -2809,7 +2842,8 @@ export const verifyRestorationArchiveImpl = Effect.fn("CorpusRestoration.verifyA
   if (failures.length > 0) {
     return yield* archiveError(`Independent preservation verification found ${failures.length} terminal failure(s).`);
   }
-  const completedAt = DateTime.toEpochMillis(yield* DateTime.now);
+  const now8 = yield* DateTime.now;
+  const completedAt = DateTime.toEpochMillis(now8);
   const summary = RestorationRunSummary.make({
     elapsedMillis: nonNegative(completedAt - startedAt),
     exceptionCount: nonNegative(0),

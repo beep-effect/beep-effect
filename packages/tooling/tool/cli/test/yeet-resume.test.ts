@@ -139,7 +139,8 @@ describe("yeet resume", () => {
         );
         yield* registry.append(makeRecord({ sessionId: "state-root-default-agent" }));
         yield* runYeetCommand(["resume", "42", "--print", "--state-root", root]);
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines1 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines1, globalThis.String), "\n");
         expect(logs).toContain("state-root-default-agent");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -159,7 +160,8 @@ describe("yeet resume", () => {
         yield* runYeetCommand(["resume", "42", "--list", "--json"]).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines2 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines2, globalThis.String), "\n");
         expect(logs).toContain('"status": "not-resumable"');
         expect(logs).toContain('"sequence": 1');
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -261,7 +263,8 @@ describe("yeet resume", () => {
         );
         yield* registry.append(makeRecord());
         yield* runYeetResume(options()).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines3 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines3, globalThis.String), "\n");
         expect(logs).toContain("claude '--resume' 'session-local-only'");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -282,7 +285,8 @@ describe("yeet resume", () => {
         yield* runYeetResume(options({ ref: decodeRef("https://github.com/OTHER-OWNER/OTHER-REPO/pull/42") })).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines4 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines4, globalThis.String), "\n");
         expect(logs).toContain("repository-b-session");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -304,7 +308,8 @@ describe("yeet resume", () => {
         yield* runYeetResume(options({ ref: decodeRef("https://github.com/other-owner/other-repo/pull/42") })).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines5 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines5, globalThis.String), "\n");
         expect(logs).toContain("repository-b-session");
         expect(logs).not.toContain("repository-a-session");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -325,7 +330,8 @@ describe("yeet resume", () => {
         yield* registry.append(makeRecord({ sessionId: "repository-a-session" }));
         yield* registry.append(makeRecord({ repository: other, sessionId: "repository-b-session" }));
         yield* runYeetResume(options()).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines6 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines6, globalThis.String), "\n");
         expect(logs).toContain("repository-a-session");
         expect(logs).not.toContain("repository-b-session");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -349,7 +355,8 @@ describe("yeet resume", () => {
           env: { HOME: root, PWD: root, BEEP_YEET_STATE_ROOT: path.join(root, "state") },
         });
         yield* runYeetResume(options()).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines7 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines7, globalThis.String), "\n");
         expect(logs).toContain("transcript-session");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -373,7 +380,8 @@ describe("yeet resume", () => {
           env: { HOME: home, PWD: root, BEEP_YEET_STATE_ROOT: path.join(root, "state") },
         });
         yield* runYeetResume(options()).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines8 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines8, globalThis.String), "\n");
         expect(logs).toContain("no-cwd");
         expect(logs).toContain(`cwd ${home}`);
         expect(logs).toContain("unknown");
@@ -414,7 +422,8 @@ describe("yeet resume", () => {
         yield* runYeetResume(options({ agent: O.some(99) })).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
-        expect(yield* TestConsole.logLines).toStrictEqual([]);
+        const logLines9 = yield* TestConsole.logLines;
+        expect(logLines9).toStrictEqual([]);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
@@ -440,7 +449,8 @@ describe("yeet resume", () => {
           env: { HOME: root, PWD: root, BEEP_YEET_STATE_ROOT: path.join(root, "state") },
         });
         yield* runYeetResume(options()).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
-        const logs = A.join(A.map(yield* TestConsole.logLines, globalThis.String), "\n");
+        const logLines10 = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines10, globalThis.String), "\n");
         expect(logs).toContain("current-repository");
         expect(logs).not.toContain("wrong-repository");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -472,7 +482,8 @@ describe("yeet resume", () => {
         yield* runYeetResume(options({ list: true })).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         );
-        const logs = A.map(yield* TestConsole.logLines, globalThis.String);
+        const logLines11 = yield* TestConsole.logLines;
+        const logs = A.map(logLines11, globalThis.String);
         expect(logs).toHaveLength(2);
         expect(A.join(logs, "\n")).toContain("not-resumable");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -576,7 +587,8 @@ describe("yeet resume", () => {
         assert.instanceOf(error, YeetCommandError);
         expect(error.exitCode).toBe(4);
         expect(error.message).toContain("claude --from-pr 42");
-        expect(yield* fs.exists(sentinel)).toBe(false);
+        const exists12 = yield* fs.exists(sentinel);
+        expect(exists12).toBe(false);
       })
     );
   });

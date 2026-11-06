@@ -73,11 +73,13 @@ const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeScenario = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject, { space: 2 }));
 const sha256Hex = Effect.fnUntraced(function* (bytes: Uint8Array) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes));
+  const digest1 = yield* crypto.digest(Digest.sha256, bytes);
+  return Hex.encode(digest1);
 });
 const randomAttemptId = Effect.fnUntraced(function* () {
   const crypto = yield* SecureRandom.SecureRandom;
-  return yield* decodeUUID(yield* crypto.uuidV4());
+  const uuidV42 = yield* crypto.uuidV4();
+  return yield* decodeUUID(uuidV42);
 });
 const fastConfig = AdmissionConfig.make({
   capacityMaxTokens: 3,
@@ -114,22 +116,22 @@ const isTransientPath = (entry: string) => isLockPath(entry) || isStagingPath(en
 const listDirectory = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   // A live contender can be publishing an atomic heartbeat when its directory is observed.
-  return A.filter(yield* fs.readDirectory(directory), (name) => !isStagingPath(name));
+  const readDirectory3 = yield* fs.readDirectory(directory);
+  return A.filter(readDirectory3, (name) => !isStagingPath(name));
 });
 
 const readJournalEvents = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* Effect.forEach(journalLines(yield* fs.readFileString(yield* admissionJournalPath(root))), (line) =>
-    decodeAdmissionJournalEvent(line)
-  );
+  const admissionJournalPath28 = yield* admissionJournalPath(root);
+  const readFileString4 = yield* fs.readFileString(admissionJournalPath28);
+  return yield* Effect.forEach(journalLines(readFileString4), (line) => decodeAdmissionJournalEvent(line));
 });
 
 const readAttemptJournalEvents = Effect.fnUntraced(function* (checkoutRoot: string, branch: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* Effect.forEach(
-    journalLines(yield* fs.readFileString(yield* attemptJournalPathForCheckout(checkoutRoot, branch))),
-    (line) => decodeYeetAttemptJournalEvent(line)
-  );
+  const attemptJournalPathForCheckout29 = yield* attemptJournalPathForCheckout(checkoutRoot, branch);
+  const readFileString5 = yield* fs.readFileString(attemptJournalPathForCheckout29);
+  return yield* Effect.forEach(journalLines(readFileString5), (line) => decodeYeetAttemptJournalEvent(line));
 });
 
 const request = (checkoutRoot: string, branch: string, attemptId: UUID) =>
@@ -193,7 +195,7 @@ const exportScenario = Effect.fn("SyntheticAdmission.exportScenario")(function* 
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if ((yield* fs.exists(target)) && A.isArrayNonEmpty(yield* fs.readDirectory(target))) {
+  if ((yield* fs.exists(target)) && (yield* Effect.map(fs.readDirectory(target), A.isArrayNonEmpty))) {
     return yield* QualitySchedulerError.make({
       message: "BEEP_CIOPS_SYNTHETIC_ROOT must be empty; refusing to overwrite a non-empty export target.",
     });
@@ -213,10 +215,12 @@ const exportScenario = Effect.fn("SyntheticAdmission.exportScenario")(function* 
     yield* copySettledState(path.join(runtimeDir, relative), path.join(target, relative));
   }
   const source = yield* fs.readFile(NodeURL.fileURLToPath(import.meta.url));
+  const argument = { path: producerPath, sha256: yield* sha256Hex(source) };
+  const now1 = yield* DateTime.now;
   const scenario = yield* encodeScenario({
-    producer: { path: producerPath, sha256: yield* sha256Hex(source) },
+    producer: argument,
     steps,
-    capturedAt: DateTime.formatIso(yield* DateTime.now),
+    capturedAt: DateTime.formatIso(now1),
     expected: { tags: expectedTags, chains },
   });
   yield* fs.writeFileString(path.join(target, "scenario.json"), `${scenario}\n`);
@@ -246,32 +250,42 @@ const expectExportCheck = Effect.fnUntraced(function* (
   const exportCheck = path.join(runtimeDir, "export-check");
   yield* fs.makeDirectory(exportCheck);
   yield* exportScenario(runtimeDir, exportCheck, chains);
-  expect(yield* fs.readFileString(path.join(exportCheck, "READY"))).toBe("");
-  expect(yield* fs.readFileString(path.join(exportCheck, "admission", "journal.ndjson"))).toBe(
-    yield* fs.readFileString(yield* admissionJournalPath(root))
-  );
+  const readFileString6 = yield* fs.readFileString(path.join(exportCheck, "READY"));
+  expect(readFileString6).toBe("");
+  const readFileString7 = yield* fs.readFileString(path.join(exportCheck, "admission", "journal.ndjson"));
+  const expectation = expect(readFileString7);
+  const admissionJournalPath6 = yield* admissionJournalPath(root);
+  const readFileString2 = yield* fs.readFileString(admissionJournalPath6);
+  expectation.toBe(readFileString2);
   const manifest = yield* fs.readFileString(path.join(exportCheck, "scenario.json"));
-  expect(yield* decodeJsonObject(manifest)).toMatchObject({
+  const decodedJsonObject = yield* decodeJsonObject(manifest);
+  const expectation1 = expect(decodedJsonObject);
+  const readFile3 = yield* fs.readFile(NodeURL.fileURLToPath(import.meta.url));
+  expectation1.toMatchObject({
     producer: {
       path: producerPath,
-      sha256: yield* sha256Hex(yield* fs.readFile(NodeURL.fileURLToPath(import.meta.url))),
+      sha256: yield* sha256Hex(readFile3),
     },
     steps,
     expected: { tags: expectedTags, chains },
   });
   for (const label of ["contender-a", "dead-lease", "dead-ticket"]) {
     const relative = path.join("checkouts", label, ".beep", "yeet", "runs");
-    expect(
-      A.sort(yield* fs.readDirectory(path.join(exportCheck, relative), { recursive: true }), Str.Order)
-    ).toStrictEqual(A.sort(yield* fs.readDirectory(path.join(runtimeDir, relative), { recursive: true }), Str.Order));
+    const readDirectory8 = yield* fs.readDirectory(path.join(exportCheck, relative), { recursive: true });
+    const expectation2 = expect(A.sort(readDirectory8, Str.Order));
+    const readDirectory4 = yield* fs.readDirectory(path.join(runtimeDir, relative), { recursive: true });
+    expectation2.toStrictEqual(A.sort(readDirectory4, Str.Order));
   }
   for (const directory of ["leases", "queue", "claims", "quarantine"]) {
-    expect(yield* fs.readDirectory(path.join(exportCheck, "admission", directory))).toStrictEqual([]);
+    const readDirectory9 = yield* fs.readDirectory(path.join(exportCheck, "admission", directory));
+    expect(readDirectory9).toStrictEqual([]);
   }
   const refusal = yield* exportScenario(runtimeDir, exportCheck, chains).pipe(Effect.flip);
   expect(refusal.message).toContain("refusing to overwrite a non-empty export target");
-  expect(yield* fs.readFileString(path.join(exportCheck, "scenario.json"))).toBe(manifest);
-  expect(A.filter(yield* fs.readDirectory(exportCheck, { recursive: true }), isLockPath)).toStrictEqual([]);
+  const readFileString10 = yield* fs.readFileString(path.join(exportCheck, "scenario.json"));
+  expect(readFileString10).toBe(manifest);
+  const readDirectory11 = yield* fs.readDirectory(exportCheck, { recursive: true });
+  expect(A.filter(readDirectory11, isLockPath)).toStrictEqual([]);
 });
 
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: false, timeout: "30 seconds" })(
@@ -281,7 +295,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const runtimeDir = yield* fs.makeTempDirectoryScoped();
-        const exportTarget = O.filter(yield* Config.option(Config.String("BEEP_CIOPS_SYNTHETIC_ROOT")), Str.isNonEmpty);
+        const option12 = yield* Config.option(Config.String("BEEP_CIOPS_SYNTHETIC_ROOT"));
+        const exportTarget = O.filter(option12, Str.isNonEmpty);
         return yield* Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -302,7 +317,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
           for (const checkout of [checkoutA, checkoutB, checkoutLease, checkoutTicket]) {
             yield* fs.makeDirectory(path.join(checkout, ".beep", "yeet", "runs"), { recursive: true });
           }
-          expect(yield* setAdmissionEvictionProtocol("on")).toMatchObject({
+          const setAdmissionEvictionProtocol13 = yield* setAdmissionEvictionProtocol("on");
+          expect(setAdmissionEvictionProtocol13).toMatchObject({
             schemaVersion: "yeet-admission-protocol/v2",
             eviction: "on",
           });
@@ -318,7 +334,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
             )
           );
           yield* Deferred.await(admittedA).pipe(Effect.timeout("5 seconds"));
-          expect(yield* listDirectory(path.join(root, "leases"))).toHaveLength(1);
+          const listDirectory14 = yield* listDirectory(path.join(root, "leases"));
+          expect(listDirectory14).toHaveLength(1);
           const ranB = yield* Ref.make(false);
           const waiter = yield* Effect.forkChild(
             withQualityAdmission(
@@ -340,10 +357,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
             }),
             Effect.timeout("5 seconds")
           );
-          expect(yield* listDirectory(path.join(root, "queue"))).toHaveLength(1);
+          const listDirectory15 = yield* listDirectory(path.join(root, "queue"));
+          expect(listDirectory15).toHaveLength(1);
           yield* Fiber.interrupt(waiter);
-          expect(yield* Ref.get(ranB)).toBe(false);
-          expect(yield* listDirectory(path.join(root, "queue"))).toStrictEqual([]);
+          const got = yield* Ref.get(ranB);
+          expect(got).toBe(false);
+          const listDirectory16 = yield* listDirectory(path.join(root, "queue"));
+          expect(listDirectory16).toStrictEqual([]);
 
           const binDirectory = path.join(runtimeDir, "bin");
           yield* fs.makeDirectory(binDirectory);
@@ -351,9 +371,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
           yield* fs.writeFileString(systemctl, "#!/bin/sh\nexit 0\n");
           yield* fs.chmod(systemctl, 0o755);
           // A same-source start mismatch is definitive dead/reused-owner evidence, without a host PID literal.
-          const liveStart = O.getOrThrow(yield* processStartIdentityForPid(process.pid));
+          const processStartIdentityForPid17 = yield* processStartIdentityForPid(process.pid);
+          const liveStart = O.getOrThrow(processStartIdentityForPid17);
           const owner = { pid: process.pid, procStart: `${liveStart}-synthetic-dead-owner` };
-          expect(yield* processIdentityStatus(owner)).toBe("dead");
+          const processIdentityStatus18 = yield* processIdentityStatus(owner);
+          expect(processIdentityStatus18).toBe("dead");
           const fixtureInstant = yield* Clock.currentTimeMillis;
           const fixture = {
             ...owner,
@@ -373,7 +395,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
             nonce: "synthetic-dead-lease",
             attemptId: O.some(attemptLease),
             admittedAtMillis: fixtureInstant,
-            startedAt: DateTime.formatIso(yield* DateTime.now),
+            startedAt: yield* Effect.map(DateTime.now, DateTime.formatIso),
           });
           const ticket = YeetAdmissionTicket.make({
             ...fixture,
@@ -385,11 +407,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
             nonce: "synthetic-dead-ticket",
             attemptId: O.some(attemptTicket),
           });
-          yield* fs.writeFileString(path.join(root, "leases", `${lease.nonce}.lease.json`), yield* encodeLease(lease));
-          yield* fs.writeFileString(
-            path.join(root, "queue", `${ticket.nonce}.ticket.json`),
-            yield* encodeTicket(ticket)
-          );
+          const argument1 = path.join(root, "leases", `${lease.nonce}.lease.json`);
+          const encodedLease5 = yield* encodeLease(lease);
+          yield* fs.writeFileString(argument1, encodedLease5);
+          const argument2 = path.join(root, "queue", `${ticket.nonce}.ticket.json`);
+          const encodedTicket = yield* encodeTicket(ticket);
+          yield* fs.writeFileString(argument2, encodedTicket);
           const reap = withPrependedPath(binDirectory, reapAdmissionState({ apply: true })).pipe(
             Effect.provideService(
               AdmissionEvictionJournal,
@@ -397,9 +420,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
             )
           );
           yield* reap;
-          expect(yield* listDirectory(path.join(root, "claims"))).toStrictEqual([]);
-          expect(yield* listDirectory(path.join(root, "queue"))).toStrictEqual([]);
-          expect(yield* listDirectory(path.join(root, "leases"))).toHaveLength(1);
+          const listDirectory19 = yield* listDirectory(path.join(root, "claims"));
+          expect(listDirectory19).toStrictEqual([]);
+          const listDirectory20 = yield* listDirectory(path.join(root, "queue"));
+          expect(listDirectory20).toStrictEqual([]);
+          const listDirectory21 = yield* listDirectory(path.join(root, "leases"));
+          expect(listDirectory21).toHaveLength(1);
           const leaseAttempts = yield* readAttemptJournalEvents(checkoutLease, branchLease);
           const ticketAttempts = yield* readAttemptJournalEvents(checkoutTicket, branchTicket);
           expect(leaseAttempts).toMatchObject([
@@ -443,10 +469,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
           const withdrawn = O.getOrThrow(A.findFirst(events, AdmissionJournalEvent.guards["admission-withdrawn"]));
           expect(withdrawn).toMatchObject(Struct.omit(enqueuedB, ["_tag", "weightTokens"]));
           expect(withdrawn.withdrawnAtMillis).toBeGreaterThanOrEqual(enqueuedB.enqueuedAtMillis);
-          const wire = yield* Effect.forEach(
-            journalLines(yield* fs.readFileString(yield* admissionJournalPath(root))),
-            (line) => decodeJsonObject(line)
-          );
+          const admissionJournalPath30 = yield* admissionJournalPath(root);
+          const readFileString22 = yield* fs.readFileString(admissionJournalPath30);
+          const wire = yield* Effect.forEach(journalLines(readFileString22), (line) => decodeJsonObject(line));
           const withdrawnWire = O.getOrThrow(A.findFirst(wire, (row) => row._tag === "admission-withdrawn"));
           expect(withdrawnWire).not.toHaveProperty("weightTokens");
           expect(withdrawnWire).not.toHaveProperty("reason");
@@ -523,13 +548,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
             ).toStrictEqual(chain.tags);
           }
           yield* reap;
-          expect(yield* readJournalEvents(root)).toStrictEqual(events);
-          expect(yield* readAttemptJournalEvents(checkoutLease, branchLease)).toStrictEqual(leaseAttempts);
-          expect(yield* readAttemptJournalEvents(checkoutTicket, branchTicket)).toStrictEqual(ticketAttempts);
+          const readJournalEvents23 = yield* readJournalEvents(root);
+          expect(readJournalEvents23).toStrictEqual(events);
+          const readAttemptJournalEvents24 = yield* readAttemptJournalEvents(checkoutLease, branchLease);
+          expect(readAttemptJournalEvents24).toStrictEqual(leaseAttempts);
+          const readAttemptJournalEvents25 = yield* readAttemptJournalEvents(checkoutTicket, branchTicket);
+          expect(readAttemptJournalEvents25).toStrictEqual(ticketAttempts);
           for (const directory of ["leases", "queue", "claims", "quarantine", "promotions"]) {
-            expect(yield* listDirectory(path.join(root, directory))).toStrictEqual([]);
+            const listDirectory26 = yield* listDirectory(path.join(root, directory));
+            expect(listDirectory26).toStrictEqual([]);
           }
-          expect(A.filter(yield* fs.readDirectory(runtimeDir, { recursive: true }), isLockPath)).toStrictEqual([]);
+          const readDirectory27 = yield* fs.readDirectory(runtimeDir, { recursive: true });
+          expect(A.filter(readDirectory27, isLockPath)).toStrictEqual([]);
 
           yield* expectExportCheck(runtimeDir, root, chains);
 
@@ -554,13 +584,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
         const decodedLease = yield* decodeLeaseEffect(encodedLease);
         expect(decodedLease.nonce).toBe(lease.nonce);
         expect(decodedLease.checkoutRoot).toBe(lease.checkoutRoot);
-        expect(yield* encodeLeaseEffect(decodedLease)).toBe(encodedLease);
+        const encodedLeaseEffect = yield* encodeLeaseEffect(decodedLease);
+        expect(encodedLeaseEffect).toBe(encodedLease);
 
         const encoded = yield* encodeTicketEffect(ticket);
         const decoded = yield* decodeTicketEffect(encoded);
         expect(decoded.nonce).toBe(ticket.nonce);
         expect(decoded.checkoutRoot).toBe(ticket.checkoutRoot);
-        expect(yield* encodeTicketEffect(decoded)).toBe(encoded);
+        const encodedTicketEffect = yield* encodeTicketEffect(decoded);
+        expect(encodedTicketEffect).toBe(encoded);
       }),
       { arbitrary: fcRuns(32) }
     );

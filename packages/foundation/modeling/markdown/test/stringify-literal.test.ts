@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // `Text.escapeStyle: "literal"` (#489): the caller vouches a text value is
 // already safe markdown, so the emitter drops every inline-phase escape and
 // keeps only the ones defending block structure. The canonical path must not
@@ -25,6 +26,8 @@ import * as A from "effect/Array";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const ProjectedRecords = S.Array(S.Record(S.String, S.Unknown));
 const isRecords = S.is(ProjectedRecords);
@@ -290,12 +293,20 @@ describe("Text escapeStyle: literal", () => {
       ["[a]: /u", "\\[a]: /u"],
     ] as const;
     for (const [value, expected] of blockOpeners) {
-      it(`escapes the line-start opener in ${JSON.stringify(value)}`, () => {
+      it(`escapes the line-start opener in ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}`, () => {
         const emitted = out(paragraphOf(literal(value)));
         assert.strictEqual(emitted, `${expected}\n`);
         const reparsed = parse(emitted);
-        assert.strictEqual(reparsed.children.length, 1, `emitted: ${JSON.stringify(emitted)}`);
-        assert.strictEqual(reparsed.children[0]?.type, "paragraph", `emitted: ${JSON.stringify(emitted)}`);
+        assert.strictEqual(
+          reparsed.children.length,
+          1,
+          `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+        );
+        assert.strictEqual(
+          reparsed.children[0]?.type,
+          "paragraph",
+          `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+        );
       });
     }
 
@@ -347,13 +358,21 @@ describe("Text escapeStyle: literal", () => {
       [">x", "\\>x"],
     ] as const;
     for (const [value, expected] of lineStarts) {
-      it(`emits the line start of ${JSON.stringify(value)} as ${JSON.stringify(expected)}`, () => {
+      it(`emits the line start of ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)} as ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(expected), identity)}`, () => {
         const emitted = out(paragraphOf(literal(value)));
         assert.strictEqual(emitted, `${expected}\n`);
         const reparsed = parse(emitted);
-        assert.strictEqual(reparsed.children.length, 1, `emitted: ${JSON.stringify(emitted)}`);
+        assert.strictEqual(
+          reparsed.children.length,
+          1,
+          `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+        );
         const paragraph = reparsed.children[0];
-        assert.strictEqual(paragraph?.type, "paragraph", `emitted: ${JSON.stringify(emitted)}`);
+        assert.strictEqual(
+          paragraph?.type,
+          "paragraph",
+          `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+        );
         if (paragraph?.type === "paragraph" && A.every(paragraph.children, (child) => child.type === "text")) {
           assert.strictEqual(
             A.join(

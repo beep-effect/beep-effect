@@ -305,12 +305,11 @@ const makeStreamTurn =
 
         const finalization = Stream.unwrap(
           Effect.gen(function* () {
-            const usage = yield* makeProviderUsage(
-              yield* Ref.get(modelId),
-              yield* Ref.get(finish),
-              yield* Ref.get(repairInputTokens),
-              yield* Ref.get(repairOutputTokens)
-            );
+            const got = yield* Ref.get(modelId);
+            const got1 = yield* Ref.get(finish);
+            const got2 = yield* Ref.get(repairInputTokens);
+            const got3 = yield* Ref.get(repairOutputTokens);
+            const usage = yield* makeProviderUsage(got, got1, got2, got3);
             return Stream.succeed(AssistantTurnFinalization.make({ usage }));
           })
         );

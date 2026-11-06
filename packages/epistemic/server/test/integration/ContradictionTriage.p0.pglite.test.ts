@@ -87,7 +87,8 @@ class CandidatePayloadConflict extends S.TaggedError<CandidatePayloadConflict, {
 
 const sha256Hex = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value));
+  return Hex.encode(digest1);
 });
 const encodeBeliefRef = (ref: BeliefRef): string => `${ref.logicalKey}:${ref.edgeVersionId}:${ref.version}`;
 
@@ -235,56 +236,50 @@ const runFirstScope = Effect.fnUntraced(function* () {
   yield* migrate(db, { migrationsFolder, migrationsSchema: "drizzle" });
   yield* createFixtureTables();
 
-  const claims = yield* db
-    .insert(DbSchema.candidateClaim)
-    .values(
-      yield* Effect.fromResult(
-        Result.all([
-          toCandidateClaimInsert(
-            decodeClaim({
-              ...productEntityFixtureInput("EpistemicCandidateClaim", 801),
-              fixtureKey: "claim-a",
-              lifecycle: "candidate",
-              snapshot: {},
-            })
-          ),
-          toCandidateClaimInsert(
-            decodeClaim({
-              ...productEntityFixtureInput("EpistemicCandidateClaim", 802),
-              fixtureKey: "claim-b",
-              lifecycle: "candidate",
-              snapshot: {},
-            })
-          ),
-        ])
-      )
-    )
-    .returning();
-  const evidence = yield* db
-    .insert(DbSchema.evidence)
-    .values(
-      yield* Effect.fromResult(
-        Result.all([
-          toEvidenceInsert(
-            decodeEvidence({
-              ...productEntityFixtureInput("EpistemicEvidence", 801),
-              artifactFixtureKey: "contradiction-p0.source-a",
-              span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
-              spanFixtureKey: "span-a",
-            })
-          ),
-          toEvidenceInsert(
-            decodeEvidence({
-              ...productEntityFixtureInput("EpistemicEvidence", 802),
-              artifactFixtureKey: "contradiction-p0.source-b",
-              span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
-              spanFixtureKey: "span-b",
-            })
-          ),
-        ])
-      )
-    )
-    .returning();
+  const argument = db.insert(DbSchema.candidateClaim);
+  const fromResult1 = yield* Effect.fromResult(
+    Result.all([
+      toCandidateClaimInsert(
+        decodeClaim({
+          ...productEntityFixtureInput("EpistemicCandidateClaim", 801),
+          fixtureKey: "claim-a",
+          lifecycle: "candidate",
+          snapshot: {},
+        })
+      ),
+      toCandidateClaimInsert(
+        decodeClaim({
+          ...productEntityFixtureInput("EpistemicCandidateClaim", 802),
+          fixtureKey: "claim-b",
+          lifecycle: "candidate",
+          snapshot: {},
+        })
+      ),
+    ])
+  );
+  const claims = yield* argument.values(fromResult1).returning();
+  const argument1 = db.insert(DbSchema.evidence);
+  const fromResult2 = yield* Effect.fromResult(
+    Result.all([
+      toEvidenceInsert(
+        decodeEvidence({
+          ...productEntityFixtureInput("EpistemicEvidence", 801),
+          artifactFixtureKey: "contradiction-p0.source-a",
+          span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
+          spanFixtureKey: "span-a",
+        })
+      ),
+      toEvidenceInsert(
+        decodeEvidence({
+          ...productEntityFixtureInput("EpistemicEvidence", 802),
+          artifactFixtureKey: "contradiction-p0.source-b",
+          span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
+          spanFixtureKey: "span-b",
+        })
+      ),
+    ])
+  );
+  const evidence = yield* argument1.values(fromResult2).returning();
   const claimA = yield* requireHead(claims, "claim A");
   const claimB = yield* requireHead(A.drop(claims, 1), "claim B");
   const evidenceA = yield* requireHead(evidence, "evidence A");
@@ -397,7 +392,8 @@ const runFirstScope = Effect.fnUntraced(function* () {
   expect(repeated.id).toBe(candidate.id);
   const receipts = yield* db.select().from(receiptTable).where(eq(receiptTable.candidateId, candidate.id));
   expect(receipts).toHaveLength(2);
-  const payloadConflict = yield* Effect.flip(submit(forwardKey, yield* sha256Hex("materially-different"), 1_400));
+  const sha256Hex2 = yield* sha256Hex("materially-different");
+  const payloadConflict = yield* Effect.flip(submit(forwardKey, sha256Hex2, 1_400));
   expect(payloadConflict._tag).toBe("CandidatePayloadConflict");
 
   const openAt = (validAt: number, knownAt: number) =>
@@ -417,7 +413,8 @@ const runFirstScope = Effect.fnUntraced(function* () {
         )
       );
 
-  expect(yield* openAt(1_500, 1_500)).toHaveLength(1);
+  const openAt3 = yield* openAt(1_500, 1_500);
+  expect(openAt3).toHaveLength(1);
   const unchangedA = yield* repository.readAsOf(asOf(identityA, 1_500, 1_900));
   const unchangedB = yield* repository.readAsOf(asOf(identityB, 1_500, 1_900));
   assertSome(
@@ -448,8 +445,10 @@ const runFirstScope = Effect.fnUntraced(function* () {
     })
   );
   assertSome(replacement.supersedesId, beliefA.id);
-  expect(yield* openAt(1_500, 1_999)).toHaveLength(1);
-  expect(yield* openAt(1_500, 2_000)).toHaveLength(0);
+  const openAt4 = yield* openAt(1_500, 1_999);
+  expect(openAt4).toHaveLength(1);
+  const openAt5 = yield* openAt(1_500, 2_000);
+  expect(openAt5).toHaveLength(0);
 
   const historicalA = yield* repository.readAsOf(asOf(identityA, 1_500, 1_500));
   const correctedA = yield* repository.readAsOf(asOf(identityA, 1_500, 2_500));
@@ -469,12 +468,14 @@ const runFirstScope = Effect.fnUntraced(function* () {
 
   const lateB = yield* repository.record(recordFact(identityB, { amount: "140" }, 2_600, 500));
   expect(lateB.version).toBe(2);
+  const readAsOf6 = yield* repository.readAsOf(asOf(identityB, 750, 3_000));
   assertSome(
-    O.map(yield* repository.readAsOf(asOf(identityB, 750, 3_000)), (edge) => edge.fact.amount),
+    O.map(readAsOf6, (edge) => edge.fact.amount),
     "140"
   );
+  const readAsOf7 = yield* repository.readAsOf(asOf(identityB, 1_500, 3_000));
   assertSome(
-    O.map(yield* repository.readAsOf(asOf(identityB, 1_500, 3_000)), (edge) => edge.fact.amount),
+    O.map(readAsOf7, (edge) => edge.fact.amount),
     "150"
   );
 
@@ -492,7 +493,8 @@ const runFirstScope = Effect.fnUntraced(function* () {
       kind: "same-source-overlap",
     }
   );
-  const rejected = yield* submit(rejectedKey, yield* sha256Hex("rejected-payload"), 2_700);
+  const sha256Hex8 = yield* sha256Hex("rejected-payload");
+  const rejected = yield* submit(rejectedKey, sha256Hex8, 2_700);
   yield* db.insert(dispositionTable).values({
     candidateId: rejected.id,
     decision: { rationale: "Overlapping text is a quotation, not a factual conflict.", status: "rejected" },

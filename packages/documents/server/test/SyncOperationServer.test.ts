@@ -127,7 +127,8 @@ describe("SyncOperation server repository", () => {
       const operation = yield* repository.enqueue(operationSeed("item-1:uploadFile:1", itemOne));
 
       yield* repository.update(DomainSyncOperation.SyncOperation.make({ ...operation, status: "leased" }));
-      expect(yield* repository.listQueued(queuedInput)).toEqual([]);
+      const listQueued1 = yield* repository.listQueued(queuedInput);
+      expect(listQueued1).toEqual([]);
 
       const leased = yield* repository.listByStatus(
         ListSyncOperationsByStatusInput.make({ ...mirror, status: "leased" })

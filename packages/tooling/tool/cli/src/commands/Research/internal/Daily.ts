@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -14,7 +15,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runToExit } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import {
   ResearchCognifyOptions,
@@ -186,16 +186,12 @@ export const dailyImpl = Effect.fn("Research.dailyImpl")(function* (
     }
   });
 
-  yield* step(
-    "history-sift",
-    historySiftImpl(
-      yield* decodeResearchHistorySiftOptions({
-        browser: options.browser,
-        sinceDays: options.sinceDays,
-        vaultRoot: options.vaultRoot,
-      }).pipe(ResearchCommandError.mapError("Invalid daily history-sift options."))
-    )
-  );
+  const pipe1 = yield* decodeResearchHistorySiftOptions({
+    browser: options.browser,
+    sinceDays: options.sinceDays,
+    vaultRoot: options.vaultRoot,
+  }).pipe(ResearchCommandError.mapError("Invalid daily history-sift options."));
+  yield* step("history-sift", historySiftImpl(pipe1));
 
   if (options.notionPage === undefined) {
     skipped.push("notion-pull (no --page)");

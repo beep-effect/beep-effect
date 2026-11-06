@@ -57,7 +57,8 @@ const withPathPrefix = <A, E, R>(pathPrefix: string, use: Effect.Effect<A, E, R>
 
 const sortedDirectoryEntries = Effect.fn("ImageTest.sortedDirectoryEntries")(function* (dir: string) {
   const fs = yield* FileSystem.FileSystem;
-  return A.sort(yield* fs.readDirectory(dir), Order.String);
+  const readDirectory1 = yield* fs.readDirectory(dir);
+  return A.sort(readDirectory1, Order.String);
 });
 
 const writeFfprobeShim = Effect.fn("ImageTest.writeFfprobeShim")(function* (binDir: string) {
@@ -170,19 +171,21 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
           runImageCommand(["extract-frames", "--video", videoPath, "--out-dir", outDir, "--fps", "1"])
         );
 
-        expect(yield* sortedDirectoryEntries(outDir)).toEqual([
+        const sortedDirectoryEntries2 = yield* sortedDirectoryEntries(outDir);
+        expect(sortedDirectoryEntries2).toEqual([
           "clip_frame_00000.png",
           "clip_frame_00001.png",
           "extract-frames-manifest.json",
         ]);
-        const manifest = yield* decodeManifest(
-          yield* fs.readFileString(path.join(outDir, "extract-frames-manifest.json"))
-        );
+        const readFileString3 = yield* fs.readFileString(path.join(outDir, "extract-frames-manifest.json"));
+        const manifest = yield* decodeManifest(readFileString3);
         expect(manifest.summary.frameCount).toBe(2);
         expect(manifest.options.fps).toBe(1);
         expect(manifest.options.prefix).toBe("clip_frame");
-        expect(pipe(yield* fs.readFileString(argsPath), (value) => Str.includes("fps=1")(value))).toBe(true);
-        expect(yield* TestConsole.logLines).toEqual([
+        const readFileString4 = yield* fs.readFileString(argsPath);
+        expect(pipe(readFileString4, (value) => Str.includes("fps=1")(value))).toBe(true);
+        const logLines5 = yield* TestConsole.logLines;
+        expect(logLines5).toEqual([
           `image extract-frames: wrote 2 frame(s) to ${outDir}. manifest: ${path.join(outDir, "extract-frames-manifest.json")}`,
         ]);
         expect(process.exitCode ?? 0).toBe(0);
@@ -212,8 +215,10 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
           )
         );
 
-        expect(yield* fs.readFileString(path.join(outDir, "clip_frame_00000.png"))).toBe("existing");
-        expect(yield* TestConsole.errorLines).toEqual([]);
+        const readFileString6 = yield* fs.readFileString(path.join(outDir, "clip_frame_00000.png"));
+        expect(readFileString6).toBe("existing");
+        const errorLines7 = yield* TestConsole.errorLines;
+        expect(errorLines7).toEqual([]);
         expect(process.exitCode ?? 0).toBe(0);
         exit.pipe(Exit.isFailure, assertTrue);
         if (Exit.isFailure(exit)) {
@@ -247,22 +252,24 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
         yield* writeExtractFramesFfmpegShim(binDir, argsPath);
         yield* withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]));
 
-        expect(yield* sortedDirectoryEntries(path.join(videoDir, "clip"))).toEqual([
+        const sortedDirectoryEntries8 = yield* sortedDirectoryEntries(path.join(videoDir, "clip"));
+        expect(sortedDirectoryEntries8).toEqual([
           "clip_frame_00000.png",
           "clip_frame_00001.png",
           "extract-frames-manifest.json",
         ]);
-        expect(yield* sortedDirectoryEntries(path.join(videoDir, "trailer"))).toEqual([
+        const sortedDirectoryEntries9 = yield* sortedDirectoryEntries(path.join(videoDir, "trailer"));
+        expect(sortedDirectoryEntries9).toEqual([
           "extract-frames-manifest.json",
           "trailer_frame_00000.png",
           "trailer_frame_00001.png",
         ]);
-        const clipManifest = yield* decodeManifest(
-          yield* fs.readFileString(path.join(videoDir, "clip", "extract-frames-manifest.json"))
-        );
+        const readFileString10 = yield* fs.readFileString(path.join(videoDir, "clip", "extract-frames-manifest.json"));
+        const clipManifest = yield* decodeManifest(readFileString10);
         expect(clipManifest.options.prefix).toBe("clip_frame");
         expect(clipManifest.summary.frameCount).toBe(2);
-        expect(yield* TestConsole.logLines).toEqual([
+        const logLines11 = yield* TestConsole.logLines;
+        expect(logLines11).toEqual([
           `image extract-frames-dir: clip.mp4: wrote 2 frame(s) to ${path.join(videoDir, "clip")}. manifest: ${path.join(videoDir, "clip", "extract-frames-manifest.json")}`,
           `image extract-frames-dir: trailer.mov: wrote 2 frame(s) to ${path.join(videoDir, "trailer")}. manifest: ${path.join(videoDir, "trailer", "extract-frames-manifest.json")}`,
           "image extract-frames-dir: processed 2 video(s); succeeded 2; failed 0.",
@@ -314,7 +321,8 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
         );
 
         exit.pipe(Exit.isFailure, assertTrue);
-        expect(yield* fs.exists(argsPath)).toBe(false);
+        const exists12 = yield* fs.exists(argsPath);
+        expect(exists12).toBe(false);
         if (Exit.isFailure(exit)) {
           const failure = firstFailure(exit.cause);
           failure.pipe(O.isSome, assertTrue);
@@ -348,15 +356,18 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
           withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]))
         );
 
-        expect(yield* sortedDirectoryEntries(path.join(videoDir, "good"))).toEqual([
+        const sortedDirectoryEntries13 = yield* sortedDirectoryEntries(path.join(videoDir, "good"));
+        expect(sortedDirectoryEntries13).toEqual([
           "extract-frames-manifest.json",
           "good_frame_00000.png",
           "good_frame_00001.png",
         ]);
-        expect(yield* TestConsole.errorLines).toEqual([
+        const errorLines14 = yield* TestConsole.errorLines;
+        expect(errorLines14).toEqual([
           `image extract-frames-dir: bad.mp4: failed: ffmpeg could not extract frames for "${badPath}".`,
         ]);
-        expect(yield* TestConsole.logLines).toEqual([
+        const logLines15 = yield* TestConsole.logLines;
+        expect(logLines15).toEqual([
           `image extract-frames-dir: good.mp4: wrote 2 frame(s) to ${path.join(videoDir, "good")}. manifest: ${path.join(videoDir, "good", "extract-frames-manifest.json")}`,
           "image extract-frames-dir: processed 2 video(s); succeeded 1; failed 1.",
         ]);

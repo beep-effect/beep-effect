@@ -167,11 +167,13 @@ it.effect.prop(
   Effect.fnUntraced(function* ([cancelNotification, permissionResponse]) {
     const encodedCancelNotification = yield* encodeSessionCancelNotification(cancelNotification);
     const decodedCancelNotification = yield* decodeSessionCancelNotification(encodedCancelNotification);
-    assert.equal(yield* encodeSessionCancelNotification(decodedCancelNotification), encodedCancelNotification);
+    const encodedSessionCancelNotification = yield* encodeSessionCancelNotification(decodedCancelNotification);
+    assert.equal(encodedSessionCancelNotification, encodedCancelNotification);
 
     const encodedPermissionResponse = yield* encodeRequestPermissionResponse(permissionResponse);
     const decodedPermissionResponse = yield* decodeRequestPermissionResponse(encodedPermissionResponse);
-    assert.equal(yield* encodeRequestPermissionResponse(decodedPermissionResponse), encodedPermissionResponse);
+    const encodedRequestPermissionResponse = yield* encodeRequestPermissionResponse(decodedPermissionResponse);
+    assert.equal(encodedRequestPermissionResponse, encodedPermissionResponse);
   }),
   { arbitrary: fcRuns(25) }
 );
@@ -184,7 +186,8 @@ it.effect.prop(
 it.effect(
   "keeps escaped _meta keys after the host materialised a backslash key at the same position",
   Effect.fnUntraced(function* () {
-    assert.deepEqual(yield* decodeJsonWithHostParser('{" ":0,"\\\\":0}'), { " ": 0, "\\": 0 });
+    const decodedJsonWithHostParser = yield* decodeJsonWithHostParser('{" ":0,"\\\\":0}');
+    assert.deepEqual(decodedJsonWithHostParser, { " ": 0, "\\": 0 });
     const notification = {
       jsonrpc: "2.0" as const,
       method: "session/cancel" as const,
@@ -197,7 +200,8 @@ it.effect(
     };
     const encoded = yield* encodeSessionCancelNotification(notification);
     const decoded = yield* decodeSessionCancelNotification(encoded);
-    assert.equal(yield* encodeSessionCancelNotification(decoded), encoded);
+    const encodedSessionCancelNotification1 = yield* encodeSessionCancelNotification(decoded);
+    assert.equal(encodedSessionCancelNotification1, encoded);
     assert.deepEqual(decoded.params._meta, notification.params._meta);
   })
 );
@@ -254,36 +258,26 @@ it.effect(
         logIncoming: true,
       }
     );
-    assert.deepEqual(
-      encode(
-        AcpProtocol.AcpProtocolLogEvent,
-        yield* decodeAcpProtocolLogEvent({
-          direction: "incoming",
-          payload: "{}",
-          stage: "raw",
-        })
-      ),
-      {
-        direction: "incoming",
-        payload: "{}",
-        stage: "raw",
-      }
-    );
-    assert.deepEqual(
-      encode(
-        AcpProtocol.AcpIncomingNotification,
-        yield* decodeAcpIncomingNotification({
-          _tag: "ExtNotification",
-          method: "x/custom",
-          params: { ok: true },
-        })
-      ),
-      {
-        _tag: "ExtNotification",
-        method: "x/custom",
-        params: { ok: true },
-      }
-    );
+    const decodedAcpProtocolLogEvent = yield* decodeAcpProtocolLogEvent({
+      direction: "incoming",
+      payload: "{}",
+      stage: "raw",
+    });
+    assert.deepEqual(encode(AcpProtocol.AcpProtocolLogEvent, decodedAcpProtocolLogEvent), {
+      direction: "incoming",
+      payload: "{}",
+      stage: "raw",
+    });
+    const decodedAcpIncomingNotification = yield* decodeAcpIncomingNotification({
+      _tag: "ExtNotification",
+      method: "x/custom",
+      params: { ok: true },
+    });
+    assert.deepEqual(encode(AcpProtocol.AcpIncomingNotification, decodedAcpIncomingNotification), {
+      _tag: "ExtNotification",
+      method: "x/custom",
+      params: { ok: true },
+    });
   })
 );
 
@@ -328,7 +322,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       const outbound = yield* Queue.take(output);
       // A JSON-RPC notification carries no `id`; Grok CLI drops frames that do.
       assert.equal(outbound, '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"}}\n');
-      assert.deepEqual(yield* decodeSessionCancelNotification(outbound), {
+      const decodedSessionCancelNotification = yield* decodeSessionCancelNotification(outbound);
+      assert.deepEqual(decodedSessionCancelNotification, {
         jsonrpc: "2.0",
         method: "session/cancel",
         params: {
@@ -336,30 +331,24 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         },
       });
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(SessionUpdateNotification, {
-          jsonrpc: "2.0",
-          method: "session/update",
-          params: usageUpdate(10),
-        })
-      );
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(ElicitationCompleteNotification, {
-          jsonrpc: "2.0",
-          method: "elicitation/complete",
-          params: { elicitationId: "elicitation-1" },
-        })
-      );
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(LegacyElicitationCompleteNotification, {
-          jsonrpc: "2.0",
-          method: "session/elicitation/complete",
-          params: { elicitationId: "elicitation-2" },
-        })
-      );
+      const encodedJsonl = yield* encodeJsonl(SessionUpdateNotification, {
+        jsonrpc: "2.0",
+        method: "session/update",
+        params: usageUpdate(10),
+      });
+      yield* Queue.offer(input, encodedJsonl);
+      const encodedJsonl2 = yield* encodeJsonl(ElicitationCompleteNotification, {
+        jsonrpc: "2.0",
+        method: "elicitation/complete",
+        params: { elicitationId: "elicitation-1" },
+      });
+      yield* Queue.offer(input, encodedJsonl2);
+      const encodedJsonl3 = yield* encodeJsonl(LegacyElicitationCompleteNotification, {
+        jsonrpc: "2.0",
+        method: "session/elicitation/complete",
+        params: { elicitationId: "elicitation-2" },
+      });
+      yield* Queue.offer(input, encodedJsonl3);
 
       const [update, completion, legacyCompletion] = yield* Deferred.await(notifications);
       assert.equal(update?._tag, "SessionUpdate");
@@ -371,7 +360,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
   it.effect(
     "decodes escaped _meta keys on inbound frames after the host materialised a backslash key",
     Effect.fnUntraced(function* () {
-      assert.deepEqual(yield* decodeJsonWithHostParser('{"beep-acp-regression":0,"\\\\":0}'), {
+      const decodedJsonWithHostParser4 = yield* decodeJsonWithHostParser('{"beep-acp-regression":0,"\\\\":0}');
+      assert.deepEqual(decodedJsonWithHostParser4, {
         "beep-acp-regression": 0,
         "\\": 0,
       });
@@ -388,14 +378,12 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         Effect.forkScoped
       );
       const meta = { "beep-acp-regression": 0, "\n": true };
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(SessionUpdateNotification, {
-          jsonrpc: "2.0",
-          method: "session/update",
-          params: { ...usageUpdate(10), _meta: meta },
-        })
-      );
+      const encodedJsonl5 = yield* encodeJsonl(SessionUpdateNotification, {
+        jsonrpc: "2.0",
+        method: "session/update",
+        params: { ...usageUpdate(10), _meta: meta },
+      });
+      yield* Queue.offer(input, encodedJsonl5);
       const [update] = yield* Deferred.await(notifications);
       assert.equal(update?._tag, "SessionUpdate");
       if (update?._tag === "SessionUpdate") {
@@ -418,7 +406,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         onTermination: (error) => Deferred.succeed(termination, error).pipe(Effect.asVoid),
       });
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: usageUpdate(1) }));
+      const jsonLine6 = yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: usageUpdate(1) });
+      yield* Queue.offer(input, jsonLine6);
 
       const error = yield* Deferred.await(termination);
       if (error._tag !== "AcpTransportError") {
@@ -495,7 +484,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
           operation: "decode-wire-message",
         },
       });
-      assert.notInclude(yield* event.pipe(O.getOrUndefined, encodeUnknownJsonText), secret);
+      const pipe7 = yield* event.pipe(O.getOrUndefined, encodeUnknownJsonText);
+      assert.notInclude(pipe7, secret);
     })
   );
 
@@ -547,7 +537,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
 
       const response = yield* transport.request("x/test", { hello: "world" }).pipe(Effect.forkScoped);
       const outbound = yield* Queue.take(output);
-      assert.deepEqual(yield* decodeExtRequest(outbound), {
+      const decodedExtRequest = yield* decodeExtRequest(outbound);
+      assert.deepEqual(decodedExtRequest, {
         jsonrpc: "2.0",
         id: 1,
         method: "x/test",
@@ -557,9 +548,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         headers: [],
       });
 
-      yield* Queue.offer(input, yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } }));
+      const encodedJsonl8 = yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } });
+      yield* Queue.offer(input, encodedJsonl8);
 
-      assert.deepEqual(yield* Fiber.join(response), { ok: true });
+      const join9 = yield* Fiber.join(response);
+      assert.deepEqual(join9, { ok: true });
     })
   );
 
@@ -574,12 +567,15 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
 
       const response = yield* transport.request("x/test", { hello: "world" }).pipe(Effect.forkScoped);
       yield* Queue.take(output);
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: "1", result: { ok: false } }));
+      const jsonLine10 = yield* jsonLine({ jsonrpc: "2.0", id: "1", result: { ok: false } });
+      yield* Queue.offer(input, jsonLine10);
       yield* Effect.yieldNow;
       assert.isUndefined(response.pollUnsafe());
 
-      yield* Queue.offer(input, yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } }));
-      assert.deepEqual(yield* Fiber.join(response), { ok: true });
+      const encodedJsonl11 = yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } });
+      yield* Queue.offer(input, encodedJsonl11);
+      const join12 = yield* Fiber.join(response);
+      assert.deepEqual(join12, { ok: true });
     })
   );
 
@@ -594,19 +590,17 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
 
       const response = yield* transport.request("x/private", { hello: "world" }).pipe(Effect.forkScoped);
       yield* Queue.take(output);
-      yield* Queue.offer(
-        input,
-        yield* jsonLine({
-          jsonrpc: "2.0",
-          id: 1,
-          error: {
-            _tag: "Cause",
-            code: -32602,
-            message: "Invalid params",
-            data: [{ _tag: "Fail", error: { code: -32602, message: "Invalid params", data: { field: "hello" } } }],
-          },
-        })
-      );
+      const jsonLine13 = yield* jsonLine({
+        jsonrpc: "2.0",
+        id: 1,
+        error: {
+          _tag: "Cause",
+          code: -32602,
+          message: "Invalid params",
+          data: [{ _tag: "Fail", error: { code: -32602, message: "Invalid params", data: { field: "hello" } } }],
+        },
+      });
+      yield* Queue.offer(input, jsonLine13);
 
       const error = yield* response.pipe(Fiber.join, expectFailure);
       if (error._tag !== "AcpRequestError") {
@@ -633,18 +627,17 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
           ),
       });
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(ExtRequest, {
-          jsonrpc: "2.0",
-          id: 9,
-          method: "x/test",
-          params: { hello: "world" },
-          headers: [],
-        })
-      );
+      const encodedJsonl14 = yield* encodeJsonl(ExtRequest, {
+        jsonrpc: "2.0",
+        id: 9,
+        method: "x/test",
+        params: { hello: "world" },
+        headers: [],
+      });
+      yield* Queue.offer(input, encodedJsonl14);
 
-      const response = yield* decodeJsonRpcErrorResponse(yield* Queue.take(output));
+      const take15 = yield* Queue.take(output);
+      const response = yield* decodeJsonRpcErrorResponse(take15);
       assert.equal(response.id, 9);
       assert.equal(response.error.code, -32603);
     })
@@ -678,19 +671,25 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         },
         options: [{ optionId: "allow", name: "Allow", kind: "allow_once" }],
       };
-      yield* Queue.offer(
-        input,
-        yield* jsonLine({ jsonrpc: "2.0", id: 0, method: "session/request_permission", params, headers: [] })
-      );
+      const jsonLine16 = yield* jsonLine({
+        jsonrpc: "2.0",
+        id: 0,
+        method: "session/request_permission",
+        params,
+        headers: [],
+      });
+      yield* Queue.offer(input, jsonLine16);
 
-      assert.deepEqual(yield* Deferred.await(inboundRequest), {
+      const await17 = yield* Deferred.await(inboundRequest);
+      assert.deepEqual(await17, {
         _tag: "Request",
         id: 0,
         tag: "session/request_permission",
         payload: params,
         headers: [],
       });
-      assert.deepEqual(yield* Deferred.await(observed), [0, "session/request_permission"]);
+      const await18 = yield* Deferred.await(observed);
+      assert.deepEqual(await18, [0, "session/request_permission"]);
 
       yield* transport.serverProtocol.send(0, {
         _tag: "Exit",
@@ -706,7 +705,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         },
       });
 
-      assert.deepEqual(yield* decodeRequestPermissionResponse(yield* Queue.take(output)), {
+      const take110 = yield* Queue.take(output);
+      const decodedRequestPermissionResponse = yield* decodeRequestPermissionResponse(take110);
+      assert.deepEqual(decodedRequestPermissionResponse, {
         jsonrpc: "2.0",
         id: 0,
         result: {
@@ -738,7 +739,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         requestId: "success-1",
         exit: { _tag: "Success", value: { ok: true } },
       });
-      assert.equal(yield* Deferred.await(acknowledged), "success-1");
+      const await19 = yield* Deferred.await(acknowledged);
+      assert.equal(await19, "success-1");
 
       const circular: { self?: unknown } = {};
       circular.self = circular;
@@ -785,10 +787,12 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
 
       yield* Deferred.await(writeStarted);
       assert.isUndefined(sendFiber.pollUnsafe());
-      assert.isFalse(yield* Deferred.isDone(acknowledged));
+      const isDone20 = yield* Deferred.isDone(acknowledged);
+      assert.isFalse(isDone20);
       yield* Deferred.succeed(releaseWrite, undefined);
       yield* Fiber.join(sendFiber);
-      assert.equal(yield* Deferred.await(acknowledged), "held-write");
+      const await21 = yield* Deferred.await(acknowledged);
+      assert.equal(await21, "held-write");
     })
   );
 
@@ -832,14 +836,14 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       assert.isUndefined(current.pollUnsafe());
       assert.isUndefined(queued.pollUnsafe());
       yield* Deferred.succeed(releaseFailure, undefined);
-      assert.instanceOf(yield* Deferred.await(terminated), AcpError.AcpTransportError);
+      const await22 = yield* Deferred.await(terminated);
+      assert.instanceOf(await22, AcpError.AcpTransportError);
       yield* Fiber.join(current);
       yield* Fiber.join(queued);
       yield* send("future");
 
-      assertTrue(
-        Equal.equals(HashSet.fromIterable(yield* Queue.takeN(failures, 3)), HashSet.make("current", "queued", "future"))
-      );
+      const takeN23 = yield* Queue.takeN(failures, 3);
+      assertTrue(Equal.equals(HashSet.fromIterable(takeN23), HashSet.make("current", "queued", "future")));
     })
   );
 
@@ -889,7 +893,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       yield* Fiber.join(admittedSend);
       yield* send("future");
 
-      assert.deepEqual(yield* Queue.takeN(failures, 2), ["admitted", "future"]);
+      const takeN24 = yield* Queue.takeN(failures, 2);
+      assert.deepEqual(takeN24, ["admitted", "future"]);
     })
   );
 
@@ -913,19 +918,19 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         Effect.forkScoped
       );
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: "skills-reload", result: { reloaded: true } }));
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(SessionUpdateNotification, {
-          jsonrpc: "2.0",
-          method: "session/update",
-          params: usageUpdate(5),
-        })
-      );
+      const jsonLine25 = yield* jsonLine({ jsonrpc: "2.0", id: "skills-reload", result: { reloaded: true } });
+      yield* Queue.offer(input, jsonLine25);
+      const encodedJsonl26 = yield* encodeJsonl(SessionUpdateNotification, {
+        jsonrpc: "2.0",
+        method: "session/update",
+        params: usageUpdate(5),
+      });
+      yield* Queue.offer(input, encodedJsonl26);
 
       const [update] = yield* Deferred.await(notifications);
       assert.equal(update?._tag, "SessionUpdate");
-      assert.equal(yield* Queue.size(clientSeen), 0);
+      const size27 = yield* Queue.size(clientSeen);
+      assert.equal(size27, 0);
     })
   );
 
@@ -946,7 +951,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         .pipe(Effect.forkScoped);
 
       const response = yield* transport.request("x/test", { hello: "world" }).pipe(Effect.forkScoped);
-      assert.deepEqual(yield* decodeExtRequest(yield* Queue.take(output)), {
+      const take111 = yield* Queue.take(output);
+      const decodedExtRequest28 = yield* decodeExtRequest(take111);
+      assert.deepEqual(decodedExtRequest28, {
         jsonrpc: "2.0",
         id: 1,
         method: "x/test",
@@ -957,11 +964,13 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       });
 
       yield* Fiber.interrupt(response);
-      yield* Queue.offer(input, yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } }));
+      const encodedJsonl29 = yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } });
+      yield* Queue.offer(input, encodedJsonl29);
 
       yield* Queue.offer(input, encoder.encode('{"jsonrpc":"2.0","method":"x/after","params":{}}\n'));
       yield* Deferred.await(drained);
-      assert.equal(yield* Queue.size(lateResponse), 0);
+      const size30 = yield* Queue.size(lateResponse);
+      assert.equal(size30, 0);
     })
   );
 
@@ -981,8 +990,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       });
 
       yield* transport.serverProtocol.end(0);
-      assertTrue(yield* Deferred.await(writerExit));
-      assert.equal(yield* Ref.get(terminations), 0);
+      const await31 = yield* Deferred.await(writerExit);
+      assertTrue(await31);
+      const got32 = yield* Ref.get(terminations);
+      assert.equal(got32, 0);
 
       yield* Queue.end(input);
     })
@@ -1017,8 +1028,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         const error = yield* Deferred.await(terminated);
         yield* Deferred.succeed(releaseWrite, undefined);
 
-        assert.strictEqual(yield* send.pipe(Fiber.join, expectFailure), error);
-        assert.equal(yield* Queue.size(output), 0);
+        const pipe33 = yield* send.pipe(Fiber.join, expectFailure);
+        assert.strictEqual(pipe33, error);
+        const size34 = yield* Queue.size(output);
+        assert.equal(size34, 0);
       })
     );
   }
@@ -1038,14 +1051,17 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       const error = yield* Deferred.await(terminated);
       assert.instanceOf(error, AcpError.AcpInputStreamEndedError);
 
-      assert.strictEqual(yield* expectFailure(transport.request("x/test", { hello: "world" })), error);
-      assert.strictEqual(yield* expectFailure(transport.notify("session/cancel", { sessionId: "session-1" })), error);
+      const expectFailure35 = yield* expectFailure(transport.request("x/test", { hello: "world" }));
+      assert.strictEqual(expectFailure35, error);
+      const expectFailure36 = yield* expectFailure(transport.notify("session/cancel", { sessionId: "session-1" }));
+      assert.strictEqual(expectFailure36, error);
       const clientSend = yield* expectFailure(
         transport.clientProtocol.send(0, { _tag: "Request", id: 5, tag: "x/test", payload: {}, headers: [] })
       );
       assert.equal(clientSend.reason._tag, "RpcClientDefect");
       assert.strictEqual(clientSend.reason.cause, error);
-      assert.equal(yield* Queue.size(output), 0);
+      const size37 = yield* Queue.size(output);
+      assert.equal(size37, 0);
     })
   );
 
@@ -1061,11 +1077,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       yield* transport.clientProtocol.send(0, { _tag: "Interrupt", requestId: AcpProtocol.RPC_REQUEST_ID_START });
       yield* transport.notify("session/cancel", { sessionId: "session-1" });
 
-      assert.equal(
-        yield* Queue.take(output),
-        '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"}}\n'
-      );
-      assert.equal(yield* Queue.size(output), 0);
+      const take38 = yield* Queue.take(output);
+      assert.equal(take38, '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"}}\n');
+      const size39 = yield* Queue.size(output);
+      assert.equal(size39, 0);
     })
   );
 
@@ -1088,12 +1103,16 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         encoder.encode(`${A.join(lines, "")}{"jsonrpc":"2.0","id":77,"method":"x/test","params":{"hello":"world"}}\n`)
       );
 
-      assert.deepEqual(yield* S.decodeEffect(AcpJson.fromJsonText(ExtResponse))(yield* Queue.take(output)), {
+      const argument = S.decodeEffect(AcpJson.fromJsonText(ExtResponse));
+      const take1 = yield* Queue.take(output);
+      const value40 = yield* argument(take1);
+      assert.deepEqual(value40, {
         jsonrpc: "2.0",
         id: 77,
         result: { ok: true },
       });
-      assert.equal(yield* Ref.get(handled), notificationCount);
+      const got41 = yield* Ref.get(handled);
+      assert.equal(got41, notificationCount);
       // The undrained buffer slides and keeps only a short tail: the 32 newest notifications.
       const [oldestKept] = yield* transport.incoming.pipe(Stream.take(1), Stream.runCollect);
       assert.deepEqual(oldestKept, { _tag: "ExtNotification", method: "x/note", params: notificationCount - 32 });
@@ -1118,8 +1137,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       });
       yield* Deferred.succeed(protocolReady, transport);
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: "outer-1", method: "x/outer", params: {} }));
-      assert.deepEqual(yield* decodeInnerRequest(yield* Queue.take(output)), {
+      const jsonLine42 = yield* jsonLine({ jsonrpc: "2.0", id: "outer-1", method: "x/outer", params: {} });
+      yield* Queue.offer(input, jsonLine42);
+      const take112 = yield* Queue.take(output);
+      const decodedInnerRequest = yield* decodeInnerRequest(take112);
+      assert.deepEqual(decodedInnerRequest, {
         jsonrpc: "2.0",
         id: 1,
         method: "x/inner",
@@ -1130,8 +1152,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       assert.equal(context.method, "x/outer");
       assert.equal(context.requestId, "outer-1");
 
-      yield* Queue.offer(input, yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } }));
-      assert.deepEqual(yield* decodeOuterResponse(yield* Queue.take(output)), {
+      const encodedJsonl43 = yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } });
+      yield* Queue.offer(input, encodedJsonl43);
+      const take113 = yield* Queue.take(output);
+      const decodedOuterResponse = yield* decodeOuterResponse(take113);
+      assert.deepEqual(decodedOuterResponse, {
         jsonrpc: "2.0",
         id: "outer-1",
         result: { inner: { ok: true } },
@@ -1153,7 +1178,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       yield* Queue.offer(input, encoder.encode('\n   \n\t\r\n{"jsonrpc":"2.0","method":"x/after-blank","params":1}\n'));
       const [notification] = yield* transport.incoming.pipe(Stream.take(1), Stream.runCollect);
       assert.deepEqual(notification, { _tag: "ExtNotification", method: "x/after-blank", params: 1 });
-      assert.isFalse(yield* Ref.get(terminated));
+      const got44 = yield* Ref.get(terminated);
+      assert.isFalse(got44);
     })
   );
 
@@ -1196,7 +1222,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         .run(0, (message) => Deferred.succeed(firstMessage, message).pipe(Effect.asVoid))
         .pipe(Effect.forkScoped);
 
-      const defectCause = terminatedDefectOf(yield* Deferred.await(firstMessage));
+      const await45 = yield* Deferred.await(firstMessage);
+      const defectCause = terminatedDefectOf(await45);
       const exitError = yield* Deferred.await(termination);
       if (exitError._tag !== "AcpProcessExitedError") {
         return assert.fail("expected a process exit error");
@@ -1230,14 +1257,18 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         .run(0, (message) => Deferred.succeed(firstMessage, message).pipe(Effect.asVoid))
         .pipe(Effect.forkScoped);
 
-      const defectCause = terminatedDefectOf(yield* Deferred.await(firstMessage));
+      const await46 = yield* Deferred.await(firstMessage);
+      const defectCause = terminatedDefectOf(await46);
       yield* Deferred.await(terminationObserved);
-      assert.equal(yield* Ref.get(terminationCalls), 1);
+      const got47 = yield* Ref.get(terminationCalls);
+      assert.equal(got47, 1);
       assert.instanceOf(defectCause, AcpError.AcpProtocolParseError);
       assert.include(defectCause, { operation: "decode-wire-message" });
 
-      assert.equal(yield* handle.exitCode, 23);
-      assert.equal(yield* Ref.get(terminationCalls), 1);
+      const exitCode48 = yield* handle.exitCode;
+      assert.equal(exitCode48, 23);
+      const got49 = yield* Ref.get(terminationCalls);
+      assert.equal(got49, 1);
     }),
     childProcessProtocolTestTimeout
   );
@@ -1299,7 +1330,8 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
       }
       yield* Queue.offer(input, encoder.encode('{"jsonrpc":"2.0","method":"x/after","params":{}}\n'));
       yield* Deferred.await(drained);
-      assert.equal(yield* Queue.size(seen), 0);
+      const size50 = yield* Queue.size(seen);
+      assert.equal(size50, 0);
       const warnings = A.filter(
         capturedWarnings,
         (annotations) => P.hasProperty(annotations, "errorMessage") && annotations.errorMessage === sentinel
@@ -1392,14 +1424,18 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
         sessionId: "session-1",
         update: { sessionUpdate: "usage_update", cost: { amount: 1, currency: secret } },
       };
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: malformed }));
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: malformed }));
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: usageUpdate(10) }));
+      const jsonLine51 = yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: malformed });
+      yield* Queue.offer(input, jsonLine51);
+      const jsonLine52 = yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: malformed });
+      yield* Queue.offer(input, jsonLine52);
+      const jsonLine53 = yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: usageUpdate(10) });
+      yield* Queue.offer(input, jsonLine53);
 
       const notification = yield* Deferred.await(received);
       assert.equal(notification._tag, "SessionUpdate");
       assert.deepEqual(notification.params, usageUpdate(10));
-      assert.isFalse(yield* Ref.get(terminated));
+      const got54 = yield* Ref.get(terminated);
+      assert.isFalse(got54);
       assert.equal(transformCalls, 1);
 
       const decodeFailures = A.filter(events, ({ stage }) => stage === "decode_failed");
@@ -1410,9 +1446,12 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
       });
       const warnings = warningsAbout("update.used missing");
       assert.lengthOf(warnings, 1);
-      assert.include(yield* encodeUnknownJsonText(warnings[0]), "update.used missing");
-      assert.include(yield* encodeUnknownJsonText(decodeFailures[0]?.payload), "update.used missing");
-      assert.notInclude(yield* encodeUnknownJsonText({ decodeFailures, capturedWarnings }), secret);
+      const encodedUnknownJsonText = yield* encodeUnknownJsonText(warnings[0]);
+      assert.include(encodedUnknownJsonText, "update.used missing");
+      const encodedUnknownJsonText55 = yield* encodeUnknownJsonText(decodeFailures[0]?.payload);
+      assert.include(encodedUnknownJsonText55, "update.used missing");
+      const encodedUnknownJsonText56 = yield* encodeUnknownJsonText({ decodeFailures, capturedWarnings });
+      assert.notInclude(encodedUnknownJsonText56, secret);
     })
   );
 
@@ -1434,19 +1473,18 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
           A.makeBy(index, () => command),
           { name: 1, description: "d" }
         );
-        yield* Queue.offer(
-          input,
-          yield* jsonLine({
-            jsonrpc: "2.0",
-            method: "session/update",
-            params: {
-              sessionId: "session-1",
-              update: { sessionUpdate: "available_commands_update", availableCommands },
-            },
-          })
-        );
+        const jsonLine57 = yield* jsonLine({
+          jsonrpc: "2.0",
+          method: "session/update",
+          params: {
+            sessionId: "session-1",
+            update: { sessionUpdate: "available_commands_update", availableCommands },
+          },
+        });
+        yield* Queue.offer(input, jsonLine57);
       }
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: usageUpdate(10) }));
+      const jsonLine58 = yield* jsonLine({ jsonrpc: "2.0", method: "session/update", params: usageUpdate(10) });
+      yield* Queue.offer(input, jsonLine58);
 
       yield* Deferred.await(dispatched);
       assert.lengthOf(warningsAbout("update.availableCommands"), 1);
@@ -1524,8 +1562,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
           '[{"jsonrpc":"2.0","method":"x/one","params":1},{"jsonrpc":"2.0","method":"x/two","params":2}]\n'
         )
       );
-      assert.deepEqual(yield* Queue.take(notifications), { _tag: "ExtNotification", method: "x/one", params: 1 });
-      assert.deepEqual(yield* Queue.take(notifications), { _tag: "ExtNotification", method: "x/two", params: 2 });
+      const take59 = yield* Queue.take(notifications);
+      assert.deepEqual(take59, { _tag: "ExtNotification", method: "x/one", params: 1 });
+      const take60 = yield* Queue.take(notifications);
+      assert.deepEqual(take60, { _tag: "ExtNotification", method: "x/two", params: 2 });
 
       const bytes = encoder.encode('{"jsonrpc":"2.0","method":"x/utf8","params":{"text":"😀é"}}\n');
       // Cut inside the four-byte emoji, then again right before the newline.
@@ -1533,7 +1573,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
       yield* Queue.offer(input, bytes.slice(0, insideEmoji));
       yield* Queue.offer(input, bytes.slice(insideEmoji, bytes.length - 1));
       yield* Queue.offer(input, bytes.slice(bytes.length - 1));
-      assert.deepEqual(yield* Queue.take(notifications), {
+      const take61 = yield* Queue.take(notifications);
+      assert.deepEqual(take61, {
         _tag: "ExtNotification",
         method: "x/utf8",
         params: { text: "😀é" },
@@ -1554,7 +1595,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
 
       yield* Queue.offer(input, new Uint8Array(16 * 1024 * 1024 + 1).fill(0x20));
 
-      assert.include(expectParseTermination(yield* Deferred.await(termination)), {
+      const await62 = yield* Deferred.await(termination);
+      assert.include(expectParseTermination(await62), {
         _tag: "MaxBufferSizeExceeded",
         maxBufferSize: 16 * 1024 * 1024,
       });
@@ -1613,7 +1655,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
           '{"jsonrpc":"2.0","id":13,"error":{"_tag":"Cause","code":1,"message":"stop","data":[{"_tag":"Interrupt"}]}}\n'
         )
       );
-      assert.deepEqual(yield* Queue.take(clientSeen), {
+      const take63 = yield* Queue.take(clientSeen);
+      assert.deepEqual(take63, {
         _tag: "Exit",
         requestId: 13,
         exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: undefined }] },
@@ -1625,7 +1668,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
           '{"jsonrpc":"2.0","id":113,"error":{"_tag":"Cause","code":1,"message":"stop","data":[{"_tag":"Interrupt","fiberId":null}]}}\n'
         )
       );
-      assert.deepEqual(yield* Queue.take(clientSeen), {
+      const take64 = yield* Queue.take(clientSeen);
+      assert.deepEqual(take64, {
         _tag: "Exit",
         requestId: 113,
         exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: null }] },
@@ -1635,7 +1679,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
         input,
         encoder.encode('{"jsonrpc":"2.0","id":14,"error":{"_tag":"Cause","code":2,"message":"odd","data":"oops"}}\n')
       );
-      assert.deepEqual(yield* Queue.take(clientSeen), {
+      const take65 = yield* Queue.take(clientSeen);
+      assert.deepEqual(take65, {
         _tag: "Exit",
         requestId: 14,
         exit: {
@@ -1652,7 +1697,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
           '{"jsonrpc":"2.0","id":10,"error":{"_tag":"Defect","code":-32603,"message":"defect","data":{"boom":true}}}\n'
         )
       );
-      assert.deepEqual(yield* Queue.take(clientSeen), {
+      const take66 = yield* Queue.take(clientSeen);
+      assert.deepEqual(take66, {
         _tag: "Exit",
         requestId: 10,
         exit: {
@@ -1664,7 +1710,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
         input,
         encoder.encode('{"jsonrpc":"2.0","id":17,"error":{"_tag":"Other","code":-32000,"message":"tagged"}}\n')
       );
-      assert.deepEqual(yield* Queue.take(clientSeen), {
+      const take67 = yield* Queue.take(clientSeen);
+      assert.deepEqual(take67, {
         _tag: "Exit",
         requestId: 17,
         exit: { _tag: "Failure", cause: [{ _tag: "Fail", error: { _tag: "Other", code: -32000, message: "tagged" } }] },
@@ -1692,7 +1739,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
           onTermination: (error) => Deferred.succeed(termination, error).pipe(Effect.asVoid),
         });
         yield* Queue.offer(input, frame);
-        assert.include(expectParseTermination(yield* Deferred.await(termination)), { _tag: tag });
+        const await68 = yield* Deferred.await(termination);
+        assert.include(expectParseTermination(await68), { _tag: tag });
       })
     );
   }
@@ -1722,7 +1770,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("effect-acp untagged err
 
       // effect rc.117 parity: RpcSerialization maps a plain error object to `Fail`, so ACP
       // consumers receive a typed error on the Cause channel rather than a `Die` defect.
-      assert.deepEqual(yield* Queue.take(clientSeen), {
+      const take69 = yield* Queue.take(clientSeen);
+      assert.deepEqual(take69, {
         _tag: "Exit",
         requestId: 8,
         exit: {
@@ -1763,14 +1812,12 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp dual-generat
         error: { code: -32603, message: "Internal error" },
       };
       for (const update of [v1Chunk, v1ToolCall, idle]) {
-        yield* Queue.offer(
-          input,
-          yield* encodeJsonl(RawSessionUpdateNotification, {
-            jsonrpc: "2.0",
-            method: "session/update",
-            params: { sessionId: "s-1", update },
-          })
-        );
+        const encodedJsonl70 = yield* encodeJsonl(RawSessionUpdateNotification, {
+          jsonrpc: "2.0",
+          method: "session/update",
+          params: { sessionId: "s-1", update },
+        });
+        yield* Queue.offer(input, encodedJsonl70);
       }
 
       const received = yield* Deferred.await(notifications);
@@ -1806,16 +1853,15 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp dual-generat
         Effect.forkScoped
       );
 
-      yield* Queue.offer(
-        input,
-        yield* encodeJsonl(RawSessionUpdateNotification, {
-          jsonrpc: "2.0",
-          method: "session/update",
-          params: { sessionId: "s-1", update: { sessionUpdate: "timeline_update", entries: [] } },
-        })
-      );
+      const encodedJsonl71 = yield* encodeJsonl(RawSessionUpdateNotification, {
+        jsonrpc: "2.0",
+        method: "session/update",
+        params: { sessionId: "s-1", update: { sessionUpdate: "timeline_update", entries: [] } },
+      });
+      yield* Queue.offer(input, encodedJsonl71);
 
-      assert.deepEqual(yield* Deferred.await(notification), {
+      const await72 = yield* Deferred.await(notification);
+      assert.deepEqual(await72, {
         _tag: "SessionUpdate",
         method: "session/update",
         params: {
@@ -2017,12 +2063,14 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
 
       const error = yield* Deferred.await(terminated);
       assert.instanceOf(error, AcpError.AcpTransportError);
-      const failures = A.getSomes(yield* Effect.forEach(notifications, Fiber.join));
+      const forEach73 = yield* Effect.forEach(notifications, Fiber.join);
+      const failures = A.getSomes(forEach73);
       assert.isAbove(failures.length, 0);
       for (const failure of failures) {
         assert.strictEqual(failure, error);
       }
-      assert.strictEqual(O.getOrThrow(yield* Fiber.join(request)), error);
+      const join74 = yield* Fiber.join(request);
+      assert.strictEqual(O.getOrThrow(join74), error);
     })
   );
 
@@ -2079,11 +2127,15 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       });
       yield* serveTypedRequests(transport);
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: 1, method: "x/slow", params: {} }));
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: 1, method: "x/slow", params: {} }));
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: 2, method: "x/fast", params: {} }));
+      const jsonLine75 = yield* jsonLine({ jsonrpc: "2.0", id: 1, method: "x/slow", params: {} });
+      yield* Queue.offer(input, jsonLine75);
+      const jsonLine76 = yield* jsonLine({ jsonrpc: "2.0", id: 1, method: "x/slow", params: {} });
+      yield* Queue.offer(input, jsonLine76);
+      const jsonLine77 = yield* jsonLine({ jsonrpc: "2.0", id: 2, method: "x/fast", params: {} });
+      yield* Queue.offer(input, jsonLine77);
 
-      assert.deepEqual(yield* takeFrame(output), { id: 2, result: "fast" });
+      const takeFrame78 = yield* takeFrame(output);
+      assert.deepEqual(takeFrame78, { id: 2, result: "fast" });
     })
   );
 
@@ -2097,11 +2149,13 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       });
       yield* serveTypedRequests(transport);
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: 3, method: "x/boom", params: {} }));
+      const jsonLine79 = yield* jsonLine({ jsonrpc: "2.0", id: 3, method: "x/boom", params: {} });
+      yield* Queue.offer(input, jsonLine79);
 
       const line = yield* Queue.take(output);
       assert.notInclude(line, handlerSecret);
-      assert.deepEqual(yield* decodeWireFrame(line), {
+      const decodedWireFrame = yield* decodeWireFrame(line);
+      assert.deepEqual(decodedWireFrame, {
         id: 3,
         error: { code: -32603, message: "ACP request handler failed for method 'x/boom'" },
       });
@@ -2128,18 +2182,24 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
             : Effect.void,
         onExtRequest: () => Effect.succeed({ ok: true }),
       });
-      yield* Deferred.succeed(clientReady, yield* makeTypedClient(transport));
+      const madeTypedClient = yield* makeTypedClient(transport);
+      yield* Deferred.succeed(clientReady, madeTypedClient);
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", method: "x/mode-changed", params: {} }));
+      const jsonLine80 = yield* jsonLine({ jsonrpc: "2.0", method: "x/mode-changed", params: {} });
+      yield* Queue.offer(input, jsonLine80);
       const line = yield* Queue.take(output);
       const typed = yield* decodeWireFrame(line);
       assert.equal(typed.method, "x/typed");
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: typed.id, result: { ok: true } }));
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: 99, method: "x/ping", params: {} }));
+      const jsonLine81 = yield* jsonLine({ jsonrpc: "2.0", id: typed.id, result: { ok: true } });
+      yield* Queue.offer(input, jsonLine81);
+      const jsonLine82 = yield* jsonLine({ jsonrpc: "2.0", id: 99, method: "x/ping", params: {} });
+      yield* Queue.offer(input, jsonLine82);
 
-      assert.deepEqual(yield* Deferred.await(handled), { ok: true });
-      assert.deepEqual(yield* takeFrame(output), { id: 99, result: { ok: true } });
+      const await83 = yield* Deferred.await(handled);
+      assert.deepEqual(await83, { ok: true });
+      const takeFrame84 = yield* takeFrame(output);
+      assert.deepEqual(takeFrame84, { id: 99, result: { ok: true } });
       // A real typed call goes on the wire without effect trace ids or headers.
       assert.equal(
         line,
@@ -2181,11 +2241,14 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       );
       yield* Deferred.await(firstStarted);
       yield* settle;
-      assert.deepEqual(yield* Ref.get(events), ["start-1"]);
+      const got85 = yield* Ref.get(events);
+      assert.deepEqual(got85, ["start-1"]);
 
       yield* Deferred.succeed(releaseFirst, undefined);
-      assert.deepEqual(yield* takeFrame(output), { id: 5, result: { ok: true } });
-      assert.deepEqual(yield* Ref.get(events), ["start-1", "end-1", "start-2", "end-2", "request"]);
+      const takeFrame86 = yield* takeFrame(output);
+      assert.deepEqual(takeFrame86, { id: 5, result: { ok: true } });
+      const got87 = yield* Ref.get(events);
+      assert.deepEqual(got87, ["start-1", "end-1", "start-2", "end-2", "request"]);
     })
   );
 
@@ -2251,15 +2314,19 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       });
       yield* Deferred.succeed(protocolReady, transport);
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", method: "x/ask", params: {} }));
+      const jsonLine88 = yield* jsonLine({ jsonrpc: "2.0", method: "x/ask", params: {} });
+      yield* Queue.offer(input, jsonLine88);
       const first = yield* takeFrame(output);
       assert.equal(first.method, "x/first");
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: first.id, result: 1 }));
+      const jsonLine89 = yield* jsonLine({ jsonrpc: "2.0", id: first.id, result: 1 });
+      yield* Queue.offer(input, jsonLine89);
       const second = yield* takeFrame(output);
       assert.equal(second.method, "x/second");
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: second.id, result: 2 }));
+      const jsonLine90 = yield* jsonLine({ jsonrpc: "2.0", id: second.id, result: 2 });
+      yield* Queue.offer(input, jsonLine90);
 
-      assert.deepEqual(yield* Deferred.await(answers), [1, 2]);
+      const await91 = yield* Deferred.await(answers);
+      assert.deepEqual(await91, [1, 2]);
     })
   );
 
@@ -2281,23 +2348,30 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
           ),
         onExtRequest: () => Effect.succeed("pong"),
       });
-      yield* Deferred.succeed(
-        otherReady,
-        yield* AcpProtocol.makeAcpPatchedProtocol({ stdio: other.stdio, serverRequestMethods: HashSet.empty() })
-      );
+      const madeAcpPatchedProtocol = yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio: other.stdio,
+        serverRequestMethods: HashSet.empty(),
+      });
+      yield* Deferred.succeed(otherReady, madeAcpPatchedProtocol);
 
-      yield* Queue.offer(own.input, yield* jsonLine({ jsonrpc: "2.0", method: "x/ask", params: {} }));
-      yield* Queue.offer(own.input, yield* jsonLine({ jsonrpc: "2.0", id: 7, method: "x/ping", params: {} }));
+      const jsonLine92 = yield* jsonLine({ jsonrpc: "2.0", method: "x/ask", params: {} });
+      yield* Queue.offer(own.input, jsonLine92);
+      const jsonLine93 = yield* jsonLine({ jsonrpc: "2.0", id: 7, method: "x/ping", params: {} });
+      yield* Queue.offer(own.input, jsonLine93);
       const elsewhere = yield* takeFrame(other.output);
       assert.equal(elsewhere.method, "x/elsewhere");
       // Another connection's reader delivers that response, so this reader keeps waiting for the
       // handler and the ping behind it stays unanswered.
       yield* settle;
-      assert.strictEqual(yield* Queue.size(own.output), 0);
+      const size94 = yield* Queue.size(own.output);
+      assert.strictEqual(size94, 0);
 
-      yield* Queue.offer(other.input, yield* jsonLine({ jsonrpc: "2.0", id: elsewhere.id, result: "there" }));
-      assert.equal(yield* Deferred.await(answered), "there");
-      assert.deepEqual(yield* takeFrame(own.output), { id: 7, result: "pong" });
+      const jsonLine95 = yield* jsonLine({ jsonrpc: "2.0", id: elsewhere.id, result: "there" });
+      yield* Queue.offer(other.input, jsonLine95);
+      const await96 = yield* Deferred.await(answered);
+      assert.equal(await96, "there");
+      const takeFrame97 = yield* takeFrame(own.output);
+      assert.deepEqual(takeFrame97, { id: 7, result: "pong" });
     })
   );
 
@@ -2323,12 +2397,14 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const response = yield* transport.request("x/test", { hello: "world" }).pipe(Effect.forkScoped);
       yield* Deferred.await(sending);
       yield* Fiber.interrupt(response);
-      yield* Queue.offer(input, yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } }));
+      const encodedJsonl98 = yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } });
+      yield* Queue.offer(input, encodedJsonl98);
 
       // The cancelled request cannot claim a late response.
       yield* Queue.offer(input, encoder.encode('{"jsonrpc":"2.0","method":"x/after","params":{}}\n'));
       yield* Deferred.await(drained);
-      assert.equal(yield* Queue.size(lateResponse), 0);
+      const size99 = yield* Queue.size(lateResponse);
+      assert.equal(size99, 0);
     })
   );
 
@@ -2352,8 +2428,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
         sampled: true,
       });
 
+      const take100 = yield* Queue.take(output);
       assert.equal(
-        yield* Queue.take(output),
+        take100,
         `{"jsonrpc":"2.0","method":"session/prompt","params":{"sessionId":"session-1"},"id":${AcpProtocol.RPC_REQUEST_ID_START}}\n`
       );
     })
@@ -2391,23 +2468,26 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
         )
       );
 
-      assert.deepEqual(yield* Effect.forEach(A.range(1, 4), () => Queue.take(notifications)), [
+      const forEach101 = yield* Effect.forEach(A.range(1, 4), () => Queue.take(notifications));
+      assert.deepEqual(forEach101, [
         { _tag: "ExtNotification", method: "@effect/rpc/Eof", params: null },
         { _tag: "ExtNotification", method: "@effect/rpc/Ping", params: null },
         { _tag: "ExtNotification", method: "@effect/rpc/Ack", params: {} },
         { _tag: "ExtNotification", method: "@effect/rpc/Interrupt", params: { requestId: 1 } },
       ]);
-      assert.deepEqual(yield* takeFrame(output), { id: "after", result: { method: "@effect/rpc/Ping" } });
+      const takeFrame102 = yield* takeFrame(output);
+      assert.deepEqual(takeFrame102, { id: "after", result: { method: "@effect/rpc/Ping" } });
 
       // A peer `Eof` no longer ends the writer: sends and typed responses still reach the wire.
       yield* transport.notify("session/cancel", { sessionId: "session-1" });
-      assert.equal(
-        yield* Queue.take(output),
-        '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"}}\n'
-      );
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: 2, method: "x/fast", params: {} }));
-      assert.deepEqual(yield* takeFrame(output), { id: 2, result: "fast" });
-      assert.isFalse(yield* Ref.get(terminated));
+      const take103 = yield* Queue.take(output);
+      assert.equal(take103, '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"}}\n');
+      const jsonLine104 = yield* jsonLine({ jsonrpc: "2.0", id: 2, method: "x/fast", params: {} });
+      yield* Queue.offer(input, jsonLine104);
+      const takeFrame105 = yield* takeFrame(output);
+      assert.deepEqual(takeFrame105, { id: 2, result: "fast" });
+      const got106 = yield* Ref.get(terminated);
+      assert.isFalse(got106);
     })
   );
 
@@ -2427,7 +2507,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
           ),
       });
 
-      yield* Queue.offer(input, yield* jsonLine({ jsonrpc: "2.0", id: 1, method: "x/long", params: {} }));
+      const jsonLine107 = yield* jsonLine({ jsonrpc: "2.0", id: 1, method: "x/long", params: {} });
+      yield* Queue.offer(input, jsonLine107);
       yield* Deferred.await(started);
       yield* Queue.end(input);
 
@@ -2452,7 +2533,8 @@ it.effect(
 
     const error = yield* response.pipe(Fiber.join, expectFailure);
     assert.instanceOf(error, AcpError.AcpInputStreamEndedError);
-    assert.strictEqual(yield* expectFailure(transport.notify("session/cancel", { sessionId: "session-1" })), error);
+    const expectFailure108 = yield* expectFailure(transport.notify("session/cancel", { sessionId: "session-1" }));
+    assert.strictEqual(expectFailure108, error);
   })
 );
 
@@ -2481,6 +2563,7 @@ it.effect(
 
     const error = yield* response.pipe(Fiber.join, expectFailure);
     assert.instanceOf(error, AcpError.AcpInputStreamEndedError);
-    assert.strictEqual(yield* expectFailure(transport.notify("session/cancel", { sessionId: "session-1" })), error);
+    const expectFailure109 = yield* expectFailure(transport.notify("session/cancel", { sessionId: "session-1" }));
+    assert.strictEqual(expectFailure109, error);
   })
 );

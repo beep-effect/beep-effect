@@ -24,7 +24,8 @@ const decode = (value: typeof GlobOptions.Encoded): GlobOptions =>
 
 const makeFixture = Effect.fn("FsUtilsGlobTest.makeFixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const dir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-repo-utils-glob-" }));
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "beep-repo-utils-glob-" });
+  const dir = yield* fs.realPath(madeTempDirectoryScoped);
 
   yield* fs.makeDirectory(`${dir}/src/errors`, { recursive: true });
   yield* fs.makeDirectory(`${dir}/src/nested`, { recursive: true });
@@ -134,7 +135,8 @@ rootIt.layer(TestLayer, { timeout: "10 seconds" })("FsUtils.globFiles, pattern n
       const results = yield* utils.globFiles(["src/**/*.ts", "!src/nested/**"], { cwd: dir });
 
       expect(results).toEqual(["src/errors/problem.ts", "src/index.ts"]);
-      expect(yield* utils.globFiles("!src/**", { cwd: dir })).toEqual([]);
+      const globFiles1 = yield* utils.globFiles("!src/**", { cwd: dir });
+      expect(globFiles1).toEqual([]);
     })
   );
 
@@ -143,11 +145,12 @@ rootIt.layer(TestLayer, { timeout: "10 seconds" })("FsUtils.globFiles, pattern n
       const utils = yield* FsUtils;
       const dir = yield* makeFixture();
 
-      expect(yield* utils.globFiles(["./src/*.ts", "src/*.ts"], { cwd: dir })).toEqual(["src/index.ts"]);
-      expect(yield* utils.globFiles("src//index.ts", { cwd: dir })).toEqual(["src/index.ts"]);
-      expect(yield* utils.globFiles(["./src/*.ts", "src/*.ts"], { cwd: dir, absolute: true })).toEqual([
-        `${dir}/src/index.ts`,
-      ]);
+      const globFiles2 = yield* utils.globFiles(["./src/*.ts", "src/*.ts"], { cwd: dir });
+      expect(globFiles2).toEqual(["src/index.ts"]);
+      const globFiles3 = yield* utils.globFiles("src//index.ts", { cwd: dir });
+      expect(globFiles3).toEqual(["src/index.ts"]);
+      const globFiles4 = yield* utils.globFiles(["./src/*.ts", "src/*.ts"], { cwd: dir, absolute: true });
+      expect(globFiles4).toEqual([`${dir}/src/index.ts`]);
     })
   );
 
@@ -158,8 +161,10 @@ rootIt.layer(TestLayer, { timeout: "10 seconds" })("FsUtils.globFiles, pattern n
       const results = yield* utils.globFiles("../src/*.ts", { cwd: `${dir}/src/nested` });
 
       expect(results).toEqual([]);
-      expect(yield* utils.globFiles("../*.ts", { cwd: `${dir}/src/nested` })).toEqual(["../index.ts"]);
-      expect(yield* utils.globFiles("../../README.md", { cwd: `${dir}/src/nested` })).toEqual(["../../README.md"]);
+      const globFiles5 = yield* utils.globFiles("../*.ts", { cwd: `${dir}/src/nested` });
+      expect(globFiles5).toEqual(["../index.ts"]);
+      const globFiles6 = yield* utils.globFiles("../../README.md", { cwd: `${dir}/src/nested` });
+      expect(globFiles6).toEqual(["../../README.md"]);
     })
   );
 
@@ -182,7 +187,8 @@ rootIt.layer(TestLayer, { timeout: "10 seconds" })("FsUtils.globFiles, pattern n
 
       expect(missing._tag).toBe("DomainError");
       expect(file._tag).toBe("DomainError");
-      expect(yield* utils.globFiles(`${dir}/src/*.ts`, { cwd: `${dir}/missing` })).toEqual([`${dir}/src/index.ts`]);
+      const globFiles7 = yield* utils.globFiles(`${dir}/src/*.ts`, { cwd: `${dir}/missing` });
+      expect(globFiles7).toEqual([`${dir}/src/index.ts`]);
     })
   );
 });

@@ -27,9 +27,12 @@ describe("Port", () => {
   it.effect(
     "accepts inclusive transport port boundaries",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownPort(portMinimum)).toBe(portMinimum);
-      expect(yield* decodeUnknownPort(443)).toBe(443);
-      expect(yield* decodeUnknownPort(portMaximum)).toBe(portMaximum);
+      const decodedUnknownPort = yield* decodeUnknownPort(portMinimum);
+      expect(decodedUnknownPort).toBe(portMinimum);
+      const decodedUnknownPort1 = yield* decodeUnknownPort(443);
+      expect(decodedUnknownPort1).toBe(443);
+      const decodedUnknownPort2 = yield* decodeUnknownPort(portMaximum);
+      expect(decodedUnknownPort2).toBe(portMaximum);
     })
   );
 
@@ -87,10 +90,14 @@ describe("PortFromString", () => {
   it.effect(
     "decodes decimal strings into branded transport ports",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownPortFromString("1")).toBe(portMinimum);
-      expect(yield* decodeUnknownPortFromString("443")).toBe(443);
-      expect(yield* decodeUnknownPortFromString("080")).toBe(80);
-      expect(yield* decodeUnknownPortFromString("65535")).toBe(portMaximum);
+      const decodedUnknownPortFromString = yield* decodeUnknownPortFromString("1");
+      expect(decodedUnknownPortFromString).toBe(portMinimum);
+      const decodedUnknownPortFromString3 = yield* decodeUnknownPortFromString("443");
+      expect(decodedUnknownPortFromString3).toBe(443);
+      const decodedUnknownPortFromString4 = yield* decodeUnknownPortFromString("080");
+      expect(decodedUnknownPortFromString4).toBe(80);
+      const decodedUnknownPortFromString5 = yield* decodeUnknownPortFromString("65535");
+      expect(decodedUnknownPortFromString5).toBe(portMaximum);
     })
   );
 
@@ -99,7 +106,8 @@ describe("PortFromString", () => {
     Effect.fnUntraced(function* () {
       const value = yield* decodePort(443);
 
-      expect(yield* encodePortFromString(value)).toBe("443");
+      const encodedPortFromString = yield* encodePortFromString(value);
+      expect(encodedPortFromString).toBe("443");
     })
   );
 

@@ -116,7 +116,8 @@ it.layer(TauriIpcSocketLive, { concurrent: false, timeout: socketLayerTimeout })
     });
     return Effect.gen(function* () {
       const socket = yield* Socket.Socket;
-      const scope = yield* Scope.fork(yield* Effect.scope);
+      const scope1 = yield* Effect.scope;
+      const scope = yield* Scope.fork(scope1);
       const reader = yield* Scope.provide(scope)(socket.reader);
       expect(invoke).toHaveBeenCalledWith("sidecar_ipc_ready");
       const waiting = yield* reader.pull.pipe(Effect.flip, Effect.forkChild);

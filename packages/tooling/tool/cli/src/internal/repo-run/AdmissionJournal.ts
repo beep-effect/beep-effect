@@ -14,6 +14,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -36,7 +37,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
-import { UUID } from "../schema/Uuid.ts";
 import { publishJournalTextAtomically } from "./JournalFile.ts";
 import {
   isProcessPidAlive,
@@ -799,7 +799,8 @@ const legacyLockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
 const lockGenerationIsDead = Effect.fnUntraced(function* (
   generation: AdmissionJournalLockGeneration
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  return ProcessIdentityStatus.is.dead(yield* processIdentityStatus(generation));
+  const processIdentityStatus1 = yield* processIdentityStatus(generation);
+  return ProcessIdentityStatus.is.dead(processIdentityStatus1);
 });
 
 const isOwnedLockGeneration = Effect.fnUntraced(function* (
@@ -824,7 +825,8 @@ const randomIdentity = SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4()
 
 const journalLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedToken: string) {
   const crypto = yield* Digest.Digest;
-  const digest = Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(observedToken)));
+  const digest2 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(observedToken));
+  const digest = Hex.encode(digest2);
   return `${lockPath}.reap-${digest}`;
 });
 
@@ -999,13 +1001,11 @@ const reapAdopterMayStillAct = Effect.fnUntraced(function* (
     onNone: () => decodeLegacyReapAdopterGeneration(adopterPath, claimPath),
     onSome: (claim) => Effect.succeedSome(claim.generation),
   });
-  return !O.exists(
-    yield* O.match(generation, {
-      onNone: () => Effect.succeed(O.none<boolean>()),
-      onSome: (current) => lockGenerationIsDead(current).pipe(Effect.asSome),
-    }),
-    (dead) => dead
-  );
+  const match3 = yield* O.match(generation, {
+    onNone: () => Effect.succeed(O.none<boolean>()),
+    onSome: (current) => lockGenerationIsDead(current).pipe(Effect.asSome),
+  });
+  return !O.exists(match3, (dead) => dead);
 });
 
 type ReapAdopterElection =
@@ -1102,7 +1102,8 @@ const journalLockReapClaimIsOwned = Effect.fnUntraced(function* (
   observedToken: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  return O.contains(yield* fs.readFileString(adopterPath).pipe(Effect.option), observedToken);
+  const pipe4 = yield* fs.readFileString(adopterPath).pipe(Effect.option);
+  return O.contains(pipe4, observedToken);
 });
 
 const reportLostJournalLockReapClaim = (adopterPath: string): Effect.Effect<void, never> =>
@@ -1333,7 +1334,8 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest> {
-  const tombstonePath = yield* journalLockReapTombstonePath(yield* journalLockReapClaimPath(lockPath, token));
+  const journalLockReapClaimPath5 = yield* journalLockReapClaimPath(lockPath, token);
+  const tombstonePath = yield* journalLockReapTombstonePath(journalLockReapClaimPath5);
   const taken = yield* takeJournalLockGeneration(lockPath, tombstonePath);
   if (O.isNone(taken)) {
     return;
@@ -1625,10 +1627,8 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   // Mixed fleet revisions share this journal. Preserve rows this revision does
   // not understand byte-for-byte so an older locked rewrite cannot erase a
   // newer protocol event before all checkouts have rolled forward.
-  const reader = O.getOrElse(
-    yield* Effect.serviceOption(AdmissionJournalReader),
-    constant(currentAdmissionJournalReader)
-  );
+  const serviceOption6 = yield* Effect.serviceOption(AdmissionJournalReader);
+  const reader = O.getOrElse(serviceOption6, constant(currentAdmissionJournalReader));
   const retained = yield* Effect.forEach(rawLines, (raw) =>
     reader.decode(raw).pipe(
       Effect.option,

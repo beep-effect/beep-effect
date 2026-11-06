@@ -34,7 +34,18 @@
     "goals/practice-gateway/GOAL.md",
     "goals/practice-gateway/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/cache-baseline-request-main-merge.json",
+    "research/cache-baseline-request-onboarding-wiring.json",
+    "research/cache-baseline-review-main-merge.md",
+    "research/cache-baseline-review-onboarding-wiring.md",
+    "research/cache-baseline-review-practice-setup.md",
+    "research/cache-baseline-review-units-a.md",
+    "research/cache-baseline-review.md",
+    "research/onboarding-distribution.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

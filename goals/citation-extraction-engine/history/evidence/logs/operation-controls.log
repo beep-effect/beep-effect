@@ -1,0 +1,12 @@
+PASS stale-payload-hash
+PASS unordered-edition-bag-with-valid-hash
+PASS invalid-filter-candidate-with-valid-hash
+PASS filter-selection-output-mismatch-with-valid-hash
+PASS absent-shared-artifact
+PASS wrong-utf16-coordinate-with-valid-hash
+PASS absent-source-site-observation
+PASS unknown-operation
+PASS wrong-independent-source-hash
+PASS absent-resolution-occurrence-with-valid-hash
+PASS dangling-tokenizer-reference-with-valid-hash
+baseline passed; 11 actual-validator negative controls passed

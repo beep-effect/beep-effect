@@ -19,6 +19,7 @@ import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
+import { isWindowsRunner } from "./internal/runner.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 
 const $I = $GithubActionsId.create("ActionOutputs");
@@ -547,10 +548,7 @@ export interface ActionOutputsShape {
 const make = Effect.gen(function* () {
   const env = yield* ActionEnvironment;
   const fs = yield* FileSystem.FileSystem;
-  const lineEnding = Bool.match(O.contains("Windows")(yield* env.getOptional("RUNNER_OS")), {
-    onTrue: () => "\r\n" as const,
-    onFalse: () => "\n" as const,
-  });
+  const lineEnding = (yield* isWindowsRunner(env)) ? "\r\n" : "\n";
 
   const append: {
     (file: string, content: string): Effect.Effect<void, RunnerFileUnavailableError | RunnerFileWriteError>;

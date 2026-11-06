@@ -9,6 +9,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import * as Catalog from "@beep/observability/catalog";
+import { resolveShardScope, shardScopeIncludes } from "@beep/repo-cli-kit/cli/ShardScope";
+import { createWorkspaceOwnerResolver } from "@beep/repo-cli-kit/tsmorph/index";
 import { FsUtils } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -25,8 +27,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Project } from "ts-morph";
-import { resolveShardScope, shardScopeIncludes } from "../../internal/cli/ShardScope.ts";
-import { createWorkspaceOwnerResolver } from "../../internal/tsmorph/index.ts";
 import { ObservabilityCommandError } from "./Observability.errors.ts";
 import { combineHarvests, harvestSourceFile } from "./Observability.harvest.ts";
 import {
@@ -201,7 +201,9 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     const absolute = path.join(repoRoot, relativePath);
     const exists = yield* fs.exists(absolute).pipe(Effect.mapError(failure(relativePath, "Failed to stat file.")));
     const current = exists
-      ? O.some(yield* fs.readFileString(absolute).pipe(Effect.mapError(failure(relativePath, "Failed to read file."))))
+      ? yield* Effect.asSome(
+          fs.readFileString(absolute).pipe(Effect.mapError(failure(relativePath, "Failed to read file.")))
+        )
       : O.none<string>();
     const content = yield* next(current);
     if (O.contains(current, content)) {
@@ -260,7 +262,7 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     scopePaths?: ReadonlyArray<string> | undefined
   ) {
     const scope = O.fromNullishOr(scopePaths).pipe(O.filter(A.isReadonlyArrayNonEmpty));
-    const scoped = O.isSome(scope) ? O.some(yield* resolveScope(scope.value)) : O.none();
+    const scoped = O.isSome(scope) ? yield* Effect.asSome(resolveScope(scope.value)) : O.none();
     const harvested = yield* O.match(scoped, {
       onNone: () => harvest,
       onSome: ({ includes }) => harvestFiles(includes),

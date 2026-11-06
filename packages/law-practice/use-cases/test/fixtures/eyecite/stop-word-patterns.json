@@ -1,0 +1,61 @@
+{
+  "configuration": {
+    "bindings": [
+      {
+        "flags": 0,
+        "patternSha256": "73533a3c332db44e595c510a7b4362d8214a6e6a4d3bc8077f064e547124a258",
+        "profile": {
+          "groups": 2,
+          "minimumWidthFloor": 1,
+          "names": {
+            "stop_word": 2
+          },
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      },
+      {
+        "flags": 2,
+        "patternSha256": "73533a3c332db44e595c510a7b4362d8214a6e6a4d3bc8077f064e547124a258",
+        "profile": {
+          "groups": 2,
+          "minimumWidthFloor": 1,
+          "names": {
+            "stop_word": 2
+          },
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      },
+      {
+        "flags": 0,
+        "patternSha256": "79c1a5ca5ef8fc6e01f761dd1714aba5121d3256242bdedc74fb6b3f513e570e",
+        "profile": {
+          "groups": 0,
+          "minimumWidthFloor": 3,
+          "names": {},
+          "nullableMultiRepeat": false,
+          "repeatedCaptures": false
+        }
+      }
+    ],
+    "patterns": {
+      "leadingIn": {
+        "bytes": "5e283f6929496e5c732b",
+        "width": 1
+      },
+      "stopWords": {
+        "bytes": "283f3a5e7c5c7329285b5e5c73612d7a412d5a302d395d2a283f503c73746f705f776f72643e767c696e2072657c72657c71756f74696e677c652e672e7c70617274657c64656e6965647c636974696e677c61666627647c61666669726d65647c72656d616e6465647c73656520616c736f7c7365657c6772616e7465647c6469736d69737365647c4366295b5e5c73612d7a412d5a302d395d2a29283f3a5c737c2429",
+        "width": 1
+      }
+    }
+  },
+  "coreSha256": "e8edce03aef921b503080f55b16b46afa15fc2ea3e16deb5f52f895d51a698b0",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "1de3bcee927496802de42a41449d2f03ca9f3c993d3387c963bc3f0824108c80",
+  "python": "3.11.15",
+  "regex": "2023.12.25",
+  "regexesSha256": "73f2508f914bda85bfddab8d5c3821c5c13fbf778b09415f2c32db22fdbe23df",
+  "schemaVersion": "citation-stop-word-patterns/v1"
+}

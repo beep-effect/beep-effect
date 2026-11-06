@@ -131,7 +131,8 @@ describe("TypeClass alt & combinators", () => {
       const out = yield* TC.empty<string, string>().apply(node);
       expect(out.length).toBe(0);
       const nonempty = TC.pureOperation("nonempty", (value: string) => [value, `${value}!`]);
-      const expected = A.map(yield* nonempty.apply(node), (child) => child.data);
+      const apply1 = yield* nonempty.apply(node);
+      const expected = A.map(apply1, (child) => child.data);
       const left = yield* TC.alt(TC.empty<string, string>(), nonempty).apply(node);
       const right = yield* TC.alt(nonempty, TC.empty<string, string>()).apply(node);
       expect(A.map(left, (child) => child.data)).toEqual(expected);

@@ -39,7 +39,7 @@
     "goals/semantica-canary/research/SOURCES.md",
     "goals/openai-driver/SPEC.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/SOURCES.md", "research/c0-design.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

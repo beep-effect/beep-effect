@@ -29,7 +29,9 @@ const isLegalVerdictFamily = S.is(LegalVerdictFamily);
 const assertSchemaEncodedRoundTrip = Effect.fn("DomainTest.assertSchemaEncodedRoundTrip")(function* <
   Schema extends S.Codec<unknown>,
 >(schema: Schema, value: Schema["Type"], label: string) {
-  const decoded = yield* S.decodeUnknownEffect(schema)(yield* S.encodeEffect(schema)(value));
+  const argument = S.decodeUnknownEffect(schema);
+  const value1 = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* argument(value1);
   expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 

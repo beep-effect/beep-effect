@@ -5,15 +5,15 @@
  * @since 0.0.0
  */
 
-import { DomainError } from "@beep/repo-utils";
-import { A, Str } from "@beep/utils";
-import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,
   renderPrettyCommandJson,
-} from "../../../../internal/cli/Json.ts";
+} from "@beep/repo-cli-kit/cli/Json";
+import { DomainError } from "@beep/repo-utils";
+import { A, Str } from "@beep/utils";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import type { DocgenQualityReport, DocgenQualityReview, DocgenQualitySubject } from "./Quality.schemas.ts";
 
 const renderJson = Effect.fn("DocgenQuality.renderJson")(function* (value: unknown) {

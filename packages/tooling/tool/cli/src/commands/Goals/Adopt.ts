@@ -14,6 +14,8 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
@@ -21,16 +23,15 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   GoalSlug,
   MODELED_GOAL_MANIFEST_KEYS,
@@ -58,6 +59,8 @@ import type * as PlatformError from "effect/PlatformError";
 import type { MaterializationPlan, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { ConflictRow, PlanRow, PreservationRow } from "./Bootstrap.ts";
 import type { GoalStatus } from "./Goals.schemas.ts";
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const decodeGoalSlug = S.decodeEffect(GoalSlug);
 
@@ -117,7 +120,8 @@ const walkEntries = Effect.fn("Goals.walkPacketEntries")(function* (root: string
   let files = A.empty<PacketSnapshotFile>();
   for (const entry of A.sort(entries, Order.String)) {
     const entryRelative = relative === "" ? entry : `${relative}/${entry}`;
-    files = A.appendAll(files, yield* walkEntry(root, entryRelative));
+    const walkEntry1 = yield* walkEntry(root, entryRelative);
+    files = A.appendAll(files, walkEntry1);
   }
   return files;
 });
@@ -232,7 +236,7 @@ const seededManifestPayload = (input: {
       status: "pending",
     })),
   };
-  return `${JSON.stringify(document, null, 2)}\n`;
+  return `${Result.getOrThrowWith(encodePrettyJson(document), identity)}\n`;
 };
 
 const inferArchetype = (files: ReadonlyArray<PacketSnapshotFile>): PhaseArchetype => {

@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // SLSA Provenance v1 — typed, total, and byte-compatible with @actions/attest.
 //
 // The compatibility claim is the reason this file reads a fixture rather than
@@ -9,8 +10,11 @@
 import { GITHUB_BUILD_TYPE, SLSA_PROVENANCE_V1, SlsaProvenance } from "@beep/sbom";
 import { assert, describe, it, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import FIXTURE from "./fixtures/actions-attest-provenance.json" with { type: "json" };
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** The claims the vendored fixture was transcribed for. */
 const claims = {
@@ -33,7 +37,11 @@ const claims = {
   runAttempt: "1",
 } as const;
 
-const asJson = (provenance: SlsaProvenance): unknown => JSON.parse(JSON.stringify(provenance));
+const asJson = (provenance: SlsaProvenance): unknown =>
+  Result.getOrThrowWith(
+    S.decodeResult(UnknownJson)(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(provenance), identity)),
+    identity
+  );
 
 describe("SlsaProvenance.forGitHubWorkflow", () => {
   it("emits exactly the shape @actions/attest emits", () => {

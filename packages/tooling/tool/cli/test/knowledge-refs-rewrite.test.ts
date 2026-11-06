@@ -20,12 +20,10 @@ const fixture = Effect.fn("KnowledgeRewriteTest.fixture")(function* (rules: Read
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-rewrite-" });
   yield* fs.makeDirectory(path.join(root, "scripts"));
   const rulesFile = path.join(root, "scripts", "knowledge-refs-rewrite.rules.json");
-  yield* fs.writeFileString(
-    rulesFile,
-    yield* S.encodeEffect(KnowledgeRewriteRulesJson)(
-      KnowledgeRewriteRules.make({ schemaVersion: "knowledge-refs-rewrite/v1", rules })
-    )
+  const value = yield* S.encodeEffect(KnowledgeRewriteRulesJson)(
+    KnowledgeRewriteRules.make({ schemaVersion: "knowledge-refs-rewrite/v1", rules })
   );
+  yield* fs.writeFileString(rulesFile, value);
   return { fs, path, root, rulesFile };
 });
 
@@ -39,16 +37,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("knowledge refs rewrite"
       ]);
       const target = f.path.join(f.root, "doc.md");
       yield* f.fs.writeFileString(target, "old old");
-      expect(yield* rewriteKnowledgeReferences(f.root, true)).toMatchObject({
+      const rewriteKnowledgeReferences1 = yield* rewriteKnowledgeReferences(f.root, true);
+      expect(rewriteKnowledgeReferences1).toMatchObject({
         applied: 2,
         skipped: 0,
         failures: [],
         dryRun: true,
       });
-      expect(yield* f.fs.readFileString(target)).toBe("old old");
-      expect(yield* rewriteKnowledgeReferences(f.root, false)).toMatchObject({ applied: 2, skipped: 0, failures: [] });
-      expect(yield* f.fs.readFileString(target)).toBe("new new");
-      expect(yield* rewriteKnowledgeReferences(f.root, false)).toMatchObject({ applied: 0, skipped: 2, failures: [] });
+      const readFileString2 = yield* f.fs.readFileString(target);
+      expect(readFileString2).toBe("old old");
+      const rewriteKnowledgeReferences3 = yield* rewriteKnowledgeReferences(f.root, false);
+      expect(rewriteKnowledgeReferences3).toMatchObject({ applied: 2, skipped: 0, failures: [] });
+      const readFileString4 = yield* f.fs.readFileString(target);
+      expect(readFileString4).toBe("new new");
+      const rewriteKnowledgeReferences5 = yield* rewriteKnowledgeReferences(f.root, false);
+      expect(rewriteKnowledgeReferences5).toMatchObject({ applied: 0, skipped: 2, failures: [] });
     })
   );
 
@@ -67,8 +70,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("knowledge refs rewrite"
       expect(report.applied).toBe(2);
       expect(report.failures).toContain("drift.md: expected 1 occurrence(s), found 2");
       expect(report.failures).toContain("missing.md: unreadable");
-      expect(yield* f.fs.readFileString(f.path.join(f.root, "drift.md"))).toBe("first second second");
-      expect(yield* f.fs.readFileString(f.path.join(f.root, "valid.md"))).toBe("new");
+      const readFileString6 = yield* f.fs.readFileString(f.path.join(f.root, "drift.md"));
+      expect(readFileString6).toBe("first second second");
+      const readFileString7 = yield* f.fs.readFileString(f.path.join(f.root, "valid.md"));
+      expect(readFileString7).toBe("new");
     })
   );
 
@@ -82,7 +87,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("knowledge refs rewrite"
       yield* f.fs.writeFileString(referent, "old");
       yield* f.fs.symlink(referent, f.path.join(f.root, "linked.md"));
       expect((yield* rewriteKnowledgeReferences(f.root, false)).failures).toEqual(["linked.md: unreadable"]);
-      expect(yield* f.fs.readFileString(referent)).toBe("old");
+      const readFileString8 = yield* f.fs.readFileString(referent);
+      expect(readFileString8).toBe("old");
     })
   );
 
@@ -96,7 +102,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("knowledge refs rewrite"
         '{"schemaVersion":"knowledge-refs-rewrite/v1","rules":[{"path":"../escape.md","find":"old","replace":"new","count":1}]}',
       ]) {
         yield* f.fs.writeFileString(f.rulesFile, input);
-        expect(yield* rewriteKnowledgeReferences(f.root, false).pipe(Effect.isFailure)).toBe(true);
+        const pipe9 = yield* rewriteKnowledgeReferences(f.root, false).pipe(Effect.isFailure);
+        expect(pipe9).toBe(true);
       }
     })
   );

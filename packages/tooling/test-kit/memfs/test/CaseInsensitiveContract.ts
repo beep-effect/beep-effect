@@ -32,8 +32,10 @@ const linkedPackageResolves = Effect.fnUntraced(function* (
   const realD = yield* fs.realPath(d);
   yield* directoryWithFile(fs, `${d}/pkg`, "a.json", "1");
   yield* fs.symlink(target, `${d}/links`);
-  assert.strictEqual(yield* fs.readFileString(`${d}/${query}`), "1");
-  assert.strictEqual(yield* fs.realPath(`${d}/${query}`), `${realD}/${resolved}`);
+  const readFileString1 = yield* fs.readFileString(`${d}/${query}`);
+  assert.strictEqual(readFileString1, "1");
+  const realPath2 = yield* fs.realPath(`${d}/${query}`);
+  assert.strictEqual(realPath2, `${realD}/${resolved}`);
 });
 
 // What a test body needs from vitest's context: a run-time skip, so a case
@@ -65,7 +67,8 @@ export const caseInsensitiveCases: {
     run(ctx, (fs, d) =>
       Effect.gen(function* () {
         yield* fs.writeFileString(`${d}/docs.json`, "{}");
-        assert.strictEqual(yield* fs.readFileString(`${d}/Docs.json`), "{}");
+        const readFileString3 = yield* fs.readFileString(`${d}/Docs.json`);
+        assert.strictEqual(readFileString3, "{}");
         assert.strictEqual((yield* fs.stat(`${d}/DOCS.JSON`)).type, "File");
       })
     )
@@ -75,7 +78,8 @@ export const caseInsensitiveCases: {
     run(ctx, (fs, d) =>
       Effect.gen(function* () {
         yield* fs.writeFileString(`${d}/Docs.json`, "{}");
-        assert.deepStrictEqual(yield* fs.readDirectory(d), ["Docs.json"]);
+        const readDirectory4 = yield* fs.readDirectory(d);
+        assert.deepStrictEqual(readDirectory4, ["Docs.json"]);
       })
     )
   );
@@ -85,8 +89,10 @@ export const caseInsensitiveCases: {
       Effect.gen(function* () {
         yield* fs.writeFileString(`${d}/Docs.json`, "1");
         yield* fs.writeFileString(`${d}/docs.json`, "2");
-        assert.deepStrictEqual(yield* fs.readDirectory(d), ["Docs.json"]);
-        assert.strictEqual(yield* fs.readFileString(`${d}/DOCS.json`), "2");
+        const readDirectory5 = yield* fs.readDirectory(d);
+        assert.deepStrictEqual(readDirectory5, ["Docs.json"]);
+        const readFileString6 = yield* fs.readFileString(`${d}/DOCS.json`);
+        assert.strictEqual(readFileString6, "2");
       })
     )
   );
@@ -116,9 +122,12 @@ export const caseInsensitiveCases: {
       Effect.gen(function* () {
         yield* directoryWithFile(fs, `${d}/Dir`, "child.txt", "c");
         yield* fs.rename(`${d}/Dir`, `${d}/dir`);
-        assert.deepStrictEqual(yield* fs.readDirectory(d), ["dir"]);
-        assert.deepStrictEqual(yield* fs.readDirectory(`${d}/DIR`), ["child.txt"]);
-        assert.strictEqual(yield* fs.readFileString(`${d}/dir/child.txt`), "c");
+        const readDirectory7 = yield* fs.readDirectory(d);
+        assert.deepStrictEqual(readDirectory7, ["dir"]);
+        const readDirectory8 = yield* fs.readDirectory(`${d}/DIR`);
+        assert.deepStrictEqual(readDirectory8, ["child.txt"]);
+        const readFileString9 = yield* fs.readFileString(`${d}/dir/child.txt`);
+        assert.strictEqual(readFileString9, "c");
       })
     )
   );
@@ -128,10 +137,13 @@ export const caseInsensitiveCases: {
       Effect.gen(function* () {
         yield* directoryWithFile(fs, `${d}/Dir`, "c.txt", "c");
         yield* fs.rename(`${d}/dir`, `${d}/dir`);
-        assert.deepStrictEqual(yield* fs.readDirectory(d), ["Dir"]);
+        const readDirectory10 = yield* fs.readDirectory(d);
+        assert.deepStrictEqual(readDirectory10, ["Dir"]);
         yield* fs.rename(`${d}/DIR`, `${d}/dir`);
-        assert.deepStrictEqual(yield* fs.readDirectory(d), ["dir"]);
-        assert.strictEqual(yield* fs.readFileString(`${d}/DIR/c.txt`), "c");
+        const readDirectory11 = yield* fs.readDirectory(d);
+        assert.deepStrictEqual(readDirectory11, ["dir"]);
+        const readFileString12 = yield* fs.readFileString(`${d}/DIR/c.txt`);
+        assert.strictEqual(readFileString12, "c");
       })
     )
   );
@@ -145,7 +157,8 @@ export const caseInsensitiveCases: {
           yield* fs.writeFileString(`${d}/b.txt`, "dst");
           yield* fs.rename(`${d}/x.txt`, `${d}/B.txt`);
           const names = yield* fs.readDirectory(d);
-          assert.strictEqual(yield* fs.readFileString(`${d}/b.TXT`), "src");
+          const readFileString13 = yield* fs.readFileString(`${d}/b.TXT`);
+          assert.strictEqual(readFileString13, "src");
           assert.deepStrictEqual(names, ["b.txt"]);
         })
       )
@@ -155,7 +168,8 @@ export const caseInsensitiveCases: {
     run(ctx, (fs, d) =>
       Effect.gen(function* () {
         yield* fs.writeFileString(`${d}/docs.json`, "{}");
-        assert.deepStrictEqual(yield* fs.glob("*.JSON", { root: d }), ["docs.json"]);
+        const glob14 = yield* fs.glob("*.JSON", { root: d });
+        assert.deepStrictEqual(glob14, ["docs.json"]);
       })
     )
   );
@@ -169,8 +183,10 @@ export const caseInsensitiveCases: {
         const realD = yield* fs.realPath(d);
         yield* directoryWithFile(fs, `${d}/Pkg`, "Main.ts", "");
         yield* fs.symlink(`${d}/Pkg`, `${d}/alias`);
-        assert.strictEqual(yield* fs.realPath(`${d}/pkg/main.TS`), `${realD}/pkg/main.TS`);
-        assert.strictEqual(yield* fs.realPath(`${d}/ALIAS/main.TS`), `${realD}/Pkg/main.TS`);
+        const realPath15 = yield* fs.realPath(`${d}/pkg/main.TS`);
+        assert.strictEqual(realPath15, `${realD}/pkg/main.TS`);
+        const realPath16 = yield* fs.realPath(`${d}/ALIAS/main.TS`);
+        assert.strictEqual(realPath16, `${realD}/Pkg/main.TS`);
       })
     )
   );
@@ -180,7 +196,8 @@ export const caseInsensitiveCases: {
       Effect.gen(function* () {
         yield* directoryWithFile(fs, `${d}/pkg`, "a.json", "1");
         yield* fs.symlink(`${d}/pkg`, `${d}/links`);
-        assert.strictEqual(yield* fs.readFileString(`${d}/Links/A.JSON`), "1");
+        const readFileString17 = yield* fs.readFileString(`${d}/Links/A.JSON`);
+        assert.strictEqual(readFileString17, "1");
       })
     )
   );
@@ -210,8 +227,10 @@ export const caseInsensitiveCases: {
       Effect.gen(function* () {
         yield* fs.makeDirectory(`${d}/Dir`);
         yield* fs.writeFileString(`${d}/dir/a.txt`, "a");
-        assert.deepStrictEqual(yield* fs.readDirectory(`${d}/Dir`), ["a.txt"]);
-        assert.deepStrictEqual(yield* fs.readDirectory(d), ["Dir"]);
+        const readDirectory18 = yield* fs.readDirectory(`${d}/Dir`);
+        assert.deepStrictEqual(readDirectory18, ["a.txt"]);
+        const readDirectory19 = yield* fs.readDirectory(d);
+        assert.deepStrictEqual(readDirectory19, ["Dir"]);
       })
     )
   );
@@ -232,7 +251,8 @@ export const caseInsensitiveCases: {
         yield* sourceAndTarget(fs, d);
         yield* fs.copyFile(`${d}/a.txt`, `${d}/B.TXT`);
         assert.deepStrictEqual([...(yield* fs.readDirectory(d))].sort(), ["a.txt", "b.txt"]);
-        assert.strictEqual(yield* fs.readFileString(`${d}/b.txt`), "A");
+        const readFileString20 = yield* fs.readFileString(`${d}/b.txt`);
+        assert.strictEqual(readFileString20, "A");
       })
     )
   );
@@ -245,7 +265,8 @@ export const caseInsensitiveCases: {
         yield* sourceAndTarget(fs, d);
         yield* fs.copy(`${d}/a.txt`, `${d}/B.TXT`, { overwrite: true });
         assert.deepStrictEqual([...(yield* fs.readDirectory(d))].sort(), ["B.TXT", "a.txt"]);
-        assert.strictEqual(yield* fs.readFileString(`${d}/b.txt`), "A");
+        const readFileString21 = yield* fs.readFileString(`${d}/b.txt`);
+        assert.strictEqual(readFileString21, "A");
       })
     )
   );
@@ -257,8 +278,10 @@ export const caseInsensitiveCases: {
         yield* directoryWithFile(fs, `${d}/dst`, "x.txt", "old");
         yield* fs.copy(`${d}/src`, `${d}/DST`, { overwrite: true });
         assert.deepStrictEqual([...(yield* fs.readDirectory(d))].sort(), ["dst", "src"]);
-        assert.deepStrictEqual(yield* fs.readDirectory(`${d}/dst`), ["X.txt"]);
-        assert.strictEqual(yield* fs.readFileString(`${d}/dst/x.txt`), "new");
+        const readDirectory22 = yield* fs.readDirectory(`${d}/dst`);
+        assert.deepStrictEqual(readDirectory22, ["X.txt"]);
+        const readFileString23 = yield* fs.readFileString(`${d}/dst/x.txt`);
+        assert.strictEqual(readFileString23, "new");
       })
     )
   );
@@ -272,9 +295,11 @@ export const caseInsensitiveCases: {
         yield* fs.writeFileString(`${d}/dst/sub/a.txt`, "old");
         yield* fs.writeFileString(`${d}/dst/sub/keep.txt`, "k");
         yield* fs.copy(`${d}/src`, `${d}/dst`, { overwrite: true });
-        assert.deepStrictEqual(yield* fs.readDirectory(`${d}/dst`), ["sub"]);
+        const readDirectory24 = yield* fs.readDirectory(`${d}/dst`);
+        assert.deepStrictEqual(readDirectory24, ["sub"]);
         assert.deepStrictEqual([...(yield* fs.readDirectory(`${d}/dst/sub`))].sort(), ["A.txt", "keep.txt"]);
-        assert.strictEqual(yield* fs.readFileString(`${d}/dst/sub/a.txt`), "new");
+        const readFileString25 = yield* fs.readFileString(`${d}/dst/sub/a.txt`);
+        assert.strictEqual(readFileString25, "new");
       })
     )
   );
@@ -284,7 +309,8 @@ export const caseInsensitiveCases: {
       Effect.gen(function* () {
         yield* fs.writeFileString(`${d}/Gone.txt`, "");
         yield* fs.remove(`${d}/gone.TXT`);
-        assert.deepStrictEqual(yield* fs.readDirectory(d), []);
+        const readDirectory26 = yield* fs.readDirectory(d);
+        assert.deepStrictEqual(readDirectory26, []);
       })
     )
   );

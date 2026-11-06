@@ -25,7 +25,7 @@ Use this command for execution-capable sessions:
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth.
 3. [`PLAN.md`](./PLAN.md) - active execution plan.
-4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
+4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing; its `researchReports` array is a generated projection of `research/` (`bun run beep goals manifest --write`), never hand-edited.
 5. [`research/`](./research/) - supporting research, if present.
 6. [`history/`](./history/) - evidence and closeouts, if present.
 

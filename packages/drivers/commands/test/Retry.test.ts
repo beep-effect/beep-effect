@@ -73,8 +73,10 @@ describe("Retry.transient", () => {
       });
       const fiber = yield* Effect.forkChild(Effect.retry(flaky, Retry.transient()));
       yield* TestClock.adjust("1 minute");
-      assert.strictEqual(yield* Fiber.join(fiber), "published");
-      assert.strictEqual(yield* Ref.get(attempts), 3);
+      const join1 = yield* Fiber.join(fiber);
+      assert.strictEqual(join1, "published");
+      const got = yield* Ref.get(attempts);
+      assert.strictEqual(got, 3);
     })
   );
 
@@ -88,7 +90,8 @@ describe("Retry.transient", () => {
       const fiber = yield* doomed.pipe(Effect.retry(Retry.transient()), Effect.flip, Effect.forkChild);
       yield* TestClock.adjust("1 minute");
       yield* Fiber.join(fiber);
-      assert.strictEqual(yield* Ref.get(attempts), 1, "a permanent failure must not be retried at all");
+      const got2 = yield* Ref.get(attempts);
+      assert.strictEqual(got2, 1, "a permanent failure must not be retried at all");
     })
   );
 
@@ -107,7 +110,8 @@ describe("Retry.transient", () => {
       yield* TestClock.adjust("1 minute");
       const error = yield* Fiber.join(fiber);
       assert.instanceOf(error, CommandFailedError);
-      assert.strictEqual(yield* Ref.get(attempts), 3, "one initial attempt plus two retries");
+      const got3 = yield* Ref.get(attempts);
+      assert.strictEqual(got3, 3, "one initial attempt plus two retries");
     })
   );
 });

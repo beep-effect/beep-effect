@@ -107,7 +107,8 @@ const runGit = Effect.fn("GoalsDoctorTest.runGit")(function* (
     stdout: "ignore",
     stderr: "inherit",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
@@ -298,7 +299,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           lifecycle: "completed-retained",
           completionGate: { ...COMPLETION_GATE, pullRequests: [{ number: 7, role: "final" }] },
         });
-        yield* writeProjectFile("goals/typed/ops/manifest.json", yield* encodeGoalManifestJson(manifest));
+        const encodedGoalManifestJson = yield* encodeGoalManifestJson(manifest);
+        yield* writeProjectFile("goals/typed/ops/manifest.json", encodedGoalManifestJson);
         yield* writeProjectFile("goals/typed/README.md", "# Typed\n\nLifecycle: `completed-retained`\n");
         yield* writeBaseline([]);
         const digest = yield* goalCompletionDeclarationDigest(manifest);
@@ -408,6 +410,117 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       })
     )
   );
+  it.effect("a verified proposal reads as adoption pending until set-status commits it", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* runGit(["init", "-b", "main"]);
+      const verdictRef = GoalAcceptanceEvidenceRef.make({
+        kind: "yeet-verdict",
+        ref: ".beep/yeet/verdict.json",
+        gating: true,
+      });
+      const manifest = yield* decodeGoalManifest({
+        initiative: { id: "pending", status: "active" },
+        lifecycle: "active",
+        completionGate: { ...COMPLETION_GATE, acceptanceEvidence: [verdictRef] },
+        proposedCloseout: { status: "completed-retained", finalPullRequest: 7 },
+      });
+      const manifestJson = yield* encodeGoalManifestJson(manifest);
+      yield* writeProjectFile("goals/pending/ops/manifest.json", manifestJson);
+      yield* writeProjectFile("goals/pending/README.md", "# Pending\n\nLifecycle: `active`\n");
+      yield* writeBaseline([]);
+      const digest = yield* goalCompletionDeclarationDigest(manifest);
+      const time = DateTime.makeUnsafe("2026-10-06T01:00:00Z");
+      const verifiedCheck = (ref: GoalAcceptanceEvidenceRef) =>
+        GoalEvidenceCheck.make({ ref, outcome: "verified", observedHead: O.some("accepted-head"), detail: "Green" });
+      const receipt = GoalCompletionReceipt.make({
+        schemaVersion: "goal-completion-receipt/v1",
+        repository: "example/repo",
+        packet: "pending",
+        declarationDigest: digest,
+        acceptedDeclarationDigest: O.some(digest),
+        requiredChecks: O.some(
+          GoalRequiredCheckSnapshot.make({
+            contexts: ["Lint"],
+            sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+            effectiveAt: time,
+            inventoryComplete: true,
+            mergeTimeInventory: O.some(
+              GoalMergeTimeInventory.make({
+                source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
+                ruleSuiteId: 1,
+                ref: "refs/heads/main",
+                afterSha: "merge-result",
+                pushedAt: time,
+                result: "pass",
+                ruleSources: [
+                  GoalMergeTimeRuleSource.make({
+                    sourceType: "ruleset",
+                    rulesetId: O.some(42),
+                    name: O.some("main"),
+                    enforcement: "active",
+                    requiredStatusChecks: O.some("pass"),
+                    survives: true,
+                    version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
+                  }),
+                ],
+              })
+            ),
+          })
+        ),
+        requiredCheckFacts: [
+          GoalRequiredCheckFact.make({
+            context: "Lint",
+            head: "accepted-head",
+            checkRunId: O.some(1),
+            conclusion: "success",
+            outcome: "verified",
+            source: "check-run",
+          }),
+        ],
+        finalPullRequest: 7,
+        acceptedHead: O.some("accepted-head"),
+        merge: O.some(
+          GoalMergeResult.make({
+            mergeCommit: "merge-result",
+            tree: "merge-tree",
+            mergedAt: time,
+            method: O.none(),
+            baseRef: "main",
+          })
+        ),
+        evidence: [
+          verifiedCheck(
+            GoalAcceptanceEvidenceRef.make({ kind: "hosted-required-checks", ref: "required", gating: true })
+          ),
+          verifiedCheck(verdictRef),
+        ],
+        nonRequiredReds: [],
+        subClaims: [],
+        outcome: "verified",
+        verifiedAt: time,
+      });
+      yield* writeProjectFile(
+        ".beep/goals/completion-receipts.ndjson",
+        `${yield* encodeGoalCompletionReceiptJson(receipt)}\n`
+      );
+      const output = yield* captureOutput(
+        runGoalsCommand(["doctor"]).pipe(
+          Effect.provideService(
+            GoalCompletionIo,
+            GoalCompletionIo.of({
+              git: Effect.fn("GoalsDoctorTest.adoptionGit")(() => Effect.succeed("git@github.com:example/repo.git")),
+              github: Effect.fn("GoalsDoctorTest.adoptionGitHub")(() => Effect.die("offline adoption used GitHub")),
+            })
+          )
+        )
+      );
+      // Proof alone never closes the packet: the note says so and the advisory names the adoption command.
+      expect(output).toContain("[goals:doctor] note: pending: completed-retained (verified via #7, adoption pending)");
+      expect(output).toContain("pending [closeout-adoption-pending]");
+      expect(output).toContain("bun run beep goals set-status pending completed-retained");
+    })
+  );
   it.effect("stored receipts name a known red and unreadable merge facts plainly", () =>
     Effect.forEach(
       [
@@ -432,7 +545,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           lifecycle: "completed-retained",
           completionGate: { ...COMPLETION_GATE, pullRequests: [{ number: 7, role: "final" }] },
         });
-        yield* writeProjectFile("goals/typed/ops/manifest.json", yield* encodeGoalManifestJson(manifest));
+        const encodedGoalManifestJson2 = yield* encodeGoalManifestJson(manifest);
+        yield* writeProjectFile("goals/typed/ops/manifest.json", encodedGoalManifestJson2);
         yield* writeProjectFile("goals/typed/README.md", "# Typed\n\nLifecycle: `completed-retained`\n");
         yield* writeBaseline([]);
         const digest = yield* goalCompletionDeclarationDigest(manifest);
@@ -502,7 +616,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         lifecycle: "completed-retained",
         completionGate: { ...COMPLETION_GATE, pullRequests: [{ number: 7, role: "final" }] },
       });
-      yield* writeProjectFile("goals/typed/ops/manifest.json", yield* encodeGoalManifestJson(manifest));
+      const encodedGoalManifestJson3 = yield* encodeGoalManifestJson(manifest);
+      yield* writeProjectFile("goals/typed/ops/manifest.json", encodedGoalManifestJson3);
       yield* writeProjectFile("goals/typed/README.md", "# Typed\n\nLifecycle: `completed-retained`\n");
       yield* writeBaseline([]);
       const digest = yield* goalCompletionDeclarationDigest(manifest);

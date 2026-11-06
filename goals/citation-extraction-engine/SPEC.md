@@ -186,8 +186,10 @@ requires a reviewed schema.
   source anchor, exact matched text, component anchors, and typed warnings.
 - `CitationResolution`: tagged `Resolved | Ambiguous | Unresolved` outcomes
   using brand-separated IDs, never array positions.
-- `CitationDocument`: mentions, authority groups, references, and resolution
-  relationships. It is the sole encoded owner of group membership.
+- `CitationDocument`: verified mentions, detached semantic objects, authority
+  catalog, ordered resource groups, shared member-list nodes and per-mention
+  resolution decisions. Lists alone own ordered group membership, including
+  empty presence and repetitions; decisions do not imply final assignment.
 - `CitationEngineInput`: server-only source identity/text plus schema-defined
   operation options.
 - `CitationEngineReport`: deterministic counts/versions/safety decisions and
@@ -289,7 +291,7 @@ const bluebook = S.decodeEffect(BluebookFromFullCitation)(citation)
 Its reverse call
 `S.encodeEffect(BluebookFromFullCitation)(bluebook)` returns a semantically
 equivalent `FullCitation.Type`. Unsupported decoded forms fail with a typed
-schema issue through `SchemaTransformation.transformOrFail`; encode may not
+schema issue through `SchemaTransformation.transformEffect`; encode may not
 manufacture missing legal data. Dtslint must prove both exact calls and their
 inferred Effect types.
 
@@ -546,6 +548,114 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 edition inference:** select built-in source edition references
+  without deduplication, preserve prior guesses when no unique choice exists,
+  and read the current calendar per date predicate. Capture configured Clock
+  and zone at installation; use the authenticated owner for date payloads and
+  retain Python datetime year prefixes. Do not replace source precedence with
+  a fallback-after-filter strategy or get_year's import-time bound. Reversal
+  removes this private adapter and reopens superclass selection; full class
+  composition and custom protocols remain required. See
+  `history/evidence/2026-11-03-edition-inference.md`.
+
+- **2026-11-03 law metadata composition:** return owned source-native field
+  updates under existing operation/native admission and one invocation budget.
+  Each call owns a fresh Scope; the captured dependency Context excludes the
+  outer Scope. Reuse an installed budget only when its ceiling is compatible;
+  otherwise make a fresh per-call owner. Authenticate exact source law/year
+  patterns and retain calendar state without a request mode. No partial patch
+  is returned on failure. Reversal removes this private compositor and restores
+  the descriptor copier's former private name; it reopens helper composition
+  and does not waive edition/public-engine duties. See
+  `history/evidence/2026-11-03-law-metadata.md`.
+
+- **2026-11-03 composed parent text budget:** use one invocation-owned Effect
+  Ref reservation service for parent-owned text allocations, captured by stage
+  factories. Allocation reservations survive caller transaction rollback and
+  are not reset by later caller contexts. Preserve separate pattern/transport
+  ceilings and standalone behavior. Unicode reserved preparation preflights
+  immutable borrowed input before copying and revalidates owned output. Keep
+  source calendar capture separate from private per-invocation installation.
+  Reversal removes composed reservation hooks and restores the prior context
+  copy-before-cumulative-check behavior, reopening the documented safety gap.
+  Whole engine adoption and physical-memory proof remain open. See
+  `history/evidence/2026-11-03-composed-text-budget.md`.
+
+- **2026-11-03 metadata strings:** preserve native comma/space-only pincite
+  cleanup and parenthetical balance scanning, including the source's early
+  return before year filtering. Reuse the existing Effect context matcher and
+  worker for exact YEAR_REGEX; preflight retained input and its additional
+  copies before native admission. The final Layer still owns source pattern
+  installation and whole-engine accounting. Reversal removes the private
+  adapter and corpus, reopening these required helper behaviors without a waiver.
+  See `history/evidence/2026-11-03-metadata-strings.md`.
+
+- **2026-11-03 metadata year:** preserve native Python integer grammar using
+  existing frozen Unicode facts and shared Effect collections, with bounded
+  accumulation above the largest source-valid date ceiling. Capture the source
+  import-time year using Clock and CurrentTimeZone at installation; methods
+  remain R=never. The live Layer still owns local-zone and installation-lifetime
+  integration. Reversal removes this private adapter and restores the resolver's
+  prior inline decimal map; it reopens year parity rather than granting a waiver.
+  See `history/evidence/2026-11-03-metadata-year.md`.
+
+- **2026-11-03 context matching:** compose native context preparation with the
+  existing Effect RPC worker and source V0 descriptors; preserve both exact
+  source anchors and complete native captures. Include the extra worker context
+  copy in the receiving allocation budget before admission. Lower nullable
+  capturing zero-or-one repetition to ordered alternation to preserve empty
+  participation, with independently executed greedy/lazy source controls.
+  Reversal is private module removal and restoring the prior lowering; it
+  would reopen the documented capture mismatch, not justify a parity waiver.
+  See `history/evidence/2026-11-03-context-matching.md`.
+
+- **2026-11-03 verbose grammar:** parse original native words with contextual
+  source-engine skipping, keeping fingerprints and raw-pattern limits intact.
+  Share the closed 0/2/64/66 flag schema with the worker. Preserve the canonical
+  artifact's narrower observed flags and reject unfinished V0 fuzzy prefixes
+  instead of silently interpreting them as literals. Retain source errors,
+  profiles and matching observations plus the complete upstream license.
+  Reversal is an ordinary revert of this private parser/profile change; no
+  public completion contract or semantic waiver changes. See
+  `history/evidence/2026-11-03-verbose-regex-grammar.md`.
+
+- **2026-11-03 source regex identity:** capture the exact source engine at
+  server construction and require it explicitly in child startup. Preserve
+  existing CPython defaults; freeze regex V0 character, lexer whitespace and
+  ASCII folding observations separately. Reuse the existing Effect RPC and
+  process owner. Reverse with a normal revert of this private profile and its
+  generated observations. Verbose parsing and other engine profiles remain
+  required, with no new semantic waiver. See
+  `history/evidence/2026-11-03-source-regex-engine-identity.md`.
+
+- **2026-11-03 nullable single matching:** extend the existing Effect RPC worker
+  for empty search/match results, preserving exact quotas, bounded frames and
+  acknowledged retirement. Keep nullable iterator advancement unqualified until
+  its Python empty/nonempty behavior is implemented. Both pinned engines execute
+  the retained synthetic controls; their Unicode character and folding profiles
+  remain distinct required work. Reverse with a normal revert of this private
+  worker profile and its tests; no public contract or semantic waiver changes.
+  See `history/evidence/2026-11-03-nullable-single-regex.md`.
+
+- **2026-11-03 native context preparation:** preserve source word scanning and
+  post-append 300-Python-point truncation through Effect control flow and the
+  existing native Unicode owner. Intercepting the source search proves context
+  preparation only; third-party regex execution remains required. Preserve
+  exact generated corpus bytes with a narrow formatter exclusion and refresh
+  the identity profile through its canonical writer. Reverse by reverting the
+  private planner, its fixture and exact exclusion, then regenerating the
+  profile. See `history/evidence/2026-11-03-native-token-context.md`.
+
+- **2026-11-03 built-in extraction dispatch:** reuse the authenticated frozen
+  edition owner for source labels and Effect collections for source-class
+  priority. Preserve actual source lookup order, token indices and explicit
+  unknown-source failure. Full context/metadata/reference/filter behavior stays
+  required. The exact generated token-dispatch fixture preserves one vector per
+  line through its formatter exclusion and authenticated byte check. Revert
+  this private planner and exact fixture exclusion to reverse the change;
+  no public completion contract changes. See
+  `history/evidence/2026-11-03-token-extraction-dispatch.md`.
+
 - **2026-07-29 capability override:** “port” means 1:1 observable capability,
   not a greenfield subset and not 1:1 source architecture.
 - **2026-07-29 behavioral oracle:** pinned official Python eyecite is normative
@@ -564,8 +674,842 @@ instead of silently splitting delivery or weakening scope.
 - Earlier decisions limiting completion to the narrow v1 forms or preserving
   existing eyecite-ts-shaped values unchanged are superseded.
 
+- **2026-10-28 prerequisite admission:** public source/anchor and vocabulary
+  contracts are present and pass focused consumer tests; exact symbols,
+  versions and approved adaptations are recorded in
+  `history/evidence/prerequisite-compatibility.md`. The dependency hold is
+  cleared; P0 accounting and safety gates still block P1.
+- **2026-10-28 source isolation:** preserve the shared reference checkouts and
+  execute exact pins in detached cache worktrees. This is reversible by
+  removing those task-owned worktrees after retaining required evidence.
+- **2026-10-28 donor baseline environment:** the user authorized both donor
+  installs. An npm-configuration incompatibility is isolated process-locally
+  with install scripts disabled; workstation and donor configuration stay
+  intact. Remove the environment override to reproduce the initial failure.
+
+- **2026-10-28 Effect API adaptation:** the checked Effect 4.0.6 source
+  exposes `SchemaTransformation.transformEffect` for fallible transforms;
+  `transformOrFail` is absent. Use the current API with typed schema issues,
+  preserving every information/directional law and exact Bluebook call proof.
+  The byte-preserving oracle fixture codec proves this boundary with encode
+  rejection tests. This is an API spelling adaptation, not a parity waiver;
+  reverse it only if a future pinned Effect version changes that API.
+
+- **2026-10-28 oracle environment:** freeze `PYTHONHASHSEED=0` and the
+  oracle clock date in operation corpus metadata. Unseeded runs changed
+  set-derived tokenizer configuration order without changing observed stage
+  outputs. Pinning interpreter inputs preserves actual seeded execution rather
+  than sorting an executable configuration after the fact. Remove the startup
+  gate only with an explicit, re-proved oracle environment update.
+
+- **2026-10-28 representation normalization:** exact/variation/all-edition
+  candidate bags are unordered ambiguity data. The oracle merges them through
+  sets and selects an edition only when one candidate remains. Normalize these
+  bags by artifact identity while retaining every candidate, multiplicity,
+  selected edition and decision. Six changed case pairs prove no other value
+  differs in two seeded runs; the retained receipt is
+  `history/evidence/edition-candidate-order.json`. Restore raw bag order only
+  with a new declared comparison rule and deterministic oracle proof.
+  **2026-10-29 qualification:** actual law/journal ResourceCitation hashing
+  stably sorts editions by abbreviation. Distinct editions with tied
+  abbreviations retain their relative order and can change the resource hash.
+  The deterministic counterexample and revised rule are recorded in
+  `history/evidence/2026-10-29-publication-resource-hashes.md`. Candidate-bag
+  normalization is representation-only; retain raw order separately wherever
+  observable hashing requires it. Sorted evidence bags cannot reconstruct
+  discarded raw order. Exact runtime equality supersedes the older bag-based
+  authority fallback for these cases; adapter/corpus integration remains open.
+
+- **2026-10-29 independent edition state:** source all_editions mutations
+  retain edition_guess, including after clearing the candidate list. The
+  provisional semantic codecs therefore retain selectedEdition independently
+  of candidate membership. Actual case/law/journal publication snapshots and
+  mixed dictionary behavior are recorded in
+  `history/evidence/2026-10-29-mixed-resource-objects.md`. Artifact-kind/content
+  validation remains at the engine boundary; structural semantics do not
+  attest parser output. This correction grants no semantic parity waiver.
+
+- **2026-10-28 vocabulary vintage separation:** consume current public stable
+  court/case-reporter IDs while preserving reporters-db 3.2.53/courts-db 0.10.22
+  parser metadata, edition dates and court selection order. Three exact legacy
+  tuple transitions and all metadata differences are retained in
+  `history/evidence/2026-10-28-vocabulary-version-mapping.md`. Law/journal
+  publications remain their canonical legal citation families; no synthetic
+  public ReporterId is issued. A shared current reporter ID must not collapse
+  frozen authority groups: the CIT probe retains two separate resources for
+  the two legacy corrected reporter spellings. Reverse only through a reviewed
+  parser-data
+  version change and regenerated compatibility/parity proof.
+
+- **2026-10-28 safety policy:** freeze the 29-field numeric/Duration ceilings
+  and explicit fixture in `CitationEngineLimits` / `CitationEngineEffectivePolicy`.
+  Select parent-owned force-stoppable processes for native regex execution;
+  an Effect timeout plus the standard worker's five-second graceful finalizer
+  is insufficient. Twelve Node/Bun controls confirm parent responsiveness and
+  owned-child cleanup, with no pattern-family approval implied. The detailed
+  counter/queue/deadline/cleanup contract is retained in
+  `history/evidence/2026-10-28-limits-isolation-contract.md`. Reverse only with
+  a reviewed policy-version change and equivalent bounded execution proof.
+
+- **2026-10-28 portable gate composition:** the package command defaults to
+  completion mode and sends `--complete` to ledger and donor validators.
+  Explicit `--audit` checks the available evidence components without
+  asserting parity. Require fixed repository verifier entrypoints for
+  divergences, regex benchmarks, supplemental probes and target parity; their
+  absence fails completion. Fixtures never supply executable commands. The
+  future entrypoints take `--fixtures` and `--evidence` paths, must independently
+  validate their full proof scope, and must reject absent or incomplete proof.
+  Their implementations remain open; adding files alone is not evidence.
+  Reverse by changing the fixed composition with equivalent rejection controls.
+
+- **2026-10-28 supplemental extraction:** integrate 13 focused probes as an
+  eighth portable audit component, with exact Python/UTF-16 coordinates,
+  equality and authority membership. Keep the CIT identity-merger observation
+  linked to its original evidence. The pinned oracle classifies the probed
+  U.S.C. and C.F.R. examples as `FullLawCitation`; neither is an extension.
+  The supplemental verifier now exists but rejects completion while its target
+  proof or five named coverage families remain open. Divergence, benchmark
+  and exhaustive target verifiers remain absent. Reverse or expand this
+  projection through the authored plan, schema and equivalent controls.
+
+- **2026-10-28 supplemental text revision:** advance the test-only bundle to
+  `citation-supplemental-extraction/v2` for 26 cleaning/annotation probes and
+  source-bound mapping traces. Preserve the 13 extraction probes. Zero-width
+  annotation points are validated through nonempty prefix conversion and are
+  never constructed as verified ranges. The oracle can choose a repeated
+  source occurrence or collapse a deleted occurrence to an empty insertion.
+  These results remain explicit fidelity/anchoring review obligations before
+  target readiness; no divergence or weakened raw-anchor contract is approved.
+  Reverse through a schema/version and corpus migration with equivalent proof.
+
+- **2026-10-28 warning evidence:** require explicit warning arrays for every
+  supplemental text observation, including empty arrays; preserve logger,
+  severity, template and arguments separately. Advance the fixture to v3 and
+  the text plan to v2. The skip-mode warning is checked oracle data, not an
+  instruction to log raw citation text in the engine. Target diagnostic
+  translation/redaction remains required. Public consumer tests retain the
+  ambiguous-locator and nonempty-anchor boundaries. Reverse only through a
+  schema/corpus migration with equivalent warning and anchor controls.
+
+- **2026-10-28 divergence accounting:** retain eleven source-bound
+  representation laws and four case-bound fidelity questions in the test-only
+  `citation-divergences/v1` ledger. Require each planned focused test identity
+  and source-bound receipt before its row can complete; the execution producer
+  and target tests remain future work. No semantic waiver variant exists.
+  Cataloguing a law does not authorize dropping a mismatch. The ninth audit
+  component checks accounting; final target comparison still must reject every
+  difference without a proved applicable rule. Reverse or extend through the
+  reviewed plan, schema and equivalent corruption controls.
+
+- **2026-10-28 regex benchmark contract:** freeze twelve adversarial recipes
+  at ten exact UTF-16 sizes, two warmups, five samples and the strict
+  greater-than-3.5 ratio rule for two consecutive doublings. Native control
+  execution is serialized in owned child processes with a one-second lifetime
+  watchdog and confirmed cleanup; this maintainer guard includes startup and
+  does not replace production policy deadlines. The source-only projection
+  excludes mutable workflow/proof fields, avoiding circular receipt hashes.
+  Every family/instance approval remains open pending review, routing, work
+  caps, positive cases and full geometric results. Reverse through a versioned
+  protocol/corpus migration with equivalent positive and negative controls.
+
+- **2026-10-28 identity foundations:** separate versioned `cm1:` occurrence
+  and `ca1:` authority tokens, each with the public shared `Sha256Hex`
+  constraint and a distinct brand. The schema validates format only; source,
+  engine, anchor and semantic-key digest production remains unimplemented.
+  Shared persisted `LawPractice.CitationId` stays distinct. A frozen migration
+  surface and compiler-based consumer scan retain review findings before any
+  legacy removal. Limited P1 foundations overlap unfinished P0 target proof
+  after the explicit prerequisite and limits holdpoints pass; neither phase
+  is complete. Reverse these additive tokens before consumers bind them, or
+  use a versioned migration once producers exist; never weaken anchor or
+  historical authority distinctions to preserve a token.
+
+- **2026-10-28 occurrence digest protocol:** the private cm1 producer requires
+  a genuine prerequisite `VerifiedTextAnchor`, hashes an ordered JSON tuple
+  with every source identity field, the engine artifact digest, semantic
+  discriminant and exact UTF-16 range/quote, and emits only a mention token.
+  Structural receipts require source re-verification. Neither stage ordering
+  nor grouping enters identity. Internal failures retain only a finite reason;
+  the future engine boundary must map them into its closed union. The engine
+  artifact producer and semantic-union integration remain unfinished. Any
+  protocol/input change requires a new token version and migration; do not
+  silently reinterpret cm1. Authority-key generation remains separately open.
+
+- **2026-10-28 canonical law rebaseline:** replace the two provisional
+  statute/regulation shapes with one `FullLawCitation` in the existing union.
+  Preserve canonical legal component strings, missing versus explicit-null
+  keys, textual metadata and edition artifact identities; C.F.R.'s numeric
+  prefix remains `chapter` while U.S.C.'s remains `title`. The oracle defines
+  component names as non-exhaustive, so the schema retains unknown legal
+  component names instead of silently discarding them. Keep publication kind
+  validation and artifact resolution at the engine boundary. Remove the
+  unused statute coordinate model and independent type literal lists. No
+  residual donor behavior is accepted or rejected by this schema migration.
+  Reversal requires another evidenced semantic mapping and consumer migration,
+  not compatibility aliases or a parallel hierarchy.
+
+- **2026-10-28 canonical model rebaseline:** replace the recursive case/Id/
+  supra/short-case cluster and provisional journal with source-backed semantic
+  forms, adding canonical named reference and unknown branches to the existing
+  union. Reuse component, publication and locator/date schemas across forms.
+  Case editions retain historical refs alongside versioned public reporter
+  identities. Courts are either versioned public identities or explicit
+  unmapped data; source lookup and compatibility verification remain engine
+  duties. Preserve textual metadata and name enrichment without embedded
+  citations, telemetry or source coordinates. Remove the old ad-hoc formatter;
+  lawful structured Bluebook codecs remain an open P1 requirement. Reversal
+  requires an evidenced field/consumer migration, not aliases or recursion.
+
+- **2026-10-28 provisional contract retirement:** remove the remaining mixed
+  base, local occurrence ID, generic warning/resolution bags, duplicate
+  span/locator models, embedded relationship copies and unproved extension
+  stubs. Keep all donor obligations open until their final evidenced
+  disposition. Preserve the existing non-citation `SourceRef` selector by
+  relocating `TextQuote` with its encoded shape and annotation identity intact;
+  it is unverified review data, not a citation anchor or locator replacement.
+  New mentions and document relationships must use the prerequisite proof and
+  role-specific IDs. Reintroduction requires the target ownership contract and
+  source/regression proof, not recovery of a provisional public alias.
+
+- **2026-10-28 verified mention composition:** compose semantic citations with
+  genuine prerequisite anchor proofs and role-specific cm1 identity. Persist
+  only the explicit versioned structural receipt. Restore against trusted
+  expected source/engine identity and raw text, reverify all anchors and
+  recompute cm1. Snapshot mutable inputs before hashing. Neither receipts nor
+  mention IDs authenticate semantic metadata. Named components share a source;
+  optional footnote zones contain the primary token. Detection, warning
+  emission, document relationships and full runtime budgets remain unproved.
+  Reversal requires equivalent proof and persistence boundaries with consumer
+  migration, not decoding structural receipts as opaque runtime capabilities.
+
+- **2026-10-28 authority digest protocol:** produce ca1 from a versioned ordered
+  semantic key. Ordinary cases use volume/page and frozen corrected reporter;
+  missing-page cases bind the verified occurrence ID to preserve conservative
+  uniqueness. Law/journal keys retain all legal groups and the complete edition
+  bag with multiplicity, under the declared bag-order normalization law.
+  Metadata and current reporter aliases do not collapse historical authority
+  distinctions. A trusted artifact adapter supplies the selected spelling;
+  the private helper checks reference coherence but does not authenticate
+  adapter content or occurrence identity. The live Layer must establish both.
+  Focused resource equality and protocol vectors are proof of this helper,
+  not extraction or full resolution parity. Protocol changes require a new
+  ID version and migration rather than a silent ca1 reinterpretation.
+
+- **2026-10-28 document relationship ownership:** make resolved mention-to-
+  authority edges the sole encoded authority membership. Authority records
+  reference a full mention representing the resource; derive ordered members
+  from document mentions and resolved edges. Ambiguous candidates are not
+  membership. Require one outcome per mention, unique IDs, closed references,
+  coherent source/engine identity and full representatives resolved to their
+  own authority. Reuse the same graph check for structural document receipts;
+  those receipts cannot issue runtime anchor proofs. Whole-document server
+  production/restoration and resolver correctness remain open. Reversal needs
+  equivalent coherence/persistence proof and a consumer migration, not a second
+  member array or mention-level group pointer.
+
+- **2026-10-28 whole-document persistence:** snapshot all structural document
+  data and trusted edition descriptors before hashing. Project only after
+  recomputing every occurrence ID and every resolved full default authority
+  key, including non-representative members. Restore against one verified
+  canonical source capability shared by every anchor; recheck source/engine,
+  occurrence IDs, full authority keys and final graph coherence. Keep failures
+  private and sanitized. Descriptor spelling, expected identity and installed
+  artifact authentication remain live Layer duties. These helpers do not
+  attest classification or short resolution. Canonical custom resource keys
+  still need explicit ports/policy and proof; no behavior is rejected here.
+  Reversal requires equivalent source/identity/mutation proof, not trusting
+  structural receipts as capabilities or checking only representatives.
+
+- **2026-10-28 resolver text fidelity:** preserve the exact strip_punct
+  substitution order and frozen Python 3.11.15 / Unicode 14 digit, decimal and
+  whitespace facts. Do not substitute JavaScript whitespace or numeric
+  conversion. Use arbitrary-precision decimal comparison for Id. with the
+  canonical inclusive 150-page range and frozen 4,300-digit conversion policy.
+  Preserve missing/null page distinctions and source conversion/type failures
+  through sanitized private errors. Full resolver integration, boundary mapping
+  and regex-family safety remain open. Reverse only through a new oracle
+  baseline and equivalent Unicode/numeric/punctuation comparison evidence.
+
+- **2026-10-28 default resolver integration:** process verified mentions in
+  caller order with immutable pre-hash snapshots. Preserve first full resource
+  representatives, corrected reporter/volume matching, antecedent refinement,
+  exact all-metadata name matching and Id. reset/page rules. Retain ambiguous
+  candidates as data without membership. Preserve lazy reporter-field access:
+  missing-page identity and selected corrections do not require a raw reporter,
+  while an actual unselected short comparison may fail. Check basic published
+  count budgets without claiming full deadlines/isolation. The focused corpus
+  is semantic-context proof, not target extraction or exhaustive parity.
+  Custom resource ports/key policy and final boundary mapping remain open.
+  Reverse only through equivalent source/state/identity/budget evidence.
+
+- **2026-10-28 operation-bound resolution proof:** project every committed
+  default resolution observation through its source payload and immutable
+  edition hashes. Require the exact corpus digest, 30 unique observation IDs,
+  two sites, 94 mentions, all five default callbacks and all eight canonical
+  families. Compare source membership indices directly rather than copying
+  expected groups. Overlapping offsets from separately extracted fragments
+  require explicit constructed witness text for semantic-only evaluation;
+  original source coordinates remain unchanged and unproved by this lane.
+  Custom callback, helper/assertion, extraction and complete parity proof stay
+  open. Reverse only with equivalent provenance/no-drop/source-group checks.
+
+- **2026-10-28 custom resolver contract gap:** pinned callback probes show that
+  short/supra/reference/Id. callbacks can introduce resources without any full
+  mention. The current full-representative authority schema is therefore only
+  sufficient for the default path; do not force custom results into it or
+  claim custom-resource parity. Preserve the source observations and adapt
+  authority representation, key production, persistence checks and port state
+  together before enabling custom resolution. Callable mutation, falsy keys
+  and resource equality require explicit source-bound treatment; no divergence
+  or immutable-state substitution is approved by this observation. Reversal
+  is removal of the focused probe/evidence checkpoint; existing target behavior
+  and the canonical accounting rows remain unchanged.
+
+- **2026-10-28 general authority representative:** replace the provisional
+  `fullMentionId` field with `representativeMentionId`. Graph coherence requires
+  an existing mention resolved to the authority, without restricting its
+  citation family. This is representation of canonical custom-resource results,
+  not adoption of a TypeScript extension or proof of callback execution. Keep
+  resource identity verification at the engine/adapter boundary. The current
+  default persistence verifier requires a checked full-member key witness for
+  each group, independently of its representative kind. A group without that
+  witness fails with sanitized private `authority-key-unavailable` until custom
+  identity verification lands; every resolved full key remains rechecked.
+  Default resolution still selects its first full member. No source consumer
+  of the retired field exists outside this initiative. This unshipped schema
+  replacement carries no compatibility alias; reverse by reverting the schema,
+  producer, persistence guard and tests together. Resource-key policy, mutable
+  state ports and target callback proof remain open.
+
+- **2026-10-28 trusted resource bindings:** keep canonical fallback identity
+  unchanged and add a private external descriptor containing adapter-scope and
+  equality-key fingerprints. Its ca1 preimage uses the distinct
+  `external-resource` domain. The adapter owns host equality normalization;
+  fingerprints do not attest equality or truthiness. Keep expected membership
+  out of the receipt, captured from the trusted adapter, and require exact
+  group coverage before overriding a full member's default key. Snapshot all
+  binding data before hashing. No public request field authorizes this trust
+  input. Continue rejecting unknown keys and validating source, anchors,
+  occurrence IDs and all unbound full keys. This implements a private identity
+  boundary, not callback parity or a semantic waiver. Reverse by removing the
+  descriptor/helper and binding seam together; the empty-binding default path
+  remains the regression gate. Host normalization, first-value/truthiness and
+  mutable callback state need their own source-bound proof.
+
+- **2026-10-28 private callback session:** share verified input preparation
+  with the default path and inject five captured callbacks through a private
+  Context.Service. Preserve actual last results, falsy prior-full entries,
+  first key presentation and callback-boundary list/dictionary updates. Keep
+  resource identity separate from truthiness/presentation. The oracle's Id.
+  first-member cast is not a runtime full-only restriction; the private pin
+  helper accepts canonical non-full members too. The explicit transition
+  protocol matches all 18 focused source contexts and 53 events using test
+  adapters. It does not yet prove arbitrary aliases/model mutation or publish
+  production defaults/public ports. Keep transient groups, including empty or
+  mutable memberships, until final projection has its own lawful proof.
+  Reverse the session, shared preparation refactor and pin-input widening
+  together, retaining equivalent default and source-trace regression proof.
+
+- **2026-10-28 production callback defaults:** construct all five defaults
+  from one prepared operation and capture Crypto/work services in methods with
+  R = never. Dispatch and matching share one operation-owned counter, whose
+  ceiling is captured and must match the prepared policy. Preserve precise
+  finite failure reasons while dropping extra callback payloads. Run the
+  prepared session after one verification rather than verifying twice. The
+  production callbacks match all 76 default contexts and replace test-only
+  default logic in the 18 custom trace contexts. Keep the existing document
+  resolver until unified projection retains its richer outcome diagnostics;
+  retire the duplicate matcher in that integration. No full custom/host/alias
+  or bounded-runtime claim follows. Reverse factory/work integration together
+  while retaining equivalent source, concurrency, ceiling and default proof.
+
+- **2026-10-28 callback mutation requirements:** the pinned resolver preserves
+  empty groups, independent member order, repeated/cross-group members,
+  falsy/None dictionary keys, shared lists, retained dictionary aliases and
+  detached citation objects. Reopen provisional membership/projection
+  assumptions rather than normalize those values away. Ordered membership
+  and resolution decisions need distinct ownership within the document; a
+  single chosen edge per mention cannot be their sole representation.
+  Detached semantic objects must remain distinct from verified mentions and
+  receive no fabricated anchors/occurrence IDs. Live alias state belongs in
+  server implementation, not pure domain behavior. Ten final group-value
+  scenes are target-tested; all identity observations and six alias/detached
+  scenes remain open. No replacement graph or semantic waiver is approved by
+  this source checkpoint. Reverse the probe/test/evidence checkpoint together;
+  all sixteen scenes must enter final target proof before row promotion.
+
+- **2026-10-29 ordered document graph:** supersede the provisional v1 rule
+  deriving membership from decisions. Receipt v2 stores ordered resource
+  groups and separately identified member-list nodes. Multiple groups may
+  reference one list; repeated mention/detached references and empty listed
+  groups remain explicit. Detached citation objects use document-local object
+  tokens, never verified anchors or occurrence tokens. Authority examples are
+  optional references with no implied assignment. Structural closure does not
+  authenticate alias history, semantic classification or external equality.
+  Private persistence verifies exact trusted decision sets separately from
+  optional list identity/ordered members; unbound defaults require exact
+  default membership in mention order. Default list IDs substitute the cl1
+  namespace for their owning ca1 token within a document, without issuing any
+  source evidence. Structural codec tests preserve all sixteen frozen mutation
+  snapshots. This does not close live alias/detached execution, general host
+  normalization, production list/object identity issuers or final projection.
+  Reverse graph, persistence, tests and this checkpoint together if retired;
+  do not retain the v1 format as a competing public representation.
+
+- **2026-10-29 live callback dictionary:** replace Id. callback array-replacement
+  output with an operation-owned captured dictionary service. Its schema data
+  snapshots carry list slots; owned runtime handles preserve sharing and
+  retained lists across removal/clear. Custom callback factories capture the
+  service and all dependencies with R = never, including access retained by a
+  later full callback. Id. input group data is a fresh snapshot, not a mutable
+  host dictionary or a request function. This is the Effect service adaptation
+  of the callable interface, with known-input observations compared directly
+  against source. All thirteen known-input mutation scenes now match all
+  thirty events and final groups, including list slots and retained service
+  identity. Methods serialize asynchronous updates, verify handle ownership,
+  snapshot values, enforce bounded retained state and alias multiplicity, and
+  close/release state on success, failure or interruption. This does not prove
+  detached objects, arbitrary host/model mutation, public port capture,
+  production list-token issuance or final document diagnostics/projection.
+  Reverse runtime protocol, adapters, tests and this checkpoint together if
+  retired; do not keep array replacement as a competing dictionary path.
+
+- **2026-10-29 detached callback objects:** prior-context entries and group
+  members use the domain's explicit mention/detached references. The operation
+  owner registers detached semantic objects, snapshots their values, reuses a
+  token for the same registered object and distinguishes equal-but-distinct
+  objects. Its private cd1 preimage is the versioned citation-detached/v1 tag,
+  captured source identity, engine artifact and allocation ordinal. It is
+  document-local object identity, not content equality, a persisted entity or
+  a source capability. Semantic objects never receive fake cm1 tokens/anchors.
+  Default short/supra/reference/Id. helpers resolve semantic references through
+  the same captured owner; metadata lookup accepts the existing Citation union.
+  All sixteen frozen mutation scenes now match all thirty-eight events and
+  final groups, including detached prior-full replacement/append and detached
+  returned membership. Structural receipt proof remains separate. Prior-full
+  state still uses explicit list transitions; its retained-list alias identity
+  and arbitrary model mutation need further source/target proof before final
+  projection/public port publication. No exhaustive row is promoted here.
+
+- **2026-10-29 retained prior-full context:** eight further pinned scenes prove
+  one shared prior-full list across context callbacks, automatic full-pair
+  append through retained views, later full/Id. mutation of that same state,
+  and immutable pair identity independent of equal values. Move prior-full
+  state into the captured operation owner. Context outputs carry only their
+  resource result; mutations use owner methods, preserving a single live path.
+  Private pair slots distinguish nodes, preserve repeated references and
+  retain old pairs after replacement/clear. Snapshots expose data; adapters
+  retain the owner rather than mutable snapshot arrays. This is the same
+  Effect-service adaptation as the dictionary, not a request function or a
+  public Python-object hierarchy. All eight scenes match all thirty-one events
+  and final context/groups through production defaults. Fresh pinned replay
+  and eight portable corruption controls pass. General host/model mutation,
+  final diagnostics/document projection, public ports and full safety/parity
+  proof remain open; no exhaustive accounting row is promoted.
+
+- **2026-10-29 semantic mutation and live-key frontier:** add eleven pinned
+  semantic/default-resource mutation scenes. The operation owner now snapshots
+  initial semantics and accepts explicit schema-owned semantic writes. Default
+  helpers reread current semantics, including current Id./supra/short inputs;
+  final mention snapshots reflect the writes while preserving verified anchors
+  and cm1 inputs. Writes to a physical mention currently preserve its semantic
+  discriminant; unsupported class/tag mutation remains open, not waived.
+  Detached updates preserve their object token and aliases. Eight scenes using
+  stable string resources match complete event/semantic snapshots. Three
+  default-resource key scenes remain mandatory source counterexamples. A page
+  change after insertion can produce two dictionary entries for one resource
+  object; another page change retains one group. Preserve both outcomes and
+  live key/object/lookup history before closing custom resolution. The existing
+  immutable-artifact-reference law already forbids caching mutable resources;
+  no normalization, stable-key precondition or duplicate-group collapse is
+  approved by this checkpoint. Full safety/parity and final projection remain
+  open; no exhaustive row is promoted.
+
+- **2026-10-29 runtime dictionary backend:** pin CPython 3.11.15 general-key
+  table behavior underlying the observed mutable default-resource cases. The
+  private Effect backend uses current normalized 64-bit hashes, resource-object
+  handles, cached insertion hashes and separate insertion-entry identities.
+  Check object identity before cached-hash/equality, preserve deleted probe
+  markers, retain insertion order, and rebuild growth tables with stored hashes.
+  Bounded probes, captured comparison/work services, serialized operations and
+  typed errors do not add a Python runtime dependency. Eight source histories
+  now match all sixty-two results, equality-call traces and ordered entries.
+  CPython source/license hashes and PSF attribution are explicit. Full live hash
+  production, owner integration, reentrant comparison mutation and split or
+  Unicode-specialized tables remain outside this backend's proof. The three
+  mutable-key engine cases remain open; no normalization waiver or exhaustive
+  row promotion follows from isolated backend tests.
+
+- **2026-10-29 insertion-entry receipts:** receipt v3 separates cg1 insertion
+  identity from ca1 authority identity and cl1 member-list alias identity.
+  Distinct entries may reference the same authority without collapsing their
+  order or lists. Trusted resource bindings fix every expected entry's global
+  position, identity and complete list node. Unbound defaults still require
+  their deterministic single-entry graph. Per-entry getters preserve boundaries;
+  authority getters concatenate every matching entry with repetitions. All
+  three actual mutable-key callback scenes now preserve their final graphs
+  through codec and verified-source restoration under controlled out-of-band
+  expectations. Automatic session identity/decision/binding production remains
+  open; no parity or representation-law completion follows from this contract.
+
+- **2026-10-29 dispatch decision capture:** record each actual callback result
+  separately from the selected append destination and final membership. Final
+  session entries retain insertion slots; capture the stored key/list during
+  the original lookup rather than repeating native operations. Retain falsy,
+  None and removed-entry history, and refresh current presentations through
+  the owner before close. Eight pinned source histories and nineteen decisions
+  match exact hook traces and final groups. Unique-list observational evidence
+  does not prove shared-list selection. Public resolution translation and final
+  trusted identity/binding production remain open; no completion row advances.
+
+- **2026-10-29 issued-session document production:** seal actual dispatch data
+  behind its issued view and capture genuine anchor handles separately. Copies
+  cannot authorize projection; outward mutations do not alter issued history.
+  A captured pure descriptor port supplies resource labels while the producer
+  derives catalogs, decisions, ordered entries, list aliases and exact bindings.
+  Descriptor IDs do not replace native runtime comparisons. Node IDs bind source,
+  engine artifact, kind and slot, independent of random runtime resource scopes.
+  Non-None results remain decisions independently of membership; None records a
+  generic callback-unresolved reason unless a source branch is known. Eight
+  actual histories and three mutable-key scenes now restore automatic receipts.
+  Default registered descriptors, richer diagnostics and the live Layer remain
+  open; no exhaustive completion or semantic waiver follows.
+
+- **2026-10-29 canonical session descriptors:** capture owned Canonical/Host
+  origins inside issued snapshots. Derive private canonical labels from final
+  semantics, authenticated frozen editions and pinned Resource hashes. Three
+  case rows plus real law/journal rows match source-observed hash descriptors.
+  Mutable-key scenes restore identical receipts across independent owners.
+  Host presentation cannot select the canonical path; explicit host descriptors
+  remain required. Unavailable null-page identity inputs fail closed. The live
+  Layer, general host normalization and exhaustive completion remain open.
+
+- **2026-10-29 registered default resolution:** one captured private resolver
+  connects verified preparation, registered default dispatch and sealed document
+  production. All 76 committed contexts run through it, including 71 successful
+  receipt restorations and five closed source-error outcomes. A trusted optional
+  operation identity port carries controlled source null-page integers into the
+  sealed origins. It does not supply a production native allocator. Concurrent
+  replay and budget-failure recovery preserve operation isolation. Public Layer,
+  detailed diagnostics, native allocation and exhaustive proof remain open.
+
+- **2026-10-29 default branch observations:** bind actual default None-branch
+  evidence to its returned object and occurrence, then seal it into the session.
+  All 108 completed focused source decisions match target statuses/reasons;
+  five ambiguities retain exact candidate authority sets and restore receipts.
+  Independent replay retains 394 unchanged source-defined model hash/equality
+  calls. Custom None without issuance stays generic. Final descriptor collapse
+  rejects rather than fabricating two candidates; historical identity and general
+  host qualification remain open. No exhaustive completion or waiver follows.
+
+- **2026-10-29 literal cleaner primitives:** four private scans implement inline
+  and all whitespace, underscore runs and XML prefix removal. All 440 source
+  vectors and exhaustive single-code-point facts match; 135 immutable strings
+  retain complete values behind content hashes. Captured limits, Clock and
+  cooperative yields provide scoped count/deadline/interruption evidence. HTML,
+  custom/named composition, source maps and full family safety remain open.
+  No canonical capability is rejected and no completion row is promoted.
+
+- **2026-10-29 approved HTML safety exception:** direct human authorization
+  in ops/html-safety-exception.json permits CitationSafetyLimitExceeded for
+  native HTML parser resource exhaustion, discarding any partial value. The
+  public limit category is nativeHtmlParserResource and adds no policy knob.
+  This supersedes the historical hold. Ordinary parse diagnostics and errors
+  retain source behavior; a fatal diagnostic alone does not authorize failure.
+  Focused completion replay rejects three depth-limit outcomes and preserves
+  60 other successful outputs; six source errors remain separate obligations.
+  Native parser qualification and exhaustive parity remain open. This is an
+  explicitly approved safety contract exception, not a normalization law or
+  a completed canonical capability row. The source-only audit remains frozen.
+
+- **2026-10-31 HTML input preparation:** the private factory reproduces the
+  pinned PEP-393 buffer selection and bytes, Python whitespace wrapper decisions
+  and Unicode encoding-declaration rejection across 1,075 source decisions.
+  Count ceilings, Clock capture and cooperative scans have focused proof.
+  Complete worker framing, shared operation deadlines, native parsing and
+  lifecycle qualification remain open. The lxml BSD notice is retained. No
+  canonical completion, normalization law or new safety exception follows.
+
+- **2026-10-31 private HTML native core:** the pinned WASM asset and closed host
+  reproduce 1,097 source outcomes, including 840 exact successes, 238 declaration
+  rejections, 16 parser-error categories and the three approved resource failures.
+  Two clean builds are byte-identical. Runtime notices, closed imports, fixed
+  memory maximum and output bounds have focused proof. Synchronous evaluation
+  belongs in the pending owned worker; parent interruption, framing, shared
+  deadlines, full engine translation, maps and Layer qualification remain open.
+  No canonical completion or normalization law follows.
+
+- **2026-10-31 owned HTML worker:** the private Bun entrypoint and supervisor
+  provide bounded schema messages, captured Clock timers, bounded admission,
+  forced retirement and acknowledgement before permit reuse. Thirteen focused
+  tests cover real kernel values, busy native work, cancellation, queue/total
+  expiry, quarantine and late acknowledgement, owner-Scope shutdown, failed
+  launch, environment isolation and malformed traffic. Full JSON envelopes and
+  newlines count toward message ceilings before encoding/buffer growth. Global
+  engine admission, composed stage budgets, source maps, Layer wiring and
+  exhaustive engine qualification remain open. No canonical row advances.
+
+- **2026-10-31 HTML worker qualification:** all 1,097 frozen source outcomes
+  now pass through the actual owned process boundary. All 859 launched children
+  have independent exit probes; 238 declaration rejections launch no child.
+  ASCII and wide one-million-unit inputs, exact request/reply/output ceilings,
+  explicit failures and subsequent recovery pass. Both affected package gates
+  pass. Global composition must preserve the distinction between original
+  source limits and intermediate produced text. Cleaner composition, source
+  maps, public translation and Layer integration remain open. No canonical
+  completion or normalization law follows.
+
+- **2026-10-31 cleaner sequence source:** 1,155 source cases retain all named
+  sequences through length three, twelve original cleaning observations and 51
+  custom scenes. Lazy iteration, live registry/hash/equality dispatch, retained
+  callback state and non-string/identity-preserving values require explicit
+  server runtime contracts. The eleventh portable component seals this corpus;
+  no target composition or completion row follows. The existing approved native
+  safety exception stops subsequent callbacks after resource exhaustion.
+
+- **2026-10-31 direct dictionary reentrancy:** a private owner-aware semaphore
+  and source-equivalent key-table/insertion checks preserve thirteen direct
+  comparison-mutation histories, 26 outcomes and 49 ordered events. Original
+  histories remain unchanged. Repeated retries consume bounded work, and
+  interruption releases ownership. Unicode/split tables, forked callback
+  mutation, retained registry work ownership and cleaner integration remain
+  open. No canonical completion or normalization law follows.
+
+- **2026-10-31 private cleaner execution:** a captured lazy cursor/registry port
+  now preserves opaque host values and separate membership/get dispatch. Nested
+  calls share one reservation ledger and enclosing deadlines. Live handle fields
+  preserve ownership; decoded data does not issue authority. All 440 frozen
+  primitive text vectors pass through the actual reserved stage helpers. Global
+  admission, native/default owners, full custom replay, maps and public Layer
+  remain open; no canonical completion or normalization law follows.
+
+The private cleaner ledger now lends exclusive remaining output capacity to
+captured bounded producers and settles original live charge tickets. Ordinary
+reservations wait until producer cleanup completes; empty output is allowed at
+zero remaining capacity. This does not complete native stage integration or
+global process ownership. See
+[capacity evidence](./history/evidence/2026-10-31-cleaner-capacity.md).
+
+- **2026-10-31 native cleaner stage:** the captured HTML worker now borrows the
+  shared remaining production allowance, including zero, and returns schema-owned
+  stage text with original live tickets. Intermediate preparation preflights the
+  complete encoded job before payload allocation; native/host/protocol input
+  bounds agree on four times the existing produced-text maximum. Two clean
+  native builds match. Full cleaner ownership/replay, global admission, maps
+  and the public service/Layer remain open. See the native stage evidence.
+
+- **2026-10-31 byte cleaner and converter:** 589 byte parsing cases and 45
+  non-text controls pin detection, conversion, source failures and no coercion
+  hooks. Private bytes stage composition shares the existing text budget. The
+  native backend matches the oracle's GNU libiconv 1.17 version, full encoding
+  inventory and UTF-8 locale. Complete LGPL source, original relinking objects
+  and sixteen notices accompany reproducible assets. Full host/registry/identity
+  ownership and engine parity remain open; no rejection waiver is introduced.
+
+- **2026-10-31 cleaner value ownership:** a scoped original-handle arena and
+  concrete builtin invocation preserve 340 pinned text identity/subclass cases
+  and all 45 input-kind controls without coercion. Allocation metadata does not
+  bypass stage production charges. Complete live registry/cursor replay and
+  the public error translator remain open. See the cleaner value ownership evidence.
+
+- **2026-10-31 combined Unicode dictionary:** the captured classifier selects
+  internal exact-string comparison, conversion before non-exact insertion and
+  key-change restarts. Thirteen histories and forty full outcomes are retained.
+  Per-call probe guards share nested work; captured aggregate limits still apply
+  across calls. Production hashes and complete cleaner registry replay stay open.
+  The local server test runner caps fan-out at two workers and two concurrent
+  tests to reduce cold-loading contention without changing production limits.
+  Removing that package configuration override reverses the runner decision.
+
+- **2026-10-31 Python primitive hashes:** a captured service streams frozen
+  SipHash13 over bytes and canonical one/two/four-byte Unicode storage. All
+  1,056 vectors retain full values, including two surrogate-pair controls whose
+  native storage differs from the JSON text projection. Complete MIT attribution
+  is retained. Source Unicode ownership, object protocols and full registry
+  replay remain open; no text-equivalence normalization is introduced.
+
+- **2026-11-02 UTC remote qualification routing:** the workstation's traced
+  earlyoom stop ends heavy local retries. Qualification uses the exact source
+  snapshot in an isolated checkout on an existing admitted worker, with no
+  forwarded SSH agent or publication. The first worker reached its runtime
+  limit; controlled Go/Bun memory experiments also reached task and parent
+  memory-high thresholds. Their receipts are retained without claiming test
+  success. A newly idle worker provides an existing larger shared allowance;
+  the task uses 5.5 GiB memory-high, the same 6 GiB hard maximum, no swap,
+  200 percent CPU, 448 tasks and a one-hour runtime under its unchanged shared
+  7/8 GiB thresholds and 512-task ceiling. Bun 1.4.4 and Node 24.22.1 are
+  selected from existing installations. No shared guard, unrelated service,
+  production limit or verification scope is weakened. Gate completion remains
+  pending. Reversal requires live admission and the same source-bound full
+  gates on another suitable worker; these private job settings add no engine
+  runtime contract. See the Python primitive hash evidence for outcomes.
+
+- **2026-11-02 operator publication direction:** open the existing work as one
+  draft PR now, rather than holding publication for full verification or local
+  compute. Retain the passing focused checks and explicit pending full gates;
+  hosted CI is authoritative. Remaining implementation, exhaustive parity,
+  review and completion requirements continue in that PR. This supersedes the
+  prior publication-order hold, without changing behavior or acceptance laws.
+
+- **2026-11-02 Unicode composition source:** the report retains 2,016 histories and
+6,412 value snapshots, with actual CPython storage and retained identity checks.
+Twenty corruption controls and the twelfth portable audit component seal the
+source evidence. The current string-only owner loses adjacent surrogate code
+points after literal deletion, and HTML behavior depends on source storage
+width. Preserving this state through the owner, literal stages and native
+transport remains required; no normalization or new divergence is approved.
+See [Unicode source evidence](./history/evidence/2026-11-02-cleaner-unicode.md).
+
+- **2026-11-02 coordinated integration direction:** the operator assigns shared
+  repository-wide green checks to the Claude orchestrator. Merge main regularly,
+  continue engine implementation with focused checks, and publish ready work
+  without waiting for unrelated reds. Final acceptance requirements are retained.
+  Shared operation admission now captures one policy/Clock/Scope owner and the
+  cleaner operation adapter uses it; nested plans retain the outer permit and
+  ledger. See [operation admission](./history/evidence/2026-11-02-operation-admission.md).
+  Reversal removes these private adapters and their integration tests; it does
+  not alter oracle observations or public contracts.
+
+- **2026-11-02 registry inspection:** captured callbacks need bounded access to
+  the source registry's ordered live bindings. The private registry now exposes
+  a serialized R-never inspection effect with original key/value handles and
+  owner-derived builtin classification. It charges lifetime work, rejects
+  closed owners and calls no hash/equality hooks. It is not a wire/persistence
+  model. All controlled source replays compare their final registry snapshots;
+  native execution remains hosted. Reversal removes the read capability and
+  its dependent snapshot assertions without changing the frozen source corpus.
+  See [native controlled cleaners](./history/evidence/2026-11-02-native-controlled-cleaners.md).
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-extraction-engine`; add a `kind: decision` file there, never edit this block._
+
+### Continue unchanged goal after PR 2511 merged, 2026-11-05
+
+On 2026-11-05 the operator explicitly authorized continuing the unchanged citation-extraction-engine goal in a follow-up PR, starting with committed scanner and word-boundary work, after PR #2511 was squash-merged as 96a7698b63ed3e187981faf3b5b2d0663706ee91. This is a scoped exception to the one-PR delivery and reviewability stop condition. All parity, accounting, safety, proof, reflection, and lifecycle requirements remain binding; the prior PR merge does not prove goal completion. Preserve links to the prior PR and exact evidence, and publish ready changes using hosted CI.
+
+Lane `citation-extraction-engine`
+
+Reverse: Requires a new explicit operator instruction; this publication exception does not relax any acceptance requirement.
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
+
+The generated oracle evidence fixtures are excluded by exact path from
+spellcheck and formatting in the root tool configuration: `operation-cases`,
+`assertion-cases`, `source-inventory`, `canonical-cases`, `regex-inventory`,
+`typescript-extensions`, `vocabulary-mapping` and `regex-adversarial-corpus`
+JSON files below the eyecite
+fixture directory. The cleaner-pipeline report additionally retains complete
+source callback traces under its dedicated checker. The html-bytes report retains
+complete byte/non-text outcomes under ops/verify-html-bytes.py. The
+cleaner-identities report retains full text and object-identity observations
+under ops/verify-cleaner-identities.py. The unicode-dictionary report retains
+complete transition histories under ops/verify-unicode-dictionary.py. The
+python-hashes report retains full code points/native bytes under its dedicated
+ops/verify-python-hashes.py checker. They retain upstream legal spellings,
+source expressions
+or hash-bound payloads. Their separate schema/source/hash/coverage validators
+and corruption controls remain required. These exclusions do not apply to
+authored code or unrelated fixtures. Remove each exact exclusion when its
+artifact is retired.
+
+The cleaner-unicode report is also excluded by exact path. Its complete native
+storage, source code points and identity relations are validated by the portable
+Bun component and ops/verify-cleaner-unicode.py, including twenty corruption
+controls. Authored source and unrelated fixtures are not covered by this rule.
 
 | Exception | Scope | Owner | Removal condition |
 | --- | --- | --- | --- |
 | Python 3.12 baseline bootstrap | The pinned `pyahocorasick==2.0.0` fails to compile under this host's Python 3.12/C23 toolchain before tests run; Python 3.11 passes all official tests. | P0 source baseline | Record as environment evidence; oracle generation uses pinned Python 3.11 unless upstream dependencies are deliberately re-pinned in a separate baseline decision. |
+
+The verbatim CPython license block in THIRD_PARTY_NOTICES.md has scoped MD013
+and MD046 allowances to preserve upstream bytes and the notice's existing
+block style. Its digest is checked by the runtime dictionary source verifier.
+The proper Dutch institution names are allowed only for that notice path in
+_typos.toml; authored prose is still checked normally.
+
+### Full-law superclass metadata composition (2026-11-03)
+
+The private full-law stage runs the source law helper before edition selection,
+uses the resulting year, retains source exact/variation priority and prior guess
+behavior, and publishes a complete result only after both succeed. Candidate
+preflight precedes native execution; one admission/deadline covers both stages.
+The helper owns the existing text budget and fresh native Scope. Source-free
+errors retain no partial patch. This is a built-in model-state adapter; custom
+protocols and public engine lifetime integration remain separate obligations.
+
+### Resource reporter/page correction (2026-11-03)
+
+Private built-in resource correction retains missing/None/empty group states,
+source lookup short circuits and exact two-reporter page-marker membership.
+Outputs retain native Python points, use existing Unicode ownership and reserve
+before allocating. The shared authenticated edition router is also used by
+edition inference. General citation replacement and full rendering remain open.
+
+### Positive lookahead grammar (2026-11-03)
+
+The private data-only program can express positive lookahead with zero consumed
+width, retained capture identities and existing repetition profiles. Rendering
+adds only noncapturing structure around assertions. Raw identity/admission and
+process containment remain with existing owners. Source-invalid spaced openers
+reject. Other assertions, nullable finditer and unqualified repeated profiles
+remain explicit open work; journal metadata composition is a separate stage.
+
+### Full journal metadata composition (2026-11-03)
+
+The journal stage writes only its source pin, parenthetical and year fields,
+uses the helper's resulting numeric year for superclass edition selection, and
+publishes both stages together. Law/journal share source-authenticated pattern
+snapshots, owned context/captures, string/year processors, admission, deadlines,
+fresh native scopes and invocation budgets. Returned methods require no caller
+services. Untouched inherited metadata fields stay outside the journal patch.
+
+### Pre-case metadata (2026-11-05)
+
+The private pre-case stage preserves source guard order before word decoding,
+uses backward strings-only context and the authenticated PRE_FULL pattern, and
+publishes only the source antecedent/pin/start patch. No raw pin retains the
+prior pin-span start. Negative source starts remain unverified model state.
+The existing shared metadata operation owns timing, admission, fresh Scope,
+native captures and invocation budgets; no new transport or scheduler is added.
+Complete case composition and post-case helpers remain separate obligations.
+
+### Resource citation substitution (2026-11-05)
+
+The private resource stage replaces original reporter text before corrected
+page text, using original groups for both decisions. Native literal replacement
+retains Python-point boundaries, empty-search insertion and replacement bytes.
+Two cooperative passes measure and reserve canonical receiving output before
+allocation. Existing captured owner, deadlines and fresh/enclosing invocation
+budgets remain authoritative. Full metadata formatting remains open.
+
+### Built-in full rendering (2026-11-05)
+
+Private schema variants distinguish full case, short case, law and journal
+overrides, inherited matched-only rendering and separate Id./supra formatted
+operations. Only the four overrides invoke resource correction. Native metadata
+truthiness, punctuation and ordering remain source-specific. Existing native
+receiving/concatenation, captured edition/Clock owners and one fresh/enclosing
+invocation budget cover complete assembly. This private source adapter does not
+replace public semantic schemas or their separate transform laws.
+
+### Short-form pin extraction (2026-11-05)
+
+Private pin extraction resolves the source Python list index before matching,
+retains prefix point counts and computes span end from raw-pin right trim.
+Successful empty matches still produce a source end; negative values remain
+unverified model state. Source string-token errors follow parenthetical cleanup.
+Existing admitted metadata composition, native string processing, worker Scope,
+captured deadlines and invocation budgets own the operation. Full-case V0
+repeated-name patterns and final service integration remain separate duties.
+
+### V0 logical capture reuse (2026-11-05)
+
+Source logical group identities remain distinct from physical JavaScript
+capture occurrences. The compiler derives their bounded closing-order mapping;
+the worker applies it before the existing logical-result codec. Only the
+admitted non-repeated capture profile is qualified. Source bytes, fingerprints,
+group limits, timing and retirement remain owned by existing stages. Full-case
+pattern qualification uses an explicitly supplied existing 8192-unit policy;
+the default refusal and all absolute ceilings remain unchanged.

@@ -36,6 +36,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
@@ -49,17 +50,18 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   adaptGitKitError,
+  patientGit,
   RepoRunContext,
   removeGitWorktree,
   runRepoCommandCapture,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
-import { patientGit, runGitOutput } from "./GitExec.ts";
-import type { Git } from "@beep/git/Git";
+import { resolveYeetRev } from "./GitExec.ts";
+import type { MergeTreeResult } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
+import type { GitCommandErrorAdapter, GitKitError } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MergedPreview");
 
@@ -472,12 +474,48 @@ const gitCapture = Effect.fn("Yeet.mergedPreviewGitCapture")(function* (
 // The worktree add runs through `Git` (a patient instance: checking out a whole tree can outlive the
 // edge's 30 s timeout) and reads back exactly as `gitCapture` did: git's exit code and stderr, or
 // exit 128 with "git could not be executed" when git never ran (repo-cli-gh-git-consolidation W2b,
-// SPEC D-11). `merge-tree --write-tree` and `commit-tree` have no kit member and stay on the capture.
+// SPEC D-11). `merge-tree --write-tree` runs on `Git.mergeTree` (W7a, SPEC D-18); `commit-tree` stays
+// on the capture.
 const gitKitCaptureAdapter: GitCommandErrorAdapter<{ readonly exitCode: number; readonly output: string }> = {
   onSpawnFailure: () => () => ({ exitCode: 128, output: "git could not be executed" }),
   onNonZeroExit: ({ exitCode, output }) => ({ exitCode, output }),
   onTruncated: O.none(),
 };
+
+// A merge-tree run that failed reads as the capture's unavailable verdict: git's stderr or its exit
+// code, and "git could not be executed" when git never ran.
+const mergeTreeUnavailableAdapter: GitCommandErrorAdapter<YeetMergeTreeResult> = {
+  onSpawnFailure: () => () => YeetMergeTreeUnavailable.make({ detail: "git could not be executed" }),
+  onNonZeroExit: ({ exitCode, output }) =>
+    YeetMergeTreeUnavailable.make({
+      detail: Str.isNonEmpty(Str.trim(output)) ? Str.trim(output) : `git merge-tree exited ${exitCode}`,
+    }),
+  onTruncated: O.none(),
+};
+
+// `Git.mergeTree` reads `-z --name-only`, so conflicted paths arrive raw and once each; the messages
+// keep the capture's `CONFLICT`/`warning:` filter.
+const yeetMergeTreeResult = (result: MergeTreeResult): YeetMergeTreeResult =>
+  result._tag === "clean"
+    ? YeetMergeTreeMerged.make({ treeSha: result.tree })
+    : YeetMergeTreeConflicted.make({
+        paths: A.dedupe(result.paths),
+        messages: A.filter(result.messages, (message) => CONFLICT_MESSAGE_PATTERN.test(message)),
+      });
+
+const previewMergeTree = Effect.fn("Yeet.mergedPreviewMergeTree")(function* (
+  repoRoot: string,
+  baseSha: string,
+  headSha: string
+): Effect.fn.Return<YeetMergeTreeResult, never, Git> {
+  const git = yield* Git;
+  return yield* git.mergeTree(repoRoot, baseSha, headSha).pipe(
+    Effect.map(yeetMergeTreeResult),
+    Effect.catch((error: GitKitError) =>
+      Effect.succeed(adaptGitKitError(error, GitCommand.mergeTree(baseSha, headSha), mergeTreeUnavailableAdapter))
+    )
+  );
+});
 
 const addPreviewWorktree = Effect.fn("Yeet.mergedPreviewAddWorktree")(function* (
   repoRoot: string,
@@ -571,18 +609,17 @@ export const createYeetMergePreview = Effect.fn("Yeet.createYeetMergePreview")(f
   Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const worktreePath = yield* yeetMergedPreviewPath(context);
-  const headSha = yield* runGitOutput(context.repoRoot, ["rev-parse", context.head]).pipe(Effect.map(Str.trim));
-  const baseSha = yield* runGitOutput(context.repoRoot, ["rev-parse", context.base]).pipe(
-    Effect.mapBoth({
-      onFailure: YeetCommandError.new(
+  const headSha = yield* resolveYeetRev(context.repoRoot, context.head);
+  const baseSha = yield* resolveYeetRev(context.repoRoot, context.base).pipe(
+    Effect.mapError(
+      YeetCommandError.new(
         `yeet verify --merged could not resolve ${context.base}. Run git fetch origin first so the base ref exists locally.`
-      ),
-      onSuccess: Str.trim,
-    })
+      )
+    )
   );
 
-  const merge = yield* gitCapture(context.repoRoot, ["merge-tree", "--write-tree", baseSha, headSha]);
-  const treeSha = yield* Match.value(parseYeetMergeTreeResult(merge.exitCode, merge.output)).pipe(
+  const merge = yield* previewMergeTree(context.repoRoot, baseSha, headSha);
+  const treeSha = yield* Match.value(merge).pipe(
     Match.discriminator("status")("merged", (value) => Effect.succeed(value.treeSha)),
     Match.discriminator("status")("conflicted", (value) =>
       Effect.fail(
@@ -606,6 +643,7 @@ export const createYeetMergePreview = Effect.fn("Yeet.createYeetMergePreview")(f
   );
 
   const parents = baseSha === headSha ? ["-p", baseSha] : ["-p", baseSha, "-p", headSha];
+  // KEEP (D-03): single-consumer `commit-tree` plumbing outside the typed-introspection contract.
   const committed = yield* gitCapture(context.repoRoot, [
     "commit-tree",
     treeSha,

@@ -15,15 +15,19 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect("uses root when process is absent", () =>
       Effect.gen(function* () {
         vi.stubGlobal("process", undefined);
-        assertSome(yield* ConfigResolver.upwardWalk({ filename: "config" }).resolve, "/config");
-        assertNone(yield* ConfigResolver.workspaceRoot({ filename: "config" }).resolve);
-        assertNone(yield* ConfigResolver.systemEtc({ app: "absent", filename: "config" }).resolve);
+        const resolved = yield* ConfigResolver.upwardWalk({ filename: "config" }).resolve;
+        assertSome(resolved, "/config");
+        const resolved1 = yield* ConfigResolver.workspaceRoot({ filename: "config" }).resolve;
+        assertNone(resolved1);
+        const resolved2 = yield* ConfigResolver.systemEtc({ app: "absent", filename: "config" }).resolve;
+        assertNone(resolved2);
       })
     );
     it.effect("uses root when process has no cwd", () =>
       Effect.gen(function* () {
         vi.stubGlobal("process", {});
-        assertSome(yield* ConfigResolver.upwardWalk({ filename: "config" }).resolve, "/config");
+        const resolved3 = yield* ConfigResolver.upwardWalk({ filename: "config" }).resolve;
+        assertSome(resolved3, "/config");
       })
     );
     it.effect("skips etc on Windows, read from HostProcessPlatform rather than the process global", () =>
@@ -50,7 +54,8 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect("uses the host cwd when no cwd is supplied", () =>
       Effect.gen(function* () {
         vi.stubGlobal("process", { cwd: () => "/", platform: "linux" });
-        assertSome(yield* ConfigResolver.upwardWalk({ filename: "config" }).resolve, "/config");
+        const resolved4 = yield* ConfigResolver.upwardWalk({ filename: "config" }).resolve;
+        assertSome(resolved4, "/config");
       })
     );
   });
@@ -79,24 +84,29 @@ it.layer(markers, { timeout: "30 seconds" })((it) => {
   describe("workspace-root markers and a present system config", () => {
     it.effect("a package.json with workspaces marks the root, from a nested cwd", () =>
       Effect.gen(function* () {
-        assertSome(yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/npm/sub" }).resolve, "/npm/.apprc");
+        const resolved5 = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/npm/sub" }).resolve;
+        assertSome(resolved5, "/npm/.apprc");
       })
     );
     it.effect("pnpm-workspace.yaml marks the root", () =>
       Effect.gen(function* () {
-        assertSome(yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/pnpm" }).resolve, "/pnpm/.apprc");
+        const resolved6 = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/pnpm" }).resolve;
+        assertSome(resolved6, "/pnpm/.apprc");
       })
     );
     it.effect("a package.json without workspaces, or one that is not JSON, marks nothing", () =>
       Effect.gen(function* () {
-        assertNone(yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/plain" }).resolve);
-        assertNone(yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/broken" }).resolve);
+        const resolved7 = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/plain" }).resolve;
+        assertNone(resolved7);
+        const resolved8 = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/broken" }).resolve;
+        assertNone(resolved8);
       })
     );
     it.effect("systemEtc finds a config that exists under its root", () =>
       Effect.gen(function* () {
         const etc = ConfigResolver.systemEtc({ app: "app", filename: "config", dir: "/etc-root" });
-        assertSome(yield* Effect.provideService(etc.resolve, HostProcessPlatform, "linux"), "/etc-root/app/config");
+        const provideService9 = yield* Effect.provideService(etc.resolve, HostProcessPlatform, "linux");
+        assertSome(provideService9, "/etc-root/app/config");
       })
     );
   });

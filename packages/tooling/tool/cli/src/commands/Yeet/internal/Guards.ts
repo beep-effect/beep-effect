@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { writeTextFile } from "./ArtifactPaths.ts";
@@ -88,6 +88,26 @@ const optionGuardRules: ReadonlyArray<OptionGuardRule> = [
     rejects: (options) => options.stagedOnly && (options.pushOnly || options.reuseVerified || options.amend),
     message:
       "yeet publish --staged-only cannot be combined with --push-only, --reuse-verified, or --amend; those modes never create a fresh reviewed commit to scope.",
+  },
+  {
+    rejects: (options) => options.hostedProof && (options.mode !== "publish" || !options.pr),
+    message: "yeet open is a publish that always opens or reuses a pull request.",
+  },
+  {
+    rejects: (options) =>
+      options.hostedProof &&
+      (options.proveFirst ||
+        options.pushOnly ||
+        options.reuseVerified ||
+        options.amend ||
+        options.noEdit ||
+        options.stagedOnly),
+    message:
+      "yeet open pushes the committed HEAD without a local proof; it cannot be combined with --prove-first, --push-only, --reuse-verified, --amend, --no-edit, or --staged-only.",
+  },
+  {
+    rejects: (options) => O.isSome(optionFromNonEmpty(options.bodyFile)) && options.mode !== "publish",
+    message: "yeet --body-file is only valid for publish and open.",
   },
 ];
 
@@ -312,6 +332,7 @@ export const validateCommitMessage = Effect.fn("Yeet.validateCommitMessage")(fun
  */
 export const validateProofJobDetach = Effect.fn("Yeet.validateProofJobDetach")(function* (plan: boolean) {
   if (plan) return yield* YeetCommandError.make({ message: "--detach cannot be combined with --plan." });
-  if (O.isSome(yield* configStringOption("BEEP_YEET_JOB_ID")))
+  const configStringOption1 = yield* configStringOption("BEEP_YEET_JOB_ID");
+  if (O.isSome(configStringOption1))
     return yield* YeetCommandError.make({ message: "Cannot recursively --detach inside a proof job." });
 });

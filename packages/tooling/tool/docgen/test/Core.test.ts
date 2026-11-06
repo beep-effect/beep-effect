@@ -220,8 +220,10 @@ describe("Core", () =>
               return { fixture, child };
             })
           );
-          expect(yield* fs.exists(completed.fixture)).toBe(false);
-          expect(yield* completed.child.isRunning).toBe(false);
+          const exists1 = yield* fs.exists(completed.fixture);
+          expect(exists1).toBe(false);
+          const isRunning2 = yield* completed.child.isRunning;
+          expect(isRunning2).toBe(false);
         })
       );
     });

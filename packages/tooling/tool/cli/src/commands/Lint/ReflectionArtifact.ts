@@ -19,6 +19,9 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { Frontmatter } from "@beep/markdown/MarkdownNode";
 import { YamlFrontmatter } from "@beep/markdown/YamlFrontmatter";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import { makePolicyFindingLogger } from "@beep/repo-cli-kit/cli/PolicyFindingLogger";
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A, thunkEmptyStr, thunkFalse } from "@beep/utils";
@@ -33,9 +36,6 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
 import { GoalCloseoutRecord, GoalProposedCloseout, GoalStatus } from "../Goals/Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Lint/ReflectionArtifact");
@@ -360,9 +360,8 @@ const inspectGoalReflection = Effect.fnUntraced(function* (
   const reflectionsDir = path.join(GOALS_DIR, slug, ...REFLECTIONS_SUBDIR);
   const reflectionsDirExists = yield* fs.exists(reflectionsDir).pipe(Effect.orElseSucceed(thunkFalse));
   const reflectionFiles = reflectionsDirExists
-    ? pipe(
-        yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>)),
-        A.filter(reflectionFileNameIsArtifact)
+    ? yield* Effect.map(fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>)), (value) =>
+        pipe(value, A.filter(reflectionFileNameIsArtifact))
       )
     : A.empty<string>();
   const blocking = yield* validateReflectionFiles(slug, reflectionsDir, reflectionFiles);

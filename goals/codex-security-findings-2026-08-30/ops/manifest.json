@@ -33,7 +33,7 @@
     "goals/codex-security-findings-2026-08-30/research/SOURCES.md",
     "goals/codex-security-findings-2026-08-30/research/OPPORTUNITIES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

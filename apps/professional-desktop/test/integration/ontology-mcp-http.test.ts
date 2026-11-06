@@ -100,15 +100,19 @@ const makeLedgerProbe = Effect.fnUntraced(function* () {
       yield* Ref.update(outcomes, A.append(record));
     }),
     readDecisions: Effect.fn("OntologyMcpHttpTest.readDecisions")(function* (runKey) {
-      return A.filter(yield* Ref.get(decisions), (record) => record.runKey === runKey);
+      const got = yield* Ref.get(decisions);
+      return A.filter(got, (record) => record.runKey === runKey);
     }),
     readOutcomes: Effect.fn("OntologyMcpHttpTest.readOutcomes")(function* (runKey) {
-      return A.filter(yield* Ref.get(outcomes), (record) => record.runKey === runKey);
+      const got1 = yield* Ref.get(outcomes);
+      return A.filter(got1, (record) => record.runKey === runKey);
     }),
     readUnsettledAllowed: Effect.fn("OntologyMcpHttpTest.readUnsettledAllowed")(function* (runKey) {
-      const settled = A.map(yield* Ref.get(outcomes), (record) => record.decisionHash);
+      const got2 = yield* Ref.get(outcomes);
+      const settled = A.map(got2, (record) => record.decisionHash);
+      const got3 = yield* Ref.get(decisions);
       return A.filter(
-        yield* Ref.get(decisions),
+        got3,
         (record) => record.runKey === runKey && record.verdict === "allowed" && !A.contains(settled, record.hash)
       );
     }),
@@ -247,7 +251,8 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
         expect(decisions).toHaveLength(1);
         expect(decisions[0]!.verdict).toBe("denied");
         expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("principal-not-granted");
-        expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
+        const got4 = yield* Ref.get(probe.outcomes);
+        expect(got4).toHaveLength(0);
       })
     );
 
@@ -357,11 +362,14 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             const after = yield* fileSystem.readFileString(path.join(root, "ontology.ttl"));
             expect(after).toBe(before);
             // No provenance sidecar was produced either: the mutation never ran.
-            expect(yield* fileSystem.readDirectory(root)).toEqual(["ontology.ttl"]);
+            const readDirectory5 = yield* fileSystem.readDirectory(root);
+            expect(readDirectory5).toEqual(["ontology.ttl"]);
           }).pipe(Effect.provide(context));
         }).pipe(Effect.scoped);
-        expect(yield* Ref.get(probe.decisions)).toHaveLength(0);
-        expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
+        const got6 = yield* Ref.get(probe.decisions);
+        expect(got6).toHaveLength(0);
+        const got7 = yield* Ref.get(probe.outcomes);
+        expect(got7).toHaveLength(0);
       })
     );
 

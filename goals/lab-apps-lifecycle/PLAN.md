@@ -41,7 +41,7 @@ the PR title; P5 covers whatever residue closes the packet.
 - **Geometry designed:** `research/11-registration-geometry-design.md` —
   `RegistrationSurface` ten-kind tagged union + `RegistrationGeometryService`
   (forward/inverse/inspect), homed as a new `RegistrationGeometry` module
-  (P1 creates it) under `packages/tooling/tool/cli/src/internal/cli/`;
+  (P1 creates it) under `packages/tooling/library/repo-cli-kit/src/cli/`;
   `dependentsOf` via inverted dependency index + E1/E15 scans. Holdout
   resolutions adopted per SPEC D5 ("by hand" + generated-labs-segment
   holdout clause): (A) labs excluded from root solution refs by path,

@@ -6,7 +6,7 @@
     "title": "repo-cli gh/git consolidation",
     "status": "active",
     "created": "2026-11-01",
-    "updated": "2026-11-03",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/repo-cli-gh-git-consolidation",
@@ -19,18 +19,7 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false,
-    "acceptanceEvidence": [
-      {
-        "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/chore_repo-cli-gh-git-consolidation-closeout-a17236589b0f/verdict.json",
-        "gating": true
-      }
-    ]
-  },
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 2654
+    "grandfathered": false
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -44,16 +33,32 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/p0-site-inventory-2026-11-02.md",
-    "research/is-ancestor-prune-differential-w0.json",
-    "research/git-readers-differential-w1a.json",
-    "research/yeet-git-differential-w1b.json",
+    "research/cache-baseline-request-w0.json",
+    "research/cache-baseline-request-w1b.json",
+    "research/cache-baseline-request-w2b.json",
+    "research/cache-baseline-request-w3-kit.json",
+    "research/cache-baseline-request-w3-sites.json",
+    "research/cache-baseline-request-w6.json",
+    "research/cache-baseline-request-w7-kit.json",
+    "research/cache-baseline-review-w0.md",
+    "research/cache-baseline-review-w1b.md",
+    "research/cache-baseline-review-w2b.md",
+    "research/cache-baseline-review-w3-kit.md",
+    "research/cache-baseline-review-w3-sites.md",
+    "research/cache-baseline-review-w6.md",
+    "research/cache-baseline-review-w7-kit.md",
     "research/dirty-axis-differential-w2.json",
-    "research/yeet-remainder-differential-w2b.json",
-    "research/reviewer-ci-github-differential-w3.json",
+    "research/git-readers-differential-w1a.json",
+    "research/is-ancestor-prune-differential-w0.json",
+    "research/p0-site-inventory-2026-11-02.md",
     "research/review-thread-differential-w4.json",
+    "research/reviewer-ci-github-differential-w3.json",
+    "research/site-list.md",
+    "research/w7-site-census-2026-11-03.md",
+    "research/yeet-differential-w7.json",
     "research/yeet-gh-seams-differential-w6.json",
-    "history/closeout-ledger.md"
+    "research/yeet-git-differential-w1b.json",
+    "research/yeet-remainder-differential-w2b.json"
   ],
   "agentLaunchers": [
     {
@@ -75,22 +80,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "complete"
+      "status": "pending"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "pending"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "pending"
     }
   ],
   "verificationCommands": [

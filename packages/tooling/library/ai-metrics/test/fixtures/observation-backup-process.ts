@@ -80,10 +80,14 @@ const program = Effect.gen(function* () {
       Effect.provideService(FileSystem.FileSystem, intercepted)
     );
   }).pipe(Effect.scoped);
-  yield* fs.writeFileString(`${directory}/receipt.json`, yield* encodeObservationBackupReceiptJson(receipt), {
+  const argument = `${directory}/receipt.json`;
+  const encodedObservationBackupReceiptJson = yield* encodeObservationBackupReceiptJson(receipt);
+  yield* fs.writeFileString(argument, encodedObservationBackupReceiptJson, {
     mode: 0o600,
   });
-  if (mode === "capture-after") return yield* boundary;
+  if (mode === "capture-after") {
+    return yield* boundary;
+  }
   // Original source is closed. Recovery uses only the independent snapshot.
   yield* fs.writeFileString(`${directory}/source.sqlite`, "synthetic database corruption");
   const verifier = yield* SqliteClient.make({ filename: ":memory:" });

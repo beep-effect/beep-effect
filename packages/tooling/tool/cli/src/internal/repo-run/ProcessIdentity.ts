@@ -18,6 +18,15 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+class ProcessIdentityOperationError extends S.TaggedError<
+  ProcessIdentityOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "ProcessIdentityOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in ProcessIdentity.ts." }
+) {}
+
 const $I = $RepoCliId.create("internal/repo-run/ProcessIdentity");
 
 /**
@@ -233,16 +242,19 @@ const processStartIdentityProbe = (options: { readonly pid: number; readonly pla
 export const processStartIdentityProbeForTesting = processStartIdentityProbe;
 
 const processStartIdentityFromSystemCommand = (pid: number, source: "ps" | "win"): Effect.Effect<O.Option<string>> =>
-  Effect.try(() => {
-    const command = processStartIdentityProbe({ pid, platform: source === "win" ? "win32" : "linux" }).command;
-    const result = Bun.spawnSync({
-      cmd: command,
-      env: { ...Bun.env, LANG: "C", LC_ALL: "C" },
-      stderr: "ignore",
-      stdout: "pipe",
-    });
-    const output = Str.trim(result.stdout.toString());
-    return result.success && Str.isNonEmpty(output) ? O.some(`${source}:${output}`) : O.none<string>();
+  Effect.try({
+    try: () => {
+      const command = processStartIdentityProbe({ pid, platform: source === "win" ? "win32" : "linux" }).command;
+      const result = Bun.spawnSync({
+        cmd: command,
+        env: { ...Bun.env, LANG: "C", LC_ALL: "C" },
+        stderr: "ignore",
+        stdout: "pipe",
+      });
+      const output = Str.trim(result.stdout.toString());
+      return result.success && Str.isNonEmpty(output) ? O.some(`${source}:${output}`) : O.none<string>();
+    },
+    catch: (cause) => ProcessIdentityOperationError.make({ cause }),
   }).pipe(Effect.orElseSucceed(O.none<string>));
 
 const probeRecordedProcessIdentity = (
@@ -309,7 +321,8 @@ const processIdentityStatusWithStart = Effect.fnUntraced(function* <Requirements
     return ProcessIdentityStatus.Enum.alive;
   }
   const recorded = normalizeRecordedProcessIdentity(owner.procStart);
-  return O.match(yield* currentStart, {
+  const currentStart1 = yield* currentStart;
+  return O.match(currentStart1, {
     onNone: () => ProcessIdentityStatus.Enum.unknown,
     onSome: (current) => {
       const normalizedCurrent = normalizeRecordedProcessIdentity(current);
@@ -374,7 +387,8 @@ export const processIdentityStatus = Effect.fnUntraced(function* (
 export const isProcessIdentityAlive = Effect.fnUntraced(function* (
   owner: ProcessIdentityOwner
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  return !ProcessIdentityStatus.is.dead(yield* processIdentityStatus(owner));
+  const processIdentityStatus2 = yield* processIdentityStatus(owner);
+  return !ProcessIdentityStatus.is.dead(processIdentityStatus2);
 });
 
 /**
@@ -438,5 +452,6 @@ export const isProcessIdentityAliveWithStartForTesting = Effect.fnUntraced(funct
   owner: ProcessIdentityOwner,
   currentStart: O.Option<string>
 ): Effect.fn.Return<boolean> {
-  return !ProcessIdentityStatus.is.dead(yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart)));
+  const processIdentityStatusWithStart3 = yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart));
+  return !ProcessIdentityStatus.is.dead(processIdentityStatusWithStart3);
 });

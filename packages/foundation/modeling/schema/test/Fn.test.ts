@@ -22,8 +22,10 @@ describe("Fn schema", () => {
       });
       const handler = (count: number) => count + 1;
 
-      expect(yield* S.decodeEffect(schema)(handler)).toBe(handler);
-      expect(yield* S.encodeEffect(schema)(handler)).toBe(handler);
+      const value = yield* S.decodeEffect(schema)(handler);
+      expect(value).toBe(handler);
+      const value1 = yield* S.encodeEffect(schema)(handler);
+      expect(value1).toBe(handler);
     })
   );
 
@@ -67,7 +69,8 @@ describe("Fn thunks", () => {
       const schema = Fn({ output: S.FiniteFromString });
       const impl = schema.implement(() => 2);
 
-      expect(yield* impl()).toBe(2);
+      const impl2 = yield* impl();
+      expect(impl2).toBe(2);
       expect(schema.inputSchema).toBe(S.Never);
       expect(schema.outputSchema).toBe(S.FiniteFromString);
     })
@@ -117,7 +120,8 @@ describe("Fn unary functions", () => {
       });
       const impl = schema.implement((count) => `${count + 1}`);
 
-      expect(yield* impl("1")).toBe("2");
+      const impl3 = yield* impl("1");
+      expect(impl3).toBe("2");
     })
   );
 
@@ -216,7 +220,8 @@ describe("Fn unary functions", () => {
         label: `${name} (${age})`,
       }));
 
-      expect(yield* impl({ name: "Ada", age: "10" })).toEqual({
+      const impl4 = yield* impl({ name: "Ada", age: "10" });
+      expect(impl4).toEqual({
         id: "ada-10",
         label: "Ada (10)",
       });
@@ -247,7 +252,8 @@ describe("Fn convenience exports", () => {
     Effect.fnUntraced(function* () {
       const handler = () => "ok";
 
-      expect(yield* decodeAnyFnEffect(handler)).toBe(handler);
+      const decodedAnyFnEffect = yield* decodeAnyFnEffect(handler);
+      expect(decodedAnyFnEffect).toBe(handler);
     })
   );
 

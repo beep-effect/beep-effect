@@ -23,6 +23,8 @@
 
 import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
+import { configStringOptionSync } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { repoRunOutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, P, Str } from "@beep/utils";
 import * as Clock from "effect/Clock";
@@ -39,8 +41,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { configStringOptionSync } from "../../internal/cli/EnvConfig.ts";
-import { repoRunOutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import { parseAdmissionProcStatStartTime } from "../../internal/repo-run/index.ts";
 import { selectFleetScannerDir } from "./internal/FleetScannerDir.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
@@ -460,7 +460,8 @@ const cloneMatchesOrigin = Effect.fn("Fleet.cloneMatchesOrigin")(function* (
     return false;
   }
   const git = yield* Git;
-  const originOutput = O.flatten(yield* gitProbe(git.remoteUrl(candidate)));
+  const gitProbe1 = yield* gitProbe(git.remoteUrl(candidate));
+  const originOutput = O.flatten(gitProbe1);
   return O.match(originOutput, {
     onNone: () => false,
     onSome: (output) => normalizeOriginUrl(output) === normalizedOrigin,
@@ -532,7 +533,8 @@ const enumerateFleet = Effect.fn("Fleet.enumerateFleet")(function* (
   FleetMirrorServiceRequirements
 > {
   const clones = yield* discoverClones(fleetRoot, normalizedOrigin);
-  const stubs = dedupeStubs(A.flatten(yield* Effect.forEach(clones, cloneStubs)));
+  const forEach2 = yield* Effect.forEach(clones, cloneStubs);
+  const stubs = dedupeStubs(A.flatten(forEach2));
   return { clones, stubs: A.sortWith(stubs, (stub) => stub.path, Order.String) };
 });
 
@@ -709,7 +711,8 @@ const childMillis = Effect.fn("Fleet.childMillis")(function* (
   if (O.isNone(children)) {
     return A.empty();
   }
-  return entryMillis(yield* Effect.forEach(children.value, entryReading));
+  const forEach3 = yield* Effect.forEach(children.value, entryReading);
+  return entryMillis(forEach3);
 });
 
 /** Mtimes across the given entries and, for those that are directories, their children — the checkout's top two levels. */
@@ -777,7 +780,8 @@ const worktreeMtimeReading = Effect.fn("Fleet.worktreeMtimeReading")(function* (
     return PROBE_FAILED;
   }
   const rootMillis = A.getSomes([O.map(rootInfo.value.mtime, (date) => date.getTime())]);
-  return measuredSince(A.appendAll(rootMillis, yield* treeMillis(entries.value)), nowMillis);
+  const treeMillis4 = yield* treeMillis(entries.value);
+  return measuredSince(A.appendAll(rootMillis, treeMillis4), nowMillis);
 });
 
 const ensureScanner = Effect.fn("Fleet.ensureScanner")(function* (
@@ -818,13 +822,12 @@ const materializeTarget = Effect.fn("Fleet.materializeTarget")(function* (
   if (!scanner.available) {
     return FleetEpochTarget.make({ ref: targetRef, sha: null, materialized: false });
   }
-  const lsRemote = gitStdout(
-    yield* runGitProbe(
-      scanner.scannerDir,
-      ["ls-remote", "--quiet", "--end-of-options", originUrl, `refs/heads/${targetRef}`],
-      scanner.env
-    )
+  const resultGitProbe = yield* runGitProbe(
+    scanner.scannerDir,
+    ["ls-remote", "--quiet", "--end-of-options", originUrl, `refs/heads/${targetRef}`],
+    scanner.env
   );
+  const lsRemote = gitStdout(resultGitProbe);
   const sha = O.flatMap(lsRemote, (output) => {
     const token = A.head(Str.split(Str.trim(output), /\s+/));
     return O.filter(token, (value) => /^[0-9a-f]{40,64}$/.test(value));
@@ -930,7 +933,8 @@ const statusFacts = Effect.fn("Fleet.statusFacts")(function* (
   const git = yield* Git;
   // Every untracked file inside an untracked directory is its own entry (`--untracked-files=all`);
   // a rename or copy contributes both of its paths, because both are contested by the change.
-  const status = O.map(yield* gitProbe(git.status(checkoutPath, { untrackedFiles: "all" })), statusFactsFromEntries);
+  const gitProbe5 = yield* gitProbe(git.status(checkoutPath, { untrackedFiles: "all" }));
+  const status = O.map(gitProbe5, statusFactsFromEntries);
   return {
     dirtyCount: O.match(status, { onNone: () => null, onSome: (facts) => facts.entryCount }),
     dirtyPaths: O.match(status, { onNone: A.empty<string>, onSome: (facts) => facts.paths }),
@@ -967,7 +971,8 @@ const resolveMergeBase = Effect.fn("Fleet.resolveMergeBase")(function* (
   head: string,
   targetSha: string
 ): Effect.fn.Return<O.Option<string>, never, FleetMirrorServiceRequirements> {
-  const output = gitStdout(yield* runGitProbe(scanner.scannerDir, ["merge-base", targetSha, head], scanner.env));
+  const resultGitProbe6 = yield* runGitProbe(scanner.scannerDir, ["merge-base", targetSha, head], scanner.env);
+  const output = gitStdout(resultGitProbe6);
   return O.filter(O.map(output, Str.trim), Str.isNonEmpty);
 });
 
@@ -984,9 +989,12 @@ const branchDiffReading = Effect.fn("Fleet.branchDiffReading")(function* (
   mergeBase: string,
   head: string
 ): Effect.fn.Return<BranchDiffReading, never, FleetMirrorServiceRequirements> {
-  const output = gitStdout(
-    yield* runGitProbe(scanner.scannerDir, ["diff", "--name-only", "-z", mergeBase, head], scanner.env)
+  const resultGitProbe7 = yield* runGitProbe(
+    scanner.scannerDir,
+    ["diff", "--name-only", "-z", mergeBase, head],
+    scanner.env
   );
+  const output = gitStdout(resultGitProbe7);
   return O.match(output, {
     onNone: () => BRANCH_DIFF_PROBE_FAILED,
     onSome: (stdout): BranchDiffReading => {
@@ -1015,13 +1023,12 @@ const policyReading = Effect.fn("Fleet.policyReading")(function* (
   mergeBase: string,
   targetSha: string
 ): Effect.fn.Return<PolicyReading, never, FleetMirrorServiceRequirements> {
-  const output = gitStdout(
-    yield* runGitProbe(
-      scanner.scannerDir,
-      ["diff", "--name-only", "-z", mergeBase, targetSha, "--", ...FLEET_POLICY_SURFACE],
-      scanner.env
-    )
+  const resultGitProbe8 = yield* runGitProbe(
+    scanner.scannerDir,
+    ["diff", "--name-only", "-z", mergeBase, targetSha, "--", ...FLEET_POLICY_SURFACE],
+    scanner.env
   );
+  const output = gitStdout(resultGitProbe8);
   return O.match(output, {
     onNone: () => POLICY_PROBE_FAILED,
     onSome: (stdout): PolicyReading => {
@@ -1236,7 +1243,8 @@ const resolveFleetScope = Effect.fn("Fleet.resolveFleetScope")(function* (
   );
 
   const git = yield* Git;
-  const originProbe = O.flatten(yield* gitProbe(git.remoteUrl(currentRoot)));
+  const gitProbe9 = yield* gitProbe(git.remoteUrl(currentRoot));
+  const originProbe = O.flatten(gitProbe9);
   const originUrl = options.originUrl ?? (O.isSome(originProbe) ? Str.trim(originProbe.value) : null);
   if (originUrl === null || Str.isEmpty(originUrl)) {
     return yield* WorktreeCommandError.make({
@@ -1272,7 +1280,8 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
   options: FleetScanOptions
 ): Effect.fn.Return<FleetSnapshot, WorktreeCommandError, FleetMirrorServiceRequirements> {
   const nowMillis = yield* Clock.currentTimeMillis;
-  const scannedAt = DateTime.formatIso(yield* DateTime.now);
+  const now10 = yield* DateTime.now;
+  const scannedAt = DateTime.formatIso(now10);
   const windowSeconds = options.livenessWindowSeconds ?? FLEET_LIVENESS_WINDOW_SECONDS;
   const targetRef = options.targetRef ?? "main";
   const { fleetRoot, normalizedOrigin, originUrl } = yield* resolveFleetScope(options);

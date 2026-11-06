@@ -403,7 +403,8 @@ const makeParcels = Effect.gen(function* () {
   });
 
   const readAppErrorClasses = Effect.fnUntraced(function* (budget: ParcelBudget) {
-    return reduceAppErrorClasses(yield* DateTime.now, budget);
+    const now1 = yield* DateTime.now;
+    return reduceAppErrorClasses(now1, budget);
   });
 
   // The cursor moves to the read time taken before the sources are read, so

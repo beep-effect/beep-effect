@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(GlobSet)(value);
       const decoded = yield* S.decodeEffect(GlobSet)(encoded);
       assert.deepStrictEqual(decoded, value);
-      assert.deepStrictEqual(yield* S.encodeEffect(GlobSet)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(GlobSet)(decoded);
+      assert.deepStrictEqual(value1, encoded);
       const recompiled = yield* GlobSet.compile(decoded.patterns);
       assert.deepStrictEqual(recompiled.patterns, value.patterns);
       assert.strictEqual(decoded.matches(candidate), value.matches(candidate));

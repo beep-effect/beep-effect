@@ -254,9 +254,12 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (
     before: activation.before,
     after: activation.after,
   });
-  yield* fs.writeFileString(requests.baseline, yield* encodeBaselineRequest(baselineRequest));
-  yield* fs.writeFileString(requests.transition, yield* encodeTransitionRequest(transitionRequest));
-  yield* fs.writeFileString(requests.activation, yield* encodeActivationRequest(activationRequest));
+  const encodedBaselineRequest = yield* encodeBaselineRequest(baselineRequest);
+  yield* fs.writeFileString(requests.baseline, encodedBaselineRequest);
+  const encodedTransitionRequest = yield* encodeTransitionRequest(transitionRequest);
+  yield* fs.writeFileString(requests.transition, encodedTransitionRequest);
+  const encodedActivationRequest = yield* encodeActivationRequest(activationRequest);
+  yield* fs.writeFileString(requests.activation, encodedActivationRequest);
   const calls = A.empty<string>();
   const layer = Layer.succeed(
     CacheQualificationService,
@@ -265,7 +268,9 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (
       audit: Effect.fn("CacheDispatchTest.audit")(() => Effect.succeed(report)),
       inspect: Effect.fn("CacheDispatchTest.inspect")(() => Effect.succeed(store)),
       fingerprint: Effect.fn("CacheDispatchTest.fingerprint")(function* (_root, computation) {
-        if (computation !== key.computation) return yield* CacheCommandError.new("Unknown computation.");
+        if (computation !== key.computation) {
+          return yield* CacheCommandError.new("Unknown computation.");
+        }
         return identity;
       }),
       baseline: Effect.fn("CacheDispatchTest.baseline")((_root, request) =>
@@ -312,11 +317,14 @@ describe("cache qualification command dispatch", () => {
         const output = f.path.join(f.root, "acceptance-reference.json");
         yield* f.fs.writeFileString(request, "{}");
         for (const command of ["accept", "pilot-signed", "protocol-run", "protocol-review"]) {
-          expect(yield* f.run([command, "--request", request, "--output", output]).pipe(Effect.isFailure)).toBe(true);
+          const pipe1 = yield* f.run([command, "--request", request, "--output", output]).pipe(Effect.isFailure);
+          expect(pipe1).toBe(true);
         }
-        expect(yield* f.fs.exists(output)).toBe(false);
+        const exists2 = yield* f.fs.exists(output);
+        expect(exists2).toBe(false);
         expect(f.calls).toEqual([]);
-        expect(yield* errorText).toContain("Cannot decode the pinned local experiment request.");
+        const errorText3 = yield* errorText;
+        expect(errorText3).toContain("Cannot decode the pinned local experiment request.");
       })
     );
   });
@@ -337,8 +345,10 @@ describe("cache qualification command dispatch", () => {
         expect(text).toContain("Identity lint candidate profile is current.");
         expect(text).toContain("Identity lint candidate profile written.");
         verify.mockReturnValue(Effect.fail(CacheCommandError.new("stale profile fixture")));
-        expect(yield* f.run(["profile"]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* errorText).toContain("stale profile fixture");
+        const pipe4 = yield* f.run(["profile"]).pipe(Effect.isFailure);
+        expect(pipe4).toBe(true);
+        const errorText5 = yield* errorText;
+        expect(errorText5).toContain("stale profile fixture");
       })
     );
   });
@@ -352,7 +362,8 @@ describe("cache qualification command dispatch", () => {
         yield* f.run(["execute", "--", ...args]);
         expect(execute).toHaveBeenCalledWith(process.cwd(), args);
         execute.mockReturnValue(Effect.succeed(7));
-        expect(yield* f.run(["execute", "--", ...args]).pipe(Effect.isFailure)).toBe(true);
+        const pipe6 = yield* f.run(["execute", "--", ...args]).pipe(Effect.isFailure);
+        expect(pipe6).toBe(true);
       })
     );
   });
@@ -402,11 +413,16 @@ describe("cache qualification command dispatch", () => {
         const reviewed = yield* fixture(CachePolicyAuditReport.make({ findings: [advisory], unassessed: [] }));
         yield* reviewed.run(["audit"]);
         const refused = yield* fixture(CachePolicyAuditReport.make({ findings: [advisory, blocking], unassessed: [] }));
-        expect(yield* refused.run(["audit"]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* refused.run(["audit", "--json"]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* consoleText).toContain("REVIEW configuration-source-drift: turbo.json");
-        expect(yield* consoleText).toContain("BLOCK unqualified-reuse: @beep/fixture#lint");
-        expect(yield* errorText).toContain("Current cache reuse differs from reviewed policy.");
+        const pipe7 = yield* refused.run(["audit"]).pipe(Effect.isFailure);
+        expect(pipe7).toBe(true);
+        const pipe8 = yield* refused.run(["audit", "--json"]).pipe(Effect.isFailure);
+        expect(pipe8).toBe(true);
+        const consoleText9 = yield* consoleText;
+        expect(consoleText9).toContain("REVIEW configuration-source-drift: turbo.json");
+        const consoleText10 = yield* consoleText;
+        expect(consoleText10).toContain("BLOCK unqualified-reuse: @beep/fixture#lint");
+        const errorText11 = yield* errorText;
+        expect(errorText11).toContain("Current cache reuse differs from reviewed policy.");
       })
     );
   });
@@ -419,10 +435,13 @@ describe("cache qualification command dispatch", () => {
         yield* f.run(["transition", "--request", f.requests.transition]);
         const output = f.path.join(f.root, "preview.json");
         yield* f.run(["activation", "--request", f.requests.activation, "--output", output]);
-        expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodePreview))).toEqual(preview);
+        const pipe12 = yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodePreview));
+        expect(pipe12).toEqual(preview);
         expect(f.calls).toEqual(["baseline", "transition", "activation"]);
-        expect(yield* consoleText).toContain("Reviewed baseline written for 0 executable computations");
-        expect(yield* consoleText).toContain("Qualification revision 1: @beep/fixture#lint is excluded.");
+        const consoleText13 = yield* consoleText;
+        expect(consoleText13).toContain("Reviewed baseline written for 0 executable computations");
+        const consoleText14 = yield* consoleText;
+        expect(consoleText14).toContain("Qualification revision 1: @beep/fixture#lint is excluded.");
       })
     );
   });
@@ -434,19 +453,24 @@ describe("cache qualification command dispatch", () => {
         yield* f.run(["fingerprint", "--computation", key.computation]);
         const output = f.path.join(f.root, "identity.json");
         yield* f.run(["fingerprint", "--computation", key.computation, "--output", output]);
-        expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeIdentity))).toEqual(identity);
-        expect(yield* consoleText).toContain('"cache-live-identity/v1"');
-        expect(yield* consoleText).toContain("Fingerprint recorded for @beep/fixture#lint");
-        expect(yield* f.run(["fingerprint", "--computation", "@beep/unknown#lint"]).pipe(Effect.isFailure)).toBe(true);
-        expect(
-          yield* Effect.acquireUseRelease(
-            Effect.sync(() => vi.spyOn(Bun, "write").mockRejectedValue(new Error("fixture write failure"))),
-            () => f.run(["fingerprint", "--computation", key.computation, "--output", output]).pipe(Effect.isFailure),
-            (spy) => Effect.sync(() => spy.mockRestore())
-          )
-        ).toBe(true);
-        expect(yield* errorText).toContain("Unknown computation.");
-        expect(yield* errorText).toContain("Failed to write");
+        const pipe15 = yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeIdentity));
+        expect(pipe15).toEqual(identity);
+        const consoleText16 = yield* consoleText;
+        expect(consoleText16).toContain('"cache-live-identity/v1"');
+        const consoleText17 = yield* consoleText;
+        expect(consoleText17).toContain("Fingerprint recorded for @beep/fixture#lint");
+        const pipe18 = yield* f.run(["fingerprint", "--computation", "@beep/unknown#lint"]).pipe(Effect.isFailure);
+        expect(pipe18).toBe(true);
+        const acquireUseRelease19 = yield* Effect.acquireUseRelease(
+          Effect.sync(() => vi.spyOn(Bun, "write").mockRejectedValue(new Error("fixture write failure"))),
+          () => f.run(["fingerprint", "--computation", key.computation, "--output", output]).pipe(Effect.isFailure),
+          (spy) => Effect.sync(() => spy.mockRestore())
+        );
+        expect(acquireUseRelease19).toBe(true);
+        const errorText20 = yield* errorText;
+        expect(errorText20).toContain("Unknown computation.");
+        const errorText21 = yield* errorText;
+        expect(errorText21).toContain("Failed to write");
       })
     );
   });
@@ -458,15 +482,20 @@ describe("cache qualification command dispatch", () => {
         const bad = f.path.join(f.root, "bad.json");
         yield* f.fs.writeFileString(bad, "{}");
         for (const command of ["baseline", "transition", "activation", "pilot"]) {
-          expect(yield* f.run([command, "--request", bad]).pipe(Effect.isFailure)).toBe(true);
+          const pipe22 = yield* f.run([command, "--request", bad]).pipe(Effect.isFailure);
+          expect(pipe22).toBe(true);
         }
         yield* f.fs.writeFile(bad, new Uint8Array([255]));
-        expect(yield* f.run(["activation", "--request", bad]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* errorText).toContain("not valid UTF-8");
-        expect(
-          yield* f.run(["activation", "--request", f.path.join(f.root, "missing.json")]).pipe(Effect.isFailure)
-        ).toBe(true);
-        expect(yield* f.run(["activation", "--request", "/outside-request.json"]).pipe(Effect.isFailure)).toBe(true);
+        const pipe23 = yield* f.run(["activation", "--request", bad]).pipe(Effect.isFailure);
+        expect(pipe23).toBe(true);
+        const errorText24 = yield* errorText;
+        expect(errorText24).toContain("not valid UTF-8");
+        const pipe25 = yield* f
+          .run(["activation", "--request", f.path.join(f.root, "missing.json")])
+          .pipe(Effect.isFailure);
+        expect(pipe25).toBe(true);
+        const pipe26 = yield* f.run(["activation", "--request", "/outside-request.json"]).pipe(Effect.isFailure);
+        expect(pipe26).toBe(true);
         expect(f.calls).toEqual([]);
       })
     );
@@ -484,11 +513,15 @@ describe("cache qualification command dispatch", () => {
         yield* f.run(["transition", "--request", transitionPath]);
         expect(f.calls).toEqual(["baseline", "transition"]);
         yield* f.fs.writeFileString(baselinePath, "invalid JSON");
-        expect(yield* f.run(["baseline", "--request", baselinePath]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* errorText).toContain("Cannot decode baseline review request.");
+        const pipe27 = yield* f.run(["baseline", "--request", baselinePath]).pipe(Effect.isFailure);
+        expect(pipe27).toBe(true);
+        const errorText28 = yield* errorText;
+        expect(errorText28).toContain("Cannot decode baseline review request.");
         yield* f.fs.remove(transitionPath);
-        expect(yield* f.run(["transition", "--request", transitionPath]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* errorText).toContain("Cannot decode qualification transition request.");
+        const pipe29 = yield* f.run(["transition", "--request", transitionPath]).pipe(Effect.isFailure);
+        expect(pipe29).toBe(true);
+        const errorText30 = yield* errorText;
+        expect(errorText30).toContain("Cannot decode qualification transition request.");
         expect(f.calls).toEqual(["baseline", "transition"]);
       })
     );
@@ -502,12 +535,16 @@ describe("cache qualification command dispatch", () => {
           .run(["producer-inspect", "--output", output])
           .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration));
         expect(inspect).toHaveBeenCalledWith(process.cwd());
-        expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeWorkflow))).toEqual(workflow);
+        const pipe31 = yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeWorkflow));
+        expect(pipe31).toEqual(workflow);
         expect(f.calls).toEqual([]);
-        expect(yield* consoleText).not.toContain('"inspectionTools"');
+        const consoleText32 = yield* consoleText;
+        expect(consoleText32).not.toContain('"inspectionTools"');
         inspect.mockReturnValue(Effect.fail(CacheCommandError.new("Source drift fixture.")));
-        expect(yield* f.run(["producer-inspect", "--output", output]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeWorkflow))).toEqual(workflow);
+        const pipe33 = yield* f.run(["producer-inspect", "--output", output]).pipe(Effect.isFailure);
+        expect(pipe33).toBe(true);
+        const pipe34 = yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeWorkflow));
+        expect(pipe34).toEqual(workflow);
       })
     );
     it.effect("refuses an oversized producer inspection before overwriting output", () =>
@@ -528,23 +565,23 @@ describe("cache qualification command dispatch", () => {
             })
           )
         );
-        expect(yield* f.run(["producer-inspect", "--output", output]).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.readFileString(output)).toBe("preserved");
-        expect(yield* errorText).toContain("exceeds its configured byte bound");
+        const pipe35 = yield* f.run(["producer-inspect", "--output", output]).pipe(Effect.isFailure);
+        expect(pipe35).toBe(true);
+        const readFileString36 = yield* f.fs.readFileString(output);
+        expect(readFileString36).toBe("preserved");
+        const errorText37 = yield* errorText;
+        expect(errorText37).toContain("exceeds its configured byte bound");
       })
     );
     it.effect("requires independent producer configuration without dispatching an experiment", () =>
       Effect.gen(function* () {
         const f = yield* fixture();
-        expect(
-          yield* f
-            .run(["producer-run", "--request", f.requests.baseline])
-            .pipe(
-              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
-              Effect.isFailure
-            )
-        ).toBe(true);
-        expect(yield* errorText).toContain("An independently provisioned producer store is required.");
+        const pipe38 = yield* f
+          .run(["producer-run", "--request", f.requests.baseline])
+          .pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})), Effect.isFailure);
+        expect(pipe38).toBe(true);
+        const errorText39 = yield* errorText;
+        expect(errorText39).toContain("An independently provisioned producer store is required.");
         expect(f.calls).toEqual([]);
       })
     );
@@ -603,7 +640,8 @@ describe("cache qualification command dispatch", () => {
         const request = f.path.join(f.root, "producer-request.json");
         const output = f.path.join(f.root, "private-observation.json");
         const publication = f.path.join(f.root, "cache-producer.json");
-        yield* f.fs.writeFileString(request, yield* encodeSignedPilotRequest(selected));
+        const encodedSignedPilotRequest = yield* encodeSignedPilotRequest(selected);
+        yield* f.fs.writeFileString(request, encodedSignedPilotRequest);
         const load = vi
           .spyOn(Workflow, "loadCacheProducerExecutionRuntime")
           .mockReturnValue(Effect.succeed(Tuple.make(binding, runtime)));
@@ -630,18 +668,20 @@ describe("cache qualification command dispatch", () => {
         expect(load).toHaveBeenCalledWith("/trusted/producer");
         deepStrictEqual(run.mock.calls, [[process.cwd(), selected, "/trusted/producer", binding, O.some(runtime)]]);
         const contents = yield* f.fs.readFileString(output);
-        expect(yield* decodeProducerObservation(contents)).toEqual(observation);
+        const decodedProducerObservation = yield* decodeProducerObservation(contents);
+        expect(decodedProducerObservation).toEqual(observation);
         expect((yield* f.fs.stat(output)).mode & 0o777).toBe(0o600);
-        expect(yield* f.fs.exists(publication)).toBe(publish);
+        const exists40 = yield* f.fs.exists(publication);
+        expect(exists40).toBe(publish);
         if (publish) {
           const report = yield* f.fs.readFileString(publication).pipe(Effect.flatMap(decodeCompleteReport));
           expect(report.runId).toBe(11);
           expect(report.attempt).toBe(2);
           expect(report.binding).toEqual(binding);
           expect(report.uploads).toEqual(O.toArray(observation.observation.upload));
-          expect(report.observationSha256).toBe(
-            yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(Str.trimEnd(contents)))
-          );
+          const expectation = expect(report.observationSha256);
+          const value1 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(Str.trimEnd(contents)));
+          expectation.toBe(value1);
           expect((yield* f.fs.stat(publication)).mode & 0o777).toBe(0o600);
           const transported = CacheProducerPublication.make({
             reference: CacheHostedProducerReference.make({ runId: 11, attempt: 2, artifactId: 111 }),
@@ -666,40 +706,53 @@ describe("cache qualification command dispatch", () => {
           const configure = vi
             .spyOn(AcceptanceStore, "loadCacheProducerStoreConfiguration")
             .mockReturnValue(Effect.fail(CacheCommandError.new("Complete bounded pair decoded before trust lookup.")));
-          expect(yield* f.run(["accept", "--request", importFile]).pipe(Effect.isFailure)).toBe(true);
+          const pipe41 = yield* f.run(["accept", "--request", importFile]).pipe(Effect.isFailure);
+          expect(pipe41).toBe(true);
           expect(configure).toHaveBeenCalledTimes(1);
-          expect(yield* errorText).toContain("Complete bounded pair decoded before trust lookup.");
+          const errorText42 = yield* errorText;
+          expect(errorText42).toContain("Complete bounded pair decoded before trust lookup.");
           configure.mockClear();
           yield* f.fs.writeFileString(
             importFile,
             Str.concat(composed, Str.repeat(20 * 1024 * 1024 + 1 - composedBytes)(" "))
           );
-          expect(yield* f.run(["accept", "--request", importFile]).pipe(Effect.isFailure)).toBe(true);
+          const pipe43 = yield* f.run(["accept", "--request", importFile]).pipe(Effect.isFailure);
+          expect(pipe43).toBe(true);
           expect(configure).not.toHaveBeenCalled();
         }
         yield* f.fs.writeFileString(output, "preserved observation");
-        expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.readFileString(output)).toBe("preserved observation");
+        const pipe44 = yield* execute.pipe(Effect.isFailure);
+        expect(pipe44).toBe(true);
+        const readFileString45 = yield* f.fs.readFileString(output);
+        expect(readFileString45).toBe("preserved observation");
         const linked = f.path.join(f.root, "preserved-linked-target.json");
         const missing = f.path.join(f.root, "missing-linked-target.json");
         yield* f.fs.writeFileString(linked, "preserved linked target");
         yield* f.fs.remove(output);
         yield* f.fs.symlink(linked, output);
-        expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.readFileString(linked)).toBe("preserved linked target");
+        const pipe46 = yield* execute.pipe(Effect.isFailure);
+        expect(pipe46).toBe(true);
+        const readFileString47 = yield* f.fs.readFileString(linked);
+        expect(readFileString47).toBe("preserved linked target");
         yield* f.fs.remove(output);
         yield* f.fs.symlink(missing, output);
-        expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.exists(missing)).toBe(false);
+        const pipe48 = yield* execute.pipe(Effect.isFailure);
+        expect(pipe48).toBe(true);
+        const exists49 = yield* f.fs.exists(missing);
+        expect(exists49).toBe(false);
         yield* f.fs.remove(output);
         yield* f.fs.link(linked, output);
-        expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.readFileString(linked)).toBe("preserved linked target");
+        const pipe50 = yield* execute.pipe(Effect.isFailure);
+        expect(pipe50).toBe(true);
+        const readFileString51 = yield* f.fs.readFileString(linked);
+        expect(readFileString51).toBe("preserved linked target");
         yield* f.fs.remove(output);
         if (publish) {
           const published = yield* f.fs.readFileString(publication);
-          expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
-          expect(yield* f.fs.readFileString(publication)).toBe(published);
+          const pipe52 = yield* execute.pipe(Effect.isFailure);
+          expect(pipe52).toBe(true);
+          const readFileString53 = yield* f.fs.readFileString(publication);
+          expect(readFileString53).toBe(published);
           expect((yield* f.fs.stat(output)).mode & 0o777).toBe(0o600);
           yield* f.fs.writeFileString(output, "preserved observation");
           yield* f.fs.writeFileString(publication, "preserved publication");
@@ -711,8 +764,9 @@ describe("cache qualification command dispatch", () => {
               })
             )
           );
-          expect(
-            yield* f.run(["producer-run", "--request", request, "--output", output, "--publication", publication]).pipe(
+          const pipe54 = yield* f
+            .run(["producer-run", "--request", request, "--output", output, "--publication", publication])
+            .pipe(
               Effect.provideService(
                 ConfigProvider.ConfigProvider,
                 ConfigProvider.fromUnknown({
@@ -722,15 +776,20 @@ describe("cache qualification command dispatch", () => {
                 })
               ),
               Effect.isFailure
-            )
-          ).toBe(true);
-          expect(yield* errorText).toContain("Complete producer publication requires its owned upload");
-          expect(yield* f.fs.readFileString(output)).toBe("preserved observation");
-          expect(yield* f.fs.readFileString(publication)).toBe("preserved publication");
+            );
+          expect(pipe54).toBe(true);
+          const errorText55 = yield* errorText;
+          expect(errorText55).toContain("Complete producer publication requires its owned upload");
+          const readFileString56 = yield* f.fs.readFileString(output);
+          expect(readFileString56).toBe("preserved observation");
+          const readFileString57 = yield* f.fs.readFileString(publication);
+          expect(readFileString57).toBe("preserved publication");
         }
         expect(f.calls).toEqual([]);
-        expect(yield* consoleText).not.toContain('"observation"');
-        expect(yield* consoleText).not.toContain('"uploads"');
+        const consoleText58 = yield* consoleText;
+        expect(consoleText58).not.toContain('"observation"');
+        const consoleText59 = yield* consoleText;
+        expect(consoleText59).not.toContain('"uploads"');
       })
     );
     it.effect.each([
@@ -745,21 +804,23 @@ describe("cache qualification command dispatch", () => {
         const load = vi.spyOn(Workflow, "loadCacheProducerExecutionRuntime");
         const output = f.path.join(f.root, "private-observation.json");
         const publication = f.path.join(f.root, "cache-producer.json");
-        expect(
-          yield* f
-            .run(["producer-run", "--request", f.requests.baseline, "--output", output, "--publication", publication])
-            .pipe(
-              Effect.provideService(
-                ConfigProvider.ConfigProvider,
-                ConfigProvider.fromUnknown({ BEEP_CACHE_PRODUCER_STORE: "/trusted/producer", ...configuration })
-              ),
-              Effect.isFailure
-            )
-        ).toBe(true);
+        const pipe60 = yield* f
+          .run(["producer-run", "--request", f.requests.baseline, "--output", output, "--publication", publication])
+          .pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ BEEP_CACHE_PRODUCER_STORE: "/trusted/producer", ...configuration })
+            ),
+            Effect.isFailure
+          );
+        expect(pipe60).toBe(true);
         expect(load).not.toHaveBeenCalled();
-        expect(yield* f.fs.exists(output)).toBe(false);
-        expect(yield* f.fs.exists(publication)).toBe(false);
-        expect(yield* errorText).toContain("requires valid GITHUB_RUN_ID and GITHUB_RUN_ATTEMPT");
+        const exists61 = yield* f.fs.exists(output);
+        expect(exists61).toBe(false);
+        const exists62 = yield* f.fs.exists(publication);
+        expect(exists62).toBe(false);
+        const errorText63 = yield* errorText;
+        expect(errorText63).toContain("requires valid GITHUB_RUN_ID and GITHUB_RUN_ATTEMPT");
       })
     );
     it.effect.each(["missing-output", "same-path", "wrong-member"])(
@@ -772,36 +833,31 @@ describe("cache qualification command dispatch", () => {
           const forbidConfiguration = ConfigProvider.make(() =>
             Effect.die("Read configuration before layout refusal.")
           );
-          expect(
-            yield* f
-              .run([
-                "producer-run",
-                "--request",
-                f.requests.baseline,
-                ...(layout === "missing-output" ? [] : ["--output", output]),
-                "--publication",
-                publication,
-              ])
-              .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure)
-          ).toBe(true);
-          expect(yield* errorText).toContain("requires --output and a distinct cache-producer.json path");
+          const pipe64 = yield* f
+            .run([
+              "producer-run",
+              "--request",
+              f.requests.baseline,
+              ...(layout === "missing-output" ? [] : ["--output", output]),
+              "--publication",
+              publication,
+            ])
+            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure);
+          expect(pipe64).toBe(true);
+          const errorText65 = yield* errorText;
+          expect(errorText65).toContain("requires --output and a distinct cache-producer.json path");
           expect(f.calls).toEqual([]);
         })
     );
     it.effect("requires separate trusted provisioning configuration without loading an experiment", () =>
       Effect.gen(function* () {
         const f = yield* fixture();
-        expect(
-          yield* f
-            .run(["producer-provision"])
-            .pipe(
-              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
-              Effect.isFailure
-            )
-        ).toBe(true);
-        expect(yield* errorText).toContain(
-          "Independently selected provisioning inputs and producer store are required."
-        );
+        const pipe66 = yield* f
+          .run(["producer-provision"])
+          .pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})), Effect.isFailure);
+        expect(pipe66).toBe(true);
+        const errorText67 = yield* errorText;
+        expect(errorText67).toContain("Independently selected provisioning inputs and producer store are required.");
         expect(f.calls).toEqual([]);
       })
     );
@@ -824,20 +880,20 @@ describe("cache qualification command dispatch", () => {
         );
         expect(read).toHaveBeenCalledWith("/trusted/inputs", process.cwd());
         deepStrictEqual(initialize.mock.calls, [[process.cwd(), "/trusted/store", approval, profile, O.none()]]);
-        expect(
-          yield* f.run(["producer-install"]).pipe(
-            Effect.provideService(
-              ConfigProvider.ConfigProvider,
-              ConfigProvider.fromUnknown({
-                BEEP_CACHE_PRODUCER_PROVISIONING: "/trusted/inputs",
-                BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
-              })
-            ),
-            Effect.isFailure
-          )
-        ).toBe(true);
+        const pipe68 = yield* f.run(["producer-install"]).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({
+              BEEP_CACHE_PRODUCER_PROVISIONING: "/trusted/inputs",
+              BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
+            })
+          ),
+          Effect.isFailure
+        );
+        expect(pipe68).toBe(true);
         expect(initialize).toHaveBeenCalledTimes(1);
-        expect(yield* errorText).toContain("requires independently transferred issuer material");
+        const errorText69 = yield* errorText;
+        expect(errorText69).toContain("requires independently transferred issuer material");
         const material = O.some(Redacted.make(new Uint8Array(96)));
         read.mockReturnValue(Effect.succeed(Tuple.make(approval, profile, material)));
         yield* f.run(["producer-install"]).pipe(
@@ -851,8 +907,10 @@ describe("cache qualification command dispatch", () => {
         );
         expect(initialize).toHaveBeenLastCalledWith(process.cwd(), "/trusted/store", approval, profile, material);
         expect(f.calls).toEqual([]);
-        expect(yield* consoleText).toContain("provisioned from independent approval");
-        expect(yield* consoleText).not.toContain("/trusted");
+        const consoleText70 = yield* consoleText;
+        expect(consoleText70).toContain("provisioned from independent approval");
+        const consoleText71 = yield* consoleText;
+        expect(consoleText71).not.toContain("/trusted");
       })
     );
     it.effect("installs protected environment records through the existing initializer without reading files", () =>
@@ -884,8 +942,10 @@ describe("cache qualification command dispatch", () => {
         deepStrictEqual(Redacted.value(material), bytes);
         expect(read).not.toHaveBeenCalled();
         expect(f.calls).toEqual([]);
-        expect(yield* consoleText).not.toContain("/trusted");
-        expect(yield* consoleText).not.toContain("issuerMaterial");
+        const consoleText72 = yield* consoleText;
+        expect(consoleText72).not.toContain("/trusted");
+        const consoleText73 = yield* consoleText;
+        expect(consoleText73).not.toContain("issuerMaterial");
       })
     );
     it.effect("keeps environment installation opt-in and unavailable to issuer provisioning", () =>
@@ -902,16 +962,16 @@ describe("cache qualification command dispatch", () => {
         yield* f
           .run(["producer-install"])
           .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configuration), Effect.flip);
-        expect(yield* errorText).toContain(
-          "Independently selected provisioning inputs and producer store are required."
-        );
+        const errorText74 = yield* errorText;
+        expect(errorText74).toContain("Independently selected provisioning inputs and producer store are required.");
         yield* f
           .run(["producer-provision", "--from-environment"])
           .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configuration), Effect.flip);
         expect(initialize).not.toHaveBeenCalled();
         expect(read).not.toHaveBeenCalled();
         expect(f.calls).toEqual([]);
-        expect(yield* errorText).not.toContain("private-unused");
+        const errorText75 = yield* errorText;
+        expect(errorText75).not.toContain("private-unused");
       })
     );
     it.effect.each([
@@ -1037,9 +1097,12 @@ describe("cache qualification command dispatch", () => {
         expect(initialize).not.toHaveBeenCalled();
         expect(read).not.toHaveBeenCalled();
         expect(f.calls).toEqual([]);
-        expect(yield* consoleText).not.toContain(marker);
-        expect(yield* errorText).not.toContain(marker);
-        expect(yield* errorText).toContain(diagnostic);
+        const consoleText76 = yield* consoleText;
+        expect(consoleText76).not.toContain(marker);
+        const errorText77 = yield* errorText;
+        expect(errorText77).not.toContain(marker);
+        const errorText78 = yield* errorText;
+        expect(errorText78).toContain(diagnostic);
       })
     );
     it.effect.each(["--request", "--store", "--approval", "--runtime", "--target", "--signing-key"])(
@@ -1050,11 +1113,10 @@ describe("cache qualification command dispatch", () => {
           const forbidConfiguration = ConfigProvider.make(() =>
             Effect.die("Provisioning configuration read before argument refusal.")
           );
-          expect(
-            yield* f
-              .run(["producer-provision", flag, "/untrusted-input"])
-              .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure)
-          ).toBe(true);
+          const pipe79 = yield* f
+            .run(["producer-provision", flag, "/untrusted-input"])
+            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure);
+          expect(pipe79).toBe(true);
           expect(f.calls).toEqual([]);
         })
     );
@@ -1073,11 +1135,10 @@ describe("cache qualification command dispatch", () => {
         const forbidConfiguration = ConfigProvider.make(() =>
           Effect.die("Producer configuration was read before invalid arguments were rejected.")
         );
-        expect(
-          yield* f
-            .run(["producer-run", "--request", f.requests.baseline, flag, "/untrusted-selection"])
-            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure)
-        ).toBe(true);
+        const pipe80 = yield* f
+          .run(["producer-run", "--request", f.requests.baseline, flag, "/untrusted-selection"])
+          .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure);
+        expect(pipe80).toBe(true);
         expect(f.calls).toEqual([]);
       })
     );

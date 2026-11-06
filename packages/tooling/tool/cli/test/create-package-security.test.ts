@@ -63,7 +63,8 @@ describe("create-package security", () => {
         yield* writeRootConfigFiles(tmpDir);
 
         const changed = yield* updateTsconfigPackages(tmpDir, "packages/foundation/modeling/identity");
-        const parsed = yield* Jsonc.parse(yield* fs.readFileString(filePath));
+        const readFileString1 = yield* fs.readFileString(filePath);
+        const parsed = yield* Jsonc.parse(readFileString1);
 
         expect(changed).toBe(false);
         expect(parsed).toMatchObject({ references: [{ path: "packages/foundation/modeling/identity" }] });
@@ -112,14 +113,10 @@ describe("create-package security", () => {
           actions: [{ kind: "write-file", relativePath: "../external.txt", content: "owned\n" }],
         } as unknown as FileGenerationPlan;
 
-        const succeeded = yield* service.executePlan(forgedPlan).pipe(
-          Effect.match({
-            onFailure: () => false,
-            onSuccess: () => true,
-          })
-        );
+        const succeeded = yield* service.executePlan(forgedPlan).pipe(Effect.isSuccess);
         expect(succeeded).toBe(false);
-        expect(yield* fs.readFileString(externalPath)).toBe("safe\n");
+        const readFileString2 = yield* fs.readFileString(externalPath);
+        expect(readFileString2).toBe("safe\n");
       })
     );
 
@@ -140,14 +137,10 @@ describe("create-package security", () => {
           actions: [{ kind: "symlink", relativePath: "CLAUDE.md", target: "../AGENTS.md" }],
         } as unknown as FileGenerationPlan;
 
-        const succeeded = yield* service.executePlan(forgedPlan).pipe(
-          Effect.match({
-            onFailure: () => false,
-            onSuccess: () => true,
-          })
-        );
+        const succeeded = yield* service.executePlan(forgedPlan).pipe(Effect.isSuccess);
         expect(succeeded).toBe(false);
-        expect(yield* fs.exists(symlinkPath)).toBe(false);
+        const exists3 = yield* fs.exists(symlinkPath);
+        expect(exists3).toBe(false);
       })
     );
 
@@ -169,7 +162,8 @@ describe("create-package security", () => {
 
         expect(result.createdSymlinks).toBe(0);
         expect(result.skippedSymlinks).toBe(1);
-        expect(yield* fs.readLink(symlinkPath)).toBe("AGENTS.md");
+        const readLink4 = yield* fs.readLink(symlinkPath);
+        expect(readLink4).toBe("AGENTS.md");
       })
     );
 
@@ -190,7 +184,8 @@ describe("create-package security", () => {
 
         expect(result.createdSymlinks).toBe(1);
         expect(result.skippedSymlinks).toBe(0);
-        expect(yield* fs.readLink(symlinkPath)).toBe("AGENTS.md");
+        const readLink5 = yield* fs.readLink(symlinkPath);
+        expect(readLink5).toBe("AGENTS.md");
       })
     );
 
@@ -213,14 +208,10 @@ describe("create-package security", () => {
           actions: [{ kind: "write-file", relativePath: "README.md", content: "owned\n" }],
         } as unknown as FileGenerationPlan;
 
-        const succeeded = yield* service.executePlan(forgedPlan).pipe(
-          Effect.match({
-            onFailure: () => false,
-            onSuccess: () => true,
-          })
-        );
+        const succeeded = yield* service.executePlan(forgedPlan).pipe(Effect.isSuccess);
         expect(succeeded).toBe(false);
-        expect(yield* fs.exists(escapedPath)).toBe(false);
+        const exists6 = yield* fs.exists(escapedPath);
+        expect(exists6).toBe(false);
       })
     );
   });

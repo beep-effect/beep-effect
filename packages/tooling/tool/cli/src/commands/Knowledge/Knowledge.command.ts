@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -20,7 +21,6 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { isCi } from "../../internal/cli/EnvConfig.ts";
 import {
   KnowledgeHostPathDebtError,
   KnowledgeIntroducedFindingsError,
@@ -958,7 +958,7 @@ export const renderKnowledgeLeasesReport = (report: KnowledgeLeasesReport): stri
 // branch of this repository. The command checks it itself instead of trusting its caller.
 const mintPullRequestReasons = Effect.gen(function* () {
   const ci = yield* isCi;
-  const reasons = knowledgeMintPullRequestRefusals(yield* readKnowledgeMintPullRequest());
+  const reasons = yield* readKnowledgeMintPullRequest().pipe(Effect.map(knowledgeMintPullRequestRefusals));
   return ci ? reasons : A.prepend(reasons, "CI is not true; --accept-mint is CI-only.");
 });
 

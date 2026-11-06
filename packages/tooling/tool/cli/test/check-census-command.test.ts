@@ -101,19 +101,18 @@ const fixtureRepo = Effect.gen(function* () {
   const root = yield* temporaryWorkingDirectory;
 
   yield* writeProjectFile("bun.lock", "");
-  yield* writeProjectFile(
-    "package.json",
-    yield* encodeJsonString({ name: "check-census-command-fixture", private: true, workspaces: ["packages/*"] })
-  );
-  yield* writeProjectFile(
-    "packages/consumer/package.json",
-    yield* encodeJsonString({ name: "@fixture/consumer", private: true })
-  );
-  yield* writeProjectFile("packages/consumer/tsconfig.json", yield* encodeJsonString({ include: ["src"] }));
-  yield* writeProjectFile(
-    "packages/consumer/tsconfig.check.json",
-    yield* encodeJsonString({ extends: "./tsconfig.json", references: [] })
-  );
+  const encodedJsonString = yield* encodeJsonString({
+    name: "check-census-command-fixture",
+    private: true,
+    workspaces: ["packages/*"],
+  });
+  yield* writeProjectFile("package.json", encodedJsonString);
+  const encodedJsonString1 = yield* encodeJsonString({ name: "@fixture/consumer", private: true });
+  yield* writeProjectFile("packages/consumer/package.json", encodedJsonString1);
+  const encodedJsonString2 = yield* encodeJsonString({ include: ["src"] });
+  yield* writeProjectFile("packages/consumer/tsconfig.json", encodedJsonString2);
+  const encodedJsonString3 = yield* encodeJsonString({ extends: "./tsconfig.json", references: [] });
+  yield* writeProjectFile("packages/consumer/tsconfig.check.json", encodedJsonString3);
   yield* writeProjectFile("packages/consumer/src/index.ts", "export const consumerValue = 1;\n");
   yield* Effect.forEach(["tsc", "tsgo"], (compiler) =>
     writeProjectFile(`node_modules/.bin/${compiler}`, compilerShim).pipe(
@@ -175,9 +174,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       const report = yield* readReport;
       const gate = yield* Effect.fromOption(report.gate);
       expect(A.map(gate.comparisons, (comparison) => comparison.instantiations)).toStrictEqual(["increase"]);
-      expect(yield* loggedSince(mark)).toContain(
-        "FAIL @fixture/consumer: single-checker instantiations increased by 200."
-      );
+      const loggedSince4 = yield* loggedSince(mark);
+      expect(loggedSince4).toContain("FAIL @fixture/consumer: single-checker instantiations increased by 200.");
     })
   );
 
@@ -196,7 +194,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       expect(row?.buildOverlapFiles).toBe(1);
       const gate = yield* Effect.fromOption(report.gate);
       assertSome(gate.filter, "consumer");
-      expect(yield* loggedSince(mark)).toContain("@fixture/consumer");
+      const loggedSince5 = yield* loggedSince(mark);
+      expect(loggedSince5).toContain("@fixture/consumer");
     })
   );
 
@@ -212,7 +211,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       const error = yield* exit.cause.pipe(Cause.findErrorOption, Effect.fromOption);
       expect(error._tag).toBe("QualityScriptCommandError");
       expect(error.message).toContain("Instantiations");
-      expect(yield* fs.exists(REPORT_PATH)).toBe(false);
+      const exists6 = yield* fs.exists(REPORT_PATH);
+      expect(exists6).toBe(false);
     })
   );
 
@@ -255,8 +255,10 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       );
       expect(A.every(checkCensusBaselineRows(baseline), (row) => row.instantiations === 1000)).toBe(true);
       // --write-baseline skips the census and the gate, so no report is written.
-      expect(yield* fs.exists(REPORT_PATH)).toBe(false);
-      expect(yield* loggedSince(mark)).toContain(`wrote ${CHECK_CENSUS_BASELINE_PATH}`);
+      const exists7 = yield* fs.exists(REPORT_PATH);
+      expect(exists7).toBe(false);
+      const loggedSince8 = yield* loggedSince(mark);
+      expect(loggedSince8).toContain(`wrote ${CHECK_CENSUS_BASELINE_PATH}`);
     })
   );
 });

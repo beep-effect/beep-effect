@@ -62,7 +62,8 @@ describe("maintainers", () => {
       // actually pin the field are the two decode cases above and the
       // completeness guard below — those fail when the field is removed.
       const wire = [{ name: "Dee", email: "dee@example.com" }, "Ray <ray@example.com>"];
-      const encoded = yield* encode(yield* decode({ maintainers: wire }));
+      const decoded = yield* decode({ maintainers: wire });
+      const encoded = yield* encode(decoded);
       assert.deepStrictEqual<unknown>(encoded.maintainers, wire);
     })
   );
@@ -70,7 +71,8 @@ describe("maintainers", () => {
   it.effect("keeps unknown keys on a maintainer object", () =>
     Effect.gen(function* () {
       const wire = [{ name: "Dee", github: "@dee" }];
-      const encoded = yield* encode(yield* decode({ maintainers: wire }));
+      const decoded1 = yield* decode({ maintainers: wire });
+      const encoded = yield* encode(decoded1);
       assert.deepStrictEqual<unknown>(encoded.maintainers, wire);
     })
   );
@@ -99,14 +101,16 @@ describe("keywords", () => {
       // Keyword order is authored, not incidental — sorting it would be a
       // rewrite of legal input.
       const wire = ["zebra", "alpha", "middle"];
-      const encoded = yield* encode(yield* decode({ keywords: wire }));
+      const decoded2 = yield* decode({ keywords: wire });
+      const encoded = yield* encode(decoded2);
       assert.deepStrictEqual<unknown>(encoded.keywords, wire);
     })
   );
 
   it.effect("an empty array stays an empty array, not an absent key", () =>
     Effect.gen(function* () {
-      const encoded = yield* encode(yield* decode({ keywords: [] }));
+      const decoded3 = yield* decode({ keywords: [] });
+      const encoded = yield* encode(decoded3);
       assert.deepStrictEqual<unknown>(encoded.keywords, []);
     })
   );

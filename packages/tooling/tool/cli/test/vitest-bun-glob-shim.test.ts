@@ -72,7 +72,8 @@ it.layer(NodeServices.layer)("Bun.Glob shim parity", (it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const cwd = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+      const cwd = yield* fs.realPath(madeTempDirectoryScoped);
       yield* Effect.forEach(fixtureFiles, (file) =>
         Effect.gen(function* () {
           yield* fs.makeDirectory(path.dirname(path.join(cwd, file)), { recursive: true });

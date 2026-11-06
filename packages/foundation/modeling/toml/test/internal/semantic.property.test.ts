@@ -104,10 +104,13 @@ describe("semantic property floor", () => {
         const text = source(sample);
         const document = yield* TomlDocument.parse(text);
         assert.strictEqual(document.stringify(), text);
-        assert.deepStrictEqual(yield* document.toValue(), buildValue(parseExpressions(text)));
+        const toValue1 = yield* document.toValue();
+        assert.deepStrictEqual(toValue1, buildValue(parseExpressions(text)));
         const reparsed = yield* TomlDocument.parse(document.stringify());
         assert.strictEqual(reparsed.stringify(), text);
-        assert.deepStrictEqual(yield* reparsed.toValue(), yield* document.toValue());
+        const toValue2 = yield* reparsed.toValue();
+        const toValue3 = yield* document.toValue();
+        assert.deepStrictEqual(toValue2, toValue3);
       }),
     runs
   );

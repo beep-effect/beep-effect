@@ -151,9 +151,12 @@ describe("MailTagging job", () => {
         expect(counts(report)).toStrictEqual(firstRunCounts);
         expect(report.wrote).toBe(false);
         expect(report.mode).toBe("dry-run");
-        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
-        expect(yield* Ref.get(state.messages)).toStrictEqual(mailbox);
-        assertNone(yield* Ref.get(state.checkpoint));
+        const got = yield* Ref.get(state.writes);
+        expect(got).toStrictEqual([]);
+        const got1 = yield* Ref.get(state.messages);
+        expect(got1).toStrictEqual(mailbox);
+        const got2 = yield* Ref.get(state.checkpoint);
+        assertNone(got2);
       })
     );
   });
@@ -164,19 +167,19 @@ describe("MailTagging job", () => {
       Effect.fnUntraced(function* () {
         const state = yield* World;
         const report = yield* run("apply", runId);
-        const entries = activeTagEntries(yield* Ref.get(state.tagRecords));
+        const got3 = yield* Ref.get(state.tagRecords);
+        const entries = activeTagEntries(got3);
 
         expect(counts(report)).toStrictEqual(firstRunCounts);
         expect(report.wrote).toBe(true);
-        expect(yield* state.categoriesOf(1)).toStrictEqual([
-          "Docket - unverified",
-          "Personal",
-          "M: acme.10001",
-          "P: USPTO",
-        ]);
-        expect(yield* state.categoriesOf(2)).toStrictEqual(["Personal", "M: acme.10001"]);
-        expect(yield* state.categoriesOf(3)).toStrictEqual(["P: Unmatched - review"]);
-        expect(yield* state.categoriesOf(4)).toStrictEqual([]);
+        const categoriesOf4 = yield* state.categoriesOf(1);
+        expect(categoriesOf4).toStrictEqual(["Docket - unverified", "Personal", "M: acme.10001", "P: USPTO"]);
+        const categoriesOf5 = yield* state.categoriesOf(2);
+        expect(categoriesOf5).toStrictEqual(["Personal", "M: acme.10001"]);
+        const categoriesOf6 = yield* state.categoriesOf(3);
+        expect(categoriesOf6).toStrictEqual(["P: Unmatched - review"]);
+        const categoriesOf7 = yield* state.categoriesOf(4);
+        expect(categoriesOf7).toStrictEqual([]);
         expect(A.map(entries, (entry) => entry.messageId)).toStrictEqual(["msg-1", "msg-2", "msg-3", "msg-5"]);
         expect(A.map(entries, (entry) => O.getOrNull(entry.decision.matterKey))).toStrictEqual([
           acme,
@@ -190,7 +193,8 @@ describe("MailTagging job", () => {
           null,
           null,
         ]);
-        expect(A.take(yield* Ref.get(state.writes), 10)).toStrictEqual([
+        const got8 = yield* Ref.get(state.writes);
+        expect(A.take(got8, 10)).toStrictEqual([
           "ensureMasterCategories:P: USPTO|P: Client|P: Opposing counsel|P: Billing|P: Admin|P: Unmatched - review",
           "filingLedger.append:FilingIntended",
           "upload:2026-07-01 office-action.pdf",
@@ -202,17 +206,14 @@ describe("MailTagging job", () => {
           "setCategories:msg-2",
           "checkpoint.save",
         ]);
-        expect(yield* state.writesOf("ensureMasterCategories")).toHaveLength(2);
-        expect(A.map(yield* Ref.get(state.categoryWrites), (write) => O.getOrNull(write.changeKey))).toStrictEqual([
-          "ck-1",
-          "ck-2",
-          "ck-3",
-          "ck-5",
-        ]);
-        expect(
-          A.map(completedFilings(yield* Ref.get(state.filingRecords)), (entry) => entry.destination)
-        ).toStrictEqual(["uspto-incoming"]);
-        expect(yield* state.writesOf("checkpoint.save")).toHaveLength(3);
+        const writesOf9 = yield* state.writesOf("ensureMasterCategories");
+        expect(writesOf9).toHaveLength(2);
+        const got10 = yield* Ref.get(state.categoryWrites);
+        expect(A.map(got10, (write) => O.getOrNull(write.changeKey))).toStrictEqual(["ck-1", "ck-2", "ck-3", "ck-5"]);
+        const got11 = yield* Ref.get(state.filingRecords);
+        expect(A.map(completedFilings(got11), (entry) => entry.destination)).toStrictEqual(["uspto-incoming"]);
+        const writesOf12 = yield* state.writesOf("checkpoint.save");
+        expect(writesOf12).toHaveLength(3);
       })
     );
   });
@@ -227,9 +228,12 @@ describe("MailTagging job", () => {
         const categoryWrites = yield* state.writesOf("setCategories:");
         const second = yield* run("apply", "run-0002");
 
-        expect(yield* state.writesOf("setCategories:")).toStrictEqual(categoryWrites);
-        expect(yield* state.writesOf("upload:")).toHaveLength(1);
-        expect(yield* Ref.get(state.messages)).toStrictEqual(before);
+        const writesOf13 = yield* state.writesOf("setCategories:");
+        expect(writesOf13).toStrictEqual(categoryWrites);
+        const writesOf14 = yield* state.writesOf("upload:");
+        expect(writesOf14).toHaveLength(1);
+        const got15 = yield* Ref.get(state.messages);
+        expect(got15).toStrictEqual(before);
         expect(second.alreadyTagged).toBe(1);
         expect(second.categoryAdds).toStrictEqual([]);
         expect(second.attachmentsFiled).toBe(0);
@@ -248,20 +252,23 @@ describe("MailTagging job", () => {
 
         expect(failure).toBeInstanceOf(MailTaggingPortError);
         expect(O.getOrNull(O.flatMap(interrupted, (saved) => saved.lastMessageId))).toBe("msg-2");
-        expect(yield* state.writesOf("setCategories:")).toStrictEqual(["setCategories:msg-1", "setCategories:msg-2"]);
+        const writesOf16 = yield* state.writesOf("setCategories:");
+        expect(writesOf16).toStrictEqual(["setCategories:msg-1", "setCategories:msg-2"]);
 
         const resumed = yield* run("apply", "run-0002");
         const completed = yield* Ref.get(state.checkpoint);
 
         expect(resumed.alreadyTagged).toBe(1);
         expect(resumed.scanned).toBe(4);
-        expect(yield* state.writesOf("setCategories:")).toStrictEqual([
+        const writesOf17 = yield* state.writesOf("setCategories:");
+        expect(writesOf17).toStrictEqual([
           "setCategories:msg-1",
           "setCategories:msg-2",
           "setCategories:msg-3",
           "setCategories:msg-5",
         ]);
-        expect(yield* state.categoriesOf(2)).toStrictEqual(["Personal", "M: acme.10001"]);
+        const categoriesOf18 = yield* state.categoriesOf(2);
+        expect(categoriesOf18).toStrictEqual(["Personal", "M: acme.10001"]);
         expect(O.getOrNull(O.flatMap(completed, (saved) => saved.lastMessageId))).toBe("msg-5");
         expect(O.getOrNull(O.map(completed, (saved) => saved.processed))).toBe(6);
       })
@@ -277,32 +284,37 @@ describe("MailTagging job", () => {
         const failure = yield* Effect.flip(run("apply", runId));
 
         expect(failure).toBeInstanceOf(MailTaggingPortError);
-        expect(yield* state.categoriesOf(2)).toStrictEqual(["Personal"]);
-        expect(A.map(activeTagEntries(yield* Ref.get(state.tagRecords)), (entry) => entry.messageId)).toStrictEqual([
-          "msg-1",
-          "msg-2",
-        ]);
+        const categoriesOf19 = yield* state.categoriesOf(2);
+        expect(categoriesOf19).toStrictEqual(["Personal"]);
+        const got20 = yield* Ref.get(state.tagRecords);
+        expect(A.map(activeTagEntries(got20), (entry) => entry.messageId)).toStrictEqual(["msg-1", "msg-2"]);
 
         const preview = yield* run("dry-run", "run-0002");
         const rerun = yield* run("apply", "run-0003");
-        const entries = activeTagEntries(yield* Ref.get(state.tagRecords));
+        const got21 = yield* Ref.get(state.tagRecords);
+        const entries = activeTagEntries(got21);
 
         expect([preview.repaired, preview.wrote]).toStrictEqual([1, false]);
         expect([rerun.alreadyTagged, rerun.repaired, rerun.scanned]).toStrictEqual([1, 1, 5]);
-        expect(yield* state.categoriesOf(2)).toStrictEqual(["Personal", "M: acme.10001"]);
+        const categoriesOf22 = yield* state.categoriesOf(2);
+        expect(categoriesOf22).toStrictEqual(["Personal", "M: acme.10001"]);
         expect(A.map(entries, (entry) => [entry.messageId, entry.runId])).toStrictEqual([
           ["msg-1", "run-0001"],
           ["msg-2", "run-0001"],
           ["msg-3", "run-0003"],
           ["msg-5", "run-0003"],
         ]);
-        expect(yield* state.writesOf("upload:")).toHaveLength(1);
+        const writesOf23 = yield* state.writesOf("upload:");
+        expect(writesOf23).toHaveLength(1);
 
         yield* undo("apply", "undo-0001");
 
-        expect(yield* state.categoriesOf(1)).toStrictEqual(["Docket - unverified", "Personal"]);
-        expect(yield* state.categoriesOf(2)).toStrictEqual(["Personal"]);
-        expect(yield* state.categoriesOf(3)).toStrictEqual(["P: Unmatched - review"]);
+        const categoriesOf24 = yield* state.categoriesOf(1);
+        expect(categoriesOf24).toStrictEqual(["Docket - unverified", "Personal"]);
+        const categoriesOf25 = yield* state.categoriesOf(2);
+        expect(categoriesOf25).toStrictEqual(["Personal"]);
+        const categoriesOf26 = yield* state.categoriesOf(3);
+        expect(categoriesOf26).toStrictEqual(["P: Unmatched - review"]);
       })
     );
   });
@@ -324,9 +336,12 @@ describe("MailTagging job", () => {
         expect([preview.alreadyTagged, preview.repaired]).toStrictEqual([1, 0]);
         expect([rerun.scanned, rerun.alreadyTagged, rerun.repaired]).toStrictEqual([1, 1, 0]);
         expect(rerun.categoryAdds).toStrictEqual([]);
-        expect(yield* state.writesOf("setCategories:")).toStrictEqual(categoryWrites);
-        expect(yield* state.categoriesOf(5)).toStrictEqual([]);
-        expect(yield* Ref.get(state.tagRecords)).toStrictEqual(ledgerLines);
+        const writesOf27 = yield* state.writesOf("setCategories:");
+        expect(writesOf27).toStrictEqual(categoryWrites);
+        const categoriesOf28 = yield* state.categoriesOf(5);
+        expect(categoriesOf28).toStrictEqual([]);
+        const got29 = yield* Ref.get(state.tagRecords);
+        expect(got29).toStrictEqual(ledgerLines);
       })
     );
   });
@@ -342,19 +357,19 @@ describe("MailTagging job", () => {
 
         assertInstanceOf(failure, MailTaggingPortError);
         expect(A.flatMap(O.toArray(interrupted), (saved) => saved.coveredAtBoundary)).toStrictEqual(["msg-2"]);
-        expect(yield* state.categoriesById("msg-2b")).toStrictEqual([]);
-        expect(A.map(activeTagEntries(yield* Ref.get(state.tagRecords)), (entry) => entry.messageId)).toStrictEqual([
-          "msg-1",
-          "msg-2",
-          "msg-2b",
-        ]);
+        const categoriesById30 = yield* state.categoriesById("msg-2b");
+        expect(categoriesById30).toStrictEqual([]);
+        const got31 = yield* Ref.get(state.tagRecords);
+        expect(A.map(activeTagEntries(got31), (entry) => entry.messageId)).toStrictEqual(["msg-1", "msg-2", "msg-2b"]);
 
         const rerun = yield* run("apply", "run-0002");
         const completed = yield* Ref.get(state.checkpoint);
 
         expect([rerun.scanned, rerun.alreadyTagged, rerun.repaired]).toStrictEqual([2, 1, 1]);
-        expect(yield* state.categoriesById("msg-2b")).toStrictEqual(["M: acme.10001"]);
-        expect(activeTagEntries(yield* Ref.get(state.tagRecords))).toHaveLength(3);
+        const categoriesById32 = yield* state.categoriesById("msg-2b");
+        expect(categoriesById32).toStrictEqual(["M: acme.10001"]);
+        const got33 = yield* Ref.get(state.tagRecords);
+        expect(activeTagEntries(got33)).toHaveLength(3);
         expect(A.flatMap(O.toArray(completed), (saved) => saved.coveredAtBoundary)).toStrictEqual(["msg-2", "msg-2b"]);
 
         yield* state.mailbox.setCategories(
@@ -364,8 +379,10 @@ describe("MailTagging job", () => {
         const third = yield* run("apply", "run-0003");
 
         expect([third.alreadyTagged, third.repaired]).toStrictEqual([2, 0]);
-        expect(yield* state.writesOf("setCategories:")).toStrictEqual(categoryWrites);
-        expect(yield* state.categoriesById("msg-2b")).toStrictEqual([]);
+        const writesOf34 = yield* state.writesOf("setCategories:");
+        expect(writesOf34).toStrictEqual(categoryWrites);
+        const categoriesById35 = yield* state.categoriesById("msg-2b");
+        expect(categoriesById35).toStrictEqual([]);
       })
     );
   });
@@ -379,20 +396,18 @@ describe("MailTagging job", () => {
         const failure = yield* Effect.flip(run("apply", runId));
 
         assertInstanceOf(failure, MailTaggingPortError);
-        expect(yield* state.writesOf("setCategories:")).toStrictEqual([]);
+        const writesOf36 = yield* state.writesOf("setCategories:");
+        expect(writesOf36).toStrictEqual([]);
 
         const rerun = yield* run("apply", "run-0002");
 
         expect([rerun.scanned, rerun.matched, rerun.attachmentsReconciled, rerun.attachmentsFiled]).toStrictEqual([
           5, 2, 1, 0,
         ]);
-        expect(yield* state.categoriesOf(1)).toStrictEqual([
-          "Docket - unverified",
-          "Personal",
-          "M: acme.10001",
-          "P: USPTO",
-        ]);
-        expect(yield* Ref.get(state.uploads)).toHaveLength(1);
+        const categoriesOf37 = yield* state.categoriesOf(1);
+        expect(categoriesOf37).toStrictEqual(["Docket - unverified", "Personal", "M: acme.10001", "P: USPTO"]);
+        const got38 = yield* Ref.get(state.uploads);
+        expect(got38).toHaveLength(1);
       })
     );
   });
@@ -423,9 +438,8 @@ describe("MailTagging job client filing", () => {
         const categoryWrites = yield* Ref.get(state.categoryWrites);
 
         expect([report.matched, report.attachmentsFiled]).toStrictEqual([1, 1]);
-        expect(
-          A.map(completedFilings(yield* Ref.get(state.filingRecords)), (entry) => entry.destination)
-        ).toStrictEqual(["from-client"]);
+        const got39 = yield* Ref.get(state.filingRecords);
+        expect(A.map(completedFilings(got39), (entry) => entry.destination)).toStrictEqual(["from-client"]);
         expect(undone.categoriesRemoved).toBe(2);
         expect(A.map(categoryWrites, (write) => [write.expected, write.categories])).toStrictEqual([
           [["Personal"], ["Personal", "M: acme.10001", "P: Client"]],
@@ -444,8 +458,10 @@ describe("MailTagging job client filing", () => {
 
         expect([report.matched, report.attachmentsFiled]).toStrictEqual([1, 0]);
         expect(report.attachmentsSkipped["sender-not-routable"]).toBe(1);
-        expect(yield* state.writesOf("upload:")).toStrictEqual([]);
-        expect(yield* state.categoriesOf(6)).toStrictEqual(["Personal", "M: acme.10001", "P: Client"]);
+        const writesOf40 = yield* state.writesOf("upload:");
+        expect(writesOf40).toStrictEqual([]);
+        const categoriesOf41 = yield* state.categoriesOf(6);
+        expect(categoriesOf41).toStrictEqual(["Personal", "M: acme.10001", "P: Client"]);
       })
     );
   });
@@ -470,12 +486,16 @@ describe("MailTagging job contact-only near misses", () => {
           expect(A.map(report.categoryAdds, (item) => [item.category, item.count])).toStrictEqual([["P: Client", 1]]);
         }
         expect([preview.wrote, applied.wrote]).toStrictEqual([false, true]);
-        expect(
-          A.map(activeTagEntries(yield* Ref.get(state.tagRecords)), (entry) => [entry.messageId, entry.addedCategories])
-        ).toStrictEqual([["msg-1", ["P: Client"]]]);
-        expect(yield* state.categoriesOf(1)).toStrictEqual(["P: Client"]);
-        expect(yield* state.categoriesOf(2)).toStrictEqual([]);
-        expect(yield* state.categoriesOf(3)).toStrictEqual([]);
+        const got42 = yield* Ref.get(state.tagRecords);
+        expect(A.map(activeTagEntries(got42), (entry) => [entry.messageId, entry.addedCategories])).toStrictEqual([
+          ["msg-1", ["P: Client"]],
+        ]);
+        const categoriesOf43 = yield* state.categoriesOf(1);
+        expect(categoriesOf43).toStrictEqual(["P: Client"]);
+        const categoriesOf44 = yield* state.categoriesOf(2);
+        expect(categoriesOf44).toStrictEqual([]);
+        const categoriesOf45 = yield* state.categoriesOf(3);
+        expect(categoriesOf45).toStrictEqual([]);
       })
     );
   });
@@ -500,7 +520,8 @@ describe("MailTagging undo", () => {
         const planned = yield* undo("dry-run", "undo-0000");
 
         expect({ ...planned }).toMatchObject({ entries: 4, messagesRestored: 4, categoriesRemoved: 5, wrote: false });
-        expect(yield* Ref.get(state.writes)).toStrictEqual(writesBefore);
+        const got46 = yield* Ref.get(state.writes);
+        expect(got46).toStrictEqual(writesBefore);
 
         const report = yield* undo("apply", "undo-0001");
 
@@ -511,11 +532,16 @@ describe("MailTagging undo", () => {
           categoriesRemoved: 5,
           wrote: true,
         });
-        expect(yield* state.categoriesOf(1)).toStrictEqual(["Docket - unverified", "Personal"]);
-        expect(yield* state.categoriesOf(2)).toStrictEqual(["Follow up", "Personal"]);
-        expect(yield* state.categoriesOf(3)).toStrictEqual([]);
-        expect(yield* state.categoriesOf(5)).toStrictEqual([]);
-        expect(activeTagEntries(yield* Ref.get(state.tagRecords))).toStrictEqual([]);
+        const categoriesOf47 = yield* state.categoriesOf(1);
+        expect(categoriesOf47).toStrictEqual(["Docket - unverified", "Personal"]);
+        const categoriesOf48 = yield* state.categoriesOf(2);
+        expect(categoriesOf48).toStrictEqual(["Follow up", "Personal"]);
+        const categoriesOf49 = yield* state.categoriesOf(3);
+        expect(categoriesOf49).toStrictEqual([]);
+        const categoriesOf50 = yield* state.categoriesOf(5);
+        expect(categoriesOf50).toStrictEqual([]);
+        const got51 = yield* Ref.get(state.tagRecords);
+        expect(activeTagEntries(got51)).toStrictEqual([]);
       })
     );
   });
@@ -547,13 +573,12 @@ describe("MailTagging undo", () => {
           categoriesRemoved: 3,
           wrote: true,
         });
-        expect(yield* state.writesOf("setCategories:")).toStrictEqual([
-          ...categoryWrites,
-          "setCategories:msg-1",
-          "setCategories:msg-2",
-        ]);
-        expect(yield* state.categoriesOf(5)).toStrictEqual(["Follow up"]);
-        expect(activeTagEntries(yield* Ref.get(state.tagRecords))).toStrictEqual([]);
+        const writesOf52 = yield* state.writesOf("setCategories:");
+        expect(writesOf52).toStrictEqual([...categoryWrites, "setCategories:msg-1", "setCategories:msg-2"]);
+        const categoriesOf53 = yield* state.categoriesOf(5);
+        expect(categoriesOf53).toStrictEqual(["Follow up"]);
+        const got54 = yield* Ref.get(state.tagRecords);
+        expect(activeTagEntries(got54)).toStrictEqual([]);
         expect((yield* undo("apply", "undo-0002")).entries).toBe(0);
       })
     );
@@ -583,16 +608,21 @@ describe("MailTagging undo", () => {
           fromStart.attachmentsFiled,
         ]).toStrictEqual([5, 4, 0, 0]);
         expect(fromStart.unmatched["no-signal"]).toBe(1);
-        expect(yield* state.writesOf("setCategories:")).toStrictEqual(categoryWrites);
-        expect(yield* Ref.get(state.tagRecords)).toStrictEqual(ledgerLines);
-        expect(yield* state.categoriesOf(1)).toStrictEqual(["Docket - unverified", "Personal"]);
-        expect(yield* state.categoriesOf(5)).toStrictEqual([]);
+        const writesOf55 = yield* state.writesOf("setCategories:");
+        expect(writesOf55).toStrictEqual(categoryWrites);
+        const got56 = yield* Ref.get(state.tagRecords);
+        expect(got56).toStrictEqual(ledgerLines);
+        const categoriesOf57 = yield* state.categoriesOf(1);
+        expect(categoriesOf57).toStrictEqual(["Docket - unverified", "Personal"]);
+        const categoriesOf58 = yield* state.categoriesOf(5);
+        expect(categoriesOf58).toStrictEqual([]);
 
         yield* Ref.update(state.messages, A.append(envelope({ at: 6, subject: "Notice for 16/123,456" })));
         const later = yield* run("apply", "run-0004");
 
         expect([later.undoneSkipped, later.matched]).toStrictEqual([1, 1]);
-        expect(yield* state.categoriesOf(6)).toStrictEqual(["M: acme.10001"]);
+        const categoriesOf59 = yield* state.categoriesOf(6);
+        expect(categoriesOf59).toStrictEqual(["M: acme.10001"]);
       })
     );
   });
@@ -608,7 +638,8 @@ describe("MailTagging undo", () => {
         const second = yield* undo("apply", "undo-0002");
 
         expect({ ...second }).toMatchObject({ entries: 0, messagesRestored: 0, categoriesRemoved: 0, wrote: false });
-        expect(yield* Ref.get(state.writes)).toStrictEqual(writesBefore);
+        const got60 = yield* Ref.get(state.writes);
+        expect(got60).toStrictEqual(writesBefore);
       })
     );
   });

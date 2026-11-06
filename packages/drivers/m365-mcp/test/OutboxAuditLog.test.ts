@@ -73,7 +73,8 @@ const useLog = Effect.fnUntraced(function* <A, E, R>(
 const tempDirectory = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return path.join(yield* fs.makeTempDirectoryScoped({ prefix: "outbox-audit-" }), "audit");
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "outbox-audit-" });
+  return path.join(madeTempDirectoryScoped, "audit");
 });
 
 describe("@beep/m365-mcp outbox audit log", () => {
@@ -118,7 +119,8 @@ describe("@beep/m365-mcp outbox audit log", () => {
             return [auditId, yield* log.nextAuditId];
           })
         );
-        const names = pipe(yield* fs.readDirectory(directory), A.sort(Order.String));
+        const readDirectory1 = yield* fs.readDirectory(directory);
+        const names = pipe(readDirectory1, A.sort(Order.String));
         const lines = yield* Effect.forEach(names, (name) =>
           fs.readFileString(path.join(directory, name)).pipe(Effect.map(Str.split("\n")))
         );

@@ -50,9 +50,12 @@ layer(Path.layer, { timeout: "10 seconds" })("Walker.ascend", (it) => {
 
   it.effect("stops a parent-relative start at its last '..' instead of stepping to '.'", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* Walker.ascend("../x"), ["../x", ".."]);
-      assert.deepStrictEqual(yield* Walker.ascend("../../a"), ["../../a", "../.."]);
-      assert.deepStrictEqual(yield* Walker.ascend(".."), [".."]);
+      const ascend1 = yield* Walker.ascend("../x");
+      assert.deepStrictEqual(ascend1, ["../x", ".."]);
+      const ascend2 = yield* Walker.ascend("../../a");
+      assert.deepStrictEqual(ascend2, ["../../a", "../.."]);
+      const ascend3 = yield* Walker.ascend("..");
+      assert.deepStrictEqual(ascend3, [".."]);
     })
   );
 
@@ -177,8 +180,10 @@ layer(Path.layer, { timeout: "10 seconds" })("Walker.ascend", (it) => {
   // degenerate case where the ceiling break and the dirname fixpoint coincide.
   it.effect("stops sanely when both start and the ceiling are the filesystem root", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* Walker.ascend("/", { stopAt: "/" }), ["/"]);
-      assert.deepStrictEqual(yield* Walker.ascend("/a/b", { stopAt: "/" }), ["/a/b", "/a", "/"]);
+      const ascend4 = yield* Walker.ascend("/", { stopAt: "/" });
+      assert.deepStrictEqual(ascend4, ["/"]);
+      const ascend5 = yield* Walker.ascend("/a/b", { stopAt: "/" });
+      assert.deepStrictEqual(ascend5, ["/a/b", "/a", "/"]);
     })
   );
 
@@ -268,7 +273,8 @@ describe("Walker.firstMatch", () => {
       const found = yield* Walker.firstMatch(["a", "b", "c"], predicate);
 
       assertSome(found, "c");
-      assert.deepStrictEqual(yield* Ref.get(probed), ["a", "b", "c"]);
+      const got = yield* Ref.get(probed);
+      assert.deepStrictEqual(got, ["a", "b", "c"]);
     })
   );
 
@@ -286,7 +292,8 @@ describe("Walker.firstMatch", () => {
       const found = yield* Walker.firstMatch(["a", "b", "c"], predicate);
 
       assertSome(found, "b");
-      assert.deepStrictEqual(yield* Ref.get(probed), ["a", "b"]);
+      const got6 = yield* Ref.get(probed);
+      assert.deepStrictEqual(got6, ["a", "b"]);
     })
   );
 
@@ -304,7 +311,8 @@ describe("Walker.firstMatch", () => {
       const found = yield* Walker.firstMatch(["a", "b"], predicate);
 
       assertSome(found, "a");
-      assert.deepStrictEqual(yield* Ref.get(probed), ["a"]);
+      const got7 = yield* Ref.get(probed);
+      assert.deepStrictEqual(got7, ["a"]);
     })
   );
 
@@ -366,7 +374,8 @@ describe("Walker.findUpward callback contract", () => {
         return A.map(dirs, (dir) => `${dir}/.apprc`);
       }).pipe(Effect.provideService(FileSystem.FileSystem, fs));
       assert.deepStrictEqual(calls, [["/near"], ["/far"]]);
-      assert.deepStrictEqual(yield* Ref.get(probed), ["/near/.apprc", "/far/.apprc"]);
+      const got8 = yield* Ref.get(probed);
+      assert.deepStrictEqual(got8, ["/near/.apprc", "/far/.apprc"]);
       assertSome(found, "/far/.apprc");
     })
   );
@@ -496,7 +505,8 @@ describe("Walker.findRoot", () => {
       const found = yield* Walker.findRoot(["/a/b/c", "/a/b", "/a"], isRoot);
 
       assertSome(found, "/a/b");
-      assert.deepStrictEqual(yield* Ref.get(probed), ["/a/b/c", "/a/b"]);
+      const got9 = yield* Ref.get(probed);
+      assert.deepStrictEqual(got9, ["/a/b/c", "/a/b"]);
     })
   );
 });
@@ -553,7 +563,8 @@ layer(linkedRepo, { timeout: "10 seconds" })("Walker.ascendWithin", (it) => {
   it.effect("ascends to the root, exactly as ascend does, when there is no ceiling", () =>
     Effect.gen(function* () {
       const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.none());
-      assert.deepStrictEqual(dirs, yield* Walker.ascend("/link/repo/packages/foo"));
+      const ascend10 = yield* Walker.ascend("/link/repo/packages/foo");
+      assert.deepStrictEqual(dirs, ascend10);
       assert.strictEqual(dirs.at(-1), "/");
     })
   );

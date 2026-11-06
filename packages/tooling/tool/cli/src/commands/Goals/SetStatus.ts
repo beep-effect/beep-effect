@@ -21,6 +21,9 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -32,9 +35,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { readGoalCloseoutView } from "./Completion.ts";
 import {
   GoalManifestInvalidError,
@@ -137,8 +137,10 @@ const processGoalMigration = Effect.fn("Goals.processGoalMigration")(function* (
 const runGoalsMigration = Effect.fn("Goals.runGoalsMigration")(function* (options: { readonly write: boolean }) {
   const records = yield* listGoalPackets();
   let counts = emptyGoalsMigrationCounts;
-  for (const record of records)
-    counts = addGoalsMigrationCounts(counts, yield* processGoalMigration(record, options.write));
+  for (const record of records) {
+    const processGoalMigration1 = yield* processGoalMigration(record, options.write);
+    counts = addGoalsMigrationCounts(counts, processGoalMigration1);
+  }
 
   const mode = options.write ? "applied" : "planned (dry-run; rerun with --write to apply)";
   yield* Console.log(
@@ -408,7 +410,8 @@ const planStreamTransition = Effect.fn("Goals.planStreamTransition")(function* (
     actor: "operator",
     at,
   });
-  return O.some(yield* writer.plan(request));
+  const plan1 = yield* writer.plan(request);
+  return O.some(plan1);
 });
 
 type ManifestEdit = { readonly path: ReadonlyArray<string>; readonly value: unknown };

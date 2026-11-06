@@ -7,21 +7,24 @@ import * as S from "effect/Schema";
 it.effect("FromValue preserves spelling and rebuilds remembered objects when url or type changes", () =>
   Effect.gen(function* () {
     const original = yield* S.decodeEffect(Funding.FromValue)({ url: "old", type: "github", custom: 42 });
-    assert.deepStrictEqual(yield* S.encodeEffect(Funding.FromValue)(original), {
+    const value = yield* S.encodeEffect(Funding.FromValue)(original);
+    assert.deepStrictEqual(value, {
       url: "old",
       type: "github",
       custom: 42,
     });
     const urlChanged = Funding.make({ url: "new", type: "github", rest: { custom: 42 } });
     Funding.rememberWire(urlChanged, { url: "old", type: "github", custom: 42 });
-    assert.deepStrictEqual(yield* S.encodeEffect(Funding.FromValue)(urlChanged), {
+    const value1 = yield* S.encodeEffect(Funding.FromValue)(urlChanged);
+    assert.deepStrictEqual(value1, {
       url: "new",
       type: "github",
       custom: 42,
     });
     const typeChanged = Funding.make({ url: "old", type: "other" });
     Funding.rememberWire(typeChanged, { url: "old", type: "github" });
-    assert.deepStrictEqual(yield* S.encodeEffect(Funding.FromValue)(typeChanged), { url: "old", type: "other" });
+    const value2 = yield* S.encodeEffect(Funding.FromValue)(typeChanged);
+    assert.deepStrictEqual(value2, { url: "old", type: "other" });
   })
 );
 
@@ -32,7 +35,8 @@ it.effect.prop(
     Effect.gen(function* () {
       const funding = yield* S.decodeEffect(Funding.FromValue)(wire);
       assert.strictEqual(funding.url, wire.url);
-      assert.deepStrictEqual(yield* S.encodeEffect(Funding.FromValue)(funding), wire);
+      const value3 = yield* S.encodeEffect(Funding.FromValue)(funding);
+      assert.deepStrictEqual(value3, wire);
     }),
   { arbitrary: fcRuns(50) }
 );

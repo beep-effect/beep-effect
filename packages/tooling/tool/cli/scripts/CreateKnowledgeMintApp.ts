@@ -19,6 +19,15 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+class CreateKnowledgeMintAppOperationError extends S.TaggedError<
+  CreateKnowledgeMintAppOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CreateKnowledgeMintAppOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in CreateKnowledgeMintApp.ts." }
+) {}
+
 const PORT = 8787;
 const MANIFEST_URL = new URL("../../../../../scripts/github-app/beep-knowledge-mint.manifest.json", import.meta.url);
 const ITEM_TITLE = "beep-knowledge-mint GitHub App";
@@ -78,7 +87,8 @@ const convertAndStore = Effect.fn("KnowledgeMint.convertAndStore")(function* (co
   if (response.status !== 201) {
     return { _tag: "ConversionFailed", status: response.status } satisfies Outcome;
   }
-  const converted = yield* decodeConversion(yield* response.json);
+  const json1 = yield* response.json;
+  const converted = yield* decodeConversion(json1);
   const template = yield* renderTemplate(converted);
   // No secret in argv, stdout, stderr, the callback page, or a temporary file.
   // Bun uses a socket for child stdin on Linux. The CLI requires a real pipe
@@ -91,9 +101,10 @@ const convertAndStore = Effect.fn("KnowledgeMint.convertAndStore")(function* (co
   const exitCode = yield* Effect.promise(() => child.exited);
   if (exitCode !== 0) {
     // One safe, count-only diagnosis for the operator; a missing op-doctor changes nothing.
-    yield* Effect.tryPromise(() => Bun.spawn(["op-doctor"], { stdout: "inherit", stderr: "ignore" }).exited).pipe(
-      Effect.ignore
-    );
+    yield* Effect.tryPromise({
+      try: () => Bun.spawn(["op-doctor"], { stdout: "inherit", stderr: "ignore" }).exited,
+      catch: (cause) => CreateKnowledgeMintAppOperationError.make({ cause }),
+    }).pipe(Effect.ignore);
   }
   return exitCode === 0
     ? ({ _tag: "Stored", slug: converted.slug, appId: converted.id } satisfies Outcome)
@@ -181,7 +192,8 @@ export const makeKnowledgeMintHandler: {
     }
     // Set before the first yield, so a concurrent second callback is refused.
     attempted = true;
-    return yield* report(yield* runCallback(code));
+    const resultCallback = yield* runCallback(code);
+    return yield* report(resultCallback);
   });
 });
 
@@ -195,7 +207,8 @@ const startRegistration = Effect.fn("KnowledgeMint.startRegistration")(function*
   );
   const manifestJson = yield* encodeJson(manifest);
   const crypto = yield* SecureRandom.SecureRandom;
-  const handle = makeKnowledgeMintHandler(yield* crypto.uuidV4(), manifestJson);
+  const uuidV42 = yield* crypto.uuidV4();
+  const handle = makeKnowledgeMintHandler(uuidV42, manifestJson);
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: PORT,

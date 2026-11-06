@@ -22,8 +22,9 @@ it.layer(ActionState.layerTest(), { timeout: "30 seconds" })((it) => {
         ["saveSecret", state.saveSecret("k", "secret")],
       ] as const;
       for (const [member, call] of calls) {
+        const exit1 = yield* Effect.exit(call);
         assertExitFailure(
-          yield* Effect.exit(call),
+          exit1,
           Cause.die(
             UnstubbedMemberError.make({
               message: `ActionState.makeTest: ${member}() was called but not stubbed — pass a \`${member}\` override.`,
@@ -69,7 +70,8 @@ it.layer(
       assert.strictEqual(error.reason, "malformed");
       assert.strictEqual(error.key, "count");
       assert.isDefined(error.cause);
-      assertNone(yield* Effect.option((yield* FileSystem.FileSystem).readFileString("/state")));
+      const option2 = yield* Effect.option((yield* FileSystem.FileSystem).readFileString("/state"));
+      assertNone(option2);
     })
   );
 });

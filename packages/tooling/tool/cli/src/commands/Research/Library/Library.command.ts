@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -13,7 +14,6 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
-import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { acquireLibrary } from "./Library.acquire.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { importLibraryResult } from "./Library.import.ts";
@@ -146,7 +146,7 @@ const status = Command.make(
   "status",
   { library },
   Effect.fn("ResearchLibrary.statusCommand")(function* ({ library }) {
-    yield* libraryStatus(yield* resolveLibraryRoot(library));
+    yield* resolveLibraryRoot(library).pipe(Effect.flatMap(libraryStatus));
   })
 ).pipe(Command.withDescription("Report coverage and provider health separately"));
 

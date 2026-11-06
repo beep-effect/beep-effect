@@ -3,6 +3,9 @@ import { resolvePathWithinCanonicalRoot, resolvePathWithinRoot } from "@beep/fil
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
+import { manifestDecoder, manifestParser } from "@beep/repo-cli-kit/ManifestRead";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
+import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { fencedLineState } from "@beep/repo-utils/JSDoc/JSDocSections";
 import { WorkspaceDiscovery } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import { WorkspaceRoot } from "@beep/repo-workspaces/WorkspaceRoot";
@@ -20,15 +23,12 @@ import * as P from "effect/Predicate";
 import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
-import { manifestDecoder, manifestParser } from "../../../internal/ManifestRead.ts";
-import { runCaptured } from "../../../internal/process/index.ts";
-import { OpaqueDefect } from "../../../internal/schema/OpaqueDefect.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
+import type { ManifestField } from "@beep/repo-cli-kit/ManifestRead";
 import type { WorkspaceDiscoveryError } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import type { WorkspacePackage } from "@beep/repo-workspaces/WorkspacePackage";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { ManifestField } from "../../../internal/ManifestRead.ts";
 
 export { fencedLineState, jsdocCommentsFromSource } from "@beep/repo-utils/JSDoc/JSDocSections";
 
@@ -340,7 +340,8 @@ const readWorkspacePackage = Effect.fn("QualityArtifactSupport.readWorkspacePack
   path: Path.Path
 ): Effect.fn.Return<WorkspacePackageInfo, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const filePath = path.join(absolutePath, "package.json");
-  return yield* readWorkspacePackageText(yield* readText(filePath), filePath, absolutePath, relativePath);
+  const readText1 = yield* readText(filePath);
+  return yield* readWorkspacePackageText(readText1, filePath, absolutePath, relativePath);
 });
 
 /**
@@ -441,7 +442,13 @@ const containedMember = Effect.fn("QualityArtifactSupport.containedMember")(func
   const packageJson = yield* decodePackageJson(member.manifestRecord).pipe(
     QualityArtifactGeneratorError.mapError(`Failed to decode package manifest ${filePath}.`, { filePath })
   );
-  return O.some(yield* workspacePackageInfoOf(packageJson, filePath, absolutePath, member.relativePath));
+  const workspacePackageInfoOf2 = yield* workspacePackageInfoOf(
+    packageJson,
+    filePath,
+    absolutePath,
+    member.relativePath
+  );
+  return O.some(workspacePackageInfoOf2);
 });
 
 /**
@@ -631,7 +638,8 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
           continue;
         }
         MutableHashSet.add(visited, absolutePath);
-        files = A.appendAll(files, yield* visit(absolutePath));
+        const visit3 = yield* visit(absolutePath);
+        files = A.appendAll(files, visit3);
         continue;
       }
 
@@ -654,7 +662,8 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
     return files;
   });
 
-  return A.sort(yield* visit(canonicalRoot.value), Order.String);
+  const visit4 = yield* visit(canonicalRoot.value);
+  return A.sort(visit4, Order.String);
 });
 
 /**
@@ -882,7 +891,8 @@ const collectFilesImpl = Effect.fn("QualityScriptCommands.collectFiles")(functio
     );
   });
 
-  return pipe(yield* visit(searchRoot), A.sort(Order.String));
+  const visit5 = yield* visit(searchRoot);
+  return pipe(visit5, A.sort(Order.String));
 });
 
 /**

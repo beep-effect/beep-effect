@@ -181,7 +181,8 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
       const encoded = yield* encodeSummary(summary);
       const decoded = yield* decodeSummary(encoded);
       expect(summaryEquivalent(decoded, summary)).toBe(true);
-      expect(yield* encodeSummary(decoded)).toBe(encoded);
+      const encodedSummary = yield* encodeSummary(decoded);
+      expect(encodedSummary).toBe(encoded);
     }),
     { arbitrary: fcRuns() }
   );
@@ -194,13 +195,15 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
         const fs = yield* FileSystem.FileSystem;
         const policy = yield* PolicyToolsFingerprintPolicy.make(root);
         yield* policy.check;
-        const config = yield* decodeTurboTasks(yield* fs.readFileString(`${root}/turbo.json`));
+        const readFileString1 = yield* fs.readFileString(`${root}/turbo.json`);
+        const config = yield* decodeTurboTasks(readFileString1);
         expect(config.tasks["//#lint:policy-fingerprint"]).toMatchObject({ cache: true, outputs: [] });
         for (const [task, value] of R.toEntries(config.tasks)) {
           // Nothing depends on the drift check: its inputs span every seal.
           expect(value.dependsOn ?? [], task).not.toContain("//#lint:policy-fingerprint");
         }
-        const manifest = yield* decodeScripts(yield* fs.readFileString(`${root}/package.json`));
+        const readFileString2 = yield* fs.readFileString(`${root}/package.json`);
+        const manifest = yield* decodeScripts(readFileString2);
         expect(manifest.scripts["lint:policy-fingerprint"]).toBe("beep-cli lint policy-fingerprint --check");
         // The seals are script-less CLI-workspace tasks (quality audit M9): no root `true` script remains,
         // and every seal input is root-relative.
@@ -222,7 +225,8 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
         const root = yield* findRepoRoot();
         const fs = yield* FileSystem.FileSystem;
         const fsUtils = yield* FsUtils;
-        const config = yield* decodeTurboTasks(yield* fs.readFileString(`${root}/turbo.json`));
+        const readFileString3 = yield* fs.readFileString(`${root}/turbo.json`);
+        const config = yield* decodeTurboTasks(readFileString3);
         const seals = A.filter(R.toEntries(config.tasks), ([task]) => isSeal(task));
         expect(A.length(seals)).toBeGreaterThan(1);
         const declaredOf = (task: string): ReadonlyArray<string> => {
@@ -244,20 +248,20 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
             (file) => `${directory}/${file}`
           );
         });
-        const modules = A.dedupe(
-          A.flatten(yield* Effect.forEach(A.dedupe(A.flatMap(seals, ([task]) => declaredOf(task))), modulesOf))
+        const forEach4 = yield* Effect.forEach(A.dedupe(A.flatMap(seals, ([task]) => declaredOf(task))), modulesOf);
+        const modules = A.dedupe(A.flatten(forEach4));
+        const forEach5 = yield* Effect.forEach(
+          modules,
+          Effect.fnUntraced(function* (module) {
+            const readFileString23 = yield* fs.readFileString(`${root}/${module}`);
+            return [module, moduleRootFileReads(module, readFileString23)] as const;
+          })
         );
-        const reads = HashMap.fromIterable(
-          yield* Effect.forEach(
-            modules,
-            Effect.fnUntraced(function* (module) {
-              return [module, moduleRootFileReads(module, yield* fs.readFileString(`${root}/${module}`))] as const;
-            })
-          )
-        );
+        const reads = HashMap.fromIterable(forEach5);
         for (const [task] of seals) {
           const declared = declaredOf(task);
-          const read = A.flatMap(A.flatten(yield* Effect.forEach(declared, modulesOf)), (module) =>
+          const forEach6 = yield* Effect.forEach(declared, modulesOf);
+          const read = A.flatMap(A.flatten(forEach6), (module) =>
             O.getOrElse(HashMap.get(reads, module), A.empty<string>)
           );
           expect(A.dedupe(A.filter(read, (file) => !A.contains(declared, file))), task).toEqual([]);
@@ -335,45 +339,57 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
           schemaVersion: "lint-policy-sweeps/v1",
           deprecatedApis: "turbo",
         });
-        expect(yield* packageHash(root, binary)).not.toBe(baseline);
+        const packageHash7 = yield* packageHash(root, binary);
+        expect(packageHash7).not.toBe(baseline);
         yield* writeJson(root, "standards/lint-policy.sweeps.jsonc", {
           schemaVersion: "lint-policy-sweeps/v1",
           deprecatedApis: "oxlint",
         });
-        expect(yield* packageHash(root, binary)).toBe(baseline);
+        const packageHash8 = yield* packageHash(root, binary);
+        expect(packageHash8).toBe(baseline);
         // A root file no closure module names is no seal input.
         yield* writeFile(root, "_typos.toml", '[default]\nlocale = "en-us"\n');
-        expect(yield* packageHash(root, binary)).toBe(baseline);
+        const packageHash9 = yield* packageHash(root, binary);
+        expect(packageHash9).toBe(baseline);
         // Turbo hashes the root `turbo.json` into root tasks only; the CLI-workspace seal keeps a
         // `turbo.json` edit out of package policy tasks (quality audit M9).
         const turboText = yield* fs.readFileString(path.join(root, "turbo.json"));
         yield* writeFile(root, "turbo.json", `${turboText}\n`);
-        expect(yield* packageHash(root, binary)).toBe(baseline);
+        const packageHash10 = yield* packageHash(root, binary);
+        expect(packageHash10).toBe(baseline);
         yield* writeFile(root, "turbo.json", turboText);
         yield* writeFile(root, "packages/unrelated/src/index.ts", "export const unrelated = 2;\n");
-        expect(yield* packageHash(root, binary)).toBe(baseline);
+        const packageHash11 = yield* packageHash(root, binary);
+        expect(packageHash11).toBe(baseline);
         yield* writeJson(root, "packages/unrelated/package.json", { name: "@fixture/unrelated", private: false });
-        expect(yield* packageHash(root, binary)).toBe(baseline);
+        const packageHash12 = yield* packageHash(root, binary);
+        expect(packageHash12).toBe(baseline);
         yield* writeFile(root, "packages/helper/src/index.ts", "export const value = 2;\n");
-        expect(yield* packageHash(root, binary)).not.toBe(baseline);
+        const packageHash13 = yield* packageHash(root, binary);
+        expect(packageHash13).not.toBe(baseline);
         yield* writeFile(root, "packages/helper/src/index.ts", "export const value = 1;\n");
-        expect(yield* packageHash(root, binary)).toBe(baseline);
+        const packageHash14 = yield* packageHash(root, binary);
+        expect(packageHash14).toBe(baseline);
         // Another command's closure is not this task's input: the per-task seal isolates it.
         yield* writeFile(root, "packages/sibling/src/index.ts", "export const value = 2;\n");
-        expect(yield* packageHash(root, binary)).toBe(baseline);
+        const packageHash15 = yield* packageHash(root, binary);
+        expect(packageHash15).toBe(baseline);
         yield* writeFile(root, "packages/sibling/src/index.ts", "export const value = 1;\n");
         // The shell is shared by every command.
         const binMain = yield* fs.readFileString(path.join(root, "packages/cli/src/bin-main.ts"));
         yield* writeFile(root, "packages/cli/src/bin-main.ts", `${binMain}// edited\n`);
-        expect(yield* packageHash(root, binary)).not.toBe(baseline);
+        const packageHash16 = yield* packageHash(root, binary);
+        expect(packageHash16).not.toBe(baseline);
         yield* writeFile(root, "packages/cli/src/bin-main.ts", binMain);
-        expect(yield* packageHash(root, binary)).toBe(baseline);
+        const packageHash17 = yield* packageHash(root, binary);
+        expect(packageHash17).toBe(baseline);
         yield* writeJson(root, "packages/helper/package.json", {
           name: "@beep/helper",
           exports: { ".": "./src/index.ts" },
           description: "closure edit",
         });
-        expect(yield* packageHash(root, binary)).not.toBe(baseline);
+        const packageHash18 = yield* packageHash(root, binary);
+        expect(packageHash18).not.toBe(baseline);
       })
     );
   });
@@ -386,11 +402,13 @@ describe("Documentation task inputs", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const root = yield* findRepoRoot();
         const fs = yield* FileSystem.FileSystem;
-        const config = yield* decodePolicyTasks(yield* fs.readFileString(`${root}/turbo.json`));
+        const readFileString19 = yield* fs.readFileString(`${root}/turbo.json`);
+        const config = yield* decodePolicyTasks(readFileString19);
         expect(config.tasks["lint:deprecated-apis"]).toMatchObject(expectedPolicyTasks["lint:deprecated-apis"]);
         expect(config.tasks["lint:jsdoc"]).toMatchObject(expectedPolicyTasks["lint:jsdoc"]);
         expect(config.tasks["//#lint:jsdoc:root"]).toMatchObject(expectedPolicyTasks["//#lint:jsdoc:root"]);
-        const manifest = yield* decodeScripts(yield* fs.readFileString(`${root}/package.json`));
+        const readFileString20 = yield* fs.readFileString(`${root}/package.json`);
+        const manifest = yield* decodeScripts(readFileString20);
         expect(manifest.scripts["lint:jsdoc:root"]).toBe("beep-cli lint jsdoc --root-only");
       })
     );
@@ -401,7 +419,8 @@ describe("Documentation task inputs", { concurrent: false }, () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
-        const config = yield* decodePolicyTasks(yield* fs.readFileString(`${repoRoot}/turbo.json`));
+        const readFileString21 = yield* fs.readFileString(`${repoRoot}/turbo.json`);
+        const config = yield* decodePolicyTasks(readFileString21);
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "policy-docs-turbo-" });
         const binary = path.join(repoRoot, "node_modules", ".bin", "turbo");
         yield* writeJson(root, "package.json", {
@@ -494,7 +513,8 @@ describe("Documentation task inputs", { concurrent: false }, () => {
             );
           });
           yield* writeFile(root, file, original);
-          expect(yield* policyHashes(root, binary)).toEqual(baseline);
+          const policyHashes22 = yield* policyHashes(root, binary);
+          expect(policyHashes22).toEqual(baseline);
         });
         yield* assertMutation("packages/consumer/src/index.ts", [true, true, true]);
         yield* Effect.forEach(

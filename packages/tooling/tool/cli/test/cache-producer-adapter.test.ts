@@ -85,8 +85,9 @@ const fixture = Effect.fn("ProducerAdapterTest.fixture")(function* (fault: typeo
   const root = path.join(parent, "runner");
   const source = path.join(parent, "source");
   const dependencies = path.join(parent, "dependencies");
-  for (const directory of [root, source, dependencies, path.join(root, "infra/r2-cache")])
+  for (const directory of [root, source, dependencies, path.join(root, "infra/r2-cache")]) {
     yield* fs.makeDirectory(directory, { recursive: true });
+  }
   const tool = path.join(parent, "adapter");
   yield* fs.writeFileString(tool, "inert reviewed executable fixture");
   const backendSha256 = yield* hashBytes(new TextEncoder().encode("inert reviewed executable fixture"));
@@ -164,7 +165,9 @@ const fixture = Effect.fn("ProducerAdapterTest.fixture")(function* (fault: typeo
     totalThreads: 6,
     memoryPeakBytes: S.Natural.make(1024),
   });
-  const encoded = yield* json(S.String)(yield* json(CacheAdapterRuntimeObservation)(observation));
+  const argument = json(S.String);
+  const value1 = yield* json(CacheAdapterRuntimeObservation)(observation);
+  const encoded = yield* argument(value1);
   const marker = path.join(parent, "peer.json");
   const python = `import json, os, sys, time
 from pathlib import Path
@@ -201,8 +204,12 @@ const prepareFilesystemFault = Effect.fn("ProducerAdapterTest.prepareFilesystemF
   f: Effect.Success<ReturnType<typeof fixture>>,
   fault: typeof PreflightFault.Type
 ) {
-  if (fault === "changed-executable") yield* f.fs.writeFileString(f.tool, "changed executable");
-  if (fault === "missing-git") yield* f.fs.remove(f.path.join(f.request.sourceRoot, ".git"), { recursive: true });
+  if (fault === "changed-executable") {
+    yield* f.fs.writeFileString(f.tool, "changed executable");
+  }
+  if (fault === "missing-git") {
+    yield* f.fs.remove(f.path.join(f.request.sourceRoot, ".git"), { recursive: true });
+  }
 });
 
 const Peer = S.Struct({ pid: S.Int, keys: S.Array(S.String), argv: S.Array(S.String) });
@@ -257,7 +264,9 @@ describe.skipIf(currentHostPlatform !== "linux")("Linux owned adapter parent", (
             f.approval,
             Effect.gen(function* () {
               callbacks++;
-              if (fault === "callback-failure") return yield* CacheCommandError.new("Expected upload callback failure");
+              if (fault === "callback-failure") {
+                return yield* CacheCommandError.new("Expected upload callback failure");
+              }
               return "owned result";
             })
           ).pipe(Effect.exit);
@@ -279,7 +288,8 @@ describe.skipIf(currentHostPlatform !== "linux")("Linux owned adapter parent", (
             expect(result.value[1].cleaned).toBe(true);
           }
           const peer = yield* f.fs.readFileString(f.marker).pipe(Effect.flatMap(decodePeer));
-          expect(yield* f.fs.exists(`/proc/${peer.pid}`)).toBe(false);
+          const exists1 = yield* f.fs.exists(`/proc/${peer.pid}`);
+          expect(exists1).toBe(false);
           expect(peer.keys).not.toContain("TURBO_REMOTE_CACHE_SIGNATURE_KEY");
           expect(peer.keys).not.toContain("BEEP_CACHE_UPLOAD_SIGNING");
           for (const secret of ["synthetic-storage-id", "synthetic-storage-secret", "synthetic-native-signing-key"])
@@ -312,7 +322,8 @@ describe.skipIf(currentHostPlatform !== "linux")("Linux owned adapter parent", (
             result.pipe(Exit.isFailure, assertTrue);
             if (Exit.isFailure(result)) expect(Cause.pretty(result.cause)).toContain("Operation timed out after '9m'");
             const peer = yield* f.fs.readFileString(f.marker).pipe(Effect.flatMap(decodePeer));
-            expect(yield* f.fs.exists(`/proc/${peer.pid}`)).toBe(false);
+            const exists2 = yield* f.fs.exists(`/proc/${peer.pid}`);
+            expect(exists2).toBe(false);
           })
         );
       });
@@ -345,7 +356,8 @@ describe.skipIf(currentHostPlatform !== "linux")("Linux owned adapter parent", (
           );
           result.pipe(Exit.isFailure, assertTrue);
           expect(callbacks).toBe(0);
-          expect(yield* f.fs.exists(f.marker)).toBe(false);
+          const exists3 = yield* f.fs.exists(f.marker);
+          expect(exists3).toBe(false);
         })
       );
     }

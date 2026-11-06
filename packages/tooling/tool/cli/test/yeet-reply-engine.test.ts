@@ -39,10 +39,11 @@ import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } fr
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { expectReportedExit } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
@@ -451,7 +452,8 @@ describe("planReplyActions", () => {
       });
       const text = yield* ReplyReportJson.encode(report);
       expect(text).not.toContain('"_id":"Option"');
-      expect(yield* ReplyReportJson.decode(text)).toEqual(report);
+      const decoded1 = yield* ReplyReportJson.decode(text);
+      expect(decoded1).toEqual(report);
     })
   );
 });
@@ -592,7 +594,9 @@ const replyContext = (root: string): RepoRunContext =>
 
 const writeDrafts = Effect.fnUntraced(function* (context: RepoRunContext, drafts: ReplyDrafts) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.writeFileString(yield* replyDraftsPathForContext(context), yield* ReplyDraftsJson.encode(drafts));
+  const replyDraftsPathForContext2 = yield* replyDraftsPathForContext(context);
+  const encoded = yield* ReplyDraftsJson.encode(drafts);
+  yield* fs.writeFileString(replyDraftsPathForContext2, encoded);
 });
 
 const replyTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
@@ -666,9 +670,11 @@ describe("runYeetReply", () => {
         ]);
         expect(spawner.spawns).toHaveLength(1);
         const fs = yield* FileSystem.FileSystem;
-        const written = yield* fs.readFileString(yield* replyReportPathForContext(context));
+        const replyReportPathForContext3 = yield* replyReportPathForContext(context);
+        const written = yield* fs.readFileString(replyReportPathForContext3);
         expect(written).not.toContain('"_id":"Option"');
-        expect(yield* ReplyReportJson.decode(written)).toEqual(report);
+        const decoded4 = yield* ReplyReportJson.decode(written);
+        expect(decoded4).toEqual(report);
       })
     );
   });
@@ -838,9 +844,9 @@ describe("reply run verdict", () => {
         // The batch still ran: the stale draft was still classified.
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["failed", "stale"]);
 
-        expectReportedExit(
-          yield* Effect.exit(failYeetReplyOnFailedOutcomes(report, yield* replyReportPathForContext(context)))
-        );
+        const replyReportPathForContext6 = yield* replyReportPathForContext(context);
+        const exit5 = yield* Effect.exit(failYeetReplyOnFailedOutcomes(report, replyReportPathForContext6));
+        expectReportedExit(exit5);
       })
     );
   });
@@ -854,24 +860,41 @@ const closeoutStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   [
     "gh pr view",
     ok(
-      JSON.stringify({
-        number: 558,
-        headRefName: "feat/merge-loop",
-        state: "OPEN",
-        url: "https://github.com/YeeBois/beep-effect/pull/558",
-        headRefOid: "abc1234def",
-        isDraft: false,
-        author: { login: "octocat" },
-      })
+      Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          number: 558,
+          headRefName: "feat/merge-loop",
+          state: "OPEN",
+          url: "https://github.com/YeeBois/beep-effect/pull/558",
+          headRefOid: "abc1234def",
+          isDraft: false,
+          author: { login: "octocat" },
+        }),
+        identity
+      )
     ),
   ],
   [
     "YeetPrCloseoutComments",
-    ok(JSON.stringify({ data: { repository: { pullRequest: { comments: emptyConnection } } } })),
+    ok(
+      Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          data: { repository: { pullRequest: { comments: emptyConnection } } },
+        }),
+        identity
+      )
+    ),
   ],
   [
     "YeetPrCloseoutReviews",
-    ok(JSON.stringify({ data: { repository: { pullRequest: { reviews: emptyConnection } } } })),
+    ok(
+      Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          data: { repository: { pullRequest: { reviews: emptyConnection } } },
+        }),
+        identity
+      )
+    ),
   ],
 ];
 

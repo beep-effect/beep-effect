@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -25,7 +26,6 @@ import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { PosInt } from "../../../internal/schema/PosInt.ts";
 import { canonicalizeFileTargetPath } from "./FileTransaction.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
 import type { MatchPersonModelAcquisitionError, MatchPersonModelIntegrityError } from "./MatchPerson.errors.ts";
@@ -542,7 +542,8 @@ const downloadArtifact = Effect.fn("Files.PersonMatchModelStore.downloadArtifact
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const client = HttpClient.followRedirects(yield* HttpClient.HttpClient, 5);
+  const HttpClient1 = yield* HttpClient.HttpClient;
+  const client = HttpClient.followRedirects(HttpClient1, 5);
   const stagingDirectory = yield* fs
     .makeTempDirectory({ directory: modelRoot, prefix: `.beep-${artifact.component}-` })
     .pipe(

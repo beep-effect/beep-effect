@@ -30,7 +30,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* encode(value);
         const decoded = yield* decode(encoded);
         assertTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* encode(decoded), encoded);
+        const encoded1 = yield* encode(decoded);
+        assert.deepStrictEqual(encoded1, encoded);
       }),
     runs
   );
@@ -53,8 +54,10 @@ it.effect.prop(
     Effect.gen(function* () {
       const parsed = yield* Sha256Digest.parse(`SHA256:${Str.toUpperCase(digest)}`);
       assert.strictEqual(parsed, digest);
-      assert.strictEqual(yield* Sha256Digest.parse(parsed), parsed);
-      assert.strictEqual(yield* Effect.fromResult(Sha256Digest.parseResult(parsed)), parsed);
+      const parsed2 = yield* Sha256Digest.parse(parsed);
+      assert.strictEqual(parsed2, parsed);
+      const fromResult3 = yield* Effect.fromResult(Sha256Digest.parseResult(parsed));
+      assert.strictEqual(fromResult3, parsed);
     }),
   runs
 );

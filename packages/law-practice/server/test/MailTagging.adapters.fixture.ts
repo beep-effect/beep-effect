@@ -133,5 +133,10 @@ export const writeText = Effect.fn("MailTaggingAdaptersFixture.writeText")(funct
 export const linesOf = Effect.fn("MailTaggingAdaptersFixture.linesOf")(function* (target: string) {
   const fs = yield* FileSystem.FileSystem;
   const exists = yield* fs.exists(target);
-  return exists ? A.filter(Str.split(yield* fs.readFileString(target), "\n"), Str.isNonEmpty) : [];
+  return exists
+    ? yield* Effect.map(
+        Effect.map(fs.readFileString(target), (value) => Str.split(value, "\n")),
+        (value) => A.filter(value, Str.isNonEmpty)
+      )
+    : [];
 });

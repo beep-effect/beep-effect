@@ -12,6 +12,8 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
@@ -22,8 +24,6 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { GoalSlug } from "./Bootstrap.schemas.ts";
 import { readGoalCloseoutView, readGoalLifecycle } from "./Completion.ts";
 import { GoalGraphInputError, GoalGraphOperationalError } from "./Goals.errors.ts";
@@ -230,9 +230,10 @@ export const goalsExplainCommand = Command.make(
       // proposal and whether this clone's receipt verified it. A report exists only
       // for a slug the manifests carry, so the manifest is always found here.
       const manifest = A.findFirst(manifests, (candidate) => candidate.initiative.id === slug);
-      const closeout = O.flatten(
-        yield* Effect.transposeOption(O.map(manifest, (found) => readGoalCloseoutView(".", slug, found)))
+      const transposeOption1 = yield* Effect.transposeOption(
+        O.map(manifest, (found) => readGoalCloseoutView(".", slug, found))
       );
+      const closeout = O.flatten(transposeOption1);
       yield* printReport(
         GoalExplainReport,
         GoalExplainReport.make({ ...report, ...optionalProp("closeout", closeout) }),

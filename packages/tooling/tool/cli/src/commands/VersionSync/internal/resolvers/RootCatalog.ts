@@ -13,6 +13,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
+import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
 import { Str, thunkEmptyStr } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -22,7 +23,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import { manifestParser } from "../../../../internal/ManifestRead.ts";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 

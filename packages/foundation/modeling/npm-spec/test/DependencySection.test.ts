@@ -30,7 +30,8 @@ describe("DependencySection", () => {
   it.effect("DependencyKind schema accepts the four kinds and rejects a field name", () =>
     Effect.gen(function* () {
       for (const kind of ["prod", "dev", "peer", "optional"]) {
-        assert.strictEqual(yield* S.decodeUnknownEffect(DependencyKind)(kind), kind);
+        const value = yield* S.decodeUnknownEffect(DependencyKind)(kind);
+        assert.strictEqual(value, kind);
       }
       const error = yield* Effect.flip(S.decodeUnknownEffect(DependencyKind)("dependencies"));
       assert.strictEqual(error._tag, "SchemaError");
@@ -40,7 +41,8 @@ describe("DependencySection", () => {
   it.effect("DependencyField schema accepts the four field names and rejects a kind", () =>
     Effect.gen(function* () {
       for (const field of ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"]) {
-        assert.strictEqual(yield* S.decodeUnknownEffect(DependencyField)(field), field);
+        const value1 = yield* S.decodeUnknownEffect(DependencyField)(field);
+        assert.strictEqual(value1, field);
       }
       const error = yield* Effect.flip(S.decodeUnknownEffect(DependencyField)("prod"));
       assert.strictEqual(error._tag, "SchemaError");

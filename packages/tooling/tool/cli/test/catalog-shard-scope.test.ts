@@ -1,36 +1,26 @@
-import { Git, GitCommandError } from "@beep/git/Git";
+import { Git } from "@beep/git/Git";
 import {
   observabilityCommand,
   STANDARD_SECTION_BEGIN,
   STANDARD_SECTION_END,
 } from "@beep/repo-cli/commands/Observability";
-import {
-  resolveShardScope,
-  ShardScope,
-  ShardScopeOwner,
-  shardScopeIncludes,
-  stageGeneratedFiles,
-} from "@beep/repo-cli/test/Cli";
+import { resolveShardScope } from "@beep/repo-cli/test/Cli";
 import { lintCommand, makeSchemaFirstOwnerResolver } from "@beep/repo-cli/test/Lint";
 import { githubCheckCheapGateLanes } from "@beep/repo-cli/test/Quality";
 import { runGitOutput } from "@beep/repo-cli/test/RepoRun";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { describe, expect, layer } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
-import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { NodeTestLayer, readProjectFile, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
@@ -143,28 +133,6 @@ const initFixtureRepository = Effect.fn("CatalogShardScopeTest.initFixtureReposi
   yield* git.commit(root, "fixture");
 });
 
-// A `Git` whose `add` replays the scripted outcomes in order and counts its calls, so the
-// index-lock retry policy is observable without a real repository.
-const scriptedAdd = Effect.fn("CatalogShardScopeTest.scriptedAdd")(function* (
-  outcomes: ReadonlyArray<O.Option<GitCommandError>>
-) {
-  const calls = yield* Ref.make(0);
-  const service = Git.makeTest({
-    add: () =>
-      Ref.getAndUpdate(calls, (count) => count + 1).pipe(
-        Effect.flatMap((index) =>
-          O.match(O.flatten(A.get(outcomes, index)), { onNone: () => Effect.void, onSome: Effect.fail })
-        )
-      ),
-  });
-  return { calls, service } as const;
-});
-
-const gitFailure = (kind: "failed" | "refused", stderr: string) =>
-  GitCommandError.make({ kind, args: ["add", "--", "shard"], cwd: "/repo", exitCode: 128, stderr });
-
-const indexLocked = gitFailure("failed", "fatal: Unable to create '/repo/.git/index.lock': File exists.");
-
 layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
   describe("resolveShardScope", () => {
     it.effect(
@@ -207,16 +175,21 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             yield* removeProjectFile(schemaShard("@beep/b"));
 
             yield* runLint(["schema-catalog", "--write", sourceA]);
-            expect(yield* readProjectFile(schemaShard("@beep/a"))).toBe(fullA);
-            expect(yield* projectFileExists(schemaShard("@beep/b"))).toBe(false);
+            const readProjectFile1 = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(readProjectFile1).toBe(fullA);
+            const projectFileExists2 = yield* projectFileExists(schemaShard("@beep/b"));
+            expect(projectFileExists2).toBe(false);
 
             // The package that lost its last schema loses its shard; the other shard is untouched.
             yield* runLint(["schema-catalog", "--write", sourceB]);
-            expect(yield* readProjectFile(schemaShard("@beep/b"))).toBe(fullB);
+            const readProjectFile3 = yield* readProjectFile(schemaShard("@beep/b"));
+            expect(readProjectFile3).toBe(fullB);
             yield* removeProjectFile(sourceB);
             yield* runLint(["schema-catalog", "--write", sourceB]);
-            expect(yield* projectFileExists(schemaShard("@beep/b"))).toBe(false);
-            expect(yield* readProjectFile(schemaShard("@beep/a"))).toBe(fullA);
+            const projectFileExists4 = yield* projectFileExists(schemaShard("@beep/b"));
+            expect(projectFileExists4).toBe(false);
+            const readProjectFile5 = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(readProjectFile5).toBe(fullA);
           })
         );
       })
@@ -236,7 +209,8 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
 
             // Staging the out-of-glob file still regenerates the owner, from in-glob files only.
             yield* runLint(["schema-catalog", "--write", sourceInfraLambda]);
-            expect(yield* readProjectFile(schemaShard("@beep/infra"))).toBe(fullInfra);
+            const readProjectFile6 = yield* readProjectFile(schemaShard("@beep/infra"));
+            expect(readProjectFile6).toBe(fullInfra);
           })
         );
       })
@@ -253,11 +227,13 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             yield* removeProjectFile(schemaShard("@beep/a"));
 
             yield* runLint(["schema-catalog", "--write", "--stage", sourceA]);
-            expect(yield* stagedPaths(root)).toEqual([]);
+            const stagedPaths7 = yield* stagedPaths(root);
+            expect(stagedPaths7).toEqual([]);
             // The rewrite restored the committed bytes, so nothing is staged; a real change is.
             yield* removeProjectFile(sourceB);
             yield* runLint(["schema-catalog", "--write", "--stage", sourceB]);
-            expect(yield* stagedPaths(root)).toEqual([schemaShard("@beep/b")]);
+            const stagedPaths8 = yield* stagedPaths(root);
+            expect(stagedPaths8).toEqual([schemaShard("@beep/b")]);
           })
         );
       })
@@ -280,16 +256,21 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
 
             yield* runObservability(["catalog", "--write", "--stage", sourceA]);
             // The report prints as one multi-line block.
-            const report = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+            const logLines9 = yield* TestConsole.logLines;
+            const report = A.join(A.filter(logLines9, P.isString), "\n");
             expect(report).toContain(`[observability-catalog] ${standardPath}: skipped`);
-            expect(yield* readProjectFile(spanShard("@beep/a"))).toBe(fullA);
+            const readProjectFile10 = yield* readProjectFile(spanShard("@beep/a"));
+            expect(readProjectFile10).toBe(fullA);
             // The standard's generated section belongs to the full run.
-            expect(yield* readProjectFile(standardPath)).not.toBe(fullStandard);
-            expect(yield* stagedPaths(root)).toEqual([]);
+            const readProjectFile11 = yield* readProjectFile(standardPath);
+            expect(readProjectFile11).not.toBe(fullStandard);
+            const stagedPaths12 = yield* stagedPaths(root);
+            expect(stagedPaths12).toEqual([]);
 
             yield* removeProjectFile(sourceB);
             yield* runObservability(["catalog", "--write", "--stage", sourceB]);
-            expect(yield* stagedPaths(root)).toEqual([spanShard("@beep/b")]);
+            const stagedPaths13 = yield* stagedPaths(root);
+            expect(stagedPaths13).toEqual([spanShard("@beep/b")]);
           })
         );
       })
@@ -315,65 +296,5 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
         { tier: "cheap-gates", args: ["bun", "run", "beep", "observability", "catalog", "--check"] }
       );
     });
-  });
-});
-
-describe("stageGeneratedFiles", () => {
-  it.effect(
-    "does not call git for an empty path list",
-    Effect.fn("CatalogShardScopeTest.stageEmpty")(function* () {
-      const { calls, service } = yield* scriptedAdd([]);
-      yield* stageGeneratedFiles("/repo", []).pipe(Effect.provideService(Git, service));
-      expect(yield* Ref.get(calls)).toBe(0);
-    })
-  );
-
-  it.effect(
-    "retries while another hook holds the index lock",
-    Effect.fn("CatalogShardScopeTest.stageRetriesIndexLock")(function* () {
-      const { calls, service } = yield* scriptedAdd([O.some(indexLocked), O.some(indexLocked)]);
-      const fiber = yield* stageGeneratedFiles("/repo", ["shard"]).pipe(
-        Effect.provideService(Git, service),
-        Effect.forkChild
-      );
-      yield* TestClock.adjust(Duration.seconds(1));
-      yield* Fiber.join(fiber);
-      expect(yield* Ref.get(calls)).toBe(3);
-    })
-  );
-
-  it.effect(
-    "surfaces any other git failure without retrying",
-    Effect.fn("CatalogShardScopeTest.stageNoRetry")(function* () {
-      const cases = [
-        gitFailure("failed", "fatal: pathspec 'shard' did not match any files"),
-        gitFailure("refused", indexLocked.stderr),
-      ];
-      for (const failure of cases) {
-        const { calls, service } = yield* scriptedAdd([O.some(failure)]);
-        const error = yield* stageGeneratedFiles("/repo", ["shard"]).pipe(
-          Effect.provideService(Git, service),
-          Effect.flip
-        );
-        expect(error).toBe(failure);
-        expect(yield* Ref.get(calls)).toBe(1);
-      }
-    })
-  );
-});
-
-describe("shardScopeIncludes", () => {
-  it("accepts only files whose owner is in scope, data-first and data-last", () => {
-    const scope = ShardScope.make({
-      owners: [ShardScopeOwner.make({ owner: "@beep/a", directory: "packages/a" })],
-      skipped: [],
-    });
-    const ownerOf = (absolutePath: string) => (Str.includes("/packages/a/")(absolutePath) ? "@beep/a" : "@beep/b");
-    const dataFirst = shardScopeIncludes(scope, ownerOf);
-    const dataLast = shardScopeIncludes(ownerOf)(scope);
-    for (const includes of [dataFirst, dataLast]) {
-      expect(includes("/repo/packages/a/src/A.ts")).toBe(true);
-      expect(includes("/repo/packages/b/src/B.ts")).toBe(false);
-    }
   });
 });

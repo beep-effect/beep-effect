@@ -84,7 +84,8 @@ const runGit = Effect.fn("YeetRetireTest.runGit")(function* (cwd: string, args: 
     stdout: "ignore",
     stderr: "inherit",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 const runGitText = Effect.fn("YeetRetireTest.runGitText")(function* (cwd: string, args: ReadonlyArray<string>) {
@@ -95,7 +96,8 @@ const runGitText = Effect.fn("YeetRetireTest.runGitText")(function* (cwd: string
     stderr: "inherit",
   });
   const output = yield* handle.stdout.pipe(Stream.decodeText(), Stream.mkString);
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode2 = yield* handle.exitCode;
+  expect(exitCode2).toBe(0);
   return Str.trim(output);
 });
 
@@ -238,7 +240,8 @@ const withScratchRepo = Effect.fn("YeetRetireTest.withScratchRepo")(function* <A
   yield* runGit(lane, ["push", "origin", "claude/lane:main"]);
   yield* runGit(repoRoot, ["fetch", "origin"]);
   const tip = yield* runGitText(lane, ["rev-parse", "HEAD"]);
-  expect(yield* runGitText(repoRoot, ["rev-parse", "main"])).not.toBe(tip);
+  const resultGitText = yield* runGitText(repoRoot, ["rev-parse", "main"]);
+  expect(resultGitText).not.toBe(tip);
   const residueRoot = path.join(tmp, "test-residue");
   // The fixture env stands in for the process environment, so the real
   // session's CLAUDE_PID never leaks into a test: each case names its own.
@@ -459,6 +462,34 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     { arbitrary: { runs: 20 } }
   );
 
+  it("refuses a lane that stands on the main branch instead of its own branch", () => {
+    const plan = YeetRetirePlan.make({
+      worktreePath: "/clones/x/.claude/worktrees/lane",
+      owningClone: "/clones/x",
+      name: "lane",
+      branch: "main",
+    });
+    const onMain = SweepGitState.make({
+      branch: "main",
+      mainBranch: "main",
+      headBranch: "main",
+      worktreeDirty: false,
+      mainCheckedOutElsewhere: false,
+      branchCheckedOutElsewhere: false,
+      branchMergedIntoBase: true,
+      lockfileMovedOnMainUpdate: false,
+      statusProbeUnreliable: false,
+      worktreeProbeUnreliable: false,
+      localTip: O.some("1ed08f66df016a18c6d7d56bd97aa778912cb37b"),
+    });
+    expect(retireVerdict(plan, onMain)).toEqual(
+      YeetRetireVerdict.cases.refused.make({
+        reason:
+          "the lane stands on main, not on its own branch; run `git switch -` (or `git switch <lane-branch>`) in /clones/x/.claude/worktrees/lane, then retry",
+      })
+    );
+  });
+
   it("judges a lane by its pull request when one was observed, otherwise by git", () => {
     const plan = YeetRetirePlan.make({
       worktreePath: "/clones/x/.claude/worktrees/lane",
@@ -528,7 +559,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     ({ outcome }) =>
       Effect.gen(function* () {
         const line = yield* encodeRetireInvokerOutcome(outcome);
-        expect(yield* decodeRetireInvokerOutcome(line)).toEqual(outcome);
+        const decodedRetireInvokerOutcome = yield* decodeRetireInvokerOutcome(line);
+        expect(decodedRetireInvokerOutcome).toEqual(outcome);
       })
   );
 
@@ -549,43 +581,48 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED"))
           )
         );
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
-        expect(yield* runGitText(repoRoot, ["rev-parse", "main"])).toBe(tip);
-        expect(yield* runGitText(repoRoot, ["rev-parse", "origin/main"])).toBe(tip);
+        const exists3 = yield* fs.exists(lane);
+        expect(exists3).toBe(false);
+        const resultGitText4 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText4).toBe("");
+        const resultGitText5 = yield* runGitText(repoRoot, ["rev-parse", "main"]);
+        expect(resultGitText5).toBe(tip);
+        const resultGitText6 = yield* runGitText(repoRoot, ["rev-parse", "origin/main"]);
+        expect(resultGitText6).toBe(tip);
         expect(output).toContain("[yeet] retired");
         expect(output).toContain("branch claude/lane: deleted");
         // The retirement deleted the branch before the sweep observed the clone.
         expect(output).toContain("delete-local-branch: skipped: local branch claude/lane is already deleted");
         expect(output).not.toContain("local tip <absent>");
         expect(output).toContain("residue: clean (archived under ");
-        const repositoryRoot = path.join(
-          residueRoot,
-          yield* Effect.fromOption(A.head(yield* fs.readDirectory(residueRoot)))
-        );
-        const laneRoot = path.join(
-          repositoryRoot,
-          yield* Effect.fromOption(A.head(yield* fs.readDirectory(repositoryRoot)))
-        );
+        const readDirectory63 = yield* fs.readDirectory(residueRoot);
+        const fromOption7 = yield* Effect.fromOption(A.head(readDirectory63));
+        const repositoryRoot = path.join(residueRoot, fromOption7);
+        const readDirectory64 = yield* fs.readDirectory(repositoryRoot);
+        const fromOption8 = yield* Effect.fromOption(A.head(readDirectory64));
+        const laneRoot = path.join(repositoryRoot, fromOption8);
         const manifest = yield* fs
           .readFileString(path.join(laneRoot, "manifest.json"))
           .pipe(Effect.flatMap(decodeResidueManifest));
         expect(A.map(manifest.materialEntries, ({ name, files, bytes }) => [name, files, bytes])).toEqual([
           ["quality", 1, 12],
         ]);
-        expect(yield* fs.readFileString(path.join(laneRoot, "beep-material", "quality", "report.json"))).toBe(
-          '{"ok":true}\n'
+        const readFileString9 = yield* fs.readFileString(
+          path.join(laneRoot, "beep-material", "quality", "report.json")
         );
-        expect(yield* fs.exists(path.join(laneRoot, "beep-material", "ci"))).toBe(false);
+        expect(readFileString9).toBe('{"ok":true}\n');
+        const exists10 = yield* fs.exists(path.join(laneRoot, "beep-material", "ci"));
+        expect(exists10).toBe(false);
 
         // Restore is the exact inverse of the retirement's capture.
         const restorePath = path.join(path.dirname(repoRoot), "restored-lane");
         yield* runGit(repoRoot, ["worktree", "add", "--detach", restorePath, manifest.archiveRef]);
-        expect(yield* restoreBeepMaterial(manifest, restorePath)).toEqual(manifest.materialEntries);
-        expect(yield* fs.readFileString(path.join(restorePath, ".beep", "quality", "report.json"))).toBe(
-          '{"ok":true}\n'
-        );
-        expect(yield* fs.exists(path.join(laneRoot, "beep-material", "quality"))).toBe(false);
+        const restoreBeepMaterial11 = yield* restoreBeepMaterial(manifest, restorePath);
+        expect(restoreBeepMaterial11).toEqual(manifest.materialEntries);
+        const readFileString12 = yield* fs.readFileString(path.join(restorePath, ".beep", "quality", "report.json"));
+        expect(readFileString12).toBe('{"ok":true}\n');
+        const exists13 = yield* fs.exists(path.join(laneRoot, "beep-material", "quality"));
+        expect(exists13).toBe(false);
       })
     )
   );
@@ -600,7 +637,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         );
         expect(error._tag).toBe("YeetCommandError");
         expect(error.message).toContain("not MERGED");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists14 = yield* fs.exists(lane);
+        expect(exists14).toBe(true);
       })
     )
   );
@@ -615,7 +653,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         );
         expect(error._tag).toBe("YeetCommandError");
         expect(error.message).toContain("is the clone itself");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists15 = yield* fs.exists(lane);
+        expect(exists15).toBe(true);
       })
     )
   );
@@ -632,9 +671,12 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         );
         expect(output).toContain("[yeet] retire");
         expect(output).toContain("gate: pull request MERGED");
-        expect(yield* fs.exists(lane)).toBe(true);
-        expect(yield* runGitText(repoRoot, ["rev-parse", "claude/lane"])).toBe(tip);
-        expect(yield* runGitText(repoRoot, ["rev-parse", "main"])).toBe(before);
+        const exists16 = yield* fs.exists(lane);
+        expect(exists16).toBe(true);
+        const resultGitText17 = yield* runGitText(repoRoot, ["rev-parse", "claude/lane"]);
+        expect(resultGitText17).toBe(tip);
+        const resultGitText18 = yield* runGitText(repoRoot, ["rev-parse", "main"]);
+        expect(resultGitText18).toBe(before);
       })
     )
   );
@@ -650,7 +692,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED"))
           )
         );
-        expect(yield* fs.exists(lane)).toBe(false);
+        const exists19 = yield* fs.exists(lane);
+        expect(exists19).toBe(false);
         expect(output).toContain("archived under");
         const repositories = yield* fs.readDirectory(residueRoot);
         expect(repositories).toHaveLength(1);
@@ -658,8 +701,10 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         const archives = yield* fs.readDirectory(repositoryRoot);
         expect(archives).toHaveLength(1);
         const archiveRoot = path.join(repositoryRoot, O.getOrThrow(A.head(archives)));
-        expect(yield* fs.exists(path.join(archiveRoot, "manifest.json"))).toBe(true);
-        expect(yield* fs.readFileString(path.join(archiveRoot, "untracked", "recovery.txt"))).toBe("recover me\n");
+        const exists20 = yield* fs.exists(path.join(archiveRoot, "manifest.json"));
+        expect(exists20).toBe(true);
+        const readFileString21 = yield* fs.readFileString(path.join(archiveRoot, "untracked", "recovery.txt"));
+        expect(readFileString21).toBe("recover me\n");
       })
     )
   );
@@ -674,7 +719,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           )
         );
         expect(output).toContain("blocked: the pull request for claude/lane is OPEN, not MERGED");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists22 = yield* fs.exists(lane);
+        expect(exists22).toBe(true);
       })
     )
   );
@@ -691,9 +737,12 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
               Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "none"))
             )
           );
-          expect(yield* fs.exists(lane)).toBe(false);
-          expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
-          expect(yield* runGitText(repoRoot, ["rev-parse", "main"])).toBe(tip);
+          const exists23 = yield* fs.exists(lane);
+          expect(exists23).toBe(false);
+          const resultGitText24 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+          expect(resultGitText24).toBe("");
+          const resultGitText25 = yield* runGitText(repoRoot, ["rev-parse", "main"]);
+          expect(resultGitText25).toBe(tip);
           expect(output).toContain("[yeet] retired");
           expect(output).toContain("branch claude/lane: deleted");
           expect(output).toContain(`gate: no pull request; tip ${tip} is already on origin/main and the lane is clean`);
@@ -720,7 +769,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           expect(error.message).toContain(
             `no pull request was observed for claude/lane and its tip ${tip} is not contained in origin/main`
           );
-          expect(yield* fs.exists(lane)).toBe(true);
+          const exists26 = yield* fs.exists(lane);
+          expect(exists26).toBe(true);
         }),
       { remoteBranch: false }
     )
@@ -746,8 +796,10 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             Effect.flip
           );
           expect(error.message).toContain("the lane has uncommitted changes");
-          expect(yield* fs.exists(lane)).toBe(true);
-          expect(yield* runGitText(lane, ["status", "--porcelain"])).toContain("lane.txt");
+          const exists27 = yield* fs.exists(lane);
+          expect(exists27).toBe(true);
+          const resultGitText28 = yield* runGitText(lane, ["status", "--porcelain"]);
+          expect(resultGitText28).toContain("lane.txt");
         }),
       { remoteBranch: false }
     )
@@ -783,8 +835,10 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             )
           );
           expect(error.message).toContain(`is not the authorized ${tip}`);
-          expect(yield* fs.exists(lane)).toBe(true);
-          expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toContain("claude/lane");
+          const exists29 = yield* fs.exists(lane);
+          expect(exists29).toBe(true);
+          const resultGitText30 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+          expect(resultGitText30).toContain("claude/lane");
         }),
       { remoteBranch: false }
     )
@@ -974,9 +1028,12 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED"))
           )
         );
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
-        expect(yield* runGitText(repoRoot, ["rev-parse", "main"])).toBe(tip);
+        const exists31 = yield* fs.exists(lane);
+        expect(exists31).toBe(false);
+        const resultGitText32 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText32).toBe("");
+        const resultGitText33 = yield* runGitText(repoRoot, ["rev-parse", "main"]);
+        expect(resultGitText33).toBe(tip);
         expect(output).toContain(`[yeet] retired ${lane}`);
       })
     )
@@ -996,9 +1053,12 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED"))
           )
         );
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* fs.exists(sibling)).toBe(true);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists34 = yield* fs.exists(lane);
+        expect(exists34).toBe(false);
+        const exists35 = yield* fs.exists(sibling);
+        expect(exists35).toBe(true);
+        const resultGitText36 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText36).toBe("");
         expect(output).toContain(`[yeet] retired ${lane}`);
       })
     )
@@ -1048,8 +1108,10 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             expect(process.cwd()).toBe(repoRoot);
           })
         );
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists37 = yield* fs.exists(lane);
+        expect(exists37).toBe(false);
+        const resultGitText38 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText38).toBe("");
       })
     )
   );
@@ -1074,7 +1136,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         expect(error.message).toContain(
           `cd "${repoRoot}" && bun run "${lane}/packages/tooling/tool/cli/src/bin.ts" -- yeet sweep --retire --lane "${lane}"`
         );
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists39 = yield* fs.exists(lane);
+        expect(exists39).toBe(true);
       })
     )
   );
@@ -1099,8 +1162,10 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         ).toContain(
           `note: the idle Claude Desktop Terminal panel shell (pid ${holder.pid}) stood in the lane and was left running; the lane was removed under it, so run \`cd ~\` in that Terminal tab before using it`
         );
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists40 = yield* fs.exists(lane);
+        expect(exists40).toBe(false);
+        const resultGitText41 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText41).toBe("");
       })
     )
   );
@@ -1153,7 +1218,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         expect(error.message).toContain("beep-material");
         expect(error.message).toContain("does not match its source");
         expect(error.message).not.toMatch(/\n\s+at /);
-        expect(yield* fs.readFileString(path.join(lane, ".beep", "a.txt"))).toBe("a.txt");
+        const readFileString42 = yield* fs.readFileString(path.join(lane, ".beep", "a.txt"));
+        expect(readFileString42).toBe("a.txt");
       })
     )
   );
@@ -1179,15 +1245,19 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         const lateWrites = yield* Effect.fromOption(
           A.head(A.filter(siblings, Str.startsWith(`${path.basename(lane)}.late-writes-`)))
         );
-        expect(yield* fs.readFileString(path.join(path.dirname(lane), lateWrites, ".beep/yeet/jobs/late.log"))).toBe(
-          "late\n"
+        const readFileString43 = yield* fs.readFileString(
+          path.join(path.dirname(lane), lateWrites, ".beep/yeet/jobs/late.log")
         );
-        expect(yield* runGitText(lane, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("claude/lane");
+        expect(readFileString43).toBe("late\n");
+        const resultGitText44 = yield* runGitText(lane, ["rev-parse", "--abbrev-ref", "HEAD"]);
+        expect(resultGitText44).toBe("claude/lane");
 
         // The checkout and its branch are whole again, so a rerun finishes the retirement.
         yield* withCwd(lane, retireMergedLane(repoRoot, lane));
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists45 = yield* fs.exists(lane);
+        expect(exists45).toBe(false);
+        const resultGitText46 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText46).toBe("");
       })
     )
   );
@@ -1205,10 +1275,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         // Idle at both scans, yet it ran something in between: the archive may be
         // missing that write, so the fenced copy is kept rather than deleted.
         expect(error.message).toContain("became active, during capture; the fenced copy is preserved at");
-        const fenced = A.filter(
-          yield* fs.readDirectory(path.dirname(lane)),
-          Str.startsWith(`${path.basename(lane)}.retiring-`)
-        );
+        const readDirectory47 = yield* fs.readDirectory(path.dirname(lane));
+        const fenced = A.filter(readDirectory47, Str.startsWith(`${path.basename(lane)}.retiring-`));
         expect(A.length(fenced)).toBe(1);
       })
     )
@@ -1238,10 +1306,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           Effect.ensuring(Effect.ignore(holder.kill()))
         );
         expect(error.message).toContain("became active, during capture; the fenced copy is preserved at");
-        const fenced = A.filter(
-          yield* fs.readDirectory(path.dirname(lane)),
-          Str.startsWith(`${path.basename(lane)}.retiring-`)
-        );
+        const readDirectory48 = yield* fs.readDirectory(path.dirname(lane));
+        const fenced = A.filter(readDirectory48, Str.startsWith(`${path.basename(lane)}.retiring-`));
         expect(A.length(fenced)).toBe(1);
       })
     )
@@ -1262,7 +1328,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           `pid ${holder.pid} (sleep) via cwd (the Claude Desktop Terminal panel shell) still hold it`
         );
         expect(error.message).toContain("run `cd ~` in that Terminal tab");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists49 = yield* fs.exists(lane);
+        expect(exists49).toBe(true);
       })
     )
   );
@@ -1281,7 +1348,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         );
         expect(error.message).toContain("closing the tab does not free the checkout");
         expect(error.message).toContain("run `cd ~` in that Terminal tab, then rerun");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists50 = yield* fs.exists(lane);
+        expect(exists50).toBe(true);
       })
     )
   );
@@ -1299,7 +1367,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         expect(error.message).toContain(
           `pid ${holder.pid} (sleep) via descriptor (the Claude Desktop Terminal panel shell) still hold it`
         );
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists51 = yield* fs.exists(lane);
+        expect(exists51).toBe(true);
       })
     )
   );
@@ -1330,7 +1399,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           `pid ${holder.pid} (sleep) via cwd (the Claude Desktop Terminal panel shell) still hold it`
         );
         expect(error.message).toContain("run `cd ~` in that Terminal tab");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists52 = yield* fs.exists(lane);
+        expect(exists52).toBe(true);
       })
     )
   );
@@ -1347,8 +1417,10 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           Effect.ensuring(Effect.ignore(holder.kill()))
         );
         expect(outcome).toMatchObject({ ok: true, exitCode: 0 });
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists53 = yield* fs.exists(lane);
+        expect(exists53).toBe(false);
+        const resultGitText54 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText54).toBe("");
       })
     )
   );
@@ -1367,7 +1439,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         expect(outcome.ok).toBe(false);
         expect(outcome.message).toContain("still hold it");
         expect(outcome.message).toContain("(sh) via cwd");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists55 = yield* fs.exists(lane);
+        expect(exists55).toBe(true);
       })
     )
   );
@@ -1386,7 +1459,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
         expect(error.message).toContain("still hold it");
         expect(error.message).toContain("(sh) via cwd");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists56 = yield* fs.exists(lane);
+        expect(exists56).toBe(true);
       })
     )
   );
@@ -1404,7 +1478,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           )
         ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
         expect(error.message).toContain("still hold it");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists57 = yield* fs.exists(lane);
+        expect(exists57).toBe(true);
       })
     )
   );
@@ -1423,7 +1498,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
         expect(error.message).toContain("still hold it");
         expect(error.message).toContain("(sh) via cwd");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists58 = yield* fs.exists(lane);
+        expect(exists58).toBe(true);
       })
     )
   );
@@ -1438,7 +1514,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           )
         );
         expect(output).toContain("[yeet] retired");
-        expect(yield* fs.exists(lane)).toBe(false);
+        const exists59 = yield* fs.exists(lane);
+        expect(exists59).toBe(false);
       })
     )
   );
@@ -1453,7 +1530,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           )
         );
         expect(error.message).toContain("--branch cannot override it");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists60 = yield* fs.exists(lane);
+        expect(exists60).toBe(true);
       })
     )
   );
@@ -1512,13 +1590,12 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           `${yield* encodePacketLifecycle({ lifecycle: "completed-retained" })}\n`
         );
         const prFiles = ["goals/open-packet/ops/manifest.json", "goals/closed-packet/ops/manifest.json", "lane.txt"];
-        const laterPlan = yield* YeetRetireSweepPlanJson.decode(
-          yield* captureOutput(
-            withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(
-              Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED", prFiles))
-            )
+        const captureOutput61 = yield* captureOutput(
+          withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(
+            Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED", prFiles))
           )
         );
+        const laterPlan = yield* YeetRetireSweepPlanJson.decode(captureOutput61);
         expect(laterPlan.activePackets).toEqual(["open-packet"]);
         const output = yield* captureOutput(
           withCwd(lane, sweep(packetDir)).pipe(
@@ -1528,7 +1605,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         expect(output).toContain("[yeet] packet still active after merge: goals/open-packet");
         expect(output).not.toContain("closed-packet");
         expect(output).not.toContain("noted-packet");
-        expect(yield* fs.exists(lane)).toBe(false);
+        const exists62 = yield* fs.exists(lane);
+        expect(exists62).toBe(false);
       })
     )
   );

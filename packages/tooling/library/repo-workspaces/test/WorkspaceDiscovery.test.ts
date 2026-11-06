@@ -21,9 +21,12 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { manifest, platform, platformWith, rootManifest } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 /** Discovery over a tree, rooted at `/repo`. */
 const discoveryOver = (
@@ -124,7 +127,8 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
         // The root package's path is a PREFIX of every member's, so a naive
         // first-match index would attribute this to `root`.
         const owner = yield* discovery.resolveFile("/repo/packages/alpha/src/index.ts");
-        assertSome(owner, yield* discovery.getPackage("@x/alpha"));
+        const gotPackage = yield* discovery.getPackage("@x/alpha");
+        assertSome(owner, gotPackage);
         assert.strictEqual(owner.value.name, "@x/alpha");
       })
     );
@@ -132,7 +136,8 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
     it.effect("a file outside every package resolves to none", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
-        assertNone(yield* discovery.resolveFile("/elsewhere/x.ts"));
+        const resolvedFile = yield* discovery.resolveFile("/elsewhere/x.ts");
+        assertNone(resolvedFile);
       })
     );
 
@@ -160,7 +165,10 @@ const nested: Tree = {
   "/repo/packages/alpha/package.json": manifest("@x/alpha"),
   "/repo/packages/group/nested/package.json": manifest("@x/nested"),
   "/repo/packages/group/deeper/still/package.json": manifest("@x/deep"),
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
 };
 
 describe("WorkspaceDiscovery — packages/** crosses segments (workspaces #62)", () => {
@@ -193,7 +201,10 @@ describe("WorkspaceDiscovery — packages/** crosses segments (workspaces #62)",
 
 const withNodeModules: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/**'\n  - '!packages/private-*'\n",
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
   "/repo/packages/alpha/package.json": manifest("@x/alpha"),
   "/repo/packages/private-thing/package.json": manifest("@x/private"),
   // A package NESTED under an excluded directory. `!packages/private-*` rejects
@@ -396,7 +407,8 @@ describe("WorkspaceDiscovery — skipDirectoryNames skips a directory before rea
     it.effect("without the option, a malformed generated manifest fails discovery", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
-        assert.instanceOf(yield* Effect.flip(discovery.listPackages), WorkspaceDiscoveryError);
+        const flip1 = yield* Effect.flip(discovery.listPackages);
+        assert.instanceOf(flip1, WorkspaceDiscoveryError);
       })
     );
   });
@@ -491,7 +503,10 @@ describe("WorkspaceDiscovery — malformed input fails typed, never as a defect"
 
 const nameless: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
-  "/repo/packages/bad/package.json": JSON.stringify({ version: "1.0.0" }),
+  "/repo/packages/bad/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ version: "1.0.0" }),
+    identity
+  ),
 };
 
 describe("WorkspaceDiscovery — a member without a name", () => {
@@ -511,8 +526,14 @@ describe("WorkspaceDiscovery — a member without a name", () => {
 
 const versionless: Tree = {
   // The ordinary private-monorepo root: a name and `workspaces`, no `version`.
-  "/repo/package.json": JSON.stringify({ name: "root", private: true, workspaces: ["packages/*"] }),
-  "/repo/packages/bare/package.json": JSON.stringify({ name: "@x/bare", private: true }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", private: true, workspaces: ["packages/*"] }),
+    identity
+  ),
+  "/repo/packages/bare/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "@x/bare", private: true }),
+    identity
+  ),
   "/repo/packages/versioned/package.json": manifest("@x/versioned"),
 };
 
@@ -551,9 +572,11 @@ describe("WorkspaceDiscovery — a manifest without a version is discovered (#47
         Effect.gen(function* () {
           const resolver = yield* WorkspaceResolver;
           // Positive control first: the versioned sibling still resolves.
-          assertSome(yield* resolver.versionOf("@x/versioned"), "1.0.0");
+          const versionOf2 = yield* resolver.versionOf("@x/versioned");
+          assertSome(versionOf2, "1.0.0");
           // A non-member is still `none`, per the contract.
-          assertNone(yield* resolver.versionOf("react"));
+          const versionOf3 = yield* resolver.versionOf("react");
+          assertNone(versionOf3);
           // The version-less member is a MEMBER with nothing to resolve to, which
           // the contract reserves for the typed channel rather than `none`.
           const error = yield* Effect.flip(resolver.versionOf("@x/bare"));
@@ -573,7 +596,10 @@ describe("WorkspaceDiscovery — a manifest without a version is discovered (#47
 
 const emptyVersion: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
-  "/repo/packages/empty/package.json": JSON.stringify({ name: "@x/empty", version: "" }),
+  "/repo/packages/empty/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "@x/empty", version: "" }),
+    identity
+  ),
   "/repo/packages/versioned/package.json": manifest("@x/versioned"),
 };
 
@@ -619,7 +645,10 @@ describe("WorkspaceDiscovery — a version that is PRESENT but EMPTY", () => {
 
 const badVersion: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
-  "/repo/packages/bad/package.json": JSON.stringify({ name: "@x/bad", version: 42 }),
+  "/repo/packages/bad/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "@x/bad", version: 42 }),
+    identity
+  ),
 };
 
 describe("WorkspaceDiscovery — a version that is PRESENT but not a string", () => {
@@ -643,7 +672,10 @@ describe("WorkspaceDiscovery — a version that is PRESENT but not a string", ()
 
 const oddVersion: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
-  "/repo/packages/odd/package.json": JSON.stringify({ name: "@x/odd", version: "not-semver" }),
+  "/repo/packages/odd/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "@x/odd", version: "not-semver" }),
+    identity
+  ),
 };
 
 describe("WorkspaceDiscovery — the projection is deliberately tolerant", () => {
@@ -682,7 +714,10 @@ describe("WorkspaceRoot — no marker anywhere", () => {
 // that outer workspace and its members; `stopAt: cwd` refuses it.
 const nestedCheckout: Tree = {
   "/outer/pnpm-workspace.yaml": "packages:\n  - 'pkgs/*'\n",
-  "/outer/package.json": JSON.stringify({ name: "outer-root", version: "0.0.0", private: true }),
+  "/outer/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "outer-root", version: "0.0.0", private: true }),
+    identity
+  ),
   "/outer/pkgs/other/package.json": manifest("other"),
   "/outer/checkout/package.json": manifest("checkout"),
 };
@@ -763,7 +798,10 @@ describe("WorkspaceRoot — the NEAREST root wins", () => {
   const nestedRoots: Tree = {
     "/outer/package.json": rootManifest(["packages/*"]),
     "/outer/inner/pnpm-workspace.yaml": "packages:\n  - 'pkgs/*'\n",
-    "/outer/inner/package.json": JSON.stringify({ name: "inner", version: "0.0.0" }),
+    "/outer/inner/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(UnknownJson)({ name: "inner", version: "0.0.0" }),
+      identity
+    ),
     "/outer/inner/pkgs/a/package.json": manifest("@i/a"),
   };
   const base = platform(nestedRoots);
@@ -771,14 +809,16 @@ describe("WorkspaceRoot — the NEAREST root wins", () => {
     it.effect("stops at the first marker on the way up, not the outermost", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/outer/inner/pkgs/a"), "/outer/inner");
+        const found4 = yield* roots.find("/outer/inner/pkgs/a");
+        assert.strictEqual(found4, "/outer/inner");
       })
     );
 
     it.effect("ascends past directories with no marker", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        assert.strictEqual(yield* roots.find("/outer/inner/pkgs"), "/outer/inner");
+        const found5 = yield* roots.find("/outer/inner/pkgs");
+        assert.strictEqual(found5, "/outer/inner");
       })
     );
   });
@@ -824,11 +864,14 @@ const wrongShape: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   // Valid JSON, valid name and version, but `dependencies` is not a string map:
   // the tolerant decode's schema rejects it and raises a SchemaError.
-  "/repo/packages/bad/package.json": JSON.stringify({
-    name: "@x/bad",
-    version: "1.0.0",
-    publishConfig: { access: 42 },
-  }),
+  "/repo/packages/bad/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      name: "@x/bad",
+      version: "1.0.0",
+      publishConfig: { access: 42 },
+    }),
+    identity
+  ),
 };
 
 describe("WorkspaceDiscovery — a manifest whose shape the schema rejects", () => {
@@ -876,7 +919,10 @@ describe("WorkspaceDiscovery — a directory that cannot be read", () => {
 
 const unreadablePnpmWorkspace: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
-  "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0" }),
+    identity
+  ),
   "/repo/packages/a/package.json": manifest("@x/a"),
 };
 
@@ -1003,10 +1049,14 @@ describe("WorkspaceDiscovery.makeTest — the empty-workspace defaults", () => {
     it.effect("list-shaped methods succeed empty and refresh is a no-op", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
-        assert.deepStrictEqual(yield* discovery.listPackages, []);
-        assert.strictEqual(HashMap.size(yield* discovery.importerMap), 0);
-        assert.deepStrictEqual(yield* discovery.resolveFiles(["/repo/a.ts"]), []);
-        assertNone(yield* discovery.resolveFile("/repo/a.ts"));
+        const listPackages6 = yield* discovery.listPackages;
+        assert.deepStrictEqual(listPackages6, []);
+        const importerMap7 = yield* discovery.importerMap;
+        assert.strictEqual(HashMap.size(importerMap7), 0);
+        const resolvedFiles = yield* discovery.resolveFiles(["/repo/a.ts"]);
+        assert.deepStrictEqual(resolvedFiles, []);
+        const resolvedFile8 = yield* discovery.resolveFile("/repo/a.ts");
+        assertNone(resolvedFile8);
         yield* discovery.refresh;
       })
     );
@@ -1043,7 +1093,8 @@ describe("WorkspaceDiscovery.makeTest — overrides win over derivation", () => 
       });
       const info = yield* double.info;
       assert.strictEqual(info.root, "/repo");
-      assert.deepStrictEqual(yield* double.listPackages, []);
+      const listPackages9 = yield* double.listPackages;
+      assert.deepStrictEqual(listPackages9, []);
     })
   );
 });
@@ -1074,7 +1125,8 @@ describe("WorkspaceDiscovery — duplicate package names", () => {
       it.effect("versionOf resolves the first package's version", () =>
         Effect.gen(function* () {
           const resolver = yield* WorkspaceResolver;
-          assertSome(yield* resolver.versionOf("@x/dup"), "1.0.0");
+          const versionOf10 = yield* resolver.versionOf("@x/dup");
+          assertSome(versionOf10, "1.0.0");
         })
       );
     });

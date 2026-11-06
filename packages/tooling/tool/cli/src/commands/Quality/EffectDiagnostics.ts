@@ -9,6 +9,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import * as A from "effect/Array";
@@ -23,7 +25,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { workspaceDependentOwners } from "./internal/CoverageScope.ts";
 import { testTsgoPrograms } from "./internal/TestTsgoPrograms.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
@@ -232,17 +233,16 @@ const collectDiagnosticsInventory = Effect.fn("EffectDiagnostics.inventory")(fun
     ),
     [root.name, repoRoot, toSortedRecord(root.scripts)] as const
   );
-  let inventory = HashMap.fromIterable(
-    yield* Effect.forEach(
-      owners,
-      ([name, dir, scripts]) =>
-        Effect.map(
-          checkProjects(dir, scripts, dir === repoRoot, resolveProject),
-          (projects) => [name, projects] as const
-        ),
-      { concurrency: 1 }
-    )
+  const forEach1 = yield* Effect.forEach(
+    owners,
+    ([name, dir, scripts]) =>
+      Effect.map(
+        checkProjects(dir, scripts, dir === repoRoot, resolveProject),
+        (projects) => [name, projects] as const
+      ),
+    { concurrency: 1 }
   );
+  let inventory = HashMap.fromIterable(forEach1);
   const tests = yield* testTsgoPrograms.uncovered(repoRoot);
   for (const program of tests) {
     inventory = HashMap.set(
@@ -272,5 +272,6 @@ const collectDiagnosticsInventory = Effect.fn("EffectDiagnostics.inventory")(fun
  * @since 0.0.0
  */
 export const effectDiagnosticsProjects = Effect.fn("EffectDiagnostics.projects")(function* (repoRoot: string) {
-  return yield* collectDiagnosticsInventory(repoRoot, yield* makeProjectResolver);
+  const madeProjectResolver = yield* makeProjectResolver;
+  return yield* collectDiagnosticsInventory(repoRoot, madeProjectResolver);
 });

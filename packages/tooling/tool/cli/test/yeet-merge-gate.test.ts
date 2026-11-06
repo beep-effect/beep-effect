@@ -18,6 +18,7 @@ import {
   MergeGateRunOptions,
   MergeGateTolerance,
   parseMergeGateTolerance,
+  provenanceFooterBeforeMergeForTesting,
   RepoRunContext,
   readMergeGate,
   renderMergeGateDecision,
@@ -39,7 +40,8 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { flow } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { flow, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
@@ -62,10 +64,12 @@ import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { legacyGhAnswer, legacyGhArgs, recordedGithub } from "./support/YeetGithub.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
-const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+const encodeJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
 
 // Recorded 2026-10-06 from merged PR #1459 (head 212fe39b4f): 16 required
 // contexts on main, all 33 check runs green, one ready_for_review event, the
@@ -1113,17 +1117,29 @@ const withLatest = (recorded: RecordedThreads, pageInfo: GhScript["threadsPageIn
   };
 };
 
-const isFirstThreadPage = (call: GithubCall): boolean => !Str.includes('"after"')(JSON.stringify(call.body ?? {}));
+const isFirstThreadPage = (call: GithubCall): boolean =>
+  !Str.includes('"after"')(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(call.body ?? {}), identity));
 
 // What the old `gh` call printed, as GitHub's own answer, with the recorded
 // payloads completed the way GitHub sends them.
 const recordedOutput = (script: GhScript, call: GithubCall, output: string): string =>
   O.isSome(call.graphql)
-    ? JSON.stringify(
-        withLatest(JSON.parse(output) as RecordedThreads, isFirstThreadPage(call) ? script.threadsPageInfo : undefined)
+    ? Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)(
+          withLatest(
+            Result.getOrThrowWith(S.decodeResult(UnknownJson)(output), identity) as RecordedThreads,
+            isFirstThreadPage(call) ? script.threadsPageInfo : undefined
+          )
+        ),
+        identity
       )
     : call.path === `{repo}/pulls/${pullFixture.number}`
-      ? JSON.stringify(restPull(JSON.parse(output)))
+      ? Result.getOrThrowWith(
+          S.encodeUnknownResult(UnknownJson)(
+            S.decodeResult(UnknownJson)(output).pipe(Result.getOrThrowWith(identity), restPull)
+          ),
+          identity
+        )
       : output;
 
 const githubAnswer = (script: GhScript, call: GithubCall, line: string): GithubAnswer => {
@@ -1138,7 +1154,7 @@ const githubAnswer = (script: GhScript, call: GithubCall, line: string): GithubA
 
 // The reviewer gate's REST calls arrive through `fetch`; each is recorded and answered as the
 // `gh api <path>` line it replaced, so one answer table serves both transports.
-const decodeAnswer = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
+const decodeAnswer = S.decodeResult(UnknownJson);
 const scriptedGithub = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
   githubFetch((call) => {
     const line = `gh api ${Str.slice(1)(call.url.pathname)}${call.url.search}`;
@@ -1149,6 +1165,20 @@ const scriptedGithub = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>)
       ? Result.getOrElse(decodeAnswer(scripted.output), () => ({}))
       : reply(404)({ message: scripted.output });
   });
+
+// The merge gate consults a workstation merge-reservation helper whenever the host has activated
+// reservations (`~/.local/state/beep/merge-reservations/active`). The scripted runs prove the gate's
+// own decisions, so the sentinel always reads as absent here and a developer machine with active
+// reservations sees the same argv as CI.
+const withoutHostMergeReservation = Effect.map(FileSystem.FileSystem, (fs) =>
+  FileSystem.FileSystem.of({
+    ...fs,
+    exists: Effect.fn("withoutHostMergeReservation.exists")(function* (path: string) {
+      const found = yield* fs.exists(path);
+      return found && !Str.endsWith("/merge-reservations/active")(path);
+    }),
+  })
+);
 
 // Every scripted run records the argv it was asked for (and each GitHub call in
 // that form), so a test can prove the merge was or was not sent.
@@ -1171,6 +1201,7 @@ const withScriptedGh = <A, E, R>(
         github.provide,
         Effect.provideService(GithubTransportFetch, O.some(scriptedGithub(script, calls).fetch)),
         Effect.provideServiceEffect(Git, Git.make),
+        Effect.provideServiceEffect(FileSystem.FileSystem, withoutHostMergeReservation),
         provideSpawner(scriptedGh(script, calls))
       );
     })
@@ -1210,7 +1241,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           expect(result.squashCommitlint.verdict._tag).toBe("pass");
           expect(result.squashCommitlint.message.header).toBe(`${pullFixture.title} (#${pullFixture.number})`);
           expect(result.squashCommitlint.message.body).toBe("The one commit.");
-          expect(yield* mergeWasSent(calls)).toBe(false);
+          const mergeWasSent1 = yield* mergeWasSent(calls);
+          expect(mergeWasSent1).toBe(false);
         })
       )
     );
@@ -1242,8 +1274,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             // The recorded #1459 title is 116 characters with its suffix, so the header is listed first.
             expect(error.message).toContain("HOLD squash-commitlint: footer-max-line-length at line 1 (116 chars)");
             expect(error.message).toContain(`line 7 (102 chars): "${longBullet}"`);
-            expect(yield* mergeWasSent(calls)).toBe(false);
-            const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const mergeWasSent2 = yield* mergeWasSent(calls);
+            expect(mergeWasSent2).toBe(false);
+            const logLines3 = yield* TestConsole.logLines;
+            const printed = A.join(A.map(logLines3, String), "\n");
             expect(printed).toContain(`[yeet] squash-commitlint #${pullFixture.number}: footer-max-line-length`);
             expect(printed).toContain(`#${pullFixture.number} HOLD squash-commitlint`);
           })
@@ -1366,9 +1400,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           withScriptedGh({ ...defaultScript, threads }, () =>
             readMergeGate(context, pullFixture.number).pipe(Effect.map((read) => read.unresolvedThreads))
           );
-        assertSome(yield* count(threadsFixture), 0);
-        assertSome(yield* count(withLastAuthor({ __typename: "User", login: "reviewer" })), 1);
-        assertSome(yield* count(withLastAuthor({ __typename: "Bot", login: "greptile-apps" })), 0);
+        const count4 = yield* count(threadsFixture);
+        assertSome(count4, 0);
+        const count5 = yield* count(withLastAuthor({ __typename: "User", login: "reviewer" }));
+        assertSome(count5, 1);
+        const count6 = yield* count(withLastAuthor({ __typename: "Bot", login: "greptile-apps" }));
+        assertSome(count6, 0);
       })
     );
 
@@ -1395,7 +1432,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             const result = yield* readMergeGate(context, pullFixture.number);
             // Four open threads on the first page and four more on the second.
             assertSome(result.unresolvedThreads, 8);
-            expect(A.filter(yield* Ref.get(calls), Str.includes("graphql"))).toHaveLength(2);
+            const got = yield* Ref.get(calls);
+            expect(A.filter(got, Str.includes("graphql"))).toHaveLength(2);
           })
       )
     );
@@ -1452,7 +1490,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
                 })
               ).pipe(Effect.result);
               expect(held._tag).toBe("Failure");
-              expect(A.some(yield* Ref.get(calls), (line) => Str.includes("/merge")(line))).toBe(false);
+              const got7 = yield* Ref.get(calls);
+              expect(A.some(got7, (line) => Str.includes("/merge")(line))).toBe(false);
             })
           );
         }
@@ -1470,7 +1509,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
               })
             );
             expect(decision._tag).toBe("merge");
-            expect(A.some(yield* Ref.get(calls), (line) => Str.includes("/merge")(line))).toBe(true);
+            const got8 = yield* Ref.get(calls);
+            expect(A.some(got8, (line) => Str.includes("/merge")(line))).toBe(true);
           })
         );
       })
@@ -1491,8 +1531,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             })
           ).pipe(Effect.result);
           expect(held._tag).toBe("Failure");
-          expect(A.filter(yield* Ref.get(calls), Str.includes("check_name=beep-reviewer"))).toHaveLength(1);
-          expect(yield* mergeWasSent(calls)).toBe(false);
+          const got9 = yield* Ref.get(calls);
+          expect(A.filter(got9, Str.includes("check_name=beep-reviewer"))).toHaveLength(1);
+          const mergeWasSent10 = yield* mergeWasSent(calls);
+          expect(mergeWasSent10).toBe(false);
         })
       )
     );
@@ -1586,7 +1628,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             })
           );
           expect(decision._tag).toBe("merge");
-          expect(yield* mergeWasSent(calls)).toBe(false);
+          const mergeWasSent11 = yield* mergeWasSent(calls);
+          expect(mergeWasSent11).toBe(false);
         })
       )
     );
@@ -1605,7 +1648,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
               dryRun: false,
             })
           );
-          const merge = A.findFirst(yield* Ref.get(calls), Str.includes("/merge"));
+          const got12 = yield* Ref.get(calls);
+          const merge = A.findFirst(got12, Str.includes("/merge"));
           merge.pipe(O.isSome, assertTrue);
           if (O.isSome(merge)) {
             expect(merge.value).toContain("-X PUT");
@@ -1657,7 +1701,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           ).pipe(Effect.flip);
           expect(failure.message).toContain("HOLD head-moved");
           expect(failure.exitCode).toBe(1);
-          expect(yield* mergeWasSent(calls)).toBe(false);
+          const mergeWasSent13 = yield* mergeWasSent(calls);
+          expect(mergeWasSent13).toBe(false);
         })
       )
     );
@@ -1706,10 +1751,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             A.map([11, 12, 13], (id) => `gh api -X POST repos/{owner}/{repo}/actions/runs/${id}/cancel`)
           );
           expect(comment).toContain("review window elapsed");
-          expect(A.join(A.map(yield* TestConsole.logLines, String), "\n")).toContain(
+          const logLines14 = yield* TestConsole.logLines;
+          expect(A.join(A.map(logLines14, String), "\n")).toContain(
             `recorded the S11 merge in a comment on #${pullFixture.number}`
           );
-          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          const logLines15 = yield* TestConsole.logLines;
+          const printed = A.join(A.map(logLines15, String), "\n");
           expect(printed).toContain("GATE-MET (S11)");
           expect(printed).toContain("cancelled 3 of 3 active workflow run(s) on 212fe39b4f");
         })
@@ -1724,8 +1771,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             `#${pullFixture.number} HOLD own-red: Lint (base run ${lintRunId} green at merge-base 2c1cb448ba)`
           );
           expect(failure.exitCode).toBe(1);
-          expect(yield* mergeWasSent(calls)).toBe(false);
-          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          const mergeWasSent16 = yield* mergeWasSent(calls);
+          expect(mergeWasSent16).toBe(false);
+          const logLines17 = yield* TestConsole.logLines;
+          const printed = A.join(A.map(logLines17, String), "\n");
           expect(printed).toContain(`[yeet] #${pullFixture.number} HOLD own-red: Lint (base run ${lintRunId} green`);
         })
       )
@@ -1746,7 +1795,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             expect(failure.message).toBe(
               `#${pullFixture.number} HOLD own-red: Lint (base run ${lintRunId} green at base tip 7a7a7a7a7a)`
             );
-            expect(yield* mergeWasSent(calls)).toBe(false);
+            const mergeWasSent18 = yield* mergeWasSent(calls);
+            expect(mergeWasSent18).toBe(false);
           })
       )
     );
@@ -1784,9 +1834,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           expect((yield* relaxedRun(false))._tag).toBe("merge");
           const lines = yield* Ref.get(calls);
           expect(A.filter(lines, Str.includes("/cancel"))).toEqual([]);
-          const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+          const errorLines19 = yield* TestConsole.errorLines;
+          const warned = A.join(A.map(errorLines19, String), "\n");
           expect(warned).toContain("[yeet] warning: listing the merged head's workflow runs failed after the merge");
-          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          const logLines20 = yield* TestConsole.logLines;
+          const printed = A.join(A.map(logLines20, String), "\n");
           expect(printed).toContain("cancelled 0 of 0 active workflow run(s)");
         })
       )
@@ -1799,9 +1851,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           const lines = yield* Ref.get(calls);
           expect(A.filter(lines, Str.includes("/cancel"))).toHaveLength(3);
           expect(A.some(lines, Str.includes("/runs/14/cancel"))).toBe(false);
-          const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+          const errorLines21 = yield* TestConsole.errorLines;
+          const warned = A.join(A.map(errorLines21, String), "\n");
           expect(warned).toContain("[yeet] warning: cancelling a leftover workflow run failed after the merge");
-          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          const logLines22 = yield* TestConsole.logLines;
+          const printed = A.join(A.map(logLines22, String), "\n");
           expect(printed).toContain("cancelled 2 of 3 active workflow run(s)");
         })
       )
@@ -1813,7 +1867,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           expect((yield* relaxedRun(false))._tag).toBe("merge");
           const lines = yield* Ref.get(calls);
           expect(A.filter(lines, Str.includes("/cancel"))).toHaveLength(3);
-          const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+          const errorLines23 = yield* TestConsole.errorLines;
+          const warned = A.join(A.map(errorLines23, String), "\n");
           expect(warned).toContain("[yeet] warning: the S11 merge comment failed after the merge");
         })
       )
@@ -1850,7 +1905,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
       withScriptedGh({ ...defaultScript, checkRuns: lintRed }, () =>
         Effect.gen(function* () {
           yield* runYeetMergeGate(commandOptions({ relaxed: true, tolerate: ["Lint=inherited: red on main"] }));
-          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          const logLines24 = yield* TestConsole.logLines;
+          const printed = A.join(A.map(logLines24, String), "\n");
           expect(printed).toContain("GATE-MET (S11)");
           expect(printed).toContain("reds at merge: Lint [inherited: red on main]");
         })
@@ -1864,9 +1920,23 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             Effect.flip
           );
           expect(failure.message).toContain('--tolerate needs "<check name>=<attribution>"');
-          expect(yield* Ref.get(calls)).toHaveLength(0);
+          const got25 = yield* Ref.get(calls);
+          expect(got25).toHaveLength(0);
         })
       )
+    );
+
+    it.effect("re-asserts the provenance footer before a real merge and never on a dry run", () =>
+      Effect.gen(function* () {
+        const runs = yield* Ref.make(0);
+        const reassert = Ref.update(runs, (n) => n + 1);
+        yield* provenanceFooterBeforeMergeForTesting({ dryRun: true, reassert });
+        const afterDryRun = yield* Ref.get(runs);
+        expect(afterDryRun).toBe(0);
+        yield* provenanceFooterBeforeMergeForTesting({ dryRun: false, reassert });
+        const afterMerge = yield* Ref.get(runs);
+        expect(afterMerge).toBe(1);
+      })
     );
 
     it.effect("the command decodes tolerances, resolves the repo and runs the gate", () =>
@@ -1875,7 +1945,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           yield* runYeetMergeGate(commandOptions({ tolerate: ["Heavy / Coverage Regression=inherited: red on main"] }));
           const lines = yield* Ref.get(calls);
           expect(A.some(lines, Str.includes(`/pulls/${pullFixture.number}`))).toBe(true);
-          expect(yield* mergeWasSent(calls)).toBe(false);
+          const mergeWasSent26 = yield* mergeWasSent(calls);
+          expect(mergeWasSent26).toBe(false);
         })
       )
     );

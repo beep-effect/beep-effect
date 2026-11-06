@@ -77,7 +77,8 @@ const installClaude = Effect.gen(function* () {
     return StepSkipped.make({ step, detail: "Claude Desktop is already installed." });
   }
   yield* lawyer.tell("Installing Claude. This takes a minute or two.");
-  const installer = path.join(yield* host.stateDir, `Claude-Setup-${ClaudeDesktopInstaller.version}.exe`);
+  const stateDir1 = yield* host.stateDir;
+  const installer = path.join(stateDir1, `Claude-Setup-${ClaudeDesktopInstaller.version}.exe`);
   yield* download.fetch(ClaudeDesktopInstaller, installer);
   const exitCode = yield* host.runInstaller(installer, ClaudeDesktopInstaller.silentArgs);
   const schedule = yield* InstallWaitSchedule;
@@ -132,7 +133,8 @@ const watchForGateway = Effect.fnUntraced(function* (probe: Effect.Effect<Gatewa
   // race takes the first success: the Enter loop succeeds only on a current check,
   // so a timed-out watch wins otherwise, and a console that cannot read Enter
   // leaves the watch running. The loser is interrupted.
-  return GatewayInstallState.is.current(yield* Effect.race(watched, checkOnEnter));
+  const race2 = yield* Effect.race(watched, checkOnEnter);
+  return GatewayInstallState.is.current(race2);
 });
 
 const signIn = Effect.gen(function* () {
@@ -171,7 +173,8 @@ const installGateway = Effect.gen(function* () {
   if (GatewayInstallState.is.current(state)) {
     return StepSkipped.make({ step, detail: "Claude already has this version of the Practice Gateway." });
   }
-  const file = yield* bundle.materialize(yield* host.stateDir);
+  const stateDir3 = yield* host.stateDir;
+  const file = yield* bundle.materialize(stateDir3);
   const action = GatewayInstallState.is.outdated(state) ? "Update" : "Install";
   yield* lawyer.tell(
     A.join(
@@ -278,7 +281,8 @@ const writeReport = Effect.fnUntraced(function* (report: SetupReport) {
   const host = yield* SetupHost;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const file = path.join(yield* host.stateDir, REPORT_FILE);
+  const stateDir4 = yield* host.stateDir;
+  const file = path.join(stateDir4, REPORT_FILE);
   yield* fs.writeFileString(file, `${yield* encodeReport(report)}\n`);
 });
 

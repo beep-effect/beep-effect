@@ -51,7 +51,9 @@ const assertSchemaEncodeDecodeRoundTrip = Effect.fn("SchemaParityTest.assertSche
   const decode = S.decodeUnknownEffect(schema);
   const encode = S.encodeEffect(schema);
   const equivalent = S.toEquivalence(schema);
-  assertTrue(equivalent(yield* decode(yield* encode(value)), value));
+  const encoded4 = yield* encode(value);
+  const decoded1 = yield* decode(encoded4);
+  assertTrue(equivalent(decoded1, value));
 });
 const assertArbitraryValueDecodesToSelf = Effect.fn("SchemaParityTest.assertArbitraryValueDecodesToSelf")(function* <
   Schema extends S.Codec<unknown>,
@@ -131,7 +133,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     { arbitrary: fcRuns(10) }
   );
 
-  it("composes the twelve-tool practice surface with a typed claims not-loaded branch", () => {
+  it("composes the thirteen-tool practice surface with a typed claims not-loaded branch", () => {
     const notLoaded = PracticeKgCandidateClaimsNotLoadedResult.make({
       available: false,
       bundle_version: "fixture-1",
@@ -139,7 +141,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
       reason: "claims batch not yet loaded",
     });
 
-    expect(R.keys(PracticeKgToolkit.tools)).toHaveLength(12);
+    expect(R.keys(PracticeKgToolkit.tools)).toHaveLength(13);
     pipe(S.is(PracticeKgCandidateClaimsResult)(notLoaded), assertTrue);
   });
 
@@ -157,13 +159,15 @@ describe("@beep/law-practice-use-cases schema parity", () => {
       });
 
       assertNone(missing.alignmentStatus);
-      expect(yield* encodeIrToLawExtractionError(missing)).toStrictEqual({
+      const encodedIrToLawExtractionError = yield* encodeIrToLawExtractionError(missing);
+      expect(encodedIrToLawExtractionError).toStrictEqual({
         _tag: "IrToLawExtractionError",
         label: "claim",
         message: "Missing claim extraction.",
         reason: "required-extraction-missing",
       });
-      expect(yield* encodeIrToLawExtractionError(unaligned)).toStrictEqual({
+      const encodedIrToLawExtractionError2 = yield* encodeIrToLawExtractionError(unaligned);
+      expect(encodedIrToLawExtractionError2).toStrictEqual({
         _tag: "IrToLawExtractionError",
         alignmentStatus: "unaligned",
         label: "distinction",
@@ -190,7 +194,8 @@ describe("@beep/law-practice-use-cases schema parity", () => {
         updatedByPrincipal: { component: "Runtime", kind: "System" },
       });
 
-      expect(yield* encodeEntityInput(decoded)).toStrictEqual({
+      const encodedEntityInput = yield* encodeEntityInput(decoded);
+      expect(encodedEntityInput).toStrictEqual({
         createdAt: 1,
         createdByPrincipal: {
           component: "Runtime",
@@ -248,8 +253,10 @@ describe("@beep/law-practice-use-cases schema parity", () => {
   it.effect("decodes and encodes a port output by reference", () =>
     Effect.gen(function* () {
       const program = Effect.succeed(1);
-      expect(yield* decodeUnknownCountOutput(program)).toBe(program);
-      expect(yield* encodeCountOutput(program)).toBe(program);
+      const decodedUnknownCountOutput = yield* decodeUnknownCountOutput(program);
+      expect(decodedUnknownCountOutput).toBe(program);
+      const encodedCountOutput = yield* encodeCountOutput(program);
+      expect(encodedCountOutput).toBe(program);
       const rejected = yield* Effect.exit(decodeUnknownCountOutput("not-an-effect"));
       expect(rejected._tag).toBe("Failure");
     })
@@ -257,7 +264,8 @@ describe("@beep/law-practice-use-cases schema parity", () => {
 
   it.effect("validates a port implementation's Effect output", () =>
     Effect.gen(function* () {
-      expect(yield* increment(1)).toBe(2);
+      const increment3 = yield* increment(1);
+      expect(increment3).toBe(2);
     })
   );
 });

@@ -157,7 +157,9 @@ describe("Code.unterminated", () => {
   it.effect("round-trips through the schema", () =>
     Effect.gen(function* () {
       const node = Code.make({ value: "a\n", fenceChar: "`", fenceLength: 3, unterminated: true });
-      const decoded = yield* S.decodeEffect(Code)(yield* S.encodeEffect(Code)(node));
+      const argument = S.decodeEffect(Code);
+      const value1 = yield* S.encodeEffect(Code)(node);
+      const decoded = yield* argument(value1);
       assertTrue(decoded.unterminated === true);
     })
   );

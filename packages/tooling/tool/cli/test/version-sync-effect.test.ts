@@ -49,6 +49,7 @@ import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -69,13 +70,16 @@ const encodeJson = S.encodeUnknownEffect(UnknownJson);
 
 import * as Arbitrary from "effect/Arbitrary";
 
-const decodeUnknownJson = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeUnknownJson = S.decodeEffect(UnknownJson);
 const decodeBunVersionStateEffect = S.decodeEffect(BunVersionState);
 const encodeBunVersionStateEffect = S.encodeEffect(BunVersionState);
 
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Result from "effect/Result";
+
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
@@ -175,17 +179,15 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
             typescript: "^5.9.0",
           };
           const packageJsonPath = path.join(tmpDir, "package.json");
-          yield* fs.writeFileString(
-            packageJsonPath,
-            yield* encodeJson({
-              catalog: {
-                effect: `https://pkg.pr.new/Effect-TS/${repository}/effect@c8349ed`,
-                "@effect/vitest": "https://pkg.pr.new/Effect-TS/effect-smol/@effect/vitest@abcdef0",
-                "@effect/platform-node": snapshot("@effect/platform-node"),
-                ...independent,
-              },
-            })
-          );
+          const encodedJson = yield* encodeJson({
+            catalog: {
+              effect: `https://pkg.pr.new/Effect-TS/${repository}/effect@c8349ed`,
+              "@effect/vitest": "https://pkg.pr.new/Effect-TS/effect-smol/@effect/vitest@abcdef0",
+              "@effect/platform-node": snapshot("@effect/platform-node"),
+              ...independent,
+            },
+          });
+          yield* fs.writeFileString(packageJsonPath, encodedJson);
           const state = yield* resolveEffectCatalog(tmpDir);
           expect(A.map(state.packages, (pkg) => pkg.name)).toEqual([
             "@effect/platform-node",
@@ -199,15 +201,14 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
             ...(repository === "effect-smol" ? [["catalog.effect", snapshot("effect")]] : []),
           ]);
           const updater = yield* UpdateApplierService;
-          expect(
-            yield* updater.apply(
-              tmpDir,
-              VersionSyncResolution.make({
-                report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
-                nodeLocations: [],
-              })
-            )
-          ).toBe(repository === "effect-smol" ? 2 : 1);
+          const apply1 = yield* updater.apply(
+            tmpDir,
+            VersionSyncResolution.make({
+              report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
+              nodeLocations: [],
+            })
+          );
+          expect(apply1).toBe(repository === "effect-smol" ? 2 : 1);
           const resolved = yield* resolveEffectCatalog(tmpDir);
           expect(buildEffectReport(resolved).status).toBe("ok");
           expect(A.map(resolved.packages, (pkg) => pkg.versionSpecifier)).toEqual([
@@ -215,7 +216,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
             snapshot("@effect/vitest"),
             snapshot("effect"),
           ]);
-          const updated = yield* decodeJsonEffect(yield* fs.readFileString(packageJsonPath));
+          const readFileString2 = yield* fs.readFileString(packageJsonPath);
+          const updated = yield* decodeJsonEffect(readFileString2);
           expect(updated).toMatchObject({ catalog: independent });
         })
       );
@@ -272,10 +274,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
         const changed = yield* updatePackageManagerField(packageJsonPath, "1.4.2");
 
         assertTrue(changed);
-        strictEqual(
-          yield* fs.readFileString(packageJsonPath),
-          '{\n\t"name": "@beep/test-root",\n\t"packageManager": "bun@1.4.2"\n}\n'
-        );
+        const readFileString3 = yield* fs.readFileString(packageJsonPath);
+        strictEqual(readFileString3, '{\n\t"name": "@beep/test-root",\n\t"packageManager": "bun@1.4.2"\n}\n');
       })
     );
 
@@ -295,7 +295,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
         const error = yield* Effect.flip(updateCatalogEntry(packageJsonPath, "effect", { versionSpecifier: "^4.0.0" }));
 
         assertTrue(Str.startsWith(`Failed to update ${packageJsonPath}`)(error.message));
-        strictEqual(yield* fs.readFileString(packageJsonPath), original);
+        const readFileString4 = yield* fs.readFileString(packageJsonPath);
+        strictEqual(readFileString4, original);
       })
     );
   });
@@ -436,9 +437,9 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
         "round-trips schema-derived Bun version states",
         [Arbitrary.schema(BunVersionState)],
         Effect.fnUntraced(function* ([state]) {
-          expect(equivalent(yield* decodeBunVersionStateEffect(yield* encodeBunVersionStateEffect(state)), state)).toBe(
-            true
-          );
+          const encodedBunVersionStateEffect = yield* encodeBunVersionStateEffect(state);
+          const decodedBunVersionStateEffect = yield* decodeBunVersionStateEffect(encodedBunVersionStateEffect);
+          expect(equivalent(decodedBunVersionStateEffect, state)).toBe(true);
         })
       );
     }
@@ -689,23 +690,28 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
         );
         yield* fs.writeFileString(vercelJsonPath, document);
 
-        const report = buildBunReport(yield* resolveBunVersions(tmpDir, true));
+        const resolvedBunVersions = yield* resolveBunVersions(tmpDir, true);
+        const report = buildBunReport(resolvedBunVersions);
         expect(A.map(report.items, (item) => item.file)).toEqual([".bun-version"]);
         const updater = yield* UpdateApplierService;
-        expect(
-          yield* updater.apply(
-            tmpDir,
-            VersionSyncResolution.make({
-              report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
-              nodeLocations: [],
-            })
-          )
-        ).toBe(1);
-        expect(yield* fs.readFileString(path.join(tmpDir, ".bun-version"))).toBe("1.4.0\n");
-        expect(buildBunReport(yield* resolveBunVersions(tmpDir, true)).status).toBe("ok");
-        expect(yield* updateVercelBunVersion(vercelJsonPath, "installCommand", "1.4.0")).toBe(false);
-        expect(yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0")).toBe(false);
-        expect(yield* fs.readFileString(vercelJsonPath)).toBe(document);
+        const apply5 = yield* updater.apply(
+          tmpDir,
+          VersionSyncResolution.make({
+            report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
+            nodeLocations: [],
+          })
+        );
+        expect(apply5).toBe(1);
+        const readFileString6 = yield* fs.readFileString(path.join(tmpDir, ".bun-version"));
+        expect(readFileString6).toBe("1.4.0\n");
+        const resolvedBunVersions7 = yield* resolveBunVersions(tmpDir, true);
+        expect(buildBunReport(resolvedBunVersions7).status).toBe("ok");
+        const updateVercelBunVersion8 = yield* updateVercelBunVersion(vercelJsonPath, "installCommand", "1.4.0");
+        expect(updateVercelBunVersion8).toBe(false);
+        const updateVercelBunVersion9 = yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0");
+        expect(updateVercelBunVersion9).toBe(false);
+        const readFileString10 = yield* fs.readFileString(vercelJsonPath);
+        expect(readFileString10).toBe(document);
       })
     );
 
@@ -726,11 +732,15 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
           })}\n`
         );
 
-        expect(yield* updateVercelBunVersion(vercelJsonPath, "installCommand", "1.4.0")).toBe(true);
-        expect(yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0")).toBe(true);
-        expect(yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0")).toBe(false);
+        const updateVercelBunVersion11 = yield* updateVercelBunVersion(vercelJsonPath, "installCommand", "1.4.0");
+        expect(updateVercelBunVersion11).toBe(true);
+        const updateVercelBunVersion12 = yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0");
+        expect(updateVercelBunVersion12).toBe(true);
+        const updateVercelBunVersion13 = yield* updateVercelBunVersion(vercelJsonPath, "buildCommand", "1.4.0");
+        expect(updateVercelBunVersion13).toBe(false);
 
-        const updated = (yield* decodeUnknownJson(yield* fs.readFileString(vercelJsonPath))) as Record<string, unknown>;
+        const readFileString14 = yield* fs.readFileString(vercelJsonPath);
+        const updated = (yield* decodeUnknownJson(readFileString14)) as Record<string, unknown>;
         expect(updated.installCommand).toBe('cd ../.. && npx --yes "bun@1.4.0" install --frozen-lockfile');
         expect(updated.buildCommand).toBe("cd ../.. && npx --yes bun@1.4.0 run --cwd apps/oip-web build:pwa");
         expect(updated.$schema).toBe("https://openapi.vercel.sh/vercel.json");
@@ -779,10 +789,10 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
         const applied = yield* updater.apply(tmpDir, resolution);
 
         expect(applied).toBe(3);
-        expect(yield* fs.readFileString(path.join(tmpDir, ".bun-linux-x64.sha256"))).toBe("new-digest\n");
-        const updatedVercel = (yield* decodeUnknownJson(
-          yield* fs.readFileString(path.join(vercelDir, "vercel.json"))
-        )) as Record<string, unknown>;
+        const readFileString15 = yield* fs.readFileString(path.join(tmpDir, ".bun-linux-x64.sha256"));
+        expect(readFileString15).toBe("new-digest\n");
+        const readFileString16 = yield* fs.readFileString(path.join(vercelDir, "vercel.json"));
+        const updatedVercel = (yield* decodeUnknownJson(readFileString16)) as Record<string, unknown>;
         expect(updatedVercel.installCommand).toBe("npx --yes bun@1.4.0 install --frozen-lockfile");
         expect(updatedVercel.buildCommand).toBe("npx --yes bun@1.4.0 run build:pwa");
       })
@@ -801,15 +811,14 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Turbo Sch
     yield* fs.makeDirectory(appDir, { recursive: true });
     yield* fs.makeDirectory(libDir, { recursive: true });
     yield* fs.makeDirectory(bareDir, { recursive: true });
-    yield* fs.writeFileString(
-      path.join(tmpDir, "package.json"),
-      yield* encodeJson({
-        name: "turbo-fixture",
-        workspaces: ["apps/*", "packages/*"],
-        catalog: { turbo: "^2.10.13" },
-        devDependencies: { turbo: "catalog:" },
-      })
-    );
+    const argument = path.join(tmpDir, "package.json");
+    const encodedJson1 = yield* encodeJson({
+      name: "turbo-fixture",
+      workspaces: ["apps/*", "packages/*"],
+      catalog: { turbo: "^2.10.13" },
+      devDependencies: { turbo: "catalog:" },
+    });
+    yield* fs.writeFileString(argument, encodedJson1);
     if (options.lockfile) {
       // The lockfile resolves a newer patch than the catalog floor; the
       // installed binary is 2.10.14, so the schema pin must follow it.
@@ -830,9 +839,15 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Turbo Sch
         )
       );
     }
-    yield* fs.writeFileString(path.join(appDir, "package.json"), yield* encodeJson({ name: "@fixture/web" }));
-    yield* fs.writeFileString(path.join(libDir, "package.json"), yield* encodeJson({ name: "@fixture/lib" }));
-    yield* fs.writeFileString(path.join(bareDir, "package.json"), yield* encodeJson({ name: "@fixture/bare" }));
+    const argument1 = path.join(appDir, "package.json");
+    const encodedJson2 = yield* encodeJson({ name: "@fixture/web" });
+    yield* fs.writeFileString(argument1, encodedJson2);
+    const argument2 = path.join(libDir, "package.json");
+    const encodedJson3 = yield* encodeJson({ name: "@fixture/lib" });
+    yield* fs.writeFileString(argument2, encodedJson3);
+    const argument3 = path.join(bareDir, "package.json");
+    const encodedJson4 = yield* encodeJson({ name: "@fixture/bare" });
+    yield* fs.writeFileString(argument3, encodedJson4);
     yield* fs.writeFileString(
       path.join(tmpDir, "turbo.json"),
       A.join(
@@ -847,15 +862,23 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Turbo Sch
         "\n"
       )
     );
-    yield* fs.writeFileString(
-      path.join(appDir, "turbo.json"),
-      yield* encodeJson({ $schema: "https://turborepo.com/schema.json", extends: ["//"], tasks: {} })
-    );
-    yield* fs.writeFileString(
-      path.join(libDir, "turbo.json"),
-      yield* encodeJson({ $schema: "https://v2-10-13.turborepo.dev/schema.json", extends: ["//"], tasks: {} })
-    );
-    yield* fs.writeFileString(path.join(bareDir, "turbo.json"), yield* encodeJson({ extends: ["//"], tasks: {} }));
+    const argument4 = path.join(appDir, "turbo.json");
+    const encodedJson5 = yield* encodeJson({
+      $schema: "https://turborepo.com/schema.json",
+      extends: ["//"],
+      tasks: {},
+    });
+    yield* fs.writeFileString(argument4, encodedJson5);
+    const argument5 = path.join(libDir, "turbo.json");
+    const encodedJson6 = yield* encodeJson({
+      $schema: "https://v2-10-13.turborepo.dev/schema.json",
+      extends: ["//"],
+      tasks: {},
+    });
+    yield* fs.writeFileString(argument5, encodedJson6);
+    const argument6 = path.join(bareDir, "turbo.json");
+    const encodedJson7 = yield* encodeJson({ extends: ["//"], tasks: {} });
+    yield* fs.writeFileString(argument6, encodedJson7);
   });
 
   describe("resolveTurboSchema", () => {
@@ -949,7 +972,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Turbo Sch
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         yield* writeTurboWorkspace(tmpDir, { lockfile: true });
 
-        const report = buildTurboReport(yield* resolveTurboSchema(tmpDir));
+        const resolvedTurboSchema = yield* resolveTurboSchema(tmpDir);
+        const report = buildTurboReport(resolvedTurboSchema);
         const resolution = VersionSyncResolution.make({
           report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
           nodeLocations: [],
@@ -963,22 +987,20 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Turbo Sch
         expect(rootTurbo).toContain("// root pipeline");
         expect(rootTurbo).toContain('"$schema": "https://v2-10-14.turborepo.dev/schema.json"');
 
-        const appTurbo = (yield* decodeUnknownJson(
-          yield* fs.readFileString(path.join(tmpDir, "apps", "web", "turbo.json"))
-        )) as Record<string, unknown>;
+        const readFileString17 = yield* fs.readFileString(path.join(tmpDir, "apps", "web", "turbo.json"));
+        const appTurbo = (yield* decodeUnknownJson(readFileString17)) as Record<string, unknown>;
         expect(appTurbo.$schema).toBe("https://v2-10-14.turborepo.dev/schema.json");
 
-        const libTurbo = (yield* decodeUnknownJson(
-          yield* fs.readFileString(path.join(tmpDir, "packages", "lib", "turbo.json"))
-        )) as Record<string, unknown>;
+        const readFileString18 = yield* fs.readFileString(path.join(tmpDir, "packages", "lib", "turbo.json"));
+        const libTurbo = (yield* decodeUnknownJson(readFileString18)) as Record<string, unknown>;
         expect(libTurbo.$schema).toBe("https://v2-10-14.turborepo.dev/schema.json");
 
-        const bareTurbo = (yield* decodeUnknownJson(
-          yield* fs.readFileString(path.join(tmpDir, "packages", "bare", "turbo.json"))
-        )) as Record<string, unknown>;
+        const readFileString19 = yield* fs.readFileString(path.join(tmpDir, "packages", "bare", "turbo.json"));
+        const bareTurbo = (yield* decodeUnknownJson(readFileString19)) as Record<string, unknown>;
         expect(bareTurbo.$schema).toBeUndefined();
 
-        const rerun = buildTurboReport(yield* resolveTurboSchema(tmpDir));
+        const resolvedTurboSchema20 = yield* resolveTurboSchema(tmpDir);
+        const rerun = buildTurboReport(resolvedTurboSchema20);
         expect(rerun.status).toBe("ok");
       })
     );
@@ -1108,19 +1130,21 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync installed
         const path = yield* Path.Path;
         const tmpDir = yield* fs.makeTempDirectoryScoped();
 
-        yield* fs.writeFileString(
-          path.join(tmpDir, "package.json"),
-          yield* encodeJson({ name: "fixture", devDependencies: { turbo: "~2.10.13" } })
-        );
-        yield* fs.writeFileString(
-          path.join(tmpDir, "bun.lock"),
-          yield* encodeJson({ lockfileVersion: 1, packages: { turbo: [{ unexpected: true }, ""] } })
-        );
+        const argument7 = path.join(tmpDir, "package.json");
+        const encodedJson8 = yield* encodeJson({ name: "fixture", devDependencies: { turbo: "~2.10.13" } });
+        yield* fs.writeFileString(argument7, encodedJson8);
+        const argument8 = path.join(tmpDir, "bun.lock");
+        const encodedJson9 = yield* encodeJson({ lockfileVersion: 1, packages: { turbo: [{ unexpected: true }, ""] } });
+        yield* fs.writeFileString(argument8, encodedJson9);
 
-        assertNone(yield* readLockfileResolvedVersion(tmpDir, "turbo"));
-        assertNone(yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome"));
-        expect(yield* resolveInstalledToolVersion(tmpDir, "turbo")).toBe("2.10.13");
-        expect(yield* resolveInstalledToolVersion(tmpDir, "@biomejs/biome")).toBe("");
+        const readLockfileResolvedVersion21 = yield* readLockfileResolvedVersion(tmpDir, "turbo");
+        assertNone(readLockfileResolvedVersion21);
+        const readLockfileResolvedVersion22 = yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome");
+        assertNone(readLockfileResolvedVersion22);
+        const resolvedInstalledToolVersion = yield* resolveInstalledToolVersion(tmpDir, "turbo");
+        expect(resolvedInstalledToolVersion).toBe("2.10.13");
+        const resolvedInstalledToolVersion23 = yield* resolveInstalledToolVersion(tmpDir, "@biomejs/biome");
+        expect(resolvedInstalledToolVersion23).toBe("");
       })
     );
 
@@ -1131,24 +1155,27 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync installed
         const path = yield* Path.Path;
         const tmpDir = yield* fs.makeTempDirectoryScoped();
 
-        yield* fs.writeFileString(
-          path.join(tmpDir, "bun.lock"),
-          yield* encodeJson({
-            lockfileVersion: 1,
-            workspaces: { "": { name: "fixture" }, "packages/turbo": { name: "turbo", version: "9.9.9" } },
-            packages: {
-              turbo: ["turbo@workspace:packages/turbo"],
-              "@biomejs/biome": ["@biomejs/cli@2.4.4", "", {}],
-              "other/effect": ["effect@4.0.4", "", {}],
-              "string-width": ["string-width@5.1.2", "", {}],
-            },
-          })
-        );
+        const argument9 = path.join(tmpDir, "bun.lock");
+        const encodedJson10 = yield* encodeJson({
+          lockfileVersion: 1,
+          workspaces: { "": { name: "fixture" }, "packages/turbo": { name: "turbo", version: "9.9.9" } },
+          packages: {
+            turbo: ["turbo@workspace:packages/turbo"],
+            "@biomejs/biome": ["@biomejs/cli@2.4.4", "", {}],
+            "other/effect": ["effect@4.0.4", "", {}],
+            "string-width": ["string-width@5.1.2", "", {}],
+          },
+        });
+        yield* fs.writeFileString(argument9, encodedJson10);
 
-        assertNone(yield* readLockfileResolvedVersion(tmpDir, "turbo"));
-        assertNone(yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome"));
-        assertNone(yield* readLockfileResolvedVersion(tmpDir, "effect"));
-        assertSome(yield* readLockfileResolvedVersion(tmpDir, "string-width"), "5.1.2");
+        const readLockfileResolvedVersion24 = yield* readLockfileResolvedVersion(tmpDir, "turbo");
+        assertNone(readLockfileResolvedVersion24);
+        const readLockfileResolvedVersion25 = yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome");
+        assertNone(readLockfileResolvedVersion25);
+        const readLockfileResolvedVersion26 = yield* readLockfileResolvedVersion(tmpDir, "effect");
+        assertNone(readLockfileResolvedVersion26);
+        const readLockfileResolvedVersion27 = yield* readLockfileResolvedVersion(tmpDir, "string-width");
+        assertSome(readLockfileResolvedVersion27, "5.1.2");
       })
     );
 
@@ -1177,14 +1204,13 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync installed
         // The legacy `packages`-only decode accepted this and found turbo; the
         // kit rejects the unparseable integrity, so the read fails instead of
         // falling back to the catalog.
-        yield* fs.writeFileString(
-          path.join(tmpDir, "bun.lock"),
-          yield* encodeJson({
-            lockfileVersion: 1,
-            workspaces: { "": { name: "fixture" } },
-            packages: { turbo: ["turbo@2.10.14", "", {}, "not-an-integrity"] },
-          })
-        );
+        const argument10 = path.join(tmpDir, "bun.lock");
+        const encodedJson11 = yield* encodeJson({
+          lockfileVersion: 1,
+          workspaces: { "": { name: "fixture" } },
+          packages: { turbo: ["turbo@2.10.14", "", {}, "not-an-integrity"] },
+        });
+        yield* fs.writeFileString(argument10, encodedJson11);
 
         const failure = yield* readLockfileResolvedVersion(tmpDir, "turbo").pipe(Effect.flip);
         expect(failure._tag).toBe("VersionSyncError");
@@ -1211,11 +1237,16 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync installed
         const appDir = path.join(tmpDir, "apps", "web");
 
         yield* fs.makeDirectory(appDir, { recursive: true });
-        yield* fs.writeFileString(
-          path.join(tmpDir, "package.json"),
-          yield* encodeJson({ name: "fixture", workspaces: ["apps/*"], catalog: { turbo: "2.10.13" } })
-        );
-        yield* fs.writeFileString(path.join(appDir, "package.json"), yield* encodeJson({ name: "@fixture/web" }));
+        const argument11 = path.join(tmpDir, "package.json");
+        const encodedJson12 = yield* encodeJson({
+          name: "fixture",
+          workspaces: ["apps/*"],
+          catalog: { turbo: "2.10.13" },
+        });
+        yield* fs.writeFileString(argument11, encodedJson12);
+        const argument12 = path.join(appDir, "package.json");
+        const encodedJson13 = yield* encodeJson({ name: "@fixture/web" });
+        yield* fs.writeFileString(argument12, encodedJson13);
         yield* fs.writeFileString(path.join(appDir, "turbo.json"), "{ not: valid");
 
         const failure = yield* resolveTurboSchema(tmpDir).pipe(Effect.flip);
@@ -1237,9 +1268,12 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync installed
 
         yield* fs.writeFileString(file, '{\n  // pinned\n  "$schema": "https://turborepo.com/schema.json"\n}\n');
 
-        expect(yield* updateJsoncSchemaUrl(file, url)).toBe(true);
-        expect(yield* updateJsoncSchemaUrl(file, url)).toBe(false);
-        expect(yield* fs.readFileString(file)).toContain("// pinned");
+        const updateJsoncSchemaUrl28 = yield* updateJsoncSchemaUrl(file, url);
+        expect(updateJsoncSchemaUrl28).toBe(true);
+        const updateJsoncSchemaUrl29 = yield* updateJsoncSchemaUrl(file, url);
+        expect(updateJsoncSchemaUrl29).toBe(false);
+        const readFileString30 = yield* fs.readFileString(file);
+        expect(readFileString30).toContain("// pinned");
       })
     );
   });
@@ -1251,20 +1285,21 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync shared lo
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
-      yield* fs.writeFileString(path.join(root, "package.json"), yield* encodeJson({ name: "fixture" }));
+      const argument13 = path.join(root, "package.json");
+      const encodedJson14 = yield* encodeJson({ name: "fixture" });
+      yield* fs.writeFileString(argument13, encodedJson14);
       yield* fs.writeFileString(path.join(root, "biome.jsonc"), "{}");
       yield* fs.writeFileString(path.join(root, "turbo.json"), "{}");
-      yield* fs.writeFileString(
-        path.join(root, "bun.lock"),
-        yield* encodeJson({
-          lockfileVersion: 1,
-          workspaces: { "": { name: "fixture" } },
-          packages: {
-            turbo: ["turbo@2.10.14", "", {}],
-            "@biomejs/biome": ["@biomejs/biome@2.5.6", "", {}],
-          },
-        })
-      );
+      const argument14 = path.join(root, "bun.lock");
+      const encodedJson15 = yield* encodeJson({
+        lockfileVersion: 1,
+        workspaces: { "": { name: "fixture" } },
+        packages: {
+          turbo: ["turbo@2.10.14", "", {}],
+          "@biomejs/biome": ["@biomejs/biome@2.5.6", "", {}],
+        },
+      });
+      yield* fs.writeFileString(argument14, encodedJson15);
       const parse = yield* Effect.acquireRelease(
         Effect.sync(() => vi.spyOn(Lockfile, "parse")),
         (spy) => Effect.sync(() => spy.mockRestore())
@@ -1299,11 +1334,23 @@ const releaseCommitClient = (commits: Readonly<Record<string, string>>, requeste
       HttpClientResponse.fromWeb(
         request,
         sha === undefined
-          ? new Response(JSON.stringify({ message: "No commit found for SHA" }), { status: 404 })
-          : new Response(JSON.stringify({ sha, commit: { message: "release" } }), {
-              status: 200,
-              headers: { "content-type": "application/json" },
-            })
+          ? new Response(
+              Result.getOrThrowWith(
+                S.encodeUnknownResult(UnknownJson)({ message: "No commit found for SHA" }),
+                identity
+              ),
+              { status: 404 }
+            )
+          : new Response(
+              Result.getOrThrowWith(
+                S.encodeUnknownResult(UnknownJson)({ sha, commit: { message: "release" } }),
+                identity
+              ),
+              {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              }
+            )
       )
     );
   });
@@ -1314,14 +1361,13 @@ const effectSourceManifest = (
   effect: string,
   effectSource: O.Option<{ readonly version: string; readonly commit: string }>
 ) =>
-  `${JSON.stringify(
-    {
+  `${Result.getOrThrowWith(
+    encodePrettyJson({
       name: "@beep/test-root",
       catalog: { effect, "@effect/vitest": effect },
       ...O.match(effectSource, { onNone: () => ({}), onSome: (source) => ({ config: { effectSource: source } }) }),
-    },
-    null,
-    2
+    }),
+    identity
   )}\n`;
 
 it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect source pin", (it) => {
@@ -1385,7 +1431,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
     "reports a commit that does not match the release tag even when the version agrees",
     Effect.fn(function* () {
       const { tmpDir } = yield* writeManifest("4.1.1", O.some({ version: "4.1.1", commit: EFFECT_4_1_0_COMMIT }));
-      const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), false).pipe(
+      const resolvedEffectCatalog = yield* resolveEffectCatalog(tmpDir);
+      const resolved = yield* withEffectReleaseCommit(resolvedEffectCatalog, false).pipe(
         Effect.provideService(HttpClient.HttpClient, releaseCommitClient({ "effect@4.1.1": EFFECT_4_1_1_COMMIT }, []))
       );
       const report = buildEffectReport(resolved);
@@ -1401,7 +1448,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
     "is ok when config.effectSource already matches the catalog version and its release commit",
     Effect.fn(function* () {
       const { tmpDir } = yield* writeManifest("4.1.1", O.some({ version: "4.1.1", commit: EFFECT_4_1_1_COMMIT }));
-      const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), false).pipe(
+      const resolvedEffectCatalog31 = yield* resolveEffectCatalog(tmpDir);
+      const resolved = yield* withEffectReleaseCommit(resolvedEffectCatalog31, false).pipe(
         Effect.provideService(HttpClient.HttpClient, releaseCommitClient({ "effect@4.1.1": EFFECT_4_1_1_COMMIT }, []))
       );
       const report = buildEffectReport(resolved);
@@ -1417,7 +1465,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
     Effect.fn(function* () {
       const fs = yield* FileSystem.FileSystem;
       const { tmpDir, packageJsonPath, text } = yield* writeManifest("4.1.1", stale);
-      const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), true).pipe(
+      const resolvedEffectCatalog32 = yield* resolveEffectCatalog(tmpDir);
+      const resolved = yield* withEffectReleaseCommit(resolvedEffectCatalog32, true).pipe(
         Effect.provideService(HttpClient.HttpClient, unreachableClient)
       );
       const report = buildEffectReport(resolved);
@@ -1437,7 +1486,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
         })
       );
       strictEqual(applied, 0);
-      strictEqual(yield* fs.readFileString(packageJsonPath), text);
+      const readFileString33 = yield* fs.readFileString(packageJsonPath);
+      strictEqual(readFileString33, text);
     })
   );
 
@@ -1446,7 +1496,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
     Effect.fn(function* () {
       const { tmpDir } = yield* writeManifest("4.1.1", stale);
       const requested: Array<string> = [];
-      const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), false).pipe(
+      const resolvedEffectCatalog34 = yield* resolveEffectCatalog(tmpDir);
+      const resolved = yield* withEffectReleaseCommit(resolvedEffectCatalog34, false).pipe(
         Effect.provideService(HttpClient.HttpClient, releaseCommitClient({}, requested))
       );
 
@@ -1466,7 +1517,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
         ["4.1.1", O.none()],
       ] as const) {
         const { tmpDir } = yield* writeManifest(effect, effectSource);
-        const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), false).pipe(
+        const resolvedEffectCatalog35 = yield* resolveEffectCatalog(tmpDir);
+        const resolved = yield* withEffectReleaseCommit(resolvedEffectCatalog35, false).pipe(
           Effect.provideService(HttpClient.HttpClient, unreachableClient)
         );
         const report = buildEffectReport(resolved);
@@ -1490,10 +1542,12 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
         .resolve(tmpDir, options)
         .pipe(Effect.provideService(HttpClient.HttpClient, client));
       strictEqual(resolution.report.hasDrift, true);
-      strictEqual(yield* updater.apply(tmpDir, resolution), 2);
+      const apply36 = yield* updater.apply(tmpDir, resolution);
+      strictEqual(apply36, 2);
 
+      const readFileString37 = yield* fs.readFileString(packageJsonPath);
       strictEqual(
-        yield* fs.readFileString(packageJsonPath),
+        readFileString37,
         Str.replace(
           `"commit": "${EFFECT_4_1_0_COMMIT}"`,
           `"commit": "${EFFECT_4_1_1_COMMIT}"`
@@ -1517,14 +1571,12 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
       const packageJsonPath = path.join(tmpDir, "package.json");
       // A numeric commit fails the pin decode; the drifted `@effect/vitest`
       // entry must still be reported and written.
-      yield* fs.writeFileString(
-        packageJsonPath,
-        yield* encodeJson({
-          name: "@beep/test-root",
-          catalog: { effect: "4.1.1", "@effect/vitest": "4.1.0" },
-          config: { effectSource: { version: "4.1.0", commit: 42 } },
-        })
-      );
+      const encodedJson38 = yield* encodeJson({
+        name: "@beep/test-root",
+        catalog: { effect: "4.1.1", "@effect/vitest": "4.1.0" },
+        config: { effectSource: { version: "4.1.0", commit: 42 } },
+      });
+      yield* fs.writeFileString(packageJsonPath, encodedJson38);
 
       const state = yield* resolveEffectCatalog(tmpDir);
       strictEqual(state.canonicalSpecifier, "4.1.1");
@@ -1534,7 +1586,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
         "config.effectSource in package.json is malformed (expected { version: string, commit: string }); fix it by hand"
       );
 
-      const report = buildEffectReport(yield* withEffectReleaseCommit(state, true));
+      const withEffectReleaseCommit39 = yield* withEffectReleaseCommit(state, true);
+      const report = buildEffectReport(withEffectReleaseCommit39);
       strictEqual(report.status, "error");
       assertTrue(O.exists(report.error, Str.includes("config.effectSource in package.json is malformed")));
       expect(A.map(report.items, (item) => [item.field, item.current, item.expected])).toEqual([
@@ -1549,7 +1602,8 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
           nodeLocations: [],
         })
       );
-      const written = (yield* decodeUnknownJson(yield* fs.readFileString(packageJsonPath))) as {
+      const readFileString40 = yield* fs.readFileString(packageJsonPath);
+      const written = (yield* decodeUnknownJson(readFileString40)) as {
         readonly catalog: Record<string, string>;
         readonly config: unknown;
       };

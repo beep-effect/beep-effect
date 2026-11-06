@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { SourceBoundary } from "@beep/repo-workspaces/SourceBoundary";
 import { normalizePath } from "@beep/schema";
@@ -23,7 +24,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { BoundaryRule } from "@beep/repo-workspaces/SourceBoundary";
 import type * as HashMap from "effect/HashMap";
 
@@ -349,7 +349,8 @@ export const runEcosystemPolarityCheck = Effect.fn("EcosystemPolarity.runEcosyst
   let violations = A.empty<EcosystemPolarityViolation>();
 
   for (const member of members) {
-    violations = A.appendAll(violations, yield* manifestViolations(member, repoRoot));
+    const manifestViolations1 = yield* manifestViolations(member, repoRoot);
+    violations = A.appendAll(violations, manifestViolations1);
     const sources = yield* sourceViolations(member, repoRoot);
     scannedSourceFiles += sources.scannedSourceFiles;
     violations = A.appendAll(violations, sources.violations);

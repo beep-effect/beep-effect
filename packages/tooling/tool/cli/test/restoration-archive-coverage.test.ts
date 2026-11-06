@@ -102,7 +102,8 @@ describe("restoration archive boundary helpers", () => {
           Exit.isFailure,
           assertTrue
         );
-        expect(yield* RA.requireContainedPath(path, root, source, "outside", true)).toBe(source);
+        const requireContainedPath1 = yield* RA.requireContainedPath(path, root, source, "outside", true);
+        expect(requireContainedPath1).toBe(source);
         (yield* RA.requireContainedPath(path, root, root, "equal", false).pipe(Effect.exit)).pipe(
           Exit.isFailure,
           assertTrue
@@ -111,11 +112,16 @@ describe("restoration archive boundary helpers", () => {
           Exit.isFailure,
           assertTrue
         );
-        expect(yield* RA.prefixMatches(source, equal, 0, 2)).toBe(true);
-        expect(yield* RA.prefixMatches(source, equal, 6, 2)).toBe(true);
-        expect(yield* RA.prefixMatches(source, different, 6, 2)).toBe(false);
-        expect(yield* RA.prefixMatches(source, short, 6, 2)).toBe(false);
-        expect(yield* RA.maybeCrash("none", "after-copy")).toBeUndefined();
+        const prefixMatches2 = yield* RA.prefixMatches(source, equal, 0, 2);
+        expect(prefixMatches2).toBe(true);
+        const prefixMatches3 = yield* RA.prefixMatches(source, equal, 6, 2);
+        expect(prefixMatches3).toBe(true);
+        const prefixMatches4 = yield* RA.prefixMatches(source, different, 6, 2);
+        expect(prefixMatches4).toBe(false);
+        const prefixMatches5 = yield* RA.prefixMatches(source, short, 6, 2);
+        expect(prefixMatches5).toBe(false);
+        const maybeCrash6 = yield* RA.maybeCrash("none", "after-copy");
+        expect(maybeCrash6).toBeUndefined();
         (yield* RA.maybeCrash("after-rename", "after-rename").pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
       })
     );
@@ -147,27 +153,25 @@ describe("restoration archive boundary helpers", () => {
           preserveOptions(sourceRoot, separateArchive, sourceRoot, manifest)
         ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
-        expect(
-          yield* RA.reconcileCollectorRecord(
-            CollectorManifestRecord.cases.error.make({
-              reason: "unreadable",
-              src: "C:\\source\\unreadable.bin",
-              status: "error",
-            }),
-            sourceRoot,
-            2
-          )
-        ).toEqual({ kind: "collector-error" });
-        expect(
-          yield* RA.reconcileCollectorRecord(
-            CollectorManifestRecord.cases["excluded-secret"].make({
-              src: "C:\\source\\secret.bin",
-              status: "excluded-secret",
-            }),
-            sourceRoot,
-            2
-          )
-        ).toEqual({ kind: "ignored" });
+        const reconcileCollectorRecord7 = yield* RA.reconcileCollectorRecord(
+          CollectorManifestRecord.cases.error.make({
+            reason: "unreadable",
+            src: "C:\\source\\unreadable.bin",
+            status: "error",
+          }),
+          sourceRoot,
+          2
+        );
+        expect(reconcileCollectorRecord7).toEqual({ kind: "collector-error" });
+        const reconcileCollectorRecord8 = yield* RA.reconcileCollectorRecord(
+          CollectorManifestRecord.cases["excluded-secret"].make({
+            src: "C:\\source\\secret.bin",
+            status: "excluded-secret",
+          }),
+          sourceRoot,
+          2
+        );
+        expect(reconcileCollectorRecord8).toEqual({ kind: "ignored" });
         (yield* RA.reconcileCollectorRecord(
           CollectorManifestRecord.cases.copied.make({
             dst: "C:\\root",
@@ -186,14 +190,24 @@ describe("restoration archive boundary helpers", () => {
             src: `C:\\source\\${name}`,
             status: "copied",
           });
-        expect(yield* RA.reconcileCollectorRecord(collectorRecord("missing.bin", 4), sourceRoot, 2)).toEqual({
+        const reconcileCollectorRecord9 = yield* RA.reconcileCollectorRecord(
+          collectorRecord("missing.bin", 4),
+          sourceRoot,
+          2
+        );
+        expect(reconcileCollectorRecord9).toEqual({
           kind: "mutated",
           recordedSize: 4,
           relativePath: "missing.bin",
         });
         const presentPath = path.join(sourceRoot, "present.bin");
         yield* fs.writeFileString(presentPath, "data");
-        expect(yield* RA.reconcileCollectorRecord(collectorRecord("present.bin", 4), sourceRoot, 2)).toEqual({
+        const reconcileCollectorRecord10 = yield* RA.reconcileCollectorRecord(
+          collectorRecord("present.bin", 4),
+          sourceRoot,
+          2
+        );
+        expect(reconcileCollectorRecord10).toEqual({
           kind: "present",
           recordedSize: 4,
           relativePath: "present.bin",
@@ -266,7 +280,8 @@ describe("restoration archive boundary helpers", () => {
           signature
         );
 
-        expect(yield* RA.reapedCoordinationPath("/tmp/claim")).toContain(".reaped-");
+        const reapedCoordinationPath11 = yield* RA.reapedCoordinationPath("/tmp/claim");
+        expect(reapedCoordinationPath11).toContain(".reaped-");
         const reapClaim = RA.writerReapClaimPath("/tmp/claim", "observed");
         expect(reapClaim).toContain(".reap-");
         expect(RA.writerReapClaimTombstonePath(reapClaim, "observed")).toContain(".claim.reap-");
@@ -653,7 +668,9 @@ describe("restoration archive boundary helpers", () => {
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-coordination-coverage-" });
         const bootId = yield* RA.currentBootId();
         const procStart = yield* RA.processStartTime(process.pid);
-        if (O.isNone(procStart)) return yield* Effect.die("Expected the current process identity.");
+        if (O.isNone(procStart)) {
+          return yield* Effect.die("Expected the current process identity.");
+        }
         const claimText = `${yield* RA.encodeRestorationWriterClaim({
           bootId,
           pid: process.pid,
@@ -663,17 +680,26 @@ describe("restoration archive boundary helpers", () => {
           token: "live-claim-token",
         })}\n`;
         const liveClaim = yield* RA.decodeObservedWriterClaim(claimText, "claim decode failed");
-        expect(yield* RA.writerClaimOwnerIsAlive(liveClaim)).toBe(true);
-        expect(yield* RA.writerClaimOwnerIsAlive({ ...liveClaim, bootId: "different-boot" })).toBe(false);
-        expect(yield* RA.writerClaimOwnerIsAlive({ ...liveClaim, pid: 2_147_483_647 })).toBe(false);
+        const writerClaimOwnerIsAlive12 = yield* RA.writerClaimOwnerIsAlive(liveClaim);
+        expect(writerClaimOwnerIsAlive12).toBe(true);
+        const writerClaimOwnerIsAlive13 = yield* RA.writerClaimOwnerIsAlive({ ...liveClaim, bootId: "different-boot" });
+        expect(writerClaimOwnerIsAlive13).toBe(false);
+        const writerClaimOwnerIsAlive14 = yield* RA.writerClaimOwnerIsAlive({ ...liveClaim, pid: 2_147_483_647 });
+        expect(writerClaimOwnerIsAlive14).toBe(false);
 
         const claimPath = path.join(root, "writer.claim");
-        expect(yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText)).toBe(true);
-        expect(yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText)).toBe(false);
-        assertSome(yield* RA.readCanonicalCoordinationFile(claimPath), claimText);
-        expect(yield* RA.moveObservedCoordinationFile(claimPath, "wrong-generation")).toBe(false);
-        expect(yield* RA.moveObservedCoordinationFile(claimPath, claimText)).toBe(true);
-        assertNone(yield* RA.readCanonicalCoordinationFile(claimPath));
+        const tryWriteExclusiveCoordinationFile15 = yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText);
+        expect(tryWriteExclusiveCoordinationFile15).toBe(true);
+        const tryWriteExclusiveCoordinationFile16 = yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText);
+        expect(tryWriteExclusiveCoordinationFile16).toBe(false);
+        const readCanonicalCoordinationFile17 = yield* RA.readCanonicalCoordinationFile(claimPath);
+        assertSome(readCanonicalCoordinationFile17, claimText);
+        const moveObservedCoordinationFile18 = yield* RA.moveObservedCoordinationFile(claimPath, "wrong-generation");
+        expect(moveObservedCoordinationFile18).toBe(false);
+        const moveObservedCoordinationFile19 = yield* RA.moveObservedCoordinationFile(claimPath, claimText);
+        expect(moveObservedCoordinationFile19).toBe(true);
+        const readCanonicalCoordinationFile20 = yield* RA.readCanonicalCoordinationFile(claimPath);
+        assertNone(readCanonicalCoordinationFile20);
 
         const deadText = `${yield* RA.encodeRestorationWriterClaim({
           ...liveClaim,
@@ -681,32 +707,51 @@ describe("restoration archive boundary helpers", () => {
           token: "dead-claim-token",
         })}\n`;
         yield* fs.writeFileString(claimPath, deadText);
-        expect(yield* RA.tryClaimWriterReapClaim(claimPath, claimText)).toBe(true);
-        expect(yield* RA.moveObservedCoordinationFile(claimPath, claimText)).toBe(true);
+        const tryClaimWriterReapClaim21 = yield* RA.tryClaimWriterReapClaim(claimPath, claimText);
+        expect(tryClaimWriterReapClaim21).toBe(true);
+        const moveObservedCoordinationFile22 = yield* RA.moveObservedCoordinationFile(claimPath, claimText);
+        expect(moveObservedCoordinationFile22).toBe(true);
         yield* fs.writeFileString(claimPath, claimText);
-        expect(yield* RA.tryClaimWriterReapClaim(claimPath, deadText)).toBe(false);
-        expect(yield* RA.moveObservedCoordinationFile(claimPath, claimText)).toBe(true);
+        const tryClaimWriterReapClaim23 = yield* RA.tryClaimWriterReapClaim(claimPath, deadText);
+        expect(tryClaimWriterReapClaim23).toBe(false);
+        const moveObservedCoordinationFile24 = yield* RA.moveObservedCoordinationFile(claimPath, claimText);
+        expect(moveObservedCoordinationFile24).toBe(true);
 
         const reapPath = path.join(root, "reap.claim");
         yield* fs.writeFileString(reapPath, deadText);
         const tombstonePath = RA.writerReapClaimTombstonePath(reapPath, deadText);
         yield* fs.writeFileString(tombstonePath, claimText);
-        expect(yield* RA.tryRecoverObservedWriterReapClaim(reapPath, claimText, deadText)).toBe(false);
-        expect(yield* RA.moveObservedCoordinationFile(tombstonePath, claimText)).toBe(true);
+        const tryRecoverObservedWriterReapClaim25 = yield* RA.tryRecoverObservedWriterReapClaim(
+          reapPath,
+          claimText,
+          deadText
+        );
+        expect(tryRecoverObservedWriterReapClaim25).toBe(false);
+        const moveObservedCoordinationFile26 = yield* RA.moveObservedCoordinationFile(tombstonePath, claimText);
+        expect(moveObservedCoordinationFile26).toBe(true);
         yield* fs.writeFileString(tombstonePath, deadText);
         (yield* RA.tryRecoverObservedWriterReapClaim(reapPath, claimText, deadText).pipe(Effect.exit)).pipe(
           Exit.isFailure,
           assertTrue
         );
-        expect(yield* RA.moveObservedCoordinationFile(tombstonePath, deadText)).toBe(true);
-        expect(yield* RA.moveObservedCoordinationFile(reapPath, deadText)).toBe(true);
+        const moveObservedCoordinationFile27 = yield* RA.moveObservedCoordinationFile(tombstonePath, deadText);
+        expect(moveObservedCoordinationFile27).toBe(true);
+        const moveObservedCoordinationFile28 = yield* RA.moveObservedCoordinationFile(reapPath, deadText);
+        expect(moveObservedCoordinationFile28).toBe(true);
         yield* fs.writeFileString(reapPath, "changed-generation");
-        expect(yield* RA.tryRecoverObservedWriterReapClaim(reapPath, claimText, deadText)).toBe(false);
-        expect(yield* RA.moveObservedCoordinationFile(reapPath, "changed-generation")).toBe(true);
+        const tryRecoverObservedWriterReapClaim29 = yield* RA.tryRecoverObservedWriterReapClaim(
+          reapPath,
+          claimText,
+          deadText
+        );
+        expect(tryRecoverObservedWriterReapClaim29).toBe(false);
+        const moveObservedCoordinationFile30 = yield* RA.moveObservedCoordinationFile(reapPath, "changed-generation");
+        expect(moveObservedCoordinationFile30).toBe(true);
 
         const acquiredPath = path.join(root, "acquired.claim");
         const lease = { claimPath: acquiredPath, claimText };
-        expect(yield* RA.acquireObservedRestorationWriterClaim(lease)).toEqual(lease);
+        const acquireObservedRestorationWriterClaim31 = yield* RA.acquireObservedRestorationWriterClaim(lease);
+        expect(acquireObservedRestorationWriterClaim31).toEqual(lease);
         yield* RA.releaseArchiveWriterClaim(lease);
         (yield* RA.releaseArchiveWriterClaim(lease).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
@@ -727,7 +772,9 @@ describe("restoration archive boundary helpers", () => {
         yield* RA.persistVerificationReport(reportRoot, []);
         const reportDirectory = path.join(reportRoot, "verification");
         const reportName = (yield* fs.readDirectory(reportDirectory))[0];
-        if (reportName === undefined) return yield* Effect.die("Expected a verification report.");
+        if (reportName === undefined) {
+          return yield* Effect.die("Expected a verification report.");
+        }
         const reportPath = path.join(reportDirectory, reportName);
         yield* fs.writeFileString(reportPath, "drift");
         (yield* RA.persistVerificationReport(reportRoot, []).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
@@ -774,7 +821,8 @@ describe("restoration archive boundary helpers", () => {
           sourceLabel: "synthetic-source",
           sourceRelativePath: "synthetic.bin",
         });
-        expect(HashMap.size(yield* RA.validateArchiveTerminalIndex(root, [failure], preflight))).toBe(1);
+        const validateArchiveTerminalIndex32 = yield* RA.validateArchiveTerminalIndex(root, [failure], preflight);
+        expect(HashMap.size(validateArchiveTerminalIndex32)).toBe(1);
         RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId.pipe(O.isSome, assertTrue);
       })
     );
@@ -789,7 +837,9 @@ describe("restoration archive boundary helpers", () => {
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-coordination-contention-" });
         const bootId = yield* RA.currentBootId();
         const procStart = yield* RA.processStartTime(process.pid);
-        if (O.isNone(procStart)) return yield* Effect.die("Expected the current process identity.");
+        if (O.isNone(procStart)) {
+          return yield* Effect.die("Expected the current process identity.");
+        }
         const claim = (token: string, claimBootId = bootId) =>
           RA.encodeRestorationWriterClaim({
             bootId: claimBootId,
@@ -866,14 +916,13 @@ describe("restoration archive boundary helpers", () => {
         (yield* RA.acquireObservedRestorationWriterClaim({ claimPath: liveClaimPath, claimText: staleText }).pipe(
           Effect.exit
         )).pipe(Exit.isFailure, assertTrue);
-        expect(
-          yield* RA.moveObservedCoordinationFile(liveClaimPath, liveText).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              rename: () => fs.rename(path.join(root, "missing-source"), path.join(root, "missing-target")),
-            })
-          )
-        ).toBe(false);
+        const pipe33 = yield* RA.moveObservedCoordinationFile(liveClaimPath, liveText).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            rename: () => fs.rename(path.join(root, "missing-source"), path.join(root, "missing-target")),
+          })
+        );
+        expect(pipe33).toBe(false);
         (yield* RA.moveObservedCoordinationFile(liveClaimPath, liveText).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
@@ -884,45 +933,44 @@ describe("restoration archive boundary helpers", () => {
 
         const interruptedReapPath = path.join(root, "interrupted-reap.claim");
         yield* fs.writeFileString(interruptedReapPath, staleText);
-        expect(
-          yield* RA.tryRecoverObservedWriterReapClaim(interruptedReapPath, liveText, staleText).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              rename: () => fs.rename(path.join(root, "missing-source"), path.join(root, "missing-target")),
-            })
-          )
-        ).toBe(false);
+        const pipe34 = yield* RA.tryRecoverObservedWriterReapClaim(interruptedReapPath, liveText, staleText).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            rename: () => fs.rename(path.join(root, "missing-source"), path.join(root, "missing-target")),
+          })
+        );
+        expect(pipe34).toBe(false);
 
         const vanishedReapPath = path.join(root, "vanished-reap.claim");
         yield* fs.writeFileString(vanishedReapPath, staleText);
         const vanishedTombstonePath = RA.writerReapClaimTombstonePath(vanishedReapPath, staleText);
         yield* fs.writeFileString(vanishedTombstonePath, liveText);
-        expect(
-          yield* RA.tryRecoverObservedWriterReapClaim(vanishedReapPath, staleText, staleText).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              exists: (filePath) => (filePath === vanishedTombstonePath ? Effect.succeed(false) : fs.exists(filePath)),
-            })
-          )
-        ).toBe(false);
+        const pipe35 = yield* RA.tryRecoverObservedWriterReapClaim(vanishedReapPath, staleText, staleText).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            exists: (filePath) => (filePath === vanishedTombstonePath ? Effect.succeed(false) : fs.exists(filePath)),
+          })
+        );
+        expect(pipe35).toBe(false);
 
         const vanishedObservedPath = path.join(root, "vanished-observed.claim");
         yield* fs.writeFileString(vanishedObservedPath, staleText);
-        expect(
-          yield* RA.tryClaimWriterReapClaim(vanishedObservedPath, liveText).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              exists: (filePath) => (filePath === vanishedObservedPath ? Effect.succeed(false) : fs.exists(filePath)),
-            })
-          )
-        ).toBe(false);
+        const pipe36 = yield* RA.tryClaimWriterReapClaim(vanishedObservedPath, liveText).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            exists: (filePath) => (filePath === vanishedObservedPath ? Effect.succeed(false) : fs.exists(filePath)),
+          })
+        );
+        expect(pipe36).toBe(false);
 
         const staleClaimPath = path.join(root, "stale.claim");
         yield* fs.writeFileString(staleClaimPath, staleText);
         const reapClaimPath = RA.writerReapClaimPath(staleClaimPath, staleText);
         yield* fs.writeFileString(reapClaimPath, liveText);
-        expect(yield* RA.tryMoveObservedWriterClaim(staleClaimPath, staleText, staleText)).toBe(false);
-        expect(yield* RA.tryReplaceStaleWriterClaim(staleClaimPath, staleText, staleText)).toBe(false);
+        const tryMoveObservedWriterClaim37 = yield* RA.tryMoveObservedWriterClaim(staleClaimPath, staleText, staleText);
+        expect(tryMoveObservedWriterClaim37).toBe(false);
+        const tryReplaceStaleWriterClaim38 = yield* RA.tryReplaceStaleWriterClaim(staleClaimPath, staleText, staleText);
+        expect(tryReplaceStaleWriterClaim38).toBe(false);
         (yield* RA.acquireObservedRestorationWriterClaim({ claimPath: staleClaimPath, claimText: liveText }).pipe(
           Effect.exit
         )).pipe(Exit.isFailure, assertTrue);
@@ -935,7 +983,8 @@ describe("restoration archive boundary helpers", () => {
         const emptyPartial = path.join(root, "empty-partial.bin");
         yield* fs.writeFileString(emptySource, "");
         yield* fs.writeFileString(emptyPartial, "");
-        expect(yield* RA.prefixMatches(emptySource, emptyPartial, 1, 2)).toBe(false);
+        const prefixMatches39 = yield* RA.prefixMatches(emptySource, emptyPartial, 1, 2);
+        expect(prefixMatches39).toBe(false);
       })
     );
   });
@@ -1025,7 +1074,8 @@ describe("restoration archive boundary helpers", () => {
           sourcePath,
           sourceRelativePath: "source.bin",
         };
-        expect(yield* RA.inspectExpectedSourceFile(object, "source changed")).toEqual(sourceInfo);
+        const inspectExpectedSourceFile40 = yield* RA.inspectExpectedSourceFile(object, "source changed");
+        expect(inspectExpectedSourceFile40).toEqual(sourceInfo);
         (yield* RA.inspectExpectedSourceFile(
           { ...object, expectedSizeBytes: object.expectedSizeBytes + 1 },
           "source changed"
@@ -1048,10 +1098,11 @@ describe("restoration archive boundary helpers", () => {
         ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         const linkedDirectory = path.join(sourceRoot, "linked-directory");
         yield* fs.symlink(destinationDirectory, linkedDirectory);
+        const stat41 = yield* fs.stat(destinationDirectory);
         (yield* RA.inspectExpectedSourceDirectory(
           {
             destinationRelativePath: "payload/linked-directory",
-            expectedInfo: RA.sourceIdentity(yield* fs.stat(destinationDirectory)),
+            expectedInfo: RA.sourceIdentity(stat41),
             objectId: "linked-directory-object",
             sourceLabel: "tree",
             sourceRelativePath: "linked-directory",
@@ -1071,33 +1122,32 @@ describe("restoration archive boundary helpers", () => {
         };
         const changingDestination = path.join(destinationDirectory, "changing-destination.bin");
         yield* fs.writeFileString(changingDestination, "source-bytes");
-        expect(
-          yield* RA.reconcileCompleteArchiveDestination(
-            { ...context, destinationPath: changingDestination },
-            sourceInfo
-          ).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
-              stat: (filePath) =>
-                fs
-                  .stat(filePath)
-                  .pipe(
-                    Effect.map((info) => (filePath === sourcePath ? { ...info, size: Number(info.size) + 1 } : info))
-                  ),
-            })
-          )
-        ).toMatchObject({ _tag: "Some", value: { recordType: "archive-changed-during-copy" } });
+        const pipe42 = yield* RA.reconcileCompleteArchiveDestination(
+          { ...context, destinationPath: changingDestination },
+          sourceInfo
+        ).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            stat: (filePath) =>
+              fs
+                .stat(filePath)
+                .pipe(
+                  Effect.map((info) => (filePath === sourcePath ? { ...info, size: Number(info.size) + 1 } : info))
+                ),
+          })
+        );
+        expect(pipe42).toMatchObject({ _tag: "Some", value: { recordType: "archive-changed-during-copy" } });
         const mismatchedDestination = path.join(destinationDirectory, "mismatched-destination.bin");
         const mismatchedPartial = `${mismatchedDestination}.partial`;
         yield* fs.writeFileString(mismatchedDestination, "mismatched-bytes");
         yield* fs.writeFileString(mismatchedPartial, "retained-partial");
-        assertNone(
-          yield* RA.reconcileCompleteArchiveDestination(
-            { ...context, destinationPath: mismatchedDestination, partialPath: mismatchedPartial },
-            sourceInfo
-          )
+        const reconcileCompleteArchiveDestination43 = yield* RA.reconcileCompleteArchiveDestination(
+          { ...context, destinationPath: mismatchedDestination, partialPath: mismatchedPartial },
+          sourceInfo
         );
-        expect(yield* fs.exists(`${mismatchedPartial}.rejected-${context.attemptId}`)).toBe(true);
+        assertNone(reconcileCompleteArchiveDestination43);
+        const exists44 = yield* fs.exists(`${mismatchedPartial}.rejected-${context.attemptId}`);
+        expect(exists44).toBe(true);
         yield* fs.remove(destinationPath);
         yield* fs.link(sourcePath, destinationPath);
         (yield* RA.reconcileCompleteArchiveDestination(context, sourceInfo).pipe(Effect.exit)).pipe(
@@ -1110,7 +1160,8 @@ describe("restoration archive boundary helpers", () => {
         (yield* RA.resumableArchiveOffset(context, sourceInfo).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
         yield* fs.remove(partialPath);
         yield* fs.writeFileString(partialPath, "source-bytes-with-extra-data");
-        expect(yield* RA.resumableArchiveOffset(context, sourceInfo)).toMatchObject({ resumeBytes: 0 });
+        const resumableArchiveOffset45 = yield* RA.resumableArchiveOffset(context, sourceInfo);
+        expect(resumableArchiveOffset45).toMatchObject({ resumeBytes: 0 });
         yield* fs.writeFileString(partialPath, "partial");
 
         const cleanPartialInfo = yield* fs.stat(partialPath);
@@ -1120,12 +1171,12 @@ describe("restoration archive boundary helpers", () => {
           sourceInfo,
           cleanPartialInfo
         ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
-        (yield* RA.validateOpenedArchiveCopy(
-          context,
-          { expectedInfo: O.none(), resumeBytes: 0 },
-          sourceInfo,
-          yield* fs.stat(destinationDirectory)
-        ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
+        const argument = { expectedInfo: O.none(), resumeBytes: 0 };
+        const stat1 = yield* fs.stat(destinationDirectory);
+        (yield* RA.validateOpenedArchiveCopy(context, argument, sourceInfo, stat1).pipe(Effect.exit)).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
         (yield* RA.validateOpenedArchiveCopy(
           context,
           { expectedInfo: O.some({ ...RA.sourceIdentity(cleanPartialInfo), sizeBytes: 1 }), resumeBytes: 0 },

@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -16,7 +17,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { printLines } from "../../internal/cli/Printer.ts";
 
 const $I = $RepoCliId.create("docs");
 

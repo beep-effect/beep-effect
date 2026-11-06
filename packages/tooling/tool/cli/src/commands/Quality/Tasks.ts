@@ -9,6 +9,30 @@ import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { REPO_CLI_ENTRY_PATH } from "@beep/repo-cli-kit/cli/EntryPath";
+import {
+  canUseTurboCacheSecretSession,
+  configStringEqualsSync,
+  configStringOption,
+  isCiSync,
+  isUnresolvedSecretReference,
+  readTurboCacheEnvironmentSync,
+  renderTurboEnvironmentHealthWarnings,
+  turboEnvExtendsAmbient,
+  turboEnvironmentHealthWarnings,
+  turboEnvOverrides,
+  turboSecretSessionStep,
+} from "@beep/repo-cli-kit/cli/EnvConfig";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import {
+  hasRemoteTurboCacheArgs,
+  isTurboCacheControlArg,
+  localOnlyTurboCacheArgs,
+  resolveTurboCachePlan,
+  turboCacheEnvironmentNeedsSecretSession,
+  turboCachePlanArgs,
+  turboCachePlanNeedsSecretSession,
+} from "@beep/repo-cli-kit/cli/TurboCache";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
@@ -34,36 +58,12 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { REPO_CLI_ENTRY_PATH } from "../../internal/cli/EntryPath.ts";
-import {
-  canUseTurboCacheSecretSession,
-  configStringEqualsSync,
-  configStringOption,
-  isCiSync,
-  isUnresolvedSecretReference,
-  readTurboCacheEnvironmentSync,
-  renderTurboEnvironmentHealthWarnings,
-  turboEnvExtendsAmbient,
-  turboEnvironmentHealthWarnings,
-  turboEnvOverrides,
-  turboSecretSessionStep,
-} from "../../internal/cli/EnvConfig.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import {
-  hasRemoteTurboCacheArgs,
-  isTurboCacheControlArg,
-  localOnlyTurboCacheArgs,
-  resolveTurboCachePlan,
-  turboCacheEnvironmentNeedsSecretSession,
-  turboCachePlanArgs,
-  turboCachePlanNeedsSecretSession,
-} from "../../internal/cli/TurboCache.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 import type { Git } from "@beep/git/Git";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
-import { manifestParser } from "../../internal/ManifestRead.ts";
+import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
 import {
   CapturedStep,
   formatCommandLine,
@@ -73,10 +73,10 @@ import {
   repoRunOutputBound,
   runCaptured,
   runToExit,
-} from "../../internal/process/index.ts";
+} from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
-import { PosInt } from "../../internal/schema/PosInt.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.step.ts";
 import { CoverageProducerIdentity, resolveCoverageProducerIdentity } from "./internal/CoverageArtifacts.ts";
 import {
@@ -155,13 +155,13 @@ import {
 } from "./Quality.schemas.ts";
 import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
+import type { CaptureCommandTimedOutError } from "@beep/repo-cli-kit/process/index";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { EnumerationFailure } from "@beep/repo-workspaces/internal/enumerate";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
@@ -170,7 +170,7 @@ import type { TurboLaneDigest } from "./internal/TurboLaneDigest.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
 import type { GithubCheckLaneSpec, GithubCheckLaneWaveSpec, QualityConcurrencyPlan } from "./Quality.schemas.ts";
 
-export { QualityTaskStep } from "../../internal/process/index.ts";
+export { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 /**
  * Public quality task error exports.
  *
@@ -749,8 +749,9 @@ const resolveExplicitCoveragePackageNames = Effect.fn("QualityTasks.resolveExpli
     );
   }
 
+  const workspaceTaskOwners1 = yield* workspaceTaskOwners(repoRoot);
   const coverageOwnerNames = pipe(
-    yield* workspaceTaskOwners(repoRoot),
+    workspaceTaskOwners1,
     A.filter(ownerDefinesScript("coverage")),
     A.map((owner) => owner.packageName)
   );
@@ -1098,7 +1099,9 @@ export const resolveCiCoverageArtifactPlan = Effect.fn("QualityTasks.resolveCiCo
           (owner) => owner.packageName
         );
   const selected = A.filter(owners, (owner) => A.contains(names, owner.packageName));
-  const comparisonBase = base ?? O.getOrElse(yield* configStringOption("TURBO_SCM_BASE"), () => "origin/main");
+  const comparisonBase =
+    base ??
+    (yield* Effect.map(configStringOption("TURBO_SCM_BASE"), (value) => O.getOrElse(value, () => "origin/main")));
   return CiCoverageArtifactPlan.make({
     identity: yield* resolveCoverageProducerIdentity(repoRoot, { base: comparisonBase, packageNames: names }),
     owners: selected,
@@ -1142,7 +1145,7 @@ const shouldRunLintRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, isExplicitTurboAffectedOrScopeArg);
 
 // A workstation configured for remote reads is honored; everything else falls
-// back to local-only. The decision itself lives in `internal/cli/TurboCache`
+// back to local-only. The decision itself lives in `@beep/repo-cli-kit/cli/TurboCache`
 // so the whole matrix stays unit-testable without mutating the environment.
 const turboCachePlan = (args: ReadonlyArray<string>) =>
   resolveTurboCachePlan(readTurboCacheEnvironmentSync(), { args, ci: isCiSync() });
@@ -1864,7 +1867,8 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
     }),
     { concurrency }
   );
-  yield* closeTurboLaneLedgerIfNamed(ledger, yield* Ref.get(ledgerAttempts));
+  const got = yield* Ref.get(ledgerAttempts);
+  yield* closeTurboLaneLedgerIfNamed(ledger, got);
   yield* O.match(artifactCwd, {
     onNone: () => Effect.void,
     onSome: (cwd) => Effect.flatMap(Ref.get(incidents), (recorded) => writeFlakeQuarantineArtifact(cwd, recorded)),
@@ -1879,8 +1883,15 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
   concurrency = 1,
   buffered = false
 ) {
+  const collectStreamingStepOutcomes2 = yield* collectStreamingStepOutcomes(
+    label,
+    steps,
+    concurrency,
+    ignoreStreamingOutcome,
+    buffered
+  );
   return pipe(
-    yield* collectStreamingStepOutcomes(label, steps, concurrency, ignoreStreamingOutcome, buffered),
+    collectStreamingStepOutcomes2,
     A.map((outcome) => outcome.failure),
     A.getSomes
   );
@@ -2272,7 +2283,9 @@ const journalGithubCheckLaneOutcome = Effect.fnUntraced(function* (
     yield* O.match(outcome.value.laneRun, { onNone: () => Effect.void, onSome: appendQualityTaskLaneRun });
     return outcome.value.laneRun;
   }
-  return P.isUndefined(lane) ? O.none<QualityTaskLaneRun>() : O.some(yield* appendSkippedQualityTaskLaneRun(lane));
+  return P.isUndefined(lane)
+    ? O.none<QualityTaskLaneRun>()
+    : yield* Effect.asSome(appendSkippedQualityTaskLaneRun(lane));
 });
 
 /**
@@ -2401,11 +2414,10 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
     );
   // Segments run in sequence (an exclusive lane runs alone); the lanes of one
   // shared segment share the pool.
-  const outcomes = A.flatten(
-    yield* Effect.forEach(githubCheckWaveSegments(wave.lanes), (segment) =>
-      Effect.forEach(segment, runPooledLane, { concurrency: Math.max(1, concurrency) })
-    )
+  const forEach3 = yield* Effect.forEach(githubCheckWaveSegments(wave.lanes), (segment) =>
+    Effect.forEach(segment, runPooledLane, { concurrency: Math.max(1, concurrency) })
   );
+  const outcomes = A.flatten(forEach3);
   const ran = A.getSomes(outcomes);
   return {
     activeReusableIds: A.map(
@@ -2501,10 +2513,8 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
           GithubCheckLaneRun.make({ id: lane.id, stage: lane.stage, status: "not-run-early-stop", wave: lane.wave })
         )
       );
-      qualityTaskLaneRuns = A.appendAll(
-        qualityTaskLaneRuns,
-        yield* Effect.forEach(wave.lanes, appendSkippedQualityTaskLaneRun)
-      );
+      const forEach4 = yield* Effect.forEach(wave.lanes, appendSkippedQualityTaskLaneRun);
+      qualityTaskLaneRuns = A.appendAll(qualityTaskLaneRuns, forEach4);
       continue;
     }
 
@@ -2675,7 +2685,8 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
         `[beep-cli] ${label}: first red ${firstRed}; skipped ${result.report.skippedAfterRed} lane(s) after red`
       ),
   });
-  yield* emitQualityTaskLaneRunReport(yield* qualityTaskLaneRunReportFromArtifact(result.laneReport));
+  const qualityTaskLaneRunReportFromArtifact5 = yield* qualityTaskLaneRunReportFromArtifact(result.laneReport);
+  yield* emitQualityTaskLaneRunReport(qualityTaskLaneRunReportFromArtifact5);
   yield* failQualityTaskFailures(label, result.failures);
 });
 
@@ -2704,7 +2715,8 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
   concurrency = 1
 ) {
   const result = yield* collectQualityTaskLaneRuns(label, lanes, concurrency);
-  yield* emitQualityTaskLaneRunReport(yield* qualityTaskLaneRunReportFromArtifact(result.report));
+  const qualityTaskLaneRunReportFromArtifact6 = yield* qualityTaskLaneRunReportFromArtifact(result.report);
+  yield* emitQualityTaskLaneRunReport(qualityTaskLaneRunReportFromArtifact6);
   yield* failQualityTaskFailures(label, result.failures);
 });
 
@@ -3295,11 +3307,10 @@ export const rootDocsCacheKey = Effect.fn("QualityTasks.rootDocsCacheKey")(
   function* (repoRoot: string) {
     const fs = yield* FileSystem.FileSystem;
     const crypto = yield* Digest.Digest;
-    const files = pipe(
-      yield* Effect.forEach(rootDocsCacheKeySources, (source) => listRootDocsCacheKeyFiles(repoRoot, source)),
-      A.flatten,
-      A.sort(Order.String)
+    const forEach7 = yield* Effect.forEach(rootDocsCacheKeySources, (source) =>
+      listRootDocsCacheKeyFiles(repoRoot, source)
     );
+    const files = pipe(forEach7, A.flatten, A.sort(Order.String));
     const parts = yield* Effect.forEach(files, (file) =>
       fs.readFileString(`${repoRoot}/${file}`).pipe(Effect.map((content) => `${file}\0${content}\0`))
     );
@@ -3790,7 +3801,8 @@ export const runRootLintPolicyTask: {
  */
 export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecatedApisTask")(function* (base?: string) {
   const repoRoot = yield* findRepoRoot();
-  yield* runStep(deprecatedApisTurboStep(repoRoot, base, yield* qualityConcurrencyPlan));
+  const qualityConcurrencyPlan8 = yield* qualityConcurrencyPlan;
+  yield* runStep(deprecatedApisTurboStep(repoRoot, base, qualityConcurrencyPlan8));
 });
 
 const rootLintPolicySteps = (
@@ -3841,7 +3853,9 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
     return;
   }
 
-  const steps = rootLintSteps(repoRoot, args, fix, yield* rootDocsCacheKey(repoRoot), yield* qualityConcurrencyPlan);
+  const rootDocsCacheKey9 = yield* rootDocsCacheKey(repoRoot);
+  const qualityConcurrencyPlan11 = yield* qualityConcurrencyPlan;
+  const steps = rootLintSteps(repoRoot, args, fix, rootDocsCacheKey9, qualityConcurrencyPlan11);
   if (A.length(steps) === 1) {
     yield* runStep(A.headNonEmpty(steps));
     return;
@@ -4397,7 +4411,8 @@ const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
     }
   }
 
-  const steps = rootStepsFor(repoRoot, invocation, yield* qualityConcurrencyPlan);
+  const qualityConcurrencyPlan10 = yield* qualityConcurrencyPlan;
+  const steps = rootStepsFor(repoRoot, invocation, qualityConcurrencyPlan10);
   const step = A.head(steps);
   if (A.length(steps) === 1 && O.isSome(step) && step.value.flakeQuarantine === undefined) {
     yield* runStep(step.value);

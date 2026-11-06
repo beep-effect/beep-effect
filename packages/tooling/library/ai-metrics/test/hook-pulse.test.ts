@@ -404,7 +404,8 @@ describe("HookPulseV1", () => {
         };
         const row = yield* withSaltEnv({}, decodeHookPulseFromRaw(input));
         expect(row.sessionRole).toEqual(role);
-        expect(yield* encodeUnknownJsonEffect(row)).not.toContain(path);
+        const encodedUnknownJsonEffect = yield* encodeUnknownJsonEffect(row);
+        expect(encodedUnknownJsonEffect).not.toContain(path);
         const foreign = yield* withSaltEnv({}, decodeHookPulseFromRaw({ ...input, agentKind: "codex-cli" }));
         assertNone(foreign.sessionRole);
       }
@@ -431,7 +432,8 @@ describe("HookPulseV1", () => {
       // was pinned by construction; now an unpinned decode would mean the
       // developer's environment here and the empty one in CI.
       const decoded = yield* withSaltEnv({}, decodeHookPulseFromLegacy(legacy));
-      const serialized = yield* encodeUnknownJsonEffect(yield* encodeHookPulse(decoded));
+      const encodedHookPulse = yield* encodeHookPulse(decoded);
+      const serialized = yield* encodeUnknownJsonEffect(encodedHookPulse);
 
       expect(S.is(HookPulseV1)(decoded)).toBe(true);
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
@@ -1042,18 +1044,26 @@ describe("HookPulseV1", () => {
         )
       );
 
-      expect(decoded.sessionId).toBe(
-        yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.some(HOOK_RUNG_SALT))
+      const expectation = expect(decoded.sessionId);
+      const hashPrivateIdentifier4 = yield* hashPrivateIdentifier(
+        baseRawEventFixture.session_id,
+        O.some(HOOK_RUNG_SALT)
       );
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.some(HOOK_RUNG_SALT)));
-      assertSome(
-        decoded.transcriptPath,
-        yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.some(HOOK_RUNG_SALT))
+      expectation.toBe(hashPrivateIdentifier4);
+      const expectation1 = expect(decoded.cwd);
+      const hashPrivateIdentifier5 = yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.some(HOOK_RUNG_SALT));
+      expectation1.toBe(hashPrivateIdentifier5);
+      const hashPrivateIdentifier1 = yield* hashPrivateIdentifier(
+        baseRawEventFixture.transcript_path,
+        O.some(HOOK_RUNG_SALT)
       );
+      assertSome(decoded.transcriptPath, hashPrivateIdentifier1);
       // Non-vacuity: every shape assertion elsewhere in this file is satisfied
       // by a codec that ignored the salt entirely, because the library default
       // is what such a codec would have used anyway.
-      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
+      const argument = expect(decoded.sessionId).not;
+      const hashPrivateIdentifier6 = yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none());
+      argument.toBe(hashPrivateIdentifier6);
     })
   );
 
@@ -1071,10 +1081,12 @@ describe("HookPulseV1", () => {
         )
       );
 
-      expect(decoded.sessionId).toBe(
-        yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.some(AI_RUNG_SALT))
-      );
-      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
+      const expectation2 = expect(decoded.sessionId);
+      const hashPrivateIdentifier7 = yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.some(AI_RUNG_SALT));
+      expectation2.toBe(hashPrivateIdentifier7);
+      const argument1 = expect(decoded.sessionId).not;
+      const hashPrivateIdentifier8 = yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none());
+      argument1.toBe(hashPrivateIdentifier8);
     })
   );
 
@@ -1093,9 +1105,14 @@ describe("HookPulseV1", () => {
         )
       );
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.none()));
-      assertSome(decoded.transcriptPath, yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.none()));
+      const expectation3 = expect(decoded.sessionId);
+      const hashPrivateIdentifier9 = yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none());
+      expectation3.toBe(hashPrivateIdentifier9);
+      const expectation4 = expect(decoded.cwd);
+      const hashPrivateIdentifier10 = yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.none());
+      expectation4.toBe(hashPrivateIdentifier10);
+      const hashPrivateIdentifier2 = yield* hashPrivateIdentifier(baseRawEventFixture.transcript_path, O.none());
+      assertSome(decoded.transcriptPath, hashPrivateIdentifier2);
     })
   );
 
@@ -1114,8 +1131,12 @@ describe("HookPulseV1", () => {
         )
       );
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none()));
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.none()));
+      const expectation5 = expect(decoded.sessionId);
+      const hashPrivateIdentifier11 = yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none());
+      expectation5.toBe(hashPrivateIdentifier11);
+      const expectation6 = expect(decoded.cwd);
+      const hashPrivateIdentifier12 = yield* hashPrivateIdentifier(baseRawEventFixture.cwd, O.none());
+      expectation6.toBe(hashPrivateIdentifier12);
     })
   );
 
@@ -1143,10 +1164,17 @@ describe("HookPulseV1", () => {
         decodeHookPulseFromLegacy(legacy)
       );
 
-      expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(legacy.sessionId, O.some(AI_RUNG_SALT)));
-      expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(legacy.cwd, O.some(AI_RUNG_SALT)));
-      assertSome(decoded.transcriptPath, yield* hashPrivateIdentifier(legacy.transcriptPath, O.some(AI_RUNG_SALT)));
-      expect(decoded.sessionId).not.toBe(yield* hashPrivateIdentifier(legacy.sessionId, O.none()));
+      const expectation7 = expect(decoded.sessionId);
+      const hashPrivateIdentifier13 = yield* hashPrivateIdentifier(legacy.sessionId, O.some(AI_RUNG_SALT));
+      expectation7.toBe(hashPrivateIdentifier13);
+      const expectation8 = expect(decoded.cwd);
+      const hashPrivateIdentifier14 = yield* hashPrivateIdentifier(legacy.cwd, O.some(AI_RUNG_SALT));
+      expectation8.toBe(hashPrivateIdentifier14);
+      const hashPrivateIdentifier3 = yield* hashPrivateIdentifier(legacy.transcriptPath, O.some(AI_RUNG_SALT));
+      assertSome(decoded.transcriptPath, hashPrivateIdentifier3);
+      const argument2 = expect(decoded.sessionId).not;
+      const hashPrivateIdentifier15 = yield* hashPrivateIdentifier(legacy.sessionId, O.none());
+      argument2.toBe(hashPrivateIdentifier15);
     })
   );
 
@@ -1207,15 +1235,20 @@ describe("HookPulseV1", () => {
           { concurrency: 1 }
         )
       );
-      const serialized = yield* encodeUnknownJsonEffect(yield* encodeHookPulse(decoded.skill));
+      const encodedHookPulse4 = yield* encodeHookPulse(decoded.skill);
+      const serialized = yield* encodeUnknownJsonEffect(encodedHookPulse4);
 
       // The leading slash of a slash-command invocation is not part of the name.
-      assertSome(decoded.skill.surface, yield* hashPublicTextSha256(`skill:${surfaceSkillName}`));
-      assertSome(decoded.mcp.surface, yield* hashPublicTextSha256("mcp-server:notion"));
+      const hashPublicTextSha2565 = yield* hashPublicTextSha256(`skill:${surfaceSkillName}`);
+      assertSome(decoded.skill.surface, hashPublicTextSha2565);
+      const hashPublicTextSha2566 = yield* hashPublicTextSha256("mcp-server:notion");
+      assertSome(decoded.mcp.surface, hashPublicTextSha2566);
       assertNone(decoded.sourceRead.surface);
-      assertSome(decoded.hookEdit.surface, yield* hashPublicTextSha256("hook:law-pulse.sh"));
+      const hashPublicTextSha2567 = yield* hashPublicTextSha256("hook:law-pulse.sh");
+      assertSome(decoded.hookEdit.surface, hashPublicTextSha2567);
       // CLAUDE.md is a symlink to AGENTS.md: one surface, one digest.
-      assertSome(decoded.claudeMd.surface, yield* hashPublicTextSha256("agents-md:AGENTS.md"));
+      const hashPublicTextSha2568 = yield* hashPublicTextSha256("agents-md:AGENTS.md");
+      assertSome(decoded.claudeMd.surface, hashPublicTextSha2568);
       // PostToolUse owns the field, so the same skill call's PreToolUse carries none.
       assertNone(decoded.preToolUse.surface);
       expect(serialized).not.toContain(surfaceSkillName);
@@ -1274,7 +1307,8 @@ describe("HookPulseV1", () => {
       const canonical = yield* decodeHookPulseFromRaw(autoApprovedPreToolUse);
       const encoded = yield* encodeHookPulse(canonical);
       const failure = yield* Effect.flip(decodeHookPulse({ ...encoded, harnessHash: harnessHashStamp }));
-      const started = yield* encodeHookPulse(yield* decodeHookPulseFromRaw(sessionStart));
+      const decodedHookPulseFromRaw = yield* decodeHookPulseFromRaw(sessionStart);
+      const started = yield* encodeHookPulse(decodedHookPulseFromRaw);
       const legacyStart = yield* decodeHookPulse(started);
 
       expect(failure._tag).toBe("SchemaError");
@@ -1334,11 +1368,15 @@ describe("HookPulseV1", () => {
         )
       );
 
-      assertSome(decoded.skillFile.surface, yield* hashPublicTextSha256("skill:surface-canary"));
-      assertSome(decoded.agent.surface, yield* hashPublicTextSha256("agent-definition:reviewer.md"));
-      assertSome(decoded.settings.surface, yield* hashPublicTextSha256("settings:settings.local.json"));
+      const hashPublicTextSha2569 = yield* hashPublicTextSha256("skill:surface-canary");
+      assertSome(decoded.skillFile.surface, hashPublicTextSha2569);
+      const hashPublicTextSha25610 = yield* hashPublicTextSha256("agent-definition:reviewer.md");
+      assertSome(decoded.agent.surface, hashPublicTextSha25610);
+      const hashPublicTextSha25611 = yield* hashPublicTextSha256("settings:settings.local.json");
+      assertSome(decoded.settings.surface, hashPublicTextSha25611);
       assertNone(decoded.notSettings.surface);
-      assertSome(decoded.pattern.surface, yield* hashPublicTextSha256("pattern:jsdoc-documentation.md"));
+      const hashPublicTextSha25612 = yield* hashPublicTextSha256("pattern:jsdoc-documentation.md");
+      assertSome(decoded.pattern.surface, hashPublicTextSha25612);
       assertNone(decoded.malformedPaths.surface);
       assertNone(decoded.malformedSkill.surface);
       assertNone(decoded.outsideRepo.surface);

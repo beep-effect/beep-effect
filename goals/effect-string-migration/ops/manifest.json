@@ -37,7 +37,12 @@
     "goals/effect-string-migration/GOAL.md",
     "goals/effect-string-migration/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/census-2026-10-21.md",
+    "research/census-2026-10-22.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

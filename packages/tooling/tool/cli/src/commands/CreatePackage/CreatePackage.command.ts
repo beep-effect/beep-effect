@@ -13,6 +13,21 @@
 import * as NodeURL from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
+import {
+  encodeLabManifestJson,
+  isLabsWorkspacePath,
+  LAB_MANIFEST_FILENAME,
+  LABS_WORKSPACE_GLOB,
+  LABS_WORKSPACE_ROOT,
+  LabManifest,
+  RETIRED_REGISTRY_PATH,
+  readRetiredPackageNames,
+} from "@beep/repo-cli-kit/cli/Labs/index";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import { scaffoldPackageScripts } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
+import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import {
   DomainError,
   encodePackageJsonCanonicalPrettyEffect,
@@ -38,21 +53,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { formatJsonValue } from "../../internal/cli/Json.ts";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
-import {
-  encodeLabManifestJson,
-  isLabsWorkspacePath,
-  LAB_MANIFEST_FILENAME,
-  LABS_WORKSPACE_GLOB,
-  LABS_WORKSPACE_ROOT,
-  LabManifest,
-  RETIRED_REGISTRY_PATH,
-  readRetiredPackageNames,
-} from "../../internal/cli/Labs/index.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
-import { scaffoldPackageScripts } from "../../internal/package-scripts/PackageScripts.schemas.ts";
-import { runToExit } from "../../internal/process/StepExec.ts";
 import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import { TsconfigSyncRunOptionsSync } from "../TsconfigSync/TsconfigSync.schemas.ts";
 import {
@@ -66,7 +66,7 @@ import { CreatePackageIdentityRegistration } from "./internal/IdentityRegistrati
 import { LabIdentitySegment } from "./internal/LabIdentitySegment.ts";
 import * as RetiredNameRegistry from "./internal/RetiredNameRegistry.ts";
 import { createTemplateService, StaticAssetSpec, TemplateRenderRequest, TemplateSpec } from "./TemplateService.ts";
-import type { PackageKind as ScriptsPackageKind } from "../../internal/package-scripts/PackageScripts.schemas.ts";
+import type { PackageKind as ScriptsPackageKind } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 
 const $I = $RepoCliId.create("commands/CreatePackage/CreatePackage.command");
 const {
@@ -1217,7 +1217,7 @@ export const createPackageCommand = Command.make(
     }
 
     const appKind: O.Option<AppKind> = Str.isNonEmpty(appKindOption)
-      ? O.some(yield* decodeAppKindEffect(appKindOption))
+      ? yield* Effect.asSome(decodeAppKindEffect(appKindOption))
       : O.none();
 
     // ── Validate lab mode (lab-apps P2-D20) ────────────────────────────
@@ -1235,7 +1235,7 @@ export const createPackageCommand = Command.make(
       });
     }
     const requestedPackageFamily = Str.isNonEmpty(familyOption)
-      ? O.some(yield* decodePackageFamilyEffect(familyOption))
+      ? yield* Effect.asSome(decodePackageFamilyEffect(familyOption))
       : O.none();
 
     if (packageTypeEquivalence(packageType, "app") && O.isSome(requestedPackageFamily)) {
@@ -1261,7 +1261,7 @@ export const createPackageCommand = Command.make(
     }
     const foundationKind =
       O.isSome(requestedPackageFamily) && packageFamilyEquivalence(requestedPackageFamily.value, "foundation")
-        ? O.some(yield* decodeFoundationKindEffect(kindOption))
+        ? yield* Effect.asSome(decodeFoundationKindEffect(kindOption))
         : O.none<FoundationKind>();
     if (
       O.isSome(requestedPackageFamily) &&
@@ -1274,7 +1274,7 @@ export const createPackageCommand = Command.make(
     }
     const explicitToolingKind =
       O.isSome(requestedPackageFamily) && packageFamilyEquivalence(requestedPackageFamily.value, "tooling")
-        ? O.some(yield* decodeToolingKindEffect(kindOption))
+        ? yield* Effect.asSome(decodeToolingKindEffect(kindOption))
         : O.none<ToolingKind>();
     if (
       O.isSome(requestedPackageFamily) &&
@@ -1549,7 +1549,9 @@ export const createPackageCommand = Command.make(
       portlessLabel,
       ecosystemEffectPeerVersion
     );
-    const labManifestFiles = lab ? A.of(yield* labManifestPlannedFile(description)) : A.empty<PlannedFile>();
+    const labManifestFiles = lab
+      ? yield* Effect.map(labManifestPlannedFile(description), A.of)
+      : A.empty<PlannedFile>();
 
     const plan = fileGenerationPlanService.createPlan(
       FileGenerationPlanInput.make({

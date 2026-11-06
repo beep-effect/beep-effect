@@ -70,7 +70,9 @@ describe("blockchain redacted schemas", () => {
     "derives valid validator public keys from the source schema and round-trips",
     [validatorPublicKeyArbitrary],
     Effect.fnUntraced(function* ([value]) {
-      expect(yield* decodeUnknownEthereumValidatorPublicKeyEffect(value)).toBe(value);
+      const decodedUnknownEthereumValidatorPublicKeyEffect =
+        yield* decodeUnknownEthereumValidatorPublicKeyEffect(value);
+      expect(decodedUnknownEthereumValidatorPublicKeyEffect).toBe(value);
 
       return true;
     }),

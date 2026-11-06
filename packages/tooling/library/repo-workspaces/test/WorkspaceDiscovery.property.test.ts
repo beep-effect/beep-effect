@@ -16,7 +16,8 @@ const roundTrip = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -66,10 +67,12 @@ it.layer(
         yield* fs.writeFileString("/repo/package.json", text);
         yield* discovery.refresh;
         const first = yield* discovery.getPackage(manifest.name);
-        assert.deepStrictEqual(first.manifestRecord, yield* S.decodeEffect(JsonValue)(text));
+        const value2 = yield* S.decodeEffect(JsonValue)(text);
+        assert.deepStrictEqual(first.manifestRecord, value2);
         assert.strictEqual(first.name, manifest.name);
         assert.strictEqual(first.version, manifest.version);
-        yield* fs.writeFileString("/repo/package.json", yield* S.encodeEffect(JsonValue)(first.manifestRecord));
+        const value3 = yield* S.encodeEffect(JsonValue)(first.manifestRecord);
+        yield* fs.writeFileString("/repo/package.json", value3);
         yield* discovery.refresh;
         const second = yield* discovery.getPackage(manifest.name);
         assert.deepStrictEqual(second.manifestRecord, first.manifestRecord);
@@ -85,14 +88,14 @@ it.effect.prop(
   [Arbitrary.schema(WorkspaceDiscoveryError)],
   ([error]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(WorkspaceDiscoveryError)(
-        yield* S.encodeEffect(WorkspaceDiscoveryError)(error)
-      );
+      const argument = S.decodeEffect(WorkspaceDiscoveryError);
+      const value4 = yield* S.encodeEffect(WorkspaceDiscoveryError)(error);
+      const decoded = yield* argument(value4);
       assert.strictEqual(error.message, `Workspace discovery failed at ${error.path} (${error.kind})`);
       assert.strictEqual(decoded.message, error.message);
-      const twice = yield* S.decodeEffect(WorkspaceDiscoveryError)(
-        yield* S.encodeEffect(WorkspaceDiscoveryError)(decoded)
-      );
+      const argument1 = S.decodeEffect(WorkspaceDiscoveryError);
+      const value5 = yield* S.encodeEffect(WorkspaceDiscoveryError)(decoded);
+      const twice = yield* argument1(value5);
       assert.strictEqual(twice.message, decoded.message);
     }),
   runs
@@ -103,13 +106,17 @@ it.effect.prop(
   [Arbitrary.schema(WorkspacePatternError)],
   ([error]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(WorkspacePatternError)(yield* S.encodeEffect(WorkspacePatternError)(error));
+      const argument2 = S.decodeEffect(WorkspacePatternError);
+      const value6 = yield* S.encodeEffect(WorkspacePatternError)(error);
+      const decoded = yield* argument2(value6);
       assert.strictEqual(
         error.message,
         `Workspace pattern "${error.pattern}" could not be enumerated (${error.kind}: ${error.detail})`
       );
       assert.strictEqual(decoded.message, error.message);
-      const twice = yield* S.decodeEffect(WorkspacePatternError)(yield* S.encodeEffect(WorkspacePatternError)(decoded));
+      const argument3 = S.decodeEffect(WorkspacePatternError);
+      const value7 = yield* S.encodeEffect(WorkspacePatternError)(decoded);
+      const twice = yield* argument3(value7);
       assert.strictEqual(twice.message, decoded.message);
     }),
   runs
@@ -120,12 +127,16 @@ it.effect.prop(
   [Arbitrary.schema(PackageNotFoundError)],
   ([error]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(PackageNotFoundError)(yield* S.encodeEffect(PackageNotFoundError)(error));
+      const argument4 = S.decodeEffect(PackageNotFoundError);
+      const value8 = yield* S.encodeEffect(PackageNotFoundError)(error);
+      const decoded = yield* argument4(value8);
       assert.strictEqual(error.message, `No workspace package named "${error.packageName}"`);
       // D-24: the requested name no longer shadows the error's own `name`.
       assert.strictEqual(error.name, "@beep/repo-workspaces/WorkspaceDiscovery/PackageNotFoundError");
       assert.strictEqual(decoded.message, error.message);
-      const twice = yield* S.decodeEffect(PackageNotFoundError)(yield* S.encodeEffect(PackageNotFoundError)(decoded));
+      const argument5 = S.decodeEffect(PackageNotFoundError);
+      const value9 = yield* S.encodeEffect(PackageNotFoundError)(decoded);
+      const twice = yield* argument5(value9);
       assert.strictEqual(twice.message, decoded.message);
     }),
   runs

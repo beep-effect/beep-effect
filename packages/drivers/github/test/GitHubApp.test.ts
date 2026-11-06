@@ -445,7 +445,8 @@ describe("GitHubApp.clientLayer", () => {
           const signal = yield* Deferred.await(started);
           yield* Fiber.interrupt(requesting);
           assert.isTrue(signal.aborted, "cancellation must abort the blocked HTTP request");
-          assert.isTrue(Exit.hasInterrupts(yield* Fiber.await(requesting)), "the requesting fiber must terminate");
+          const await1 = yield* Fiber.await(requesting);
+          assert.isTrue(Exit.hasInterrupts(await1), "the requesting fiber must terminate");
           // A subsequent request must acquire the released rotation permit;
           // an acquired replacement is reused rather than minted again.
           const repo = yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
@@ -506,8 +507,10 @@ describe("GitHubApp.clientLayer", () => {
             .pipe(Effect.forkChild);
           yield* close;
           assert.isTrue(signal.aborted, "scope cleanup must abort the active rotation without caller cancellation");
-          assert.isTrue(Exit.hasInterrupts(yield* Fiber.await(requesting)), "the active request must terminate");
-          assert.isTrue(Exit.hasInterrupts(yield* Fiber.await(waiting)), "queued refreshes must stop after closure");
+          const await2 = yield* Fiber.await(requesting);
+          assert.isTrue(Exit.hasInterrupts(await2), "the active request must terminate");
+          const await3 = yield* Fiber.await(waiting);
+          assert.isTrue(Exit.hasInterrupts(await3), "queued refreshes must stop after closure");
           assert.deepStrictEqual(
             A.map(script.calls, (call) => call.method),
             ["POST", "DELETE"]
@@ -557,7 +560,8 @@ describe("GitHubApp.clientLayer", () => {
           const requesting = yield* client
             .request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" })
             .pipe(Effect.provideService(Tracer.Tracer, cancelOnMint), Effect.forkChild);
-          assert.isTrue(Exit.hasInterrupts(yield* Fiber.await(requesting)), "the requesting fiber must terminate");
+          const await4 = yield* Fiber.await(requesting);
+          assert.isTrue(Exit.hasInterrupts(await4), "the requesting fiber must terminate");
           assert.strictEqual(script.count(), 3, "the replacement HTTP response was received before cancellation");
           yield* close;
           assert.deepStrictEqual(
@@ -758,7 +762,8 @@ describe("GitHubApp.token down-scope", () => {
         assert.strictEqual(script.count(), 1);
         assert.strictEqual(script.calls[0]?.method, "POST");
         assert.include(script.calls[0]?.url ?? "", "/app/installations/42/access_tokens");
-        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), {
+        const value5 = yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
+        assert.deepStrictEqual(value5, {
           repositories: ["beep-effect"],
           permissions: { ...REVIEWER_SCOPE.permissions },
         });
@@ -769,7 +774,8 @@ describe("GitHubApp.token down-scope", () => {
   withApp("sends repository ids under GitHub's spelling", [tokenReply()], (app, script) =>
     Effect.gen(function* () {
       yield* app.token({ ...CREDENTIALS, installationId: 42, repositoryIds: [1, 2] });
-      assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), {
+      const value6 = yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
+      assert.deepStrictEqual(value6, {
         repository_ids: [1, 2],
       });
     })
@@ -837,7 +843,8 @@ describe("GitHubApp.token down-scope", () => {
   withApp("scopedToken mints through the same body builder", [tokenReply(), { status: 204 }], (app, script) =>
     Effect.gen(function* () {
       yield* Effect.scoped(app.scopedToken({ ...CREDENTIALS, installationId: 42, ...REVIEWER_SCOPE }));
-      assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), {
+      const value7 = yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
+      assert.deepStrictEqual(value7, {
         repositories: ["beep-effect"],
         permissions: { ...REVIEWER_SCOPE.permissions },
       });
@@ -882,8 +889,10 @@ describe("GitHubApp.clientLayer down-scope and refresh", () => {
         assert.strictEqual(script.calls[3]?.headers.authorization, "token ghs_first");
         assert.strictEqual(script.calls[5]?.headers.authorization, "token ghs_second");
         const scopedBody = { repositories: ["beep-effect"], permissions: { ...REVIEWER_SCOPE.permissions } };
-        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), scopedBody);
-        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}"), scopedBody);
+        const value8 = yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
+        assert.deepStrictEqual(value8, scopedBody);
+        const value9 = yield* S.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}");
+        assert.deepStrictEqual(value9, scopedBody);
       });
     },
     30_000
@@ -1002,7 +1011,8 @@ describe("InstallationToken", () => {
       // redacted token, the UTC expiry, the installation id and every optional field.
       const encoded = yield* S.encodeEffect(InstallationToken)(generated);
       const decoded = yield* S.decodeEffect(InstallationToken)(encoded);
-      assert.deepStrictEqual(yield* S.encodeEffect(InstallationToken)(decoded), encoded);
+      const value10 = yield* S.encodeEffect(InstallationToken)(decoded);
+      assert.deepStrictEqual(value10, encoded);
       assert.strictEqual(Redacted.value(decoded.token), Redacted.value(generated.token));
     })
   );

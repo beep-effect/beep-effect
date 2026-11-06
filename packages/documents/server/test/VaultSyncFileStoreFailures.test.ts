@@ -249,7 +249,8 @@ describe("Vault filesystem boundary failures", () => {
           const error = yield* Effect.flip(engine.syncOnce(input(root)));
           expect(error).toMatchObject({ _tag: "VaultScanFailed", reason: expect.stringContaining(testCase.reason) });
           testCase.verify?.();
-          expect(yield* fs.readFileString(target)).toBe("private content");
+          const readFileString1 = yield* fs.readFileString(target);
+          expect(readFileString1).toBe("private content");
           expect(
             (yield* engine.status(VaultSyncStatusInput.make({ workspaceId: WorkspaceIdentity.WorkspaceId.make(31) })))
               .queuedOperations

@@ -1,0 +1,96 @@
+/**
+ * YAML and TOML text decoders for the repo CLI.
+ *
+ * **Details**
+ *
+ * `effect/encoding/Yaml` and `effect/encoding/Toml` ship parsers but no schema
+ * codec. The `decode*TextWith` helpers parse text with those modules and decode
+ * the parsed value into a target schema; a parse failure surfaces as the same
+ * `SchemaError` a schema codec would raise. Workflow files, docker-compose
+ * files, reflection frontmatter, and Codex config all cross this boundary.
+ *
+ * @internal
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import * as Effect from "effect/Effect";
+import * as Toml from "effect/encoding/Toml";
+import * as Yaml from "effect/encoding/Yaml";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+
+const invalidInput =
+  (format: string) =>
+  (cause: unknown): S.SchemaError =>
+    new S.SchemaError(
+      new SchemaIssue.InvalidValue({
+        message: `Invalid ${format} input (${String(cause)}).`,
+      })
+    );
+
+const parseYamlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
+  Effect.try({ try: () => Yaml.parse(text), catch: invalidInput("YAML") });
+
+// `Toml.parse` reports malformed input as a failed `Result` instead of throwing.
+const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
+  Effect.fromResult(Toml.parse(text)).pipe(Effect.mapError(invalidInput("TOML")));
+
+/**
+ * Build a decoder from YAML text through a target decoder.
+ *
+ * **Details**
+ *
+ * Parses with `effect/encoding/Yaml`, then runs `decode` on the parsed value.
+ * Malformed YAML fails with a `SchemaError` whose message starts with
+ * `Invalid YAML input`. Pass a module-scoped `S.decodeUnknownEffect(Target)`.
+ *
+ * **Example** (Decode a YAML document)
+ *
+ * ```ts
+ * import { decodeYamlTextWith } from "@beep/repo-cli-kit/schema/TextCodec"
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema"
+ *
+ * const decode = decodeYamlTextWith(S.decodeUnknownEffect(S.Struct({ name: S.String })))
+ * console.log(Effect.runSync(decode("name: ci")).name) // ci
+ * ```
+ *
+ * @param decode - Decoder the parsed YAML value must satisfy.
+ * @returns A function from YAML text to the decoded value.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const decodeYamlTextWith =
+  <A, E, R>(decode: (input: unknown) => Effect.Effect<A, E, R>) =>
+  (text: string): Effect.Effect<A, E | S.SchemaError, R> =>
+    Effect.flatMap(parseYamlText(text), decode);
+
+/**
+ * Build a decoder from TOML text through a target decoder.
+ *
+ * **Details**
+ *
+ * Parses with `effect/encoding/Toml`, then runs `decode` on the parsed value.
+ * Malformed TOML fails with a `SchemaError` whose message starts with
+ * `Invalid TOML input`. Pass a module-scoped `S.decodeUnknownEffect(Target)`.
+ *
+ * **Example** (Decode a TOML document)
+ *
+ * ```ts
+ * import { decodeTomlTextWith } from "@beep/repo-cli-kit/schema/TextCodec"
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema"
+ *
+ * const decode = decodeTomlTextWith(S.decodeUnknownEffect(S.Struct({ model: S.String })))
+ * console.log(Effect.runSync(decode("model = \"o3\"")).model) // o3
+ * ```
+ *
+ * @param decode - Decoder the parsed TOML value must satisfy.
+ * @returns A function from TOML text to the decoded value.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const decodeTomlTextWith =
+  <A, E, R>(decode: (input: unknown) => Effect.Effect<A, E, R>) =>
+  (text: string): Effect.Effect<A, E | S.SchemaError, R> =>
+    Effect.flatMap(parseTomlText(text), decode);

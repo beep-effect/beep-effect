@@ -38,7 +38,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("scanProcessAttachments"
       const fs = yield* FileSystem.FileSystem;
       const idle = yield* fs.makeTempDirectoryScoped({ prefix: "process-attachment-idle-" });
 
-      const own = ownAttachments(yield* scanProcessAttachments({ directory: process.cwd(), kinds: ["cwd"] }));
+      const scanProcessAttachments1 = yield* scanProcessAttachments({ directory: process.cwd(), kinds: ["cwd"] });
+      const own = ownAttachments(scanProcessAttachments1);
       expect(A.map(own, (attachment) => attachment.kind)).toEqual(["cwd"]);
 
       const idleScan = yield* scanProcessAttachments({ directory: idle, kinds: ProcessAttachmentKind.literals });
@@ -97,17 +98,22 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("scanProcessAttachments"
       const ofWatcher = (scan: O.Option<ReadonlyArray<ProcessAttachment>>) =>
         A.filter(O.getOrThrow(scan), (attachment) => attachment.pid === watcher.pid);
 
-      const watches = ofWatcher(yield* scanProcessAttachments({ directory: watched, kinds: ["watch"] }));
+      const scanProcessAttachments2 = yield* scanProcessAttachments({ directory: watched, kinds: ["watch"] });
+      const watches = ofWatcher(scanProcessAttachments2);
       expect(A.map(watches, (attachment) => [attachment.kind, attachment.target])).toEqual([["watch", resolved]]);
 
       const handles = yield* scanProcessAttachments({ directory: watched, kinds: ProcessHandleKind.literals });
       expect(ofWatcher(handles)).toEqual([]);
 
       // The table finds the same identity in the watcher's fdinfo, and only that one.
-      const target = O.getOrThrow(yield* inotifyWatchTarget(watched));
-      expect(yield* procProcessTable.watching(watcher.pid, target)).toBe(true);
-      const sibling = O.getOrThrow(yield* inotifyWatchTarget(root));
-      expect(yield* procProcessTable.watching(watcher.pid, sibling)).toBe(false);
+      const inotifyWatchTarget3 = yield* inotifyWatchTarget(watched);
+      const target = O.getOrThrow(inotifyWatchTarget3);
+      const watching4 = yield* procProcessTable.watching(watcher.pid, target);
+      expect(watching4).toBe(true);
+      const inotifyWatchTarget5 = yield* inotifyWatchTarget(root);
+      const sibling = O.getOrThrow(inotifyWatchTarget5);
+      const watching6 = yield* procProcessTable.watching(watcher.pid, sibling);
+      expect(watching6).toBe(false);
       yield* Effect.ignore(watcher.kill());
     })
   );
@@ -118,7 +124,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("scanProcessAttachments"
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "process-attachment-identity-" });
       const missing = path.join(root, "missing");
-      const watched = O.getOrThrow(yield* inotifyWatchTarget(root));
+      const inotifyWatchTarget7 = yield* inotifyWatchTarget(root);
+      const watched = O.getOrThrow(inotifyWatchTarget7);
       const table = processTableFromEntries({
         self: 100,
         entries: [
@@ -134,9 +141,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("scanProcessAttachments"
       const scan = scanProcessAttachments({ directory: root, kinds: ["watch"] }).pipe(
         Effect.provideService(ProcessTable, table)
       );
-      expect(A.map(O.getOrThrow(yield* scan), (attachment) => [attachment.pid, attachment.kind])).toEqual([
-        [200, "watch"],
-      ]);
+      const scan8 = yield* scan;
+      expect(A.map(O.getOrThrow(scan8), (attachment) => [attachment.pid, attachment.kind])).toEqual([[200, "watch"]]);
 
       // Without mountinfo the directory has no inotify identity: watchers go
       // unnamed, and the scan still completes rather than withholding its result.
@@ -145,8 +151,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("scanProcessAttachments"
         readFileString: (target, encoding) =>
           fs.readFileString(target === "/proc/self/mountinfo" ? missing : target, encoding),
       });
-      expect(yield* scan.pipe(Effect.provideService(FileSystem.FileSystem, blind))).toEqual(O.some([]));
-      expect(O.isNone(yield* inotifyWatchTarget(missing))).toBe(true);
+      const pipe9 = yield* scan.pipe(Effect.provideService(FileSystem.FileSystem, blind));
+      expect(pipe9).toEqual(O.some([]));
+      const inotifyWatchTarget10 = yield* inotifyWatchTarget(missing);
+      expect(O.isNone(inotifyWatchTarget10)).toBe(true);
     })
   );
 });
@@ -220,7 +228,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("processName", (it) => {
       const child = yield* spawnSleeper;
       const named = yield* processName(child.pid).pipe(Effect.ensuring(Effect.ignore(child.kill())));
       expect(named).toEqual(O.some("sleep"));
-      expect(yield* processName(2 ** 31)).toEqual(O.none());
+      const processName11 = yield* processName(2 ** 31);
+      expect(processName11).toEqual(O.none());
     })
   );
 });
@@ -255,9 +264,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         const child = yield* spawnSleeperWith({ BEEP_TEST_MARKER: "present" });
         const chain = yield* ancestryChainOf(child.pid);
         expect(A.take(chain, 2)).toEqual([child.pid, process.pid]);
-        expect(yield* processEnvironmentValue(child.pid, "BEEP_TEST_MARKER")).toEqual(O.some("present"));
-        expect(yield* processEnvironmentValue(child.pid, "BEEP_TEST_ABSENT")).toEqual(O.none());
-        expect(yield* processEnvironmentValue(2 ** 31, "HOME")).toEqual(O.none());
+        const processEnvironmentValue12 = yield* processEnvironmentValue(child.pid, "BEEP_TEST_MARKER");
+        expect(processEnvironmentValue12).toEqual(O.some("present"));
+        const processEnvironmentValue13 = yield* processEnvironmentValue(child.pid, "BEEP_TEST_ABSENT");
+        expect(processEnvironmentValue13).toEqual(O.none());
+        const processEnvironmentValue14 = yield* processEnvironmentValue(2 ** 31, "HOME");
+        expect(processEnvironmentValue14).toEqual(O.none());
         yield* Effect.ignore(child.kill());
       })
     );
@@ -270,22 +282,29 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
       const marker = "CLAUDE_PID";
       // This process plays the harness: it exported its own pid to the child.
       const marked = yield* spawnSleeperWith({ [marker]: String(process.pid) });
-      expect(yield* sessionRootOf(marked.pid, { name: marker, pid: process.pid })).toEqual(O.some(process.pid));
+      const sessionRootOf15 = yield* sessionRootOf(marked.pid, { name: marker, pid: process.pid });
+      expect(sessionRootOf15).toEqual(O.some(process.pid));
       // init is on every chain, but nothing on this path was started by it
       // with CLAUDE_PID=1; a universal ancestor must never become the session.
-      expect(yield* sessionRootOf(marked.pid, { name: marker, pid: 1 })).toEqual(O.none());
+      const sessionRootOf16 = yield* sessionRootOf(marked.pid, { name: marker, pid: 1 });
+      expect(sessionRootOf16).toEqual(O.none());
       // An ancestor that never exported the marker: this process's parent.
-      expect(yield* sessionRootOf(marked.pid, { name: marker, pid: process.ppid })).toEqual(O.none());
+      const sessionRootOf17 = yield* sessionRootOf(marked.pid, { name: marker, pid: process.ppid });
+      expect(sessionRootOf17).toEqual(O.none());
       // The invoker itself has no child on the path to vouch for it.
-      expect(yield* sessionRootOf(marked.pid, { name: marker, pid: marked.pid })).toEqual(O.none());
+      const sessionRootOf18 = yield* sessionRootOf(marked.pid, { name: marker, pid: marked.pid });
+      expect(sessionRootOf18).toEqual(O.none());
       // A pid that is not on the chain at all.
-      expect(yield* sessionRootOf(marked.pid, { name: marker, pid: 2 ** 31 })).toEqual(O.none());
+      const sessionRootOf19 = yield* sessionRootOf(marked.pid, { name: marker, pid: 2 ** 31 });
+      expect(sessionRootOf19).toEqual(O.none());
       yield* Effect.ignore(marked.kill());
 
       // A child started with a forged value proves neither init nor this process.
       const forged = yield* spawnSleeperWith({ [marker]: "1" });
-      expect(yield* sessionRootOf(forged.pid, { name: marker, pid: 1 })).toEqual(O.none());
-      expect(yield* sessionRootOf(forged.pid, { name: marker, pid: process.pid })).toEqual(O.none());
+      const sessionRootOf20 = yield* sessionRootOf(forged.pid, { name: marker, pid: 1 });
+      expect(sessionRootOf20).toEqual(O.none());
+      const sessionRootOf21 = yield* sessionRootOf(forged.pid, { name: marker, pid: process.pid });
+      expect(sessionRootOf21).toEqual(O.none());
       yield* Effect.ignore(forged.kill());
     })
   );

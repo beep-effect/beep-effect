@@ -21,6 +21,15 @@ import * as Str from "effect/String";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
 import type { AiMetricsCanonicalRootInput } from "./identity-registry.ts";
 
+class GitRootEvidenceOperationError extends S.TaggedError<
+  GitRootEvidenceOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "GitRootEvidenceOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in git-root-evidence.ts." }
+) {}
+
 const $I = $RepoAiMetricsId.create("git-root-evidence");
 const UnknownReason = LiteralKit([
   "not-observed",
@@ -173,9 +182,10 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
           );
           const bytes = yield* handle.stdout.pipe(Stream.flattenIterable, Stream.take(16385), Stream.runCollect);
           if (bytes.length > 16384) return O.none<GitProbeResult>();
-          const output = yield* Effect.try(() =>
-            new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes))
-          );
+          const output = yield* Effect.try({
+            try: () => new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes)),
+            catch: (cause) => GitRootEvidenceOperationError.make({ cause }),
+          });
           return O.some(GitProbeResult.make({ exitCode: yield* handle.exitCode, output }));
         })
       );

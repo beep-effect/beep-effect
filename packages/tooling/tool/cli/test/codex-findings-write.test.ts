@@ -4,8 +4,18 @@ import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { NodeTestLayer, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+
+class CodexFindingsWriteTestOperationError extends S.TaggedError<
+  CodexFindingsWriteTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CodexFindingsWriteTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in codex-findings-write.test.ts." }
+) {}
 
 const SLUG = "codex-security-findings-2026-08-04";
 
@@ -46,7 +56,8 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         const outcome = yield* writeIn({ documents: [...sampleDocuments, doc(reflectionPath, contents)] });
         const fs = yield* FileSystem.FileSystem;
         expect(outcome.committed).toBe(true);
-        expect(yield* fs.readFileString(`goals/${SLUG}/${reflectionPath}`)).toBe(contents);
+        const readFileString1 = yield* fs.readFileString(`goals/${SLUG}/${reflectionPath}`);
+        expect(readFileString1).toBe(contents);
         const rejected = yield* writeIn({
           force: true,
           documents: [...sampleDocuments, doc(reflectionPath, `${contents}/home/private-owner/work\n`)],
@@ -99,7 +110,8 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         );
 
         expect(outcome).toBe("packet-exists");
-        expect(yield* fs.readFileString(`goals/${SLUG}/README.md`)).toBe("hand written\n");
+        const readFileString2 = yield* fs.readFileString(`goals/${SLUG}/README.md`);
+        expect(readFileString2).toBe("hand written\n");
       })
     );
 
@@ -118,8 +130,10 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         );
 
         expect(outcome).toBe("staging-failed");
-        expect(yield* fs.exists(`goals/${SLUG}`)).toBe(false);
-        expect(A.filter(yield* fs.readDirectory("goals"), (entry) => Str.startsWith(".tmp-")(entry))).toEqual([]);
+        const exists3 = yield* fs.exists(`goals/${SLUG}`);
+        expect(exists3).toBe(false);
+        const readDirectory4 = yield* fs.readDirectory("goals");
+        expect(A.filter(readDirectory4, (entry) => Str.startsWith(".tmp-")(entry))).toEqual([]);
       })
     );
   });
@@ -186,13 +200,16 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         const outcome = yield* writeIn({ force: true });
 
         expect(outcome.committed).toBe(true);
-        expect(yield* fs.readFileString(`goals/${SLUG}/README.md`)).toBe(sampleDocuments[0]?.contents);
+        const readFileString5 = yield* fs.readFileString(`goals/${SLUG}/README.md`);
+        expect(readFileString5).toBe(sampleDocuments[0]?.contents);
         // The replaced packet is moved aside, promoted, then removed. Nothing
         // may survive under goals/ once the promotion succeeds.
-        expect(A.filter(yield* fs.readDirectory("goals"), (e) => Str.includes("-replaced")(e))).toEqual([]);
+        const readDirectory6 = yield* fs.readDirectory("goals");
+        expect(A.filter(readDirectory6, (e) => Str.includes("-replaced")(e))).toEqual([]);
         // A replacement is a replacement: files the new packet does not declare
         // must not survive from the packet it replaced.
-        expect(yield* fs.exists(`goals/${SLUG}/findings/CSF-999.md`)).toBe(false);
+        const exists7 = yield* fs.exists(`goals/${SLUG}/findings/CSF-999.md`);
+        expect(exists7).toBe(false);
       })
     );
 
@@ -215,7 +232,8 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         );
 
         expect(outcome).toBe("refused");
-        expect(yield* fs.readFileString(`goals/${SLUG}/README.md`)).toBe("hand written\n");
+        const readFileString8 = yield* fs.readFileString(`goals/${SLUG}/README.md`);
+        expect(readFileString8).toBe("hand written\n");
       })
     );
 
@@ -235,7 +253,8 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         );
 
         expect(outcome).toBe("staging-failed");
-        expect(yield* fs.readFileString(`goals/${SLUG}/README.md`)).toBe("hand written\n");
+        const readFileString9 = yield* fs.readFileString(`goals/${SLUG}/README.md`);
+        expect(readFileString9).toBe("hand written\n");
       })
     );
   });
@@ -254,8 +273,10 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
           `goals/${SLUG}/findings/CSF-001.md`,
           `goals/${SLUG}/raw/.gitignore`,
         ]);
-        expect(yield* fs.exists(`goals/${SLUG}`)).toBe(false);
-        expect(yield* fs.readDirectory("goals")).toEqual([]);
+        const exists10 = yield* fs.exists(`goals/${SLUG}`);
+        expect(exists10).toBe(false);
+        const readDirectory11 = yield* fs.readDirectory("goals");
+        expect(readDirectory11).toEqual([]);
       })
     );
 
@@ -291,7 +312,8 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         );
 
         expect(outcome).toEqual(["raw/payload.json (onepassword-ref)"]);
-        expect(yield* fs.exists(`goals/${SLUG}`)).toBe(false);
+        const exists12 = yield* fs.exists(`goals/${SLUG}`);
+        expect(exists12).toBe(false);
       })
     );
 
@@ -333,7 +355,10 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
       yield* temporaryWorkingDirectory;
       const fs = yield* FileSystem.FileSystem;
       yield* fs.makeDirectory("goals", { recursive: true });
-      return yield* Effect.try(() => PacketDocument.make({ contents: "x\n", path, tracked: true })).pipe(
+      return yield* Effect.try({
+        try: () => PacketDocument.make({ contents: "x\n", path, tracked: true }),
+        catch: (cause) => CodexFindingsWriteTestOperationError.make({ cause }),
+      }).pipe(
         Effect.as("accepted"),
         Effect.orElseSucceed(() => "rejected")
       );
@@ -374,7 +399,8 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         );
 
         expect(outcome).toBe("packet-exists");
-        expect(yield* fs.readDirectory("outside")).toEqual([]);
+        const readDirectory13 = yield* fs.readDirectory("outside");
+        expect(readDirectory13).toEqual([]);
       })
     );
   });

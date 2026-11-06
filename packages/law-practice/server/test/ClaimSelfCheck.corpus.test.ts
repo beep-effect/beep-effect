@@ -39,7 +39,9 @@ describe("Frozen allowed-claim sample", () => {
         const manifestPath = yield* path.fromFileUrl(
           new URL("../../../../goals/claim-element-antecedent-check/research/allowed-sampling.json", import.meta.url)
         );
-        const sample = yield* S.decodeEffect(allowedSampleJson)(yield* fs.readFileString(manifestPath));
+        const argument = S.decodeEffect(allowedSampleJson);
+        const readFileString1 = yield* fs.readFileString(manifestPath);
+        const sample = yield* argument(readFileString1);
         assert.strictEqual(sample.selectedSetCount, 200);
         assert.strictEqual(sample.sets.length, sample.selectedSetCount);
         assert.strictEqual(A.dedupe(A.map(sample.sets, ({ patentNumber }) => patentNumber)).length, 200);
@@ -60,8 +62,10 @@ describe("Frozen allowed-claim sample", () => {
             new URL(`../../domain/test/fixtures/claim-element/allowed/${row.patentNumber}.claims.xml`, import.meta.url)
           );
           const bytes = yield* fs.readFile(filename);
-          assert.strictEqual(yield* S.decodeEffect(Sha256HexFromBytes)(bytes), row.claimsXmlSha256);
-          const parsed = yield* claimsDocument(yield* fs.readFileString(filename));
+          const value1 = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
+          assert.strictEqual(value1, row.claimsXmlSha256);
+          const readFileString2 = yield* fs.readFileString(filename);
+          const parsed = yield* claimsDocument(readFileString2);
           const claims = yield* S.decodeUnknownEffect(numberedClaims)(A.ensure(parsed.claims.claim));
           assert.strictEqual(claims.length, row.claimCount);
           assert.strictEqual(A.dedupe(A.map(claims, ({ num }) => num)).length, row.claimCount);
@@ -102,7 +106,9 @@ describe("Positive source sample integrity", () => {
         const manifestPath = yield* path.fromFileUrl(
           new URL("../../../../goals/claim-element-antecedent-check/research/positive-sampling.json", import.meta.url)
         );
-        const sample = yield* S.decodeEffect(positiveSampleJson)(yield* fs.readFileString(manifestPath));
+        const argument1 = S.decodeEffect(positiveSampleJson);
+        const readFileString3 = yield* fs.readFileString(manifestPath);
+        const sample = yield* argument1(readFileString3);
         assert.strictEqual(sample.familyCount, 60);
         assert.strictEqual(sample.families.length, 60);
         assert.strictEqual(A.dedupe(A.map(sample.families, (row) => row.familyId)).length, 60);
@@ -122,21 +128,22 @@ describe("Positive source sample integrity", () => {
           const directory = yield* path.fromFileUrl(
             new URL(`../../domain/test/fixtures/claim-element/positive/${row.familyId}/`, import.meta.url)
           );
-          const source = yield* S.decodeEffect(positiveSourceJson)(
-            yield* fs.readFileString(path.join(directory, "claims.json"))
-          );
-          const provenance = yield* S.decodeEffect(sourceDigestJson)(
-            yield* fs.readFileString(path.join(directory, "provenance.json"))
-          );
+          const argument2 = S.decodeEffect(positiveSourceJson);
+          const readFileString5 = yield* fs.readFileString(path.join(directory, "claims.json"));
+          const source = yield* argument2(readFileString5);
+          const argument3 = S.decodeEffect(sourceDigestJson);
+          const readFileString6 = yield* fs.readFileString(path.join(directory, "provenance.json"));
+          const provenance = yield* argument3(readFileString6);
           assert.deepStrictEqual(source.labelClaimNumbers, row.claimNumbers);
           assert.strictEqual(row.claimCount, row.claimNumbers.length);
           assert.strictEqual(A.dedupe(row.claimNumbers).length, row.claimCount);
           const filename = path.join(directory, "source.claims.xml");
-          assert.strictEqual(
-            yield* S.decodeEffect(Sha256HexFromBytes)(yield* fs.readFile(filename)),
-            provenance.claimsXmlSha256
-          );
-          const parsed = yield* claimsDocument(yield* fs.readFileString(filename));
+          const argument4 = S.decodeEffect(Sha256HexFromBytes);
+          const readFile7 = yield* fs.readFile(filename);
+          const value3 = yield* argument4(readFile7);
+          assert.strictEqual(value3, provenance.claimsXmlSha256);
+          const readFileString4 = yield* fs.readFileString(filename);
+          const parsed = yield* claimsDocument(readFileString4);
           const claims = yield* S.decodeUnknownEffect(numberedClaims)(A.ensure(parsed.claims.claim));
           const numbers = A.map(claims, ({ num }) => N.parse(num));
           assertTrue(A.every(numbers, (number) => O.isSome(number)));

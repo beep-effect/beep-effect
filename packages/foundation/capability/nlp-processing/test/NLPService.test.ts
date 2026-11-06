@@ -108,13 +108,16 @@ describe("NLPService", () => {
 
       expect((yield* service.getBackend).name).toBe("minimal");
       MutableHashMap.clear(backendCalls);
-      expect(yield* service.extractEntities("ada lovelace")).toStrictEqual([]);
+      const extractEntities1 = yield* service.extractEntities("ada lovelace");
+      expect(extractEntities1).toStrictEqual([]);
       assertSome(MutableHashMap.get(backendCalls, "extractEntities"), "ada lovelace");
       MutableHashMap.clear(backendCalls);
-      expect(yield* service.extractRelations("grace hopper")).toStrictEqual([]);
+      const extractRelations2 = yield* service.extractRelations("grace hopper");
+      expect(extractRelations2).toStrictEqual([]);
       assertSome(MutableHashMap.get(backendCalls, "extractRelations"), "grace hopper");
       MutableHashMap.clear(backendCalls);
-      expect(yield* service.tagPartsOfSpeech("alan turing")).toStrictEqual([]);
+      const tagPartsOfSpeech3 = yield* service.tagPartsOfSpeech("alan turing");
+      expect(tagPartsOfSpeech3).toStrictEqual([]);
       assertSome(MutableHashMap.get(backendCalls, "posTag"), "alan turing");
       expect(MutableHashMap.size(backendCalls)).toBe(1);
       expect(Graph.nodeCount(graph)).toBeGreaterThanOrEqual(2);
@@ -130,13 +133,16 @@ describe("NLPService", () => {
           const graph = yield* processText("ada lovelace");
 
           MutableHashMap.clear(backendCalls);
-          expect(yield* extractEntities("ada lovelace")).toStrictEqual([]);
+          const extractEntities4 = yield* extractEntities("ada lovelace");
+          expect(extractEntities4).toStrictEqual([]);
           assertSome(MutableHashMap.get(backendCalls, "extractEntities"), "ada lovelace");
           MutableHashMap.clear(backendCalls);
-          expect(yield* extractRelations("grace hopper")).toStrictEqual([]);
+          const extractRelations5 = yield* extractRelations("grace hopper");
+          expect(extractRelations5).toStrictEqual([]);
           assertSome(MutableHashMap.get(backendCalls, "extractRelations"), "grace hopper");
           MutableHashMap.clear(backendCalls);
-          expect(yield* tagPartsOfSpeech("alan turing")).toStrictEqual([]);
+          const tagPartsOfSpeech6 = yield* tagPartsOfSpeech("alan turing");
+          expect(tagPartsOfSpeech6).toStrictEqual([]);
           assertSome(MutableHashMap.get(backendCalls, "posTag"), "alan turing");
           expect(MutableHashMap.size(backendCalls)).toBe(1);
           expect(Graph.nodeCount(graph)).toBeGreaterThanOrEqual(2);
@@ -151,9 +157,12 @@ describe("NLPService", () => {
       Effect.fnUntraced(function* () {
         const document = yield* tokenizeToDocument("typed effects");
 
-        expect(yield* tokenize("typed effects")).toStrictEqual([]);
-        expect(yield* sentences("Effect works.")).toStrictEqual([]);
-        expect(yield* tokenCount("typed effects")).toBe(0);
+        const tokenize7 = yield* tokenize("typed effects");
+        expect(tokenize7).toStrictEqual([]);
+        const sentences8 = yield* sentences("Effect works.");
+        expect(sentences8).toStrictEqual([]);
+        const tokenCount9 = yield* tokenCount("typed effects");
+        expect(tokenCount9).toBe(0);
         expect(document.text).toBe("typed effects");
       })
     );

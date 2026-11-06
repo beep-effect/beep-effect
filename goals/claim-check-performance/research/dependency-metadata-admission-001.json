@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "claim-performance-dependency-metadata-admission/v1",
+  "acceptedMain": "bf36ecd46346423501a82342272fbe8620e62b7a",
+  "sourceMerge": "96374c92aca16a9cfc0954e52251f1894530a55f",
+  "oldBaselinePath": "goals/claim-check-performance/research/implementation-runtime-integrated-policy-001.json",
+  "oldBaselineSha256": "f3caac75a632f998b13317ebca963039ca497f386af5cd8b5e1944150df859c9",
+  "oldBaselineImplementationDigest": "9d1ca21c9ae5a416cb106a33d879446b880d131c07097be0c50ce3aa4261c8cd",
+  "historicalLockArchive": "goals/claim-check-performance/research/legacy-protocol/bun.lock.txt",
+  "historicalLockSha256": "d5061d1b46d36ed75ec185c7fca6583048d6084c22c30ebb4a262df568dea89c",
+  "activeLockPath": "bun.lock",
+  "activeLockSha256": "673b0349426053698cfc3f5e86e78eab359644497699c10929d3afcd3dd1f658",
+  "changedWorkspaceManifests": [
+    {
+      "path": "packages/foundation/capability/technical-drawing/package.json",
+      "sha256": "4a67604d94d13fd6e888ce0a461dc7783e4d3635813a4001e63734b53930db34"
+    },
+    {
+      "path": "packages/foundation/modeling/html/package.json",
+      "sha256": "4ad81416aba54233ccd89aba496d6277af04bef2d15bba3f5e466e39e4963113"
+    },
+    {
+      "path": "packages/law-practice/server/package.json",
+      "sha256": "a62adb143f5f25314228bb839d91b70a888980d687f96e4ee0af2cfca41d8588"
+    }
+  ],
+  "allowedChanges": [
+    "technical-drawing and html add existing codegen-kit workspace devDependency",
+    "server moves same existing platform-bun/platform-node catalog entries devDependencies->dependencies"
+  ],
+  "externalResolutionsVersionsCatalogOverridesAndPatchesUnchanged": true,
+  "independentDesignReview": "metadata-proposal-review-001",
+  "scope": "Prospective metadata baseline only. No historic freeze, source labels, scorer, version or numerical gates changed. Installed closure/replay still required."
+}

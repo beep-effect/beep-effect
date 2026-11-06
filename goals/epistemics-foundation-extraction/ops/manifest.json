@@ -4,13 +4,13 @@
     "id": "epistemics-foundation-extraction",
     "packetId": "goal-packet/v1:12e4b6bb7de75166277ba5fe274935d9d4bd13ad3d2527cd29767fe50aff52bf",
     "title": "Epistemics Foundation Extraction",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-21",
-    "updated": "2026-11-02",
+    "updated": "2026-11-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemics-foundation-extraction",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Move tenant-free epistemic vocabulary into foundation/modeling @beep/epistemics so party and other slices build claims on it",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -38,8 +38,12 @@
     "goals/epistemics-foundation-extraction/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/2026-10-28-acceptance-audit.md",
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/2026-10-28-acceptance-audit.md"
+    "research/cache-baseline-request-p1.json",
+    "research/cache-baseline-review-p1.md",
+    "research/p1-move-report.md"
   ],
   "agentLaunchers": [
     {
@@ -91,7 +95,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2334
   }

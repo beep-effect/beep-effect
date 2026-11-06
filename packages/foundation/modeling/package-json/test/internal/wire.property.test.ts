@@ -42,7 +42,8 @@ describe("makeWire property floor", () => {
         const encoded = yield* S.encodeEffect(manifestWire)(value);
         const decoded = yield* S.decodeEffect(manifestWire)(encoded);
         assertTrue(S.toEquivalence(Manifest)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(manifestWire)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(manifestWire)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -55,7 +56,8 @@ describe("makeWire property floor", () => {
         const encoded = yield* S.encodeEffect(extendedWire)(value);
         const decoded = yield* S.decodeEffect(extendedWire)(encoded);
         assertTrue(S.toEquivalence(ExtendedManifest)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(extendedWire)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(extendedWire)(decoded);
+        assert.deepStrictEqual(value2, encoded);
       }),
     runs
   );
@@ -91,7 +93,8 @@ describe("makeWire property floor", () => {
           enabled: value.enabled,
           rest: { ...value.rest, name: collision, size: collision, enabled: collision },
         });
-        assert.deepStrictEqual(yield* S.encodeEffect(collisionWire)(colliding), encoded);
+        const value3 = yield* S.encodeEffect(collisionWire)(colliding);
+        assert.deepStrictEqual(value3, encoded);
       }),
     runs
   );
@@ -105,7 +108,8 @@ describe("makeWire property floor", () => {
         const raw = { ...encoded, ["__proto__"]: extra };
         const decoded = yield* S.decodeEffect(extendedWire)(raw);
         assert.deepStrictEqual(Reflect.get(decoded.rest, "__proto__"), extra);
-        assert.deepStrictEqual(yield* S.encodeEffect(extendedWire)(decoded), raw);
+        const value4 = yield* S.encodeEffect(extendedWire)(decoded);
+        assert.deepStrictEqual(value4, raw);
       }),
     runs
   );

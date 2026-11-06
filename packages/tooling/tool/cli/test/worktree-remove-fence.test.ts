@@ -63,7 +63,8 @@ const runGit = Effect.fn("WorktreeRemoveFenceTest.runGit")(function* (cwd: strin
     stdout: "ignore",
     stderr: "inherit",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 const runGitText = Effect.fn("WorktreeRemoveFenceTest.runGitText")(function* (
@@ -77,7 +78,8 @@ const runGitText = Effect.fn("WorktreeRemoveFenceTest.runGitText")(function* (
     stderr: "inherit",
   });
   const output = yield* handle.stdout.pipe(Stream.decodeText(), Stream.mkString);
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode2 = yield* handle.exitCode;
+  expect(exitCode2).toBe(0);
   return Str.trim(output);
 });
 
@@ -225,7 +227,8 @@ const walkingWatcherTable = Effect.fn("WorktreeRemoveFenceTest.walkingWatcherTab
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const watch = O.getOrThrow(yield* inotifyWatchTarget(lane));
+  const inotifyWatchTarget3 = yield* inotifyWatchTarget(lane);
+  const watch = O.getOrThrow(inotifyWatchTarget3);
   const scans = yield* Ref.make(0);
   const fencedCopy = fs.readDirectory(path.dirname(lane)).pipe(
     Effect.map(A.findFirst(Str.startsWith(`${path.basename(lane)}.retiring-`))),
@@ -335,8 +338,10 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
             expect(process.cwd()).toBe(repoRoot);
           })
         );
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists4 = yield* fs.exists(lane);
+        expect(exists4).toBe(false);
+        const resultGitText = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText).toBe("");
       })
     )
   );
@@ -349,7 +354,8 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         const error = yield* Effect.flip(remove(lane)).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
         expect(failureMessage(error)).toContain("still hold it");
         expect(failureMessage(error)).toContain("(sleep) via cwd");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists5 = yield* fs.exists(lane);
+        expect(exists5).toBe(true);
       })
     )
   );
@@ -364,12 +370,15 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         // so no exemption applies: the watch alone never refuses.
         const watcher = yield* spawnInotifyWatcher(lane, path.dirname(repoRoot));
         // The kernel name of the Bun binary on PATH (`bun`, or `bun.native` behind a shim).
-        const name = O.getOrThrow(yield* processName(watcher.pid));
+        const processName6 = yield* processName(watcher.pid);
+        const name = O.getOrThrow(processName6);
         const output = yield* captureOutput(remove(repoRoot)).pipe(Effect.ensuring(Effect.ignore(watcher.kill())));
         expect(output).toContain(`Worktree retirement complete: ${lane}`);
         expect(output).toContain(`warning: pid ${watcher.pid} (${name}) held only an inotify watch on the worktree`);
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists7 = yield* fs.exists(lane);
+        expect(exists7).toBe(false);
+        const resultGitText8 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText8).toBe("");
       })
     )
   );
@@ -381,11 +390,13 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         const path = yield* Path.Path;
         // The watch alone would be advisory, but an open file is a handle.
         const watcher = yield* spawnInotifyWatcher(lane, path.dirname(repoRoot), path.join(lane, "README.md"));
-        const name = O.getOrThrow(yield* processName(watcher.pid));
+        const processName9 = yield* processName(watcher.pid);
+        const name = O.getOrThrow(processName9);
         const error = yield* Effect.flip(remove(repoRoot)).pipe(Effect.ensuring(Effect.ignore(watcher.kill())));
         expect(failureMessage(error)).toContain(`pid ${watcher.pid} (${name}) via descriptor still hold it`);
         expect(failureMessage(error)).not.toContain("still walking");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists10 = yield* fs.exists(lane);
+        expect(exists10).toBe(true);
       })
     )
   );
@@ -396,14 +407,17 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const walker = yield* spawnSleepIn(path.dirname(repoRoot));
-        const output = yield* captureOutput(remove(repoRoot)).pipe(
-          Effect.provideService(ProcessTable, yield* walkingWatcherTable(walker.pid, lane, 2)),
+        const argument = captureOutput(remove(repoRoot));
+        const walkingWatcherTable1 = yield* walkingWatcherTable(walker.pid, lane, 2);
+        const output = yield* argument.pipe(
+          Effect.provideService(ProcessTable, walkingWatcherTable1),
           Effect.provideService(WorktreeFenceSettle, quickSettle(5)),
           Effect.ensuring(Effect.ignore(walker.kill()))
         );
         expect(output).toContain(`Worktree retirement complete: ${lane}`);
         expect(output).toContain(`warning: pid ${walker.pid} (sleep) held only an inotify watch on the worktree`);
-        expect(yield* fs.exists(lane)).toBe(false);
+        const exists11 = yield* fs.exists(lane);
+        expect(exists11).toBe(false);
       })
     )
   );
@@ -439,12 +453,10 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
           Effect.ensuring(Effect.ignore(walker.kill()))
         );
         expect(failureMessage(error)).toContain("the fenced copy is preserved");
-        const fenced = O.getOrThrow(
-          A.findFirst(yield* fs.readDirectory(path.dirname(lane)), Str.startsWith(`${path.basename(lane)}.retiring-`))
-        );
-        expect(yield* fs.readFileString(path.join(path.dirname(lane), fenced, "late-data.txt"))).toBe(
-          "uncaptured data"
-        );
+        const readDirectory12 = yield* fs.readDirectory(path.dirname(lane));
+        const fenced = O.getOrThrow(A.findFirst(readDirectory12, Str.startsWith(`${path.basename(lane)}.retiring-`)));
+        const readFileString13 = yield* fs.readFileString(path.join(path.dirname(lane), fenced, "late-data.txt"));
+        expect(readFileString13).toBe("uncaptured data");
       })
     )
   );
@@ -455,8 +467,10 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const walker = yield* spawnSleepIn(path.dirname(repoRoot));
-        const error = yield* Effect.flip(remove(repoRoot)).pipe(
-          Effect.provideService(ProcessTable, yield* walkingWatcherTable(walker.pid, lane, Number.POSITIVE_INFINITY)),
+        const argument1 = Effect.flip(remove(repoRoot));
+        const walkingWatcherTable2 = yield* walkingWatcherTable(walker.pid, lane, Number.POSITIVE_INFINITY);
+        const error = yield* argument1.pipe(
+          Effect.provideService(ProcessTable, walkingWatcherTable2),
           Effect.provideService(WorktreeFenceSettle, quickSettle(3)),
           Effect.ensuring(Effect.ignore(walker.kill()))
         );
@@ -464,7 +478,8 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
           `pid ${walker.pid} (sleep) via descriptor (an inotify watcher still walking the tree) still hold it after 3 scans`
         );
         expect(failureMessage(error)).toContain("exclude `.claude/worktrees` from the editor's project");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists14 = yield* fs.exists(lane);
+        expect(exists14).toBe(true);
       })
     )
   );
@@ -483,8 +498,10 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         expect(output).toContain(
           `note: the idle Claude Desktop Terminal panel shell (pid ${holder.pid}) stood in the worktree and was left running; the worktree was removed under it, so run \`cd ~\` in that Terminal tab before using it`
         );
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists15 = yield* fs.exists(lane);
+        expect(exists15).toBe(false);
+        const resultGitText16 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText16).toBe("");
       })
     )
   );
@@ -504,7 +521,8 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
           `pid ${holder.pid} (sleep) via cwd (the Claude Desktop Terminal panel shell) still hold it`
         );
         expect(failureMessage(error)).toContain("run `cd ~` in that Terminal tab");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists17 = yield* fs.exists(lane);
+        expect(exists17).toBe(true);
       })
     )
   );
@@ -521,8 +539,10 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
           Effect.ensuring(Effect.ignore(holder.kill()))
         );
         expect(outcome).toMatchObject({ ok: true, exitCode: 0 });
-        expect(yield* fs.exists(lane)).toBe(false);
-        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        const exists18 = yield* fs.exists(lane);
+        expect(exists18).toBe(false);
+        const resultGitText19 = yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"]);
+        expect(resultGitText19).toBe("");
       })
     )
   );
@@ -541,7 +561,8 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         expect(outcome.ok).toBe(false);
         expect(outcome.message).toContain("still hold it");
         expect(outcome.message).toContain("(sh) via cwd");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists20 = yield* fs.exists(lane);
+        expect(exists20).toBe(true);
       })
     )
   );
@@ -558,7 +579,8 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         );
         expect(failureMessage(error)).toContain("still hold it");
         expect(failureMessage(error)).toContain("(sh) via cwd");
-        expect(yield* fs.exists(lane)).toBe(true);
+        const exists21 = yield* fs.exists(lane);
+        expect(exists21).toBe(true);
       })
     )
   );

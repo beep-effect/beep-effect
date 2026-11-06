@@ -8,6 +8,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { LiteralKit } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
@@ -16,7 +17,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { KnowledgeCommitSha } from "./Knowledge.refs.ts";
 import {
   encodeKnowledgeBaselineText,

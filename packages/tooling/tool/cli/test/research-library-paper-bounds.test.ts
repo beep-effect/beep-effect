@@ -155,9 +155,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         expect(artifact._tag).toBe("Some");
         if (artifact._tag !== "Some") return;
         expect(artifact.value.bytes).toBe(6_000_005);
-        expect(yield* actual.fs.readFileString(actual.path.join(actual.root, "capture/source.txt"))).toBe(
-          "Full fixture paper content."
-        );
+        const readFileString1 = yield* actual.fs.readFileString(actual.path.join(actual.root, "capture/source.txt"));
+        expect(readFileString1).toBe("Full fixture paper content.");
       })
     );
     for (const contentLength of ["", "6000005"]) {
@@ -184,9 +183,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         expect(actual.result.status).toBe("readable");
         expect(actual.result.complete).toBe(true);
         expect(actual.extractors).toBe(1);
-        expect(A.fromIterable(yield* actual.fs.readFile(actual.path.join(actual.root, "capture/source.pdf")))).toEqual(
-          A.fromIterable(pdf)
-        );
+        const readFile2 = yield* actual.fs.readFile(actual.path.join(actual.root, "capture/source.pdf"));
+        expect(A.fromIterable(readFile2)).toEqual(A.fromIterable(pdf));
       })
     );
   }

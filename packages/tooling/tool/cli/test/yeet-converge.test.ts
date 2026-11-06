@@ -269,11 +269,13 @@ it.layer(platform, { timeout: "30 seconds" })("Converge", (test) => {
           workflow: "CI",
         },
       });
-      const wave = O.getOrThrow(yield* loadYeetRemediationWave(root));
+      const loadedYeetRemediationWave = yield* loadYeetRemediationWave(root);
+      const wave = O.getOrThrow(loadedYeetRemediationWave);
       expect(wave.headSha).toBe(head);
       expect(wave.capsuleIds).toEqual([first[0]?.id, first[1]?.id]);
       yield* convergeYeetInbox(context, observation, "2026-09-25T00:00:30.000Z");
-      expect(yield* rows(root)).toHaveLength(5);
+      const rows1 = yield* rows(root);
+      expect(rows1).toHaveLength(5);
     })
   );
 
@@ -311,13 +313,17 @@ it.layer(platform, { timeout: "30 seconds" })("Converge", (test) => {
         ts: at,
       });
       yield* appendYeetInboxRow(root, unrelated);
-      expect(yield* activeIds(root)).toEqual([unrelated.id]);
+      const activeIds2 = yield* activeIds(root);
+      expect(activeIds2).toEqual([unrelated.id]);
       // The red, the thread and the drift are all still true on the next poll.
       yield* convergeYeetInbox(context, observation, "2026-09-25T00:00:30.000Z");
       yield* convergeYeetInbox(context, observation, "2026-09-25T00:01:00.000Z");
-      expect(A.map(yield* rows(root), (row) => row.id)).toEqual([...A.map(written, (row) => row.id), unrelated.id]);
-      expect(yield* activeIds(root)).toEqual([unrelated.id]);
-      expect(yield* appendYeetInboxRowOnce(root, A.getUnsafe(written, 1))).toBe(false);
+      const rows3 = yield* rows(root);
+      expect(A.map(rows3, (row) => row.id)).toEqual([...A.map(written, (row) => row.id), unrelated.id]);
+      const activeIds4 = yield* activeIds(root);
+      expect(activeIds4).toEqual([unrelated.id]);
+      const appendYeetInboxRowOnce5 = yield* appendYeetInboxRowOnce(root, A.getUnsafe(written, 1));
+      expect(appendYeetInboxRowOnce5).toBe(false);
     })
   );
 
@@ -336,8 +342,9 @@ it.layer(platform, { timeout: "30 seconds" })("Converge", (test) => {
         }),
         at
       );
+      const loadedYeetRemediationWave6 = yield* loadYeetRemediationWave(root);
       assertSome(
-        O.map(yield* loadYeetRemediationWave(root), (wave) => wave.headSha),
+        O.map(loadedYeetRemediationWave6, (wave) => wave.headSha),
         staleHead
       );
     })
@@ -380,10 +387,12 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the inb
           closeout: () => Effect.succeed(report(fixHead)),
         });
         expect(terminal).toBe("ready");
-        expect(yield* Ref.get(polls)).toBe(4);
+        const got = yield* Ref.get(polls);
+        expect(got).toBe(4);
         // The stale record is superseded at the first poll, stays on head A
         // through the red polls, and moves to head B at the fix push.
-        expect(yield* Ref.get(pinnedAtPoll)).toEqual([staleHead, head, head, fixHead]);
+        const got7 = yield* Ref.get(pinnedAtPoll);
+        expect(got7).toEqual([staleHead, head, head, fixHead]);
         const written = yield* rows(root);
         expect(A.map(written, (row) => row.kind)).toEqual([
           "check-failed",
@@ -403,7 +412,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the inb
             workflow: "CI",
           },
         });
-        const wave = O.getOrThrow(yield* loadYeetRemediationWave(root));
+        const loadedYeetRemediationWave8 = yield* loadYeetRemediationWave(root);
+        const wave = O.getOrThrow(loadedYeetRemediationWave8);
         expect(wave).toMatchObject({ headSha: fixHead, prNumber: 7, capsuleIds: [], sessionStartedAt: null });
         const view = yield* loadYeetInboxView(root);
         const red = A.findFirst(view.entries, (entry) => entry.row.kind === "check-failed");
@@ -423,9 +433,11 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the inb
           O.map(outstanding, (entry) => entry.liveness),
           "live"
         );
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const logLines9 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines9, String), "\n");
         expect(printed).toContain("settle: base-conflict");
-        const errors = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+        const errorLines10 = yield* TestConsole.errorLines;
+        const errors = A.join(A.map(errorLines10, String), "\n");
         expect(errors).toContain("head moved to bbbbbbb; the 2-capsule wave for aaaaaaa is superseded.");
       })
   );
@@ -463,7 +475,8 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the inb
         attachment: "detached",
         bindPullRequest: Effect.fnUntraced(function* (_context, prNumber) {
           // What the job's waiter reads the moment the record is bound.
-          const pinned = O.getOrThrow(yield* loadYeetRemediationWave(root)).headSha;
+          const loadedYeetRemediationWave11 = yield* loadYeetRemediationWave(root);
+          const pinned = O.getOrThrow(loadedYeetRemediationWave11).headSha;
           const wave = yield* loadYeetPrWave(root, prNumber, HashSet.empty());
           const ids = O.match(wave, {
             onNone: A.empty<string>,
@@ -486,13 +499,12 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the inb
         closeout: () => Effect.die("unexpected closeout"),
       });
       expect(terminal).toBe("closed");
-      const headRed = A.findFirst(
-        yield* rows(root),
-        (row) => row.kind === "check-failed" && row.capsule.headSha === head
-      );
+      const rows12 = yield* rows(root);
+      const headRed = A.findFirst(rows12, (row) => row.kind === "check-failed" && row.capsule.headSha === head);
       // One bind per head, each after its pin: the previous head's red is
       // already superseded, and the current head's red is returned at once.
-      expect(yield* Ref.get(binds)).toStrictEqual([
+      const got13 = yield* Ref.get(binds);
+      expect(got13).toStrictEqual([
         [7, head, O.toArray(O.map(headRed, (row) => row.id))],
         [7, fixHead, []],
       ]);
@@ -522,8 +534,10 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the inb
         closeout: () => Effect.die("unexpected closeout"),
       });
       expect(terminal).toBe("merged");
-      expect(yield* fs.exists(`${root}/.beep/inbox/failures.ndjson`)).toBe(false);
-      expect(yield* fs.exists(`${root}/.beep/inbox/dispatch.json`)).toBe(false);
+      const exists14 = yield* fs.exists(`${root}/.beep/inbox/failures.ndjson`);
+      expect(exists14).toBe(false);
+      const exists15 = yield* fs.exists(`${root}/.beep/inbox/dispatch.json`);
+      expect(exists15).toBe(false);
     })
   );
 });

@@ -190,7 +190,8 @@ export const makeObservationLaunchHttp = Effect.fn("AiMetrics.makeObservationLau
       accepting: state.accepting,
       routes: policy.routes,
     });
-    return HttpServerResponse.text(yield* encodeObservationLaunchContextJson(context), {
+    const encodedObservationLaunchContextJson = yield* encodeObservationLaunchContextJson(context);
+    return HttpServerResponse.text(encodedObservationLaunchContextJson, {
       contentType: "application/json",
       headers: { "cache-control": "no-store", connection: "close" },
     });

@@ -145,8 +145,9 @@ const resolveFolderProviderId = Effect.fnUntraced(function* (
   folderProviderIds: MutableHashMap.MutableHashMap<Sha256Hex, BoxProviderId>,
   logicalKey: BoxLogicalKey
 ) {
+  const hashed1 = yield* hashed(digestText(logicalKey));
   return yield* pipe(
-    MutableHashMap.get(folderProviderIds, yield* hashed(digestText(logicalKey))),
+    MutableHashMap.get(folderProviderIds, hashed1),
     Effect.fromOption(() => invariant("unresolved-dependency"))
   );
 });
@@ -495,7 +496,8 @@ const createWebhook = Effect.fn("BoxProvisioningApplier.createWebhook")(function
       }),
     })
   );
-  return appliedOutcome(action, yield* decodeCreatedIdentity(created));
+  const decodedCreatedIdentity = yield* decodeCreatedIdentity(created);
+  return appliedOutcome(action, decodedCreatedIdentity);
 });
 
 const applyCreate = (
@@ -566,7 +568,8 @@ const applyNoop = Effect.fn("BoxProvisioningApplier.applyNoop")(function* (
   folderProviderIds: MutableHashMap.MutableHashMap<Sha256Hex, BoxProviderId>
 ): Effect.fn.Return<BoxApplyOutcome, BoxProvisioningInvariantError> {
   if (action.resourceKind === "folder") {
-    MutableHashMap.set(folderProviderIds, action.logicalKeyDigest, yield* requiredProviderId(action));
+    const requiredProviderId2 = yield* requiredProviderId(action);
+    MutableHashMap.set(folderProviderIds, action.logicalKeyDigest, requiredProviderId2);
   }
   return BoxActionSkipped.make({
     actionKey: action.actionKey,
@@ -795,7 +798,8 @@ const makeService = (
       if (!(yield* hashed(hasValidBoxProvisioningPlanDigest(plan)))) {
         return yield* invariant("invalid-plan-digest");
       }
-      if (!sha256Equivalence(yield* hashed(boxDesiredStateDigest(desiredState)), plan.desiredStateDigest)) {
+      const hashed3 = yield* hashed(boxDesiredStateDigest(desiredState));
+      if (!sha256Equivalence(hashed3, plan.desiredStateDigest)) {
         return yield* invariant("desired-state-digest-mismatch");
       }
       if (hasUnsupportedDestructiveAction(plan.actions)) {

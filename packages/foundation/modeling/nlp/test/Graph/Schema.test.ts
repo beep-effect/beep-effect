@@ -84,14 +84,22 @@ describe("Schema-derived graph payloads", () => {
         const encodedRelationNode = yield* encodeGraphSchemaRelationNode(relationNode);
         const encodedAnalysis = yield* encodeGraphSchemaNLPAnalysis(analysis);
 
-        expect(yield* decodeGraphSchemaTextNode(encodedTextNode)).toEqual(textNode);
-        expect(yield* decodeGraphSchemaTextEdge(encodedTextEdge)).toEqual(textEdge);
-        expect(yield* decodeGraphSchemaEntityNode(encodedEntityNode)).toEqual(entityNode);
-        expect(yield* decodeGraphSchemaPOSNode(encodedPOSNode)).toEqual(posNode);
-        expect(yield* decodeGraphSchemaLemmaNode(encodedLemmaNode)).toEqual(lemmaNode);
-        expect(yield* decodeGraphSchemaDependencyNode(encodedDependencyNode)).toEqual(dependencyNode);
-        expect(yield* decodeGraphSchemaRelationNode(encodedRelationNode)).toEqual(relationNode);
-        expect(yield* decodeGraphSchemaNLPAnalysis(encodedAnalysis)).toEqual(analysis);
+        const decodedGraphSchemaTextNode = yield* decodeGraphSchemaTextNode(encodedTextNode);
+        expect(decodedGraphSchemaTextNode).toEqual(textNode);
+        const decodedGraphSchemaTextEdge = yield* decodeGraphSchemaTextEdge(encodedTextEdge);
+        expect(decodedGraphSchemaTextEdge).toEqual(textEdge);
+        const decodedGraphSchemaEntityNode = yield* decodeGraphSchemaEntityNode(encodedEntityNode);
+        expect(decodedGraphSchemaEntityNode).toEqual(entityNode);
+        const decodedGraphSchemaPOSNode = yield* decodeGraphSchemaPOSNode(encodedPOSNode);
+        expect(decodedGraphSchemaPOSNode).toEqual(posNode);
+        const decodedGraphSchemaLemmaNode = yield* decodeGraphSchemaLemmaNode(encodedLemmaNode);
+        expect(decodedGraphSchemaLemmaNode).toEqual(lemmaNode);
+        const decodedGraphSchemaDependencyNode = yield* decodeGraphSchemaDependencyNode(encodedDependencyNode);
+        expect(decodedGraphSchemaDependencyNode).toEqual(dependencyNode);
+        const decodedGraphSchemaRelationNode = yield* decodeGraphSchemaRelationNode(encodedRelationNode);
+        expect(decodedGraphSchemaRelationNode).toEqual(relationNode);
+        const decodedGraphSchemaNLPAnalysis = yield* decodeGraphSchemaNLPAnalysis(encodedAnalysis);
+        expect(decodedGraphSchemaNLPAnalysis).toEqual(analysis);
 
         return true;
       }),

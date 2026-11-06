@@ -366,12 +366,14 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
 
   const readJsonFile = Effect.fn(function* (filePath: string) {
     const fs = yield* FileSystem.FileSystem;
-    return yield* decodeUnknownJson(yield* fs.readFileString(filePath));
+    const readFileString1 = yield* fs.readFileString(filePath);
+    return yield* decodeUnknownJson(readFileString1);
   });
 
   const readJsoncFile = Effect.fn(function* (filePath: string) {
     const fs = yield* FileSystem.FileSystem;
-    return yield* Jsonc.parse(yield* fs.readFileString(filePath));
+    const readFileString2 = yield* fs.readFileString(filePath);
+    return yield* Jsonc.parse(readFileString2);
   });
 
   const toFailureMessage = (error: unknown): string =>
@@ -597,12 +599,14 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
       [StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary],
       flow(
         Effect.fnUntraced(function* ([storiesTsconfig, storiesDirectory]) {
-          expect(yield* decodeStoriesTsconfig(yield* encodeStoriesTsconfigEffect(storiesTsconfig))).toEqual(
-            storiesTsconfig
+          const encodedStoriesTsconfigEffect = yield* encodeStoriesTsconfigEffect(storiesTsconfig);
+          const decodedStoriesTsconfig = yield* decodeStoriesTsconfig(encodedStoriesTsconfigEffect);
+          expect(decodedStoriesTsconfig).toEqual(storiesTsconfig);
+          const encodedStoriesDirectoryTsconfigEffect = yield* encodeStoriesDirectoryTsconfigEffect(storiesDirectory);
+          const decodedStoriesDirectoryTsconfig = yield* decodeStoriesDirectoryTsconfig(
+            encodedStoriesDirectoryTsconfigEffect
           );
-          expect(
-            yield* decodeStoriesDirectoryTsconfig(yield* encodeStoriesDirectoryTsconfigEffect(storiesDirectory))
-          ).toEqual(storiesDirectory);
+          expect(decodedStoriesDirectoryTsconfig).toEqual(storiesDirectory);
         }),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       ),
@@ -615,12 +619,10 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const repoRoot = yield* findRepoRoot();
-          const rootConfig = yield* decodeTypeScriptPluginsConfig(
-            yield* readJsoncFile(path.join(repoRoot, "tsconfig.base.json"))
-          );
-          const oipConfig = yield* decodeTypeScriptPluginsConfig(
-            yield* readJsoncFile(path.join(repoRoot, "apps", "oip-web", "tsconfig.json"))
-          );
+          const readJsoncFile3 = yield* readJsoncFile(path.join(repoRoot, "tsconfig.base.json"));
+          const rootConfig = yield* decodeTypeScriptPluginsConfig(readJsoncFile3);
+          const readJsoncFile4 = yield* readJsoncFile(path.join(repoRoot, "apps", "oip-web", "tsconfig.json"));
+          const oipConfig = yield* decodeTypeScriptPluginsConfig(readJsoncFile4);
 
           expect(oipConfig.compilerOptions.plugins).toEqual(
             A.append(rootConfig.compilerOptions.plugins, { name: "next" })
@@ -651,7 +653,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               runCreatePackageCommandRaw(["box", "--family", "drivers", "--description", "Box driver package"])
             );
 
-            expect(yield* fs.readFileString(bunArgsPath)).toBe("install\n--lockfile-only\n");
+            const readFileString5 = yield* fs.readFileString(bunArgsPath);
+            expect(readFileString5).toBe("install\n--lockfile-only\n");
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageTestTimeoutMs
@@ -674,9 +677,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               "A tool package",
             ]);
 
-            const manifest = yield* decodeToolPackageManifest(
-              yield* readJsonFile(path.join(rootDir, "packages", "example-tool", "package.json"))
-            );
+            const readJsonFile6 = yield* readJsonFile(path.join(rootDir, "packages", "example-tool", "package.json"));
+            const manifest = yield* decodeToolPackageManifest(readJsonFile6);
             expect(manifest.scripts).toEqual(CreatePackageScripts.package("tool", false));
             expect(manifest.dependencies["@effect/platform-node"]).toBe("catalog:");
           })
@@ -699,18 +701,20 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               "An editor package",
             ]);
 
-            const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+            const readJsonFile7 = yield* readJsonFile(path.join(rootDir, "package.json"));
+            const rootPackage = yield* decodeRootPackage(readJsonFile7);
             expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "packages/example-domain"]);
 
-            const generatedPackage = yield* decodePackageScripts(
-              yield* readJsonFile(path.join(rootDir, "packages", "example-domain", "package.json"))
-            );
+            const readJsonFile8 = yield* readJsonFile(path.join(rootDir, "packages", "example-domain", "package.json"));
+            const generatedPackage = yield* decodePackageScripts(readJsonFile8);
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
             expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
             expect(generatedPackage.scripts.codegen).toBeUndefined();
-            expect(yield* fs.exists(path.join(rootDir, "packages", "example-domain", "ai-context.md"))).toBe(false);
+            const exists9 = yield* fs.exists(path.join(rootDir, "packages", "example-domain", "ai-context.md"));
+            expect(exists9).toBe(false);
 
-            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const readJsoncFile10 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const rootTsconfig = yield* decodeTsconfigPaths(readJsoncFile10);
             expect(rootTsconfig.compilerOptions.paths).toMatchObject({
               "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
               "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
@@ -718,9 +722,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               "@beep/example-domain/*": ["./packages/example-domain/src/*"],
             });
 
-            const packageRefs = yield* decodeTsconfigReferences(
-              yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
-            );
+            const readJsoncFile11 = yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"));
+            const packageRefs = yield* decodeTsconfigReferences(readJsoncFile11);
             expect(A.map(packageRefs.references, (entry) => entry.path)).toEqual([
               "packages/example-domain",
               "packages/foundation/modeling/identity",
@@ -730,12 +733,10 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             // the canonical references (quality-lane audit D3), with no module
             // overrides of its own.
             const packageDir = path.join(rootDir, "packages", "example-domain");
-            const canonicalTsconfig = yield* decodeTsconfigOptionalReferences(
-              yield* readJsoncFile(path.join(packageDir, "tsconfig.json"))
-            );
-            const checkOverlay = yield* decodeTsconfigOptionalReferences(
-              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
-            );
+            const readJsoncFile12 = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+            const canonicalTsconfig = yield* decodeTsconfigOptionalReferences(readJsoncFile12);
+            const readJsoncFile13 = yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"));
+            const checkOverlay = yield* decodeTsconfigOptionalReferences(readJsoncFile13);
             expect(referencePathsOf(checkOverlay)).toEqual(referencePathsOf(canonicalTsconfig));
             expect(checkOverlay.compilerOptions).not.toHaveProperty("module");
             expect(checkOverlay.compilerOptions).not.toHaveProperty("moduleResolution");
@@ -815,7 +816,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             // guard is ever relaxed, the overwrite in
             // `FileGenerationPlanService` becomes reachable and needs its own
             // skip-if-present branch.
-            expect(yield* fs.readFileString(sentinel)).toBe("author-replaced");
+            const readFileString14 = yield* fs.readFileString(sentinel);
+            expect(readFileString14).toBe("author-replaced");
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageTestTimeoutMs
@@ -839,9 +841,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             ]);
 
             const packageDir = path.join(rootDir, "apps", "marketing-web");
-            const generatedPackage = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile15 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const generatedPackage = yield* decodeGeneratedPackageManifest(readJsonFile15);
 
             expect(generatedPackage.scripts).toEqual(ExpectedNextjsAppScripts);
             expect(generatedPackage.scripts.docgen).toBeUndefined();
@@ -854,9 +855,12 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               "react-dom": "catalog:",
             });
 
-            expect(yield* fs.exists(path.join(packageDir, "src", "index.ts"))).toBe(false);
-            expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
-            expect(yield* fs.exists(path.join(packageDir, "src", "app", "page.tsx"))).toBe(true);
+            const exists16 = yield* fs.exists(path.join(packageDir, "src", "index.ts"));
+            expect(exists16).toBe(false);
+            const exists17 = yield* fs.exists(path.join(packageDir, "docgen.json"));
+            expect(exists17).toBe(false);
+            const exists18 = yield* fs.exists(path.join(packageDir, "src", "app", "page.tsx"));
+            expect(exists18).toBe(true);
 
             const appTsconfigDocument = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
             const appTsconfig = yield* decodeTsconfigPaths(appTsconfigDocument);
@@ -869,7 +873,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             });
             expect(appPlugins.compilerOptions.plugins).toEqual(A.append(TestRootTypeScriptPlugins, { name: "next" }));
 
-            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const readJsoncFile19 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const rootTsconfig = yield* decodeTsconfigPaths(readJsoncFile19);
             expect(rootTsconfig.compilerOptions.paths["@beep/marketing-web"]).toBeUndefined();
             expect(rootTsconfig.compilerOptions.paths["@beep/marketing-web/*"]).toBeUndefined();
 
@@ -900,9 +905,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             ]);
 
             const packageDir = path.join(rootDir, "apps", "desktop-shell");
-            const generatedPackage = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile20 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const generatedPackage = yield* decodeGeneratedPackageManifest(readJsonFile20);
 
             expect(generatedPackage.scripts).toEqual(ExpectedTauriAppScripts);
             expect(generatedPackage.scripts.docgen).toBeUndefined();
@@ -915,10 +919,14 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               "react-dom": "catalog:",
             });
 
-            expect(yield* fs.exists(path.join(packageDir, "src", "index.ts"))).toBe(false);
-            expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
-            expect(yield* fs.exists(path.join(packageDir, "src", "App.tsx"))).toBe(true);
-            expect(yield* fs.exists(path.join(packageDir, "src-tauri", "tauri.conf.json"))).toBe(true);
+            const exists21 = yield* fs.exists(path.join(packageDir, "src", "index.ts"));
+            expect(exists21).toBe(false);
+            const exists22 = yield* fs.exists(path.join(packageDir, "docgen.json"));
+            expect(exists22).toBe(false);
+            const exists23 = yield* fs.exists(path.join(packageDir, "src", "App.tsx"));
+            expect(exists23).toBe(true);
+            const exists24 = yield* fs.exists(path.join(packageDir, "src-tauri", "tauri.conf.json"));
+            expect(exists24).toBe(true);
 
             // `tauri::generate_context!()` opens this icon while the macro expands, so
             // a Tauri crate without it does not compile. Assert the PNG signature
@@ -949,7 +957,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             expect(viteConfig).toContain(`"@": fileURLToPath(new URL("./src", import.meta.url))`);
             expect(vitestConfig).toContain(`"@": fileURLToPath(new URL("./src", import.meta.url))`);
 
-            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const readJsoncFile25 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const rootTsconfig = yield* decodeTsconfigPaths(readJsoncFile25);
             expect(rootTsconfig.compilerOptions.paths["@beep/desktop-shell"]).toBeUndefined();
             expect(rootTsconfig.compilerOptions.paths["@beep/desktop-shell/*"]).toBeUndefined();
 
@@ -987,9 +996,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               ]);
 
               const packageDir = path.join(rootDir, "apps", "vite-shell");
-              const generatedPackage = yield* decodeGeneratedPackageManifest(
-                yield* readJsonFile(path.join(packageDir, "package.json"))
-              );
+              const readJsonFile26 = yield* readJsonFile(path.join(packageDir, "package.json"));
+              const generatedPackage = yield* decodeGeneratedPackageManifest(readJsonFile26);
 
               expect(generatedPackage.scripts["beep:check"]).toBe("tsrs -p tsconfig.check.json");
               expect(generatedPackage.scripts.dev).toBe(
@@ -1004,13 +1012,18 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
                 "react-dom": "catalog:",
               });
 
-              const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              const readJsonFile27 = yield* readJsonFile(path.join(rootDir, "package.json"));
+              const rootPackage = yield* decodeRootPackage(readJsonFile27);
               expect(rootPackage.workspaces).toEqual(["packages/foundation/modeling/identity", "apps/*"]);
 
-              expect(yield* fs.exists(path.join(packageDir, "src", "App.tsx"))).toBe(true);
-              expect(yield* fs.exists(path.join(packageDir, "index.html"))).toBe(true);
-              expect(yield* fs.exists(path.join(packageDir, "postcss.config.mjs"))).toBe(false);
-              expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
+              const exists28 = yield* fs.exists(path.join(packageDir, "src", "App.tsx"));
+              expect(exists28).toBe(true);
+              const exists29 = yield* fs.exists(path.join(packageDir, "index.html"));
+              expect(exists29).toBe(true);
+              const exists30 = yield* fs.exists(path.join(packageDir, "postcss.config.mjs"));
+              expect(exists30).toBe(false);
+              const exists31 = yield* fs.exists(path.join(packageDir, "docgen.json"));
+              expect(exists31).toBe(false);
               const globalsCss = yield* fs.readFileString(path.join(packageDir, "src", "styles", "globals.css"));
               expect(globalsCss).toContain(":root");
               const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
@@ -1043,9 +1056,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             ]);
 
             const packageDir = path.join(rootDir, "apps", "api-service");
-            const generatedPackage = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile32 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const generatedPackage = yield* decodeGeneratedPackageManifest(readJsonFile32);
             expect(generatedPackage.scripts["beep:check"]).toBe("tsrs -p tsconfig.check.json");
 
             const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
@@ -1057,9 +1069,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             // sync gives tsconfig.json one reference and the check overlay must
             // carry the same one (quality-lane audit D3).
             const canonicalTsconfig = yield* decodeTsconfigOptionalReferences(appTsconfig);
-            const checkOverlay = yield* decodeTsconfigOptionalReferences(
-              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
-            );
+            const readJsoncFile33 = yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"));
+            const checkOverlay = yield* decodeTsconfigOptionalReferences(readJsoncFile33);
             expect(referencePathsOf(canonicalTsconfig)).toEqual([
               "../../packages/foundation/modeling/identity/tsconfig.json",
             ]);
@@ -1069,7 +1080,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
 
             // The service build is the noEmit check, so the scaffold declares
             // empty build outputs or Turbo warns on every root build.
-            expect(yield* readJsonFile(path.join(packageDir, "turbo.json"))).toEqual(NoEmitTurboConfig);
+            const readJsonFile34 = yield* readJsonFile(path.join(packageDir, "turbo.json"));
+            expect(readJsonFile34).toEqual(NoEmitTurboConfig);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageTestTimeoutMs
@@ -1093,9 +1105,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             ]);
 
             const packageDir = path.join(rootDir, "apps", "runtime-proof-lab");
-            const generatedPackage = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile35 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const generatedPackage = yield* decodeGeneratedPackageManifest(readJsonFile35);
 
             expect(generatedPackage.scripts).toMatchObject({
               ...ExpectedGeneratedQualityScripts,
@@ -1108,11 +1119,15 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               ".": "./src/index.ts",
               "./package.json": "./package.json",
             });
-            expect(yield* fs.exists(path.join(packageDir, "src", "index.ts"))).toBe(true);
-            expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(true);
-            expect(yield* readJsonFile(path.join(packageDir, "turbo.json"))).toEqual(NoEmitTurboConfig);
+            const exists36 = yield* fs.exists(path.join(packageDir, "src", "index.ts"));
+            expect(exists36).toBe(true);
+            const exists37 = yield* fs.exists(path.join(packageDir, "docgen.json"));
+            expect(exists37).toBe(true);
+            const readJsonFile38 = yield* readJsonFile(path.join(packageDir, "turbo.json"));
+            expect(readJsonFile38).toEqual(NoEmitTurboConfig);
 
-            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const readJsoncFile39 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const rootTsconfig = yield* decodeTsconfigPaths(readJsoncFile39);
             expect(rootTsconfig.compilerOptions.paths).toMatchObject({
               "@beep/runtime-proof-lab": ["./apps/runtime-proof-lab/src/index.ts"],
               "@beep/runtime-proof-lab/*": ["./apps/runtime-proof-lab/src/*"],
@@ -1146,14 +1161,14 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               "A schema helper package",
             ]);
 
-            const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+            const readJsonFile40 = yield* readJsonFile(path.join(rootDir, "package.json"));
+            const rootPackage = yield* decodeRootPackage(readJsonFile40);
             expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*"]);
 
-            const generatedPackage = yield* decodeFoundationPackageMetadata(
-              yield* readJsonFile(
-                path.join(rootDir, "packages", "foundation", "modeling", "schema-kit", "package.json")
-              )
+            const readJsonFile41 = yield* readJsonFile(
+              path.join(rootDir, "packages", "foundation", "modeling", "schema-kit", "package.json")
             );
+            const generatedPackage = yield* decodeFoundationPackageMetadata(readJsonFile41);
             expect(generatedPackage.beep).toEqual({
               family: "foundation",
               kind: "modeling",
@@ -1161,7 +1176,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
             expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
-            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const readJsoncFile42 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const rootTsconfig = yield* decodeTsconfigPaths(readJsoncFile42);
             expect(rootTsconfig.compilerOptions.paths).toMatchObject({
               "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
               "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
@@ -1206,18 +1222,16 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             ]);
 
             const packageDir = path.join(rootDir, "packages", "foundation", "ui-system", "design-kit");
-            const generatedPackage = yield* decodeFoundationPackageMetadata(
-              yield* readJsonFile(path.join(packageDir, "package.json"))
-            );
+            const readJsonFile43 = yield* readJsonFile(path.join(packageDir, "package.json"));
+            const generatedPackage = yield* decodeFoundationPackageMetadata(readJsonFile43);
             expect(generatedPackage.beep).toEqual({
               family: "foundation",
               kind: "ui-system",
             });
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedStoriesQualityScripts);
 
-            const storiesTsconfig = yield* decodeStoriesTsconfig(
-              yield* readJsoncFile(path.join(packageDir, "tsconfig.stories.json"))
-            );
+            const readJsoncFile44 = yield* readJsoncFile(path.join(packageDir, "tsconfig.stories.json"));
+            const storiesTsconfig = yield* decodeStoriesTsconfig(readJsoncFile44);
             expect(storiesTsconfig.include).toEqual(["src", "stories"]);
             expect(storiesTsconfig.compilerOptions).toMatchObject({
               module: "ESNext",
@@ -1225,11 +1239,9 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               rootDir: "../../../../.",
               types: ["node", "vite/client"],
             });
-            expect(
-              yield* decodeStoriesDirectoryTsconfig(
-                yield* readJsoncFile(path.join(packageDir, "stories", "tsconfig.json"))
-              )
-            ).toEqual({
+            const readJsoncFile63 = yield* readJsoncFile(path.join(packageDir, "stories", "tsconfig.json"));
+            const decodedStoriesDirectoryTsconfig45 = yield* decodeStoriesDirectoryTsconfig(readJsoncFile63);
+            expect(decodedStoriesDirectoryTsconfig45).toEqual({
               extends: "../tsconfig.stories.json",
             });
 
@@ -1244,7 +1256,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               "--with-stories-tsconfig",
               "--dry-run",
             ]);
-            const dryRunOutput = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const logLines46 = yield* TestConsole.logLines;
+            const dryRunOutput = A.join(A.map(logLines46, String), "\n");
             expect(dryRunOutput).toContain("tsconfig.stories.json");
             expect(dryRunOutput).toContain("stories/tsconfig.json");
           })
@@ -1340,7 +1353,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
                 "Repo helpers",
               ]);
 
-              const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              const readJsonFile47 = yield* readJsonFile(path.join(rootDir, "package.json"));
+              const rootPackage = yield* decodeRootPackage(readJsonFile47);
               expect(rootPackage.workspaces).toEqual([
                 "packages/foundation/*/*",
                 "packages/tooling/tool/cli",
@@ -1348,18 +1362,18 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               ]);
               expect(rootPackage.workspaces).not.toContain("packages/tooling/*/*");
 
-              const generatedPackage = yield* decodeToolingPackageMetadata(
-                yield* readJsonFile(path.join(rootDir, "packages", "tooling", "library", "repo-utils", "package.json"))
+              const readJsonFile48 = yield* readJsonFile(
+                path.join(rootDir, "packages", "tooling", "library", "repo-utils", "package.json")
               );
+              const generatedPackage = yield* decodeToolingPackageMetadata(readJsonFile48);
               expect(generatedPackage.beep).toEqual({
                 family: "tooling",
                 kind: "library",
               });
               expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
-              const packageRefs = yield* decodeTsconfigReferences(
-                yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
-              );
+              const readJsoncFile49 = yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"));
+              const packageRefs = yield* decodeTsconfigReferences(readJsoncFile49);
               expect(A.map(packageRefs.references, (entry) => entry.path)).toEqual([
                 "packages/foundation/modeling/identity",
                 "packages/tooling/library/repo-utils",
@@ -1403,12 +1417,14 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
                 "Runpod API driver package",
               ]);
 
-              const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              const readJsonFile50 = yield* readJsonFile(path.join(rootDir, "package.json"));
+              const rootPackage = yield* decodeRootPackage(readJsonFile50);
               expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "packages/drivers/*"]);
 
-              const generatedPackage = yield* decodeDriverPackageMetadata(
-                yield* readJsonFile(path.join(rootDir, "packages", "drivers", "runpod", "package.json"))
+              const readJsonFile51 = yield* readJsonFile(
+                path.join(rootDir, "packages", "drivers", "runpod", "package.json")
               );
+              const generatedPackage = yield* decodeDriverPackageMetadata(readJsonFile51);
               expect(generatedPackage.beep).toEqual({
                 family: "drivers",
               });
@@ -1417,9 +1433,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
               expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
-              const rootTsconfig = yield* decodeTsconfigPaths(
-                yield* readJsoncFile(path.join(rootDir, "tsconfig.json"))
-              );
+              const readJsoncFile52 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+              const rootTsconfig = yield* decodeTsconfigPaths(readJsoncFile52);
               expect(rootTsconfig.compilerOptions.paths).toMatchObject({
                 "@beep/runpod": ["./packages/drivers/runpod/src/index.ts"],
                 "@beep/runpod/*": ["./packages/drivers/runpod/src/*"],
@@ -1464,12 +1479,14 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
                 "Portable Effect library",
               ]);
 
-              const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              const readJsonFile53 = yield* readJsonFile(path.join(rootDir, "package.json"));
+              const rootPackage = yield* decodeRootPackage(readJsonFile53);
               expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "packages/ecosystem/*"]);
 
-              const generatedPackage = yield* decodeEcosystemPackageMetadata(
-                yield* readJsonFile(path.join(rootDir, "packages", "ecosystem", "portable-effect", "package.json"))
+              const readJsonFile54 = yield* readJsonFile(
+                path.join(rootDir, "packages", "ecosystem", "portable-effect", "package.json")
               );
+              const generatedPackage = yield* decodeEcosystemPackageMetadata(readJsonFile54);
               expect(generatedPackage.beep).toEqual({ family: "ecosystem" });
               expect(generatedPackage.beep.kind).toBeUndefined();
               expect(generatedPackage.sideEffects).toBe(false);
@@ -1501,15 +1518,12 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
               const ecosystemPackageDir = path.join(rootDir, "packages", "ecosystem", "portable-effect");
-              const productionTsconfig = yield* decodeEcosystemProductionTsconfig(
-                yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.json"))
-              );
-              const testTsconfig = yield* decodeEcosystemTestTsconfig(
-                yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.test.json"))
-              );
-              const rootTypeScriptPlugins = yield* decodeTypeScriptPluginsConfig(
-                yield* readJsoncFile(path.join(rootDir, "tsconfig.base.json"))
-              );
+              const readJsoncFile55 = yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.json"));
+              const productionTsconfig = yield* decodeEcosystemProductionTsconfig(readJsoncFile55);
+              const readJsoncFile56 = yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.test.json"));
+              const testTsconfig = yield* decodeEcosystemTestTsconfig(readJsoncFile56);
+              const readJsoncFile57 = yield* readJsoncFile(path.join(rootDir, "tsconfig.base.json"));
+              const rootTypeScriptPlugins = yield* decodeTypeScriptPluginsConfig(readJsoncFile57);
               const expectedEcosystemPlugins = yield* withSanctionedEcosystemDiagnosticDelta(
                 rootTypeScriptPlugins.compilerOptions.plugins
               );
@@ -1569,8 +1583,10 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               TsconfigSyncRunOptionsCheck.make({ mode: "check", filter: undefined, verbose: false })
             );
             expect(check.changedFiles).toBe(0);
-            const rootPaths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
-            expect(yield* readJsonFile(aliasesPath)).toEqual(rootPaths.compilerOptions.paths);
+            const readJsoncFile58 = yield* readJsoncFile(path.join(rootDir, "tsconfig.json"));
+            const rootPaths = yield* decodeTsconfigPaths(readJsoncFile58);
+            const readJsonFile59 = yield* readJsonFile(aliasesPath);
+            expect(readJsonFile59).toEqual(rootPaths.compilerOptions.paths);
             expect(R.keys(rootPaths.compilerOptions.paths)).toContain("@beep/fresh-lib");
             const boundaries = yield* fs.readFileString(boundariesPath);
             expect(boundaries).toContain(`"packages/foundation/modeling/fresh-lib/src/**"`);
@@ -1612,7 +1628,9 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
 
             // The library entry point starts as an empty, documented barrel: no
             // placeholder export to drift from the manifest version.
-            const libraryIndex = Str.split("\n")(yield* fs.readFileString(path.join(libraryDir, "src", "index.ts")));
+            const argument = Str.split("\n");
+            const readFileString3 = yield* fs.readFileString(path.join(libraryDir, "src", "index.ts"));
+            const libraryIndex = argument(readFileString3);
             expect(A.filter(libraryIndex, Str.startsWith("export "))).toStrictEqual(["export {};"]);
             expect(libraryIndex).toContain(" * Package entry point for `@beep/fresh-lib`.");
             expect(A.some(libraryIndex, Str.startsWith(" * @packageDocumentation"))).toBe(true);
@@ -1622,7 +1640,9 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               path.join(serviceDir, "src", "Api.ts"),
               path.join(serviceDir, "src", "runtime", "Layer.ts"),
             ]) {
-              const lines = Str.split("\n")(yield* fs.readFileString(filePath));
+              const argument1 = Str.split("\n");
+              const readFileString4 = yield* fs.readFileString(filePath);
+              const lines = argument1(readFileString4);
               const exportCount = A.length(A.filter(lines, Str.startsWith("export ")));
               expect(exportCount).toBeGreaterThan(0);
               expect(A.length(A.filter(lines, Str.startsWith(" * **Example** (")))).toBe(exportCount);
@@ -1630,18 +1650,17 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             }
 
             // Dependency hygiene: declared dependencies are used and referenced types are declared.
-            const libraryManifest = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(libraryDir, "package.json"))
-            );
+            const readJsonFile60 = yield* readJsonFile(path.join(libraryDir, "package.json"));
+            const libraryManifest = yield* decodeGeneratedPackageManifest(readJsonFile60);
             expect(libraryManifest.devDependencies?.["bun-types"]).toBe("catalog:");
             const libraryTest = yield* fs.readFileString(path.join(libraryDir, "test", "index.test.ts"));
             expect(libraryTest).toContain(`from "@beep/fresh-lib"`);
             expect(libraryTest).toContain(`from "@effect/vitest"`);
             expect(libraryTest).toContain(`from "effect/Effect"`);
-            expect(yield* fs.exists(path.join(libraryDir, "test", ".gitkeep"))).toBe(false);
-            const serviceManifest = yield* decodeGeneratedPackageManifest(
-              yield* readJsonFile(path.join(serviceDir, "package.json"))
-            );
+            const exists61 = yield* fs.exists(path.join(libraryDir, "test", ".gitkeep"));
+            expect(exists61).toBe(false);
+            const readJsonFile62 = yield* readJsonFile(path.join(serviceDir, "package.json"));
+            const serviceManifest = yield* decodeGeneratedPackageManifest(readJsonFile62);
             expect(R.keys(serviceManifest.devDependencies ?? {})).not.toContain("@beep/test-utils");
 
             // check, test, and the effect-vitest inventory for the service template.

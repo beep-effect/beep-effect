@@ -63,11 +63,11 @@ const decodeMirrorBundle = S.decodeUnknownEffect(S.fromJsonString(AiMetricsMirro
 const decodeOtlpExportResult = S.decodeUnknownEffect(S.fromJsonString(AiMetricsOtlpExportResult));
 const decodeSourceDiscovery = S.decodeUnknownEffect(S.fromJsonString(AiMetricsSourceDiscoveryResult));
 const decodeWeeklyReport = S.decodeUnknownEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
-const decodeForwarderResultResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsForwarderRunResult));
-const decodeLabelQueueResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsLabelQueueResult));
-const decodeMirrorBundleResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsMirrorBundleResult));
-const decodeOtlpExportResultResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsOtlpExportResult));
-const decodeWeeklyReportResult = S.decodeUnknownResult(S.fromJsonString(AiMetricsWeeklyReportResult));
+const decodeForwarderResultResult = S.decodeResult(S.fromJsonString(AiMetricsForwarderRunResult));
+const decodeLabelQueueResult = S.decodeResult(S.fromJsonString(AiMetricsLabelQueueResult));
+const decodeMirrorBundleResult = S.decodeResult(S.fromJsonString(AiMetricsMirrorBundleResult));
+const decodeOtlpExportResultResult = S.decodeResult(S.fromJsonString(AiMetricsOtlpExportResult));
+const decodeWeeklyReportResult = S.decodeResult(S.fromJsonString(AiMetricsWeeklyReportResult));
 const encodeForwarderResultResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsForwarderRunResult));
 const encodeLabelQueueResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsLabelQueueResult));
 const encodeMirrorBundleResult = S.encodeUnknownResult(S.fromJsonString(AiMetricsMirrorBundleResult));
@@ -126,7 +126,8 @@ const seedGitRoot = Effect.fn("AIMetricsCommandTest.seedGitRoot")(function* (rep
     ["add", "--", "AGENTS.md"],
   ]) {
     const git = yield* ChildProcess.make("git", args, { cwd: repoRoot, stdout: "ignore", stderr: "ignore" });
-    expect(yield* git.exitCode).toBe(0);
+    const exitCode1 = yield* git.exitCode;
+    expect(exitCode1).toBe(0);
   }
   yield* writeText(path.join(repoRoot, ".git/HEAD"), "ref: refs/heads/main\n");
   yield* writeText(path.join(repoRoot, ".git/refs/heads/main"), `${pipe("a", Str.repeat(40))}\n`);
@@ -137,11 +138,13 @@ const seedGitRoot = Effect.fn("AIMetricsCommandTest.seedGitRoot")(function* (rep
 });
 
 const loggedText = Effect.fn("AIMetricsCommandTest.loggedText")(function* () {
-  return pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
+  const logLines2 = yield* TestConsole.logLines;
+  return pipe(logLines2, A.filter(isString), A.join("\n"));
 });
 
 const lastLoggedLine = Effect.fn("AIMetricsCommandTest.lastLoggedLine")(function* () {
-  const last = pipe(yield* TestConsole.logLines, A.last);
+  const logLines3 = yield* TestConsole.logLines;
+  const last = pipe(logLines3, A.last);
   if (O.isSome(last)) {
     return last.value;
   }
@@ -199,7 +202,8 @@ const seedAiMetricsData = Effect.fn("AIMetricsCommandTest.seedAiMetricsData")(fu
     "test-salt",
     "--json",
   ]);
-  const forwarderResult = yield* decodeForwarderResult(yield* lastLoggedLine());
+  const lastLoggedLine4 = yield* lastLoggedLine();
+  const forwarderResult = yield* decodeForwarderResult(lastLoggedLine4);
 
   return { dataRoot, forwarderResult, homeDir, repoRoot };
 });
@@ -442,11 +446,14 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         );
-        expect(yield* render([])).toContain(process.execPath);
+        const render5 = yield* render([]);
+        expect(render5).toContain(process.execPath);
         yield* writeText(shim, "");
         yield* fs.chmod(shim, 0o755);
-        expect(yield* render([])).toContain(shim);
-        expect(yield* render(["--bun-path", "~/tools/bun"])).toContain(path.join(home, "tools/bun"));
+        const render6 = yield* render([]);
+        expect(render6).toContain(shim);
+        const render7 = yield* render(["--bun-path", "~/tools/bun"]);
+        expect(render7).toContain(path.join(home, "tools/bun"));
       })
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -472,7 +479,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           }
           // An absolute pin renders with no HOME at all (sanitized containers, CI).
           yield* runAiMetricsCommand([...timerArgs, "--bun-path", "/opt/bun 1/bin/bun"]).pipe(withEnvironment({}));
-          expect(yield* loggedText()).toContain("/opt/bun 1/bin/bun");
+          const loggedText8 = yield* loggedText();
+          expect(loggedText8).toContain("/opt/bun 1/bin/bun");
           const unsafePin = yield* Effect.flip(
             runAiMetricsCommand([...timerArgs, "--bun-path", '/opt/"bun"/bin/bun']).pipe(
               withEnvironment({ HOME: home })
@@ -540,7 +548,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           runAiMetricsCommand(["install", "plan", "--target", "local", "--json"])
         );
 
-        const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+        const lastLoggedLine9 = yield* lastLoggedLine();
+        const plan = yield* decodeInstallPlan(lastLoggedLine9);
         expect(plan.storage.dataRoot).toBe(envDataRoot);
       })
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -557,7 +566,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           runAiMetricsCommand(["install", "plan", "--target", "local", "--data-root", flagDataRoot, "--json"])
         );
 
-        const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+        const lastLoggedLine10 = yield* lastLoggedLine();
+        const plan = yield* decodeInstallPlan(lastLoggedLine10);
         expect(plan.storage.dataRoot).toBe(flagDataRoot);
       })
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -571,7 +581,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           runAiMetricsCommand(["install", "plan", "--target", "local", "--json"])
         );
 
-        const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+        const lastLoggedLine11 = yield* lastLoggedLine();
+        const plan = yield* decodeInstallPlan(lastLoggedLine11);
         expect(plan.storage.dataRoot).toBe(`${tmpDir}/.local/state/beep/ai-metrics`);
         expect(plan.storage.dataRoot).not.toContain(".beep/ai-metrics");
       })
@@ -592,7 +603,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           runAiMetricsCommand(["install", "plan", "--target", "local", "--json"])
         );
 
-        const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+        const lastLoggedLine12 = yield* lastLoggedLine();
+        const plan = yield* decodeInstallPlan(lastLoggedLine12);
         expect(plan.storage.dataRoot).toBe(`${stateHome}/beep/ai-metrics`);
       })
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -615,7 +627,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
         ]);
 
         expect(message).toContain("absolute");
-        expect(yield* loggedText()).toBe("");
+        const loggedText13 = yield* loggedText();
+        expect(loggedText13).toBe("");
       })
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -667,7 +680,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
       Effect.gen(function* () {
         yield* runAiMetricsCommand(["install", "plan", "--target", "local", "--json"]);
 
-        const plan = yield* decodeInstallPlan(yield* lastLoggedLine());
+        const lastLoggedLine14 = yield* lastLoggedLine();
+        const plan = yield* decodeInstallPlan(lastLoggedLine14);
         expect(plan.target).toBe("local");
         expect(plan.dryRunOnly).toBe(true);
         expect(plan.steps).toEqual(
@@ -707,7 +721,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           "--json",
         ]);
 
-        const doctor = yield* decodeInstallDoctor(yield* lastLoggedLine());
+        const lastLoggedLine15 = yield* lastLoggedLine();
+        const doctor = yield* decodeInstallDoctor(lastLoggedLine15);
         const output = yield* loggedText();
         expect(doctor.status).toBe("warning");
         expect(doctor.availableSourceCount).toBe(1);
@@ -738,7 +753,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           ])
         );
 
-        const doctor = yield* decodeInstallDoctor(yield* lastLoggedLine());
+        const lastLoggedLine16 = yield* lastLoggedLine();
+        const doctor = yield* decodeInstallDoctor(lastLoggedLine16);
         exit.pipe(Exit.isFailure, assertTrue);
         expect(doctor.status).toBe("failed");
         expect(doctor.availableSourceCount).toBe(0);
@@ -762,7 +778,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           "--json",
         ]);
 
-        const result = yield* decodeInstallApplyDryRun(yield* lastLoggedLine());
+        const lastLoggedLine17 = yield* lastLoggedLine();
+        const result = yield* decodeInstallApplyDryRun(lastLoggedLine17);
         expect(result.target).toBe("dankserver");
         expect(result.dryRun).toBe(true);
         expect(result.plan.steps).toEqual(
@@ -927,7 +944,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           "--json",
         ]);
 
-        const result = yield* decodeSourceDiscovery(yield* lastLoggedLine());
+        const lastLoggedLine18 = yield* lastLoggedLine();
+        const result = yield* decodeSourceDiscovery(lastLoggedLine18);
         const codex = pipe(
           result.sources,
           A.findFirst((source) => source.sourceKind === "codex")
@@ -1053,11 +1071,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             })
           );
           expect(output).not.toContain("private-forwarder-retention-secret");
-          expect(
-            A.filter(yield* fs.readDirectory(path.join(dataRoot, "derived/parquet")), (entry) =>
-              Str.startsWith("forwarder-")(entry)
-            )
-          ).toEqual([]);
+          const readDirectory19 = yield* fs.readDirectory(path.join(dataRoot, "derived/parquet"));
+          expect(A.filter(readDirectory19, (entry) => Str.startsWith("forwarder-")(entry))).toEqual([]);
         })
       )
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1186,7 +1201,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
               const resultJson = yield* lastLoggedLine();
               const result = yield* decodeForwarderResult(resultJson);
               const otlpExport = result.otlpExport;
-              const errorOutput = pipe(yield* TestConsole.errorLines, A.filter(isString), A.join("\n"));
+              const errorLines20 = yield* TestConsole.errorLines;
+              const errorOutput = pipe(errorLines20, A.filter(isString), A.join("\n"));
 
               expect(result.sourceFileCount).toBe(1);
               expect(result.turnCount).toBeGreaterThan(0);
@@ -1301,7 +1317,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
               "--json",
             ])
           );
-          const forwarder = yield* decodeForwarderResult(yield* lastLoggedLine());
+          const lastLoggedLine21 = yield* lastLoggedLine();
+          const forwarder = yield* decodeForwarderResult(lastLoggedLine21);
 
           yield* runAiMetricsCommand([
             "label",
@@ -1314,7 +1331,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             String(farFutureUntilEpochMs),
             "--json",
           ]);
-          const queue = yield* decodeLabelQueue(yield* lastLoggedLine());
+          const lastLoggedLine22 = yield* lastLoggedLine();
+          const queue = yield* decodeLabelQueue(lastLoggedLine22);
           const firstTask = A.head(queue.items);
           firstTask.pipe(O.isSome, assertTrue);
           if (O.isNone(firstTask)) {
@@ -1389,7 +1407,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             String(farFutureUntilEpochMs),
             "--json",
           ]);
-          const report = yield* decodeWeeklyReport(yield* lastLoggedLine());
+          const lastLoggedLine23 = yield* lastLoggedLine();
+          const report = yield* decodeWeeklyReport(lastLoggedLine23);
           const reportJson = yield* fs.readFileString(report.jsonPath);
 
           expect(report.document.scores).toHaveLength(1);
@@ -1470,7 +1489,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
                 "--json",
               ])
             );
-            yield* decodeForwarderResult(yield* lastLoggedLine());
+            const lastLoggedLine24 = yield* lastLoggedLine();
+            yield* decodeForwarderResult(lastLoggedLine24);
 
             yield* runAiMetricsCommand([
               "otlp",
@@ -1521,7 +1541,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             "--json",
           ]);
 
-          const result = yield* decodeOtlpExportResult(yield* lastLoggedLine());
+          const lastLoggedLine25 = yield* lastLoggedLine();
+          const result = yield* decodeOtlpExportResult(lastLoggedLine25);
           const traceRequest = yield* waitForCapturedOtlpTraceRequest(requests);
 
           expect(traceRequest.contentType).toContain("application/x-protobuf");
@@ -1578,7 +1599,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
 
           yield* runAiMetricsCommand(["mirror", "build", "--target", "dankserver", "--data-root", dataRoot, "--json"]);
 
-          const buildJson = yield* decodeMirrorBundle(yield* lastLoggedLine());
+          const lastLoggedLine26 = yield* lastLoggedLine();
+          const buildJson = yield* decodeMirrorBundle(lastLoggedLine26);
           expect(buildJson).toEqual(
             expect.objectContaining({
               bundleDir: expect.any(String),
@@ -1588,7 +1610,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
 
           yield* runAiMetricsCommand(["mirror", "sync", "--bundle", "latest", "--data-root", dataRoot, "--json"]);
 
-          const syncJson = yield* decodeUnknownJson(yield* lastLoggedLine());
+          const lastLoggedLine27 = yield* lastLoggedLine();
+          const syncJson = yield* decodeUnknownJson(lastLoggedLine27);
           expect(syncJson).toEqual(
             expect.objectContaining({
               confirmToken: "p7-derived-mirror",
@@ -1611,7 +1634,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           const { dataRoot } = yield* seedAiMetricsData(tmpDir);
 
           yield* runAiMetricsCommand(["mirror", "build", "--target", "dankserver", "--data-root", dataRoot, "--json"]);
-          const buildJson = yield* decodeMirrorBundle(yield* lastLoggedLine());
+          const lastLoggedLine28 = yield* lastLoggedLine();
+          const buildJson = yield* decodeMirrorBundle(lastLoggedLine28);
           yield* writeText(path.join(buildJson.bundleDir, "mirror.duckdb"), "unsafe payload");
 
           const output = yield* expectAiMetricsCommandFailure([
@@ -1641,7 +1665,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
           const { dataRoot } = yield* seedAiMetricsData(tmpDir);
 
           yield* runAiMetricsCommand(["mirror", "build", "--target", "dankserver", "--data-root", dataRoot, "--json"]);
-          const buildJson = yield* decodeMirrorBundle(yield* lastLoggedLine());
+          const lastLoggedLine29 = yield* lastLoggedLine();
+          const buildJson = yield* decodeMirrorBundle(lastLoggedLine29);
           yield* writeText(path.join(buildJson.bundleDir, "parquet/undeclared.parquet"), "extra payload");
 
           const output = yield* expectAiMetricsCommandFailure([
@@ -1693,7 +1718,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             ])
           );
 
-          const syncJson = yield* decodeUnknownJson(yield* lastLoggedLine());
+          const lastLoggedLine30 = yield* lastLoggedLine();
+          const syncJson = yield* decodeUnknownJson(lastLoggedLine30);
           expect(syncJson).toEqual(
             expect.objectContaining({
               dryRun: false,
@@ -1732,7 +1758,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             "--json",
           ]);
 
-          const resultJson = yield* decodeUnknownJson(yield* lastLoggedLine());
+          const lastLoggedLine31 = yield* lastLoggedLine();
+          const resultJson = yield* decodeUnknownJson(lastLoggedLine31);
           expect(resultJson).toEqual(
             expect.objectContaining({
               hashMatches: true,
@@ -1767,7 +1794,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             "--json",
           ]);
 
-          const resultJson = yield* decodeUnknownJson(yield* lastLoggedLine());
+          const lastLoggedLine32 = yield* lastLoggedLine();
+          const resultJson = yield* decodeUnknownJson(lastLoggedLine32);
           expect(resultJson).toEqual(
             expect.objectContaining({
               dryRun: true,
@@ -1800,17 +1828,18 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             "--json",
           ]);
 
-          const dryRunJson = yield* decodeUnknownJson(yield* lastLoggedLine());
+          const lastLoggedLine33 = yield* lastLoggedLine();
+          const dryRunJson = yield* decodeUnknownJson(lastLoggedLine33);
           expect(dryRunJson).toEqual(
             expect.objectContaining({
               deletedDerivedExportCount: 1,
               dryRun: true,
             })
           );
-          expect(yield* fs.exists(path.join(parquetRoot, "latest"))).toBe(true);
-          expect(
-            A.filter(yield* fs.readDirectory(parquetRoot), (entry) => Str.startsWith("forwarder-")(entry))
-          ).toHaveLength(1);
+          const exists34 = yield* fs.exists(path.join(parquetRoot, "latest"));
+          expect(exists34).toBe(true);
+          const readDirectory35 = yield* fs.readDirectory(parquetRoot);
+          expect(A.filter(readDirectory35, (entry) => Str.startsWith("forwarder-")(entry))).toHaveLength(1);
 
           yield* runAiMetricsCommand([
             "retention",
@@ -1824,17 +1853,18 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             "--json",
           ]);
 
-          const appliedJson = yield* decodeUnknownJson(yield* lastLoggedLine());
+          const lastLoggedLine36 = yield* lastLoggedLine();
+          const appliedJson = yield* decodeUnknownJson(lastLoggedLine36);
           expect(appliedJson).toEqual(
             expect.objectContaining({
               deletedDerivedExportCount: 1,
               dryRun: false,
             })
           );
-          expect(yield* fs.exists(path.join(parquetRoot, "latest"))).toBe(true);
-          expect(
-            A.filter(yield* fs.readDirectory(parquetRoot), (entry) => Str.startsWith("forwarder-")(entry))
-          ).toEqual([]);
+          const exists37 = yield* fs.exists(path.join(parquetRoot, "latest"));
+          expect(exists37).toBe(true);
+          const readDirectory38 = yield* fs.readDirectory(parquetRoot);
+          expect(A.filter(readDirectory38, (entry) => Str.startsWith("forwarder-")(entry))).toEqual([]);
         })
       )
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1901,15 +1931,18 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             "--json",
           ]);
 
-          const resultJson = yield* decodeUnknownJson(yield* lastLoggedLine());
+          const lastLoggedLine39 = yield* lastLoggedLine();
+          const resultJson = yield* decodeUnknownJson(lastLoggedLine39);
           expect(resultJson).toEqual(
             expect.objectContaining({
               dryRun: false,
               mode: "compact",
             })
           );
-          expect(yield* fs.exists(path.join(dataRoot, "reports/weekly.md"))).toBe(false);
-          expect(yield* fs.readDirectory(path.join(dataRoot, "raw/codex"))).toHaveLength(1);
+          const exists40 = yield* fs.exists(path.join(dataRoot, "reports/weekly.md"));
+          expect(exists40).toBe(false);
+          const readDirectory41 = yield* fs.readDirectory(path.join(dataRoot, "raw/codex"));
+          expect(readDirectory41).toHaveLength(1);
         })
       )
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1937,7 +1970,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
             "--json",
           ]);
 
-          const resultJson = yield* decodeUnknownJson(yield* lastLoggedLine());
+          const lastLoggedLine42 = yield* lastLoggedLine();
+          const resultJson = yield* decodeUnknownJson(lastLoggedLine42);
           expect(resultJson).toEqual(
             expect.objectContaining({
               deletedRawArchiveObjectCount: 1,
@@ -1945,8 +1979,10 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
               mode: "delete",
             })
           );
-          expect(yield* fs.exists(path.join(dataRoot, "reports/weekly.md"))).toBe(false);
-          expect(yield* fs.readDirectory(path.join(dataRoot, "raw/codex"))).toEqual([]);
+          const exists43 = yield* fs.exists(path.join(dataRoot, "reports/weekly.md"));
+          expect(exists43).toBe(false);
+          const readDirectory44 = yield* fs.readDirectory(path.join(dataRoot, "raw/codex"));
+          expect(readDirectory44).toEqual([]);
         })
       )
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))

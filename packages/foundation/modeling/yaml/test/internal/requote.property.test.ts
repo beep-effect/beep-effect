@@ -33,7 +33,8 @@ it.effect.prop(
       assert.isDefined(converted);
       if (converted === undefined) return;
       const parsed = yield* Yaml.parse(converted);
-      assert.deepStrictEqual(parsed, yield* Yaml.parse(text));
+      const parsed1 = yield* Yaml.parse(text);
+      assert.deepStrictEqual(parsed, parsed1);
       assert.strictEqual(parsed, value);
       assert.strictEqual(
         O.getOrUndefined(
@@ -55,7 +56,9 @@ it.effect.prop(
         )
       );
       assert.strictEqual(restored, text);
-      assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(parsed)), parsed);
+      const stringify5 = yield* Yaml.stringify(parsed);
+      const parsed2 = yield* Yaml.parse(stringify5);
+      assert.deepStrictEqual(parsed2, parsed);
     }),
   runs
 );
@@ -88,8 +91,11 @@ it.effect.prop(
         converted
       );
       const parsed = yield* Yaml.parse(converted);
-      assert.deepStrictEqual(parsed, yield* Yaml.parse(value));
-      assert.deepStrictEqual(yield* Yaml.parse(yield* Yaml.stringify(parsed)), parsed);
+      const parsed3 = yield* Yaml.parse(value);
+      assert.deepStrictEqual(parsed, parsed3);
+      const stringify6 = yield* Yaml.stringify(parsed);
+      const parsed4 = yield* Yaml.parse(stringify6);
+      assert.deepStrictEqual(parsed4, parsed);
     }),
   runs
 );

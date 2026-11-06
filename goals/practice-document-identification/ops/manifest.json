@@ -30,7 +30,10 @@
     "goals/practice-document-identification/GOAL.md",
     "goals/practice-document-identification/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/cache-baseline-review.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

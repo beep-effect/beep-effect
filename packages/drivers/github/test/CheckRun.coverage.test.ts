@@ -65,11 +65,16 @@ it.layer(Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" })), { timeout:
     it.effect("all supplied overrides are preserved", () =>
       Effect.gen(function* () {
         const service = yield* CheckRun;
-        assert.strictEqual(yield* service.create("lint", "sha"), ref);
-        assert.strictEqual(yield* service.get(3), ref);
-        assert.strictEqual(yield* service.update(3, output), undefined);
-        assert.strictEqual(yield* service.complete(3, "success"), undefined);
-        assert.strictEqual(yield* service.withCheckRun("lint", "sha", (id) => Effect.succeed(id)), 3);
+        const created = yield* service.create("lint", "sha");
+        assert.strictEqual(created, ref);
+        const got = yield* service.get(3);
+        assert.strictEqual(got, ref);
+        const update1 = yield* service.update(3, output);
+        assert.strictEqual(update1, undefined);
+        const complete2 = yield* service.complete(3, "success");
+        assert.strictEqual(complete2, undefined);
+        const withCheckRun3 = yield* service.withCheckRun("lint", "sha", (id) => Effect.succeed(id));
+        assert.strictEqual(withCheckRun3, 3);
       })
     );
   });
@@ -90,16 +95,18 @@ for (const [field, value] of [
     it.effect(`returns typed create/get decode failures for invalid ${field}=${value}`, () =>
       Effect.gen(function* () {
         const service = yield* CheckRun;
+        const result4 = yield* Effect.result(service.create("lint", "sha"));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.create("lint", "sha")), (error) => ({
+          Result.mapError(result4, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,
           })),
           { tag: "GitHubError", kind: "decode", operation: "CheckRun.create" }
         );
+        const result5 = yield* Effect.result(service.get(3));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.get(3)), (error) => ({
+          Result.mapError(result5, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,

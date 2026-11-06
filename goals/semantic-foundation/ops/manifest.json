@@ -43,9 +43,15 @@
     "explorations/legal-ontology-landscape/MAP.md"
   ],
   "researchReports": [
-    "../../explorations/legal-ontology-landscape/research/README.md",
-    "../../explorations/legal-ontology-landscape/research/01-direction-grounding.md",
-    "../../explorations/legal-ontology-landscape/research/"
+    "research/2026-07-25-academia-corpus-mining-note.md",
+    "research/2026-10-09-m2-classification-contract.md",
+    "research/2026-10-09-m2-licence-ledger.md",
+    "research/2026-10-09-m3-adversarial-review.md",
+    "research/2026-10-09-m3-blinded-category-review.md",
+    "research/2026-10-09-m3-kind-role-audit.md",
+    "research/2026-10-09-m3-vocabulary-contract.md",
+    "research/OPPORTUNITIES.md",
+    "research/README.md"
   ],
   "agentLaunchers": [
     {
@@ -102,5 +108,10 @@
     "The former ontology-survey packet was removed 2026-07-14, so its edit fence is moot; stop if work exceeds the scope absorbed from explorations/legal-ontology-landscape or requires law-practice domain entities, document-intake workflow code, graph-store wiring, or SPARQL engine wiring.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "researchReferences": [
+    "../../explorations/legal-ontology-landscape/research/",
+    "../../explorations/legal-ontology-landscape/research/01-direction-grounding.md",
+    "../../explorations/legal-ontology-landscape/research/README.md"
   ]
 }

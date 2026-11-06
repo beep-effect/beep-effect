@@ -34,8 +34,10 @@ describe("facade uncovered contracts", () => {
         ["a: &x 1\nb: &y [*x]\nc: &x 2\nd: *y\n", { a: 1, b: [1], c: 2, d: [1] }],
         ["a: &x 1\nb: &y [*x]\nc: &x [*y]\nd: *y\n", { a: 1, b: [1], c: [[1]], d: [1] }],
       ] as const) {
-        assert.deepStrictEqual(yield* Yaml.parse(text), expected);
-        assert.deepStrictEqual(yield* Yaml.parseAll(text), [expected]);
+        const parsed = yield* Yaml.parse(text);
+        assert.deepStrictEqual(parsed, expected);
+        const parsedAll = yield* Yaml.parseAll(text);
+        assert.deepStrictEqual(parsedAll, [expected]);
         const document = yield* YamlDocument.parse(text);
         assert.deepStrictEqual(document.toValue(), expected);
         assert.deepStrictEqual(document.toValue(), expected);
@@ -124,7 +126,8 @@ describe("facade uncovered contracts", () => {
       assert.include(stringify.message, "Circular");
       const allStringify = yield* Effect.flip(S.encodeEffect(stream)([circular]));
       assert.include(allStringify.message, "Circular");
-      assert.strictEqual(yield* S.encodeEffect(stream)([]), "");
+      const value1 = yield* S.encodeEffect(stream)([]);
+      assert.strictEqual(value1, "");
     })
   );
   it.effect("unexpected value getters propagate their defect in both stringify paths", () =>

@@ -19,6 +19,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
@@ -29,32 +30,38 @@ import * as S from "effect/Schema";
 
 const decodeUsptoConfigInputResult = S.decodeResult(UsptoConfigInput);
 
-const applicationEnvelope = JSON.stringify({
-  count: 1,
-  patentFileWrapperDataBag: [
-    {
-      applicationMetaData: {
-        applicationStatusDescriptionText: "Patented Case",
-        filingDate: "2018-09-21",
-        firstApplicantName: "Precision Widgets LLC",
-        firstInventorName: "Ada Lovelace",
-        grantDate: "2020-09-15",
-        inventionTitle: "Adjustable widget assembly",
-        patentNumber: "10772255",
+const applicationEnvelope = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    count: 1,
+    patentFileWrapperDataBag: [
+      {
+        applicationMetaData: {
+          applicationStatusDescriptionText: "Patented Case",
+          filingDate: "2018-09-21",
+          firstApplicantName: "Precision Widgets LLC",
+          firstInventorName: "Ada Lovelace",
+          grantDate: "2020-09-15",
+          inventionTitle: "Adjustable widget assembly",
+          patentNumber: "10772255",
+        },
+        applicationNumberText: "16138242",
       },
-      applicationNumberText: "16138242",
-    },
-  ],
-});
+    ],
+  }),
+  identity
+);
 
-const continuityEnvelope = JSON.stringify({
-  patentFileWrapperDataBag: [
-    {
-      childContinuityBag: [{ childApplicationNumberText: "17999999" }],
-      parentContinuityBag: [{ parentApplicationNumberText: "15111111" }],
-    },
-  ],
-});
+const continuityEnvelope = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    patentFileWrapperDataBag: [
+      {
+        childContinuityBag: [{ childApplicationNumberText: "17999999" }],
+        parentContinuityBag: [{ parentApplicationNumberText: "15111111" }],
+      },
+    ],
+  }),
+  identity
+);
 
 const documentsEnvelope = `{
   "documentBag": [

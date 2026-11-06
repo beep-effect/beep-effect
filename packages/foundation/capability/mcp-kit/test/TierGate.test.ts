@@ -52,7 +52,8 @@ describe("dispatchWithTierGate", () => {
         Ref.update(executions, (count) => count + 1).pipe(Effect.as("this handler must never run"))
       ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
-      assert.strictEqual(yield* Ref.get(executions), 0);
+      const got = yield* Ref.get(executions);
+      assert.strictEqual(got, 0);
       assert.strictEqual(result._tag, "Refused");
       if (result._tag === "Refused") {
         assert.isTrue(TierGateAuditRecord.is(result.audit));
@@ -75,7 +76,8 @@ describe("dispatchWithTierGate", () => {
         Ref.update(executions, (count) => count + 1).pipe(Effect.as("deleted"))
       ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
-      assert.strictEqual(yield* Ref.get(executions), 1);
+      const got1 = yield* Ref.get(executions);
+      assert.strictEqual(got1, 1);
       assert.strictEqual(result._tag, "Dispatched");
       if (result._tag === "Dispatched") {
         assert.strictEqual(result.value, "deleted");
@@ -115,7 +117,8 @@ describe("dispatchWithTierGate", () => {
         Ref.update(executions, (count) => count + 1).pipe(Effect.as("this handler must never run"))
       ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
-      assert.strictEqual(yield* Ref.get(executions), 0);
+      const got2 = yield* Ref.get(executions);
+      assert.strictEqual(got2, 0);
       assert.strictEqual(result._tag, "Refused");
       if (result._tag === "Refused") {
         assert.isTrue(TierGateAuditRecord.is(result.audit));
@@ -137,7 +140,8 @@ describe("dispatchWithTierGate", () => {
         Ref.update(executions, (count) => count + 1).pipe(Effect.as("this handler must never run"))
       ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
-      assert.strictEqual(yield* Ref.get(executions), 0);
+      const got3 = yield* Ref.get(executions);
+      assert.strictEqual(got3, 0);
       assert.strictEqual(result._tag, "Refused");
       if (result._tag === "Refused") {
         assert.isTrue(TierGateAuditRecord.is(result.audit));
@@ -174,7 +178,8 @@ describe("recordOutcome settlement", () => {
       ).pipe(Effect.provideService(TierGate, gate));
 
       assert.strictEqual(result._tag, "Dispatched");
-      assert.deepStrictEqual(yield* Ref.get(recorded), [{ settlement: "completed", tool: "delete_document" }]);
+      const got4 = yield* Ref.get(recorded);
+      assert.deepStrictEqual(got4, [{ settlement: "completed", tool: "delete_document" }]);
     })
   );
 
@@ -188,7 +193,8 @@ describe("recordOutcome settlement", () => {
       ).pipe(Effect.provideService(TierGate, gate), Effect.flip);
 
       assert.strictEqual(failure, "boom");
-      assert.deepStrictEqual(yield* Ref.get(recorded), [{ settlement: "failed", tool: "delete_document" }]);
+      const got5 = yield* Ref.get(recorded);
+      assert.deepStrictEqual(got5, [{ settlement: "failed", tool: "delete_document" }]);
     })
   );
 
@@ -204,7 +210,8 @@ describe("recordOutcome settlement", () => {
       yield* Deferred.await(entered);
       yield* Fiber.interrupt(fiber);
 
-      assert.deepStrictEqual(yield* Ref.get(recorded), [{ settlement: "interrupted", tool: "delete_document" }]);
+      const got6 = yield* Ref.get(recorded);
+      assert.deepStrictEqual(got6, [{ settlement: "interrupted", tool: "delete_document" }]);
     })
   );
 
@@ -218,9 +225,11 @@ describe("recordOutcome settlement", () => {
         Ref.update(executions, (count) => count + 1).pipe(Effect.as("this handler must never run"))
       ).pipe(Effect.provideService(TierGate, gate));
 
-      assert.strictEqual(yield* Ref.get(executions), 0);
+      const got7 = yield* Ref.get(executions);
+      assert.strictEqual(got7, 0);
       assert.strictEqual(result._tag, "Refused");
-      assert.deepStrictEqual(yield* Ref.get(recorded), []);
+      const got8 = yield* Ref.get(recorded);
+      assert.deepStrictEqual(got8, []);
     })
   );
 

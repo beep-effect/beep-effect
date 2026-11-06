@@ -1,0 +1,4676 @@
+{
+  "schemaVersion": "citation-regex-input/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "pythonVersion": "3.11.15",
+  "unicodeHeaderSha256": "9183d40b4aec778c4f59d2091b4374722f635116a33ae6fc66c16e0b5fa700b5",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "producerSha256": "4bb21e8ffef4f9a9f4cf0811fac233982f1ad3dad35a68ccdbae622f6580584e",
+  "cases": [
+    {
+      "points": [],
+      "storage": {
+        "width": 1,
+        "nativeHex": ""
+      },
+      "pythonLength": 0,
+      "utf16Units": 0,
+      "prefix": [0],
+      "boundaries": [true],
+      "projectionAmbiguous": false,
+      "text": "",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": ""
+      },
+      "rawPythonLength": 0
+    },
+    {
+      "points": [65],
+      "storage": {
+        "width": 1,
+        "nativeHex": "41"
+      },
+      "pythonLength": 1,
+      "utf16Units": 1,
+      "prefix": [0, 1],
+      "boundaries": [true, true],
+      "projectionAmbiguous": false,
+      "text": "A",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "41"
+      },
+      "rawPythonLength": 1
+    },
+    {
+      "points": [233],
+      "storage": {
+        "width": 1,
+        "nativeHex": "e9"
+      },
+      "pythonLength": 1,
+      "utf16Units": 1,
+      "prefix": [0, 1],
+      "boundaries": [true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "e9"
+      },
+      "rawPythonLength": 1
+    },
+    {
+      "points": [256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001"
+      },
+      "pythonLength": 1,
+      "utf16Units": 1,
+      "prefix": [0, 1],
+      "boundaries": [true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001"
+      },
+      "rawPythonLength": 1
+    },
+    {
+      "points": [55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8"
+      },
+      "pythonLength": 1,
+      "utf16Units": 1,
+      "prefix": [0, 1],
+      "boundaries": [true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8"
+      },
+      "rawPythonLength": 1
+    },
+    {
+      "points": [57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf"
+      },
+      "pythonLength": 1,
+      "utf16Units": 1,
+      "prefix": [0, 1],
+      "boundaries": [true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf"
+      },
+      "rawPythonLength": 1
+    },
+    {
+      "points": [120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100"
+      },
+      "pythonLength": 1,
+      "utf16Units": 2,
+      "prefix": [0, 2],
+      "boundaries": [true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100"
+      },
+      "rawPythonLength": 1
+    },
+    {
+      "points": [65, 65],
+      "storage": {
+        "width": 1,
+        "nativeHex": "4141"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "AA",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "4141"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [65, 233],
+      "storage": {
+        "width": 1,
+        "nativeHex": "41e9"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u00e9",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "41e9"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [65, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "41000001"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "41000001"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [65, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410035d8"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "410035d8"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [65, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100cedf"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100cedf"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [65, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 1, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [233, 65],
+      "storage": {
+        "width": 1,
+        "nativeHex": "e941"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9A",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "e941"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [233, 233],
+      "storage": {
+        "width": 1,
+        "nativeHex": "e9e9"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u00e9",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "e9e9"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [233, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e9000001"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e9000001"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [233, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90035d8"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e90035d8"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [233, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900cedf"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900cedf"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [233, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 1, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [256, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "00014100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "00014100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [256, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001e900"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001e900"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [256, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "00010001"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "00010001"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [256, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000135d8"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000135d8"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [256, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001cedf"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001cedf"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [256, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 1, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d84100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d84100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8e900"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8e900"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d80001"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d80001"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d835d8"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d835d8"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8cedf"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, false, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100"
+      },
+      "rawPythonLength": 1
+    },
+    {
+      "points": [55349, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 1, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [57294, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf4100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfceA",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf4100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [57294, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfe900"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfe900"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [57294, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf0001"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf0001"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [57294, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf35d8"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf35d8"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [57294, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfcedf"
+      },
+      "pythonLength": 2,
+      "utf16Units": 2,
+      "prefix": [0, 1, 2],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfcedf"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [57294, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 1, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [120782, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 2, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [120782, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 2, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [120782, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 2, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [120782, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010035d80000"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 2, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010035d80000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [120782, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000"
+      },
+      "pythonLength": 2,
+      "utf16Units": 3,
+      "prefix": [0, 2, 3],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [120782, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100"
+      },
+      "pythonLength": 2,
+      "utf16Units": 4,
+      "prefix": [0, 2, 4],
+      "boundaries": [true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [65, 65, 65],
+      "storage": {
+        "width": 1,
+        "nativeHex": "414141"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "AAA",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "414141"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 65, 233],
+      "storage": {
+        "width": 1,
+        "nativeHex": "4141e9"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "AA\u00e9",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "4141e9"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 65, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410041000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "AA\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "410041000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 65, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100410035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "AA\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100410035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 65, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "41004100cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "AA\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "41004100cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 65, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "4100000041000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "AA\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "4100000041000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 233, 65],
+      "storage": {
+        "width": 1,
+        "nativeHex": "41e941"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u00e9A",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "41e941"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 233, 233],
+      "storage": {
+        "width": 1,
+        "nativeHex": "41e9e9"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u00e9\u00e9",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "41e9e9"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 233, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100e9000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u00e9\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100e9000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 233, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100e90035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u00e9\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100e90035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 233, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100e900cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u00e9\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100e900cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 233, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000e9000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u00e9\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000e9000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 256, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410000014100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u0100A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "410000014100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 256, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "41000001e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u0100\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "41000001e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 256, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410000010001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u0100\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "410000010001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 256, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100000135d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u0100\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100000135d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 256, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "41000001cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u0100\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "41000001cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 256, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "4100000000010000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\u0100\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "4100000000010000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 55349, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410035d84100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "410035d84100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 55349, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410035d8e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "410035d8e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 55349, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410035d80001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "410035d80001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 55349, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410035d835d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "410035d835d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 55349, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "410035d8cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, false, true],
+      "projectionAmbiguous": true,
+      "text": "A\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [65, 55349, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "4100000035d80000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "4100000035d80000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 57294, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100cedf4100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\udfceA",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100cedf4100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 57294, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100cedfe900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\udfce\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100cedfe900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 57294, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100cedf0001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\udfce\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100cedf0001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 57294, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100cedf35d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\udfce\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100cedf35d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 57294, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "4100cedfcedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\udfce\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "4100cedfcedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 57294, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000cedf0000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000cedf0000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 120782, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000ced7010041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000ced7010041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 120782, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 120782, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000ced7010000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000ced7010000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 120782, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000ced7010035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000ced7010035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 120782, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [65, 120782, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 1, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "A\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "41000000ced70100ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 65, 65],
+      "storage": {
+        "width": 1,
+        "nativeHex": "e94141"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9AA",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "e94141"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 65, 233],
+      "storage": {
+        "width": 1,
+        "nativeHex": "e941e9"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9A\u00e9",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "e941e9"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 65, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90041000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9A\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e90041000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 65, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900410035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9A\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900410035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 65, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e9004100cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9A\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e9004100cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 65, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e900000041000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9A\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e900000041000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 233, 65],
+      "storage": {
+        "width": 1,
+        "nativeHex": "e9e941"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u00e9A",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "e9e941"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 233, 233],
+      "storage": {
+        "width": 1,
+        "nativeHex": "e9e9e9"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u00e9\u00e9",
+      "rawStorage": {
+        "width": 1,
+        "nativeHex": "e9e9e9"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 233, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900e9000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u00e9\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900e9000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 233, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900e90035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u00e9\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900e90035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 233, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900e900cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u00e9\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900e900cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 233, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000e9000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u00e9\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000e9000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 256, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90000014100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u0100A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e90000014100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 256, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e9000001e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u0100\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e9000001e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 256, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90000010001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u0100\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e90000010001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 256, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900000135d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u0100\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900000135d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 256, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e9000001cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u0100\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e9000001cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 256, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e900000000010000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\u0100\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e900000000010000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 55349, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90035d84100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e90035d84100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 55349, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90035d8e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e90035d8e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 55349, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90035d80001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e90035d80001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 55349, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90035d835d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e90035d835d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 55349, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e90035d8cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, false, true],
+      "projectionAmbiguous": true,
+      "text": "\u00e9\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [233, 55349, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e900000035d80000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e900000035d80000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 57294, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900cedf4100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\udfceA",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900cedf4100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 57294, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900cedfe900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\udfce\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900cedfe900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 57294, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900cedf0001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\udfce\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900cedf0001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 57294, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900cedf35d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\udfce\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900cedf35d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 57294, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "e900cedfcedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\udfce\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "e900cedfcedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 57294, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000cedf0000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000cedf0000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 120782, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000ced7010041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000ced7010041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 120782, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 120782, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000ced7010000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000ced7010000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 120782, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000ced7010035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000ced7010035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 120782, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [233, 120782, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 1, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u00e9\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "e9000000ced70100ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 65, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000141004100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100AA",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000141004100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 65, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "00014100e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100A\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "00014100e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 65, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000141000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100A\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000141000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 65, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001410035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100A\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001410035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 65, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "00014100cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100A\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "00014100cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 65, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "0001000041000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100A\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "0001000041000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 233, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001e9004100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u00e9A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001e9004100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 233, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001e900e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u00e9\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001e900e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 233, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001e9000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u00e9\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001e9000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 233, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001e90035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u00e9\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001e90035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 233, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001e900cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u00e9\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001e900cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 233, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000e9000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u00e9\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000e9000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 256, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000100014100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u0100A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000100014100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 256, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "00010001e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u0100\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "00010001e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 256, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000100010001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u0100\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000100010001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 256, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001000135d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u0100\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001000135d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 256, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "00010001cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u0100\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "00010001cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 256, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "0001000000010000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\u0100\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "0001000000010000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 55349, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000135d84100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000135d84100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 55349, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000135d8e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000135d8e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 55349, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000135d80001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000135d80001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 55349, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000135d835d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "000135d835d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 55349, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "000135d8cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, false, true],
+      "projectionAmbiguous": true,
+      "text": "\u0100\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [256, 55349, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "0001000035d80000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "0001000035d80000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 57294, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001cedf4100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\udfceA",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001cedf4100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 57294, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001cedfe900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\udfce\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001cedfe900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 57294, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001cedf0001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\udfce\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001cedf0001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 57294, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001cedf35d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\udfce\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001cedf35d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 57294, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "0001cedfcedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\udfce\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "0001cedfcedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 57294, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000cedf0000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000cedf0000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 120782, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000ced7010041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000ced7010041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 120782, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 120782, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000ced7010000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000ced7010000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 120782, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000ced7010035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000ced7010035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 120782, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [256, 120782, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 1, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\u0100\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "00010000ced70100ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 65, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d841004100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835AA",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d841004100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 65, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d84100e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835A\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d84100e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 65, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d841000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835A\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d841000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 65, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8410035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835A\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8410035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 65, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d84100cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835A\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d84100cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 65, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d8000041000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835A\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d8000041000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 233, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8e9004100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u00e9A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8e9004100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 233, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8e900e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u00e9\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8e900e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 233, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8e9000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u00e9\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8e9000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 233, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8e90035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u00e9\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8e90035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 233, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8e900cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u00e9\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8e900cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 233, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000e9000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u00e9\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000e9000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 256, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d800014100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u0100A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d800014100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 256, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d80001e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u0100\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d80001e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 256, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d800010001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u0100\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d800010001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 256, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8000135d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u0100\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d8000135d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 256, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d80001cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u0100\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d80001cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 256, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d8000000010000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\u0100\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d8000000010000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 55349, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d835d84100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d835d84100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 55349, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d835d8e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d835d8e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 55349, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d835d80001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d835d80001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 55349, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d835d835d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "35d835d835d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 55349, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d835d8cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, false, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 55349, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d8000035d80000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d8000035d80000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 57294, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8cedf4100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, false, true, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 57294, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8cedfe900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, false, true, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 57294, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8cedf0001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, false, true, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 57294, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8cedf35d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, false, true, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010035d80000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 57294, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "35d8cedfcedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, false, true, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 57294, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000cedf0000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, false, true, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [55349, 120782, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000ced7010041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000ced7010041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 120782, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 120782, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000ced7010000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000ced7010000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 120782, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000ced7010035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000ced7010035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 120782, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [55349, 120782, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 1, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "35d80000ced70100ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 65, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf41004100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfceAA",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf41004100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 65, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf4100e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfceA\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf4100e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 65, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf41000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfceA\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf41000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 65, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf410035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfceA\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf410035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 65, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf4100cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfceA\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf4100cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 65, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf000041000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfceA\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf000041000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 233, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfe9004100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u00e9A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfe9004100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 233, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfe900e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u00e9\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfe900e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 233, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfe9000001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u00e9\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfe9000001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 233, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfe90035d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u00e9\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfe90035d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 233, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfe900cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u00e9\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfe900cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 233, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000e9000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u00e9\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000e9000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 256, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf00014100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u0100A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf00014100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 256, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf0001e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u0100\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf0001e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 256, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf00010001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u0100\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf00010001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 256, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf000135d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u0100\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf000135d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 256, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf0001cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u0100\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf0001cedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 256, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf000000010000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\u0100\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf000000010000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 55349, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf35d84100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835A",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf35d84100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 55349, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf35d8e900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf35d8e900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 55349, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf35d80001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf35d80001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 55349, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf35d835d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedf35d835d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 55349, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedf35d8cedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, false, true],
+      "projectionAmbiguous": true,
+      "text": "\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [57294, 55349, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf000035d80000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf000035d80000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 57294, 65],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfcedf4100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\udfceA",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfcedf4100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 57294, 233],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfcedfe900"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\udfce\u00e9",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfcedfe900"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 57294, 256],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfcedf0001"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\udfce\u0100",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfcedf0001"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 57294, 55349],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfcedf35d8"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\udfce\ud835",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfcedf35d8"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 57294, 57294],
+      "storage": {
+        "width": 2,
+        "nativeHex": "cedfcedfcedf"
+      },
+      "pythonLength": 3,
+      "utf16Units": 3,
+      "prefix": [0, 1, 2, 3],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\udfce\udfce",
+      "rawStorage": {
+        "width": 2,
+        "nativeHex": "cedfcedfcedf"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 57294, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000cedf0000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 2, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000cedf0000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 120782, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced7010041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced7010041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 120782, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 120782, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced7010000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced7010000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 120782, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced7010035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced7010035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 120782, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 1, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [57294, 120782, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 1, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\udfce\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "cedf0000ced70100ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 65, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced701004100000041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfceAA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced701004100000041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 65, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfceA\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 65, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced701004100000000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfceA\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced701004100000000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 65, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced701004100000035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfceA\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced701004100000035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 65, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfceA\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 65, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfceA\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010041000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 233, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100e900000041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u00e9A",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100e900000041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 233, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u00e9\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 233, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100e900000000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u00e9\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100e900000000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 233, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100e900000035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u00e9\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100e900000035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 233, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u00e9\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 233, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u00e9\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100e9000000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 256, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced701000001000041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u0100A",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced701000001000041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 256, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u0100\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 256, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced701000001000000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u0100\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced701000001000000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 256, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced701000001000035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u0100\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced701000001000035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 256, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u0100\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 256, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\u0100\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010000010000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 55349, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010035d8000041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835A",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010035d8000041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 55349, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010035d80000e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010035d80000e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 55349, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010035d8000000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010035d8000000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 55349, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010035d8000035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010035d8000035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 55349, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010035d80000cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, false, true],
+      "projectionAmbiguous": true,
+      "text": "\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100"
+      },
+      "rawPythonLength": 2
+    },
+    {
+      "points": [120782, 55349, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced7010035d80000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced7010035d80000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 57294, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf000041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf000041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 57294, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 57294, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf000000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf000000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 57294, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf000035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf000035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 57294, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 4,
+      "prefix": [0, 2, 3, 4],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 57294, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 3, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100cedf0000ced70100"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 120782, 65],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100ced7010041000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 4, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\udfceA",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced7010041000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 120782, 233],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100e9000000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 4, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\udfce\u00e9",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100e9000000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 120782, 256],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100ced7010000010000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 4, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\udfce\u0100",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced7010000010000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 120782, 55349],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100ced7010035d80000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 4, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\udfce\ud835",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced7010035d80000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 120782, 57294],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100cedf0000"
+      },
+      "pythonLength": 3,
+      "utf16Units": 5,
+      "prefix": [0, 2, 4, 5],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\udfce\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100cedf0000"
+      },
+      "rawPythonLength": 3
+    },
+    {
+      "points": [120782, 120782, 120782],
+      "storage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100ced70100"
+      },
+      "pythonLength": 3,
+      "utf16Units": 6,
+      "prefix": [0, 2, 4, 6],
+      "boundaries": [true, true, true, true],
+      "projectionAmbiguous": false,
+      "text": "\ud835\udfce\ud835\udfce\ud835\udfce",
+      "rawStorage": {
+        "width": 4,
+        "nativeHex": "ced70100ced70100ced70100"
+      },
+      "rawPythonLength": 3
+    }
+  ],
+  "projectionCases": 2395,
+  "scope": "Native observed storage and unverified projection boundaries only; no regex-worker, matching or verified-span proof."
+}

@@ -41,7 +41,8 @@ describe("makeDrainableWorker", () => {
       yield* Deferred.succeed(releaseFirst, undefined);
       yield* Deferred.await(secondStarted);
 
-      expect(yield* Deferred.isDone(drained)).toBe(false);
+      const isDone1 = yield* Deferred.isDone(drained);
+      expect(isDone1).toBe(false);
 
       yield* Deferred.succeed(releaseSecond, undefined);
       yield* Deferred.await(drained);

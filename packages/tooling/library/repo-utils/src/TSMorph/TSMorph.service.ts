@@ -735,10 +735,8 @@ const collectStatementOutlineEntries = Effect.fnUntraced(function* (
     return A.empty();
   }
 
-  return pipe(
-    yield* normalizeOutlineSymbol(sourceText, symbolFilePath, statement, O.none()),
-    O.match({ onNone: A.empty<ScopeSymbolEntry>, onSome: A.of })
-  );
+  const normalizeOutlineSymbol1 = yield* normalizeOutlineSymbol(sourceText, symbolFilePath, statement, O.none());
+  return pipe(normalizeOutlineSymbol1, O.match({ onNone: A.empty<ScopeSymbolEntry>, onSome: A.of }));
 });
 
 const collectOutlineEntries = Effect.fn(function* (
@@ -751,7 +749,12 @@ const collectOutlineEntries = Effect.fn(function* (
   const sourceText = sourceFile.getFullText();
 
   for (const statement of sourceFile.getStatements()) {
-    entries = A.appendAll(entries, yield* collectStatementOutlineEntries(sourceText, symbolFilePath, statement));
+    const collectStatementOutlineEntries2 = yield* collectStatementOutlineEntries(
+      sourceText,
+      symbolFilePath,
+      statement
+    );
+    entries = A.appendAll(entries, collectStatementOutlineEntries2);
   }
 
   return entries;

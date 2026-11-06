@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { repoRunOutputBound, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { DomainError } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -14,11 +15,10 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
+import type { CaptureSource } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { CaptureSource } from "../process/StepExec.ts";
 import type { RepoPlanStep } from "./RepoRun.models.ts";
 
 type RepoCommandOutput = {

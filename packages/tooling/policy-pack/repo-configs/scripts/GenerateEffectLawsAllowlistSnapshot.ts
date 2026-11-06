@@ -59,7 +59,10 @@ const program = Effect.gen(function* () {
   yield* fs.makeDirectory(outputDirectory, { recursive: true });
   const outputExists = yield* fs.exists(outputPath);
   const outputChanged = outputExists
-    ? Bool.not(Str.equivalence(yield* fs.readFileString(outputPath), snapshotModule))
+    ? yield* Effect.map(
+        Effect.map(fs.readFileString(outputPath), (value) => Str.equivalence(value, snapshotModule)),
+        Bool.not
+      )
     : true;
   yield* fs.writeFileString(outputPath, snapshotModule).pipe(Effect.when(Effect.succeed(outputChanged)), Effect.asVoid);
 

@@ -114,7 +114,9 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
       [Arbitrary.schema(GoalSlug)],
       Effect.fnUntraced(
         function* ([slug]) {
-          expect(yield* decodeGoalSlugEffect(yield* encodeGoalSlugEffect(slug))).toBe(slug);
+          const encodedGoalSlugEffect = yield* encodeGoalSlugEffect(slug);
+          const decodedGoalSlugEffect = yield* decodeGoalSlugEffect(encodedGoalSlugEffect);
+          expect(decodedGoalSlugEffect).toBe(slug);
         },
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       ),
@@ -123,19 +125,22 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
 
     it.effect("pins the minimal standard-delivery plan byte-for-byte", () =>
       Effect.gen(function* () {
-        yield* expectGolden("bootstrap-minimal", yield* compileMaterializationPlan(minimalInput, []));
+        const compileMaterializationPlan1 = yield* compileMaterializationPlan(minimalInput, []);
+        yield* expectGolden("bootstrap-minimal", compileMaterializationPlan1);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("pins the fully populated plan with capabilities and exploration provenance", () =>
       Effect.gen(function* () {
-        yield* expectGolden("bootstrap-full", yield* compileMaterializationPlan(fullInput, []));
+        const compileMaterializationPlan2 = yield* compileMaterializationPlan(fullInput, []);
+        yield* expectGolden("bootstrap-full", compileMaterializationPlan2);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("pins the report-first archetype plan", () =>
       Effect.gen(function* () {
-        yield* expectGolden("bootstrap-report-first", yield* compileMaterializationPlan(reportFirstInput, []));
+        const compileMaterializationPlan3 = yield* compileMaterializationPlan(reportFirstInput, []);
+        yield* expectGolden("bootstrap-report-first", compileMaterializationPlan3);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
@@ -229,7 +234,6 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           expect(unmodeledKeys).toStrictEqual([
             "agentLaunchers",
             "currentSourceOfTruth",
-            "researchReports",
             "stopConditions",
             "verificationCommands",
           ]);
@@ -306,13 +310,7 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
         const encoded: unknown = yield* encodeGoalManifest(decoded);
         expect(isJsonRecord(encoded)).toBe(true);
         const roundTripKeys = isJsonRecord(encoded) ? R.keys(encoded) : A.empty<string>();
-        for (const lost of [
-          "agentLaunchers",
-          "currentSourceOfTruth",
-          "researchReports",
-          "stopConditions",
-          "verificationCommands",
-        ]) {
+        for (const lost of ["agentLaunchers", "currentSourceOfTruth", "stopConditions", "verificationCommands"]) {
           expect(originalKeys).toContain(lost);
           expect(roundTripKeys).not.toContain(lost);
         }
@@ -470,16 +468,23 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           const fs = yield* FileSystem.FileSystem;
           yield* fs.makeDirectory("goals", { recursive: true });
 
-          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])), undefined);
-          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--write"])), undefined);
-          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])), undefined);
+          const exit4 = yield* Effect.exit(runGoalsCommand(["index", "--check"]));
+          assertExitSuccess(exit4, undefined);
+          const exit5 = yield* Effect.exit(runGoalsCommand(["index", "--write"]));
+          assertExitSuccess(exit5, undefined);
+          const exit6 = yield* Effect.exit(runGoalsCommand(["index", "--check"]));
+          assertExitSuccess(exit6, undefined);
 
           // A stale copy is git-ignored workstation state (left behind by any pull that lands a
           // manifest change) that no hosted lane carries: the check rewrites it instead of failing.
           yield* fs.writeFileString(PORTFOLIO_INDEX_PATH, "# stale local projection\n");
-          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])), undefined);
-          strictEqual(yield* fs.readFileString(PORTFOLIO_INDEX_PATH), yield* buildPortfolioIndexContent());
-          deepStrictEqual(A.filter(yield* TestConsole.logLines, P.isString), [
+          const exit7 = yield* Effect.exit(runGoalsCommand(["index", "--check"]));
+          assertExitSuccess(exit7, undefined);
+          const readFileString8 = yield* fs.readFileString(PORTFOLIO_INDEX_PATH);
+          const buildPortfolioIndexContent10 = yield* buildPortfolioIndexContent();
+          strictEqual(readFileString8, buildPortfolioIndexContent10);
+          const logLines9 = yield* TestConsole.logLines;
+          deepStrictEqual(A.filter(logLines9, P.isString), [
             "[goals:index] OK: projection generated successfully.",
             "[goals:index] wrote goals/INDEX.md.",
             "[goals:index] OK: projection generated successfully and the local copy matches.",

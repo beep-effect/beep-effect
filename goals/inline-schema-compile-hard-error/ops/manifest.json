@@ -37,11 +37,23 @@
     "goals/schema-utils-selective-codec-statics/research/closing-census.json"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/closeout-evidence.md",
-    "research/package-verification.json",
+    "research/implementation-owner-inventory.json",
+    "research/manual-followup-migration.json",
+    "research/mechanical-migration.json",
+    "research/opening-census.json",
+    "research/opening-census.md",
+    "research/ordering-repair.json",
     "research/package-verification-supplemental.json",
-    "research/implementation-owner-inventory.json"
+    "research/package-verification.json",
+    "research/residual-census.json",
+    "research/scripts/census.ts",
+    "research/scripts/package-verification.test.ts",
+    "research/scripts/verify-packages-admitted.ts",
+    "research/scripts/verify-packages.test.ts",
+    "research/scripts/verify-packages.ts"
   ],
   "agentLaunchers": [
     {

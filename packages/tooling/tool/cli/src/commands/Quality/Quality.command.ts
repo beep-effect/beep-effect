@@ -9,6 +9,11 @@ import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import { unknownRecordKeys, unknownRecordProperty } from "@beep/repo-cli-kit/cli/UnknownProbe";
+import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "@beep/repo-cli-kit/process/index";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
@@ -35,11 +40,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { XMLParser } from "fast-xml-parser";
-import { configStringOption } from "../../internal/cli/EnvConfig.ts";
-import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
-import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
-import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
 import { checkScriptTestTypecheckCoverage } from "../../internal/quality/TestTypecheckCoverage.ts";
 import {
   AdmissionConfig,
@@ -903,7 +903,9 @@ const runGithubCheckLaneGroup = Effect.fn("QualityScriptCommands.runGithubCheckL
   QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment | Digest.Digest
 > {
-  const width = concurrency ?? githubCheckTierConcurrency("pre-push", yield* qualityConcurrencyPlan);
+  const width =
+    concurrency ??
+    (yield* Effect.map(qualityConcurrencyPlan, (value) => githubCheckTierConcurrency("pre-push", value)));
   yield* runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, width);
 });
 
@@ -922,7 +924,8 @@ const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   // Pre-push lanes run `prePushLanes` wide inside each run of consecutive
   // same-wave lanes; exclusive lanes (Turbo graphs, coverage, integration,
   // codegen) still run alone.
-  const width = githubCheckTierConcurrency("pre-push", yield* qualityConcurrencyPlan);
+  const qualityConcurrencyPlan1 = yield* qualityConcurrencyPlan;
+  const width = githubCheckTierConcurrency("pre-push", qualityConcurrencyPlan1);
   yield* runQualityTaskGithubCheckLaneWaves(
     label,
     githubCheckOrderedLaneWaves(waveOrder.order(lanes)),
@@ -1208,15 +1211,18 @@ const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function*
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment | Digest.Digest
 > {
+  const githubCheckChangesetStatusLanes2 = yield* githubCheckChangesetStatusLanes(repoRoot);
   const changesetStatusLanes = A.map(
-    yield* githubCheckChangesetStatusLanes(repoRoot),
+    githubCheckChangesetStatusLanes2,
     githubCheckLanePlan.githubCheckLaneInTier("cheap-gates")
   );
+  const argument = [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)];
+  const qualityConcurrencyPlan2 = yield* qualityConcurrencyPlan;
   yield* runGithubCheckLaneGroup(
     "github-checks:cheap-gates",
-    [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)],
+    argument,
     "collect-all",
-    githubCheckTierConcurrency("cheap-gates", yield* qualityConcurrencyPlan)
+    githubCheckTierConcurrency("cheap-gates", qualityConcurrencyPlan2)
   );
 });
 
@@ -1516,42 +1522,50 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
   }
 
   yield* Console.log("[github-checks] sast: semgrep");
-  yield* runFixedStep(repoRoot, "sast:semgrep", "docker", [
-    "run",
-    "--rm",
-    "-e",
-    "SEMGREP_SEND_METRICS=off",
-    "-v",
-    `${repoRoot}:/src`,
-    "-w",
-    "/src",
-    "semgrep/semgrep",
-    "semgrep",
-    "scan",
-    // Fail the lane on findings. Without this, `semgrep scan` exits 0 even on
-    // blocking findings, so every rule below is advisory-only.
-    "--error",
-    "--config",
-    "p/typescript",
-    "--config",
-    "p/javascript",
-    "--config",
-    "p/security-audit",
-    "--config",
-    "p/secrets",
-    // Vendored, offline first-party rules — keep CI and the local replay
-    // verdict-identical without registry auth. See .semgrep/first-party.yml.
-    "--config",
-    "/src/.semgrep/first-party.yml",
-    "--disable-version-check",
-    "--timeout",
-    "20",
-    // Explicit targets bypass .semgrepignore. Traverse the root so Semgrep
-    // applies its ignore rules, then restrict that traversal to literal, root-anchored
-    // changed paths rather than interpreting filenames as gitignore patterns.
-    ...A.flatMap(semgrepFiles, (file) => ["--include", `/${Str.replace(/[\\[\]*?!#]/g, "\\$&")(file)}`]),
-    ".",
-  ]);
+  // Semgrep combines include patterns into a core-process argument. A broad
+  // codemod can overflow Linux's per-argument limit even before ARG_MAX.
+  // Keep each invocation bounded while preserving root discovery and ignores.
+  yield* Effect.forEach(
+    A.chunksOf(semgrepFiles, 128),
+    (files, index) =>
+      runFixedStep(repoRoot, `sast:semgrep:${index + 1}`, "docker", [
+        "run",
+        "--rm",
+        "-e",
+        "SEMGREP_SEND_METRICS=off",
+        "-v",
+        `${repoRoot}:/src`,
+        "-w",
+        "/src",
+        "semgrep/semgrep",
+        "semgrep",
+        "scan",
+        // Fail the lane on findings. Without this, `semgrep scan` exits 0 even on
+        // blocking findings, so every rule below is advisory-only.
+        "--error",
+        "--config",
+        "p/typescript",
+        "--config",
+        "p/javascript",
+        "--config",
+        "p/security-audit",
+        "--config",
+        "p/secrets",
+        // Vendored, offline first-party rules — keep CI and the local replay
+        // verdict-identical without registry auth. See .semgrep/first-party.yml.
+        "--config",
+        "/src/.semgrep/first-party.yml",
+        "--disable-version-check",
+        "--timeout",
+        "20",
+        // Explicit targets bypass .semgrepignore. Traverse the root so Semgrep
+        // applies its ignore rules, then restrict that traversal to literal, root-anchored
+        // changed paths rather than interpreting filenames as gitignore patterns.
+        ...A.flatMap(files, (file) => ["--include", `/${Str.replace(/[\\[\]*?!#]/g, "\\$&")(file)}`]),
+        ".",
+      ]),
+    { concurrency: 1, discard: true }
+  );
 });
 
 const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (
@@ -2068,6 +2082,7 @@ const extractEffectTsgoRuleCellCode = (cell: unknown): O.Option<string> =>
 
 const extractEffectTsgoRuleNameFromRow = flow(
   decodeEffectTsgoRuleRowOption,
+  O.filter((row) => !pipe(A.get(row.td, 1), O.filter(S.is(S.String)), O.exists(Str.startsWith("Deprecated:")))),
   O.flatMap((decodedRow) => A.head(decodedRow.td)),
   O.flatMap(extractEffectTsgoRuleCellCode)
 );
@@ -2679,15 +2694,12 @@ const collectGitVisiblePaths = Effect.fn("QualityScriptCommands.collectGitVisibl
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const visiblePaths = HashSet.fromIterable(
-    gitPathListFromNulOutput(
-      yield* runGitRawOutput(
-        repoRoot,
-        ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-        jsdocGitErrorAdapter
-      )
-    )
+  const resultGitRawOutput = yield* runGitRawOutput(
+    repoRoot,
+    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+    jsdocGitErrorAdapter
   );
+  const visiblePaths = HashSet.fromIterable(gitPathListFromNulOutput(resultGitRawOutput));
   // A listing that misses the base config came from the wrong work tree (a git-less copy nested in
   // another checkout), and filtering by it would pass every scan vacuously.
   if (!HashSet.has(visiblePaths, "tsconfig.base.json")) {
@@ -2713,8 +2725,11 @@ const collectWorkspaceTsconfigProfileDiagnostics = Effect.fn(
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const pipe3 = yield* fs
+    .readDirectory(repoRoot)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${repoRoot}.`));
   const rootTsconfigFiles = pipe(
-    yield* fs.readDirectory(repoRoot).pipe(QualityScriptCommandError.mapError(`Failed to read ${repoRoot}.`)),
+    pipe3,
     A.filter(isTsconfigFileName),
     A.map((name) => path.join(repoRoot, name))
   );

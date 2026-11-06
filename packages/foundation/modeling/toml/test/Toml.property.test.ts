@@ -15,7 +15,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(value, decoded));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -52,9 +53,14 @@ describe("facade schemas and canonical value laws", () => {
         const text = yield* Toml.stringify(value, options);
         const parsed = yield* Toml.parse(text);
         assert.deepStrictEqual(parsed, value);
-        assert.strictEqual(yield* Toml.stringify(parsed, options), text);
-        assert.deepStrictEqual(yield* Toml.parse(yield* Toml.stringify(parsed)), parsed);
-        assert.deepStrictEqual(yield* bound.decode(yield* bound.encode(value)), value);
+        const stringify2 = yield* Toml.stringify(parsed, options);
+        assert.strictEqual(stringify2, text);
+        const stringify5 = yield* Toml.stringify(parsed);
+        const parsed3 = yield* Toml.parse(stringify5);
+        assert.deepStrictEqual(parsed3, parsed);
+        const encoded6 = yield* bound.encode(value);
+        const decoded4 = yield* bound.decode(encoded6);
+        assert.deepStrictEqual(decoded4, value);
       }),
     runs
   );

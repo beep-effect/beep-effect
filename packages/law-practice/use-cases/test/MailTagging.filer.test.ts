@@ -79,21 +79,21 @@ describe("MailTagging attachment filer", () => {
           yield* file({ mode: "apply", message: usptoMail }),
           yield* file({ mode: "apply", message: clientMail }),
         ];
-        const entries = completedFilings(yield* Ref.get(state.filingRecords));
+        const got = yield* Ref.get(state.filingRecords);
+        const entries = completedFilings(got);
         const uploads = yield* Ref.get(state.uploads);
 
         expect(A.map(reports, (report) => report.attachmentsFiled)).toStrictEqual([1, 0]);
         expect(A.map(reports, (report) => report.attachmentsDeduped)).toStrictEqual([0, 1]);
         expect(A.map(reports, (report) => report.wrote)).toStrictEqual([true, false]);
-        expect(yield* state.writesOf("upload:")).toStrictEqual(["upload:2026-07-01 office-action.pdf"]);
+        const writesOf1 = yield* state.writesOf("upload:");
+        expect(writesOf1).toStrictEqual(["upload:2026-07-01 office-action.pdf"]);
         expect(A.map(uploads, (upload) => upload.folderId)).toStrictEqual(["folder-acme-uspto-incoming"]);
         expect(A.map(entries, (entry) => [entry.contentSha256, entry.destination, entry.byteLength])).toStrictEqual([
           [pdfSha256, "uspto-incoming", 4],
         ]);
-        expect(yield* Ref.get(state.folderRequests)).toStrictEqual([
-          "acme.10001:uspto-incoming",
-          "acme.10001:from-client",
-        ]);
+        const got2 = yield* Ref.get(state.folderRequests);
+        expect(got2).toStrictEqual(["acme.10001:uspto-incoming", "acme.10001:from-client"]);
       })
     );
   });
@@ -106,12 +106,10 @@ describe("MailTagging attachment filer", () => {
         const report = yield* file({ mode: "apply", message: clientMail });
 
         expect(report.attachmentsFiled).toBe(1);
-        expect(A.map(yield* Ref.get(state.uploads), (upload) => upload.folderId)).toStrictEqual([
-          "folder-acme-from-client",
-        ]);
-        expect(
-          A.map(completedFilings(yield* Ref.get(state.filingRecords)), (entry) => entry.destination)
-        ).toStrictEqual(["from-client"]);
+        const got3 = yield* Ref.get(state.uploads);
+        expect(A.map(got3, (upload) => upload.folderId)).toStrictEqual(["folder-acme-from-client"]);
+        const got4 = yield* Ref.get(state.filingRecords);
+        expect(A.map(completedFilings(got4), (entry) => entry.destination)).toStrictEqual(["from-client"]);
       })
     );
   });
@@ -125,8 +123,10 @@ describe("MailTagging attachment filer", () => {
 
         expect(report.attachmentsSkipped["sender-not-routable"]).toBe(1);
         expect(report.attachmentsFiled).toBe(0);
-        expect(yield* Ref.get(state.downloads)).toBe(0);
-        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
+        const got5 = yield* Ref.get(state.downloads);
+        expect(got5).toBe(0);
+        const got6 = yield* Ref.get(state.writes);
+        expect(got6).toStrictEqual([]);
       })
     );
   });
@@ -142,8 +142,10 @@ describe("MailTagging attachment filer", () => {
 
         expect([applied.attachmentsDeduped, applied.attachmentsFiled, applied.wrote]).toStrictEqual([1, 0, false]);
         expect([preview.attachmentsDeduped, preview.attachmentsFiled]).toStrictEqual([1, 0]);
-        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
-        expect(yield* Ref.get(state.filingRecords)).toStrictEqual([]);
+        const got7 = yield* Ref.get(state.writes);
+        expect(got7).toStrictEqual([]);
+        const got8 = yield* Ref.get(state.filingRecords);
+        expect(got8).toStrictEqual([]);
       })
     );
   });
@@ -157,7 +159,8 @@ describe("MailTagging attachment filer", () => {
         const report = yield* file({ mode: "apply", message: usptoMail });
 
         expect([report.attachmentsDeduped, report.attachmentsFiled]).toStrictEqual([0, 1]);
-        expect(yield* state.writesOf("upload:")).toStrictEqual(["upload:2026-07-01 office-action.pdf"]);
+        const writesOf9 = yield* state.writesOf("upload:");
+        expect(writesOf9).toStrictEqual(["upload:2026-07-01 office-action.pdf"]);
       })
     );
   });
@@ -175,8 +178,10 @@ describe("MailTagging attachment filer", () => {
         expect(A.map(reports, (report) => report.attachmentsFiled)).toStrictEqual([1, 0]);
         expect(A.map(reports, (report) => report.attachmentsDeduped)).toStrictEqual([0, 1]);
         expect(A.map(reports, (report) => report.wrote)).toStrictEqual([false, false]);
-        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
-        expect(yield* Ref.get(state.filingRecords)).toStrictEqual([]);
+        const got10 = yield* Ref.get(state.writes);
+        expect(got10).toStrictEqual([]);
+        const got11 = yield* Ref.get(state.filingRecords);
+        expect(got11).toStrictEqual([]);
       })
     );
   });
@@ -239,7 +244,8 @@ describe("MailTagging attachment filer", () => {
         const report = yield* file({ mode: "apply", message: usptoMail });
 
         expect(report.attachmentsFiled).toBe(3);
-        expect(A.map(yield* Ref.get(state.uploads), (upload) => upload.fileName)).toStrictEqual([
+        const got12 = yield* Ref.get(state.uploads);
+        expect(A.map(got12, (upload) => upload.fileName)).toStrictEqual([
           "2026-07-01 README",
           "2026-07-01 README (dbc1b4c9)",
           "2026-07-01 attachment",
@@ -263,7 +269,8 @@ describe("MailTagging attachment filer", () => {
         const exit = yield* Effect.exit(file({ mode: "apply", message: usptoMail }));
 
         assertTrue(Exit.isFailure(exit) && Exit.hasDies(exit));
-        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
+        const got13 = yield* Ref.get(state.writes);
+        expect(got13).toStrictEqual([]);
       })
     );
   });
@@ -288,7 +295,8 @@ describe("MailTagging attachment filer", () => {
           "sha256",
           "sha256 digest failed",
         ]);
-        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
+        const got14 = yield* Ref.get(state.writes);
+        expect(got14).toStrictEqual([]);
       })
     );
   });
@@ -334,8 +342,10 @@ describe("MailTagging attachment filer", () => {
           "name-held": 0,
         });
         expect(report.attachmentsFiled).toBe(1);
-        expect(yield* Ref.get(state.downloads)).toBe(1);
-        expect(yield* state.writesOf("upload:")).toStrictEqual(["upload:2026-07-01 notice.pdf"]);
+        const got15 = yield* Ref.get(state.downloads);
+        expect(got15).toBe(1);
+        const writesOf16 = yield* state.writesOf("upload:");
+        expect(writesOf16).toStrictEqual(["upload:2026-07-01 notice.pdf"]);
       })
     );
 
@@ -349,7 +359,8 @@ describe("MailTagging attachment filer", () => {
         expect(report.attachmentsSkipped["no-folder"]).toBe(5);
         expect(report.attachmentsFiled).toBe(0);
         expect(report.wrote).toBe(false);
-        expect(yield* Ref.get(state.writes)).toStrictEqual(writesBefore);
+        const got17 = yield* Ref.get(state.writes);
+        expect(got17).toStrictEqual(writesBefore);
       })
     );
 
@@ -404,20 +415,22 @@ const disownedThenFiled = {
 
 const abandonReasons = Effect.fn("MailTaggingFilerTest.abandonReasons")(function* () {
   const state = yield* World;
-  return A.map(
-    A.filter(yield* Ref.get(state.filingRecords), FilingLedgerRecord.guards.FilingAbandoned),
-    (line) => line.reason
-  );
+  const got18 = yield* Ref.get(state.filingRecords);
+  return A.map(A.filter(got18, FilingLedgerRecord.guards.FilingAbandoned), (line) => line.reason);
 });
 
 const ledgerShape = Effect.fn("MailTaggingFilerTest.ledgerShape")(function* () {
   const state = yield* World;
   const records = yield* Ref.get(state.filingRecords);
+  const argument = A.map(records, (record) => record._tag);
+  const argument1 = A.map(pendingFilingIntents(records), (intent) => intent.fileName);
+  const argument2 = A.map(completedFilings(records), (entry) => [entry.fileName, entry.fileId, entry.reconciled]);
+  const got1 = yield* Ref.get(state.uploads);
   return {
-    lines: A.map(records, (record) => record._tag),
-    pending: A.map(pendingFilingIntents(records), (intent) => intent.fileName),
-    completed: A.map(completedFilings(records), (entry) => [entry.fileName, entry.fileId, entry.reconciled]),
-    uploads: A.map(yield* Ref.get(state.uploads), (upload) => `${upload.folderId}/${upload.fileName}`),
+    lines: argument,
+    pending: argument1,
+    completed: argument2,
+    uploads: A.map(got1, (upload) => `${upload.folderId}/${upload.fileName}`),
     uploadCalls: yield* Ref.get(state.uploadCalls),
   };
 });
@@ -432,7 +445,8 @@ describe("MailTagging two-phase filing", () => {
         const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
 
         assertInstanceOf(failure, MailTaggingStateError);
-        expect(yield* ledgerShape()).toStrictEqual({
+        const ledgerShape19 = yield* ledgerShape();
+        expect(ledgerShape19).toStrictEqual({
           lines: ["FilingIntended"],
           pending: ["2026-07-01 office-action.pdf"],
           completed: [],
@@ -444,8 +458,10 @@ describe("MailTagging two-phase filing", () => {
         const preview = yield* file({ mode: "dry-run", message: usptoMail });
 
         expect([preview.attachmentsReconciled, preview.attachmentsFiled, preview.wrote]).toStrictEqual([1, 0, false]);
-        expect(yield* Ref.get(state.writes)).toStrictEqual(writesBefore);
-        expect(yield* Ref.get(state.uploadCalls)).toBe(1);
+        const got20 = yield* Ref.get(state.writes);
+        expect(got20).toStrictEqual(writesBefore);
+        const got21 = yield* Ref.get(state.uploadCalls);
+        expect(got21).toBe(1);
 
         const rerun = yield* file({ mode: "apply", message: clientMail });
 
@@ -455,7 +471,8 @@ describe("MailTagging two-phase filing", () => {
           rerun.attachmentsDeduped,
           rerun.wrote,
         ]).toStrictEqual([1, 0, 0, true]);
-        expect(yield* ledgerShape()).toStrictEqual({
+        const ledgerShape22 = yield* ledgerShape();
+        expect(ledgerShape22).toStrictEqual({
           lines: ["FilingIntended", "FilingCompleted"],
           pending: [],
           completed: [["2026-07-01 office-action.pdf", "file-1", true]],
@@ -468,7 +485,8 @@ describe("MailTagging two-phase filing", () => {
         expect([third.attachmentsDeduped, third.attachmentsReconciled, third.attachmentsFiled]).toStrictEqual([
           1, 0, 0,
         ]);
-        expect(yield* Ref.get(state.uploadCalls)).toBe(2);
+        const got23 = yield* Ref.get(state.uploadCalls);
+        expect(got23).toBe(2);
       })
     );
   });
@@ -516,7 +534,8 @@ describe("MailTagging two-phase filing", () => {
         const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
 
         assertInstanceOf(failure, MailTaggingPortError);
-        expect(yield* ledgerShape()).toStrictEqual({
+        const ledgerShape24 = yield* ledgerShape();
+        expect(ledgerShape24).toStrictEqual({
           lines: ["FilingIntended"],
           pending: ["2026-07-01 office-action.pdf"],
           completed: [],
@@ -528,7 +547,8 @@ describe("MailTagging two-phase filing", () => {
         const rerun = yield* file({ mode: "apply", message: usptoMail });
 
         expect([other.attachmentsFiled, rerun.attachmentsFiled, rerun.attachmentsReconciled]).toStrictEqual([1, 1, 0]);
-        expect(yield* ledgerShape()).toStrictEqual({
+        const ledgerShape25 = yield* ledgerShape();
+        expect(ledgerShape25).toStrictEqual({
           lines: ["FilingIntended", "FilingIntended", "FilingCompleted", "FilingCompleted"],
           pending: [],
           completed: [
@@ -554,7 +574,8 @@ describe("MailTagging two-phase filing", () => {
         const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
 
         assertInstanceOf(failure, MailTaggingStateError);
-        expect(yield* ledgerShape()).toStrictEqual({
+        const ledgerShape26 = yield* ledgerShape();
+        expect(ledgerShape26).toStrictEqual({
           lines: [],
           pending: [],
           completed: [],
@@ -574,7 +595,8 @@ describe("MailTagging two-phase filing", () => {
         const report = yield* file({ mode: "apply", message: usptoMail });
 
         expect([report.attachmentsFiled, report.attachmentsReconciled, report.wrote]).toStrictEqual([1, 0, true]);
-        expect(yield* ledgerShape()).toStrictEqual({
+        const ledgerShape27 = yield* ledgerShape();
+        expect(ledgerShape27).toStrictEqual({
           lines: ["FilingIntended", "FilingAbandoned", "FilingIntended", "FilingCompleted"],
           pending: [],
           completed: [["2026-07-01 office-action (315d429b).pdf", "file-1", false]],
@@ -585,12 +607,11 @@ describe("MailTagging two-phase filing", () => {
         const other = yield* file({ mode: "apply", message: clientMail });
 
         expect(other.attachmentsFiled).toBe(1);
-        expect(A.map(yield* Ref.get(state.uploads), (upload) => `${upload.folderId}/${upload.fileName}`)).toStrictEqual(
-          [
-            "folder-acme-uspto-incoming/2026-07-01 office-action (315d429b).pdf",
-            "folder-acme-from-client/2026-07-01 office-action.pdf",
-          ]
-        );
+        const got28 = yield* Ref.get(state.uploads);
+        expect(A.map(got28, (upload) => `${upload.folderId}/${upload.fileName}`)).toStrictEqual([
+          "folder-acme-uspto-incoming/2026-07-01 office-action (315d429b).pdf",
+          "folder-acme-from-client/2026-07-01 office-action.pdf",
+        ]);
       })
     );
   });
@@ -603,7 +624,8 @@ describe("MailTagging two-phase filing", () => {
         yield* state.holdName({ key: plainKey, bytes: [0] });
         yield* state.holdName({ key: shortHashKey, bytes: [0] });
         const held = yield* file({ mode: "apply", message: usptoMail });
-        const abandoned = A.filter(yield* Ref.get(state.filingRecords), FilingLedgerRecord.guards.FilingAbandoned);
+        const got29 = yield* Ref.get(state.filingRecords);
+        const abandoned = A.filter(got29, FilingLedgerRecord.guards.FilingAbandoned);
 
         expect(held.attachmentsSkipped["name-held"]).toBe(1);
         expect(held.attachmentsFiled).toBe(0);
@@ -611,7 +633,8 @@ describe("MailTagging two-phase filing", () => {
           ["2026-07-01 office-action.pdf", "name-taken"],
           ["2026-07-01 office-action (315d429b).pdf", "name-taken"],
         ]);
-        expect(yield* ledgerShape()).toStrictEqual({
+        const ledgerShape30 = yield* ledgerShape();
+        expect(ledgerShape30).toStrictEqual({
           lines: ["FilingIntended", "FilingAbandoned", "FilingIntended", "FilingAbandoned"],
           pending: [],
           completed: [],
@@ -645,7 +668,8 @@ describe("MailTagging two-phase filing", () => {
 
         expect([rerun.attachmentsReconciled, rerun.attachmentsFiled]).toStrictEqual([1, 0]);
         expect([third.attachmentsDeduped, third.attachmentsReconciled]).toStrictEqual([1, 0]);
-        expect(yield* ledgerShape()).toStrictEqual({
+        const ledgerShape31 = yield* ledgerShape();
+        expect(ledgerShape31).toStrictEqual({
           lines: ["FilingIntended", "FilingCompleted"],
           pending: [],
           completed: [["2026-07-01 office-action.pdf", "file-1", true]],
@@ -694,8 +718,10 @@ describe("MailTagging two-phase filing", () => {
           const third = yield* file({ mode: "apply", message: clientMail });
 
           expect([rerun.attachmentsFiled, rerun.attachmentsReconciled]).toStrictEqual([1, 0]);
-          expect(yield* ledgerShape()).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
-          expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+          const ledgerShape32 = yield* ledgerShape();
+          expect(ledgerShape32).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
+          const abandonReasons33 = yield* abandonReasons();
+          expect(abandonReasons33).toStrictEqual(["holder-mismatch"]);
           expect([third.attachmentsDeduped, third.attachmentsFiled]).toStrictEqual([1, 0]);
         })
       );
@@ -718,8 +744,10 @@ describe("MailTagging two-phase filing", () => {
         const third = yield* file({ mode: "apply", message: usptoMail });
 
         expect([rerun.attachmentsFiled, rerun.attachmentsReconciled]).toStrictEqual([1, 0]);
-        expect(yield* ledgerShape()).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
-        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+        const ledgerShape34 = yield* ledgerShape();
+        expect(ledgerShape34).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
+        const abandonReasons35 = yield* abandonReasons();
+        expect(abandonReasons35).toStrictEqual(["holder-mismatch"]);
         expect(third.attachmentsDeduped).toBe(1);
       })
     );
@@ -736,7 +764,8 @@ describe("MailTagging two-phase filing", () => {
         const rerun = yield* file({ mode: "apply", message: usptoMail });
 
         expect([rerun.attachmentsReconciled, rerun.attachmentsFiled]).toStrictEqual([0, 1]);
-        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+        const abandonReasons36 = yield* abandonReasons();
+        expect(abandonReasons36).toStrictEqual(["holder-mismatch"]);
         expect((yield* ledgerShape()).completed).toStrictEqual([
           ["2026-07-01 office-action (315d429b).pdf", "file-2", false],
         ]);
@@ -756,8 +785,10 @@ describe("MailTagging two-phase filing", () => {
         const rerun = yield* file({ mode: "apply", message: usptoMail });
 
         expect(rerun.attachmentsFiled).toBe(1);
-        expect(yield* ledgerShape()).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
-        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+        const ledgerShape37 = yield* ledgerShape();
+        expect(ledgerShape37).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
+        const abandonReasons38 = yield* abandonReasons();
+        expect(abandonReasons38).toStrictEqual(["holder-mismatch"]);
       })
     );
   });
@@ -773,7 +804,8 @@ describe("MailTagging two-phase filing", () => {
         const rerun = yield* file({ mode: "apply", message: usptoMail });
 
         expect([rerun.attachmentsFiled, rerun.attachmentsReconciled]).toStrictEqual([1, 0]);
-        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+        const abandonReasons39 = yield* abandonReasons();
+        expect(abandonReasons39).toStrictEqual(["holder-mismatch"]);
         expect((yield* ledgerShape()).completed).toStrictEqual([
           ["2026-07-01 office-action (315d429b).pdf", "file-2", false],
         ]);
@@ -799,7 +831,8 @@ describe("MailTagging two-phase filing", () => {
         const held = yield* file({ mode: "apply", message: clientMail });
 
         expect(held.attachmentsSkipped["name-held"]).toBe(1);
-        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+        const abandonReasons40 = yield* abandonReasons();
+        expect(abandonReasons40).toStrictEqual(["holder-mismatch"]);
         expect((yield* ledgerShape()).pending).toStrictEqual([]);
         expect((yield* ledgerShape()).completed).toHaveLength(1);
       })

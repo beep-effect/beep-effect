@@ -20,6 +20,8 @@ import {
   OutlookItemRef,
   OutlookItemRefFromInput,
 } from "@beep/m365";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
 import { EmailString } from "@beep/schema";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
@@ -39,8 +41,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { printLines } from "../../internal/cli/Printer.ts";
-import { isWithinRoot } from "../../internal/PathContainment.ts";
 import { DrawingIntakeError, DrawingsCommandError } from "./Drawings.errors.ts";
 import {
   IntakeAttachment,
@@ -385,10 +385,8 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
 
   // Every existing file in the intake directory, by content hash (first name wins), plus every taken name.
   const scanOut = Effect.fnUntraced(function* (outDir: string) {
-    const names = A.sort(
-      yield* fs.readDirectory(outDir).pipe(Effect.mapError(io(`Could not list "${outDir}".`))),
-      Order.String
-    );
+    const pipe1 = yield* fs.readDirectory(outDir).pipe(Effect.mapError(io(`Could not list "${outDir}".`)));
+    const names = A.sort(pipe1, Order.String);
     const byHash = MutableHashMap.empty<Sha256Hex, string>();
     yield* Effect.forEach(
       A.filter(names, (name) => !RECORD_NAME_PATTERN.test(name)),
@@ -398,7 +396,8 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
         if (info.type !== "File") {
           return;
         }
-        const sha256 = yield* hash(yield* fs.readFile(file).pipe(Effect.mapError(io(`Could not read "${file}".`))));
+        const pipe2 = yield* fs.readFile(file).pipe(Effect.mapError(io(`Could not read "${file}".`)));
+        const sha256 = yield* hash(pipe2);
         if (!MutableHashMap.has(byHash, sha256)) {
           MutableHashMap.set(byHash, sha256, name);
         }
@@ -480,7 +479,9 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
       real !== realRoot && !isWithinRoot(path, realRoot, real)
         ? Effect.fail(refused(`"${outDir}" resolves outside the corpus root "${root}".`))
         : Effect.void;
-    yield* outsideRoot(yield* realPathOf(yield* nearestExisting(outDir)));
+    const nearestExisting5 = yield* nearestExisting(outDir);
+    const realPathOf3 = yield* realPathOf(nearestExisting5);
+    yield* outsideRoot(realPathOf3);
     yield* fs.makeDirectory(outDir, { recursive: true }).pipe(Effect.mapError(io(`Could not create "${outDir}".`)));
     const realOut = yield* realPathOf(outDir);
     yield* outsideRoot(realOut);
@@ -498,13 +499,14 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
       });
 
     const attachments = yield* Effect.forEach(listed.value, take);
+    const now4 = yield* DateTime.now;
     const record = IntakeRecord.make({
       schemaVersion: "drawing-intake/v1",
       mailbox: request.mailbox,
       message: facts,
       outDir: realOut,
       attachments,
-      pulledAt: DateTime.formatIso(yield* DateTime.now),
+      pulledAt: DateTime.formatIso(now4),
     });
     const recordPath = path.join(realOut, recordNameFor(out.taken, 1));
     const json = yield* encodeRecord(record).pipe(Effect.mapError(io("Could not encode the intake record.")));

@@ -49,19 +49,22 @@ describe("PartyKey v1 canonical bytes", () => {
   it.effect("pins the email basis bytes and an independently calculated digest", () =>
     Effect.gen(function* () {
       const basis = { kind: "identifier", scheme: "email", authority: "", value: "dana@example.test" } as const;
-      expect(yield* canonicalJson(basis)).toBe(PINNED_EMAIL_BYTES);
+      const canonicalJson1 = yield* canonicalJson(basis);
+      expect(canonicalJson1).toBe(PINNED_EMAIL_BYTES);
       const bytes = yield* canonicalBytes(basis);
       expect(bytes.length).toBe(81);
       expect(bytes[0]).toBe(0x7b);
       expect(bytes[bytes.length - 1]).toBe(0x7d);
-      expect(yield* keyOf(emailAddress("dana@example.test"))).toBe(`pk:v1:${PINNED_EMAIL_DIGEST}`);
+      const keyOf2 = yield* keyOf(emailAddress("dana@example.test"));
+      expect(keyOf2).toBe(`pk:v1:${PINNED_EMAIL_DIGEST}`);
     })
   );
 
   it.effect("ignores input field order", () =>
     Effect.gen(function* () {
       const reordered = { value: "dana@example.test", scheme: "email", authority: "", kind: "identifier" } as const;
-      expect(yield* canonicalJson(reordered)).toBe(PINNED_EMAIL_BYTES);
+      const canonicalJson3 = yield* canonicalJson(reordered);
+      expect(canonicalJson3).toBe(PINNED_EMAIL_BYTES);
     })
   );
 
@@ -80,10 +83,12 @@ describe("PartyKey v1 canonical bytes", () => {
 
   it.effect("rejects unpaired surrogates", () =>
     Effect.gen(function* () {
-      expect(yield* issueReason(canonicalJson({ kind: "source-record", authority: "src", value: "a\uD800b" }))).toBe(
-        "invalid-basis"
+      const issueReason4 = yield* issueReason(
+        canonicalJson({ kind: "source-record", authority: "src", value: "a\uD800b" })
       );
-      expect(yield* issueReason(normalizeEmail("a\uDC00@example.test"))).toBe("unpaired-surrogate");
+      expect(issueReason4).toBe("invalid-basis");
+      const issueReason5 = yield* issueReason(normalizeEmail("a\uDC00@example.test"));
+      expect(issueReason5).toBe("unpaired-surrogate");
     })
   );
 
@@ -102,12 +107,22 @@ describe("email adapter equality", () => {
       const card = yield* emailAddress(" dana@example.test ");
       expect(header.raw).toBe("Dana Example <Dana@EXAMPLE.test>");
       expect(header.normalized).toBe(card.normalized);
-      expect(yield* identifierBasis(header)).toEqual(yield* identifierBasis(card));
-      expect(yield* canonicalBytes(yield* identifierBasis(header))).toEqual(
-        yield* canonicalBytes(yield* identifierBasis(card))
-      );
-      expect(yield* partyKeyOf(header)).toBe(yield* partyKeyOf(card));
-      expect(yield* partyKeyOf(header)).toBe(`pk:v1:${PINNED_EMAIL_DIGEST}`);
+      const identifierBasis6 = yield* identifierBasis(header);
+      const expectation = expect(identifierBasis6);
+      const identifierBasis1 = yield* identifierBasis(card);
+      expectation.toEqual(identifierBasis1);
+      const identifierBasis73 = yield* identifierBasis(header);
+      const canonicalBytes7 = yield* canonicalBytes(identifierBasis73);
+      const expectation1 = expect(canonicalBytes7);
+      const identifierBasis14 = yield* identifierBasis(card);
+      const canonicalBytes2 = yield* canonicalBytes(identifierBasis14);
+      expectation1.toEqual(canonicalBytes2);
+      const partyKeyOf8 = yield* partyKeyOf(header);
+      const expectation2 = expect(partyKeyOf8);
+      const partyKeyOf3 = yield* partyKeyOf(card);
+      expectation2.toBe(partyKeyOf3);
+      const partyKeyOf9 = yield* partyKeyOf(header);
+      expect(partyKeyOf9).toBe(`pk:v1:${PINNED_EMAIL_DIGEST}`);
     })
   );
 
@@ -117,32 +132,45 @@ describe("email adapter equality", () => {
       const card = yield* emailAddress("dana@example.test");
       expect(header.normalized).toBe("dana@example.test");
       expect(header.normalized).toBe(card.normalized);
-      expect(yield* canonicalJson(yield* identifierBasis(header))).toBe(
-        yield* canonicalJson(yield* identifierBasis(card))
-      );
-      expect(yield* partyKeyOf(header)).toBe(yield* partyKeyOf(card));
+      const identifierBasis74 = yield* identifierBasis(header);
+      const canonicalJson10 = yield* canonicalJson(identifierBasis74);
+      const expectation3 = expect(canonicalJson10);
+      const identifierBasis15 = yield* identifierBasis(card);
+      const canonicalJson4 = yield* canonicalJson(identifierBasis15);
+      expectation3.toBe(canonicalJson4);
+      const partyKeyOf11 = yield* partyKeyOf(header);
+      const expectation4 = expect(partyKeyOf11);
+      const partyKeyOf5 = yield* partyKeyOf(card);
+      expectation4.toBe(partyKeyOf5);
     })
   );
 
   it.effect("treats composed and decomposed local parts as equal", () =>
     Effect.gen(function* () {
-      expect(yield* normalizeEmail("josé@example.test")).toBe("josé@example.test");
-      expect(yield* keyOf(emailAddress("josé@example.test"))).toBe(yield* keyOf(emailAddress("JosÉ@example.test")));
+      const normalizeEmail12 = yield* normalizeEmail("josé@example.test");
+      expect(normalizeEmail12).toBe("josé@example.test");
+      const keyOf13 = yield* keyOf(emailAddress("josé@example.test"));
+      const expectation5 = expect(keyOf13);
+      const keyOf6 = yield* keyOf(emailAddress("JosÉ@example.test"));
+      expectation5.toBe(keyOf6);
     })
   );
 
   it.effect("converts Unicode domains to A-labels and equates them with the A-label spelling", () =>
     Effect.gen(function* () {
-      expect(yield* normalizeEmail("ana@Bücher.example")).toBe("ana@xn--bcher-kva.example");
-      expect(yield* keyOf(emailAddress("ana@bücher.example"))).toBe(
-        yield* keyOf(emailAddress("ana@XN--BCHER-KVA.example"))
-      );
+      const normalizeEmail14 = yield* normalizeEmail("ana@Bücher.example");
+      expect(normalizeEmail14).toBe("ana@xn--bcher-kva.example");
+      const keyOf15 = yield* keyOf(emailAddress("ana@bücher.example"));
+      const expectation6 = expect(keyOf15);
+      const keyOf7 = yield* keyOf(emailAddress("ana@XN--BCHER-KVA.example"));
+      expectation6.toBe(keyOf7);
     })
   );
 
   it.effect("keeps dots and plus tags, so distinct tags stay distinct", () =>
     Effect.gen(function* () {
-      expect(yield* normalizeEmail("D.Ana+Work@example.test")).toBe("d.ana+work@example.test");
+      const normalizeEmail16 = yield* normalizeEmail("D.Ana+Work@example.test");
+      expect(normalizeEmail16).toBe("d.ana+work@example.test");
       const work = yield* keyOf(emailAddress("dana+work@example.test"));
       const home = yield* keyOf(emailAddress("dana+home@example.test"));
       const bare = yield* keyOf(emailAddress("dana@example.test"));
@@ -155,20 +183,30 @@ describe("email adapter equality", () => {
       const a = yield* emailAddress("Dana Example <dana@example.test>");
       const b = yield* emailAddress("Someone Else <DANA@example.test>");
       expect(a.raw).not.toBe(b.raw);
-      expect(yield* partyKeyOf(a)).toBe(yield* partyKeyOf(b));
+      const partyKeyOf17 = yield* partyKeyOf(a);
+      const expectation7 = expect(partyKeyOf17);
+      const partyKeyOf10 = yield* partyKeyOf(b);
+      expectation7.toBe(partyKeyOf10);
     })
   );
 
   it.effect("rejects invalid mailboxes and domains as data-quality issues", () =>
     Effect.gen(function* () {
-      expect(yield* issueReason(normalizeEmail("not-an-address"))).toBe("unparseable-mailbox");
-      expect(yield* issueReason(normalizeEmail("da na@example.test"))).toBe("unparseable-mailbox");
-      expect(yield* issueReason(normalizeEmail("Dana <>"))).toBe("unparseable-mailbox");
-      expect(yield* issueReason(normalizeEmail("   "))).toBe("empty-value");
-      expect(yield* issueReason(normalizeEmail("dana@-bad-.test"))).toBe("invalid-domain");
-      expect(yield* issueReason(normalizeEmail("dana@exa_mple.test"))).toBe("invalid-domain");
+      const issueReason18 = yield* issueReason(normalizeEmail("not-an-address"));
+      expect(issueReason18).toBe("unparseable-mailbox");
+      const issueReason19 = yield* issueReason(normalizeEmail("da na@example.test"));
+      expect(issueReason19).toBe("unparseable-mailbox");
+      const issueReason20 = yield* issueReason(normalizeEmail("Dana <>"));
+      expect(issueReason20).toBe("unparseable-mailbox");
+      const issueReason21 = yield* issueReason(normalizeEmail("   "));
+      expect(issueReason21).toBe("empty-value");
+      const issueReason22 = yield* issueReason(normalizeEmail("dana@-bad-.test"));
+      expect(issueReason22).toBe("invalid-domain");
+      const issueReason23 = yield* issueReason(normalizeEmail("dana@exa_mple.test"));
+      expect(issueReason23).toBe("invalid-domain");
       // U+2488 maps to "1." without STD3 rules; STD3 processing must reject it.
-      expect(yield* issueReason(normalizeEmail("dana@a⒈test"))).toBe("invalid-domain");
+      const issueReason24 = yield* issueReason(normalizeEmail("dana@a⒈test"));
+      expect(issueReason24).toBe("invalid-domain");
     })
   );
 });
@@ -179,7 +217,10 @@ describe("other identifier schemes", () => {
       const dn = "/o=ExampleOrg/ou=Exchange Administrative Group/cn=Recipients/cn=dana";
       const upper = yield* exchangeDn(Str.toUpperCase(dn));
       expect(upper.normalized).toBe(Str.toUpperCase(dn));
-      expect(yield* partyKeyOf(upper)).toBe(yield* keyOf(exchangeDn(` ${dn} `)));
+      const partyKeyOf25 = yield* partyKeyOf(upper);
+      const expectation8 = expect(partyKeyOf25);
+      const keyOf11 = yield* keyOf(exchangeDn(` ${dn} `));
+      expectation8.toBe(keyOf11);
     })
   );
 
@@ -201,24 +242,26 @@ describe("other identifier schemes", () => {
       const native = yield* keyOf(
         nativeAccountId(NativeAccountIdInput.make({ service: "urn:example:directory", value: "AbC-1" }))
       );
-      expect(
-        yield* keyOf(
-          nativeAccountId(NativeAccountIdInput.make({ service: " urn:example:directory ", value: "AbC-1 " }))
-        )
-      ).toBe(native);
-      expect(
-        yield* keyOf(nativeAccountId(NativeAccountIdInput.make({ service: "urn:example:directory", value: "abc-1" })))
-      ).not.toBe(native);
-      expect(
-        yield* keyOf(nativeAccountId(NativeAccountIdInput.make({ service: "urn:example:other", value: "AbC-1" })))
-      ).not.toBe(native);
+      const keyOf26 = yield* keyOf(
+        nativeAccountId(NativeAccountIdInput.make({ service: " urn:example:directory ", value: "AbC-1 " }))
+      );
+      expect(keyOf26).toBe(native);
+      const keyOf27 = yield* keyOf(
+        nativeAccountId(NativeAccountIdInput.make({ service: "urn:example:directory", value: "abc-1" }))
+      );
+      expect(keyOf27).not.toBe(native);
+      const keyOf28 = yield* keyOf(
+        nativeAccountId(NativeAccountIdInput.make({ service: "urn:example:other", value: "AbC-1" }))
+      );
+      expect(keyOf28).not.toBe(native);
       const external = yield* keyOf(
         externalId(ExternalIdInput.make({ scheme: "urn:example:bar-number", value: "AbC-1" }))
       );
       expect(external).not.toBe(native);
-      expect(
-        yield* keyOf(externalId(ExternalIdInput.make({ scheme: "urn:example:other-number", value: "AbC-1" })))
-      ).not.toBe(external);
+      const keyOf29 = yield* keyOf(
+        externalId(ExternalIdInput.make({ scheme: "urn:example:other-number", value: "AbC-1" }))
+      );
+      expect(keyOf29).not.toBe(external);
     })
   );
 
@@ -227,27 +270,33 @@ describe("other identifier schemes", () => {
       const national = yield* phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.some("US") }));
       const international = yield* phoneNumber(PhoneNumberInput.make({ raw: "+1 201-555-0123", country: O.none() }));
       expect(national.e164).toBe("+12015550123");
-      expect(yield* partyKeyOf(national)).toBe(yield* partyKeyOf(international));
+      const partyKeyOf30 = yield* partyKeyOf(national);
+      const expectation9 = expect(partyKeyOf30);
+      const partyKeyOf12 = yield* partyKeyOf(international);
+      expectation9.toBe(partyKeyOf12);
     })
   );
 
   it.effect("rejects missing authority, ambiguous and invalid phones", () =>
     Effect.gen(function* () {
-      expect(yield* issueReason(username(UsernameInput.make({ service: "  ", handle: "dana" })))).toBe(
-        "missing-authority"
+      const issueReason31 = yield* issueReason(username(UsernameInput.make({ service: "  ", handle: "dana" })));
+      expect(issueReason31).toBe("missing-authority");
+      const issueReason32 = yield* issueReason(
+        nativeAccountId(NativeAccountIdInput.make({ service: "", value: "AbC-1" }))
       );
-      expect(yield* issueReason(nativeAccountId(NativeAccountIdInput.make({ service: "", value: "AbC-1" })))).toBe(
-        "missing-authority"
+      expect(issueReason32).toBe("missing-authority");
+      const issueReason33 = yield* issueReason(
+        externalId(ExternalIdInput.make({ scheme: "urn:example:bar-number", value: " " }))
       );
-      expect(
-        yield* issueReason(externalId(ExternalIdInput.make({ scheme: "urn:example:bar-number", value: " " })))
-      ).toBe("empty-value");
-      expect(yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.none() })))).toBe(
-        "ambiguous-phone"
+      expect(issueReason33).toBe("empty-value");
+      const issueReason34 = yield* issueReason(
+        phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.none() }))
       );
-      expect(yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: "12", country: O.some("US") })))).toBe(
-        "invalid-phone"
+      expect(issueReason34).toBe("ambiguous-phone");
+      const issueReason35 = yield* issueReason(
+        phoneNumber(PhoneNumberInput.make({ raw: "12", country: O.some("US") }))
       );
+      expect(issueReason35).toBe("invalid-phone");
     })
   );
 });
@@ -258,17 +307,18 @@ describe("source-record fallback and replay", () => {
       const key = yield* sourceRecordPartyKey(
         SourceRecordInput.make({ namespace: "urn:example:contacts", recordId: "Card-17" })
       );
-      expect(
-        yield* sourceRecordPartyKey(
-          SourceRecordInput.make({ namespace: " urn:example:contacts", recordId: "Card-17 " })
-        )
-      ).toBe(key);
-      expect(
-        yield* sourceRecordPartyKey(SourceRecordInput.make({ namespace: "urn:example:contacts", recordId: "card-17" }))
-      ).not.toBe(key);
-      expect(
-        yield* sourceRecordPartyKey(SourceRecordInput.make({ namespace: "urn:example:other", recordId: "Card-17" }))
-      ).not.toBe(key);
+      const sourceRecordPartyKey36 = yield* sourceRecordPartyKey(
+        SourceRecordInput.make({ namespace: " urn:example:contacts", recordId: "Card-17 " })
+      );
+      expect(sourceRecordPartyKey36).toBe(key);
+      const sourceRecordPartyKey37 = yield* sourceRecordPartyKey(
+        SourceRecordInput.make({ namespace: "urn:example:contacts", recordId: "card-17" })
+      );
+      expect(sourceRecordPartyKey37).not.toBe(key);
+      const sourceRecordPartyKey38 = yield* sourceRecordPartyKey(
+        SourceRecordInput.make({ namespace: "urn:example:other", recordId: "Card-17" })
+      );
+      expect(sourceRecordPartyKey38).not.toBe(key);
       const asIdentifier = yield* keyOf(
         nativeAccountId(NativeAccountIdInput.make({ service: "urn:example:contacts", value: "Card-17" }))
       );
@@ -278,14 +328,14 @@ describe("source-record fallback and replay", () => {
 
   it.effect("rejects a missing namespace or record id instead of falling back to a display name", () =>
     Effect.gen(function* () {
-      expect(
-        yield* issueReason(sourceRecordPartyKey(SourceRecordInput.make({ namespace: "", recordId: "Card-17" })))
-      ).toBe("missing-source-record-identity");
-      expect(
-        yield* issueReason(
-          sourceRecordPartyKey(SourceRecordInput.make({ namespace: "urn:example:contacts", recordId: "  " }))
-        )
-      ).toBe("missing-source-record-identity");
+      const issueReason39 = yield* issueReason(
+        sourceRecordPartyKey(SourceRecordInput.make({ namespace: "", recordId: "Card-17" }))
+      );
+      expect(issueReason39).toBe("missing-source-record-identity");
+      const issueReason40 = yield* issueReason(
+        sourceRecordPartyKey(SourceRecordInput.make({ namespace: "urn:example:contacts", recordId: "  " }))
+      );
+      expect(issueReason40).toBe("missing-source-record-identity");
     })
   );
 
@@ -299,7 +349,8 @@ describe("source-record fallback and replay", () => {
       const forward = yield* Effect.all(A.map(inputs, keyOf));
       const backward = yield* Effect.all(A.map(A.reverse(inputs), keyOf));
       expect(A.reverse(backward)).toEqual(forward);
-      expect(yield* Effect.all(A.map(inputs, keyOf))).toEqual(forward);
+      const all41 = yield* Effect.all(A.map(inputs, keyOf));
+      expect(all41).toEqual(forward);
     })
   );
 });
@@ -318,7 +369,8 @@ describe("normalization boundaries cannot be bypassed", () => {
         "@example.test",
         "dana@",
       ]) {
-        expect(yield* issueReason(normalizeEmail(raw)), raw).toBe("unparseable-mailbox");
+        const issueReason42 = yield* issueReason(normalizeEmail(raw));
+        expect(issueReason42, raw).toBe("unparseable-mailbox");
       }
     })
   );
@@ -327,15 +379,24 @@ describe("normalization boundaries cannot be bypassed", () => {
     Effect.gen(function* () {
       const decode = S.decodeUnknownEffect(Identifier, { onExcessProperty: "error" });
       const rejects = (input: unknown) => Effect.as(Effect.flip(decode(input)), true);
-      expect(yield* rejects({ _tag: "EmailAddress", normalized: "Dana@EXAMPLE.test", raw: "x" })).toBe(true);
-      expect(yield* rejects({ _tag: "EmailAddress", normalized: "dana@b\u00fccher.example", raw: "x" })).toBe(true);
-      expect(yield* rejects({ _tag: "EmailAddress", normalized: "a@@example.test", raw: "x" })).toBe(true);
-      expect(yield* rejects({ _tag: "PhoneNumber", e164: "2015550123", raw: "x" })).toBe(true);
-      expect(yield* rejects({ _tag: "ExchangeDn", normalized: "/o=lower", raw: "x" })).toBe(true);
-      expect(yield* rejects({ _tag: "Username", service: " svc ", handle: "dana" })).toBe(true);
-      expect(yield* rejects({ _tag: "Username", service: "", handle: "dana" })).toBe(true);
-      expect(yield* rejects({ _tag: "Username", service: "svc", handle: "Dana" })).toBe(true);
-      expect(yield* rejects({ _tag: "NativeAccountId", service: "svc", value: " AbC-1" })).toBe(true);
+      const rejects43 = yield* rejects({ _tag: "EmailAddress", normalized: "Dana@EXAMPLE.test", raw: "x" });
+      expect(rejects43).toBe(true);
+      const rejects44 = yield* rejects({ _tag: "EmailAddress", normalized: "dana@b\u00fccher.example", raw: "x" });
+      expect(rejects44).toBe(true);
+      const rejects45 = yield* rejects({ _tag: "EmailAddress", normalized: "a@@example.test", raw: "x" });
+      expect(rejects45).toBe(true);
+      const rejects46 = yield* rejects({ _tag: "PhoneNumber", e164: "2015550123", raw: "x" });
+      expect(rejects46).toBe(true);
+      const rejects47 = yield* rejects({ _tag: "ExchangeDn", normalized: "/o=lower", raw: "x" });
+      expect(rejects47).toBe(true);
+      const rejects48 = yield* rejects({ _tag: "Username", service: " svc ", handle: "dana" });
+      expect(rejects48).toBe(true);
+      const rejects49 = yield* rejects({ _tag: "Username", service: "", handle: "dana" });
+      expect(rejects49).toBe(true);
+      const rejects50 = yield* rejects({ _tag: "Username", service: "svc", handle: "Dana" });
+      expect(rejects50).toBe(true);
+      const rejects51 = yield* rejects({ _tag: "NativeAccountId", service: "svc", value: " AbC-1" });
+      expect(rejects51).toBe(true);
       const valid = yield* decode({ _tag: "EmailAddress", normalized: "dana@example.test", raw: "x" });
       expect(S.is(EmailAddress)(valid)).toBe(true);
     })
@@ -344,19 +405,30 @@ describe("normalization boundaries cannot be bypassed", () => {
   it.effect("rejects basis objects with missing, extra, non-string or mismatched fields", () =>
     Effect.gen(function* () {
       const base = { kind: "identifier", scheme: "email", authority: "", value: "dana@example.test" };
-      expect(
-        yield* issueReason(canonicalJson({ kind: "identifier", scheme: "email", value: "dana@example.test" }))
-      ).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson({ ...base, extra: "x" }))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson({ ...base, value: 7 }))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson({ ...base, scheme: "fax" }))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson({ ...base, authority: "urn:example:x" }))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson({ ...base, scheme: "user" }))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson({ ...base, value: " dana@example.test" }))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson({ kind: "source-record", authority: "", value: "Card-17" }))).toBe(
-        "invalid-basis"
+      const issueReason52 = yield* issueReason(
+        canonicalJson({ kind: "identifier", scheme: "email", value: "dana@example.test" })
       );
-      expect(S.is(IdentifierBasis)(yield* identifierBasis(yield* emailAddress("dana@example.test")))).toBe(true);
+      expect(issueReason52).toBe("invalid-basis");
+      const issueReason53 = yield* issueReason(canonicalJson({ ...base, extra: "x" }));
+      expect(issueReason53).toBe("invalid-basis");
+      const issueReason54 = yield* issueReason(canonicalJson({ ...base, value: 7 }));
+      expect(issueReason54).toBe("invalid-basis");
+      const issueReason55 = yield* issueReason(canonicalJson({ ...base, scheme: "fax" }));
+      expect(issueReason55).toBe("invalid-basis");
+      const issueReason56 = yield* issueReason(canonicalJson({ ...base, authority: "urn:example:x" }));
+      expect(issueReason56).toBe("invalid-basis");
+      const issueReason57 = yield* issueReason(canonicalJson({ ...base, scheme: "user" }));
+      expect(issueReason57).toBe("invalid-basis");
+      const issueReason58 = yield* issueReason(canonicalJson({ ...base, value: " dana@example.test" }));
+      expect(issueReason58).toBe("invalid-basis");
+      const issueReason59 = yield* issueReason(
+        canonicalJson({ kind: "source-record", authority: "", value: "Card-17" })
+      );
+      expect(issueReason59).toBe("invalid-basis");
+      const argument = S.is(IdentifierBasis);
+      const emailAddress16 = yield* emailAddress("dana@example.test");
+      const identifierBasis13 = yield* identifierBasis(emailAddress16);
+      expect(argument(identifierBasis13)).toBe(true);
     })
   );
 });
@@ -370,24 +442,29 @@ describe("review findings (PR 2588)", () => {
         authority,
         value,
       });
-      expect(yield* issueReason(canonicalJson(basis("email", "", "Dana@EXAMPLE.test")))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson(basis("email", "", "dana@b\u00fccher.example")))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson(basis("tel", "", "(201) 555-0123")))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson(basis("tel", "", "12015550123")))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson(basis("x500", "", "/o=ExampleOrg/cn=dana")))).toBe("invalid-basis");
-      expect(yield* issueReason(canonicalJson(basis("user", "https://chat.example.test", "Dana")))).toBe(
-        "invalid-basis"
-      );
-      expect(yield* issueReason(canonicalBytes(basis("email", "", "Dana@EXAMPLE.test")))).toBe("invalid-basis");
+      const issueReason60 = yield* issueReason(canonicalJson(basis("email", "", "Dana@EXAMPLE.test")));
+      expect(issueReason60).toBe("invalid-basis");
+      const issueReason61 = yield* issueReason(canonicalJson(basis("email", "", "dana@b\u00fccher.example")));
+      expect(issueReason61).toBe("invalid-basis");
+      const issueReason62 = yield* issueReason(canonicalJson(basis("tel", "", "(201) 555-0123")));
+      expect(issueReason62).toBe("invalid-basis");
+      const issueReason63 = yield* issueReason(canonicalJson(basis("tel", "", "12015550123")));
+      expect(issueReason63).toBe("invalid-basis");
+      const issueReason64 = yield* issueReason(canonicalJson(basis("x500", "", "/o=ExampleOrg/cn=dana")));
+      expect(issueReason64).toBe("invalid-basis");
+      const issueReason65 = yield* issueReason(canonicalJson(basis("user", "https://chat.example.test", "Dana")));
+      expect(issueReason65).toBe("invalid-basis");
+      const issueReason66 = yield* issueReason(canonicalBytes(basis("email", "", "Dana@EXAMPLE.test")));
+      expect(issueReason66).toBe("invalid-basis");
       // The graduated spellings of the same identifiers are accepted, and the pinned bytes are unchanged.
-      expect(yield* canonicalJson(basis("email", "", "dana@example.test"))).toBe(PINNED_EMAIL_BYTES);
-      expect(yield* canonicalJson(basis("tel", "", "+12015550123"))).toBe(
-        '{"authority":"","kind":"identifier","scheme":"tel","value":"+12015550123"}'
-      );
-      expect(yield* canonicalJson(basis("x500", "", "/O=EXAMPLEORG/CN=DANA"))).toContain(
-        '"value":"/O=EXAMPLEORG/CN=DANA"'
-      );
-      expect(yield* canonicalJson(basis("user", "https://chat.example.test", "dana"))).toContain('"value":"dana"');
+      const canonicalJson67 = yield* canonicalJson(basis("email", "", "dana@example.test"));
+      expect(canonicalJson67).toBe(PINNED_EMAIL_BYTES);
+      const canonicalJson68 = yield* canonicalJson(basis("tel", "", "+12015550123"));
+      expect(canonicalJson68).toBe('{"authority":"","kind":"identifier","scheme":"tel","value":"+12015550123"}');
+      const canonicalJson69 = yield* canonicalJson(basis("x500", "", "/O=EXAMPLEORG/CN=DANA"));
+      expect(canonicalJson69).toContain('"value":"/O=EXAMPLEORG/CN=DANA"');
+      const canonicalJson70 = yield* canonicalJson(basis("user", "https://chat.example.test", "dana"));
+      expect(canonicalJson70).toContain('"value":"dana"');
     })
   );
 
@@ -398,9 +475,8 @@ describe("review findings (PR 2588)", () => {
       expect(S.is(E164Phone)(stored)).toBe(true);
       const decoded = yield* S.decodeEffect(PhoneNumber)({ _tag: "PhoneNumber", e164: stored, raw: stored });
       expect(decoded.e164).toBe(stored);
-      expect(yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: stored, country: O.none() })))).toBe(
-        "invalid-phone"
-      );
+      const issueReason71 = yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: stored, country: O.none() })));
+      expect(issueReason71).toBe("invalid-phone");
       expect(S.is(E164Phone)("+1 201 555 0123")).toBe(false);
       expect(S.is(E164Phone)("2015550123")).toBe(false);
     })
@@ -408,9 +484,10 @@ describe("review findings (PR 2588)", () => {
 
   it.effect("reports unsupported country context separately from missing context", () =>
     Effect.gen(function* () {
-      expect(
-        yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.some("AQ") })))
-      ).toBe("unsupported-country");
+      const issueReason72 = yield* issueReason(
+        phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.some("AQ") }))
+      );
+      expect(issueReason72).toBe("unsupported-country");
       const unsupported = yield* Effect.flip(
         normalizePhone(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.some("AQ") }))
       );

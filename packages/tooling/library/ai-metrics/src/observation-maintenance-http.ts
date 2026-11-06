@@ -3,6 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
 import * as SecureRandom from "effect/crypto/SecureRandom";
@@ -12,6 +13,7 @@ import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import { DeliveryEventState } from "./delivery-ledger.ts";
 import { EvidenceRetirement, EvidenceWindow } from "./evidence-window.ts";
 import { observationHttpBodyFailure, readObservationHttpText } from "./internal/observation-http-body.ts";
 import { ObservationBackupPolicy, ObservationBackupReceipt } from "./observation-backup.ts";
@@ -38,6 +40,7 @@ const $I = $RepoAiMetricsId.create("observation-maintenance-http");
  */
 export const ObservationMaintenanceCommand = S.TaggedUnion({
   Window: {},
+  EventState: { eventId: Sha256Hex },
   Pages: { afterSequence: S.Natural },
   Reclaim: { receiptId: Sha256Hex },
   Expire: { receiptId: Sha256Hex },
@@ -186,6 +189,8 @@ export const makeObservationMaintenanceHttp = Effect.fn("AiMetrics.makeObservati
           return refused(409);
         return yield* ObservationMaintenanceCommand.match(input.command, {
           Window: () => worker.window.pipe(encodeResponse(EvidenceWindow)),
+          EventState: ({ eventId }) =>
+            worker.eventState(eventId).pipe(encodeResponse(S.OptionFromNullOr(DeliveryEventState))),
           Pages: ({ afterSequence }) =>
             worker.pages(afterSequence).pipe(encodeResponse(S.Array(TranscriptAcceptance).check(S.isMaxLength(32)))),
           Reclaim: ({ receiptId }) =>

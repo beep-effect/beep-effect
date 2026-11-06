@@ -17,6 +17,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { InkCoverageRequest, PageTextRequest, PdfPageRef, PdfTools } from "@beep/pdf-tools";
+import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
 import { Sha256Hex } from "@beep/schema";
 import { RenderManifest, sha256Hex } from "@beep/technical-drawing";
 import { A, O } from "@beep/utils";
@@ -30,7 +31,6 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { isWithinRoot } from "../../internal/PathContainment.ts";
 import { DrawingsCommandError } from "./Drawings.errors.ts";
 import {
   annotationNotes,
@@ -345,7 +345,7 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
     ) {
       const file = path.join(roundDir, name);
       const text = yield* readChecked({ file, recorded, draftAllowed: false });
-      return O.isSome(text) ? O.some(yield* decodeJson(schema, file, what)(text.value)) : O.none<A>();
+      return O.isSome(text) ? yield* Effect.asSome(decodeJson(schema, file, what)(text.value)) : O.none<A>();
     });
     if (checkDispositions) {
       yield* readChecked({
@@ -559,7 +559,7 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
     const next = ReviewRound.make({
       ...round,
       status: "planned",
-      dispositionsSha256: O.some(yield* sha256(bytes)),
+      dispositionsSha256: yield* Effect.asSome(sha256(bytes)),
       inventorySha256: O.some(inventorySha256),
     });
     yield* writeJson(ReviewRound, path.join(roundDir, "round.json"), next, root);
@@ -585,15 +585,17 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
     if (yield* fs.exists(target).pipe(Effect.orElseSucceed(() => false))) {
       return yield* refuse(`"${target}" already exists; pass --out to record another delivery.`);
     }
+    const argument = Sha256Hex.make(set.manifest.pdfSha256);
+    const now1 = yield* DateTime.now;
     const record = DeliveryRecord.make({
       schemaVersion: "drawing-delivery/v1",
-      sheetSetSha256: Sha256Hex.make(set.manifest.pdfSha256),
+      sheetSetSha256: argument,
       pdfSha256: set.sheetSetSha256,
       draftId: draft.draftId,
       sentMessageId: request.sentMessageId,
       internetMessageId: request.internetMessageId,
       attachments: draft.attachments,
-      deliveredAt: DateTime.formatIso(yield* DateTime.now),
+      deliveredAt: DateTime.formatIso(now1),
     });
     yield* writeJson(DeliveryRecord, target, record, dir);
     return DeliveryWritten.make({ path: target, record });

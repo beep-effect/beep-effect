@@ -25,9 +25,13 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import { CallToolResult } from "effect/ai/McpSchema";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { SourceAuthRegistration } from "./SourceAuth.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $McpKitId.create("ApiKeyRequired");
 
@@ -223,7 +227,12 @@ export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<C
         // the success value, not this failure.
         CallToolResult.make({
           isError: false,
-          content: [{ type: "text", text: JSON.stringify(payload.encodedResult) }],
+          content: [
+            {
+              type: "text",
+              text: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(payload.encodedResult), identity),
+            },
+          ],
         })
       )
     : O.none();

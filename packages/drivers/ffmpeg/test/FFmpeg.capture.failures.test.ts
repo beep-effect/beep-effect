@@ -282,16 +282,22 @@ describe("@beep/ffmpeg capture failures", () => {
               expect(error.operation).toBe("extractFrames");
               expect(error.message).toContain("Failed to commit");
               if (target === "sample_frame_00000.png") {
-                expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
-                expect(yield* fs.readFileString(manifestPath)).toBe("original manifest");
+                const readFileString1 = yield* fs.readFileString(existingPath);
+                expect(readFileString1).toBe("original artifact");
+                const readFileString2 = yield* fs.readFileString(manifestPath);
+                expect(readFileString2).toBe("original manifest");
               } else {
-                expect(yield* fs.exists(manifestPath)).toBe(false);
-                expect(yield* fs.readFileString(path.join(outDir, "sample_frame_00000.png"))).toBe("frame zero");
+                const exists3 = yield* fs.exists(manifestPath);
+                expect(exists3).toBe(false);
+                const readFileString4 = yield* fs.readFileString(path.join(outDir, "sample_frame_00000.png"));
+                expect(readFileString4).toBe("frame zero");
                 if (target !== "extract-frames-manifest.json") {
-                  expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
+                  const readFileString5 = yield* fs.readFileString(existingPath);
+                  expect(readFileString5).toBe("original artifact");
                 }
               }
-              expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+              const readDirectory6 = yield* fs.readDirectory(outDir);
+              expect(A.some(readDirectory6, Str.startsWith(".beep-ffmpeg-"))).toBe(false);
             })
           )
         );
@@ -332,16 +338,22 @@ describe("@beep/ffmpeg capture failures", () => {
               expect(error.operation).toBe("extractFramesAt");
               expect(error.message).toContain("Failed to commit");
               if (target === "sample_at_00000.png") {
-                expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
-                expect(yield* fs.readFileString(manifestPath)).toBe("original manifest");
+                const readFileString7 = yield* fs.readFileString(existingPath);
+                expect(readFileString7).toBe("original artifact");
+                const readFileString8 = yield* fs.readFileString(manifestPath);
+                expect(readFileString8).toBe("original manifest");
               } else {
-                expect(yield* fs.exists(manifestPath)).toBe(false);
-                expect(yield* fs.readFileString(path.join(outDir, "sample_at_00000.png"))).toBe("fake output");
+                const exists9 = yield* fs.exists(manifestPath);
+                expect(exists9).toBe(false);
+                const readFileString10 = yield* fs.readFileString(path.join(outDir, "sample_at_00000.png"));
+                expect(readFileString10).toBe("fake output");
                 if (target !== "extract-frames-at-manifest.json") {
-                  expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
+                  const readFileString11 = yield* fs.readFileString(existingPath);
+                  expect(readFileString11).toBe("original artifact");
                 }
               }
-              expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+              const readDirectory12 = yield* fs.readDirectory(outDir);
+              expect(A.some(readDirectory12, Str.startsWith(".beep-ffmpeg-"))).toBe(false);
             })
           )
         );
@@ -382,9 +394,12 @@ describe("@beep/ffmpeg capture failures", () => {
             expect(error.operation).toBe(operation);
             expect(error.message).toContain("to be a file");
             expect((yield* fs.stat(manifestPath)).type).toBe("Directory");
-            expect(yield* fs.readFileString(path.join(manifestPath, "keep.txt"))).toBe("preserved directory contents");
-            expect(yield* fs.readFileString(path.join(outDir, firstFrame))).toBe("original frame");
-            expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+            const readFileString13 = yield* fs.readFileString(path.join(manifestPath, "keep.txt"));
+            expect(readFileString13).toBe("preserved directory contents");
+            const readFileString14 = yield* fs.readFileString(path.join(outDir, firstFrame));
+            expect(readFileString14).toBe("original frame");
+            const readDirectory15 = yield* fs.readDirectory(outDir);
+            expect(A.some(readDirectory15, Str.startsWith(".beep-ffmpeg-"))).toBe(false);
           })
         )
       );
@@ -420,13 +435,17 @@ describe("@beep/ffmpeg capture failures", () => {
                       .pipe(Effect.asVoid)
               );
               exit.pipe(Exit.isFailure, assertTrue);
+              const readDirectory16 = yield* fs.readDirectory(outDir);
               const recoveryDirectory = yield* Effect.fromOption(
-                A.findFirst(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))
+                A.findFirst(readDirectory16, Str.startsWith(".beep-ffmpeg-"))
               );
               const backupPath = path.join(outDir, recoveryDirectory, "previous-manifest.json");
-              expect(yield* fs.readFileString(backupPath)).toBe("original manifest");
-              expect(yield* fs.exists(manifestPath)).toBe(false);
-              expect(yield* fs.readFileString(path.join(outDir, firstFrame))).toBe("original frame");
+              const readFileString17 = yield* fs.readFileString(backupPath);
+              expect(readFileString17).toBe("original manifest");
+              const exists18 = yield* fs.exists(manifestPath);
+              expect(exists18).toBe(false);
+              const readFileString19 = yield* fs.readFileString(path.join(outDir, firstFrame));
+              expect(readFileString19).toBe("original frame");
               if (Exit.isFailure(exit)) {
                 expect(Cause.pretty(exit.cause)).toContain(`Recovery copy retained at "${backupPath}"`);
                 expect(Cause.pretty(exit.cause)).toContain("Failed to commit frame output");
@@ -463,8 +482,10 @@ describe("@beep/ffmpeg capture failures", () => {
               videoPath,
             })
           );
-          expect(yield* fs.readFileString(outPath)).toBe("fake output");
-          expect(A.some(yield* fs.readDirectory(directory), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+          const readFileString20 = yield* fs.readFileString(outPath);
+          expect(readFileString20).toBe("fake output");
+          const readDirectory21 = yield* fs.readDirectory(directory);
+          expect(A.some(readDirectory21, Str.startsWith(".beep-ffmpeg-"))).toBe(false);
         })
       )
     );
@@ -496,8 +517,10 @@ describe("@beep/ffmpeg capture failures", () => {
           );
           expect(error.operation).toBe("renderGif");
           expect(error.message).toContain("Failed to commit output");
-          expect(yield* fs.readFileString(outPath)).toBe("original output");
-          expect(A.some(yield* fs.readDirectory(directory), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+          const readFileString22 = yield* fs.readFileString(outPath);
+          expect(readFileString22).toBe("original output");
+          const readDirectory23 = yield* fs.readDirectory(directory);
+          expect(A.some(readDirectory23, Str.startsWith(".beep-ffmpeg-"))).toBe(false);
         })
       )
     );
@@ -796,7 +819,8 @@ describe("@beep/ffmpeg capture failures", () => {
             expect(error.message).toContain("ffmpeg could not extract a clip from");
             expect(exitCodeOf(error)).toBe(9);
             // The staging directory is released, so nothing is left behind.
-            expect(yield* fs.readDirectory(path.dirname(outPath))).toEqual([]);
+            const readDirectory24 = yield* fs.readDirectory(path.dirname(outPath));
+            expect(readDirectory24).toEqual([]);
           })
         );
       })
@@ -837,7 +861,8 @@ describe("@beep/ffmpeg capture failures", () => {
               expect(error).toBeInstanceOf(FFmpegError);
               expect(error.operation).toBe("extractClip");
               expect(error.message).toContain("ffmpeg completed without producing output");
-              expect(yield* fs.exists(outPath)).toBe(false);
+              const exists25 = yield* fs.exists(outPath);
+              expect(exists25).toBe(false);
             })
           );
         })

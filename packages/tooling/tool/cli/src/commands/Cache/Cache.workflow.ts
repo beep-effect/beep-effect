@@ -6,6 +6,8 @@
  */
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
@@ -22,11 +24,9 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { gitPathListFromNulOutput } from "../../internal/repo-run/GitExec.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { loadCacheConformanceBearers } from "./Cache.conformance.ts";
@@ -98,7 +98,7 @@ const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
         () => CacheCommandError.new("Workflow directory alias escaped its canonical checkout location.")
       )
     );
-    for (const name of A.sort(yield* fs.readDirectory(directory), Order.String)) {
+    for (const name of yield* Effect.map(fs.readDirectory(directory), (value) => A.sort(value, Order.String))) {
       const child = path.join(directory, name);
       const relative = path.relative(root, child);
       const info = yield* fs.lstat(child);
@@ -117,8 +117,9 @@ const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
         Match.orElse(() => CacheCommandError.new("Workflow directory alias contains an unsupported filesystem entry."))
       );
       entries = A.append(entries, Tuple.make(relative, S.Natural.make(info.mode)));
-      if (entries.length > 20000)
+      if (entries.length > 20000) {
         return yield* CacheCommandError.new("Workflow directory alias exceeded its entry bound.");
+      }
     }
   }
   const manifest = yield* encodeDirectoryManifest([
@@ -137,8 +138,9 @@ const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args:
     env: { PATH: "/usr/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" },
     bound,
   });
-  if (captured.exitCode !== 0 || captured.truncated)
+  if (captured.exitCode !== 0 || captured.truncated) {
     return yield* CacheCommandError.new("Cannot read a complete workflow Git inventory.");
+  }
   return captured.stdout;
 });
 const declaredSourcePaths = [
@@ -164,10 +166,13 @@ const listSources = Effect.fn("CacheWorkflow.listSources")(function* (root: stri
     "--",
     ...declaredSourcePaths,
   ]);
-  if (!Str.endsWith("\0")(output))
+  if (!Str.endsWith("\0")(output)) {
     return yield* CacheCommandError.new("Workflow source inventory is empty or incomplete.");
+  }
   const paths = gitPathListFromNulOutput(output);
-  if (paths.length > 20000) return yield* CacheCommandError.new("Workflow source inventory exceeded its entry bound.");
+  if (paths.length > 20000) {
+    return yield* CacheCommandError.new("Workflow source inventory exceeded its entry bound.");
+  }
   return paths;
 });
 
@@ -213,10 +218,13 @@ export const assertCacheProducerWorkflowProfile = Effect.fn("CacheWorkflow.profi
     "--",
     ...declaredSourcePaths,
   ]);
-  if (status !== "")
+  if (status !== "") {
     return yield* CacheCommandError.new("Producer workflow requires clean declared sources without ignored overrides.");
-  if (A.some(yield* fs.readDirectory(root), isAmbientEnvironmentFile))
+  }
+  const readDirectory1 = yield* fs.readDirectory(root);
+  if (A.some(readDirectory1, isAmbientEnvironmentFile)) {
     return yield* CacheCommandError.new("Producer workflow must not contain ambient dotenv files.");
+  }
 }, CacheCommandError.mapError("Cannot validate the frozen producer workflow profile."));
 
 /**
@@ -236,12 +244,11 @@ export const assertCacheProducerWorkflowLocation = Effect.fn("CacheWorkflow.loca
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const loaded = yield* path.fromFileUrl(new URL(import.meta.url)).pipe(Effect.flatMap(fs.realPath));
-  const expected = path.join(
-    yield* fs.realPath(root),
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts"
-  );
-  if (loaded !== expected)
+  const realPath2 = yield* fs.realPath(root);
+  const expected = path.join(realPath2, "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts");
+  if (loaded !== expected) {
     return yield* CacheCommandError.new("Loaded producer workflow does not belong to the requested checkout.");
+  }
 }, CacheCommandError.mapError("Cannot bind the loaded producer workflow."));
 
 /**
@@ -275,14 +282,17 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
     Effect.fn("CacheWorkflow.file")(function* (relative) {
       const file = path.resolve(canonicalRoot, relative);
       const linkTarget = yield* fs.readLink(file).pipe(Effect.option);
-      if (O.exists(linkTarget, path.isAbsolute))
+      if (O.exists(linkTarget, path.isAbsolute)) {
         return yield* CacheCommandError.new("Workflow source alias must be relative.");
+      }
       const target = O.isSome(linkTarget) ? yield* fs.realPath(file) : file;
-      if (!isResolvedPathWithinRoot(path, { root: canonicalRoot, candidate: target }))
+      if (!isResolvedPathWithinRoot(path, { root: canonicalRoot, candidate: target })) {
         return yield* CacheCommandError.new("Workflow source alias must stay inside its canonical checkout.");
+      }
       const info = yield* fs.stat(target);
-      if (info.type === "Directory" && O.isNone(linkTarget))
+      if (info.type === "Directory" && O.isNone(linkTarget)) {
         return yield* CacheCommandError.new("Workflow source directory requires a declared relative alias.");
+      }
       return CacheProducerWorkflowFile.make({
         path: relative,
         sha256:
@@ -295,8 +305,10 @@ export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files"
     }),
     { concurrency: 4 }
   );
-  if (!pathsEquivalent(paths, yield* listSources(root)))
+  const listSources3 = yield* listSources(root);
+  if (!pathsEquivalent(paths, listSources3)) {
     return yield* CacheCommandError.new("Workflow source inventory changed during inspection.");
+  }
   return files;
 }, CacheCommandError.mapError("Cannot bind the declared workflow source files."));
 
@@ -339,8 +351,10 @@ export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(f
     inspectCacheLinkedFile,
     { concurrency: 2 }
   );
-  if (Str.trim(yield* captureGit(root, ["rev-parse", "HEAD"])) !== before)
+  const captureGit4 = yield* captureGit(root, ["rev-parse", "HEAD"]);
+  if (Str.trim(captureGit4) !== before) {
     return yield* CacheCommandError.new("Workflow revision changed during inspection.");
+  }
   yield* assertCacheProducerWorkflowProfile(root);
   return CacheProducerWorkflow.make({ revision: before, files, toolchain, inspectionTools });
 }, CacheCommandError.mapError("Cannot inspect the producer workflow."));
@@ -370,8 +384,9 @@ const assertWorkflowIdentity = Effect.fn("CacheWorkflow.assertIdentity")(functio
   if (
     workflow.revision !== binding.workflowRevision ||
     (yield* hashCacheProducerWorkflow(workflow)) !== binding.workflowImplementation
-  )
+  ) {
     return yield* CacheCommandError.new("Live producer workflow differs from its independently approved identity.");
+  }
 });
 
 /**
@@ -441,8 +456,9 @@ const assertCacheProducerStorageProfile = Effect.fn("CacheWorkflow.assertStorage
       ],
       false
     )
-  )
+  ) {
     return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
+  }
   return approval;
 });
 
@@ -470,8 +486,9 @@ const validateProvidedCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.asse
       })
     ),
   });
-  if (O.isNone(owned.adapter) || O.isNone(target.storage))
+  if (O.isNone(owned.adapter) || O.isNone(target.storage)) {
     return yield* CacheCommandError.new("Producer upload requires approved storage and an owned adapter capability.");
+  }
   if (
     A.some(
       [
@@ -484,14 +501,16 @@ const validateProvidedCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.asse
       ],
       (capability) => Redacted.value(capability) === Redacted.value(owned.signing)
     )
-  )
+  ) {
     return yield* CacheCommandError.new("Producer artifact signing must be distinct from backend capabilities.");
+  }
   const approval = yield* assertCacheProducerStorageProfile(
     binding,
     CacheProducerExecutionProfile.make({ target, adapterExecutable: owned.adapter.value.executable })
   );
-  if ((yield* hashCacheProducerUploadKey(owned.signing)) !== approval.artifactKeySha256)
+  if ((yield* hashCacheProducerUploadKey(owned.signing)) !== approval.artifactKeySha256) {
     return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
+  }
   return owned;
 });
 
@@ -528,8 +547,9 @@ export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertU
   binding: CacheProducerBinding,
   runtime: O.Option<CacheProducerUploadRuntime>
 ) {
-  if (O.isSome(binding.uploadApproval) !== O.isSome(runtime))
+  if (O.isSome(binding.uploadApproval) !== O.isSome(runtime)) {
     return yield* CacheCommandError.new("Producer upload runtime differs from independent target approval.");
+  }
   return yield* O.match(runtime, {
     onNone: () => Effect.succeedNone,
     onSome: (provided) => validateProvidedCacheProducerUploadRuntime(binding, provided).pipe(Effect.asSome),
@@ -564,8 +584,9 @@ export const loadCacheProducerExecutionRuntime = Effect.fn("CacheWorkflow.loadEx
   const approval = yield* binding.uploadApproval.pipe(
     Effect.fromOption(() => CacheCommandError.new("The producer store has no independently approved upload."))
   );
-  if ((yield* hashCacheProducerUploadTarget(profile.target)) !== approval.targetSha256)
+  if ((yield* hashCacheProducerUploadTarget(profile.target)) !== approval.targetSha256) {
     return yield* CacheCommandError.new("The private producer destination differs from independent approval.");
+  }
   const capabilities = yield* Config.all({
     signing: Config.Redacted("TURBO_REMOTE_CACHE_SIGNATURE_KEY"),
     accessKey: Config.Redacted("R2_ACCESS_KEY_ID"),
@@ -618,8 +639,9 @@ export const loadCacheProducerStorageRuntime = Effect.fn("CacheWorkflow.loadStor
     secretKey: Config.schema(CacheProducerStorageRuntime.fields.secretKey, "R2_SECRET_ACCESS_KEY"),
   }).pipe(Effect.mapError(() => CacheCommandError.new("Approved producer storage capabilities are required.")));
   for (const key of [keys.accessKey, keys.secretKey]) {
-    if ((yield* hashCacheProducerUploadKey(key)) === approval.artifactKeySha256)
+    if ((yield* hashCacheProducerUploadKey(key)) === approval.artifactKeySha256) {
       return yield* CacheCommandError.new("Producer artifact signing must be distinct from backend capabilities.");
+    }
   }
   return Tuple.make(binding, CacheProducerStorageRuntime.make({ target: profile.target, ...keys }));
 }, CacheCommandError.mapError("Cannot load independently approved producer storage capabilities."));
@@ -666,22 +688,27 @@ export const initializeCacheProducerExecution = Effect.fn("CacheWorkflow.initial
     yield* assertCacheProducerPrivateLocation(root, directory);
     const approvedText = yield* approvalCodec.encode(approval);
     const profileText = yield* executionProfileCodec.encode(profile);
-    if (A.some([approvedText, profileText], (text) => new TextEncoder().encode(text).byteLength > 16384))
+    if (A.some([approvedText, profileText], (text) => new TextEncoder().encode(text).byteLength > 16384)) {
       return yield* CacheCommandError.new("Producer provisioning records exceed their sixteen KiB private-read bound.");
+    }
     const trusted = yield* approvalCodec.decode(approvedText);
     const selected = yield* executionProfileCodec.decode(profileText);
     yield* validateCacheProducerApproval(trusted);
     const upload = yield* trusted.binding.uploadApproval.pipe(
       Effect.fromOption(() => CacheCommandError.new("Producer provisioning requires independent upload approval."))
     );
-    if ((yield* hashCacheProducerUploadTarget(selected.target)) !== upload.targetSha256)
+    if ((yield* hashCacheProducerUploadTarget(selected.target)) !== upload.targetSha256) {
       return yield* CacheCommandError.new("Producer provisioning target differs from independent approval.");
-    if (!path.isAbsolute(selected.adapterExecutable))
+    }
+    if (!path.isAbsolute(selected.adapterExecutable)) {
       return yield* CacheCommandError.new("Producer provisioning requires an absolute adapter executable.");
+    }
     const executable = yield* inspectCacheLinkedFile(selected.adapterExecutable);
-    if (executable.sha256 !== selected.target.backend.digest)
+    if (executable.sha256 !== selected.target.backend.digest) {
       return yield* CacheCommandError.new("Producer provisioning executable differs from its approved digest.");
-    yield* assertWorkflowIdentity(yield* inspectCacheProducerWorkflow(root), trusted.binding);
+    }
+    const inspectCacheProducerWorkflow5 = yield* inspectCacheProducerWorkflow(root);
+    yield* assertWorkflowIdentity(inspectCacheProducerWorkflow5, trusted.binding);
     yield* Effect.uninterruptibleMask(
       Effect.fnUntraced(function* (restore) {
         yield* initializeCacheProducerIssuer(directory, trusted.binding, trusted.contract, material);
@@ -689,11 +716,13 @@ export const initializeCacheProducerExecution = Effect.fn("CacheWorkflow.initial
           Effect.gen(function* () {
             yield* fs.writeFileString(path.join(directory, "runtime.json"), profileText, { flag: "wx", mode: 0o600 });
             const [, installed] = yield* readCacheProducerExecutionProfile(directory);
-            if ((yield* executionProfileCodec.encode(installed)) !== profileText)
+            if ((yield* executionProfileCodec.encode(installed)) !== profileText) {
               return yield* CacheCommandError.new(
                 "Installed producer execution profile differs from independent selection."
               );
-            yield* assertWorkflowIdentity(yield* inspectCacheProducerWorkflow(root), trusted.binding);
+            }
+            const inspectCacheProducerWorkflow6 = yield* inspectCacheProducerWorkflow(root);
+            yield* assertWorkflowIdentity(inspectCacheProducerWorkflow6, trusted.binding);
           })
         ).pipe(Effect.onError(() => revokeCacheProducerIssuer(directory).pipe(Effect.orDie)));
       })
@@ -738,8 +767,9 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
   if (
     ownedRequest.pilot.channel !== trusted.channel ||
     !S.toEquivalence(CacheClientPin)(ownedRequest.pilot.client, trusted.client)
-  )
+  ) {
     return yield* CacheCommandError.new("Producer request differs from its independently approved client or channel.");
+  }
   const runtime = yield* assertCacheProducerUploadRuntime(trusted, uploadRuntime);
   const issuer = yield* openCacheProducerIssuer(directory, trusted);
   const verifyWorkflow = withQualityAdmission(
@@ -760,8 +790,9 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
         Effect.map(Str.trim),
         Effect.flatMap(decodeRevision)
       );
-      if (sourceRevision !== trusted.sourceRevision)
+      if (sourceRevision !== trusted.sourceRevision) {
         return yield* CacheCommandError.new("Live producer source differs from its independently approved revision.");
+      }
       yield* assertWorkflowIdentity(workflow, trusted);
     })
   );
@@ -784,8 +815,9 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
         Effect.flatMap(decodeCacheExperimentText),
         Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode)
       );
-      if (activation.source.configurationDigest !== trusted.configurationDigest)
+      if (activation.source.configurationDigest !== trusted.configurationDigest) {
         return yield* CacheCommandError.new("Producer task closure differs from independent configuration approval.");
+      }
       const expectedTasks = A.map(activation.source.configuration.nodes, (node) => node.id);
       return yield* runCacheProducerUploadExperiment(
         root,

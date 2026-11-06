@@ -13,7 +13,10 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -21,11 +24,10 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GOALS_DIR } from "../../Goals/Inventory.ts";
 import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "../../Goals/PortfolioIndex.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { runGitPathList } from "./GitExec.ts";
+import { yeetGitKitError } from "./GitExec.ts";
 import { failPublishScopeWithPacket } from "./PublishScope.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -210,6 +212,7 @@ export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfol
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -226,16 +229,12 @@ export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfol
   );
   const committed = yield* fs.readFileString(indexPath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
   const staged = A.contains(intent.paths, PORTFOLIO_INDEX_PATH);
+  const git = yield* Git;
+  const deletionQuery = { diffFilter: "D", pathspec: [PORTFOLIO_INDEX_PATH] };
   const stagedDeletions = staged
-    ? yield* runGitPathList(context.repoRoot, [
-        "diff",
-        "--cached",
-        "--diff-filter=D",
-        "--name-only",
-        "-z",
-        "--",
-        PORTFOLIO_INDEX_PATH,
-      ])
+    ? yield* git
+        .stagedChanges(context.repoRoot, deletionQuery)
+        .pipe(Effect.mapError(yeetGitKitError(GitCommand.stagedChanges(false, deletionQuery))))
     : A.empty<string>();
   const disposition = portfolioIndexPublishDisposition({
     committed,

@@ -35,18 +35,17 @@
     "goals/coding-agent-effectiveness-evidence-loop/research/RESEARCH-CORPUS-2026-10.md"
   ],
   "researchReports": [
-    "research/SOURCES.md",
-    "research/OPPORTUNITIES.md",
     "research/2026-07-31-adhd-amendments.md",
     "research/2026-08-01-p1-hook-semantics-spike.md",
     "research/2026-08-06-p1-instrument-live-handoff.md",
+    "research/2026-08-10-p1-sampling-power-checkpoint.md",
     "research/2026-09-03-p1-baseline-close.md",
     "research/2026-09-03-p1-first-treatment-readout.md",
     "research/2026-09-03-p1-phone-transport-disposition.md",
     "research/2026-09-03-p2-contract-foundation.md",
-    "history/outputs/2026-09-03-p1-sharp-cutover.md",
-    "history/evidence/2026-08-01-hook-pulse-spike.ndjson",
-    "research/RESEARCH-CORPUS-2026-10.md"
+    "research/OPPORTUNITIES.md",
+    "research/RESEARCH-CORPUS-2026-10.md",
+    "research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
@@ -119,5 +118,9 @@
     "The same blocker repeats after reasonable investigation.",
     "The 19GB store migration cannot verify counts/DB integrity after the atomic rename; stop and report rather than continuing against an unverified store.",
     "Any telemetry surface would capture prompt, command, tool-argument, or OIP-corpus content; stop and redesign the schema rather than filtering after the fact."
+  ],
+  "researchReferences": [
+    "history/evidence/2026-08-01-hook-pulse-spike.ndjson",
+    "history/outputs/2026-09-03-p1-sharp-cutover.md"
   ]
 }

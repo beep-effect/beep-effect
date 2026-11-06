@@ -1,23 +1,23 @@
 /**
  * Yeet-specific adapters over shared Git execution helpers.
  *
- * Two tiers live here. The argv runners (`runGitOutput`, `runGitFoldedStdout`, `runGitPathList`)
- * wrap repo-run's bounded capture with Yeet's `YeetCommandError` wording. The typed readers
- * (`refreshBaseRef`, `currentYeetBranch`, `currentCommitSha`, the `collect*` trio) and the mutation
- * reader {@link captureGitKitExit} run through `@beep/git`'s `Git` service and fold its typed errors
- * back through the same adapter (repo-cli-gh-git-consolidation W1b, SPEC D-09), so every exported
- * name keeps its error wording.
+ Two tiers live here. The one argv runner left, `runGitFoldedStdout`, wraps repo-run's streamed
+ * fold with Yeet's `YeetCommandError` wording for the byte-exact patch digest no kit member can
+ * express (repo-cli-gh-git-consolidation W7a, SPEC D-18). The typed readers (`resolveYeetRev`,
+ * `changedYeetPaths`, `refreshBaseRef`, `currentYeetBranch`, `currentCommitSha`, the `collect*` trio)
+ * and the mutation reader {@link captureGitKitExit} run through `@beep/git`'s `Git` service and fold
+ * its typed errors back through the same adapter (W1b, SPEC D-09), so every exported name keeps its
+ * error wording.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { Git, GitOptions } from "@beep/git/Git";
+import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { guardLiteralArg } from "@beep/repo-utils";
 import * as A from "effect/Array";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -32,18 +32,18 @@ import {
   currentBranch,
   isSafeOriginBranch,
   originBranchFromBase,
+  patientGit,
+  resolveGitMergeBase,
   runGitFoldedStdout as runSharedGitFoldedStdout,
-  runGitOutput as runSharedGitOutput,
-  runGitPathList as runSharedGitPathList,
   safeOriginBranchFromBase,
+  sortedUniquePaths,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
-import type { GitShape } from "@beep/git/Git";
 import type { GitInvocation } from "@beep/git/GitCommand";
+import type { RunFoldedStdoutOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RunFoldedStdoutOptions } from "../../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter, GitKitError, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
@@ -53,7 +53,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
  *
  * **Details**
  *
- * The same wording {@link runGitOutput} gives the bounded capture: a run git reported is
+ The same wording Yeet's bounded capture gave: a run git reported is
  * `<command line> failed with exit code <n>.` (128 for an unknown ref or a non-repository), a
  * truncated run is the capture-limit wording, and a run git never reached (spawn failure, timeout,
  * a pre-spawn refusal) is `Failed to run <command line>.`. The command line is `git` plus the kit
@@ -84,36 +84,13 @@ export const yeetGitKitError = (invocation: GitInvocation): ((error: GitKitError
   adaptGitKitError(invocation, yeetGitOutputErrorAdapter);
 
 /**
- * Run Git with Yeet's historical bounded-output error wording.
- *
- * **Example** (Map git status length)
- *
- * ```ts
- * import * as Effect from "effect/Effect";
- * import { runGitOutput } from "@beep/repo-cli/test/Yeet"
- *
- * const statusLength = runGitOutput(".", ["status", "--short"]).pipe(
- *   Effect.map((output) => output.length)
- * )
- * ```
- *
- * @category execution
- * @since 0.0.0
- */
-export const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
-  repoRoot: string,
-  args: ReadonlyArray<string>
-): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  return yield* runSharedGitOutput(repoRoot, args, yeetGitOutputErrorAdapter);
-});
-
-/**
  * Run Git with Yeet's error wording and fold its stdout while it streams.
  *
  * **Details**
  *
- * The unbounded counterpart of {@link runGitOutput} for output Yeet only needs reduced, such as a
- * digest of a diff larger than the repo-run capture limit.
+ The unbounded runner for output Yeet only needs reduced, such as a digest of a diff larger than the
+ * repo-run capture limit. Its one caller is the byte-exact patch identity in `FinalCheckRefresh`
+ * (`// KEEP (D-18)`): the kit buffers decoded text, and that digest keeps every byte.
  *
  * **Example** (Count diff bytes)
  *
@@ -142,31 +119,175 @@ export const runGitFoldedStdout = Effect.fn("Yeet.runGitFoldedStdout")(function*
 });
 
 /**
- * Run Git and parse Yeet's NUL-delimited path output.
+ * Resolve one revision with `Git.revParse` (`rev-parse --verify <ref>`) under Yeet's wording.
  *
- * **Example** (Count NUL-delimited paths)
+ * **Details**
+ *
+ * The kit replacement for Yeet's bounded `rev-parse <ref>` capture (repo-cli-gh-git-consolidation W7a,
+ * SPEC D-18). The value is git's single object name; an unknown ref or a non-repository reads
+ * `git rev-parse --verify <ref> failed with exit code 128.`.
+ *
+ * **Example** (Resolve the base commit)
  *
  * ```ts
- * import * as Effect from "effect/Effect";
- * import { runGitPathList } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * import { resolveYeetRev } from "@beep/repo-cli/test/Yeet"
  *
- * const changedPaths = runGitPathList(".", ["diff", "--name-only", "-z"]).pipe(
- *   Effect.map((paths) => paths.length)
- * )
+ * const baseLength = resolveYeetRev(".", "origin/main").pipe(Effect.map((sha) => sha.length))
+ * console.log(Effect.isEffect(baseLength)) // true
  * ```
  *
+ * @param repoRoot - Checkout the revision is resolved in.
+ * @param ref - The revision, such as `HEAD`, `FETCH_HEAD` or `<sha>^{tree}`.
+ * @returns The object name git resolved.
  * @category execution
  * @since 0.0.0
  */
-export const runGitPathList = Effect.fn("Yeet.runGitPathList")(function* (
+export const resolveYeetRev = Effect.fn("Yeet.resolveYeetRev")(function* (
   repoRoot: string,
-  args: ReadonlyArray<string>
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
-> {
-  return yield* runSharedGitPathList(repoRoot, args, yeetGitOutputErrorAdapter);
+  ref: string
+): Effect.fn.Return<string, YeetCommandError, Git> {
+  const git = yield* Git;
+  return yield* git.revParse(repoRoot, ref).pipe(Effect.mapError(yeetGitKitError(GitCommand.revParse(ref))));
+});
+
+/**
+ * Resolve the merge base of two revisions with `Git.mergeBase` under Yeet's wording.
+ *
+ * **Details**
+ *
+ * Two revisions without a common ancestor fail with git's exit 1, as the bounded
+ * `merge-base <a> <b>` capture did (repo-cli-gh-git-consolidation W7a, SPEC D-18).
+ *
+ * **Example** (Find the branch point)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { resolveYeetMergeBase } from "@beep/repo-cli/test/Yeet"
+ *
+ * const mergeBase = resolveYeetMergeBase(".", "origin/main", "HEAD")
+ * console.log(Effect.isEffect(mergeBase)) // true
+ * ```
+ *
+ * @param repoRoot - Checkout the revisions are read in.
+ * @param left - The first revision.
+ * @param right - The second revision.
+ * @returns The merge-base commit.
+ * @category execution
+ * @since 0.0.0
+ */
+export const resolveYeetMergeBase = Effect.fn("Yeet.resolveYeetMergeBase")(function* (
+  repoRoot: string,
+  left: string,
+  right: string
+): Effect.fn.Return<string, YeetCommandError, Git> {
+  return yield* resolveGitMergeBase(repoRoot, left, right, yeetGitOutputErrorAdapter);
+});
+
+/**
+ * Count the commits in a revision range with `Git.revListCount` under Yeet's wording.
+ *
+ * **Details**
+ *
+ * The kit decodes the count fail-closed, so a non-integer answer is a failure rather than the `NaN`
+ * the bounded `rev-list --count` capture's `Number(...)` produced (repo-cli-gh-git-consolidation W7a,
+ * SPEC D-18).
+ *
+ * **Example** (Count commits ahead of the base)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { countYeetRevisions } from "@beep/repo-cli/test/Yeet"
+ *
+ * const ahead = countYeetRevisions(".", "origin/main..HEAD")
+ * console.log(Effect.isEffect(ahead)) // true
+ * ```
+ *
+ * @param repoRoot - Checkout the range is walked in.
+ * @param range - The revision range, such as `<base>..HEAD`.
+ * @returns The number of commits in the range.
+ * @category execution
+ * @since 0.0.0
+ */
+export const countYeetRevisions = Effect.fn("Yeet.countYeetRevisions")(function* (
+  repoRoot: string,
+  range: string
+): Effect.fn.Return<number, YeetCommandError, Git> {
+  const git = yield* Git;
+  return yield* git
+    .revListCount(repoRoot, range)
+    .pipe(Effect.mapError(yeetGitKitError(GitCommand.revListCount(range))));
+});
+
+/**
+ * The tree-to-tree diff {@link changedYeetPaths} lists: `base` and `head` as a plain pair unless
+ * `mergeBaseRange` asks for `base...head`, plus the kit's `diffFilter`, `noRenames` and `pathspec`.
+ *
+ * **Example** (Describe a modified-files diff)
+ *
+ * ```ts
+ * import { YeetChangedPathsQuery } from "@beep/repo-cli/test/Yeet"
+ *
+ * const query = YeetChangedPathsQuery.make({ base: "origin/main", head: "HEAD", diffFilter: "M" })
+ * console.log(query.diffFilter) // M
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetChangedPathsQuery extends S.Opaque<YeetChangedPathsQuery, { readonly brand: unique symbol }>()(
+  S.Struct({
+    base: S.String,
+    head: S.String,
+    mergeBaseRange: S.optionalKey(S.Boolean),
+    diffFilter: S.optionalKey(S.String),
+    noRenames: S.optionalKey(S.Boolean),
+    pathspec: S.String.pipe(S.Array, S.optionalKey),
+  }).pipe(
+    $I.annoteSchema("YeetChangedPathsQuery", {
+      description: "The revisions, range spelling, filter and pathspec of one `Git.changedFiles` read in Yeet.",
+    })
+  )
+) {}
+
+/**
+ * List the paths a diff between two revisions touches, sorted and unique, under Yeet's wording.
+ *
+ * **Details**
+ *
+ * Runs `Git.changedFiles` (`diff --name-only -z --no-relative ...`), the kit replacement for Yeet's
+ * NUL-delimited `diff --name-only -z` path list (repo-cli-gh-git-consolidation W7a, SPEC D-18). The
+ * paths come back sorted and unique, as the path-list runner returned them.
+ *
+ * **Example** (List the files a branch touches)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { changedYeetPaths, YeetChangedPathsQuery } from "@beep/repo-cli/test/Yeet"
+ *
+ * const touched = changedYeetPaths(".", YeetChangedPathsQuery.make({ base: "origin/main", head: "HEAD" }))
+ * console.log(Effect.isEffect(touched)) // true
+ * ```
+ *
+ * @param repoRoot - Checkout the diff runs in.
+ * @param query - The revisions, range spelling, filter and pathspec.
+ * @returns The touched paths, sorted and unique.
+ * @category changed-files
+ * @since 0.0.0
+ */
+export const changedYeetPaths = Effect.fn("Yeet.changedYeetPaths")(function* (
+  repoRoot: string,
+  query: YeetChangedPathsQuery
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Git> {
+  const git = yield* Git;
+  const { base, head, mergeBaseRange, ...filters } = query;
+  const options = { ...filters, twoDot: mergeBaseRange !== true };
+  return yield* git.changedFiles(repoRoot, { base, head, ...options }).pipe(
+    Effect.mapBoth({
+      onFailure: yeetGitKitError(GitCommand.changedFiles(base, head, false, options)),
+      onSuccess: sortedUniquePaths,
+    })
+  );
 });
 
 /**
@@ -291,52 +412,6 @@ export const optionFromNonEmpty = (value: string): O.Option<string> =>
  * @since 0.0.0
  */
 export const safeOriginBranchFromBaseForTesting = safeOriginBranchFromBase;
-
-/**
- * The `GitOptions` for Yeet's long-running git mutations: a 15-minute per-run
- * timeout instead of the kit's 30-second default, with the default output bound.
- *
- * **Details**
- *
- * `Git.layer` at the runtime edge runs every call under the default 30 s
- * timeout, which the old unbounded repo-run capture never had. Two Yeet steps
- * legitimately outlive it: the head-install preflight's `worktree add` and
- * `worktree remove --force` (the remove deletes a checkout that `bun install`
- * just filled with about 227k entries) and `refreshBaseRef`'s network fetch.
- * Those sites build their own `Git` from these options (SPEC D-09) instead of
- * taking the edge instance.
- *
- * **Example** (Read the patient timeout)
- *
- * ```ts
- * import { PATIENT_GIT_OPTIONS } from "@beep/repo-cli/test/Yeet"
- * import * as Duration from "effect/Duration"
- *
- * console.log(Duration.toMinutes(PATIENT_GIT_OPTIONS.timeout)) // 15
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const PATIENT_GIT_OPTIONS: GitOptions = GitOptions.make({ timeout: Duration.minutes(15) });
-
-/**
- * A `Git` service under {@link PATIENT_GIT_OPTIONS}, built from the ambient spawner.
- *
- * **Example** (Build the patient service)
- *
- * ```ts
- * import { patientGit } from "@beep/repo-cli/test/Yeet"
- * import * as Effect from "effect/Effect"
- *
- * console.log(Effect.isEffect(patientGit)) // true
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export const patientGit: Effect.Effect<GitShape, never, ChildProcessSpawner.ChildProcessSpawner> =
-  Git.makeWith(PATIENT_GIT_OPTIONS);
 
 /**
  * Refresh the configured base ref, preserving Yeet's unsafe-ref errors.
@@ -491,14 +566,8 @@ export const currentYeetBranch = Effect.fn("Yeet.currentYeetBranch")(function* (
  * @category execution
  * @since 0.0.0
  */
-export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
-  context: RepoRunContext
-): Effect.fn.Return<string, YeetCommandError, Git> {
-  const git = yield* Git;
-  return yield* git
-    .revParse(context.repoRoot, "HEAD")
-    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), yeetGitOutputErrorAdapter)));
-});
+export const currentCommitSha = (context: RepoRunContext): Effect.Effect<string, YeetCommandError, Git> =>
+  resolveYeetRev(context.repoRoot, "HEAD");
 
 /**
  * Return whether `bun.lock` changed between the configured base and head.

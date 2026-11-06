@@ -139,7 +139,8 @@ describe("JsoncFormatter", () => {
 
     it.effect.prop("formatting a formatted document is a no-op", [Sample], ([value]) =>
       Effect.gen(function* () {
-        const once = JsoncFormatter.formatToString(yield* encodeSample(value));
+        const encodedSample = yield* encodeSample(value);
+        const once = JsoncFormatter.formatToString(encodedSample);
         assert.strictEqual(JsoncFormatter.formatToString(once), once);
         assert.deepStrictEqual(JsoncFormatter.format(once), []);
       })

@@ -347,14 +347,42 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
   it.effect(
+    "gives every Heavy caller the read-only permission ceiling required by its nested producer",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavyYaml = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyYaml);
+      const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
+      expect(requested).toEqual({ contents: "read", actions: "read" });
+      expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      for (const { file, job } of [
+        { file: "check.yml", job: "heavy" },
+        { file: "heavy-admit.yml", job: "heavy" },
+        { file: "cache-producer-inspect.yml", job: "inspect" },
+        { file: "cache-producer-prepare.yml", job: "prepare" },
+        { file: "cache-producer.yml", job: "produce" },
+      ]) {
+        const workflowYaml = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
+        const workflow = parseWorkflowYaml(workflowYaml);
+        expect(yamlAt(workflow, ["jobs", job, "uses"])).toBe(
+          "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+        );
+        const permissions = O.fromUndefinedOr(yamlAt(workflow, ["jobs", job, "permissions"])).pipe(
+          O.getOrElse(() => yamlAt(workflow, ["permissions"]))
+        );
+        assert.deepEqual(permissions, requested, file);
+      }
+    })
+  );
+  it.effect(
     "scopes hosted governance reads to Security and exercises its job token on pull requests",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const jobs = yield* workflowJobs(
-        parseWorkflowYaml(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml")))
-      );
+      const readFileString1 = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
+      const jobs = yield* workflowJobs(parseWorkflowYaml(readFileString1));
       expect(jobs.verify?.permissions).toEqual({ contents: "read" });
       expect(jobs.security?.permissions).toEqual({ contents: "read", actions: "read" });
       const securitySteps = jobSteps(jobs, "security");
@@ -384,8 +412,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const workflow = parseWorkflowYaml(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml")));
-      const triggers = R.keys(yield* decodeYamlRecord(yamlAt(workflow, ["on"])));
+      const readFileString2 = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
+      const workflow = parseWorkflowYaml(readFileString2);
+      const decodedYamlRecord = yield* decodeYamlRecord(yamlAt(workflow, ["on"]));
+      const triggers = R.keys(decodedYamlRecord);
       expect(triggers).toContain("pull_request");
       expect(triggers).not.toContain("pull_request_target");
       expect(yamlAt(workflow, ["permissions"])).toEqual({ contents: "read" });
@@ -426,9 +456,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const ambientPath = yield* Config.String("PATH");
       const repoRoot = yield* findRepoRoot();
       const tempRoot = yield* fs.makeTempDirectoryScoped();
-      const workflow = parseWorkflowYaml(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml")));
+      const readFileString3 = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/heavy.yml"));
+      const workflow = parseWorkflowYaml(readFileString3);
+      const workflowJobs4 = yield* workflowJobs(workflow);
       const run = pipe(
-        stepRun(jobSteps(yield* workflowJobs(workflow), "verify"), "Run verification lane"),
+        stepRun(jobSteps(workflowJobs4, "verify"), "Run verification lane"),
         Str.replaceAll("${{ matrix.id }}", "check")
       );
       const fakeBun = path.join(tempRoot, "bun");
@@ -480,7 +512,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         { env: { ...process.env, PATH: `${temp}:${ambientPath}` }, stderr: "pipe", stdout: "pipe" }
       );
       assert.strictEqual(result.exitCode, 7);
-      assert.strictEqual(yield* fs.readFileString(receipt), "run");
+      const readFileString5 = yield* fs.readFileString(receipt);
+      assert.strictEqual(readFileString5, "run");
       assert.include(result.stderr.toString(), "resource measurement unavailable");
     })
   );
@@ -507,7 +540,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         { env: { ...process.env, RUNNER_TEMP: temp }, stderr: "pipe", stdout: "pipe" }
       );
       assert.strictEqual(result.exitCode, 7);
-      assert.strictEqual(yield* fs.readFileString(receipt), "run");
+      const readFileString6 = yield* fs.readFileString(receipt);
+      assert.strictEqual(readFileString6, "run");
     })
   );
 
@@ -791,7 +825,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
       // goals_only implies docs_only.
       assert.strictEqual(profile("pull_request").docs_only, "true");
-      assert.strictEqual(parseProfileOutput(yield* fs.readFileString(outputPath)).goals_only, "true");
+      const readFileString7 = yield* fs.readFileString(outputPath);
+      assert.strictEqual(parseProfileOutput(readFileString7).goals_only, "true");
       yield* fs.remove(outputPath);
 
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
@@ -913,7 +948,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       yield* writeAndCommit("apps/professional-desktop/src/index.ts", "export {}\n", "desktop frontend change");
       assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
 
-      const steps = jobSteps(yield* workflowJobs(workflow), "professional-desktop-ipc-stdio");
+      const workflowJobs8 = yield* workflowJobs(workflow);
+      const steps = jobSteps(workflowJobs8, "professional-desktop-ipc-stdio");
       const laneGate = "steps.lane-gate.outputs.should_run == 'true'";
       const rustGate = `${laneGate} && steps.lane-gate.outputs.rust_should_run == 'true'`;
       for (const name of ["Install Tauri Linux system dependencies", "Check Rust crate", "Lint Rust crate"]) {
@@ -964,8 +1000,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const workflow = parseWorkflowYaml(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml")));
-      const steps = jobSteps(yield* workflowJobs(workflow), "labs");
+      const readFileString9 = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
+      const workflow = parseWorkflowYaml(readFileString9);
+      const workflowJobs10 = yield* workflowJobs(workflow);
+      const steps = jobSteps(workflowJobs10, "labs");
       const gate = stepRun(steps, "Determine lane execution");
 
       assert.strictEqual(yamlAt(workflow, ["jobs", "labs", "name"]), "Labs");
@@ -977,7 +1015,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(gate, "labs_checks=false");
       assert.include(stepRun(steps, "Run Labs lane"), "run_lane ci lane labs --coverage-output .beep/ci-coverage/labs");
       // Not a verify matrix leg: Coverage Regression `needs` the Labs job itself.
-      assertNone(A.findFirst(yield* heavyMatrixLanes(workflow), (lane) => lane.id === "labs"));
+      const heavyMatrixLanes11 = yield* heavyMatrixLanes(workflow);
+      assertNone(A.findFirst(heavyMatrixLanes11, (lane) => lane.id === "labs"));
     })
   );
 
@@ -1063,10 +1102,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const workflow = parseWorkflowYaml(
-        yield* fs.readFileString(path.join(repoRoot, ".github/workflows/release-desktop.yml"))
-      );
-      const steps = jobSteps(yield* workflowJobs(workflow), "release-desktop");
+      const readFileString12 = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/release-desktop.yml"));
+      const workflow = parseWorkflowYaml(readFileString12);
+      const workflowJobs13 = yield* workflowJobs(workflow);
+      const steps = jobSteps(workflowJobs13, "release-desktop");
       const install = "Install Tauri Linux system dependencies";
       assert.strictEqual(stepByName(steps, install).if, "runner.os == 'Linux'");
       assertPrunesAptSourcesBefore(stepRun(steps, install), "sudo apt-get update");
@@ -1117,7 +1156,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         assert.strictEqual(emitted.goals_only, "false", eventName);
       }
       assert.notInclude(workflowText, "storybook_relevant");
-      const steps = jobSteps(yield* workflowJobs(workflow), "storybook");
+      const workflowJobs14 = yield* workflowJobs(workflow);
+      const steps = jobSteps(workflowJobs14, "storybook");
       const gate = "steps.lane-gate.outputs.should_run == 'true'";
       for (const name of [
         "Setup monorepo CI",
@@ -1172,7 +1212,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const burstRoot = path.join(repoRoot, "goals/speed-loop/ops/runner-burst");
-      const entries = A.sort(yield* fs.readDirectory(burstRoot), Order.String);
+      const readDirectory15 = yield* fs.readDirectory(burstRoot);
+      const entries = A.sort(readDirectory15, Order.String);
       const readme = yield* fs.readFileString(path.join(burstRoot, "README.md"));
 
       assert.deepStrictEqual(entries, ["README.md", "teardown-burst-runners.sh"]);
@@ -1214,9 +1255,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // script's allowlist names the same secrets.
       assert.notInclude(actionText, "toJSON(secrets)");
       assert.isUndefined(yamlAt(action, ["inputs", "repository-secrets"]));
-      const exportEnvironment = stepEnvironment(
-        stepByName(yield* decodeWorkflowSteps(yamlAt(action, ["runs", "steps"])), "Export job environment")
-      );
+      const decodedWorkflowSteps = yield* decodeWorkflowSteps(yamlAt(action, ["runs", "steps"]));
+      const exportEnvironment = stepEnvironment(stepByName(decodedWorkflowSteps, "Export job environment"));
       assert.isUndefined(exportEnvironment.BEEP_CI_SECRETS_JSON);
       for (const [input, name] of SECRET_INPUTS) {
         assert.strictEqual(yamlAt(action, ["inputs", input, "default"]), "", input);
@@ -1266,15 +1306,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yamlAt(heavyWorkflow, ["jobs", "verify", "environment"]),
         "${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}"
       );
+      const heavyMatrixLanes16 = yield* heavyMatrixLanes(heavyWorkflow);
       const buildLane = O.getOrThrowWith(
-        A.findFirst(yield* heavyMatrixLanes(heavyWorkflow), (lane) => lane.id === "build"),
+        A.findFirst(heavyMatrixLanes16, (lane) => lane.id === "build"),
         () => new Error("heavy.yml declares no build lane.")
       );
       assert.strictEqual(buildLane.name, "Build");
       assert.strictEqual(buildLane.uses_turbo, "true");
       // Effect rules run inside the patched tsrs typecheck, so the standalone
       // diagnostics matrix lane is retired.
-      assertNone(A.findFirst(yield* heavyMatrixLanes(heavyWorkflow), (lane) => lane.id === "effect-diagnostics"));
+      const heavyMatrixLanes17 = yield* heavyMatrixLanes(heavyWorkflow);
+      assertNone(A.findFirst(heavyMatrixLanes17, (lane) => lane.id === "effect-diagnostics"));
       assert.notInclude(heavyWorkflowText, "run_lane ci lane effect-diagnostics");
       assert.notInclude(heavyWorkflowText, "commands/Quality/EffectDiagnostics.ts");
       assert.include(heavyWorkflowText, "check|test-integration|build)");
@@ -1356,7 +1398,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         assert.notInclude(stdout, "write-token");
         assert.notInclude(stdout, "read-token");
         assert.notInclude(stdout, "postgres://");
-        return parseGithubEnv(yield* fs.readFileString(outputPath));
+        const readFileString18 = yield* fs.readFileString(outputPath);
+        return parseGithubEnv(readFileString18);
       });
 
       const push = yield* jobEnv({
@@ -1461,10 +1504,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         stepIndexByName(actionSteps, "Free runner disk"),
         stepIndexByName(actionSteps, "Install dependencies")
       );
-      const workflowFiles = A.filter(
-        yield* fs.readDirectory(path.join(repoRoot, ".github/workflows")),
-        Str.endsWith(".yml")
-      );
+      const readDirectory19 = yield* fs.readDirectory(path.join(repoRoot, ".github/workflows"));
+      const workflowFiles = A.filter(readDirectory19, Str.endsWith(".yml"));
       for (const file of workflowFiles) {
         const text = yield* fs.readFileString(path.join(repoRoot, ".github/workflows", file));
         for (const input of retiredInputs) {
@@ -1505,8 +1546,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(workflowText, 'eval "$(scripts/ci-change-profile.sh');
       assert.include(workflowText, 'if [[ "$goals_only" == "true" ]]');
       assert.include(workflowText, "- name: Skip lane");
+      const heavyMatrixLanes20 = yield* heavyMatrixLanes(workflow);
       assert.strictEqual(
-        O.getOrThrow(A.findFirst(yield* heavyMatrixLanes(workflow), (lane) => lane.id === "docgen")).docgen_concurrency,
+        O.getOrThrow(A.findFirst(heavyMatrixLanes20, (lane) => lane.id === "docgen")).docgen_concurrency,
         6
       );
       const steps = jobSteps(jobs, "verify");
@@ -1559,7 +1601,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       assert.notInclude(packageJson, '"doctest":');
       assert.include(packageJson, '"@effect/doctest": "catalog:"');
-      assert.isFalse(yield* fs.exists(path.join(repoRoot, "vitest.docs.ts")));
+      const exists21 = yield* fs.exists(path.join(repoRoot, "vitest.docs.ts"));
+      assert.isFalse(exists21);
     })
   );
 
@@ -1610,11 +1653,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "skills-update-train.yml:Skills Relock",
         "skills-update-train.yml:Skills Train Batch Issue",
       ];
-      const files = A.filter(yield* fs.readDirectory(`${root}/.github/workflows`), Str.endsWith(".yml"));
+      const readDirectory22 = yield* fs.readDirectory(`${root}/.github/workflows`);
+      const files = A.filter(readDirectory22, Str.endsWith(".yml"));
       for (const file of files) {
         const workflow = Str.replace(/\.yml$/, "")(file);
         const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
-        expect(yield* workflowPolicyDiagnostics(file, text)).toEqual([]);
+        const workflowPolicyDiagnostics23 = yield* workflowPolicyDiagnostics(file, text);
+        expect(workflowPolicyDiagnostics23).toEqual([]);
         const contexts = yield* workflowJobContexts(file, text);
         const declared = A.map(
           A.filter(CI_LANE_DESCRIPTORS, (row) => row.workflow === workflow),
@@ -1630,7 +1675,45 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
     })
   );
-  it.effect("keeps protected source inspection credential-free and retains only its bounded report", () =>
+  it.effect("keeps reusable Heavy callers compatible with the protected producer permission ceiling", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
+      expect(requested).toEqual({ contents: "read", actions: "read" });
+      const callers = [
+        ["check.yml", "heavy"],
+        ["heavy-admit.yml", "heavy"],
+        ["cache-producer-inspect.yml", "inspect"],
+        ["cache-producer-prepare.yml", "prepare"],
+        ["cache-producer.yml", "produce"],
+      ] as const;
+      for (const [file, job] of callers) {
+        const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
+        const caller = parseWorkflowYaml(text);
+        const diagnostics = yield* workflowPolicyDiagnostics(file, text);
+        expect(diagnostics, file).toEqual([]);
+        expect(yamlAt(caller, ["jobs", job, "uses"]), file).toBe(
+          "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+        );
+        const allowed = yamlAt(caller, ["jobs", job, "permissions"]) ?? yamlAt(caller, ["permissions"]);
+        expect(allowed, file).toEqual(requested);
+      }
+      // The caller ceiling permits validation; ordinary quality jobs still
+      // strip Actions access and cannot select the protected producer mode.
+      expect(yamlAt(heavy, ["jobs", "verify", "permissions"])).toEqual({ contents: "read" });
+      const checkText = yield* fs.readFileString(`${root}/.github/workflows/check.yml`);
+      const check = parseWorkflowYaml(checkText);
+      expect(yamlAt(check, ["jobs", "heavy", "with", "producer_execution"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toContain(
+        "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer.yml@refs/heads/main'"
+      );
+    })
+  );
+
+  it.effect("keeps source inspection credential-free with bounded dependency diagnostics", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
@@ -1655,6 +1738,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
       const heavy = parseWorkflowYaml(heavyText);
       expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(workflow, ["jobs", "inspect", "permissions"])).toEqual(
+        yamlAt(heavy, ["jobs", "producer-execute", "permissions"])
+      );
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "permissions"])).toBeUndefined();
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_inspection"])).toEqual({
         description:
           "Run only the credential-free protected source inspection for the exact main manual dispatcher. Ordinary quality callers leave this off.",
@@ -1680,7 +1767,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-ec2-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "environment"])).toBe("turbo-cache-write");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "timeout-minutes"])).toBe(10);
-      const steps = jobSteps(yield* workflowJobs(heavy), "producer-inspect");
+      const workflowJobs24 = yield* workflowJobs(heavy);
+      const steps = jobSteps(workflowJobs24, "producer-inspect");
       const setup = stepByName(steps, "Setup pinned toolchain without cache capabilities");
       expect(setup.uses).toBe(SETUP_MONOREPO_ACTION);
       expect(setup.with).toEqual({
@@ -1700,7 +1788,40 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const inspect = stepByName(steps, "Write bounded source inspection");
       expect(inspect.env).toEqual({ BEEP_TURBO_HOST_CACHE_DISABLED: "true" });
       expect(inspect.run).toContain("bun --no-env-file run beep cache producer-inspect");
+      expect(inspect.run).toContain("set -euo pipefail");
+      const diagnosticName = "Diagnose installed dependency drift without capabilities";
+      const diagnostic = stepByName(steps, diagnosticName);
+      expect(diagnostic.env).toEqual({ SOURCE_REPORT: "${{ steps.inspection.outputs.report }}" });
+      expect(diagnostic.run).toContain('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"');
+      expect(diagnostic.run).toContain(
+        "/usr/bin/python3 -I -S goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py"
+      );
+      expect(diagnostic.run).toContain('--source-report "$SOURCE_REPORT" --output "$diagnostic"');
+      expect(diagnostic.run).toContain('--revision "$GITHUB_SHA"');
+      expect(stepIndexByName(steps, "Write bounded source inspection")).toBeLessThan(
+        stepIndexByName(steps, diagnosticName)
+      );
+      expect(stepIndexByName(steps, diagnosticName)).toBeLessThan(
+        stepIndexByName(steps, "Bound inspection artifact publication")
+      );
+      const publication = stepByName(steps, "Bound inspection artifact publication");
+      expect(publication.if).toBe(
+        "always() && steps.inspection.outcome == 'success' && steps.inspection.outputs.report != ''"
+      );
+      expect(publication.env).toEqual({
+        SOURCE_REPORT: "${{ steps.inspection.outputs.report }}",
+        DIAGNOSTIC_REPORT: "${{ steps.dependency-diagnostics.outputs.report }}",
+      });
+      expect(publication.run).toContain('--publication-only --source-report "$SOURCE_REPORT"');
+      expect(publication.run).toContain('--output "$DIAGNOSTIC_REPORT"');
+      expect(publication.run).toContain('>> "$GITHUB_OUTPUT"');
+      expect(stepIndexByName(steps, "Bound inspection artifact publication")).toBeLessThan(
+        stepIndexByName(steps, "Retain inspection for at most one day")
+      );
       const retain = stepByName(steps, "Retain inspection for at most one day");
+      expect(retain.if).toBe(
+        "always() && steps.inspection.outcome == 'success' && steps.inspection-publication.outputs.source == 'true'"
+      );
       expect(retain.with).toEqual({
         name: "cache-producer-inspection-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.inspection.outputs.report }}",
@@ -1708,8 +1829,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "retention-days": 1,
         "compression-level": 0,
       });
-      expect(yield* workflowPolicyDiagnostics("cache-producer-inspect.yml", text)).toEqual([]);
-      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
+      const dependencyRetain = stepByName(steps, "Retain dependency diagnostic for at most one day");
+      expect(dependencyRetain.if).toBe("always() && steps.inspection-publication.outputs.diagnostic == 'true'");
+      expect(dependencyRetain.with).toEqual({
+        name: "cache-producer-dependencies-${{ github.run_id }}-${{ github.run_attempt }}",
+        path: "${{ steps.dependency-diagnostics.outputs.report }}",
+        "if-no-files-found": "warn",
+        "retention-days": 1,
+        "compression-level": 0,
+      });
+      const workflowPolicyDiagnostics25 = yield* workflowPolicyDiagnostics("cache-producer-inspect.yml", text);
+      expect(workflowPolicyDiagnostics25).toEqual([]);
+      const workflowPolicyDiagnostics26 = yield* workflowPolicyDiagnostics("heavy.yml", heavyText);
+      expect(workflowPolicyDiagnostics26).toEqual([]);
     })
   );
 
@@ -1737,6 +1869,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(workflow, ["jobs", "prepare", "secrets"])).toBeUndefined();
       const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
       const heavy = parseWorkflowYaml(heavyText);
+      expect(yamlAt(workflow, ["jobs", "prepare", "permissions"])).toEqual(
+        yamlAt(heavy, ["jobs", "producer-execute", "permissions"])
+      );
+      expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "permissions"])).toBeUndefined();
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_preparation"])).toEqual({
         description:
           "Build only the credential-free candidate adapter for the exact main manual dispatcher. This grants no producer or cache-write authority.",
@@ -1768,7 +1905,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         RUSTUP_TOOLCHAIN: "1.96.0",
         CARGO_BUILD_JOBS: "2",
       });
-      const steps = jobSteps(yield* workflowJobs(heavy), "producer-prepare");
+      const workflowJobs27 = yield* workflowJobs(heavy);
+      const steps = jobSteps(workflowJobs27, "producer-prepare");
       expect(stepByName(steps, "Checkout exact main source").with).toEqual({
         ref: "${{ github.sha }}",
         "fetch-depth": 0,
@@ -1782,13 +1920,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         override: "false",
         matcher: "false",
       });
-      const hostTools = "Ensure native host compiler and ELF inspection tools";
+      const hostTools = "Ensure native build and ELF inspection prerequisites";
       const hostSetup = stepRun(steps, hostTools);
       expect(hostSetup).toContain("command -v cc");
       expect(hostSetup).toContain("command -v ld");
       expect(hostSetup).toContain("command -v readelf");
-      expect(hostSetup).toContain("dnf install -y gcc binutils");
-      expect(hostSetup).toContain("apt-get install -y --no-install-recommends gcc binutils");
+      expect(hostSetup).toContain("! command -v make");
+      expect(hostSetup).toContain("! perl -MFindBin -MIPC::Cmd -MFile::Compare -MFile::Copy -e 'use 5.010;'");
+      expect(hostSetup).toContain("dnf install -y gcc binutils make perl-core");
+      expect(hostSetup).toContain("apt-get install -y --no-install-recommends gcc binutils make perl");
+      expect(hostSetup).toContain("make --version");
+      expect(hostSetup).toContain("perl --version");
       assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
       expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
       const install = stepByName(steps, "Install pinned portable build tools");
@@ -1835,8 +1977,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         expect(step.run ?? "").not.toContain("producer-run");
         expect(step.run ?? "").not.toContain("op read");
       }
-      expect(yield* workflowPolicyDiagnostics("cache-producer-prepare.yml", text)).toEqual([]);
-      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
+      const workflowPolicyDiagnostics28 = yield* workflowPolicyDiagnostics("cache-producer-prepare.yml", text);
+      expect(workflowPolicyDiagnostics28).toEqual([]);
+      const workflowPolicyDiagnostics29 = yield* workflowPolicyDiagnostics("heavy.yml", heavyText);
+      expect(workflowPolicyDiagnostics29).toEqual([]);
     })
   );
 
@@ -1914,8 +2058,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         BEEP_TURBO_HOST_CACHE_DISABLED: "true",
         BEEP_CACHE_PRODUCER_CHANNEL: "${{ inputs.producer_channel }}",
       });
-      expect(yield* workflowPolicyDiagnostics("cache-producer.yml", text)).toEqual([]);
-      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
+      const producerDiagnostics = yield* workflowPolicyDiagnostics("cache-producer.yml", text);
+      expect(producerDiagnostics).toEqual([]);
+      const heavyDiagnostics = yield* workflowPolicyDiagnostics("heavy.yml", heavyText);
+      expect(heavyDiagnostics).toEqual([]);
     })
   );
 
@@ -1923,8 +2069,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
-      const steps = jobSteps(yield* workflowJobs(heavy), "producer-execute");
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const jobs = yield* workflowJobs(heavy);
+      const steps = jobSteps(jobs, "producer-execute");
       expect(stepByName(steps, "Setup pinned toolchain without trial capabilities").with).toEqual({
         "turbo-remote-cache": "false",
         "r2-enabled": "false",
@@ -1976,8 +2124,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
-      const steps = jobSteps(yield* workflowJobs(heavy), "producer-execute");
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const jobs = yield* workflowJobs(heavy);
+      const steps = jobSteps(jobs, "producer-execute");
       const installName = "Install independently approved issuer only";
       const runName = "Execute closed signed trial and retain private observation";
       const publishName = "Publish issued observation using storage capabilities only";
@@ -2016,11 +2166,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
-      const script = stepRun(
-        jobSteps(yield* workflowJobs(heavy), "producer-execute"),
-        "Require independent frozen trial selection"
-      );
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const jobs = yield* workflowJobs(heavy);
+      const script = stepRun(jobSteps(jobs, "producer-execute"), "Require independent frozen trial selection");
       const directory = yield* fs.makeTempDirectoryScoped();
       const source = "1111111111111111111111111111111111111111";
       const base = {
@@ -2064,7 +2213,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const workflow = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/hub-pipe-security.yml`));
+      const readFileString30 = yield* fs.readFileString(`${root}/.github/workflows/hub-pipe-security.yml`);
+      const workflow = parseWorkflowYaml(readFileString30);
       const jobs = yield* workflowJobs(workflow);
       expect(yamlAt(workflow, ["permissions", "contents"])).toBe("read");
       expect(yamlAt(workflow, ["jobs", "pipe-scripts", "steps", 0, "with", "persist-credentials"])).toBe(false);
@@ -2101,7 +2251,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "name"])).toBe(
         "${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}"
       );
-      expect(A.some(yield* heavyMatrixLanes(policy.heavyWorkflow), (lane) => lane.id === "coverage")).toBe(false);
+      const heavyMatrixLanes31 = yield* heavyMatrixLanes(policy.heavyWorkflow);
+      expect(A.some(heavyMatrixLanes31, (lane) => lane.id === "coverage")).toBe(false);
       expect(policy.heavyWorkflowText).not.toContain("Verify coverage runtime features");
       expect(policy.heavyWorkflowText).not.toContain("append-turbo-summary --all");
       const download = stepByName(comparison, "Download coverage evidence");
@@ -2188,7 +2339,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const path = yield* Path.Path;
         const root = yield* findRepoRoot();
         const policy = yield* readCredentialPolicySources();
-        const comparison = jobSteps(yield* workflowJobs(policy.workflow), "coverage-regression");
+        const workflowJobs32 = yield* workflowJobs(policy.workflow);
+        const comparison = jobSteps(workflowJobs32, "coverage-regression");
         const authenticate = stepByName(comparison, "Authenticate latest Labs execution").run ?? "";
         const manifestGuard =
           Str.split(stepByName(comparison, "Compare coverage evidence").run ?? "", "shape_args=")[0] ?? "";
@@ -2212,28 +2364,29 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           completed_at: "2026-10-21T08:04:00Z",
         };
         if (scenario.original) {
-          yield* fs.writeFileString(
-            path.join(temp, "1.json"),
-            yield* encodeJobsFixture([{ jobs: [{ name: "Unrelated verification" }] }, { jobs: [original] }])
-          );
-        }
-        yield* fs.writeFileString(
-          path.join(temp, "2.json"),
-          yield* encodeJobsFixture([
+          const argument1 = path.join(temp, "1.json");
+          const encodedJobsFixture1 = yield* encodeJobsFixture([
             { jobs: [{ name: "Unrelated verification" }] },
-            {
-              jobs: [
-                {
-                  ...original,
-                  run_attempt: 2,
-                  conclusion: scenario.conclusion,
-                  started_at: `2026-10-21T${scenario.started}Z`,
-                  completed_at: `2026-10-21T${scenario.completed}Z`,
-                },
-              ],
-            },
-          ])
-        );
+            { jobs: [original] },
+          ]);
+          yield* fs.writeFileString(argument1, encodedJobsFixture1);
+        }
+        const argument2 = path.join(temp, "2.json");
+        const encodedJobsFixture2 = yield* encodeJobsFixture([
+          { jobs: [{ name: "Unrelated verification" }] },
+          {
+            jobs: [
+              {
+                ...original,
+                run_attempt: 2,
+                conclusion: scenario.conclusion,
+                started_at: `2026-10-21T${scenario.started}Z`,
+                completed_at: `2026-10-21T${scenario.completed}Z`,
+              },
+            ],
+          },
+        ]);
+        yield* fs.writeFileString(argument2, encodedJobsFixture2);
         const ambientPath = yield* Config.String("PATH");
         const env = {
           ...process.env,
@@ -2248,16 +2401,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         };
         const result = Bun.spawnSync(["bash", "-c", authenticate], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
         expect(result.exitCode === 0).toBe(Str.isNonEmpty(scenario.output));
-        expect(yield* fs.readFileString(output)).toBe(scenario.output);
-        expect(yield* fs.readFileString(calls)).toBe(scenario.original ? "1\n2\n" : "1\n");
+        const readFileString33 = yield* fs.readFileString(output);
+        expect(readFileString33).toBe(scenario.output);
+        const readFileString34 = yield* fs.readFileString(calls);
+        expect(readFileString34).toBe(scenario.original ? "1\n2\n" : "1\n");
         if (Str.isNonEmpty(scenario.output)) {
           const attempt = parseProfileOutput(scenario.output).attempt ?? "";
           const manifest = path.join(temp, `.beep/ci-coverage-inputs/unit-coverage-123-${attempt}-labs/manifest.json`);
           yield* fs.makeDirectory(path.dirname(manifest), { recursive: true });
-          yield* fs.writeFileString(
-            manifest,
-            yield* encodeJobsFixture({ partitionId: "labs", identity: { runId: "123", runAttempt: Number(attempt) } })
-          );
+          const encodedJobsFixture = yield* encodeJobsFixture({
+            partitionId: "labs",
+            identity: { runId: "123", runAttempt: Number(attempt) },
+          });
+          yield* fs.writeFileString(manifest, encodedJobsFixture);
           const accepted = Bun.spawnSync(["bash", "-c", manifestGuard], {
             cwd: temp,
             env: { ...env, LABS_PRODUCER_ATTEMPT: attempt },
@@ -2283,7 +2439,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* findRepoRoot();
-      const workflow = parseWorkflowYaml(yield* fs.readFileString(path.join(root, ".github/workflows/check.yml")));
+      const readFileString35 = yield* fs.readFileString(path.join(root, ".github/workflows/check.yml"));
+      const workflow = parseWorkflowYaml(readFileString35);
       const jobs = yield* workflowJobs(workflow);
       const rollout = stepByName(jobSteps(jobs, "admission"), "Determine coverage rollout context");
       const script = rollout.run ?? "";
@@ -2333,7 +2490,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         });
         expect(result.stderr.toString()).toBe("");
         expect(result.exitCode).toBe(0);
-        expect(yield* fs.readFileString(output)).toBe(`legacy_coverage=${legacy}\n`);
+        const readFileString36 = yield* fs.readFileString(output);
+        expect(readFileString36).toBe(`legacy_coverage=${legacy}\n`);
       }
       yield* fs.writeFileString(output, "");
       const failed = Bun.spawnSync(["bash", "-c", script], {
@@ -2354,8 +2512,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         stderr: "pipe",
       });
       expect(failed.exitCode).toBe(23);
-      expect(yield* fs.readFileString(output)).toBe("");
-      expect(yield* fs.readFileString(calls)).toContain(`show ${sha}:.github/workflows/heavy.yml`);
+      const readFileString37 = yield* fs.readFileString(output);
+      expect(readFileString37).toBe("");
+      const readFileString38 = yield* fs.readFileString(calls);
+      expect(readFileString38).toContain(`show ${sha}:.github/workflows/heavy.yml`);
     })
   );
 });

@@ -137,7 +137,8 @@ describe("ChildEnv regression contracts", () => {
   it.effect("validates plain additions and requires the true merge flag", () =>
     Effect.gen(function* () {
       const additions: PathPrependEnv.Encoded = { env: { PATH: "/tools" }, extendEnv: true };
-      assert.deepStrictEqual(yield* S.decodeEffect(PathPrependEnv)(additions), additions);
+      const value1 = yield* S.decodeEffect(PathPrependEnv)(additions);
+      assert.deepStrictEqual(value1, additions);
       assert.isFalse(S.is(PathPrependEnv)({ env: {}, extendEnv: false }));
       assert.isFalse(S.is(PathPrependEnv)({ env: {} }));
       assert.isFalse(S.is(PathPrependEnv)({ env: { PATH: undefined }, extendEnv: true }));
@@ -150,7 +151,8 @@ describe("ChildEnv regression contracts", () => {
         base: { PATH: undefined, HOME: "/home/ci" },
         platform: "other-platform",
       };
-      assert.deepStrictEqual(yield* S.decodeEffect(PathPrependOptions)(options), options);
+      const value2 = yield* S.decodeEffect(PathPrependOptions)(options);
+      assert.deepStrictEqual(value2, options);
       assert.isFalse(S.is(PathPrependOptions)({ platform: "linux" }));
       assert.isFalse(S.is(PathPrependOptions)({ base: {} }));
       assert.isFalse(S.is(PathPrependOptions)({ base: { PATH: 42 }, platform: "linux" }));

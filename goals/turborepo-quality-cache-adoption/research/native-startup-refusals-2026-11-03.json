@@ -1,0 +1,275 @@
+{
+  "schemaVersion": "native-startup-refusals/v1",
+  "recordedAt": "2026-11-03T22:10:30.161456+00:00",
+  "sourceRevision": "52a33e7e66b36ac11be28c671e16ab9e3167eba9",
+  "driverSourceBindings": [
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-boundaries-controls.py",
+      "sha256": "50eb3e7f702d3b6d620b4423214150d9e7a586ac515bd893707a57a22eb5dea4"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-worktree-controls.py",
+      "sha256": "0a3de73a0227b8be33165c1a81ea22cbd419bc7b12238354d6b60f950b9dd2d9"
+    }
+  ],
+  "cases": [
+    {
+      "driver": "native-boundaries-controls.py",
+      "case": "dash-O",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-boundaries-controls.py-dash-O.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-boundaries-controls.py-dash-O.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-boundaries-controls.py",
+      "case": "dash-OO",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-boundaries-controls.py-dash-OO.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-boundaries-controls.py-dash-OO.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-boundaries-controls.py",
+      "case": "env-one",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-boundaries-controls.py-env-one.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-boundaries-controls.py-env-one.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-boundaries-controls.py",
+      "case": "env-two",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-boundaries-controls.py-env-two.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-boundaries-controls.py-env-two.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-boundaries-controls.py",
+      "case": "simulated-darwin",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-boundaries-controls.py-simulated-darwin.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-boundaries-controls.py-simulated-darwin.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-boundaries-controls.py",
+      "case": "simulated-darwin-optimized",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-boundaries-controls.py-simulated-darwin-optimized.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-boundaries-controls.py-simulated-darwin-optimized.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-worktree-controls.py",
+      "case": "dash-O",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-worktree-controls.py-dash-O.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-worktree-controls.py-dash-O.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-worktree-controls.py",
+      "case": "dash-OO",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-worktree-controls.py-dash-OO.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-worktree-controls.py-dash-OO.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-worktree-controls.py",
+      "case": "env-one",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-worktree-controls.py-env-one.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-worktree-controls.py-env-one.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-worktree-controls.py",
+      "case": "env-two",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-worktree-controls.py-env-two.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-worktree-controls.py-env-two.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-worktree-controls.py",
+      "case": "simulated-darwin",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-worktree-controls.py-simulated-darwin.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-worktree-controls.py-simulated-darwin.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    },
+    {
+      "driver": "native-worktree-controls.py",
+      "case": "simulated-darwin-optimized",
+      "exitCode": 1,
+      "expectedMessageMatched": true,
+      "outputAndRawParentNotCreated": true,
+      "nativeClientsOrTaskBodiesExecuted": 0,
+      "scope": "Actual optimized invocation or simulated sys.platform startup branch; no non-Linux native execution.",
+      "streams": {
+        "stdout": {
+          "file": "native-worktree-controls.py-simulated-darwin-optimized.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "stderr": {
+          "file": "native-worktree-controls.py-simulated-darwin-optimized.stderr",
+          "bytes": 35,
+          "sha256": "da671abcdaa8a7939c626dcbd7be9d0bd850999472de0cf45d36e149aa8dc0ce"
+        }
+      }
+    }
+  ],
+  "counts": {
+    "earlyRefusals": 12,
+    "nativeClientsOrFixtureBodiesInRefusalControls": 0
+  },
+  "normalReplayReports": ["boundaries/report.json", "worktrees/report.json"],
+  "scope": "Startup controls plus separate bounded native replays; synthetic observations only, not task/profile or rollout qualification."
+}

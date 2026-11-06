@@ -102,7 +102,8 @@ describe("DuckDbClient late native results", () => {
         const error = yield* client.unsafe("SELECT 1 AS one").pipe(Effect.flip);
         assert.strictEqual(error.reason.cause instanceof Error && error.reason.cause.message, "row conversion refused");
         assert.strictEqual(MutableRef.get(closed), 1);
-        assert.deepStrictEqual(yield* client.unsafe("SELECT 1 AS one").values, [[1]]);
+        const values1 = yield* client.unsafe("SELECT 1 AS one").values;
+        assert.deepStrictEqual(values1, [[1]]);
         assert.strictEqual(MutableRef.get(closed), 2);
       })
     );

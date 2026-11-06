@@ -21,6 +21,15 @@ import * as S from "effect/Schema";
 import { LineBreakNode, ParagraphNode, TabNode, TextNode } from "lexical";
 import type { CapabilityDescriptor, CommandDefinition, Keybinding } from "@beep/editor/capability/schemas";
 
+class CapabilityCatalogTestOperationError extends S.TaggedError<
+  CapabilityCatalogTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CapabilityCatalogTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in capability-catalog.test.ts." }
+) {}
+
 const $I = $EditorId.create("capability/catalog-test");
 
 class AtlasBinding extends S.Opaque<AtlasBinding, { readonly brand: unique symbol }>()(
@@ -229,7 +238,10 @@ describe("capability catalog", () => {
   it.effect(
     "reconciles every atlas-backed descriptor and command",
     Effect.fnUntraced(function* () {
-      const atlasText = yield* Effect.tryPromise(() => Bun.file(atlasUrl).text());
+      const atlasText = yield* Effect.tryPromise({
+        try: () => Bun.file(atlasUrl).text(),
+        catch: (cause) => CapabilityCatalogTestOperationError.make({ cause }),
+      });
       const atlas = yield* decodeAtlasArtifactJson(atlasText);
       const index = atlasIndex(atlas.capabilities);
       const mismatches = pipe(

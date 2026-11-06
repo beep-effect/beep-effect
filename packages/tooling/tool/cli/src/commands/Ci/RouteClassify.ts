@@ -700,7 +700,8 @@ const readWorkspace = Effect.fnUntraced(function* <R>(
   read: RouteReadAt<R>,
   ref: string
 ): Effect.fn.Return<RefWorkspace, RouteError, R> {
-  const manifest = O.flatMap(yield* read(ref, MANIFEST_NAME), decodeManifestText);
+  const read1 = yield* read(ref, MANIFEST_NAME);
+  const manifest = O.flatMap(read1, decodeManifestText);
   return {
     ref,
     globs: pipe(manifest, O.map(workspacePatterns), O.flatMap(flow(GlobSet.compileResult, Result.getSuccess))),
@@ -920,7 +921,12 @@ const gitReadAt =
       if (O.isNone(blob)) {
         return O.none<string>();
       }
-      return O.some(yield* runGitRawOutput(repoRoot, ["cat-file", "blob", blob.value.objectId], routeGitErrors));
+      const resultGitRawOutput = yield* runGitRawOutput(
+        repoRoot,
+        ["cat-file", "blob", blob.value.objectId],
+        routeGitErrors
+      );
+      return O.some(resultGitRawOutput);
     }).pipe(Effect.withSpan("RouteClassify.gitReadAt", { attributes: { ref, path } }));
 
 const decodeCommitCount = S.decodeUnknownOption(S.FiniteFromString.pipe(S.decodeTo(S.Natural)));

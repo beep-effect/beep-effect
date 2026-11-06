@@ -116,7 +116,9 @@ describe("JSONL schema and facade types", () => {
       const decoded = yield* pipe(line(encoded), Envelope.decode(events));
       expectTypeOf(decoded).toEqualTypeOf<EnvelopeUnion<Registry>>();
       expect(decoded.data).toEqual({ count: 2, label: "a" });
-      expect(encoded).toBe(yield* Envelope.encode({ at, event: "updated", data: { count: 2, label: "a" } }, events));
+      const expectation = expect(encoded);
+      const encoded1 = yield* Envelope.encode({ at, event: "updated", data: { count: 2, label: "a" } }, events);
+      expectation.toBe(encoded1);
     })
   );
 
@@ -152,9 +154,12 @@ describe("JSONL schema and facade types", () => {
       expect(bom).toBe(3);
       const decode = (window: { readonly text: string }) => Line.lastValid(window.text);
       const direct = yield* readTailUntil(fs, path, bom, decode);
-      assertSome(yield* pipe(fs, readTailUntil(path, bom, decode)), O.getOrThrow(direct));
-      assertSome(yield* readTailUntil(fs, path, bom, decode, 2), O.getOrThrow(direct));
-      assertSome(yield* pipe(fs, readTailUntil(path, bom, decode, 2)), O.getOrThrow(direct));
+      const pipe1 = yield* pipe(fs, readTailUntil(path, bom, decode));
+      assertSome(pipe1, O.getOrThrow(direct));
+      const readTailUntil2 = yield* readTailUntil(fs, path, bom, decode, 2);
+      assertSome(readTailUntil2, O.getOrThrow(direct));
+      const pipe3 = yield* pipe(fs, readTailUntil(path, bom, decode, 2));
+      assertSome(pipe3, O.getOrThrow(direct));
       assertSome(direct.pipe(O.map((parsed) => parsed.line.offset)), 0);
     })
   );
@@ -291,7 +296,8 @@ describe("JSONL generic engine", () => {
         expectTypeOf<Stream.Success<typeof query>>().toEqualTypeOf<EnvelopeWithTag<Registry, "updated">>();
         const rows = yield* Stream.runCollect(query);
         expect(A.map(rows, (row) => row.data.count)).toEqual([2]);
-        assertSome(yield* SubscriptionRef.get(journal.latest), second);
+        const got = yield* SubscriptionRef.get(journal.latest);
+        assertSome(got, second);
       })
     )
   );
@@ -303,7 +309,8 @@ describe("JSONL generic engine", () => {
         yield* journal.create;
         yield* journal.append("updated", { count: 3, label: "a" });
         yield* journal.append("closed", null);
-        expect(yield* journal.quiescent).toBe(true);
+        const quiescent4 = yield* journal.quiescent;
+        expect(quiescent4).toBe(true);
         const rejected = yield* Effect.result(journal.append("updated", { count: 4, label: "b" }));
         assertFailure(
           Result.mapError(rejected, (error) => error._tag),
@@ -314,10 +321,12 @@ describe("JSONL generic engine", () => {
           .pipe(Stream.runCollect);
         assertSome(A.last(projected), 3);
         yield* journal.append("reopened", null);
-        expect(yield* journal.quiescent).toBe(false);
+        const quiescent5 = yield* journal.quiescent;
+        expect(quiescent5).toBe(false);
         const full = journal.query();
         expectTypeOf<Stream.Success<typeof full>>().toEqualTypeOf<EnvelopeUnion<Registry>>();
-        expect(A.length(yield* Stream.runCollect(full))).toBe(3);
+        const resultCollect = yield* Stream.runCollect(full);
+        expect(A.length(resultCollect)).toBe(3);
       })
     )
   );

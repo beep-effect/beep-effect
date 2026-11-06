@@ -114,7 +114,10 @@ it.layer(NodeServices.layer)("Bun shim exit cleanup", (it) => {
           const output = child.stdout + child.stderr;
           const locks = A.map(A.filter(Str.split(output, "\n"), Str.startsWith("retained=")), Str.slice(9));
           expect(locks).toHaveLength(12);
-          for (const lock of locks) expect(yield* fs.exists(lock), lock).toBe(false);
+          for (const lock of locks) {
+            const exists1 = yield* fs.exists(lock);
+            expect(exists1, lock).toBe(false);
+          }
           expect(child.error).toBeUndefined();
           expect(child.signal).toBeNull();
           expect(child.status, output).toBe(0);

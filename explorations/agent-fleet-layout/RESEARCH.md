@@ -28,7 +28,7 @@ rebuilding them). Date sections; research goes stale.
   This repo's `turbo.json` sets no `cacheDir`, so lanes already share their
   seat's cache. Seats share with each other through `~/.cache/beep/turbo`
   on two paths already: the repo CLI selects it for turbo runs when nothing
-  overrides it (`packages/tooling/tool/cli/src/internal/cli/TurboCache.ts`),
+  overrides it (`packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts`),
   and `.envrc` exports `TURBO_CACHE_DIR` for direnv-loaded shells. The gap is
   invocations that bypass both (raw `turbo`, shells without direnv, units
   without the variable), which is what lane bootstrap still has to close.

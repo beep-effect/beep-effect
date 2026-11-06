@@ -132,7 +132,8 @@ export const realDestination = ({
           if (O.isSome(link) || parent === file) {
             return yield* error;
           }
-          return path.join(yield* resolve(parent), path.basename(file));
+          const resolved = yield* resolve(parent);
+          return path.join(resolved, path.basename(file));
         })
       )
     );

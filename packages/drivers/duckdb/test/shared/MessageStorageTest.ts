@@ -94,18 +94,16 @@ describe("MessageStorage", () => {
       it.effect("detects duplicates", () =>
         Effect.gen(function* () {
           const storage = yield* MessageStorage.MessageStorage;
-          yield* storage.saveRequest(
-            yield* makeRequest({
-              rpc: PrimaryKeyTest,
-              payload: PrimaryKeyTest.payloadSchema.make({ id: 123 }),
-            })
-          );
-          const result = yield* storage.saveRequest(
-            yield* makeRequest({
-              rpc: PrimaryKeyTest,
-              payload: PrimaryKeyTest.payloadSchema.make({ id: 123 }),
-            })
-          );
+          const madeRequest = yield* makeRequest({
+            rpc: PrimaryKeyTest,
+            payload: PrimaryKeyTest.payloadSchema.make({ id: 123 }),
+          });
+          yield* storage.saveRequest(madeRequest);
+          const madeRequest1 = yield* makeRequest({
+            rpc: PrimaryKeyTest,
+            payload: PrimaryKeyTest.payloadSchema.make({ id: 123 }),
+          });
+          const result = yield* storage.saveRequest(madeRequest1);
           expect(result._tag).toEqual("Duplicate");
         })
       );
@@ -117,7 +115,8 @@ describe("MessageStorage", () => {
           const storage = yield* MessageStorage.MessageStorage;
           const request = yield* makeRequest();
           yield* storage.saveRequest(request);
-          yield* storage.saveReply(yield* makeReply(request));
+          const madeReply = yield* makeReply(request);
+          yield* storage.saveReply(madeReply);
           const messages = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
           expect(messages).toHaveLength(0);
         })
@@ -132,7 +131,8 @@ describe("MessageStorage", () => {
           yield* storage.saveRequest(request);
           let replies = yield* storage.repliesFor([request]);
           expect(replies).toHaveLength(0);
-          yield* storage.saveReply(yield* makeReply(request));
+          const madeReply2 = yield* makeReply(request);
+          yield* storage.saveReply(madeReply2);
           replies = yield* storage.repliesFor([request]);
           expect(replies).toHaveLength(1);
           expect(replies[0]?.requestId).toEqual(request.envelope.requestId);
@@ -156,7 +156,8 @@ describe("MessageStorage", () => {
             )
             .pipe(Effect.forkChild);
           yield* TestClock.adjust(1);
-          yield* storage.saveReply(yield* makeReply(request));
+          const madeReply3 = yield* makeReply(request);
+          yield* storage.saveReply(madeReply3);
           yield* latch.await;
           yield* Fiber.await(fiber);
         })

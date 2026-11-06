@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 
+import { renderTruncatedLines } from "@beep/repo-cli-kit/artifacts/index";
+import { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { flow, identity } from "effect/Function";
 import * as O from "effect/Option";
-import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
-import { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   renderSchemaFirstPolicyFindingLine,
   renderSchemaFirstScannedFilesLine,
@@ -94,7 +94,8 @@ const literalKitConstAssertionFinding = (violation: LiteralKitConstAssertionViol
   });
 
 const logPolicyFinding = Effect.fn("logPolicyFinding")(function* (finding: SchemaFirstPolicyFinding) {
-  yield* Console.error(yield* renderPolicyFindingLine(finding));
+  const renderPolicyFindingLine1 = yield* renderPolicyFindingLine(finding);
+  yield* Console.error(renderPolicyFindingLine1);
 });
 
 const makeSchemaFirstLintSummary = (input: {
@@ -229,7 +230,8 @@ const logActiveAdvisories = Effect.fn("logActiveAdvisories")(function* (
 });
 
 const logScannedFiles = Effect.fn("logScannedFiles")(function* (files: ReadonlyArray<string>) {
-  yield* Console.log(yield* renderSchemaFirstScannedFilesLine(files));
+  const renderSchemaFirstScannedFilesLine2 = yield* renderSchemaFirstScannedFilesLine(files);
+  yield* Console.log(renderSchemaFirstScannedFilesLine2);
 });
 
 const parityRuleSummaryKey: (ruleId: string) => string = flow(Str.replaceAll("-", "_"), Str.toLowerCase);
@@ -281,7 +283,8 @@ const parityRatchetInput = Effect.fn("parityRatchetInput")(function* (
   parity: SchemaFirstParityFindings,
   options: SchemaFirstLintOptions
 ) {
-  const introducedLines = A.flatten(yield* Effect.forEach(parity.introduced, parityIntroducedLines));
+  const forEach3 = yield* Effect.forEach(parity.introduced, parityIntroducedLines);
+  const introducedLines = A.flatten(forEach3);
   const resolvedOccurrences = A.flatMap(parity.resolved, (row) =>
     A.map(row.occurrences, (occurrence) => `  - ${row.file} :: ${occurrence} [${row.ruleId}]`)
   );

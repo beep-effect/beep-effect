@@ -5,6 +5,9 @@
  * @since 0.0.0
  */
 
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -19,11 +22,8 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
 import {
   decodeCacheExperimentText,
@@ -89,15 +89,14 @@ export const cacheProtocolSandboxMounts: ReadonlyArray<string> = [
 ];
 const verifyPrivateNetwork = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const interfaces = A.filter(
-    A.drop(Str.split(yield* fs.readFileString("/proc/net/dev"), "\n"), 2),
-    (line) => Str.trim(line) !== ""
-  );
+  const readFileString1 = yield* fs.readFileString("/proc/net/dev");
+  const interfaces = A.filter(A.drop(Str.split(readFileString1, "\n"), 2), (line) => Str.trim(line) !== "");
   if (
     interfaces.length !== 1 ||
     !A.every(interfaces, (line) => A.head(Str.split(line, ":")).pipe(O.getOrThrow, Str.trim) === "lo")
-  )
+  ) {
     return yield* CacheCommandError.new("Protocol worker requires a private loopback-only network namespace.");
+  }
 });
 
 const scanCaptures = Effect.fn("CacheProtocol.scanCaptures")(function* (
@@ -108,23 +107,29 @@ const scanCaptures = Effect.fn("CacheProtocol.scanCaptures")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const safe = (text: string) => !A.some(secrets, (secret) => Str.includes(secret)(text));
-  if (!A.every(streams, safe))
+  if (!A.every(streams, safe)) {
     return yield* CacheCommandError.new("Protocol capture contains synthetic credential material.");
+  }
   let pending = [""];
   let count = 0;
   let bytes = 0;
   const inspectEntry = Effect.fn("CacheProtocol.inspectCaptureEntry")(function* (directoryName: string, name: string) {
     count += 1;
-    if (count > 64) return yield* CacheCommandError.new("Protocol fixture file count exceeded its bound.");
+    if (count > 64) {
+      return yield* CacheCommandError.new("Protocol fixture file count exceeded its bound.");
+    }
     const relative = path.join(directoryName, name);
     const info = yield* fs.stat(path.join(directory, relative));
     if (info.type === "Directory") return O.some(relative);
     {
       const content = yield* readCacheExperimentBytes(directory, relative, 1024 * 1024);
       bytes += content.byteLength;
-      if (bytes > 4 * 1024 * 1024) return yield* CacheCommandError.new("Protocol fixture bytes exceeded their bound.");
-      if (!safe(new TextDecoder().decode(content)))
+      if (bytes > 4 * 1024 * 1024) {
+        return yield* CacheCommandError.new("Protocol fixture bytes exceeded their bound.");
+      }
+      if (!safe(new TextDecoder().decode(content))) {
         return yield* CacheCommandError.new("Protocol artifact contains synthetic credential material.");
+      }
     }
     return O.none<string>();
   });
@@ -158,21 +163,27 @@ const scanCaptures = Effect.fn("CacheProtocol.scanCaptures")(function* (
  */
 export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
   function* (directory: string, request: CacheProtocolRequest) {
-    if ((request.channel === "canary") !== Str.includes("-canary.")(request.client.version))
+    if ((request.channel === "canary") !== Str.includes("-canary.")(request.client.version)) {
       return yield* CacheCommandError.new("Protocol version does not match its selected client channel.");
+    }
     yield* verifyPrivateNetwork;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const crypto = yield* SecureRandom.SecureRandom;
     const executable = yield* fs.realPath(request.executable);
-    if ((yield* hashCacheExperimentExecutable(executable)) !== request.client.sha256)
+    if ((yield* hashCacheExperimentExecutable(executable)) !== request.client.sha256) {
       return yield* CacheCommandError.new("Protocol native binary differs from the requested pin.");
+    }
     const bun = yield* fs.realPath(process.execPath);
     const bunSha256 = yield* hashCacheExperimentExecutable(bun);
-    const writer = Hex.encode(yield* crypto.randomBytes(32));
-    const reader = Hex.encode(yield* crypto.randomBytes(32));
-    const signing = Hex.encode(yield* crypto.randomBytes(32));
-    const wrongSigning = Hex.encode(yield* crypto.randomBytes(32));
+    const randomBytes2 = yield* crypto.randomBytes(32);
+    const writer = Hex.encode(randomBytes2);
+    const randomBytes3 = yield* crypto.randomBytes(32);
+    const reader = Hex.encode(randomBytes3);
+    const randomBytes4 = yield* crypto.randomBytes(32);
+    const signing = Hex.encode(randomBytes4);
+    const randomBytes5 = yield* crypto.randomBytes(32);
+    const wrongSigning = Hex.encode(randomBytes5);
     const secrets = [writer, reader, signing, wrongSigning];
     const fixture = yield* makeCacheProtocolFixture(
       CacheFixtureCredentials.make({
@@ -195,11 +206,8 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
           ),
         })
       );
-      yield* writeContainedFileString(
-        work,
-        ".turbo/config.json",
-        yield* S.encodeEffect(CacheProtocolJson)({ teamId: request.client.namespace })
-      );
+      const value6 = yield* S.encodeEffect(CacheProtocolJson)({ teamId: request.client.namespace });
+      yield* writeContainedFileString(work, ".turbo/config.json", value6);
       yield* writeContainedFileString(
         work,
         "package.json",
@@ -266,7 +274,9 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
         },
         bound,
       }).pipe(Effect.timeout(Duration.seconds(120)));
-      if (captured.truncated) return yield* CacheCommandError.new("Protocol native capture exceeded its bound.");
+      if (captured.truncated) {
+        return yield* CacheCommandError.new("Protocol native capture exceeded its bound.");
+      }
       yield* scanCaptures(work, secrets, [captured.stdout, captured.stderr]);
       return captured;
     });
@@ -275,7 +285,9 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
       captured: Effect.Success<ReturnType<typeof executeCase>>
     ) {
       const names = yield* fs.readDirectory(path.join(work, ".turbo/runs"));
-      if (names.length !== 1) return yield* CacheCommandError.new("Protocol run requires exactly one native summary.");
+      if (names.length !== 1) {
+        return yield* CacheCommandError.new("Protocol run requires exactly one native summary.");
+      }
       const bytes = yield* readCacheExperimentBytes(work, path.join(".turbo/runs", O.getOrThrow(A.head(names))));
       const summary = yield* decodeCacheExperimentText(bytes).pipe(
         Effect.flatMap(JsonStringCodec(CacheProtocolNativeSummary).decode)
@@ -288,8 +300,9 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
         task.taskId !== "build" ||
         summary.turboVersion !== request.client.version ||
         task.execution.exitCode !== captured.exitCode
-      )
+      ) {
         return yield* CacheCommandError.new("Protocol native summary disagrees with its process or client pin.");
+      }
       return Tuple.make(task, bytes);
     });
     const validateNativeCacheOrigin = Effect.fn("CacheProtocol.validateNativeCacheOrigin")(function* (
@@ -299,10 +312,11 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
       if (
         task.cache.status !== (name === "replay" ? "HIT" : "MISS") ||
         (name === "replay" && !O.contains("REMOTE")(task.cache.source))
-      )
+      ) {
         return yield* CacheCommandError.new(
           "Protocol replay requires an actual remote hit; other cases require misses."
         );
+      }
     });
     const validateNativeOutcome = Effect.fn("CacheProtocol.validateNativeOutcome")(function* (
       name: CacheProtocolIsolationRoot["case"],
@@ -313,14 +327,18 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
       const outputExists = yield* fs.exists(path.join(work, "dist/result.txt"));
       const outputRootExists = yield* fs.exists(path.join(work, "dist"));
       const positive = name === "producer" || name === "replay";
-      if (captured.exitCode !== (positive ? 0 : 42) || (positive ? !outputExists : outputRootExists))
+      if (captured.exitCode !== (positive ? 0 : 42) || (positive ? !outputExists : outputRootExists)) {
         return yield* CacheCommandError.new("Protocol outcome omitted output or allowed rejected fallback execution.");
+      }
       yield* validateNativeCacheOrigin(name, task);
       if (
         positive &&
-        !S.toEquivalence(S.Array(S.String))(yield* fs.readDirectory(path.join(work, "dist")), ["result.txt"])
-      )
+        !(yield* Effect.map(fs.readDirectory(path.join(work, "dist")), (value) =>
+          S.toEquivalence(S.Array(S.String))(value, ["result.txt"])
+        ))
+      ) {
         return yield* CacheCommandError.new("Protocol fixture produced an undeclared output.");
+      }
       return positive;
     });
     const recordNativeOutcome = Effect.fn("CacheProtocol.recordNativeOutcome")(function* (
@@ -394,8 +412,9 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
     if (
       (yield* hashCacheExperimentExecutable(executable)) !== request.client.sha256 ||
       (yield* hashCacheExperimentExecutable(bun)) !== bunSha256
-    )
+    ) {
       return yield* CacheCommandError.new("Protocol producer or executable identity changed during the run.");
+    }
     return yield* validateCacheProtocolExecution(
       CacheProtocolExecution.make({
         observation,
@@ -496,8 +515,9 @@ export const runCacheProtocolExperiment = Effect.fn("CacheProtocol.experiment")(
           !S.toEquivalence(CacheClientPin)(report.observation.client, request.client) ||
           report.observation.channel !== request.channel ||
           report.bunSha256 !== (yield* hashCacheExperimentExecutable(bun))
-        )
+        ) {
           return yield* CacheCommandError.new("Protocol worker report differs from the supervised identities.");
+        }
         return yield* validateCacheProtocolExecution(report);
       })
     )

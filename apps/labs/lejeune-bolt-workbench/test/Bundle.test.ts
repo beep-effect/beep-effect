@@ -1011,7 +1011,7 @@ describe("LeJeune deterministic fixture bundle", () => {
         ];
 
         for (const [name, decode] of corruptions) {
-          const failed = yield* decode.pipe(Effect.match({ onFailure: () => true, onSuccess: () => false }));
+          const failed = yield* decode.pipe(Effect.isFailure);
           expect(failed, name).toBe(true);
         }
       })
@@ -1031,8 +1031,13 @@ describe("LeJeune deterministic fixture bundle", () => {
           "finish",
         ]);
         expect(frozen.recordedAt).toBe("2026-08-27T12:25:18.044Z");
-        expect(yield* verifyProviderRecording(frozen, PROVIDER_RECORDING_SOURCE_TEXT)).toBe(frozen);
-        expect(yield* verifyFrozenProviderRecording(frozen, PROVIDER_RECORDING_SOURCE_TEXT)).toEqual(frozen);
+        const verifyProviderRecording1 = yield* verifyProviderRecording(frozen, PROVIDER_RECORDING_SOURCE_TEXT);
+        expect(verifyProviderRecording1).toBe(frozen);
+        const verifyFrozenProviderRecording2 = yield* verifyFrozenProviderRecording(
+          frozen,
+          PROVIDER_RECORDING_SOURCE_TEXT
+        );
+        expect(verifyFrozenProviderRecording2).toEqual(frozen);
 
         const digestFailure = yield* Effect.flip(
           verifyProviderRecording(

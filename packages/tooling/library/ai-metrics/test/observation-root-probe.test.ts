@@ -36,16 +36,15 @@ const temp = FileSystem.FileSystem.use((fs) =>
 );
 const git = Effect.fn("RootProbeTest.git")(function* (cwd: string, args: ReadonlyArray<string>) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  expect(
-    yield* spawner.exitCode(
-      ChildProcess.make("git", ["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], {
-        cwd,
-        stdout: "ignore",
-        stderr: "ignore",
-        env: { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1" },
-      })
-    )
-  ).toBe(0);
+  const exitCode1 = yield* spawner.exitCode(
+    ChildProcess.make("git", ["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], {
+      cwd,
+      stdout: "ignore",
+      stderr: "ignore",
+      env: { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1" },
+    })
+  );
+  expect(exitCode1).toBe(0);
 });
 const init = Effect.fn("RootProbeTest.init")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -98,7 +97,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
         salt
       );
       const [a, b, c, retired, missing] = result.inventory.roots;
-      expect(a?.rootId).toBe(`root-${yield* hashPrivateIdentifier(primary, O.some(Redacted.value(salt)))}`);
+      expect(a?.rootId).toBe(`root-${yield* hashPrivateIdentifier(primary, salt.pipe(Redacted.value, O.some))}`);
       expect(a?.cloneId._tag).toBe("Verified");
       if (a?.cloneId._tag !== "Verified" || b?.cloneId._tag !== "Verified" || c?.cloneId._tag !== "Verified")
         throw new Error("Expected verified fixture identities");
@@ -115,7 +114,9 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
       expect(missing?.cloneId._tag).toBe("Unknown");
       for (const receipt of result.rootReceipts) {
         const encoded = yield* encodeJsonValue(receipt.observation);
-        expect(receipt.evidenceId).toBe(yield* hashPublicTextSha256(encoded));
+        const expectation = expect(receipt.evidenceId);
+        const hashPublicTextSha2561 = yield* hashPublicTextSha256(encoded);
+        expectation.toBe(hashPublicTextSha2561);
       }
       const counts = summarizeObservationInventory(result.inventory);
       expect(counts).toMatchObject({
@@ -141,7 +142,8 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
         "example.invalid",
       ])
         expect(encoded).not.toContain(privateValue);
-      yield* decodeObservationInventoryJson(yield* encodeObservationInventoryJson(result.inventory));
+      const encodedObservationInventoryJson = yield* encodeObservationInventoryJson(result.inventory);
+      yield* decodeObservationInventoryJson(encodedObservationInventoryJson);
     })
   );
   it.effect("never accesses retired paths and keeps non-Git and permission failures explicit", () =>
@@ -180,7 +182,8 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
           })
         )
       );
-      expect(yield* Ref.get(accesses)).not.toContain(`${directory}/retired`);
+      const got = yield* Ref.get(accesses);
+      expect(got).not.toContain(`${directory}/retired`);
       expect(result.inventory.roots[0]?.availability).toBe("retired");
       expect(result.inventory.roots[1]?.availability).toBe("present");
       expect(result.inventory.roots[1]?.cloneId._tag).toBe("Unknown");
@@ -204,7 +207,8 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
       const missingSalt = yield* failureText(probeObservationRoots(declaration([]), Redacted.make(" ")));
       expect(missingSalt).toContain("nonblank identity hash salt");
       yield* start.pipe(DateTime.toEpochMillis, TestClock.setTime);
-      expect(yield* failureText(probeObservationRoots(declaration([]), salt))).not.toBe("unexpected success");
+      const failureText2 = yield* failureText(probeObservationRoots(declaration([]), salt));
+      expect(failureText2).not.toBe("unexpected success");
     })
   );
   it.effect("keeps host identities stable and scopes equal checkout paths across hosts", () =>
@@ -228,9 +232,11 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
       const directory = yield* temp;
       const path = `${directory}/private.json`;
       yield* fs.writeFileString(path, Str.repeat(65_537)("x"));
-      expect(yield* failureText(readObservationRootDeclaration(path))).toContain("exceeds its byte limit");
+      const failureText3 = yield* failureText(readObservationRootDeclaration(path));
+      expect(failureText3).toContain("exceeds its byte limit");
       yield* fs.writeFile(path, new Uint8Array([0xff]));
-      expect(yield* failureText(readObservationRootDeclaration(path))).toContain("Invalid root declaration encoding");
+      const failureText4 = yield* failureText(readObservationRootDeclaration(path));
+      expect(failureText4).toContain("Invalid root declaration encoding");
       const original = yield* encodeObservationRootDeclarationJson(declaration([]));
       yield* fs.writeFileString(path, Str.replace('"roots":[]', '"roots":[],"private":"synthetic-secret"')(original));
       const rejected = yield* failureText(readObservationRootDeclaration(path));

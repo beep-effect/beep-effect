@@ -53,7 +53,8 @@ describe("CheckDocument gaps", () => {
         ["old", "old body", { at: "2026-01-01", runId: "10" }],
       ]);
       yield* Effect.gen(function* () {
-        assert.strictEqual(yield* (yield* CheckDocument).flush, "stale");
+        const flush1 = yield* (yield* CheckDocument).flush;
+        assert.strictEqual(flush1, "stale");
       }).pipe(
         withLayer(
           CheckDocument.layer({

@@ -29,7 +29,8 @@ const Group = S.Union([
 describe("SchemaIssueRenderer", () => {
   it.effect("names an unknown key with its path, in the user's words", () =>
     Effect.gen(function* () {
-      const lines = SchemaIssueRenderer.render(yield* issueFrom(Config, { owner: "acme", ownr: "typo", groups: {} }));
+      const issueFrom1 = yield* issueFrom(Config, { owner: "acme", ownr: "typo", groups: {} });
+      const lines = SchemaIssueRenderer.render(issueFrom1);
 
       // Core's own phrasing is "Expected no excess property", which describes the
       // schema's rule rather than the mistake.
@@ -40,7 +41,8 @@ describe("SchemaIssueRenderer", () => {
 
   it.effect("reports a nested path, not just the top level", () =>
     Effect.gen(function* () {
-      const lines = SchemaIssueRenderer.render(yield* issueFrom(Config, { groups: { g: { repos: ["r"], extra: 1 } } }));
+      const issueFrom2 = yield* issueFrom(Config, { groups: { g: { repos: ["r"], extra: 1 } } });
+      const lines = SchemaIssueRenderer.render(issueFrom2);
 
       assert.include(lines, "unknown key at groups.g.extra");
     })
@@ -48,7 +50,8 @@ describe("SchemaIssueRenderer", () => {
 
   it.effect("keeps core's phrasing for every other leaf", () =>
     Effect.gen(function* () {
-      const lines = SchemaIssueRenderer.render(yield* issueFrom(Config, { groups: { g: { repos: "not-an-array" } } }));
+      const issueFrom3 = yield* issueFrom(Config, { groups: { g: { repos: "not-an-array" } } });
+      const lines = SchemaIssueRenderer.render(issueFrom3);
 
       assert.strictEqual(
         A.some(lines, (line) => Str.includes("groups.g.repos")(line)),
@@ -65,7 +68,8 @@ describe("SchemaIssueRenderer", () => {
     Effect.gen(function* () {
       // The mistake a config author actually makes: the names inline, rather than
       // nested under one of the three kinds.
-      const lines = SchemaIssueRenderer.render(yield* issueFrom(Group, { KEEP_ME: "yes" }));
+      const issueFrom4 = yield* issueFrom(Group, { KEEP_ME: "yes" });
+      const lines = SchemaIssueRenderer.render(issueFrom4);
 
       assert.deepStrictEqual(lines, [
         "unknown key at KEEP_ME",

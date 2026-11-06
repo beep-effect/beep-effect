@@ -35,6 +35,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
@@ -51,9 +54,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
-import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { QualityTaskName } from "../Quality/Quality.schemas.ts";
 import { makePolicyGraph, renderClosureInputs } from "./internal/PolicyFingerprintGraph.ts";
 import { insertAfterOwned, modifyJson, renderJsonDocument } from "./internal/PolicyFingerprintJson.ts";
@@ -205,13 +205,11 @@ const readSources = Effect.fnUntraced(function* (root: string) {
       .readFileString(path.join(root, file))
       .pipe(Effect.mapError((cause) => PolicyFingerprintError.make({ message: `Cannot read ${file}`, cause })));
   const turboText = yield* read("turbo.json");
-  const turbo = yield* decodeTurbo(yield* parseJsonc("turbo.json", turboText)).pipe(
-    Effect.mapError(decodeFailure("turbo.json"))
-  );
+  const parsedJsonc = yield* parseJsonc("turbo.json", turboText);
+  const turbo = yield* decodeTurbo(parsedJsonc).pipe(Effect.mapError(decodeFailure("turbo.json")));
   const rootManifestText = yield* read("package.json");
-  const rootManifest = yield* decodeManifest(yield* parseJsonc("package.json", rootManifestText)).pipe(
-    Effect.mapError(decodeFailure("package.json"))
-  );
+  const parsedJsonc1 = yield* parseJsonc("package.json", rootManifestText);
+  const rootManifest = yield* decodeManifest(parsedJsonc1).pipe(Effect.mapError(decodeFailure("package.json")));
   const directories = yield* workspaceDirectories(root).pipe(
     Effect.mapError((cause) => PolicyFingerprintError.make({ message: "Cannot resolve workspaces", cause }))
   );
@@ -220,9 +218,9 @@ const readSources = Effect.fnUntraced(function* (root: string) {
     Effect.fnUntraced(function* ([name, directory]) {
       const relative: string = normalizePath(path.relative(root, directory));
       const file = `${relative}/package.json`;
-      const manifest = yield* decodeManifest(yield* parseJsonc(file, yield* read(file))).pipe(
-        Effect.mapError(decodeFailure(file))
-      );
+      const read6 = yield* read(file);
+      const parsedJsonc2 = yield* parseJsonc(file, read6);
+      const manifest = yield* decodeManifest(parsedJsonc2).pipe(Effect.mapError(decodeFailure(file)));
       return {
         workspace: PolicyWorkspace.make({
           name,
@@ -235,8 +233,9 @@ const readSources = Effect.fnUntraced(function* (root: string) {
     })
   );
   const cli = A.findFirst(workspaces, (entry) => entry.workspace.name === CLI_WORKSPACE);
-  if (O.isNone(cli))
+  if (O.isNone(cli)) {
     return yield* PolicyFingerprintError.make({ message: "CLI workspace is missing", cause: CLI_WORKSPACE });
+  }
   return {
     turboText,
     turbo,
@@ -257,7 +256,7 @@ const liveTree = Effect.fnUntraced(function* (root: string) {
       const absolute = path.join(root, file);
       if (!(yield* fs.exists(absolute))) return O.none<string>();
       const info = yield* fs.stat(absolute);
-      return info.type === "File" ? O.some(yield* fs.readFileString(absolute)) : O.none<string>();
+      return info.type === "File" ? yield* Effect.asSome(fs.readFileString(absolute)) : O.none<string>();
     },
     (effect, file) =>
       effect.pipe(Effect.mapError((cause) => PolicyFingerprintError.make({ message: `Cannot read ${file}`, cause })))
@@ -351,11 +350,12 @@ const fingerprintFailure = (message: string, cause: unknown) => PolicyFingerprin
 const policyTaskScripts = Effect.fnUntraced(function* (sources: FingerprintSources) {
   const tasks = A.sort(A.filter(R.keys(sources.turbo.tasks), isPolicyTask(sources)), Order.String);
   const missing = A.findFirst(tasks, (task) => A.isReadonlyArrayEmpty(taskScripts(sources, task)));
-  if (O.isSome(missing))
+  if (O.isSome(missing)) {
     return yield* fingerprintFailure(
       `Policy task ${missing.value} depends on ${CHECK_TASK} but no manifest defines its script`,
       missing.value
     );
+  }
   return A.flatMap(tasks, (task) => taskScripts(sources, task));
 });
 
@@ -378,16 +378,20 @@ const scriptPath = Effect.fnUntraced(function* (
 ) {
   const where = `Policy task ${entry.task} in ${entry.manifest}`;
   const argv = scriptArgv(entry.script, rootScripts);
-  if (O.isNone(argv))
+  if (O.isNone(argv)) {
     return yield* fingerprintFailure(`${where} does not run a single beep command: ${entry.script}`, entry.script);
-  if (usesFastPath(argv.value))
+  }
+  if (usesFastPath(argv.value)) {
     return yield* fingerprintFailure(
       `${where} routes through a bin-main fast path the fingerprint does not model: ${entry.script}`,
       entry.script
     );
-  const path = A.drop(yield* graph.commandPath(layout, argv.value), 1);
-  if (A.isReadonlyArrayEmpty(path))
+  }
+  const commandPath3 = yield* graph.commandPath(layout, argv.value);
+  const path = A.drop(commandPath3, 1);
+  if (A.isReadonlyArrayEmpty(path)) {
     return yield* fingerprintFailure(`${where} names no beep subcommand: ${entry.script}`, entry.script);
+  }
   return path;
 });
 
@@ -472,7 +476,7 @@ const renderPrefix = Effect.fnUntraced(function* (
   const closure = yield* graph.commandClosure([seal.node]);
   const inputs = sortedUnique([
     ...(yield* renderClosureInputs(tree, graph, closure, covered)),
-    ...A.filter(yield* rootFiles(closure), (file) => !HashSet.has(covered, file)),
+    ...(yield* Effect.map(rootFiles(closure), (value) => A.filter(value, (file) => !HashSet.has(covered, file)))),
   ]);
   return {
     key,
@@ -501,12 +505,11 @@ const renderPrefixes = Effect.fnUntraced(function* (
   );
   const sharedCovered = HashSet.fromIterable(shared);
   let rendered = HashMap.empty<string, RenderedPrefix>();
-  for (const entry of ordered)
-    rendered = HashMap.set(
-      rendered,
-      entry[0],
-      yield* renderPrefix(tree, graph, rootFiles, sharedCovered, rendered, entry)
-    );
+  for (const entry of ordered) {
+    const argument = entry[0];
+    const renderPrefix1 = yield* renderPrefix(tree, graph, rootFiles, sharedCovered, rendered, entry);
+    rendered = HashMap.set(rendered, argument, renderPrefix1);
+  }
   return A.map(ordered, ([key]) => O.getOrThrow(HashMap.get(rendered, key)));
 });
 
@@ -776,7 +779,8 @@ export class PolicyToolsFingerprintPolicy extends Context.Service<
     );
     const check = Effect.gen(function* () {
       const { sources, fingerprint } = yield* compute;
-      const drift = yield* driftOf(sources, yield* readDeclaration, fingerprint);
+      const readDeclaration4 = yield* readDeclaration;
+      const drift = yield* driftOf(sources, readDeclaration4, fingerprint);
       if (A.isReadonlyArrayNonEmpty(drift)) {
         return yield* PolicyFingerprintError.make({
           message: `Policy fingerprint drift: ${A.join(drift, "; ")}; run bun run beep lint policy-fingerprint --write.`,
@@ -786,11 +790,10 @@ export class PolicyToolsFingerprintPolicy extends Context.Service<
     }).pipe(Effect.withSpan("PolicyToolsFingerprintPolicy.check"));
     const write = Effect.gen(function* () {
       const { sources, fingerprint } = yield* compute;
-      const declaration = renderJsonDocument(
-        yield* encodeDeclaration(fingerprint).pipe(
-          Effect.mapError((cause) => PolicyFingerprintError.make({ message: "Cannot encode the declaration", cause }))
-        )
+      const pipe5 = yield* encodeDeclaration(fingerprint).pipe(
+        Effect.mapError((cause) => PolicyFingerprintError.make({ message: "Cannot encode the declaration", cause }))
       );
+      const declaration = renderJsonDocument(pipe5);
       const turbo = materializeTurbo(sources.turboText, sources.turbo, fingerprint);
       const manifest = materializeRootManifest(sources.rootManifestText, sources.rootScripts);
       yield* Effect.all([
@@ -828,7 +831,9 @@ export const lintPolicyFingerprintCommand = Command.make(
     write: Flag.Boolean("write").pipe(Flag.withDefault(false)),
   },
   Effect.fn("lintPolicyFingerprint")(function* ({ check, write }) {
-    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
+    if (check && write) {
+      return yield* failWithReportedExit("Choose --check or --write, not both.");
+    }
     const root = yield* findRepoRoot();
     const policy = yield* PolicyToolsFingerprintPolicy.make(root);
     if (write) {

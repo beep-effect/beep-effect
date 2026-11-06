@@ -11,6 +11,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -18,10 +20,14 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { configStringOption } from "../../internal/cli/EnvConfig.ts";
-import { runCaptured } from "../../internal/process/index.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+
+class DoctorOperationError extends S.TaggedError<DoctorOperationError, { readonly brand: unique symbol }>()(
+  "DoctorOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in Doctor.ts." }
+) {}
 
 const $I = $RepoCliId.create("commands/Qa/Doctor");
 
@@ -223,22 +229,24 @@ const probeTcpPort = Effect.fn("QaDoctor.probeTcpPort")(function* (
   port: number,
   remediation: string
 ): Effect.fn.Return<QaProbe, never> {
-  const reachable = yield* Effect.tryPromise(() =>
-    Bun.connect({
-      hostname,
-      port,
-      socket: {
-        data: () => undefined,
-        error: () => undefined,
-        open: (socket) => {
-          socket.end();
+  const reachable = yield* Effect.tryPromise({
+    try: () =>
+      Bun.connect({
+        hostname,
+        port,
+        socket: {
+          data: () => undefined,
+          error: () => undefined,
+          open: (socket) => {
+            socket.end();
+          },
         },
-      },
-    }).then((socket) => {
-      socket.end();
-      return true;
-    })
-  ).pipe(Effect.orElseSucceed(() => false));
+      }).then((socket) => {
+        socket.end();
+        return true;
+      }),
+    catch: (cause) => DoctorOperationError.make({ cause }),
+  }).pipe(Effect.orElseSucceed(() => false));
   return reachable
     ? QaProbe.make({ detail: `${hostname}:${port} reachable`, name, required: false, status: "pass" })
     : QaProbe.make({ detail: remediation, name, required: false, status: "warn" });

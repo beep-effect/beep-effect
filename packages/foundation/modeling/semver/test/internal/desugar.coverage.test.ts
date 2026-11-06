@@ -140,7 +140,8 @@ describe("desugar round-3 regressions", () => {
       assert.strictEqual(S.is(PartialParts)(value), true);
       const decoded = yield* S.decodeEffect(PartialParts)(value);
       assert.deepStrictEqual(decoded, value);
-      assert.deepStrictEqual(yield* S.encodeEffect(PartialParts)(decoded), value);
+      const value1 = yield* S.encodeEffect(PartialParts)(decoded);
+      assert.deepStrictEqual(value1, value);
       assert.strictEqual(S.is(PartialParts)({ ...value, major: "x" }), false);
       assert.strictEqual(PartialParts.ast.annotations?.identifier, "@beep/semver/internal/desugar/PartialParts");
       assert.isString(PartialParts.ast.annotations?.description);

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "@beep/repo-cli-kit/systemd/index";
 import * as Config from "effect/Config";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -16,7 +17,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
 import { installResearchTimers, readRecordedResearchTimer, uninstallResearchTimers } from "./internal/Timers.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
 import { libraryCommand } from "./Library/Library.command.ts";
@@ -299,7 +299,7 @@ const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (opti
   // A refresh re-renders what is installed: the recorded repo root and page
   // are reused unless a flag overrides them, and only the Bun is re-resolved.
   const recorded =
-    options.refresh === true ? O.some(yield* recordedResearchTimer(home)) : O.none<ResearchRecordedTimer>();
+    options.refresh === true ? yield* Effect.asSome(recordedResearchTimer(home)) : O.none<ResearchRecordedTimer>();
   const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
   const repoRoot = O.match(options.repoRoot ?? O.none<string>(), {
     onNone: () =>

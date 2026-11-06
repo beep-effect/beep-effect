@@ -388,10 +388,12 @@ describe("Pandoc.mapping", () => {
       expect(issue.pointer).toBe(JsonPath.toPointer(path));
       expect(issue.pointer).toBe(jsonPointerFromPath(path));
       expect(issue.severity).toBe("unsupported");
-      expect(yield* encodePandocMappingIssue(issue)).not.toHaveProperty("pointer");
+      const encodedPandocMappingIssue = yield* encodePandocMappingIssue(issue);
+      expect(encodedPandocMappingIssue).not.toHaveProperty("pointer");
       const report = PandocCompatibilityReport.fromIssues([issue]);
       expect(report.profile).toBe("gap");
-      expect(yield* encodePandocCompatibilityReport(report)).not.toHaveProperty("profile");
+      const encodedPandocCompatibilityReport = yield* encodePandocCompatibilityReport(report);
+      expect(encodedPandocCompatibilityReport).not.toHaveProperty("profile");
     }),
     { arbitrary: fcRuns(50) }
   );

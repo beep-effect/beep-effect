@@ -20,10 +20,14 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
         const file = `${directory}/file`;
         yield* fs.makeDirectory(directory, { recursive: true });
         yield* fs.writeFileString(file, text);
-        assert.strictEqual(yield* typeAt(fs, directory), "Directory");
-        assert.strictEqual(yield* typeAt(file)(fs), "File");
-        assert.strictEqual(yield* typeAt(fs, `${directory}/missing`), undefined);
-        assert.deepStrictEqual(yield* fs.readFile(file), new TextEncoder().encode(text));
+        const typeAt1 = yield* typeAt(fs, directory);
+        assert.strictEqual(typeAt1, "Directory");
+        const value = yield* typeAt(file)(fs);
+        assert.strictEqual(value, "File");
+        const typeAt2 = yield* typeAt(fs, `${directory}/missing`);
+        assert.strictEqual(typeAt2, undefined);
+        const readFile3 = yield* fs.readFile(file);
+        assert.deepStrictEqual(readFile3, new TextEncoder().encode(text));
       }),
     runs
   );
@@ -35,7 +39,9 @@ it.effect.prop(
     Effect.gen(function* () {
       const codec = S.fromJsonString(S.Struct({ code: S.String }));
       const original = { code };
-      const decoded = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(original));
+      const argument = S.decodeEffect(codec);
+      const value1 = yield* S.encodeEffect(codec)(original);
+      const decoded = yield* argument(value1);
       assert.strictEqual(isErrno(decoded, code), true);
       assert.strictEqual(isErrno(`${code}x`)(decoded), false);
       assert.strictEqual(isErrno(code)(original), true);

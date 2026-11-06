@@ -137,7 +137,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
       yield* fs.writeFileString(join(dirA, "sub", "c.txt"), "c\n");
       yield* raw(["add", "-A"]);
       yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
-      const commit1 = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+      const raw1 = yield* raw(["rev-parse", "HEAD"]);
+      const commit1 = Str.trim(raw1);
 
       yield* raw(["mv", "sub/c.txt", "renamed.txt"]);
       yield* fs.writeFileString(join(dirA, "a.txt"), "two\n");
@@ -227,8 +228,10 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
         const git = yield* Git;
 
         yield* git.configSet(dirA, "test.kit", "yes");
-        assertSome(yield* git.configGet(dirA, "test.kit"), "yes");
-        assertNone(yield* git.configGet(dirA, "test.unset"));
+        const configGet2 = yield* git.configGet(dirA, "test.kit");
+        assertSome(configGet2, "yes");
+        const configGet3 = yield* git.configGet(dirA, "test.unset");
+        assertNone(configGet3);
 
         yield* git.configSet(dirA, "submodule.x.shallow", "true", { file: "modcfg" });
         const written = yield* runFixtureGit(dirA, ["config", "-f", "modcfg", "--get", "submodule.x.shallow"]);
@@ -262,35 +265,43 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
     it.effect("remoteUrl is none before a remote exists and some after; push reads the push URL", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        assertNone(yield* git.remoteUrl(dirA));
-        assertNone(yield* git.remoteUrl(dirA, { push: true }));
+        const remoteUrl4 = yield* git.remoteUrl(dirA);
+        assertNone(remoteUrl4);
+        const remoteUrl5 = yield* git.remoteUrl(dirA, { push: true });
+        assertNone(remoteUrl5);
 
         yield* runFixtureGit(dirA, ["remote", "add", "origin", "https://example.com/o/r.git"]);
         yield* runFixtureGit(dirA, ["remote", "set-url", "--push", "origin", "git@example.com:o/r.git"]);
-        assertSome(yield* git.remoteUrl(dirA), "https://example.com/o/r.git");
-        assertSome(yield* git.remoteUrl(dirA, { push: true }), "git@example.com:o/r.git");
+        const remoteUrl6 = yield* git.remoteUrl(dirA);
+        assertSome(remoteUrl6, "https://example.com/o/r.git");
+        const remoteUrl7 = yield* git.remoteUrl(dirA, { push: true });
+        assertSome(remoteUrl7, "git@example.com:o/r.git");
       })
     );
 
     it.effect("defaultBranch is none until origin/HEAD is set symbolically", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        assertNone(yield* git.defaultBranch(dirA));
+        const defaultBranch8 = yield* git.defaultBranch(dirA);
+        assertNone(defaultBranch8);
 
         yield* runFixtureGit(dirA, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
         yield* runFixtureGit(dirA, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"]);
 
-        assertSome(yield* git.defaultBranch(dirA), "main");
+        const defaultBranch9 = yield* git.defaultBranch(dirA);
+        assertSome(defaultBranch9, "main");
       })
     );
 
     it.effect("currentBranch names the branch, and repoRoot agrees with rev-parse", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        assertSome(yield* git.currentBranch(dirA), "main");
+        const currentBranch10 = yield* git.currentBranch(dirA);
+        assertSome(currentBranch10, "main");
 
         const root = yield* git.repoRoot(dirA);
-        const expected = Str.trim(yield* runFixtureGit(dirA, ["rev-parse", "--show-toplevel"]));
+        const resultFixtureGit = yield* runFixtureGit(dirA, ["rev-parse", "--show-toplevel"]);
+        const expected = Str.trim(resultFixtureGit);
         assert.strictEqual(root, expected);
       })
     );
@@ -322,12 +333,11 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
         yield* Effect.gen(function* () {
           yield* runFixtureGit(dirA, ["config", "--local", "log.showSignature", "true"]);
           const info = yield* git.commitInfo(dirA);
-          assert.strictEqual(info.sha, yield* git.revParse(dirA, "HEAD"));
+          const revParse11 = yield* git.revParse(dirA, "HEAD");
+          assert.strictEqual(info.sha, revParse11);
           assert.strictEqual(info.signatureStatus, "N");
-          assert.strictEqual(
-            info.message,
-            yield* runFixtureGit(dirA, ["log", "--no-show-signature", "-1", "--format=%B"])
-          );
+          const resultFixtureGit12 = yield* runFixtureGit(dirA, ["log", "--no-show-signature", "-1", "--format=%B"]);
+          assert.strictEqual(info.message, resultFixtureGit12);
         }).pipe(Effect.ensuring(restore));
       })
     );
@@ -336,10 +346,14 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
       Effect.gen(function* () {
         const git = yield* Git;
         const ref = "HEAD^{tree}";
-        assert.strictEqual(
-          yield* runFixtureGit(dirA, ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]),
-          ""
-        );
+        const resultFixtureGit13 = yield* runFixtureGit(dirA, [
+          "log",
+          "--no-show-signature",
+          "-1",
+          "--format=%H%x00%G?%x00%B",
+          ref,
+        ]);
+        assert.strictEqual(resultFixtureGit13, "");
         const error = yield* Effect.flip(git.commitInfo(dirA, ref));
         assert.instanceOf(error, GitCommandError);
         if (!S.is(GitCommandError)(error)) return;
@@ -381,7 +395,8 @@ const FixtureBLayer = Layer.effectDiscard(
     yield* rawLib(["add", "-A"]);
     yield* rawLib(["-c", "commit.gpgsign=false", "commit", "-m", "lib commit"]);
     yield* rawLib(["tag", "v1.0.0"]);
-    const tagSha = Str.trim(yield* rawLib(["rev-parse", "v1.0.0"]));
+    const rawLib14 = yield* rawLib(["rev-parse", "v1.0.0"]);
+    const tagSha = Str.trim(rawLib14);
 
     yield* rawSuper(["-c", "init.defaultBranch=main", "init"]);
     yield* rawSuper(["config", "user.email", "git-integration@example.com"]);
@@ -432,8 +447,10 @@ it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" }
         yield* git.fetch(subDir, { ref: "v1.0.0", tag: true });
         yield* git.checkout(subDir, "FETCH_HEAD", { detach: true });
 
-        assertNone(yield* git.currentBranch(subDir));
-        assert.strictEqual(yield* git.revParse(subDir, "HEAD"), libTagSha);
+        const currentBranch15 = yield* git.currentBranch(subDir);
+        assertNone(currentBranch15);
+        const revParse16 = yield* git.revParse(subDir, "HEAD");
+        assert.strictEqual(revParse16, libTagSha);
       })
     );
 
@@ -452,14 +469,13 @@ it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" }
       Effect.gen(function* () {
         const git = yield* Git;
         yield* git.sparseCheckoutSet(subDir, ["src"], { cone: false });
-        assertSome(yield* git.configGet(subDir, "core.sparseCheckout"), "true");
+        const configGet17 = yield* git.configGet(subDir, "core.sparseCheckout");
+        assertSome(configGet17, "true");
         // The narrowing must be real, not just configured: lib.txt sits at the
         // tree root, outside the "src" pattern, so it leaves the working tree.
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const libGone = yield* fs
-          .stat(path.join(subDir, "lib.txt"))
-          .pipe(Effect.match({ onSuccess: () => false, onFailure: () => true }));
+        const libGone = yield* fs.stat(path.join(subDir, "lib.txt")).pipe(Effect.isFailure);
         assert.isTrue(libGone);
       })
     );
@@ -539,7 +555,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git.log — history repository (
 
       yield* raw(["mv", "tracked/old.txt", "tracked/new.txt"]);
       yield* commit("c2");
-      const branchPoint = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+      const raw18 = yield* raw(["rev-parse", "HEAD"]);
+      const branchPoint = Str.trim(raw18);
 
       yield* fs.writeFileString(join(dirC, "other.txt"), "other again\n");
       yield* raw(["add", "-A"]);
@@ -608,7 +625,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git.log — history repository (
         });
         yield* Effect.gen(function* () {
           yield* runFixtureGit(dirC, ["config", "--local", "log.showSignature", "true"]);
-          assert.deepStrictEqual(yield* git.log(dirC), expected);
+          const log19 = yield* git.log(dirC);
+          assert.deepStrictEqual(log19, expected);
         }).pipe(Effect.ensuring(restore));
       })
     );
@@ -673,7 +691,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git.log — history repository (
       Effect.gen(function* () {
         const git = yield* Git;
         assert.strictEqual((yield* git.log(dirC, { limit: 2 })).length, 2);
-        assert.deepStrictEqual(yield* git.log(dirC, { limit: 0 }), []);
+        const log20 = yield* git.log(dirC, { limit: 0 });
+        assert.deepStrictEqual(log20, []);
       })
     );
 
@@ -688,7 +707,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git.log — history repository (
     it.effect("an unborn HEAD is the empty listing against real git, not a failure", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        assert.deepStrictEqual(yield* git.log(emptyDir), []);
+        const log21 = yield* git.log(emptyDir);
+        assert.deepStrictEqual(log21, []);
       })
     );
 
@@ -764,7 +784,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           const path = yield* Path.Path;
           const expected = yield* fs.realPath(path.join(main, ".git"));
           for (const cwd of [main, path.join(main, "sub"), worktree, linked, path.join(linked, "sub")]) {
-            assert.strictEqual(yield* git.commonDir(cwd), expected, cwd);
+            const commonDir22 = yield* git.commonDir(cwd);
+            assert.strictEqual(commonDir22, expected, cwd);
           }
         })
       );
@@ -773,7 +794,9 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
         Effect.gen(function* () {
           const git = yield* Git;
           const fs = yield* FileSystem.FileSystem;
-          assert.strictEqual(yield* git.commonDir(bare), yield* fs.realPath(bare));
+          const commonDir23 = yield* git.commonDir(bare);
+          const realPath43 = yield* fs.realPath(bare);
+          assert.strictEqual(commonDir23, realPath43);
         })
       );
 
@@ -782,7 +805,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           const git = yield* Git;
           const fs = yield* FileSystem.FileSystem;
           const answer = yield* git.commonDir(spaced);
-          assert.strictEqual(answer, yield* fs.realPath(spaced));
+          const realPath24 = yield* fs.realPath(spaced);
+          assert.strictEqual(answer, realPath24);
           assert.isTrue(Str.endsWith(" ")(answer));
         })
       );
@@ -858,7 +882,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
         yield* fs.writeFileString(join(dirD, "a name.txt"), "spaced\n");
         yield* raw(["add", "-A"]);
         yield* commit("c1: seed");
-        c1Sha = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+        const raw25 = yield* raw(["rev-parse", "HEAD"]);
+        c1Sha = Str.trim(raw25);
 
         yield* raw(["checkout", "-q", "-b", "side"]);
         yield* fs.writeFileString(join(dirD, "other.txt"), "side\n");
@@ -872,7 +897,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
         yield* fs.writeFileString(join(dirD, "src", "added.ts"), "added\n");
         yield* raw(["add", "-A"]);
         yield* commit("c2: rename, delete, modify, add");
-        c2Sha = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+        const raw26 = yield* raw(["rev-parse", "HEAD"]);
+        c2Sha = Str.trim(raw26);
 
         yield* raw(["mv", "src/keep.ts", "src/kept.ts"]);
         yield* fs.writeFileString(join(dirD, "README.md"), "readme three\n");
@@ -887,13 +913,16 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
         () =>
           Effect.gen(function* () {
             const git = yield* Git;
-            const collapsed = A.map(yield* git.status(dirD), (entry) => entry.path);
+            const status27 = yield* git.status(dirD);
+            const collapsed = A.map(status27, (entry) => entry.path);
             assert.include(collapsed, "loose/");
             assert.notInclude(collapsed, "loose/inner.txt");
-            const expanded = A.map(yield* git.status(dirD, { untrackedFiles: "all" }), (entry) => entry.path);
+            const status28 = yield* git.status(dirD, { untrackedFiles: "all" });
+            const expanded = A.map(status28, (entry) => entry.path);
             assert.include(expanded, "loose/inner.txt");
             assert.notInclude(expanded, "loose/");
-            const none = A.map(yield* git.status(dirD, { untrackedFiles: "no" }), (entry) => entry.path);
+            const status29 = yield* git.status(dirD, { untrackedFiles: "no" });
+            const none = A.map(status29, (entry) => entry.path);
             assert.notInclude(none, "loose/");
             assert.notInclude(none, "loose/inner.txt");
           })
@@ -957,8 +986,9 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
               A.map(statuses, (entry) => entry.path),
               "other.txt"
             );
+            const nameStatus30 = yield* git.nameStatus(dirD, { base: "side", head: "main" });
             assert.notInclude(
-              A.map(yield* git.nameStatus(dirD, { base: "side", head: "main" }), (entry) => entry.path),
+              A.map(nameStatus30, (entry) => entry.path),
               "other.txt"
             );
           })
@@ -967,8 +997,10 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
       it.effect("the working-tree trio honors pathspec, diffFilter, noRenames and head against the real tree", () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          assert.deepStrictEqual(yield* git.unstagedChanges(dirD), ["README.md"]);
-          assert.deepStrictEqual(yield* git.unstagedChanges(dirD, { pathspec: ["src"] }), []);
+          const unstagedChanges31 = yield* git.unstagedChanges(dirD);
+          assert.deepStrictEqual(unstagedChanges31, ["README.md"]);
+          const unstagedChanges32 = yield* git.unstagedChanges(dirD, { pathspec: ["src"] });
+          assert.deepStrictEqual(unstagedChanges32, []);
           // Against c1 the working tree carries every change since, staged or not, under the pathspec.
           const sinceC1 = yield* git.unstagedChanges(dirD, { head: c1Sha, pathspec: ["src"], noRenames: true });
           assert.deepStrictEqual([...sinceC1].sort(), [
@@ -978,17 +1010,22 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
             "src/new.ts",
             "src/old.ts",
           ]);
-          assert.deepStrictEqual(yield* git.stagedChanges(dirD, { diffFilter: "A", noRenames: true }), ["src/kept.ts"]);
-          assert.deepStrictEqual(yield* git.stagedChanges(dirD, { diffFilter: "A" }), []);
-          assert.deepStrictEqual(yield* git.untrackedFiles(dirD, { pathspec: ["loose"] }), ["loose/inner.txt"]);
-          assert.deepStrictEqual(yield* git.untrackedFiles(dirD, { pathspec: ["src"] }), []);
+          const stagedChanges33 = yield* git.stagedChanges(dirD, { diffFilter: "A", noRenames: true });
+          assert.deepStrictEqual(stagedChanges33, ["src/kept.ts"]);
+          const stagedChanges34 = yield* git.stagedChanges(dirD, { diffFilter: "A" });
+          assert.deepStrictEqual(stagedChanges34, []);
+          const untrackedFiles35 = yield* git.untrackedFiles(dirD, { pathspec: ["loose"] });
+          assert.deepStrictEqual(untrackedFiles35, ["loose/inner.txt"]);
+          const untrackedFiles36 = yield* git.untrackedFiles(dirD, { pathspec: ["src"] });
+          assert.deepStrictEqual(untrackedFiles36, []);
         })
       );
 
       it.effect("log --name-status types c2's rename, delete, modify and add, with the subject and derived paths", () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          const c2 = O.getOrThrow(A.head(yield* git.log(dirD, { nameStatus: true, limit: 1 })));
+          const log37 = yield* git.log(dirD, { nameStatus: true, limit: 1 });
+          const c2 = O.getOrThrow(A.head(log37));
           assert.strictEqual(c2.sha, c2Sha);
           assert.strictEqual(c2.subject, "c2: rename, delete, modify, add");
           const changes = c2.changes ?? [];
@@ -1004,7 +1041,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           const sortedPaths = A.sort(c2.paths, Str.Order);
           assert.deepStrictEqual(sortedPaths, ["README.md", "docs/gone.md", "src/added.ts", "src/new.ts"]);
           // The same commit through --name-only: subject present, changes absent, the same paths.
-          const nameOnly = O.getOrThrow(A.head(yield* git.log(dirD, { limit: 1 })));
+          const log38 = yield* git.log(dirD, { limit: 1 });
+          const nameOnly = O.getOrThrow(A.head(log38));
           assert.strictEqual(nameOnly.subject, "c2: rename, delete, modify, add");
           assert.isUndefined(nameOnly.changes);
           assert.deepStrictEqual(A.sort(nameOnly.paths, Str.Order), sortedPaths);
@@ -1045,13 +1083,17 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
             const git = yield* Git;
             const path = yield* Path.Path;
             const sub = path.join(dirD, "src");
-            const scoped = A.map(yield* git.lsTree(sub, c2Sha), (entry) => entry.path);
+            const lsTree39 = yield* git.lsTree(sub, c2Sha);
+            const scoped = A.map(lsTree39, (entry) => entry.path);
             assert.notInclude(scoped, "README.md");
-            const whole = A.map(yield* git.lsTree(sub, c2Sha, { fullTree: true }), (entry) => entry.path);
+            const lsTree40 = yield* git.lsTree(sub, c2Sha, { fullTree: true });
+            const whole = A.map(lsTree40, (entry) => entry.path);
             assert.include(whole, "README.md");
             assert.include(whole, "src/new.ts");
-            assertSome(yield* git.currentBranch(dirD, { mode: "show-current" }), "main");
-            assertSome(yield* git.currentBranch(dirD), "main");
+            const currentBranch41 = yield* git.currentBranch(dirD, { mode: "show-current" });
+            assertSome(currentBranch41, "main");
+            const currentBranch42 = yield* git.currentBranch(dirD);
+            assertSome(currentBranch42, "main");
           })
       );
     });

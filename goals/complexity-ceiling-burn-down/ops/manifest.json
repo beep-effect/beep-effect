@@ -42,10 +42,10 @@
     "goals/complexity-ceiling-burn-down/history/reflections/2026-09-09-codex.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/calibration.md",
-    "research/tail-inventory.md",
-    "research/OPPORTUNITIES.md"
+    "research/tail-inventory.md"
   ],
   "agentLaunchers": [
     {

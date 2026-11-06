@@ -32,7 +32,9 @@ it.effect.prop(
       const lockfile = yield* S.decodeUnknownEffect(Lockfile)(encoded);
       const normalized = importerVersionsOf(lockfile);
       assert.deepStrictEqual(normalized, { ".": { dependency: version } });
-      const reparsed = yield* S.decodeEffect(Lockfile)(yield* S.encodeEffect(Lockfile)(lockfile));
+      const argument = S.decodeEffect(Lockfile);
+      const value = yield* S.encodeEffect(Lockfile)(lockfile);
+      const reparsed = yield* argument(value);
       assert.deepStrictEqual(importerVersionsOf(reparsed), normalized);
       const canonical = yield* S.decodeUnknownEffect(Lockfile)({
         ...encoded,

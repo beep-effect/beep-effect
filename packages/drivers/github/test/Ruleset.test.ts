@@ -100,7 +100,8 @@ describe("Ruleset.upsert", () => {
         A.some(requested, (call) => Str.includes("{ruleset_id}")(call.route)),
         false
       );
-      assert.notInclude(yield* S.encodeEffect(JsonValue)(requested), '"ruleset_id":7');
+      const value1 = yield* S.encodeEffect(JsonValue)(requested);
+      assert.notInclude(value1, '"ruleset_id":7');
     })
   );
 
@@ -221,8 +222,10 @@ describe("Ruleset bypass-actor lookups", () => {
         }
       ).pipe(Effect.exit);
 
-      assert.include(yield* S.encodeEffect(JsonValue)(exit), "available: other");
-      assert.include(yield* S.encodeEffect(JsonValue)(exit), "missing");
+      const value2 = yield* S.encodeEffect(JsonValue)(exit);
+      assert.include(value2, "available: other");
+      const value3 = yield* S.encodeEffect(JsonValue)(exit);
+      assert.include(value3, "missing");
     })
   );
 
@@ -233,7 +236,8 @@ describe("Ruleset bypass-actor lookups", () => {
         { "GET /orgs/{org}/organization-roles": Result.succeed({}) }
       ).pipe(Effect.exit);
 
-      assert.include(yield* S.encodeEffect(JsonValue)(exit), "available: none");
+      const value4 = yield* S.encodeEffect(JsonValue)(exit);
+      assert.include(value4, "available: none");
     })
   );
 });

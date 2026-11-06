@@ -454,12 +454,10 @@ it.layer(PlatformLayer, { timeout: "5 seconds" })("allowlist-check", (it) => {
         AllowlistCheckSummary.make({ ok: false, diagnostics: ["entries.0: first", "entries.1: second"] })
       );
 
-      expect(yield* TestConsole.logLines).toEqual(["[laws-allowlist] OK"]);
-      expect(yield* TestConsole.errorLines).toEqual([
-        "[laws-allowlist] found 2 issue(s):",
-        "- entries.0: first",
-        "- entries.1: second",
-      ]);
+      const logLines1 = yield* TestConsole.logLines;
+      expect(logLines1).toEqual(["[laws-allowlist] OK"]);
+      const errorLines2 = yield* TestConsole.errorLines;
+      expect(errorLines2).toEqual(["[laws-allowlist] found 2 issue(s):", "- entries.0: first", "- entries.1: second"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
   it.effect("rejects empty entry metadata before checking referenced files", () =>

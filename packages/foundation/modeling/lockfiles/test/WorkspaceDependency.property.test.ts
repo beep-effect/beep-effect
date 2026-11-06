@@ -17,7 +17,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(WorkspaceDependency)(value);
       const decoded = yield* S.decodeEffect(WorkspaceDependency)(encoded);
       assertTrue(S.toEquivalence(WorkspaceDependency)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(WorkspaceDependency)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(WorkspaceDependency)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

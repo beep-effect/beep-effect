@@ -12,7 +12,32 @@ import { flow, pipe } from "effect/Function";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+/**
+ * A conformance artifact could not be read from disk.
+ *
+ * **Example** (Describe an unreadable artifact)
+ *
+ * ```ts
+ * import { ConformanceLedgerEvidenceOperationError } from "@beep/test-utils/ConformanceLedger";
+ *
+ * const error = ConformanceLedgerEvidenceOperationError.make({ cause: "unreadable artifact" });
+ * console.log(error._tag); // "ConformanceLedgerEvidenceOperationError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ConformanceLedgerEvidenceOperationError extends S.TaggedError<
+  ConformanceLedgerEvidenceOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "ConformanceLedgerEvidenceOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in ConformanceLedger.evidence.ts." }
+) {}
 
 type CoverageEvidenceEntry = {
   readonly invariantId: string;
@@ -22,7 +47,12 @@ type CoverageEvidenceEntry = {
   readonly status: string;
 };
 
-const readText = Effect.fn("ConformanceLedger.readText")((url: URL) => Effect.tryPromise(() => Bun.file(url).text()));
+const readText = Effect.fn("ConformanceLedger.readText")((url: URL) =>
+  Effect.tryPromise({
+    try: () => Bun.file(url).text(),
+    catch: (cause) => ConformanceLedgerEvidenceOperationError.make({ cause }),
+  })
+);
 
 const parseTestId = (
   testId: string

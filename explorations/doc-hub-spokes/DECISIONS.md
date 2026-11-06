@@ -129,3 +129,35 @@ options. Deferred questions are logged DEFERRED with the reason. Manifest
 - **Rationale:** the name says what is under test (the admit-find-repair loop as the oracle
   for agent output) and stays domain-free per D-01.
 - **Rejected:** `doc-oracle` (narrower than the thesis), `backpressure` (the why, not the what).
+
+## 2026-11-05
+
+### D-13 Bounded question-binding fixture for the oracle POC
+
+- **Question:** How does the document loop preserve obligations that require
+  evidence or an authorized answer rather than an edit?
+- **Answer (operator-authorized amendment):** Extend D-01 for the oracle POC
+  with one synthetic, deterministic lab fixture after the first generic slice.
+  Keep unresolved obligations explicit; source edits cannot mint evidence or
+  erase protected commitments to discharge them. Clarify D-08: model paths and
+  codec locations address display, while answers bind to the question, source
+  and evidence basis, policy, answerer authority, and request occurrence.
+  Replay consumes admitted observations without calling answerers; duplicate,
+  conflicting, stale, and unauthorized answers follow explicit policies.
+  Confidence does not override discharge authority. A synthetic proposed rule
+  is tested against contrasting cases before simulated adoption.
+- **Scope:** The normative cases live in
+  [`goals/oracle-loop-poc/QUESTION-BINDING.md`](../../goals/oracle-loop-poc/QUESTION-BINDING.md).
+  D-09's separate domain graph and D-10's hub-native safety boundary remain.
+  No Doc schema fields, engine, production service, live classifier, or private
+  material enters this fixture. The inversion goal is unchanged and acquires
+  no dependency on the fixture or protocol substrate. All existing POC profiles
+  and numeric criteria remain required. This is a later planning amendment,
+  not an October ruling, completed experiment, or lifecycle transition.
+- **Rationale:** A stable location can acquire a different question, and
+  clearing a diagnostic does not prove its underlying obligation resolved.
+- **Rejected:** Treating location as approval identity; converting confidence
+  into authority; replacing the document loop with a general workflow platform.
+- **Reversal:** Adopt a later dated scope decision, preserve receipts, and
+  withdraw any promotion claim depending on removed checks. Keep the original
+  document-loop acceptance criteria.

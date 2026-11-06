@@ -9,6 +9,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Base64 from "effect/encoding/Base64";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
@@ -18,9 +19,9 @@ import { harness } from "./support/harness.ts";
 import type { GitHubFixtures, RecordedCall } from "@beep/github/GitHubClient";
 import type { SecretScope } from "@beep/github/RepositorySecret";
 
-const decodeSecretInfos = S.decodeResult(S.Array(SecretInfo));
-
 const JsonValue = S.fromJsonString(S.Unknown);
+
+const decodeSecretInfos = S.decodeResult(S.Array(SecretInfo));
 
 /** A base64 Curve25519 public key, so the seal has something real to work against. */
 const PUBLIC_KEY = { key: Base64.encode(new Uint8Array(32).fill(7)), key_id: "key-123" };
@@ -72,7 +73,8 @@ describe("RepositorySecret, per store", () => {
         // The plaintext must never appear in the request, on any path.
         assert.notStrictEqual(put?.params.encrypted_value, "plaintext");
         assert.strictEqual(typeof put?.params.encrypted_value, "string");
-        assert.notInclude(yield* S.encodeEffect(JsonValue)(put?.params), "plaintext");
+        const value1 = yield* S.encodeEffect(JsonValue)(put?.params);
+        assert.notInclude(value1, "plaintext");
       })
     );
 
@@ -139,7 +141,8 @@ describe("RepositorySecret, per environment", () => {
       ]);
       assert.strictEqual(requested[1]?.params.environment_name, "prod");
       assert.strictEqual(requested[1]?.params.secret_name, "TOKEN");
-      assert.notInclude(yield* S.encodeEffect(JsonValue)(requested[1]?.params), "plaintext");
+      const value2 = yield* S.encodeEffect(JsonValue)(requested[1]?.params);
+      assert.notInclude(value2, "plaintext");
     })
   );
 
@@ -188,9 +191,11 @@ describe("RepositorySecret, when the public key is unusable", () => {
         }
       ).pipe(Effect.exit);
 
-      assert.include(yield* S.encodeEffect(JsonValue)(exit), "public key");
+      const value3 = yield* S.encodeEffect(JsonValue)(exit);
+      assert.include(value3, "public key");
       // And nothing was written.
-      assert.notInclude(yield* S.encodeEffect(JsonValue)(exit), "plaintext");
+      const value4 = yield* S.encodeEffect(JsonValue)(exit);
+      assert.notInclude(value4, "plaintext");
     })
   );
 });
@@ -200,7 +205,7 @@ describe("the Redacted seam", () => {
     const value = Redacted.make("hunter2");
 
     assert.notInclude(String(value), "hunter2");
-    assert.notInclude(JSON.stringify({ value }), "hunter2");
+    assert.notInclude(Result.getOrThrowWith(S.encodeUnknownResult(JsonValue)({ value }), identity), "hunter2");
     assert.notInclude(`${value}`, "hunter2");
     // And it is still readable where the code deliberately asks.
     assert.strictEqual(Redacted.value(value), "hunter2");

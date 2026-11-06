@@ -66,7 +66,8 @@ describe("Mdast properties", () => {
         assert.strictEqual(content.children[2].label, sample.label);
         const admitted = yield* Mdast.fromMdast(plain);
         assert.deepStrictEqual(Mdast.toMdast(admitted), plain);
-        assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(Mdast.toMdast(admitted))), plain);
+        const fromMdast1 = yield* Mdast.fromMdast(Mdast.toMdast(admitted));
+        assert.deepStrictEqual(Mdast.toMdast(fromMdast1), plain);
         const [paragraph, code, definition] = admitted.children;
         assert.strictEqual(paragraphText(paragraph), sample.text);
         assert.strictEqual(codeValue(code), carriedCodeValue(sample.code));

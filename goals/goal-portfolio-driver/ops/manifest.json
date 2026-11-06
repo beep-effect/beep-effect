@@ -34,7 +34,12 @@
   "researchReports": [
     "research/SOURCES.md",
     "research/approved-plan-2026-07-14.md",
-    "research/deep-research-2026-07-14.md"
+    "research/decisions-locked.md",
+    "research/deep-research-2026-07-14.md",
+    "research/dependency-sweep-1.md",
+    "research/dependency-sweep-2.md",
+    "research/dependency-sweep-3.md",
+    "research/dependency-sweep-4.md"
   ],
   "agentLaunchers": [
     {

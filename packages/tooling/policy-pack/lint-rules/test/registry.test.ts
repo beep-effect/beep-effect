@@ -118,7 +118,8 @@ describe("rule registry", () => {
   it.effect(
     "preserves the encoded rule registry wire shape",
     Effect.fnUntraced(function* () {
-      expect(yield* encodeRuleRegistry(RuleRegistrySchema.make(RULES))).toEqual({
+      const encodedRuleRegistry = yield* encodeRuleRegistry(RuleRegistrySchema.make(RULES));
+      expect(encodedRuleRegistry).toEqual({
         "no-file-url-pathname": {
           name: "no-file-url-pathname",
           severity: "error",
@@ -186,7 +187,9 @@ describe("rule registry", () => {
     "round-trips schema-derived rule registries",
     [RuleRegistryArbitrary],
     Effect.fnUntraced(function* ([registry]) {
-      expect(yield* decodeRuleRegistry(yield* encodeRuleRegistry(registry))).toEqual(registry);
+      const encodedRuleRegistry1 = yield* encodeRuleRegistry(registry);
+      const decodedRuleRegistry = yield* decodeRuleRegistry(encodedRuleRegistry1);
+      expect(decodedRuleRegistry).toEqual(registry);
     }),
     { arbitrary: fcRuns(50) }
   );

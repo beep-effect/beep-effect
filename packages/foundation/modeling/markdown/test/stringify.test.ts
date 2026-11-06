@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // Canonical stringify: hand-built trees in, markdown source out.
 //
 // Two kinds of assertion live here. Exact-string cases pin the canonical
@@ -49,6 +50,8 @@ import * as Str from "effect/String";
 import { renderHtml } from "./support/htmlWriter.ts";
 import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 /** A throwaway span. Stringify never reads offsets, only shapes. */
 const span = (): Position =>
   Position.make({
@@ -77,7 +80,11 @@ const out = (root: Root): string => {
 const reparses = (root: Root, expectType: string): void => {
   const emitted = out(root);
   const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
-  assert.strictEqual(reparsed.children[0]?.type, expectType, `emitted: ${JSON.stringify(emitted)}`);
+  assert.strictEqual(
+    reparsed.children[0]?.type,
+    expectType,
+    `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+  );
 };
 
 // The canonical-form table published on `Markdown.stringifyResult`'s TSDoc is a
@@ -122,7 +129,10 @@ const twoCellTable = (first: PhrasingContent, second: PhrasingContent): Table =>
 /** The header-row cells of the table `emitted` re-parses to, failing unless it is one. */
 const headerCells = (emitted: string): ReadonlyArray<TableCell> => {
   const first = Result.getOrThrow(Markdown.parseResult(emitted)).children[0];
-  if (first?.type !== "table") assert.fail(`expected a table, emitted: ${JSON.stringify(emitted)}`);
+  if (first?.type !== "table")
+    assert.fail(
+      `expected a table, emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+    );
   return first.children[0]?.children ?? [];
 };
 
@@ -449,7 +459,7 @@ describe("Markdown.stringify", () => {
       assert.deepStrictEqual(
         A.map(reparsed.children, (child) => child.type),
         ["list", "list"],
-        `emitted: ${JSON.stringify(emitted)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
     });
 
@@ -511,17 +521,25 @@ describe("Markdown.stringify", () => {
       const values = ["a|b", "a\\\\|b", "a\\\\\\\\|b", "\\\\|"];
       for (const [kind, make] of rawCells) {
         for (const value of values) {
-          it(`${kind} ${JSON.stringify(value)}`, () => {
+          it(`${kind} ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}`, () => {
             const node = make(value);
             const emitted = out(rootOf(twoCellTable(node, text("x"))));
             const cells = headerCells(emitted);
-            assert.strictEqual(cells.length, 2, `emitted: ${JSON.stringify(emitted)}`);
+            assert.strictEqual(
+              cells.length,
+              2,
+              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+            );
             const [child] = cells[0]?.children ?? [];
-            assert.strictEqual(child?.type, node.type, `emitted: ${JSON.stringify(emitted)}`);
+            assert.strictEqual(
+              child?.type,
+              node.type,
+              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+            );
             assert.strictEqual(
               child !== undefined && "value" in child ? child.value : undefined,
               node.value,
-              `emitted: ${JSON.stringify(emitted)}`
+              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
             );
           });
         }
@@ -571,7 +589,7 @@ describe("Markdown.stringify", () => {
       assert.isTrue(
         firstParagraph?.type === "paragraph" &&
           A.some(firstParagraph.children, (child) => child.type === "footnoteReference"),
-        `emitted: ${JSON.stringify(emitted)}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
     });
   });
@@ -729,15 +747,22 @@ describe("Markdown.stringify", () => {
       const emitted = out(rootOf(paragraph(text(value))));
       const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
       const p = reparsed.children[0];
-      assert.strictEqual(p?.type, "paragraph", `emitted: ${JSON.stringify(emitted)} became ${p?.type}`);
+      assert.strictEqual(
+        p?.type,
+        "paragraph",
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} became ${p?.type}`
+      );
       if (p?.type !== "paragraph") return;
       assert.deepStrictEqual(
         A.map(p.children, (child) => child.type),
         ["text"],
-        `emitted: ${JSON.stringify(emitted)} split into ${JSON.stringify(A.map(p.children, (c) => c.type))}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} split into ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(A.map(p.children, (c) => c.type)), identity)}`
       );
       const only = p.children[0];
-      assert.isTrue(only?.type === "text" && only.value === expectHtmlText, `round-trip: ${JSON.stringify(emitted)}`);
+      assert.isTrue(
+        only?.type === "text" && only.value === expectHtmlText,
+        `round-trip: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+      );
     };
 
     it("emphasis markers stay literal", () => literal("a *b* _c_", "a *b* _c_"));
@@ -762,7 +787,11 @@ describe("Markdown.stringify", () => {
     it("pipes stay literal under gfm", () => {
       const emitted = out(rootOf(paragraph(text("a | b\n--- | ---"))));
       const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
-      assert.strictEqual(reparsed.children[0]?.type, "paragraph", `emitted: ${JSON.stringify(emitted)}`);
+      assert.strictEqual(
+        reparsed.children[0]?.type,
+        "paragraph",
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+      );
     });
     it("www autolink literal shape survives as text content", () => {
       // Under gfm a bare www literal re-parses as a link; the design's
@@ -774,7 +803,7 @@ describe("Markdown.stringify", () => {
       const p = reparsed.children[0];
       assert.isTrue(
         p?.type === "paragraph" && A.every(p.children, (child) => child.type === "text"),
-        `emitted: ${JSON.stringify(emitted)} must not re-parse as an autolink`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} must not re-parse as an autolink`
       );
     });
     it("scheme autolink literal shape survives as text content", () => {
@@ -783,7 +812,7 @@ describe("Markdown.stringify", () => {
       const p = reparsed.children[0];
       assert.isTrue(
         p?.type === "paragraph" && A.every(p.children, (child) => child.type === "text"),
-        `emitted: ${JSON.stringify(emitted)} must not re-parse as an autolink`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} must not re-parse as an autolink`
       );
     });
     it("keeps email-shaped plain text literal under gfm", () => {
@@ -815,12 +844,16 @@ describe("Markdown.stringify", () => {
     const reparsedText = (emitted: string, expectType: string): string => {
       const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
       const block = reparsed.children[0];
-      assert.strictEqual(block?.type, expectType, `emitted: ${JSON.stringify(emitted)} became ${block?.type}`);
+      assert.strictEqual(
+        block?.type,
+        expectType,
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} became ${block?.type}`
+      );
       if (block?.type !== "paragraph" && block?.type !== "heading") assert.fail("unreachable");
       assert.deepStrictEqual(
         A.map(block.children, (child) => child.type),
         ["text"],
-        `emitted: ${JSON.stringify(emitted)} split into ${JSON.stringify(A.map(block.children, (c) => c.type))}`
+        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} split into ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(A.map(block.children, (c) => c.type)), identity)}`
       );
       const only = block.children[0];
       return only?.type === "text" ? only.value : "";

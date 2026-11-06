@@ -21,6 +21,7 @@
  */
 
 import { SkillTreeMode, SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas";
+import { asArrayBufferView, concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -29,7 +30,6 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
 import { DiffLine, diffLines, joinDiffLines, sameDiffLine } from "./internal/DiffLines.ts";
 import { appendFramedText, hashBytes } from "./internal/SkillTree.ts";
 import { SkillPatchApplyError } from "./Skills.errors.ts";
@@ -279,7 +279,10 @@ const parseSectionLine = Effect.fn("SkillPatches.parseSectionLine")(function* (
     )(`Unsupported patch section for ${section.path}: ${line}`);
   }
   if (Str.startsWith("@@ ")(line)) {
-    return { ...section, hunks: A.append(section.hunks, yield* parseHunk(patch, section.path, cursor)) };
+    return {
+      ...section,
+      hunks: yield* Effect.map(parseHunk(patch, section.path, cursor), (value) => A.append(section.hunks, value)),
+    };
   }
   cursor.index += 1;
   return yield* applyHeaderLine(patch, section, line);
@@ -313,7 +316,9 @@ const parsePatch = Effect.fn("SkillPatches.parsePatch")(function* (
   while (O.isSome(peek(cursor))) {
     const line = current(cursor);
     cursor.index += Str.isEmpty(line) ? 1 : 0;
-    sections = Str.isEmpty(line) ? sections : A.append(sections, yield* parseSectionStart(patch, cursor, line));
+    sections = Str.isEmpty(line)
+      ? sections
+      : yield* Effect.map(parseSectionStart(patch, cursor, line), (value) => A.append(sections, value));
   }
   return A.isReadonlyArrayEmpty(sections)
     ? yield* fail(patch, "", "malformed-patch")("The patch carries no file sections.")
@@ -826,7 +831,8 @@ export const classifySkillPatchHunks = Effect.fn("SkillPatches.classifySkillPatc
   for (const section of parsed.success) {
     const classified = yield* classifySection(patch, files, section);
     files = classified.tree;
-    rows = A.appendAll(rows, yield* toReports(patch, section.path, classified.verdicts));
+    const toReports1 = yield* toReports(patch, section.path, classified.verdicts);
+    rows = A.appendAll(rows, toReports1);
   }
   return {
     rows,

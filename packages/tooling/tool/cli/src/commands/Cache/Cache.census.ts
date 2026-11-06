@@ -7,6 +7,10 @@
 
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import { hashFileSha256 } from "@beep/repo-cli-kit/cli/FsGuards";
+import { isTurboCacheControlArg } from "@beep/repo-cli-kit/cli/TurboCache";
+import { OutputBound, runCaptured } from "@beep/repo-cli-kit/process/index";
+import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtils, GlobOptions, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -25,10 +29,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
-import { isTurboCacheControlArg } from "../../internal/cli/TurboCache.ts";
-import { OutputBound, runCaptured } from "../../internal/process/index.ts";
-import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
 import { isCacheTaskInspectionArg } from "./Cache.runtime.step.ts";
 import { CacheCensusNode, CacheCensusReport, CacheCensusSource, CacheCensusWorkspace } from "./Cache.schemas.ts";
@@ -99,15 +99,19 @@ export const resolveCacheTurboBinary = Effect.fn("Cache.resolveTurboBinary")(fun
   executable: O.Option<string> = O.none()
 ) {
   const fs = yield* FileSystem.FileSystem;
-  if (O.isSome(executable)) return yield* fs.realPath(executable.value);
+  if (O.isSome(executable)) {
+    return yield* fs.realPath(executable.value);
+  }
   const path = yield* Path.Path;
-  const platform = yield* Match.value(yield* HostProcessPlatform).pipe(
+  const HostProcessPlatform1 = yield* HostProcessPlatform;
+  const platform = yield* Match.value(HostProcessPlatform1).pipe(
     Match.when("linux", () => Effect.succeed("linux")),
     Match.when("darwin", () => Effect.succeed("darwin")),
     Match.when("win32", () => Effect.succeed("windows")),
     Match.orElse(() => Effect.fail(CacheCommandError.new("Native Turbo discovery does not support this platform.")))
   );
-  const arch = yield* Match.value(yield* HostProcessArchitecture).pipe(
+  const HostProcessArchitecture2 = yield* HostProcessArchitecture;
+  const arch = yield* Match.value(HostProcessArchitecture2).pipe(
     Match.when("x64", () => Effect.succeed("64")),
     Match.when("arm64", () => Effect.succeed("arm64")),
     Match.orElse(() => Effect.fail(CacheCommandError.new("Native Turbo discovery does not support this architecture.")))
@@ -115,7 +119,9 @@ export const resolveCacheTurboBinary = Effect.fn("Cache.resolveTurboBinary")(fun
   const suffix = platform === "windows" ? ".exe" : "";
   for (const packageName of [`@turbo/${platform}-${arch}`, `turbo-${platform}-${arch}`]) {
     const candidate = path.join(root, "node_modules", packageName, "bin", `turbo${suffix}`);
-    if (yield* fs.exists(candidate)) return yield* fs.realPath(candidate);
+    if (yield* fs.exists(candidate)) {
+      return yield* fs.realPath(candidate);
+    }
   }
   return yield* CacheCommandError.new("Native Turbo is not installed; discovery will not install or emulate a client.");
 }, CacheCommandError.mapError("Cannot resolve the installed native Turbo client."));
@@ -305,8 +311,9 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
     }),
     { discard: true }
   );
-  if (cacheValuePending)
+  if (cacheValuePending) {
     return yield* CacheCommandError.new("Runtime selection received a missing cache option value.");
+  }
   return A.appendAll(A.appendAll(selected, ["--dry=json", "--cache=local:"]), forwardedArgs);
 });
 
@@ -374,10 +381,11 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
   if (
     !A.contains(identity.configuration.passThroughEnv, "BIOME_CONFIG_PATH") ||
     (yield* forwardsBiomeConfigPath(identity.configuration.env))
-  )
+  ) {
     return yield* CacheCommandError.new(
       "Identity lint profile routing must use passThroughEnv, with profile bytes hashed as inputs."
     );
+  }
   const workspace = yield* A.findFirst(rows, (row) => row.name === identity.workspace).pipe(
     Effect.fromOption(() => CacheCommandError.new("Governed identity workspace is absent."))
   );
@@ -388,8 +396,9 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
     "\\",
     "/"
   )(paths.relative(paths.resolve(root, workspace.directory), paths.resolve(root, "biome.identity.jsonc")));
-  if (!R.has(native.inputs, profileInput))
+  if (!R.has(native.inputs, profileInput)) {
     return yield* CacheCommandError.new("Native identity task inputs omit the generated lint profile bytes.");
+  }
   const global = dry.globalCacheInputs.environmentVariables.specified;
   const outsideProfile = [
     ...global.env,
@@ -400,8 +409,9 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
         : []
     ),
   ];
-  if (yield* forwardsBiomeConfigPath(outsideProfile))
+  if (yield* forwardsBiomeConfigPath(outsideProfile)) {
     return yield* CacheCommandError.new("Identity lint profile must not be forwarded globally or to another task.");
+  }
 });
 
 /**
@@ -475,7 +485,9 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
       O.isSome(node.command) &&
       A.contains([...node.configuration.env, ...node.configuration.passThroughEnv], "BIOME_CONFIG_PATH")
   );
-  if (needsProfile) yield* validateIdentityProfileScope(root, rows, nodes, dry);
+  if (needsProfile) {
+    yield* validateIdentityProfileScope(root, rows, nodes, dry);
+  }
   if (
     dry.envMode !== "strict" &&
     (needsProfile ||
@@ -633,9 +645,12 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
     }),
     { concurrency: 4 }
   );
+  const capture3 = yield* capture(root, "git", ["rev-parse", "HEAD"]);
+  const argument1 = Str.trim(capture3);
+  const capture1 = yield* capture(root, turbo, ["--skip-infer", "--version"]);
   return CacheCensusReport.make({
-    revision: Str.trim(yield* capture(root, "git", ["rev-parse", "HEAD"])),
-    turboVersion: Str.trim(yield* capture(root, turbo, ["--skip-infer", "--version"])),
+    revision: argument1,
+    turboVersion: Str.trim(capture1),
     rootScripts: toSortedRecord(rootManifest.scripts),
     globalConfiguration: R.filter(rootJson, (_, key) => key !== "tasks" && key !== "$schema"),
     workspaces: workspaceRows,

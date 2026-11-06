@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "claim-performance-owner-integrated-replay/v1",
+  "implementationDigest": "7825ab6765344e2c982f542280d4e3aaa3edcf6f69208725068f1236ff8f6bda",
+  "claims": 538,
+  "strict": 43,
+  "parsed": 537,
+  "abstained": 453,
+  "prior41Lost": [],
+  "strictGains": [["14659462-root-1", 12], ["14659462-root-1", 17]],
+  "newlyCoveredClaims": 0,
+  "coverageRegressedClaims": 0,
+  "resultsSha256": "59015d87da6b14de7c7ba04a432deba035e415baea9c6d15de83c13f1963f7bb",
+  "preservation": {
+    "filesChecked": 1213,
+    "originalPathFilesChecked": 1209,
+    "historicalRunnerArtifactsChecked": 3,
+    "historicalGeneratedMetadataArtifactsChecked": 1,
+    "activeRunners": [
+      {
+        "path": "packages/law-practice/server/test/evaluation/allowed.main.ts",
+        "sha256": "d774701ac7e444ce165d79d28535a9a556388c515f5859809abf2359fa1b0094"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/iprally-smoke.main.ts",
+        "sha256": "041e4c9ed71c372cc91951d6707c61640958ab490672efbf7d02c3e96bec0813"
+      },
+      {
+        "path": "packages/law-practice/server/test/evaluation/positive.main.ts",
+        "sha256": "061c8a578fca133ca7da71595271568906b2ff474664f6c2e31b60920a607d03"
+      }
+    ],
+    "changed": [],
+    "passingClaimsProtected": 37,
+    "lost": [],
+    "strictMatches": 43,
+    "retentionEvaluated": true,
+    "preserved": true
+  },
+  "oldResultsUnchanged": true,
+  "independentCorrectnessEstablished": false,
+  "usefulnessEstablished": false,
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "referenceSelectionDigest": "ffcffd914a33dbabbe6f878e375bf6d9d41f9f30487e835d7061760b1593b8ff",
+  "sourceCommit": "5c9d00904dd609e228328a0385ee886b9ee54ba2",
+  "ownerCommit": "f98d2a38959ed10cb749b5eace75f6c999d7fb76",
+  "independentOwnerReview": "owner-root-review002",
+  "metadataReviews": [
+    "generated-metadata-implementation-review-001",
+    "accepted-main-dependency-metadata-implementation-review-001",
+    "retired-runtime-metadata-implementation-review-001",
+    "preservation-verification-metadata-implementation-review-001"
+  ],
+  "privateOutput": "product-owner-integrated-003",
+  "failedCapturesPreserved": [
+    "runtime-owner-integrated-001",
+    "runtime-owner-integrated-002"
+  ],
+  "protectedPassingClaims": 43
+}

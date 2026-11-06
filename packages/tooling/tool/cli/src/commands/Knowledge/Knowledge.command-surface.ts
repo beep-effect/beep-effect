@@ -12,13 +12,14 @@ import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   InMemoryFileSystemHost,
@@ -44,6 +45,8 @@ import type {
   SourceFile,
 } from "ts-morph";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.command-surface");
 
 const COMMAND_SOURCE_ROOT = "packages/tooling/tool/cli/src/commands";
@@ -52,8 +55,13 @@ const STATIC_PROJECT_ROOT = "/repo";
 const STATIC_COMMAND_SOURCE_ROOT = `${STATIC_PROJECT_ROOT}/${COMMAND_SOURCE_ROOT}`;
 const STATIC_ROOT_COMMAND_SOURCE = `${STATIC_PROJECT_ROOT}/${ROOT_COMMAND_SOURCE}`;
 // Shared flag declarations commands import; read as source like the command corpus, never executed.
-const SHARED_FLAG_SOURCE = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
-const STATIC_SHARED_FLAG_SOURCE = `${STATIC_PROJECT_ROOT}/${SHARED_FLAG_SOURCE}`;
+const SHARED_FLAG_SOURCE = "packages/tooling/library/repo-cli-kit/src/cli/Flags.ts";
+// Checkouts from before beep-cli-composition W3 keep the shared flags inside repo-cli; a base-commit
+// surface must still see them there.
+const LEGACY_SHARED_FLAG_SOURCE = "packages/tooling/tool/cli/src/internal/cli/Flags.ts";
+const SHARED_FLAG_SOURCES = [SHARED_FLAG_SOURCE, LEGACY_SHARED_FLAG_SOURCE] as const;
+const SHARED_FLAG_SPECIFIER = "@beep/repo-cli-kit/cli/Flags";
+const STATIC_SHARED_FLAG_SOURCES = A.map(SHARED_FLAG_SOURCES, (source) => `${STATIC_PROJECT_ROOT}/${source}`);
 
 const StaticCommandAlias = S.NullOr(S.String).pipe(
   $I.annoteSchema("StaticCommandAlias", {
@@ -197,7 +205,7 @@ const failStatic = (category: string): never => {
 
 const insideStaticCommandCorpus = (sourceFile: SourceFile): boolean =>
   Str.startsWith(`${STATIC_COMMAND_SOURCE_ROOT}/`)(sourceFile.getFilePath()) ||
-  Str.equivalence(sourceFile.getFilePath(), STATIC_SHARED_FLAG_SOURCE);
+  A.contains(STATIC_SHARED_FLAG_SOURCES, sourceFile.getFilePath());
 
 const requireInsideStaticCommandCorpus = <A extends MorphNode>(node: A): A =>
   insideStaticCommandCorpus(node.getSourceFile()) ? node : failStatic("a definition escaped the command source corpus");
@@ -1031,12 +1039,17 @@ const commandSourceFiles = Effect.fn("Knowledge.commandSourceFiles")(function* (
     A.filter((filePath) => Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath)),
     A.sort(Order.String)
   );
-  const sharedFlagSource = path.join(checkoutRoot, SHARED_FLAG_SOURCE);
-  const sharedFlagExists = yield* fs
-    .exists(sharedFlagSource)
-    .pipe(
-      Effect.mapError(() => KnowledgeOperationalError.make({ message: "Failed to inspect shared flag source data." }))
-    );
+  const sharedFlagSources = yield* Effect.filter(
+    A.map(SHARED_FLAG_SOURCES, (source) => path.join(checkoutRoot, source)),
+    (candidate) =>
+      fs
+        .exists(candidate)
+        .pipe(
+          Effect.mapError(() =>
+            KnowledgeOperationalError.make({ message: "Failed to inspect shared flag source data." })
+          )
+        )
+  );
   const readCommandSourceFile = Effect.fnUntraced(function* (filePath: string) {
     const info = yield* fs
       .stat(filePath)
@@ -1057,10 +1070,9 @@ const commandSourceFiles = Effect.fn("Knowledge.commandSourceFiles")(function* (
       );
     return O.some([path.relative(checkoutRoot, filePath), text] as const);
   });
-  return yield* Effect.forEach(
-    sharedFlagExists ? A.append(sourceNames, sharedFlagSource) : sourceNames,
-    readCommandSourceFile
-  ).pipe(Effect.map(A.getSomes));
+  return yield* Effect.forEach(A.appendAll(sourceNames, sharedFlagSources), readCommandSourceFile).pipe(
+    Effect.map(A.getSomes)
+  );
 });
 
 const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(function* (checkoutRoot: string) {
@@ -1077,12 +1089,16 @@ const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(fun
           module: ModuleKind.NodeNext,
           moduleResolution: ModuleResolutionKind.NodeNext,
           target: ScriptTarget.ESNext,
+          // Commands import the shared flags by package path since they moved to @beep/repo-cli-kit.
+          paths: { [SHARED_FLAG_SPECIFIER]: [`${STATIC_PROJECT_ROOT}/${SHARED_FLAG_SOURCE}`] },
         },
         skipAddingFilesFromTsConfig: true,
         skipLoadingLibFiles: true,
       });
       project.addSourceFilesAtPaths(`${STATIC_COMMAND_SOURCE_ROOT}/**/*.{ts,tsx}`);
-      project.addSourceFileAtPathIfExists(STATIC_SHARED_FLAG_SOURCE);
+      for (const sharedFlagSource of STATIC_SHARED_FLAG_SOURCES) {
+        project.addSourceFileAtPathIfExists(sharedFlagSource);
+      }
       const rootSource = project.getSourceFileOrThrow(STATIC_ROOT_COMMAND_SOURCE);
       return evaluateCommandExpression(rootSource.getVariableDeclarationOrThrow("rootCommand").getInitializerOrThrow());
     },
@@ -1100,7 +1116,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
-import { rootCommand } from ${JSON.stringify(rootCommandModule)}
+import { rootCommand } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(rootCommandModule), identity)}
 const project = (command) => ({
   name: command.name,
   alias: command.alias ?? null,

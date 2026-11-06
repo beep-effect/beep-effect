@@ -1,0 +1,25 @@
+/*************************************************************************
+ *
+ * $Id$
+ *
+ * Copyright (C) 1998 Bjorn Reese and Daniel Stenberg.
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE AUTHORS AND
+ * CONTRIBUTORS ACCEPT NO RESPONSIBILITY IN ANY CONCEIVABLE MANNER.
+ *
+ *************************************************************************
+ *
+ * A note to trio contributors:
+ *
+ * Avoid heap allocation at all costs to ensure that the trio functions
+ * are async-safe. The exceptions are the printf/fprintf functions, which
+ * uses fputc, and the asprintf functions and the <alloc> modifier, which
+ * by design are required to allocate form the heap.
+ *
+ ************************************************************************/

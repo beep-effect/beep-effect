@@ -22,7 +22,8 @@ const migratedDatabase = makeDrizzleLayer().pipe(
 );
 const migrateSync = Effect.fnUntraced(function* () {
   const info = yield* TestDatabaseInfo;
-  yield* migrate(yield* makeDrizzle(), {
+  const madeDrizzle = yield* makeDrizzle();
+  yield* migrate(madeDrizzle, {
     migrationsFolder,
     migrationsSchema: O.getOrElse(info.schema, () => "drizzle"),
   });
@@ -32,13 +33,15 @@ it.layer(migratedDatabase, { timeout: "2 minutes", concurrent: false })("Drizzle
   it.effect("preserves the winning item and rejects the stale SQL update", () =>
     Effect.gen(function* () {
       yield* migrateSync();
-      yield* Versioning.staleSyncItemUpdate(yield* makeDrizzleSyncItemRepository());
+      const madeDrizzleSyncItemRepository = yield* makeDrizzleSyncItemRepository();
+      yield* Versioning.staleSyncItemUpdate(madeDrizzleSyncItemRepository);
     })
   );
   it.effect("requeues a leased operation and refuses the worker's stale completion", () =>
     Effect.gen(function* () {
       yield* migrateSync();
-      yield* Versioning.staleSyncOperationAfterRequeue(yield* makeDrizzleSyncOperationRepository());
+      const madeDrizzleSyncOperationRepository = yield* makeDrizzleSyncOperationRepository();
+      yield* Versioning.staleSyncOperationAfterRequeue(madeDrizzleSyncOperationRepository);
     })
   );
   it.effect("advances reviewed conflict versions and preserves a competing writer", () =>

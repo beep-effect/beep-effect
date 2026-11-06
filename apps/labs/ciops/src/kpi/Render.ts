@@ -16,8 +16,9 @@
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { AdoptionTable, KpiReading } from "./Schemas.ts";
 import type {
@@ -30,7 +31,9 @@ import type {
   WindowSlice,
 } from "./Schemas.ts";
 
-const pretty = (encoded: unknown): string => `${JSON.stringify(encoded, null, 2)}\n`;
+const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
+
+const pretty = (encoded: unknown): string => `${Result.getOrThrowWith(encodePrettyJson(encoded), identity)}\n`;
 
 /**
  * Renders the adoption table as its committed JSON bytes.
@@ -69,7 +72,8 @@ const pretty = (encoded: unknown): string => `${JSON.stringify(encoded, null, 2)
 export const renderAdoptionTable = Effect.fn("KpiRender.renderAdoptionTable")(function* (
   table: AdoptionTable
 ): Effect.fn.Return<string, S.SchemaError> {
-  return pretty(yield* S.encodeEffect(AdoptionTable)(table));
+  const value1 = yield* S.encodeEffect(AdoptionTable)(table);
+  return pretty(value1);
 });
 
 /**
@@ -81,7 +85,8 @@ export const renderAdoptionTable = Effect.fn("KpiRender.renderAdoptionTable")(fu
 export const renderReadingJson = Effect.fn("KpiRender.renderReadingJson")(function* (
   reading: KpiReading
 ): Effect.fn.Return<string, S.SchemaError> {
-  return pretty(yield* S.encodeEffect(KpiReading)(reading));
+  const value2 = yield* S.encodeEffect(KpiReading)(reading);
+  return pretty(value2);
 });
 
 const iso = (instant: DateTime.Utc): string => DateTime.formatIso(instant);

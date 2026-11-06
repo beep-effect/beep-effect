@@ -50,7 +50,8 @@ const scenario = Effect.fn("EvidenceCrashTest.scenario")(function* () {
     );
     if (mode === "before-window" || mode === "after-window" || mode === "before-restore" || mode === "after-restore") {
       while (!(yield* fs.exists(marker))) {
-        expect(yield* child.isRunning).toBe(true);
+        const isRunning1 = yield* child.isRunning;
+        expect(isRunning1).toBe(true);
         yield* Effect.sleep("10 millis");
       }
       const observed = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));
@@ -58,13 +59,17 @@ const scenario = Effect.fn("EvidenceCrashTest.scenario")(function* () {
         boundary: mode,
         events: [{ n: mode === "before-restore" || mode === "after-restore" ? 1 : 0 }],
       });
-      expect(yield* fs.exists(output)).toBe(false);
+      const exists2 = yield* fs.exists(output);
+      expect(exists2).toBe(false);
       yield* child.kill({ killSignal: "SIGKILL" });
-      expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
-      expect(yield* child.isRunning).toBe(false);
+      const exit3 = yield* Effect.exit(child.exitCode);
+      expect(Exit.isFailure(exit3)).toBe(true);
+      const isRunning4 = yield* child.isRunning;
+      expect(isRunning4).toBe(false);
       return;
     }
-    expect(yield* child.exitCode).toBe(0);
+    const exitCode5 = yield* child.exitCode;
+    expect(exitCode5).toBe(0);
     return yield* fs.readFileString(output).pipe(Effect.flatMap(decodeInspectionJson));
   });
   return { run };
@@ -75,13 +80,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run } = yield* scenario();
       yield* run("before-window");
-      expect(yield* run("inspect")).toMatchObject({
+      const result6 = yield* run("inspect");
+      expect(result6).toMatchObject({
         window: { epoch: 0 },
         state: { state: "unresolved", attempts: 1 },
         events: [{ n: 1 }],
       });
       yield* run("after-window");
-      expect(yield* run("inspect")).toMatchObject({
+      const result7 = yield* run("inspect");
+      expect(result7).toMatchObject({
         window: { epoch: 1, totals: { unresolved: 1, eventObservations: 1 } },
         state: null,
         events: [{ n: 0 }],
@@ -94,16 +101,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { run } = yield* scenario();
       yield* run("after-window");
-      expect(yield* run("inspect")).toMatchObject({
+      const result8 = yield* run("inspect");
+      expect(result8).toMatchObject({
         window: { epoch: 1, totals: { unresolved: 1, eventObservations: 1 } },
         state: null,
         events: [{ n: 0 }],
       });
-      expect(yield* run("new-epoch")).toMatchObject({
+      const result9 = yield* run("new-epoch");
+      expect(result9).toMatchObject({
         window: { epoch: 1, totals: { unresolved: 1 } },
         acceptedEpoch: 1,
       });
-      expect(yield* run("new-epoch")).toMatchObject({
+      const result10 = yield* run("new-epoch");
+      expect(result10).toMatchObject({
         window: { epoch: 1, totals: { unresolved: 1 } },
         acceptedEpoch: 1,
       });
@@ -117,8 +127,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
       const { run } = yield* scenario();
       yield* run("after-window");
       yield* run("before-restore");
-      expect(yield* run("inspect")).toMatchObject({ window: { epoch: 1 }, state: null, events: [{ n: 0 }] });
-      expect(yield* run("restore")).toMatchObject({
+      const result11 = yield* run("inspect");
+      expect(result11).toMatchObject({ window: { epoch: 1 }, state: null, events: [{ n: 0 }] });
+      const result12 = yield* run("restore");
+      expect(result12).toMatchObject({
         window: { epoch: 0 },
         restored: "restored",
         state: { state: "unresolved", attempts: 1 },
@@ -133,7 +145,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
       const { run } = yield* scenario();
       yield* run("after-window");
       yield* run("after-restore");
-      expect(yield* run("restore")).toMatchObject({
+      const result13 = yield* run("restore");
+      expect(result13).toMatchObject({
         window: { epoch: 0 },
         restored: "already-restored",
         state: { state: "unresolved", attempts: 1 },

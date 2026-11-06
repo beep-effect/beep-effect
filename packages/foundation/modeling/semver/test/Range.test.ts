@@ -28,8 +28,10 @@ describe("Range", () => {
     it.effect("parses the empty string as match-all", () =>
       Effect.gen(function* () {
         const range = yield* Range.parse("");
-        assert.isTrue(range.test(yield* SemVer.parse("0.0.1")));
-        assert.isTrue(range.test(yield* SemVer.parse("999.0.0")));
+        const parsed = yield* SemVer.parse("0.0.1");
+        assert.isTrue(range.test(parsed));
+        const parsed1 = yield* SemVer.parse("999.0.0");
+        assert.isTrue(range.test(parsed1));
       })
     );
 
@@ -72,7 +74,8 @@ describe("Range", () => {
         assert.deepStrictEqual(Range.filter(versions, range), []);
         assertNone(Range.maxSatisfying(versions, range));
         const concrete = yield* Range.parse(`>=${tuple}-alpha <${tuple}`);
-        assert.isTrue(concrete.test(yield* SemVer.parse(`${tuple}-beta`)));
+        const parsed2 = yield* SemVer.parse(`${tuple}-beta`);
+        assert.isTrue(concrete.test(parsed2));
       }
     })
   );
@@ -109,11 +112,14 @@ describe("Range", () => {
         const range = yield* Range.parse(input);
         assert.strictEqual(range.toString(), expected, input);
         assertSuccess(Range.parseResult(input), range);
-        assert.isTrue(range.test(yield* SemVer.parse(stable)), input);
+        const parsed3 = yield* SemVer.parse(stable);
+        assert.isTrue(range.test(parsed3), input);
         for (const version of ["0.0.0-alpha", "0.1.0-alpha", "1.0.0-alpha", "1.0.0-beta", "2.0.0-alpha"]) {
-          assert.isFalse(range.test(yield* SemVer.parse(version)), `${input} at ${version}`);
+          const parsed4 = yield* SemVer.parse(version);
+          assert.isFalse(range.test(parsed4), `${input} at ${version}`);
         }
-        assert.isFalse(range.test(yield* SemVer.parse("3.0.0")), input);
+        const parsed5 = yield* SemVer.parse("3.0.0");
+        assert.isFalse(range.test(parsed5), input);
       }
     })
   );
@@ -130,7 +136,8 @@ describe("Range", () => {
       for (const input of ["1.x", "1.x.x", "1.2.x", "*", "~1.x.2", "^1.x.2"]) {
         const range = yield* Range.parse(input);
         assertSuccess(Range.parseResult(input), range);
-        assert.isTrue(range.test(yield* SemVer.parse("1.2.0")), input);
+        const parsed6 = yield* SemVer.parse("1.2.0");
+        assert.isTrue(range.test(parsed6), input);
       }
     })
   );
@@ -202,17 +209,22 @@ describe("Range", () => {
         const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s));
         assert.deepStrictEqual(A.map(range.filter(versions), String), ["1.0.0", "1.9.9"]);
         assert.deepStrictEqual(Range.filter(versions, range), range.filter(versions));
-        assert.isTrue(Range.satisfies(yield* SemVer.parse("1.5.0"), range));
-        assert.isTrue(Range.satisfies(range)(yield* SemVer.parse("1.5.0")));
+        const parsed7 = yield* SemVer.parse("1.5.0");
+        assert.isTrue(Range.satisfies(parsed7, range));
+        const argument = Range.satisfies(range);
+        const parsed43 = yield* SemVer.parse("1.5.0");
+        assert.isTrue(argument(parsed43));
       })
     );
 
     it.effect("enforces the prerelease tuple restriction", () =>
       Effect.gen(function* () {
         const range = yield* Range.parse(">=1.0.0 <2.0.0");
-        assert.isFalse(range.test(yield* SemVer.parse("1.5.0-alpha")));
+        const parsed8 = yield* SemVer.parse("1.5.0-alpha");
+        assert.isFalse(range.test(parsed8));
         const withTuple = yield* Range.parse(">=1.5.0-0 <2.0.0");
-        assert.isTrue(withTuple.test(yield* SemVer.parse("1.5.0-alpha")));
+        const parsed9 = yield* SemVer.parse("1.5.0-alpha");
+        assert.isTrue(withTuple.test(parsed9));
       })
     );
   });
@@ -224,7 +236,8 @@ describe("Range", () => {
         const range = yield* Range.parse("^1.0.0");
         assertSome(Range.maxSatisfying(versions, range).pipe(O.map(String)), "1.9.9");
         assertSome(Range.minSatisfying(versions, range).pipe(O.map(String)), "1.0.0");
-        assertNone(Range.maxSatisfying(versions, yield* Range.parse(">=3.0.0")));
+        const parsed10 = yield* Range.parse(">=3.0.0");
+        assertNone(Range.maxSatisfying(versions, parsed10));
       })
     );
   });
@@ -253,19 +266,29 @@ describe("Range", () => {
 
     it.effect("union combines with OR semantics", () =>
       Effect.gen(function* () {
-        const combined = Range.union(yield* Range.parse("^1.0.0"), yield* Range.parse("^2.0.0"));
-        assert.isTrue(combined.test(yield* SemVer.parse("1.5.0")));
-        assert.isTrue(combined.test(yield* SemVer.parse("2.5.0")));
-        assert.isFalse(combined.test(yield* SemVer.parse("3.0.0")));
+        const parsed11 = yield* Range.parse("^1.0.0");
+        const parsed33 = yield* Range.parse("^2.0.0");
+        const combined = Range.union(parsed11, parsed33);
+        const parsed12 = yield* SemVer.parse("1.5.0");
+        assert.isTrue(combined.test(parsed12));
+        const parsed13 = yield* SemVer.parse("2.5.0");
+        assert.isTrue(combined.test(parsed13));
+        const parsed14 = yield* SemVer.parse("3.0.0");
+        assert.isFalse(combined.test(parsed14));
       })
     );
 
     it.effect("intersect keeps only versions matching both", () =>
       Effect.gen(function* () {
-        const both = yield* Range.intersect(yield* Range.parse(">=1.0.0"), yield* Range.parse("<2.0.0"));
-        assert.isTrue(both.test(yield* SemVer.parse("1.5.0")));
-        assert.isFalse(both.test(yield* SemVer.parse("2.0.0")));
-        assert.isFalse(both.test(yield* SemVer.parse("0.9.0")));
+        const parsed15 = yield* Range.parse(">=1.0.0");
+        const parsed34 = yield* Range.parse("<2.0.0");
+        const both = yield* Range.intersect(parsed15, parsed34);
+        const parsed16 = yield* SemVer.parse("1.5.0");
+        assert.isTrue(both.test(parsed16));
+        const parsed17 = yield* SemVer.parse("2.0.0");
+        assert.isFalse(both.test(parsed17));
+        const parsed18 = yield* SemVer.parse("0.9.0");
+        assert.isFalse(both.test(parsed18));
       })
     );
 
@@ -275,14 +298,18 @@ describe("Range", () => {
         const upper = yield* Range.parse("<2.0.0");
         // Data-last: intersect(that)(self) intersects self with that.
         const both = yield* Range.intersect(upper)(lower);
-        assert.isTrue(both.test(yield* SemVer.parse("1.5.0")));
-        assert.isFalse(both.test(yield* SemVer.parse("2.0.0")));
+        const parsed19 = yield* SemVer.parse("1.5.0");
+        assert.isTrue(both.test(parsed19));
+        const parsed20 = yield* SemVer.parse("2.0.0");
+        assert.isFalse(both.test(parsed20));
       })
     );
 
     it.effect("intersect fails typed on unsatisfiable constraints", () =>
       Effect.gen(function* () {
-        const error = yield* Effect.flip(Range.intersect(yield* Range.parse("<1.0.0"), yield* Range.parse(">=2.0.0")));
+        const parsed21 = yield* Range.parse("<1.0.0");
+        const parsed35 = yield* Range.parse(">=2.0.0");
+        const error = yield* Effect.flip(Range.intersect(parsed21, parsed35));
         assert.instanceOf(error, UnsatisfiableConstraintError);
         assert.strictEqual(error._tag, "UnsatisfiableConstraintError");
         assert.strictEqual(error.constraints.length, 2);
@@ -292,19 +319,27 @@ describe("Range", () => {
 
     it.effect("isSubset detects containment and documents its conservative approximation", () =>
       Effect.gen(function* () {
-        assert.isTrue(Range.isSubset(yield* Range.parse("^1.2.0"), yield* Range.parse(">=1.0.0")));
-        assert.isFalse(Range.isSubset(yield* Range.parse(">=1.0.0"), yield* Range.parse("^1.2.0")));
+        const parsed22 = yield* Range.parse("^1.2.0");
+        const parsed36 = yield* Range.parse(">=1.0.0");
+        assert.isTrue(Range.isSubset(parsed22, parsed36));
+        const parsed23 = yield* Range.parse(">=1.0.0");
+        const parsed37 = yield* Range.parse("^1.2.0");
+        assert.isFalse(Range.isSubset(parsed23, parsed37));
         // Documented false negative: the sub-range straddles sup's set boundary.
-        assert.isFalse(
-          Range.isSubset(yield* Range.parse(">=1.0.0 <3.0.0"), yield* Range.parse(">=1.0.0 <2.0.0 || >=2.0.0 <3.0.0"))
-        );
+        const parsed24 = yield* Range.parse(">=1.0.0 <3.0.0");
+        const parsed38 = yield* Range.parse(">=1.0.0 <2.0.0 || >=2.0.0 <3.0.0");
+        assert.isFalse(Range.isSubset(parsed24, parsed38));
       })
     );
 
     it.effect("equivalent is mutual subset", () =>
       Effect.gen(function* () {
-        assert.isTrue(Range.equivalent(yield* Range.parse("^1.2.3"), yield* Range.parse(">=1.2.3 <2.0.0-0")));
-        assert.isFalse(Range.equivalent(yield* Range.parse("^1.2.3"), yield* Range.parse("~1.2.3")));
+        const parsed25 = yield* Range.parse("^1.2.3");
+        const parsed39 = yield* Range.parse(">=1.2.3 <2.0.0-0");
+        assert.isTrue(Range.equivalent(parsed25, parsed39));
+        const parsed26 = yield* Range.parse("^1.2.3");
+        const parsed40 = yield* Range.parse("~1.2.3");
+        assert.isFalse(Range.equivalent(parsed26, parsed40));
       })
     );
 
@@ -433,7 +468,8 @@ describe("Range round-1 regressions", () => {
       assert.strictEqual(simplified.toString(), ">=1.0.0 <2.0.0 || >=3.0.0");
       assert.isTrue(simplified.test(SemVer.of(1, 5, 0)));
       assert.isTrue(simplified.test(SemVer.of(3, 0, 0)));
-      assert.strictEqual(Range.simplify(yield* Range.parse(">=1.0.0 || >=1.0.0")).sets.length, 1);
+      const parsed27 = yield* Range.parse(">=1.0.0 || >=1.0.0");
+      assert.strictEqual(Range.simplify(parsed27).sets.length, 1);
     })
   );
 
@@ -520,7 +556,8 @@ describe("Range round-1 regressions", () => {
         assert.strictEqual(simplified.test(v), union.test(v), input);
       }
       // A mentioned tuple with no possible prerelease witness adds no permission.
-      assert.isTrue(Range.isSubset(yield* Range.parse(">=1.0.0 <2.0.0-0"), sup));
+      const parsed28 = yield* Range.parse(">=1.0.0 <2.0.0-0");
+      assert.isTrue(Range.isSubset(parsed28, sup));
     })
   );
 
@@ -538,9 +575,14 @@ describe("Range round-1 regressions", () => {
         assertFailure(result, error);
         assert.instanceOf(error, UnsatisfiableConstraintError);
       }
-      const pre = yield* Range.intersect(yield* Range.parse(">1.0.0-alpha"), yield* Range.parse("<1.0.0-alpha.0.0"));
-      assert.isTrue(pre.test(yield* SemVer.parse("1.0.0-alpha.0")));
-      const carry = yield* Range.intersect(yield* Range.parse(">0.0.9007199254740991"), yield* Range.parse("<0.1.1"));
+      const parsed29 = yield* Range.parse(">1.0.0-alpha");
+      const parsed41 = yield* Range.parse("<1.0.0-alpha.0.0");
+      const pre = yield* Range.intersect(parsed29, parsed41);
+      const parsed30 = yield* SemVer.parse("1.0.0-alpha.0");
+      assert.isTrue(pre.test(parsed30));
+      const parsed31 = yield* Range.parse(">0.0.9007199254740991");
+      const parsed42 = yield* Range.parse("<0.1.1");
+      const carry = yield* Range.intersect(parsed31, parsed42);
       assert.isTrue(carry.test(SemVer.of(0, 1, 0)));
     })
   );
@@ -564,7 +606,9 @@ describe("Range round-1 regressions", () => {
         assert.strictEqual(error.input, input);
       }
       for (const input of ["9007199254740991.0.0", "^9007199254740990.0.0", "~1.9007199254740990.0"]) {
-        assertSuccess(Range.parseResult(input), yield* Range.parse(input));
+        const argument1 = Range.parseResult(input);
+        const parsed44 = yield* Range.parse(input);
+        assertSuccess(argument1, parsed44);
       }
     })
   );
@@ -588,7 +632,8 @@ describe("Range round-1 regressions", () => {
     Effect.gen(function* () {
       for (const sets of [[[]], [[], []]]) {
         const original = Range.make({ sets });
-        assert.isTrue(original.test(yield* SemVer.parse("1.0.0-beta")));
+        const parsed32 = yield* SemVer.parse("1.0.0-beta");
+        assert.isTrue(original.test(parsed32));
         const error = yield* Effect.flip(S.encodeEffect(Range.FromString)(original));
         assert.strictEqual(error._tag, "SchemaError");
         assert.include(error.message, "unrestricted empty comparator set");

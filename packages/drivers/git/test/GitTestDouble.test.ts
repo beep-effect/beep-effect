@@ -21,7 +21,8 @@ describe("Git.makeTest", () => {
       const double = Git.makeTest({
         revParse: () => Effect.succeed(Str.repeat(40)("a")),
       });
-      assert.strictEqual(yield* double.revParse(cwd, "HEAD"), Str.repeat(40)("a"));
+      const revParse1 = yield* double.revParse(cwd, "HEAD");
+      assert.strictEqual(revParse1, Str.repeat(40)("a"));
     })
   );
 
@@ -41,18 +42,23 @@ describe("Git.makeTest", () => {
         currentBranch: (_stubCwd, options) => Effect.succeedSome(options?.mode ?? "abbrev-ref"),
       });
       // Fixed arity: dispatch on argument count.
-      assert.strictEqual(yield* pipe(cwd, double.revParse("HEAD")), "/repo@HEAD");
+      const pipe2 = yield* pipe(cwd, double.revParse("HEAD"));
+      assert.strictEqual(pipe2, "/repo@HEAD");
       // Optional trailing options: dispatch on the string subject, so the
       // data-first call without options still runs instead of returning a function.
       yield* pipe(cwd, double.reset({ mode: "hard" }));
-      assert.deepStrictEqual(yield* double.workingChanges(cwd), ["/repo"]);
-      assert.deepStrictEqual(yield* pipe(cwd, double.workingChanges()), ["/repo"]);
+      const workingChanges3 = yield* double.workingChanges(cwd);
+      assert.deepStrictEqual(workingChanges3, ["/repo"]);
+      const pipe4 = yield* pipe(cwd, double.workingChanges());
+      assert.deepStrictEqual(pipe4, ["/repo"]);
       // `status` and `currentBranch` grew options in W2 and dispatch on the string subject too.
       yield* double.status(cwd);
       yield* pipe(cwd, double.status({ untrackedFiles: "all" }));
       assert.deepStrictEqual(statusCalls, ["/repo:-", "/repo:all"]);
-      assertSome(yield* pipe(cwd, double.currentBranch({ mode: "show-current" })), "show-current");
-      assertSome(yield* double.currentBranch(cwd), "abbrev-ref");
+      const pipe5 = yield* pipe(cwd, double.currentBranch({ mode: "show-current" }));
+      assertSome(pipe5, "show-current");
+      const currentBranch6 = yield* double.currentBranch(cwd);
+      assertSome(currentBranch6, "abbrev-ref");
     })
   );
 
@@ -100,8 +106,9 @@ describe("Git.makeTest", () => {
       // fabricated answer would leak into consumer logic as fact — so the
       // default is a defect, not a typed failure a test could swallow.
       const double = Git.makeTest({ revParse: () => Effect.succeed("sha") });
+      const exit7 = yield* Effect.exit(double.status(cwd));
       assertExitFailure(
-        yield* Effect.exit(double.status(cwd)),
+        exit7,
         Cause.die(
           NotStubbedError.make({
             message:
@@ -198,6 +205,12 @@ describe("Git.makeTest", () => {
         worktreeRemove: () => double.worktreeRemove(cwd, "../worktree"),
         worktreePrune: () => double.worktreePrune(cwd),
         lsFiles: () => double.lsFiles(cwd),
+        diffPatch: () => double.diffPatch(cwd),
+        gitDir: () => double.gitDir(cwd),
+        mergeTree: () => double.mergeTree(cwd, "main", "HEAD"),
+        revListCount: () => double.revListCount(cwd, "main..HEAD"),
+        updateRef: () => double.updateRef(cwd, "refs/archive/x", { create: "HEAD" }),
+        upstream: () => double.upstream(cwd, "main"),
       };
       for (const method of R.keys(double)) {
         const fn = double[method];

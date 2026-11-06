@@ -1,0 +1,7 @@
+# Nominal candidate replay under complete static runtime freeze
+
+After integrating the reviewed runtime-closure repair, a fresh capture using implementation-nominal-003.json as baseline was created before predictions and verified against current bytes. The exact manifest is implementation-runtime-nominal-001.json; the new measurement and preservation receipt is runtime-nominal-replay-001.json. Private blobs retain exact dependency bytes.
+
+All538 claim rows equal product-nominal-003 and all60 service reports are byte-identical. Strict41/538, parsed537/538, abstained455/538. All original37 and previous39/41 passes remain. No reference, scorer or previous measurement changed. Input coverage passes its numerical threshold; structural recovery and abstention remain inadequate, and fresh-family and independently supported alert metrics remain unproved.
+
+Commands used freeze-runtime-closure.py --baseline <implementation-nominal-003.json> --out <fresh runtime-nominal-001>; --verify <manifest>; CLAIM_IMPLEMENTATION_FREEZE=<manifest> CLAIM_EVALUATION_OUTPUT=<fresh product-runtime-nominal-001> bun packages/law-practice/server/test/evaluation/inspection-tool.main.ts; verify-preservation.py --result <results.json>; evaluate-gates.py <output-directory>. Recorded XML and synthetic metadata aliases were used; no live source fetch or legal validation occurred. Static-closure and environment/native asset limits remain those in research/RUNTIME-CLOSURE.md. Parent39 and nominal41 are distinct candidates, not a claimed regression.

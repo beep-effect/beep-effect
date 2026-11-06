@@ -331,7 +331,8 @@ const addPatch = Effect.fn("SkillsPatch.addPatch")(function* (
     return planned.receipt("planned", O.none());
   }
   yield* requireExpected(expect.value, planned.planDigest, `beep skills patch add --skill ${skill}`);
-  return planned.receipt("written", O.some(yield* publishAdd(repoRoot, skill, planned)));
+  const publishAdd1 = yield* publishAdd(repoRoot, skill, planned);
+  return planned.receipt("written", O.some(publishAdd1));
 });
 
 type PatchVerdict =
@@ -361,10 +362,8 @@ const classifyPatch = Effect.fn("SkillsPatch.classifyPatch")(function* (
   patch: SkillPatch,
   bytes: Uint8Array
 ) {
-  const hunks = yield* listSkillPatchHunks(
-    patch.path,
-    yield* decodePatchText(skill, PatchSeriesFile.make({ path: patch.path, bytes }))
-  );
+  const decodedPatchText = yield* decodePatchText(skill, PatchSeriesFile.make({ path: patch.path, bytes }));
+  const hunks = yield* listSkillPatchHunks(patch.path, decodedPatchText);
   return verdictOf(A.map(hunks, (hunk) => latestClassification(ledger, { skill, hunkHash: hunk.hunkHash })));
 });
 
@@ -450,7 +449,8 @@ const labelPatches = Effect.fn("SkillsPatch.labelPatches")(function* (
     ...entry,
     patches: SkillPatches.make({ ...entry.patches, series: A.map(entry.patches.series, relabel) }),
   });
-  return receipt("written", O.some(yield* publishSkillsLockEntry(repoRoot, lock, skill, relabelled, planDigest)));
+  const publishSkillsLockEntry2 = yield* publishSkillsLockEntry(repoRoot, lock, skill, relabelled, planDigest);
+  return receipt("written", O.some(publishSkillsLockEntry2));
 });
 
 /**

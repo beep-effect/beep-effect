@@ -338,6 +338,7 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
  */
 export const makeTikaServerFileProcessingEngineFromEnv = Effect.fn("Tika.makeTikaServerFileProcessingEngineFromEnv")(
   function* (): Effect.fn.Return<FileProcessingEngineShape, TikaError, HttpClient.HttpClient> {
-    return yield* makeTikaServerFileProcessingEngine(yield* configFromEnvironment);
+    const configFromEnvironment1 = yield* configFromEnvironment;
+    return yield* makeTikaServerFileProcessingEngine(configFromEnvironment1);
   }
 );

@@ -49,8 +49,9 @@ const program = Effect.gen(function* () {
     A.drop(process.argv, 2)
   );
   const address = yield* S.decodeEffect(S.URLFromString)(endpoint);
-  if (address.protocol !== "http:" || address.hostname !== "127.0.0.1")
+  if (address.protocol !== "http:" || address.hostname !== "127.0.0.1") {
     return yield* Effect.die("Fixture requires disposable loopback HTTP");
+  }
   const fs = yield* FileSystem.FileSystem;
   const sql = yield* SqliteClient.make({ filename: databasePath });
   const salt = "synthetic-phoenix-proof-salt";
@@ -193,23 +194,30 @@ const program = Effect.gen(function* () {
           })
         );
         const span = batch.spans[0];
-        if (span === undefined || batch.rejections.length !== 0) return yield* Effect.die("Invalid synthetic fixture");
+        if (span === undefined || batch.rejections.length !== 0) {
+          return yield* Effect.die("Invalid synthetic fixture");
+        }
         const receipt = yield* native.acceptBatch(batch);
         const scheduled = yield* scheduler.tick;
-        if (scheduled._tag !== "Complete") return yield* Effect.die("Synthetic scheduler exceeded send deadline");
+        if (scheduled._tag !== "Complete") {
+          return yield* Effect.die("Synthetic scheduler exceeded send deadline");
+        }
         const selected = A.findFirst(
           scheduled.outcomes,
           (outcome) => outcome._tag === "Sent" && outcome.eventId === span.eventId
         );
-        if (O.isNone(selected) || selected.value._tag !== "Sent")
+        if (O.isNone(selected) || selected.value._tag !== "Sent") {
           return yield* Effect.die("Scheduler did not select new event");
+        }
         let result = selected.value.result;
-        const initialState = O.getOrNull(yield* worker.ledger.state(span.eventId));
+        const state1 = yield* worker.ledger.state(span.eventId);
+        const initialState = O.getOrNull(state1);
         const interruptedAttemptId = result.attemptId;
         const qualifiedRecovery = qualificationDigest !== undefined && index === 1;
         if (qualifiedRecovery) {
-          if (result._tag !== "Recorded" || result.outcome._tag !== "Unknown" || initialState?.state !== "unresolved")
+          if (result._tag !== "Recorded" || result.outcome._tag !== "Unknown" || initialState?.state !== "unresolved") {
             return yield* Effect.die("Synthetic dropped request must remain unresolved");
+          }
           yield* Effect.sleep(3100);
           // Recreate the scheduler over the same durable profile and ledger.
           const recovered = yield* makeNativeDeliveryScheduler(
@@ -233,13 +241,16 @@ const program = Effect.gen(function* () {
             reconciler
           ).pipe(Effect.provideService(SqlClient.SqlClient, sql));
           const tick = yield* recovered.tick;
-          if (tick._tag !== "Complete") return yield* Effect.die("Recovery scheduler deadline");
+          if (tick._tag !== "Complete") {
+            return yield* Effect.die("Recovery scheduler deadline");
+          }
           const retry = A.findFirst(
             tick.outcomes,
             (outcome) => outcome._tag === "Sent" && outcome.eventId === span.eventId
           );
-          if (O.isNone(retry) || retry.value._tag !== "Sent")
+          if (O.isNone(retry) || retry.value._tag !== "Sent") {
             return yield* Effect.die("Qualified recovery did not retry");
+          }
           result = retry.value.result;
           const original = yield* worker.ledger.attempt(interruptedAttemptId);
           const repeated = yield* worker.ledger.attempt(result.attemptId);
@@ -248,29 +259,37 @@ const program = Effect.gen(function* () {
             O.isNone(repeated) ||
             original.value.payloadDigest !== repeated.value.payloadDigest ||
             result.attemptId === interruptedAttemptId
-          )
+          ) {
             return yield* Effect.die("Recovery must preserve bytes under a fresh attempt");
+          }
         }
-        if (result._tag !== "Recorded" || result.outcome._tag !== "Accepted")
+        if (result._tag !== "Recorded" || result.outcome._tag !== "Accepted") {
           return yield* Effect.die("Fixture delivery did not receive complete acknowledgment");
+        }
         const attemptId = result.attemptId;
-        const acceptanceState = O.getOrNull(yield* worker.ledger.state(span.eventId));
+        const state2 = yield* worker.ledger.state(span.eventId);
+        const acceptanceState = O.getOrNull(state2);
         let visible = false;
         let readbackPasses = 0;
         for (let query = 0; query < 20; query++) {
           yield* Effect.sleep(250);
           const tick = yield* scheduler.tick;
           readbackPasses++;
-          if (tick._tag !== "Complete") return yield* Effect.die("Synthetic scheduler exceeded read-back deadline");
-          if (A.some(tick.outcomes, (outcome) => outcome._tag === "Reconciled" && outcome.result._tag === "Mismatch"))
+          if (tick._tag !== "Complete") {
+            return yield* Effect.die("Synthetic scheduler exceeded read-back deadline");
+          }
+          if (A.some(tick.outcomes, (outcome) => outcome._tag === "Reconciled" && outcome.result._tag === "Mismatch")) {
             return yield* Effect.die("Stored synthetic metadata mismatch");
+          }
           const state = yield* worker.ledger.state(span.eventId);
           if (O.isSome(state) && state.value.state === "visible") {
             visible = true;
             break;
           }
         }
-        if (!visible) return yield* Effect.die("Synthetic backend visibility deadline exceeded");
+        if (!visible) {
+          return yield* Effect.die("Synthetic backend visibility deadline exceeded");
+        }
         // Qualify the pinned backend's duplicate handling before granting any
         // future ambiguous-replay policy. This is explicit synthetic traffic.
         const repeatedAttemptId = yield* hashPublicTextSha256(`synthetic-explicit-replay:${span.eventId}`);
@@ -282,16 +301,22 @@ const program = Effect.gen(function* () {
             limit: 1,
           })
         );
-        if (repeated._tag !== "Recorded" || repeated.outcome._tag !== "Accepted")
+        if (repeated._tag !== "Recorded" || repeated.outcome._tag !== "Accepted") {
           return yield* Effect.die("Synthetic duplicate was not acknowledged");
+        }
         const firstAttempt = yield* worker.ledger.attempt(attemptId);
         const repeatedAttempt = yield* worker.ledger.attempt(repeatedAttemptId);
         if (
           O.isNone(firstAttempt) ||
           O.isNone(repeatedAttempt) ||
           firstAttempt.value.payloadDigest !== repeatedAttempt.value.payloadDigest
-        )
+        ) {
           return yield* Effect.die("Synthetic replay changed the original bytes");
+        }
+        const argument = O.getOrNull(span.sessionHash);
+        const state3 = yield* worker.ledger.state(span.eventId);
+        const argument1 = O.getOrNull(state3);
+        const attempt4 = yield* worker.ledger.attempt(attemptId);
         return {
           scenario,
           fixtureSurface,
@@ -307,9 +332,9 @@ const program = Effect.gen(function* () {
           spanId: span.spanId,
           traceId: span.traceId,
           eventId: span.eventId,
-          sessionId: O.getOrNull(span.sessionHash),
-          state: O.getOrNull(yield* worker.ledger.state(span.eventId)),
-          attempt: O.getOrNull(yield* worker.ledger.attempt(attemptId)),
+          sessionId: argument,
+          state: argument1,
+          attempt: O.getOrNull(attempt4),
         };
       })
   );
@@ -367,33 +392,29 @@ const program = Effect.gen(function* () {
             maxFrames: 8,
           })
         );
-        if (page.frames.length !== 2 || A.some(page.frames, (f) => f._tag !== "Accepted"))
+        if (page.frames.length !== 2 || A.some(page.frames, (f) => f._tag !== "Accepted")) {
           return yield* Effect.die("Invalid reconstructed source fixture");
+        }
         yield* transcript.acceptPage(page, O.none());
         return yield* Effect.forEach(
           A.filter(page.frames, (f) => f._tag === "Accepted"),
           (frame) =>
             Effect.gen(function* () {
               const m = frame.metadata;
+              const argument2 = Str.slice(0, 32);
+              const hashPublicTextSha2565 = yield* hashPublicTextSha256(
+                `reconstructed-trace/v1:${intake.hostId}:${intake.namespaceId}:${frame.occurrenceId}`
+              );
+              const argument3 = argument2(hashPublicTextSha2565);
+              const argument4 = Str.slice(0, 16);
+              const hashPublicTextSha2566 = yield* hashPublicTextSha256(
+                `reconstructed-span/v1:${intake.hostId}:${intake.namespaceId}:${frame.occurrenceId}`
+              );
               return {
                 scenario: declaration.name,
                 eventId: frame.occurrenceId,
-                traceId: Str.slice(
-                  0,
-                  32
-                )(
-                  yield* hashPublicTextSha256(
-                    `reconstructed-trace/v1:${intake.hostId}:${intake.namespaceId}:${frame.occurrenceId}`
-                  )
-                ),
-                spanId: Str.slice(
-                  0,
-                  16
-                )(
-                  yield* hashPublicTextSha256(
-                    `reconstructed-span/v1:${intake.hostId}:${intake.namespaceId}:${frame.occurrenceId}`
-                  )
-                ),
+                traceId: argument3,
+                spanId: argument4(hashPublicTextSha2566),
                 sessionId: O.getOrNull(m.session.id),
                 kind: m.kind,
                 source: declaration.source,
@@ -405,11 +426,14 @@ const program = Effect.gen(function* () {
     );
     const rows = A.flatten(expected);
     const sent = yield* scheduler.tick;
-    if (sent._tag !== "Complete") return yield* Effect.die("Reconstructed send deadline");
+    if (sent._tag !== "Complete") {
+      return yield* Effect.die("Reconstructed send deadline");
+    }
     for (const row of rows) {
       const state = yield* worker.ledger.state(row.eventId);
-      if (O.isNone(state) || state.value.state !== "accepted-unverified")
+      if (O.isNone(state) || state.value.state !== "accepted-unverified") {
         return yield* Effect.die("Reconstructed acceptance boundary mismatch");
+      }
     }
     let readbackPasses = 0;
     for (let attempt = 0; attempt < 20; attempt++) {
@@ -419,10 +443,11 @@ const program = Effect.gen(function* () {
       if (
         tick._tag !== "Complete" ||
         A.some(tick.outcomes, (o) => o._tag === "Reconciled" && o.result._tag === "Mismatch")
-      )
+      ) {
         return yield* Effect.die("Reconstructed read-back mismatch/deadline");
+      }
       const states = yield* Effect.forEach(rows, (row) => worker.ledger.state(row.eventId));
-      if (A.every(states, (state) => O.isSome(state) && state.value.state === "visible"))
+      if (A.every(states, (state) => O.isSome(state) && state.value.state === "visible")) {
         return yield* Effect.forEach(rows, (row) =>
           Effect.gen(function* () {
             return {
@@ -430,23 +455,21 @@ const program = Effect.gen(function* () {
               automaticScheduling: true,
               readbackPasses,
               priorAcceptanceState: "accepted-unverified",
-              state: O.getOrNull(yield* worker.ledger.state(row.eventId)),
+              state: yield* Effect.map(worker.ledger.state(row.eventId), O.getOrNull),
             };
           })
         );
+      }
     }
     return yield* Effect.die("Reconstructed visibility deadline exceeded");
   });
   const reconstructedObservations = reconstruction === "reconstructed" ? yield* reconstruct() : [];
-  yield* fs.writeFileString(
-    output,
-    yield* encodeJsonValue({
-      project: policy.project,
-      observations,
-      reconstructedObservations,
-    }),
-    { mode: 0o600 }
-  );
+  const encodedJsonValue = yield* encodeJsonValue({
+    project: policy.project,
+    observations,
+    reconstructedObservations,
+  });
+  yield* fs.writeFileString(output, encodedJsonValue, { mode: 0o600 });
 });
 NodeRuntime.runMain(
   Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Reactivity.layer, NodeHttpClient.layerNodeHttp).pipe(

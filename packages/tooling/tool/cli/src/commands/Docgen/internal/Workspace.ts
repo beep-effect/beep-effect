@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { isLabsWorkspacePath, LABS_PATH_IGNORE_GLOB } from "@beep/repo-cli-kit/cli/Labs/index";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { DomainError, FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import {
   CanonicalDocgenConfigInput,
@@ -22,8 +24,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { isLabsWorkspacePath, LABS_PATH_IGNORE_GLOB } from "../../../internal/cli/Labs/index.ts";
-import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { byRelativePathAscending, DocgenConfigDocument, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { NoSuchFileError } from "@beep/repo-utils";
 import type { DocgenPackageStatus, ResolveDocgenWorkspacePackageOptions } from "../Docgen.schemas.ts";
@@ -37,7 +37,7 @@ const DOCGEN_CONFIG_SCAN_GLOBS = ["apps/**/docgen.json", "packages/**/docgen.jso
 const DOCGEN_CONFIG_SCAN_IGNORES = [
   // Labs are ceremony-exempt (goals/lab-apps-lifecycle D2): lab templates omit
   // docgen.json, and a stray one below apps/labs must never be scanned or
-  // orphan-flagged. Canonical glob: src/internal/cli/Labs/LabsWorkspace.ts.
+  // orphan-flagged. Canonical glob: @beep/repo-cli-kit/cli/Labs/LabsWorkspace.
   LABS_PATH_IGNORE_GLOB,
   "**/.git/**",
   "**/.turbo/**",

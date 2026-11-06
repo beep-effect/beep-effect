@@ -36,17 +36,20 @@ export * from "../commands/Yeet/internal/GhOps.ts";
 export * from "../commands/Yeet/internal/GitErrorAdapter.ts";
 export {
   captureGitKitExit,
+  changedYeetPaths,
+  countYeetRevisions,
   currentCommitSha,
   currentYeetBranch,
   GitKitExit,
   lockfileChangedSinceBase,
   optionFromNonEmpty,
-  PATIENT_GIT_OPTIONS,
-  patientGit,
   refreshAndPinBaseRef,
   refreshBaseRef,
+  resolveYeetMergeBase,
+  resolveYeetRev,
   runGitFoldedStdout,
   safeOriginBranchFromBaseForTesting,
+  YeetChangedPathsQuery,
 } from "../commands/Yeet/internal/GitExec.ts";
 export * from "../commands/Yeet/internal/Guards.ts";
 export * from "../commands/Yeet/internal/Handler.ts";
@@ -103,6 +106,7 @@ export * from "../commands/Yeet/internal/ReviewThreadState.ts";
 export * from "../commands/Yeet/internal/ReviewWindow.ts";
 export * from "../commands/Yeet/internal/Settle.schemas.ts";
 export * from "../commands/Yeet/internal/Settle.ts";
+export * from "../commands/Yeet/internal/Siblings.ts";
 export * from "../commands/Yeet/internal/SquashCommitlint.ts";
 export * from "../commands/Yeet/internal/Status.schemas.ts";
 export {
@@ -126,3 +130,4 @@ export * from "../commands/Yeet/Yeet.render.ts";
 export * from "../commands/Yeet/Yeet.schemas.ts";
 export { GhActor, GhPrView } from "../internal/github/GhSchema.ts";
 export * from "../internal/repo-run/index.ts";
+export { PATIENT_GIT_OPTIONS, patientGit } from "../internal/repo-run/PatientGit.ts";

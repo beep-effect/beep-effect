@@ -6,6 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
+import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { Text } from "@beep/utils";
 import * as A from "effect/Array";
@@ -16,9 +19,6 @@ import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { printCommandJson } from "../../internal/cli/Json.ts";
-import { printLines } from "../../internal/cli/Printer.ts";
 import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck } from "./AllowlistCheck.ts";
 import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.ts";
 import { EffectImportCorpusMode, EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";

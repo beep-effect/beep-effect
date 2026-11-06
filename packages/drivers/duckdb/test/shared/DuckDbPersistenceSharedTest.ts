@@ -57,7 +57,8 @@ export const suite: {
           const store = yield* persistence.make("test_store_duplicate_keys");
           yield* store.set("key", { value: 1 }, undefined);
 
-          expect(yield* store.getMany(["key", "key"])).toEqual([{ value: 1 }, { value: 1 }]);
+          const gotMany = yield* store.getMany(["key", "key"]);
+          expect(gotMany).toEqual([{ value: 1 }, { value: 1 }]);
         })
       );
 
@@ -103,9 +104,11 @@ export const suite: {
           yield* store.set("key", { name: "Alice" }, Duration.seconds(10));
           const get = store.get("key");
 
-          assert.deepStrictEqual(yield* get, { name: "Alice" });
+          const got = yield* get;
+          assert.deepStrictEqual(got, { name: "Alice" });
           yield* TestClock.adjust(Duration.seconds(10));
-          assert.strictEqual(yield* get, undefined);
+          const got1 = yield* get;
+          assert.strictEqual(got1, undefined);
         })
       );
 
@@ -116,9 +119,11 @@ export const suite: {
           yield* store.set("key", { name: "Alice" }, Duration.seconds(10));
           const getMany = store.getMany(["key"]);
 
-          assert.deepStrictEqual(yield* getMany, [{ name: "Alice" }]);
+          const gotMany2 = yield* getMany;
+          assert.deepStrictEqual(gotMany2, [{ name: "Alice" }]);
           yield* TestClock.adjust(Duration.seconds(10));
-          assert.deepStrictEqual(yield* getMany, [undefined]);
+          const gotMany3 = yield* getMany;
+          assert.deepStrictEqual(gotMany3, [undefined]);
         })
       );
 
@@ -131,13 +136,17 @@ export const suite: {
           yield* storeA.set("shared-key", { name: "Alice" }, undefined);
           yield* storeB.set("shared-key", { name: "Bob" }, undefined);
 
-          expect(yield* storeA.get("shared-key")).toEqual({ name: "Alice" });
-          expect(yield* storeB.get("shared-key")).toEqual({ name: "Bob" });
+          const got4 = yield* storeA.get("shared-key");
+          expect(got4).toEqual({ name: "Alice" });
+          const got5 = yield* storeB.get("shared-key");
+          expect(got5).toEqual({ name: "Bob" });
 
           yield* storeA.clear;
 
-          expect(yield* storeA.get("shared-key")).toEqual(undefined);
-          expect(yield* storeB.get("shared-key")).toEqual({ name: "Bob" });
+          const got6 = yield* storeA.get("shared-key");
+          expect(got6).toEqual(undefined);
+          const got7 = yield* storeB.get("shared-key");
+          expect(got7).toEqual({ name: "Bob" });
         })
       );
 
@@ -168,7 +177,8 @@ export const suite: {
           // the victim store's `secret` entry into the attacker's results.
           const values = yield* attacker.getMany(["secret", options.injectionProbe]);
           expect(values).toEqual([undefined, undefined]);
-          expect(yield* attacker.get("secret")).toEqual(undefined);
+          const got8 = yield* attacker.get("secret");
+          expect(got8).toEqual(undefined);
         })
       );
     })

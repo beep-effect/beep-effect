@@ -6,7 +6,7 @@ import { PackageManagerPin } from "@beep/npm-spec/PackageManagerPin";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
@@ -20,8 +20,9 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
-const refused = PlatformError.badArgument({ module: "FileSystem", method: "fixture", description: "refused" });
 const Json = S.fromJsonString(S.Unknown);
+
+const refused = PlatformError.badArgument({ module: "FileSystem", method: "fixture", description: "refused" });
 const pin = (spec: string) => Result.getOrThrow(PackageManagerPin.parseResult(spec));
 const nativeDependencies = { "@pnpm/exe.linux-x64": "12.0.0", "@pnpm/exe.win32-x64": "12.0.0" };
 
@@ -150,7 +151,12 @@ fails(
   "unparseable package.json"
 );
 for (const bin of [42, {}, { pnpm: 42 }]) {
-  fails(`invalid bin declaration ${JSON.stringify(bin)}`, { manifest: { bin } }, "layoutUnexpected", "names no bin");
+  fails(
+    `invalid bin declaration ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(bin), identity)}`,
+    { manifest: { bin } },
+    "layoutUnexpected",
+    "names no bin"
+  );
 }
 fails("missing bin property is refused", { manifest: {} }, "layoutUnexpected", "names no bin");
 fails(
@@ -188,7 +194,7 @@ fails(
 );
 for (const packument of [{}, { dist: {} }, { dist: { integrity: 42 } }]) {
   fails(
-    `native integrity fails closed for ${JSON.stringify(packument)}`,
+    `native integrity fails closed for ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(packument), identity)}`,
     { manifest: nativeManifest, files: nativeFiles, packument },
     "integrityMismatch",
     "@pnpm/exe.linux-x64/12.0.0"
@@ -221,22 +227,25 @@ for (const options of [
   },
 ] satisfies ReadonlyArray<Fixture>) {
   it.layer(runtime(options), { timeout: "5 seconds" })((it) => {
-    it.effect(`cache reuse preserves manager bins ${JSON.stringify(options)}`, () =>
-      Effect.gen(function* () {
-        const installer = yield* PackageManagerInstaller;
-        const record = yield* installer.install(pin(options.spec ?? "pnpm@12.0.0"));
-        assert.strictEqual(record.source, "tool-cache");
-        const fs = yield* FileSystem.FileSystem;
-        for (const file of R.values(record.bins)) assert.isTrue(yield* fs.exists(file));
-        if (options.spec === "bun@1.0.0") assert.strictEqual(record.bins.bun, "/bun/bun-linux-x64/bun");
-        if (options.env?.RUNNER_OS === "Windows") {
-          assert.strictEqual(record.bins.pnpm, "/stage/package/pnpm.exe");
-          assert.strictEqual(
-            yield* fs.readFileString("/stage/package/.bin/extra.cmd"),
-            '@echo off\r\nnode -- "/stage/package/extra.js" %*\r\n'
-          );
-        }
-      })
+    it.effect(
+      `cache reuse preserves manager bins ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(options), identity)}`,
+      () =>
+        Effect.gen(function* () {
+          const installer = yield* PackageManagerInstaller;
+          const record = yield* installer.install(pin(options.spec ?? "pnpm@12.0.0"));
+          assert.strictEqual(record.source, "tool-cache");
+          const fs = yield* FileSystem.FileSystem;
+          for (const file of R.values(record.bins)) {
+            const exists1 = yield* fs.exists(file);
+            assert.isTrue(exists1);
+          }
+          if (options.spec === "bun@1.0.0") assert.strictEqual(record.bins.bun, "/bun/bun-linux-x64/bun");
+          if (options.env?.RUNNER_OS === "Windows") {
+            assert.strictEqual(record.bins.pnpm, "/stage/package/pnpm.exe");
+            const readFileString1 = yield* fs.readFileString("/stage/package/.bin/extra.cmd");
+            assert.strictEqual(readFileString1, '@echo off\r\nnode -- "/stage/package/extra.js" %*\r\n');
+          }
+        })
     );
   });
 }
@@ -286,8 +295,10 @@ for (const runnerOs of ["Linux", "Windows"]) {
         const installer = yield* PackageManagerInstaller;
         const record = yield* installer.install(pin("pnpm@12.0.0"));
         const fs = yield* FileSystem.FileSystem;
-        assert.strictEqual(yield* fs.readFileString(record.bins.pnpm ?? ""), "native");
-        assert.strictEqual(yield* fs.readFileString(record.bins.extra ?? ""), "console.log('extra')");
+        const readFileString2 = yield* fs.readFileString(record.bins.pnpm ?? "");
+        assert.strictEqual(readFileString2, "native");
+        const readFileString3 = yield* fs.readFileString(record.bins.extra ?? "");
+        assert.strictEqual(readFileString3, "console.log('extra')");
       })
     );
   });
@@ -308,10 +319,8 @@ for (const unreadable of [false, true]) {
         const record = yield* installer.install(pin("pnpm@12.0.0"));
         assert.strictEqual(record.bins.pnpm, "/stage/package/pnpm");
         const fs = yield* FileSystem.FileSystem;
-        assert.strictEqual(
-          yield* fs.readFileString("/stage/package/.bin/pnpm"),
-          "#!/bin/sh\nexec '/stage/package/pnpm' \"$@\"\n"
-        );
+        const readFileString4 = yield* fs.readFileString("/stage/package/.bin/pnpm");
+        assert.strictEqual(readFileString4, "#!/bin/sh\nexec '/stage/package/pnpm' \"$@\"\n");
       })
     );
   });
@@ -322,17 +331,20 @@ for (const env of [
   { RUNNER_OS: "Windows", RUNNER_ARCH: "X64" },
 ]) {
   it.layer(runtime({ spec: "bun@1.0.0", env }), { timeout: "5 seconds" })((it) => {
-    it.effect(`bun installs an executable for the resolved platform ${JSON.stringify(env)}`, () =>
-      Effect.gen(function* () {
-        const installer = yield* PackageManagerInstaller;
-        const record = yield* installer.install(pin("bun@1.0.0"));
-        const fs = yield* FileSystem.FileSystem;
-        assert.strictEqual(yield* fs.readFileString(record.bins.bun ?? ""), "bun");
-        assert.strictEqual(
-          record.bins.bun,
-          env.RUNNER_OS === "Windows" ? "/bun/bun-windows-x64/bun.exe" : "/bun/bun-linux-x64/bun"
-        );
-      })
+    it.effect(
+      `bun installs an executable for the resolved platform ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(env), identity)}`,
+      () =>
+        Effect.gen(function* () {
+          const installer = yield* PackageManagerInstaller;
+          const record = yield* installer.install(pin("bun@1.0.0"));
+          const fs = yield* FileSystem.FileSystem;
+          const readFileString5 = yield* fs.readFileString(record.bins.bun ?? "");
+          assert.strictEqual(readFileString5, "bun");
+          assert.strictEqual(
+            record.bins.bun,
+            env.RUNNER_OS === "Windows" ? "/bun/bun-windows-x64/bun.exe" : "/bun/bun-linux-x64/bun"
+          );
+        })
     );
   });
 }

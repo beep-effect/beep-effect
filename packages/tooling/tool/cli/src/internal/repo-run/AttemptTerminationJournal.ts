@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { UUID as UUIDSchema } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as A from "effect/Array";
@@ -22,14 +23,13 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { UUID as UUIDSchema } from "../schema/Uuid.ts";
 import { acquireJournalFileLock, releaseJournalFileLock } from "./AdmissionJournal.ts";
 import { publishJournalTextAtomically } from "./JournalFile.ts";
 import { ProcessIdentityStatus, processIdentityStatus } from "./ProcessIdentity.ts";
 import { attemptInputFactFields, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import { repoRunArtifactId } from "./RepoRunArtifacts.ts";
+import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as Digest from "effect/crypto/Digest";
-import type { UUID } from "../schema/Uuid.ts";
 import type { YeetAdmissionLease, YeetAdmissionTicket } from "./QualityScheduler.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/AttemptTerminationJournal");
@@ -390,7 +390,8 @@ const retainedLinesForNormalization = Effect.fn("AttemptTerminationJournal.retai
     return O.none();
   }
   if (retainRows && exceedsRetention) {
-    return O.some(yield* retainedJournalLines(classified.rows, protectedAttemptIds));
+    const retainedJournalLines1 = yield* retainedJournalLines(classified.rows, protectedAttemptIds);
+    return O.some(retainedJournalLines1);
   }
   return O.some(classified.lines);
 });
@@ -495,43 +496,43 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
     .readFileString(journalPath)
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to read Yeet attempt journal "${journalPath}".`)));
   const lines = pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
-  const events = knownJournalEvents(yield* decodeJournalLines(lines));
+  const decodedJournalLines = yield* decodeJournalLines(lines);
+  const events = knownJournalEvents(decodedJournalLines);
   const terminalIds = terminalAttemptIds(events);
   const unfinishedStarts = A.filter(
     A.filter(events, AttemptJournalRetentionEvent.guards["attempt-started"]),
     (event) => !A.contains(terminalIds, event.attemptId)
   );
   const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const terminalRows = A.getSomes(
-    yield* Effect.forEach(unfinishedStarts, (started) =>
-      pipe(
-        unfinishedStartTerminationReason(started),
-        Effect.flatMap(
-          O.match({
-            onNone: () => Effect.succeedNone,
-            onSome: (reason) =>
-              encodeSchedulerTermination({
-                schemaVersion: "yeet-attempt-journal/v1",
-                _tag: "attempt-terminated",
-                attemptId: started.attemptId,
-                recordedAt,
-                reason,
-                resolvedHeadSha: started.resolvedHeadSha,
-                diffFingerprint: started.diffFingerprint,
-                proofTier: started.proofTier,
-                envProfile: started.envProfile,
-                stage: started.stage,
-              }).pipe(
-                Effect.mapBoth({
-                  onFailure: QualitySchedulerError.new("Failed to encode reconciled attempt terminal event."),
-                  onSuccess: (line) => O.some({ attemptId: started.attemptId, line }),
-                })
-              ),
-          })
-        )
+  const forEach2 = yield* Effect.forEach(unfinishedStarts, (started) =>
+    pipe(
+      unfinishedStartTerminationReason(started),
+      Effect.flatMap(
+        O.match({
+          onNone: () => Effect.succeedNone,
+          onSome: (reason) =>
+            encodeSchedulerTermination({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-terminated",
+              attemptId: started.attemptId,
+              recordedAt,
+              reason,
+              resolvedHeadSha: started.resolvedHeadSha,
+              diffFingerprint: started.diffFingerprint,
+              proofTier: started.proofTier,
+              envProfile: started.envProfile,
+              stage: started.stage,
+            }).pipe(
+              Effect.mapBoth({
+                onFailure: QualitySchedulerError.new("Failed to encode reconciled attempt terminal event."),
+                onSuccess: (line) => O.some({ attemptId: started.attemptId, line }),
+              })
+            ),
+        })
       )
     )
   );
+  const terminalRows = A.getSomes(forEach2);
   yield* appendLinesLocked(
     journalPath,
     A.map(terminalRows, ({ line }) => line)
@@ -618,18 +619,16 @@ export const reconcileAttemptJournalsForCheckout = Effect.fn("AttemptTermination
   if (!(yield* fs.exists(runsRoot).pipe(Effect.orElseSucceed(constant(false))))) {
     return 0;
   }
+  const pipe3 = yield* fs
+    .readDirectory(runsRoot, { recursive: true })
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to scan Yeet attempt journals in "${runsRoot}".`)));
   const journalPaths = pipe(
-    yield* fs
-      .readDirectory(runsRoot, { recursive: true })
-      .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to scan Yeet attempt journals in "${runsRoot}".`))),
+    pipe3,
     A.filter(Str.endsWith(JOURNAL_FILE_NAME)),
     A.map((entry) => path.join(runsRoot, entry))
   );
-  return A.reduce(
-    yield* Effect.forEach(journalPaths, reconcileAttemptJournal, { concurrency: 1 }),
-    0,
-    (total, reconciled) => total + reconciled
-  );
+  const forEach4 = yield* Effect.forEach(journalPaths, reconcileAttemptJournal, { concurrency: 1 });
+  return A.reduce(forEach4, 0, (total, reconciled) => total + reconciled);
 });
 
 /**
@@ -686,14 +685,15 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
       Effect.mapError(QualitySchedulerError.new(`Failed to decode appended Yeet attempt ${eventTag} event.`))
     );
     const currentEvents = journalExists
-      ? knownJournalEvents(
-          yield* fs.readFileString(journalPath).pipe(
+      ? yield* Effect.map(
+          fs.readFileString(journalPath).pipe(
             Effect.mapBoth({
               onFailure: QualitySchedulerError.new(`Failed to read Yeet attempt journal "${journalPath}".`),
               onSuccess: flow(Str.split("\n"), A.filter(Str.isNonEmpty)),
             }),
             Effect.flatMap(decodeJournalLines)
-          )
+          ),
+          knownJournalEvents
         )
       : A.empty<AttemptJournalRetentionEvent>();
     const appendedTerminal = AttemptJournalRetentionEvent.isAnyOf(["attempt-finished", "attempt-terminated"])(
@@ -799,7 +799,8 @@ export const appendProofJobAttemptTerminated = Effect.fn("AttemptTerminationJour
     const text = yield* fs
       .readFileString(journalPath)
       .pipe(Effect.mapError(QualitySchedulerError.new("Failed to read job attempt journal.")));
-    const events = knownJournalEvents(yield* decodeJournalLines(A.filter(Str.split(text, "\n"), Str.isNonEmpty)));
+    const decodedJournalLines5 = yield* decodeJournalLines(A.filter(Str.split(text, "\n"), Str.isNonEmpty));
+    const events = knownJournalEvents(decodedJournalLines5);
     if (A.contains(terminalAttemptIds(events), attemptId)) return false;
     const started = A.findFirst(
       A.filter(events, AttemptJournalRetentionEvent.guards["attempt-started"]),

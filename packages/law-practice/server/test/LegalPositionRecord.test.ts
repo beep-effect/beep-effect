@@ -182,11 +182,16 @@ const appendEveryKind = Effect.fnUntraced(function* (
   seed: number,
   org = 1
 ) {
-  yield* repository.recordRelator(yield* relatorFixture(seed, org));
-  yield* repository.recordFrame(yield* frameFixture(seed + 100, org));
-  yield* repository.recordExercise(yield* exerciseFixture(seed + 200, seed + 100, org));
-  yield* repository.recordCorrection(yield* correctionFixture(seed + 300, seed + 100, org));
-  yield* repository.recordOppositionCandidate(yield* candidateFixture(seed + 400, [seed, seed + 1], org));
+  const relatorFixture1 = yield* relatorFixture(seed, org);
+  yield* repository.recordRelator(relatorFixture1);
+  const frameFixture2 = yield* frameFixture(seed + 100, org);
+  yield* repository.recordFrame(frameFixture2);
+  const exerciseFixture3 = yield* exerciseFixture(seed + 200, seed + 100, org);
+  yield* repository.recordExercise(exerciseFixture3);
+  const correctionFixture4 = yield* correctionFixture(seed + 300, seed + 100, org);
+  yield* repository.recordCorrection(correctionFixture4);
+  const candidateFixture5 = yield* candidateFixture(seed + 400, [seed, seed + 1], org);
+  yield* repository.recordOppositionCandidate(candidateFixture5);
 });
 
 const ids = <Entity extends { readonly id: number }>(records: ReadonlyArray<Entity>): ReadonlyArray<number> =>
@@ -208,19 +213,28 @@ describe("@beep/law-practice-server legal position record repository", () => {
         yield* appendEveryKind(repository, 1, 1);
         yield* appendEveryKind(repository, 2, 2);
 
-        expect(ids(yield* repository.listRelators(tenant(1)))).toEqual([1]);
-        expect(ids(yield* repository.listFrames(tenant(1)))).toEqual([101]);
-        expect(ids(yield* repository.listOppositionCandidates(tenant(1)))).toEqual([401]);
+        const listRelators6 = yield* repository.listRelators(tenant(1));
+        expect(ids(listRelators6)).toEqual([1]);
+        const listFrames7 = yield* repository.listFrames(tenant(1));
+        expect(ids(listFrames7)).toEqual([101]);
+        const listOppositionCandidates8 = yield* repository.listOppositionCandidates(tenant(1));
+        expect(ids(listOppositionCandidates8)).toEqual([401]);
 
-        expect(ids(yield* repository.listRelators(tenant(2)))).toEqual([2]);
-        expect(ids(yield* repository.listFrames(tenant(2)))).toEqual([102]);
-        expect(ids(yield* repository.listOppositionCandidates(tenant(2)))).toEqual([402]);
+        const listRelators9 = yield* repository.listRelators(tenant(2));
+        expect(ids(listRelators9)).toEqual([2]);
+        const listFrames10 = yield* repository.listFrames(tenant(2));
+        expect(ids(listFrames10)).toEqual([102]);
+        const listOppositionCandidates11 = yield* repository.listOppositionCandidates(tenant(2));
+        expect(ids(listOppositionCandidates11)).toEqual([402]);
 
         // The frame-keyed reads are tenant-scoped first: tenant 1 asking for
         // tenant 2's frame gets nothing rather than tenant 2's exercises.
-        expect(ids(yield* repository.listExercises(underFrame(102, 1)))).toEqual([]);
-        expect(ids(yield* repository.listCorrections(underFrame(102, 1)))).toEqual([]);
-        expect(ids(yield* repository.listExercises(underFrame(102, 2)))).toEqual([202]);
+        const listExercises12 = yield* repository.listExercises(underFrame(102, 1));
+        expect(ids(listExercises12)).toEqual([]);
+        const listCorrections13 = yield* repository.listCorrections(underFrame(102, 1));
+        expect(ids(listCorrections13)).toEqual([]);
+        const listExercises14 = yield* repository.listExercises(underFrame(102, 2));
+        expect(ids(listExercises14)).toEqual([202]);
       })
     );
   });
@@ -267,15 +281,20 @@ describe("@beep/law-practice-server legal position record repository", () => {
           yield* appendEveryKind(repository, 1);
           yield* appendEveryKind(repository, 2);
 
-          expect(ids(yield* repository.listExercises(underFrame(101)))).toEqual([201]);
-          expect(ids(yield* repository.listCorrections(underFrame(101)))).toEqual([301]);
+          const listExercises15 = yield* repository.listExercises(underFrame(101));
+          expect(ids(listExercises15)).toEqual([201]);
+          const listCorrections16 = yield* repository.listCorrections(underFrame(101));
+          expect(ids(listCorrections16)).toEqual([301]);
 
-          expect(ids(yield* repository.listExercises(underFrame(102)))).toEqual([202]);
-          expect(ids(yield* repository.listCorrections(underFrame(102)))).toEqual([302]);
+          const listExercises17 = yield* repository.listExercises(underFrame(102));
+          expect(ids(listExercises17)).toEqual([202]);
+          const listCorrections18 = yield* repository.listCorrections(underFrame(102));
+          expect(ids(listCorrections18)).toEqual([302]);
 
           // Both frames belong to the same tenant, so the tenant-wide reads see
           // both while the frame-keyed reads never mix them.
-          expect(ids(yield* repository.listFrames(tenant(1)))).toEqual([101, 102]);
+          const listFrames19 = yield* repository.listFrames(tenant(1));
+          expect(ids(listFrames19)).toEqual([101, 102]);
         })
       );
     }
@@ -294,9 +313,12 @@ describe("@beep/law-practice-server legal position record repository", () => {
           yield* appendEveryKind(repository, 3);
           yield* appendEveryKind(repository, 1);
 
-          expect(ids(yield* repository.listRelators(tenant(1)))).toEqual([1, 3]);
-          expect(ids(yield* repository.listFrames(tenant(1)))).toEqual([101, 103]);
-          expect(ids(yield* repository.listOppositionCandidates(tenant(1)))).toEqual([401, 403]);
+          const listRelators20 = yield* repository.listRelators(tenant(1));
+          expect(ids(listRelators20)).toEqual([1, 3]);
+          const listFrames21 = yield* repository.listFrames(tenant(1));
+          expect(ids(listFrames21)).toEqual([101, 103]);
+          const listOppositionCandidates22 = yield* repository.listOppositionCandidates(tenant(1));
+          expect(ids(listOppositionCandidates22)).toEqual([401, 403]);
         })
       );
     }

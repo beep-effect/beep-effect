@@ -15,6 +15,7 @@
 
 import { isPathWithinRoot, writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { applyJsoncModification, JsoncModification } from "@beep/repo-cli-kit/cli/Jsonc";
 import { A, O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -22,7 +23,6 @@ import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import { CodexFindingSeverity } from "./Findings.capture.schemas.ts";
 import { CodexFindingsIngestError, CodexPacketWriteError } from "./Findings.errors.ts";
 import { ordinalOfRecordId, priorIdsOfEntries, recordIdForOrdinal, severityCountsOf } from "./Findings.normalize.ts";

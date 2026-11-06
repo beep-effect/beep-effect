@@ -25,7 +25,8 @@ describe("paginate", () => {
       const items = yield* Stream.runCollect(paginate(() => recordedPages([[1, 2], [3, 4], [5]], calls), undefined));
       assert.deepStrictEqual(items, [1, 2, 3, 4, 5]);
       // Three pages plus the one call that reports completion.
-      assert.strictEqual(yield* Ref.get(calls), 4);
+      const got = yield* Ref.get(calls);
+      assert.strictEqual(got, 4);
     })
   );
 
@@ -47,7 +48,8 @@ describe("paginate", () => {
         )
       );
       assert.deepStrictEqual(items, [1, 2, 3, 4]);
-      assert.strictEqual(yield* Ref.get(calls), 2, "the third page must never be requested");
+      const got1 = yield* Ref.get(calls);
+      assert.strictEqual(got1, 2, "the third page must never be requested");
     })
   );
 
@@ -56,7 +58,8 @@ describe("paginate", () => {
       const calls = yield* Ref.make(0);
       const items = yield* Stream.runCollect(paginate(() => recordedPages([[1], [2]], calls), 1));
       assert.deepStrictEqual(items, [1]);
-      assert.strictEqual(yield* Ref.get(calls), 1);
+      const got2 = yield* Ref.get(calls);
+      assert.strictEqual(got2, 1);
     })
   );
 
@@ -92,12 +95,10 @@ describe("paginate", () => {
     Effect.gen(function* () {
       const calls = yield* Ref.make(0);
       const stream = paginate(() => recordedPages([[1], [2]], calls), undefined);
-      assert.deepStrictEqual(yield* Stream.runCollect(stream), [1, 2]);
-      assert.deepStrictEqual(
-        yield* Stream.runCollect(stream),
-        [1, 2],
-        "a second run must not resume an exhausted cursor"
-      );
+      const resultCollect = yield* Stream.runCollect(stream);
+      assert.deepStrictEqual(resultCollect, [1, 2]);
+      const resultCollect3 = yield* Stream.runCollect(stream);
+      assert.deepStrictEqual(resultCollect3, [1, 2], "a second run must not resume an exhausted cursor");
     })
   );
 
@@ -119,7 +120,8 @@ describe("paginate", () => {
         ).pipe(Stream.take(3))
       );
       assert.deepStrictEqual(items, [1, 2, 3]);
-      assert.isBelow(yield* Ref.get(calls), 3, "pages beyond the taken items must not be requested");
+      const got4 = yield* Ref.get(calls);
+      assert.isBelow(got4, 3, "pages beyond the taken items must not be requested");
     })
   );
 });

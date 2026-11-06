@@ -4,19 +4,30 @@ import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const literals = Array.from({ length: 24 }, (_, index) => `packages/pkg-${index}`);
 
 const tree: Record<string, string> = {
-  "/repo/package.json": JSON.stringify({ name: "root", version: "1.0.0" }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({ name: "root", version: "1.0.0" }),
+    identity
+  ),
   ...R.fromEntries(
     A.map(literals, (literal, index) => [
       `/repo/${literal}/package.json`,
-      JSON.stringify({ name: `@x/pkg-${index}`, version: "1.0.0" }),
+      Result.getOrThrowWith(
+        S.encodeUnknownResult(UnknownJson)({ name: `@x/pkg-${index}`, version: "1.0.0" }),
+        identity
+      ),
     ])
   ),
 };

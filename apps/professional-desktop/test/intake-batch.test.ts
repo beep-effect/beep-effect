@@ -90,8 +90,10 @@ describe("intake batch machine", () => {
           "unreadable.txt: Intake failed.",
           "rejected.txt: Document intake unavailable.",
         ]);
-        expect(yield* Queue.takeN(emitted, 4)).toEqual(output.entries);
-        expect(yield* Ref.get(payloads)).toMatchObject([
+        const takeN1 = yield* Queue.takeN(emitted, 4);
+        expect(takeN1).toEqual(output.entries);
+        const got = yield* Ref.get(payloads);
+        expect(got).toMatchObject([
           { intakeBatchId: batchIdFor(files, 1), originalFileName: "first.txt", workspaceId },
           { intakeBatchId: batchIdFor(files, 1), originalFileName: "rejected.txt", workspaceId },
         ]);
@@ -119,13 +121,15 @@ describe("intake batch machine", () => {
             [workspaceVaultKey(workspaceId)]
           ).pipe(Stream.runForEach((count) => Queue.offer(reads, count)))
         );
-        expect(yield* Queue.take(reads)).toBe(1);
+        const take2 = yield* Queue.take(reads);
+        expect(take2).toBe(1);
 
         const actor = yield* startBatch(intakeClient({ IntakeDroppedFile: () => Effect.succeed(document) }), [
           intakeFile("filed.txt"),
         ]);
         yield* settled(actor);
-        expect(yield* Queue.take(reads)).toBe(2);
+        const take3 = yield* Queue.take(reads);
+        expect(take3).toBe(2);
       })
     );
   });

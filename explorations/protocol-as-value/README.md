@@ -12,20 +12,23 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Spark
 
 Mepuka's foldlab assessment ("programs live in the same value universe as
-data — identity, meaning, and proof collapse into one mechanism") turned out
-to be a theorem beep-effect has independently instantiated five times — and
+data — identity, meaning, and proof collapse into one mechanism") motivated
+the August inventory of five related journal/register/fold/digest implementations — and
 his open problem (the topology of a multi-agent async system won't fit inside
 the schemas) points at the same move one level up: the protocol as a
 digest-named value whose projections are the agents' schemas, with
-`@beep/identity`'s fibration as the standing prototype.
+`@beep/identity`'s fibration as the standing prototype. The November 5 amendment
+limits digest guarantees to versioned normalized-definition identity and
+requires explicit interpretation dependencies. The August search found no
+matching composition in its examined sources; it did not prove absence.
 
 ## Next Open Question
 
-Shape review: does BRIEF.md match the picture in Benjamin's head? (Align
-closed 2026-08-23 with 8 decisions — center of gravity, foldlab relationship,
-two-regime naming, canonical-JSON ownership, identity seam, fibered-kit
-decoupling, wave-1 appetite, wave-2 gating. Brief drafted; exit shape only on
-his confirmation, then decompose into MAP.md.)
+Shape review of the complete amended BRIEF remains open before decomposition
+into MAP.md. The November 5 contract amendments are adopted; they do not
+approve the full shape or activate Wave 2. Wave 1 retains its two migrations;
+Wave 2 needs the merged substrate and an owned, runnable consumer qualification
+case demonstrating the need for role projection.
 
 ## Read This First
 
@@ -37,6 +40,11 @@ his confirmation, then decompose into MAP.md.)
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-11-05: adopted definition-identity, evaluation-basis, request-occurrence,
+  and consumer-gate amendments in DECISIONS/BRIEF; qualified historical claims
+  in RESEARCH. Planning only: stage remains shape, Wave 2 gated, no implementation
+  or new migration. The document-hub inversion remains unchanged.
 
 - 2026-08-23 (evening): align closed in three grill-with-docs rounds (8
   decisions in DECISIONS.md); BRIEF.md drafted (kit thesis, collapse first;

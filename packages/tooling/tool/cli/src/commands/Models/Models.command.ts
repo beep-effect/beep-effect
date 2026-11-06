@@ -14,6 +14,9 @@
  */
 
 import { CatalogSnapshot } from "@beep/ai-sync/ModelCatalog.schemas";
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Config from "effect/Config";
@@ -22,12 +25,11 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { ModelsApply, ModelsApplyLive } from "./Models.apply.service.ts";
 import { ModelsCatalogOptions } from "./Models.catalog.service.ts";
 import { ModelsCommandError } from "./Models.errors.ts";
@@ -56,6 +58,8 @@ import { modelsCheckOnlyFormat, modelsEligibility, modelsWritePreflight } from "
 import type { ModelsRecoveryReport } from "./Models.exchange.schemas.ts";
 import type { Locator, ModelsApplyMode, ModelsManifest } from "./Models.manifest.schemas.ts";
 import type { DriftFinding } from "./Models.report.schemas.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const encodeReport = S.encodeUnknownEffect(ModelsCheckReport);
 const encodeSnapshot = S.encodeUnknownEffect(CatalogSnapshot);
@@ -155,10 +159,10 @@ const renderFinding = (entry: DriftFinding): string =>
   `models: ${entry.kind} ${entry.targetId} [${entry.locator._tag}] ${entry.path}` +
   pipe(
     entry.current,
-    O.map((current) => ` current=${JSON.stringify(current)}`),
+    O.map((current) => ` current=${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(current), identity)}`),
     O.getOrElse(() => "")
   ) +
-  ` expected=${JSON.stringify(entry.expected)}`;
+  ` expected=${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(entry.expected), identity)}`;
 
 // An offline run leaves `diff` empty on purpose, so the counts would read as
 // "catalog stable" to an operator. Say which of the two it is.

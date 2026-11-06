@@ -335,7 +335,8 @@ const DOCGEN_PROOF_OUTPUT_GLOBS = ["docs/**/*"] as const;
 const DOCGEN_PROOF_GLOB_IGNORES = ["**/.beep/**", "**/.turbo/**", "**/node_modules/**"] as const;
 
 const sha256Hex = Effect.fnUntraced(function* (value: string) {
-  return Sha256Hex.make(yield* utf8Sha256Hex(value));
+  const utf8Sha256Hex1 = yield* utf8Sha256Hex(value);
+  return Sha256Hex.make(utf8Sha256Hex1);
 });
 
 const jsonText = (value: unknown): string => encodeUnknownJson(value);

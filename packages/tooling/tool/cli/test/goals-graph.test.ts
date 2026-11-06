@@ -47,6 +47,15 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 import type { CapabilitySlug } from "@beep/repo-cli/test/Goals";
 
+class GoalsGraphTestOperationError extends S.TaggedError<
+  GoalsGraphTestOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "GoalsGraphTestOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in goals-graph.test.ts." }
+) {}
+
 const COMPLETION_GATE = {
   operator: "yeet",
   requiresPullRequest: true,
@@ -119,8 +128,10 @@ const differential = Effect.fn("differential")(function* (specs: ReadonlyArray<P
     const compiled = compileCapabilityProjection(order(manifests));
     strictEqual(canonicalJsonTextPretty(compiled), canonicalJsonTextPretty(reference), `projection under ${name}`);
     const sql = yield* runCapabilityGraph(permuteRows(compiled, order));
-    strictEqual(yield* encodeAnswers(sql), expectedText, `sql answers under ${name}`);
-    strictEqual(yield* encodeAnswers(evaluateCapabilityGraph(permuteRows(compiled, order))), expectedText);
+    const encodedAnswers = yield* encodeAnswers(sql);
+    strictEqual(encodedAnswers, expectedText, `sql answers under ${name}`);
+    const encodedAnswers1 = yield* encodeAnswers(evaluateCapabilityGraph(permuteRows(compiled, order)));
+    strictEqual(encodedAnswers1, expectedText);
   }
   return { projection: reference, answers: expected };
 });
@@ -153,7 +164,8 @@ const gitPorcelain = Effect.fn("GoalsGraphTest.gitPorcelain")(function* (repoRoo
     stderr: "ignore",
   });
   const output = yield* handle.stdout.pipe(Stream.decodeText(), Stream.mkString);
-  strictEqual(yield* handle.exitCode, 0);
+  const exitCode2 = yield* handle.exitCode;
+  strictEqual(exitCode2, 0);
   return output;
 });
 
@@ -301,7 +313,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
           manifestOf
         );
         for (const order of [manifests, A.reverse(manifests)]) {
-          const exit = yield* Effect.exit(Effect.try(() => compileCapabilityProjection(order)));
+          const exit = yield* Effect.exit(
+            Effect.try({
+              try: () => compileCapabilityProjection(order),
+              catch: (cause) => GoalsGraphTestOperationError.make({ cause }),
+            })
+          );
           exit.pipe(Exit.isFailure, assertTrue);
           expect(String(exit)).toContain("duplicate packet id");
         }
@@ -375,7 +392,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
       Effect.fnUntraced(function* ([census]) {
         const projection = compileCapabilityProjection(A.map(toSpecs(census), manifestOf));
         const sql = yield* runCapabilityGraph(projection);
-        strictEqual(yield* encodeAnswers(sql), yield* encodeAnswers(evaluateCapabilityGraph(projection)));
+        const encodedAnswers3 = yield* encodeAnswers(sql);
+        const encodedAnswers20 = yield* encodeAnswers(evaluateCapabilityGraph(projection));
+        strictEqual(encodedAnswers3, encodedAnswers20);
       }),
       { arbitrary: { runs: 64 } }
     );
@@ -399,11 +418,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
         );
         const roundTrip = <A, I>(schema: S.Codec<A, I>, value: A) =>
           Effect.flatMap(S.encodeUnknownEffect(schema)(value), S.decodeUnknownEffect(schema));
-        deepStrictEqual(yield* roundTrip(GoalFrontierReport, frontier), frontier);
+        const roundTrip4 = yield* roundTrip(GoalFrontierReport, frontier);
+        deepStrictEqual(roundTrip4, frontier);
         const b = explain(projection, answers, "pkt-b");
-        deepStrictEqual(yield* roundTrip(GoalExplainReport, b), b);
+        const roundTrip5 = yield* roundTrip(GoalExplainReport, b);
+        deepStrictEqual(roundTrip5, b);
         const catalog = buildCatalogReport(projection, answers);
-        deepStrictEqual(yield* roundTrip(CapabilityCatalogReport, catalog), catalog);
+        const roundTrip6 = yield* roundTrip(CapabilityCatalogReport, catalog);
+        deepStrictEqual(roundTrip6, catalog);
 
         const frontierText = renderFrontierHuman(frontier);
         assertTrue(Str.includes("pkt-d — Title pkt-d")(frontierText));
@@ -438,14 +460,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
             verification: "verified",
           }),
         });
-        assertTrue(Str.includes("  closeout: completed-retained (verified via #2320)")(renderExplainHuman(verified)));
-        deepStrictEqual(
-          yield* Effect.flatMap(
-            S.encodeUnknownEffect(GoalExplainReport)(verified),
-            S.decodeUnknownEffect(GoalExplainReport)
-          ),
-          verified
+        assertTrue(
+          Str.includes("  closeout: completed-retained (verified via #2320, adoption pending)")(
+            renderExplainHuman(verified)
+          )
         );
+        const flatMap7 = yield* Effect.flatMap(
+          S.encodeUnknownEffect(GoalExplainReport)(verified),
+          S.decodeUnknownEffect(GoalExplainReport)
+        );
+        deepStrictEqual(flatMap7, verified);
         const unverified = GoalExplainReport.make({
           ...base,
           closeout: GoalCloseoutView.make({
@@ -525,7 +549,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
           const before = yield* gitPorcelain(repoRoot);
           const projection = yield* loadCapabilityProjection(repoRoot);
           const sql = yield* runCapabilityGraph(projection);
-          strictEqual(yield* encodeAnswers(sql), yield* encodeAnswers(evaluateCapabilityGraph(projection)));
+          const encodedAnswers8 = yield* encodeAnswers(sql);
+          const encodedAnswers21 = yield* encodeAnswers(evaluateCapabilityGraph(projection));
+          strictEqual(encodedAnswers8, encodedAnswers21);
           const catalog = buildCatalogReport(projection, sql);
           for (const capability of ["knowledge/doctor", "skills/warehouse", "goals/graph", "goals/bootstrap"]) {
             const entry = A.findFirst(catalog.entries, (candidate) => candidate.capability === capability);
@@ -535,7 +561,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
               )
             );
           }
-          expect(yield* gitPorcelain(repoRoot)).toBe(before);
+          const gitPorcelain9 = yield* gitPorcelain(repoRoot);
+          expect(gitPorcelain9).toBe(before);
         }),
       60_000
     );
@@ -560,30 +587,38 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
 
             const next = yield* Effect.exit(runGoalsCommand(["next", "--json"]));
             next.pipe(Exit.isSuccess, assertTrue);
-            assertTrue(O.exists(yield* lastLog, Str.includes('"schemaVersion": "goal-frontier/v1"')));
+            const lastLog10 = yield* lastLog;
+            assertTrue(O.exists(lastLog10, Str.includes('"schemaVersion": "goal-frontier/v1"')));
 
             const explained = yield* Effect.exit(runGoalsCommand(["explain", "pkt-b", "--json"]));
             explained.pipe(Exit.isSuccess, assertTrue);
-            assertTrue(O.exists(yield* lastLog, Str.includes('"ready": true')));
+            const lastLog11 = yield* lastLog;
+            assertTrue(O.exists(lastLog11, Str.includes('"ready": true')));
 
             (yield* Effect.exit(runGoalsCommand(["catalog", "--json"]))).pipe(Exit.isSuccess, assertTrue);
             (yield* Effect.exit(runGoalsCommand(["catalog"]))).pipe(Exit.isSuccess, assertTrue);
             (yield* Effect.exit(runGoalsCommand(["next"]))).pipe(Exit.isSuccess, assertTrue);
             (yield* Effect.exit(runGoalsCommand(["explain", "pkt-b"]))).pipe(Exit.isSuccess, assertTrue);
 
-            expectReportedExit(yield* Effect.exit(runGoalsCommand(["explain", "pkt-missing"])));
-            const errors = A.filter(yield* TestConsole.errorLines, P.isString);
+            const exit12 = yield* Effect.exit(runGoalsCommand(["explain", "pkt-missing"]));
+            expectReportedExit(exit12);
+            const errorLines13 = yield* TestConsole.errorLines;
+            const errors = A.filter(errorLines13, P.isString);
             assertTrue(A.some(errors, Str.includes("bun run beep goals bootstrap --slug pkt-missing")));
-            expectReportedExit(yield* Effect.exit(runGoalsCommand(["explain", "Not_A_Slug"])));
+            const exit14 = yield* Effect.exit(runGoalsCommand(["explain", "Not_A_Slug"]));
+            expectReportedExit(exit14);
 
             yield* writeProjectFile("goals/pkt-c/ops/manifest.json", '{"initiative": {"id": "pkt-other"}}\n');
-            expectReportedExit(yield* Effect.exit(runGoalsCommand(["next"])));
+            const exit15 = yield* Effect.exit(runGoalsCommand(["next"]));
+            expectReportedExit(exit15);
             yield* writeManifest({ id: "pkt-c", status: "active" });
             yield* writeProjectFile("goals/pkt-d/ops/manifest.json", "{ not json\n");
-            expectReportedExit(yield* Effect.exit(runGoalsCommand(["catalog"])));
+            const exit16 = yield* Effect.exit(runGoalsCommand(["catalog"]));
+            expectReportedExit(exit16);
             yield* writeManifest({ id: "pkt-d", status: "active" });
             yield* writeProjectFile("goals/pkt-e/README.md", "# no manifest\n");
-            expectReportedExit(yield* Effect.exit(runGoalsCommand(["explain", "pkt-b"])));
+            const exit17 = yield* Effect.exit(runGoalsCommand(["explain", "pkt-b"]));
+            expectReportedExit(exit17);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       30_000
@@ -596,8 +631,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
           yield* writeManifest({ id: "pkt-a", status: "active" });
           const renamed = yield* encodeManifestJson(manifestOf({ id: "pkt-z", status: "active" }));
           yield* writeProjectFile("goals/pkt-b/ops/manifest.json", renamed);
-          expectReportedExit(yield* Effect.exit(runGoalsCommand(["next", "--json"])));
-          const errors = A.filter(yield* TestConsole.errorLines, P.isString);
+          const exit18 = yield* Effect.exit(runGoalsCommand(["next", "--json"]));
+          expectReportedExit(exit18);
+          const errorLines19 = yield* TestConsole.errorLines;
+          const errors = A.filter(errorLines19, P.isString);
           assertTrue(A.some(errors, Str.includes('declares initiative.id "pkt-z"')));
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))

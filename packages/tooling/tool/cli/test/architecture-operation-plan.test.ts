@@ -728,7 +728,8 @@ describe("architecture operation plan", () => {
       Effect.fnUntraced(
         function* () {
           yield* runArchitectureCommand(["plan", "--stage", "core"]);
-          const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
+          const logLines1 = yield* TestConsole.logLines;
+          const output = pipe(logLines1, A.filter(isString), A.join("\n"));
           const decoded = yield* decodeCanonicalSliceOperationPlanJson(output);
 
           expect(decoded.target.stage).toBe("core");
@@ -752,7 +753,8 @@ describe("architecture operation plan", () => {
           expect(pathExistsSync(targetDir)).toBe(false);
 
           yield* runArchitectureCommand(["create", "package", sliceName, "domain", "--dry-run"]);
-          const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
+          const logLines2 = yield* TestConsole.logLines;
+          const output = pipe(logLines2, A.filter(isString), A.join("\n"));
           const decoded = yield* decodeCanonicalSliceOperationPlanJson(output);
 
           expect(decoded.target.boundedContext).toBe(sliceName);
@@ -779,7 +781,8 @@ describe("architecture operation plan", () => {
           yield* writeText(planPath, json);
 
           yield* runArchitectureCommand(["check", "--file", planPath]);
-          const output = pipe(yield* TestConsole.logLines, A.filter(isString), A.join("\n"));
+          const logLines3 = yield* TestConsole.logLines;
+          const output = pipe(logLines3, A.filter(isString), A.join("\n"));
 
           yield* removePath(tempRoot);
           expect(output).toContain("idempotent=true");

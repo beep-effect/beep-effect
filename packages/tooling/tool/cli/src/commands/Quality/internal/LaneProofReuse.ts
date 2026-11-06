@@ -5,6 +5,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { turboEnvExtendsAmbient } from "@beep/repo-cli-kit/cli/EnvConfig";
+import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
@@ -22,9 +25,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { turboEnvExtendsAmbient } from "../../../internal/cli/EnvConfig.ts";
-import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV, QUALITY_TASK_LANE_RUN_PARENT_ID_ENV } from "../Quality.schemas.ts";
 import type { GithubCheckLaneSpec } from "../Quality.schemas.ts";
 
@@ -171,7 +171,8 @@ export class LaneProofSession extends S.Opaque<LaneProofSession, { readonly bran
 
 const hashText = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
+  const digest1 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value));
+  return Hex.encode(digest1);
 });
 
 const stableRecordText = (value: Readonly<Record<string, string | undefined>>): string =>
@@ -240,10 +241,12 @@ const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (rep
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const crypto = yield* SecureRandom.SecureRandom;
-  const indexPath = path.resolve(
-    repoRoot,
-    yield* runGit(repoRoot, ["rev-parse", "--git-path", `yeet-lane-proof-index-${yield* crypto.uuidV4()}`])
-  );
+  const resultGit = yield* runGit(repoRoot, [
+    "rev-parse",
+    "--git-path",
+    `yeet-lane-proof-index-${yield* crypto.uuidV4()}`,
+  ]);
+  const indexPath = path.resolve(repoRoot, resultGit);
   const indexEnv = { GIT_INDEX_FILE: indexPath };
   return yield* Effect.acquireUseRelease(
     Effect.succeed(indexPath),
@@ -279,7 +282,8 @@ const shortSha = Str.takeLeft(12);
 const resolveProofBase = Effect.fnUntraced(function* (repoRoot: string) {
   const pinned = pinnedLaneProofBaseSha();
   if (O.isNone(pinned)) {
-    return O.some(yield* runGit(repoRoot, ["rev-parse", Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF]));
+    const resultGit2 = yield* runGit(repoRoot, ["rev-parse", Bun.env[LANE_PROOF_BASE_ENV] ?? LANE_BASE_REF]);
+    return O.some(resultGit2);
   }
   const laneBase = yield* runGit(repoRoot, ["rev-parse", LANE_BASE_REF]);
   if (laneBase === pinned.value) {

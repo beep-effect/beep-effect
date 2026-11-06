@@ -90,21 +90,21 @@ const seedWorkspaceRepository = Effect.fn("seedWorkspaceRepository")(function* (
   const path = yield* Path.Path;
   const packageDir = path.join(repoRoot, "packages/demo");
   yield* fs.makeDirectory(packageDir, { recursive: true });
-  yield* fs.writeFileString(
-    path.join(repoRoot, "package.json"),
-    yield* encodeJson({
-      name: "verify-root",
-      private: true,
-      workspaces: ["packages/*"],
-    })
-  );
-  yield* fs.writeFileString(
-    path.join(packageDir, "package.json"),
-    yield* encodeJson({ name: "@beep/demo", private: true, scripts })
-  );
+  const argument1 = path.join(repoRoot, "package.json");
+  const encodedJson = yield* encodeJson({
+    name: "verify-root",
+    private: true,
+    workspaces: ["packages/*"],
+  });
+  yield* fs.writeFileString(argument1, encodedJson);
+  const argument2 = path.join(packageDir, "package.json");
+  const encodedJson1 = yield* encodeJson({ name: "@beep/demo", private: true, scripts });
+  yield* fs.writeFileString(argument2, encodedJson1);
   if ("docgen" in scripts) {
     yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-    yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
+    const argument3 = path.join(packageDir, "docgen.json");
+    const encodedJson2 = yield* encodeJson({ srcDir: "src" });
+    yield* fs.writeFileString(argument3, encodedJson2);
     yield* fs.writeFileString(
       path.join(packageDir, "src/index.ts"),
       "/**\n * Fixture module.\n * @packageDocumentation\n * @since 0.0.0\n */\n/**\n * Fixture constant.\n * @category constants\n * @since 0.0.0\n */\nexport const demo = 1;\n"
@@ -206,7 +206,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(result.exitCode).toBe(7);
           expect(result.output).toContain("build-failed");
           expect(result.output).not.toContain("touch audit-ran");
-          expect(yield* fs.exists(markerPath)).toBe(false);
+          const exists1 = yield* fs.exists(markerPath);
+          expect(exists1).toBe(false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -236,7 +237,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
           expect(result.exitCode).toBe(0);
           expect(result.output).toContain("audit-ok");
-          expect(yield* fs.readFileString(distStatePath)).toBe("fresh");
+          const readFileString2 = yield* fs.readFileString(distStatePath);
+          expect(readFileString2).toBe("fresh");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -264,7 +266,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
           expect(result.exitCode).toBe(0);
           expect(result.output).toContain("cache hit, replaying logs");
-          expect(yield* fs.exists(markerPath)).toBe(true);
+          const exists3 = yield* fs.exists(markerPath);
+          expect(exists3).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -372,7 +375,8 @@ export const invalidCategory = 1;
           });
           expect(report.results[1]).toMatchObject({ step: "docgen", skipped: false, ok: false });
           expect(report.results[1]?.output).toContain("invalid category");
-          expect(yield* fs.exists(path.join(packageDir, "docgen-ran"))).toBe(false);
+          const exists4 = yield* fs.exists(path.join(packageDir, "docgen-ran"));
+          expect(exists4).toBe(false);
         })
       ).pipe(TestClock.withLive)
     );
@@ -383,15 +387,14 @@ export const invalidCategory = 1;
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           yield* seedWorkspaceRepository(tmpDir, { docgen: "true" });
-          yield* fs.writeFileString(
-            path.join(tmpDir, "package.json"),
-            yield* encodeJson({
-              name: "verify-root",
-              private: true,
-              workspaces: ["packages/*"],
-              scripts: { audit: "printf '%s' \"$PWD\" > audit-cwd; printf '%s' > audit-args" },
-            })
-          );
+          const argument4 = path.join(tmpDir, "package.json");
+          const encodedJson3 = yield* encodeJson({
+            name: "verify-root",
+            private: true,
+            workspaces: ["packages/*"],
+            scripts: { audit: "printf '%s' \"$PWD\" > audit-cwd; printf '%s' > audit-args" },
+          });
+          yield* fs.writeFileString(argument4, encodedJson3);
 
           const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {
             packageName: O.some("@beep/demo"),
@@ -404,8 +407,10 @@ export const invalidCategory = 1;
             skipped: false,
             ok: true,
           });
-          expect(yield* fs.readFileString(path.join(tmpDir, "audit-cwd"))).toBe(tmpDir);
-          expect(yield* fs.readFileString(path.join(tmpDir, "audit-args"))).toBe("--filter=@beep/demo");
+          const readFileString5 = yield* fs.readFileString(path.join(tmpDir, "audit-cwd"));
+          expect(readFileString5).toBe(tmpDir);
+          const readFileString6 = yield* fs.readFileString(path.join(tmpDir, "audit-args"));
+          expect(readFileString6).toBe("--filter=@beep/demo");
           expect(report.results[1]).toMatchObject({ step: "docgen", skipped: false, ok: true });
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
@@ -417,15 +422,14 @@ export const invalidCategory = 1;
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           yield* seedWorkspaceRepository(tmpDir, {});
-          yield* fs.writeFileString(
-            path.join(tmpDir, "package.json"),
-            yield* encodeJson({
-              name: "verify-root",
-              private: true,
-              workspaces: ["packages/*"],
-              scripts: { audit: "sh -c 'printf audit-failed; exit 7' --" },
-            })
-          );
+          const argument5 = path.join(tmpDir, "package.json");
+          const encodedJson4 = yield* encodeJson({
+            name: "verify-root",
+            private: true,
+            workspaces: ["packages/*"],
+            scripts: { audit: "sh -c 'printf audit-failed; exit 7' --" },
+          });
+          yield* fs.writeFileString(argument5, encodedJson4);
           const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {
             packageName: O.some("@beep/demo"),
             quick: false,
@@ -468,12 +472,16 @@ export const invalidCategory = 1;
           expect(error.message).toContain(`Failed to decode ${path.join(packageDir, "package.json")}`);
 
           // The retired projection required `name`; the lenient read keeps that verdict.
-          yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ private: true }));
+          const argument6 = path.join(packageDir, "package.json");
+          const encodedJson5 = yield* encodeJson({ private: true });
+          yield* fs.writeFileString(argument6, encodedJson5);
           const nameless = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir).pipe(Effect.flip);
           expect(nameless.message).toContain(`Failed to decode ${path.join(packageDir, "package.json")}`);
           expect(String(nameless.cause)).toContain("does not declare a package name");
 
-          yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name: "@beep/demo" }));
+          const argument7 = path.join(packageDir, "package.json");
+          const encodedJson6 = yield* encodeJson({ name: "@beep/demo" });
+          yield* fs.writeFileString(argument7, encodedJson6);
           const workspace = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir);
           expect(workspace.scripts).toEqual({});
         })

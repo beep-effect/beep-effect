@@ -113,7 +113,9 @@ const sealedBundle = Effect.fn("BundleIngestTest.sealedBundle")(function* () {
       artifacts,
     },
   };
-  yield* fs.writeFileString(path.join(root, "scan-manifest.json"), yield* encode(manifest));
+  const argument = path.join(root, "scan-manifest.json");
+  const encoded = yield* encode(manifest);
+  yield* fs.writeFileString(argument, encoded);
   return root;
 });
 
@@ -227,7 +229,8 @@ it.layer(testLayer, { timeout: "60 seconds" })("codex findings sealed bundle ing
             })
           ).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
 
-          expect(yield* fs.exists(path.join(root, "goals/codex-security-findings-local-override"))).toBe(false);
+          const exists1 = yield* fs.exists(path.join(root, "goals/codex-security-findings-local-override"));
+          expect(exists1).toBe(false);
 
           // The same plan again, rendered for a human: machine JSON goes to
           // stdout rather than the console service, so the lines are asserted
@@ -245,7 +248,8 @@ it.layer(testLayer, { timeout: "60 seconds" })("codex findings sealed bundle ing
           expect(
             A.some(lines, Str.includes("• dry run  goals/codex-security-findings-local-override not written"))
           ).toBe(true);
-          expect(yield* fs.exists(path.join(root, "goals/codex-security-findings-local-override"))).toBe(false);
+          const exists2 = yield* fs.exists(path.join(root, "goals/codex-security-findings-local-override"));
+          expect(exists2).toBe(false);
         })
       );
     })
@@ -283,7 +287,8 @@ it.layer(testLayer, { timeout: "60 seconds" })("codex findings sealed bundle ing
             )
           );
           expect(error.message).toContain("rejected the sealed bundle contract");
-          expect(yield* fs.exists(path.join(root, `goals/${SLUG}`))).toBe(false);
+          const exists3 = yield* fs.exists(path.join(root, `goals/${SLUG}`));
+          expect(exists3).toBe(false);
         })
       );
     })
@@ -325,7 +330,8 @@ const initializeScanRepository = Effect.fn("SecurityScanTest.initializeRepositor
       "fixture",
     ],
   ]) {
-    expect(yield* spawner.exitCode(ChildProcess.make("git", args, { cwd: root, env, extendEnv: false }))).toBe(0);
+    const exitCode4 = yield* spawner.exitCode(ChildProcess.make("git", args, { cwd: root, env, extendEnv: false }));
+    expect(exitCode4).toBe(0);
   }
 });
 
@@ -334,7 +340,8 @@ it.layer(testLayer, { timeout: "60 seconds" })("security scan orchestration", (i
     "lists the supported commands without discovering a runtime",
     Effect.fnUntraced(function* () {
       yield* runScanCommand([]);
-      const help = A.join(yield* printedLines, "\n");
+      const printedLines5 = yield* printedLines;
+      const help = A.join(printedLines5, "\n");
       expect(help).toContain("beep codex security preflight");
       expect(help).toContain("beep codex security scan");
     })
@@ -353,7 +360,8 @@ writeFileSync(output + "/arguments.txt", args.join("\\n"));
       );
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const output = path.join(yield* fs.makeTempDirectoryScoped(), "scan");
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+      const output = path.join(madeTempDirectoryScoped, "scan");
       yield* withRepository((root) =>
         Effect.gen(function* () {
           yield* initializeScanRepository(root);
@@ -372,7 +380,8 @@ writeFileSync(output + "/arguments.txt", args.join("\\n"));
             Effect.result
           );
           expect(repeated._tag).toBe("Failure");
-          expect(yield* fs.readFileString(path.join(output, "beep-source.json"))).toBe(receipt);
+          const readFileString6 = yield* fs.readFileString(path.join(output, "beep-source.json"));
+          expect(readFileString6).toBe(receipt);
         })
       );
     })
@@ -390,7 +399,8 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
       );
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const output = path.join(yield* fs.makeTempDirectoryScoped(), "scan");
+      const madeTempDirectoryScoped7 = yield* fs.makeTempDirectoryScoped();
+      const output = path.join(madeTempDirectoryScoped7, "scan");
       yield* withRepository((root) =>
         Effect.gen(function* () {
           yield* initializeScanRepository(root);
@@ -400,14 +410,17 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
           yield* runScanCommand(["preflight", ...args]).pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, provider)
           );
-          expect(yield* fs.exists(output)).toBe(false);
-          expect(A.join(yield* printedLines, "\n")).toContain("uncommitted changes");
+          const exists8 = yield* fs.exists(output);
+          expect(exists8).toBe(false);
+          const printedLines9 = yield* printedLines;
+          expect(A.join(printedLines9, "\n")).toContain("uncommitted changes");
           const rejected = yield* runScanCommand(["scan", ...args]).pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, provider),
             Effect.result
           );
           expect(rejected._tag).toBe("Failure");
-          expect(yield* fs.exists(output)).toBe(false);
+          const exists10 = yield* fs.exists(output);
+          expect(exists10).toBe(false);
         })
       );
     })
@@ -419,7 +432,8 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
       const provider = yield* pinnedRuntime(23);
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const output = path.join(yield* fs.makeTempDirectoryScoped(), "scan");
+      const madeTempDirectoryScoped11 = yield* fs.makeTempDirectoryScoped();
+      const output = path.join(madeTempDirectoryScoped11, "scan");
       yield* withRepository((root) =>
         Effect.gen(function* () {
           yield* initializeScanRepository(root);
@@ -429,7 +443,8 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
           );
           expect(failed._tag).toBe("Failure");
           if (failed._tag === "Failure") expect(failed.failure).toMatchObject({ exitCode: 23 });
-          expect(yield* fs.exists(path.join(output, "beep-source.json"))).toBe(true);
+          const exists12 = yield* fs.exists(path.join(output, "beep-source.json"));
+          expect(exists12).toBe(true);
           const inside = yield* runScanCommand([
             "preflight",
             "--output-dir",
@@ -438,7 +453,8 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
             "5",
           ]).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider), Effect.result);
           expect(inside._tag).toBe("Failure");
-          expect(yield* fs.exists(path.join(root, "scan"))).toBe(false);
+          const exists13 = yield* fs.exists(path.join(root, "scan"));
+          expect(exists13).toBe(false);
         })
       );
     })
@@ -479,7 +495,8 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
       );
       expect(stalled._tag).toBe("Failure");
       if (stalled._tag === "Failure") expect(stalled.failure.message).toBe("fixture deadline");
-      const pid = O.getOrThrow(yield* Ref.get(childPid));
+      const got = yield* Ref.get(childPid);
+      const pid = O.getOrThrow(got);
       expect(() => process.kill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
     })
   );

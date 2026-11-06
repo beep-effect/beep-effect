@@ -18,7 +18,8 @@ it.layer(CliEnv.layerTest({ columns: 123, tty: true }), { timeout: "30 seconds" 
       const terminal = yield* TerminalEnv;
       assertSome(terminal.stdout.columns, 123);
       assertSome(terminal.stderr.columns, 123);
-      assert.strictEqual(yield* CliInteractive, true);
+      const CliInteractive1 = yield* CliInteractive;
+      assert.strictEqual(CliInteractive1, true);
     })
   );
 });

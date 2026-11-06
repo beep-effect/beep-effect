@@ -1,3 +1,6 @@
+import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
+import { workspaceDirectories, workspacePackages } from "@beep/repo-cli-kit/RepoWorkspaces";
+import { mentionsAnyToken, mentionsToken } from "@beep/repo-cli-kit/WholeToken";
 import { computeTransitiveClosure, decodePackageJsonEffect, toSortedRecord } from "@beep/repo-utils";
 import { ALL_DEPENDENCY_FIELDS } from "@beep/repo-workspaces/internal/dependencyFields";
 import { normalizePath } from "@beep/schema";
@@ -14,9 +17,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { isLabsWorkspacePath } from "../../../../internal/cli/Labs/index.ts";
-import { workspaceDirectories, workspacePackages } from "../../../../internal/RepoWorkspaces.ts";
-import { mentionsAnyToken, mentionsToken } from "../../../../internal/WholeToken.ts";
 import { DeletePackageDataResource } from "../DataResource.ts";
 import { isCanonicalDeletionChangeset } from "../DeletionChangeset.ts";
 import { IDENTITY_SHAPE_TEST_PATH, shapeTestRowAccessor } from "../ShapeTestRow.ts";
@@ -91,12 +91,14 @@ const collectFiles = Effect.fn("RegistrationGeometry.collectFiles")(function* (
     let files = A.empty<string>();
     for (const entry of entries) {
       if (HashSet.has(EXCLUDED_DIRECTORIES, entry)) continue;
-      files = A.appendAll(files, yield* walk(path.join(current, entry)));
+      const walk1 = yield* walk(path.join(current, entry));
+      files = A.appendAll(files, walk1);
     }
     return files;
   });
 
-  return A.sort(yield* walk(root), Order.String);
+  const walk2 = yield* walk(root);
+  return A.sort(walk2, Order.String);
 });
 
 const existingEvidence = Effect.fn("RegistrationGeometry.existingEvidence")(function* (
@@ -607,7 +609,8 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const workspaces = A.fromIterable(yield* workspaceDirectories(repoRoot));
+  const workspaceDirectories3 = yield* workspaceDirectories(repoRoot);
+  const workspaces = A.fromIterable(workspaceDirectories3);
   const edges = yield* collectWorkspaceEdges(repoRoot, target.packageName);
   const reverse = A.reduce(edges, HashMap.empty<string, HashSet.HashSet<string>>(), (map, edge) =>
     addReverseEdge(map, edge.dependency, edge.owner)
@@ -714,13 +717,15 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
   for (const root of SCAN_ROOTS) {
     const files = yield* collectFiles(path.join(repoRoot, root), TEXT_SUFFIXES);
     for (const absoluteFile of files) {
-      hits = A.appendAll(hits, yield* scanFile(absoluteFile));
+      const scanFile4 = yield* scanFile(absoluteFile);
+      hits = A.appendAll(hits, scanFile4);
     }
   }
 
   const rootManifest = yield* decodedRootManifest(repoRoot);
   hits = A.appendAll(hits, rootScriptHits(toSortedRecord(rootManifest.scripts), target));
-  hits = A.appendAll(hits, yield* rootPolicyFileHits(repoRoot, target));
+  const rootPolicyFileHits5 = yield* rootPolicyFileHits(repoRoot, target);
+  hits = A.appendAll(hits, rootPolicyFileHits5);
 
   return DependentsReport.make({
     target,

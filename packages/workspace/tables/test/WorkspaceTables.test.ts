@@ -309,16 +309,12 @@ describe("WorkspaceTables", () => {
         workspaceId: 2,
       });
       const threadInsert = yield* Effect.fromResult(Thread.toThreadInsert(thread));
-      expectConverterFailure(
-        yield* converterFailure(Thread.toThreadInsert(withUnencodablePublicId(thread))),
-        "ThreadConverterError"
+      const converterFailure1 = yield* converterFailure(Thread.toThreadInsert(withUnencodablePublicId(thread)));
+      expectConverterFailure(converterFailure1, "ThreadConverterError");
+      const converterFailure2 = yield* converterFailure(
+        Thread.fromThreadRow({ ...threadInsert, id: 10, publicId: 42 } as unknown as Thread.ThreadRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          Thread.fromThreadRow({ ...threadInsert, id: 10, publicId: 42 } as unknown as Thread.ThreadRow)
-        ),
-        "ThreadConverterError"
-      );
+      expectConverterFailure(converterFailure2, "ThreadConverterError");
 
       const message = yield* decodeUnknownMessageModel({
         ...productEntityFixtureInput("WorkspaceMessage", 20),
@@ -328,16 +324,12 @@ describe("WorkspaceTables", () => {
         turnId: 30,
       });
       const messageInsert = yield* Effect.fromResult(Message.toMessageInsert(message));
-      expectConverterFailure(
-        yield* converterFailure(Message.toMessageInsert(withUnencodablePublicId(message))),
-        "MessageConverterError"
+      const converterFailure3 = yield* converterFailure(Message.toMessageInsert(withUnencodablePublicId(message)));
+      expectConverterFailure(converterFailure3, "MessageConverterError");
+      const converterFailure4 = yield* converterFailure(
+        Message.fromMessageRow({ ...messageInsert, id: 20, publicId: 42 } as unknown as Message.MessageRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          Message.fromMessageRow({ ...messageInsert, id: 20, publicId: 42 } as unknown as Message.MessageRow)
-        ),
-        "MessageConverterError"
-      );
+      expectConverterFailure(converterFailure4, "MessageConverterError");
 
       const turn = yield* decodeUnknownTurnModel({
         ...productEntityFixtureInput("WorkspaceTurn", 30),
@@ -347,21 +339,17 @@ describe("WorkspaceTables", () => {
         turnIndex: 0,
       });
       const turnInsert = yield* Effect.fromResult(Turn.toTurnInsert(turn));
-      expectConverterFailure(
-        yield* converterFailure(Turn.toTurnInsert(withUnencodablePublicId(turn))),
-        "TurnConverterError"
+      const converterFailure5 = yield* converterFailure(Turn.toTurnInsert(withUnencodablePublicId(turn)));
+      expectConverterFailure(converterFailure5, "TurnConverterError");
+      const converterFailure6 = yield* converterFailure(
+        Turn.fromTurnRow({
+          ...turnInsert,
+          id: 30,
+          parentTurnId: absentAsNull(turnInsert.parentTurnId),
+          publicId: 42,
+        } as unknown as Turn.TurnRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          Turn.fromTurnRow({
-            ...turnInsert,
-            id: 30,
-            parentTurnId: absentAsNull(turnInsert.parentTurnId),
-            publicId: 42,
-          } as unknown as Turn.TurnRow)
-        ),
-        "TurnConverterError"
-      );
+      expectConverterFailure(converterFailure6, "TurnConverterError");
 
       const workspace = yield* decodeUnknownWorkspaceModel({
         ...productEntityFixtureInput("WorkspaceWorkspace", 40),
@@ -372,21 +360,19 @@ describe("WorkspaceTables", () => {
         vaultRootPath: "/tmp/beep-workspace-vault",
       });
       const workspaceInsert = yield* Effect.fromResult(Workspace.toWorkspaceInsert(workspace));
-      expectConverterFailure(
-        yield* converterFailure(Workspace.toWorkspaceInsert(withUnencodablePublicId(workspace))),
-        "WorkspaceConverterError"
+      const converterFailure7 = yield* converterFailure(
+        Workspace.toWorkspaceInsert(withUnencodablePublicId(workspace))
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          Workspace.fromWorkspaceRow({
-            ...workspaceInsert,
-            id: 40,
-            publicId: 42,
-            vaultRootPath: absentAsNull(workspaceInsert.vaultRootPath),
-          } as unknown as Workspace.WorkspaceRow)
-        ),
-        "WorkspaceConverterError"
+      expectConverterFailure(converterFailure7, "WorkspaceConverterError");
+      const converterFailure8 = yield* converterFailure(
+        Workspace.fromWorkspaceRow({
+          ...workspaceInsert,
+          id: 40,
+          publicId: 42,
+          vaultRootPath: absentAsNull(workspaceInsert.vaultRootPath),
+        } as unknown as Workspace.WorkspaceRow)
       );
+      expectConverterFailure(converterFailure8, "WorkspaceConverterError");
     })
   );
 });

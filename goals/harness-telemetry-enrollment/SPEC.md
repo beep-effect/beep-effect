@@ -17,7 +17,7 @@ User decisions and AGENTS.md govern; then architecture standards, this SPEC, PLA
 
 ## Scope and constraints
 
-This packet is paused until explicitly launched. Preserve unrelated local work, existing source identities, the masked collector recovery hold and historical archives. Metadata plus curated sanitized examples is the approved collection boundary. Use schema-first Effect code, existing drivers/tooling and architecture observability conventions. Source changes and deployments must have owned tests and rollback. Existing subscriptions only; no new paid endpoints, quota purchases or automatic broad judge runs. Do not revive retired OpenClaw.
+The operator explicitly launched this packet on 2026-11-03 after the foundation canonical completion verified. Preserve unrelated local work, existing source identities, the masked collector recovery hold and historical archives. Metadata plus curated sanitized examples is the approved collection boundary. Use schema-first Effect code, existing drivers/tooling and architecture observability conventions. Source changes and deployments must have owned tests and rollback. Existing subscriptions only; no new paid endpoints, quota purchases or automatic broad judge runs. Do not revive retired OpenClaw.
 
 Do not infer that an enum, installed app, green service, transport acknowledgment, query result or canary proves every activity source was captured. Unknown and intentionally excluded populations remain explicit. Keep code fixtures synthetic and disposable; do not use real prompts or secrets to make tests convenient.
 
@@ -30,9 +30,11 @@ Do not infer that an enum, installed app, green service, transport acknowledgmen
 
 ## Acceptance criteria
 
+- [ ] Prove fresh current-source root admission with explicit qualification/probe pins and independently checked source bindings before real-route collection. Distinguish a synthetic declared-root proof from admission of the actual Beep worktree and its real runtime source.
+
 - [ ] Provide a versioned matrix for Grok, Claude Code CLI, Claude Code desktop runtime, ordinary Claude Desktop/Cowork, Codex CLI, ChatGPT/Codex Desktop, Muse proxy and cursor-agent. Add Junie/remote routes when declared; never silently omit an unsupported surface.
 - [ ] For each route separately prove capability, installed configuration, launch observation, normalized metadata and backend receipt; absent or inaccessible evidence remains unknown.
-- [ ] Qualify Codex 0.165.0 separate log/trace/metrics configuration and actual runtime overrides. Do not rely on exporter=none as trace evidence or enable every Rust runtime span.
+- [ ] Qualify the installed Codex version (0.166.0 at launch; retain 0.165.0 historical evidence separately) and its separate log/trace/metrics configuration and actual runtime overrides. Do not rely on exporter=none as trace evidence or enable every Rust runtime span.
 - [ ] Add adapters for managed Grok/Cursor usage and results using documented native events, supported local metadata or controlled launcher receipts; source enum membership is not coverage.
 - [ ] Keep Muse requested proxy route, reported harness/model and verified provider identity separate. Never infer upstream identity from a model alias or Claude-formatted event.
 - [ ] Preserve intended bounded telemetry context through managed child environments without forwarding secrets or all parent environment variables.

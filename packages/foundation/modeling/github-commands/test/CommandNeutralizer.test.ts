@@ -1,8 +1,13 @@
 import { CommandNeutralizer } from "@beep/github-commands";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { commandLines, isCommand, isDotNetWhitespace, LINE_BREAK } from "./helpers/runnerCommands.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const ZWSP = String.fromCodePoint(0x200b);
 
@@ -55,13 +60,18 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
     ];
     for (const ch of whitespace) {
       const line = `${ch}::error::x`;
-      assert.isTrue(isDotNetWhitespace(ch), JSON.stringify(ch));
-      assert.isTrue(isCommand(line), JSON.stringify(ch));
+      assert.isTrue(isDotNetWhitespace(ch), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity));
+      assert.isTrue(isCommand(line), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity));
       const expected = ch === "\r" || ch === "\n" ? ["", `${ZWSP}::error::x`] : [`${ZWSP}${line}`];
       const out = CommandNeutralizer.lines(line);
-      assert.deepStrictEqual(out, expected, JSON.stringify(ch));
-      for (const outputLine of out) assert.isFalse(isCommand(outputLine), JSON.stringify(ch));
-      assert.strictEqual(CommandNeutralizer.text(line), A.join(expected, "\n"), JSON.stringify(ch));
+      assert.deepStrictEqual(out, expected, Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity));
+      for (const outputLine of out)
+        assert.isFalse(isCommand(outputLine), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity));
+      assert.strictEqual(
+        CommandNeutralizer.text(line),
+        A.join(expected, "\n"),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(ch), identity)
+      );
     }
   });
 
@@ -75,18 +85,22 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
       "##[group]x",
       "x##[y",
     ]) {
-      assert.isTrue(isCommand(command), JSON.stringify(command));
+      assert.isTrue(isCommand(command), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(command), identity));
     }
     for (const quiet of ["## Heading", "a :: b", ": :x", `${ZWSP}::x`, `##${ZWSP}[x`, "# [x]", "##", "#[x]", "﻿::x"]) {
-      assert.isFalse(isCommand(quiet), JSON.stringify(quiet));
+      assert.isFalse(isCommand(quiet), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(quiet), identity));
     }
   });
 
   it("a V2 line gets a zero-width space in front, behind whatever whitespace it had", () => {
     for (const line of ["::error::x", "  ::add-mask::x", "\t::x", " ::x", "\u0085::x", " ::x"]) {
       const [out] = CommandNeutralizer.lines(line);
-      assert.strictEqual(out, `${ZWSP}${line}`, JSON.stringify(line));
-      assert.isFalse(isCommand(out ?? ""), JSON.stringify(line));
+      assert.strictEqual(
+        out,
+        `${ZWSP}${line}`,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(line), identity)
+      );
+      assert.isFalse(isCommand(out ?? ""), Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(line), identity));
     }
   });
 
@@ -94,7 +108,11 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
     assert.deepStrictEqual(CommandNeutralizer.lines("a ##[x] b ##[y]"), [`a ##${ZWSP}[x] b ##${ZWSP}[y]`]);
     assert.deepStrictEqual(CommandNeutralizer.lines("prefix ##[add-mask]secret"), [`prefix ##${ZWSP}[add-mask]secret`]);
     for (const bare of ["## Heading", "a ## b", "##", "###", "## [link]", "#[x]", "# #[x]", "##x[y]"]) {
-      assert.deepStrictEqual(CommandNeutralizer.lines(bare), [bare], JSON.stringify(bare));
+      assert.deepStrictEqual(
+        CommandNeutralizer.lines(bare),
+        [bare],
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(bare), identity)
+      );
     }
   });
 
@@ -113,7 +131,11 @@ describe("CommandNeutralizer: the runner's two parsers", () => {
   it("is idempotent", () => {
     for (const text of ["::error::x\n a ##[b]\n##[c]", "plain", "::a::##[b]##[c]", "x\r\n::y", "##[", "##[[ ##[#[x"]) {
       const once = CommandNeutralizer.text(text);
-      assert.strictEqual(CommandNeutralizer.text(once), once, JSON.stringify(text));
+      assert.strictEqual(
+        CommandNeutralizer.text(once),
+        once,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
+      );
     }
   });
 });
@@ -132,14 +154,22 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
 
   it(`no output line is a command, for all ${ALL.length} strings`, () => {
     for (const text of ALL) {
-      assert.deepStrictEqual(commandLines(CommandNeutralizer.text(text)), [], JSON.stringify(text));
+      assert.deepStrictEqual(
+        commandLines(CommandNeutralizer.text(text)),
+        [],
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
+      );
     }
   });
 
   it("only a zero-width space is added: removing it gives back the input's own lines", () => {
     for (const text of ALL) {
       const out = A.map(CommandNeutralizer.lines(text), (line) => Str.replaceAll(ZWSP, "")(line));
-      assert.deepStrictEqual(out, Str.split(LINE_BREAK)(text), JSON.stringify(text));
+      assert.deepStrictEqual(
+        out,
+        Str.split(LINE_BREAK)(text),
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
+      );
     }
   });
 
@@ -148,7 +178,12 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
       const inputLines = Str.split(LINE_BREAK)(text);
       const out = CommandNeutralizer.lines(text);
       A.forEach(inputLines, (line, index) => {
-        if (!isCommand(line)) assert.strictEqual(out[index], line, JSON.stringify(text));
+        if (!isCommand(line))
+          assert.strictEqual(
+            out[index],
+            line,
+            Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
+          );
       });
     }
   });
@@ -156,13 +191,21 @@ describe("CommandNeutralizer: exhaustive over a small alphabet, judged by the in
   it("is idempotent for every one of them", () => {
     for (const text of ALL) {
       const once = CommandNeutralizer.text(text);
-      assert.strictEqual(CommandNeutralizer.text(once), once, JSON.stringify(text));
+      assert.strictEqual(
+        CommandNeutralizer.text(once),
+        once,
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
+      );
     }
   });
 
   it("a string that already carries zero-width spaces is still safe", () => {
     for (const text of strings([":", "#", "[", ZWSP, "\n"], 6)) {
-      assert.deepStrictEqual(commandLines(CommandNeutralizer.text(text)), [], JSON.stringify(text));
+      assert.deepStrictEqual(
+        commandLines(CommandNeutralizer.text(text)),
+        [],
+        Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)
+      );
     }
   });
 });

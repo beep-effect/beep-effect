@@ -9,6 +9,9 @@ import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
+import { messageWithCause } from "@beep/repo-cli-kit/cli/CommandErrorFields";
+import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -23,9 +26,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
-import { manifestParser } from "../../internal/ManifestRead.ts";
-import { runCaptured } from "../../internal/process/index.ts";
 import { ChangesetGraphError } from "./Quality.errors.ts";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -345,8 +345,9 @@ export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collec
   ChangesetGraphError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  const readWorkspacePatterns1 = yield* readWorkspacePatterns(repoRoot);
   const workspaceManifests = yield* GlobSet.compile(
-    A.map(yield* readWorkspacePatterns(repoRoot), packageJsonGlobForWorkspacePattern)
+    A.map(readWorkspacePatterns1, packageJsonGlobForWorkspacePattern)
   ).pipe(Effect.mapError((error) => ChangesetGraphError.new(error, error.message)));
   const output = yield* collectGitOutput(repoRoot, ["ls-files", "-z", "--", ...gitTrackedPackageJsonPathspecs]);
 
@@ -369,7 +370,8 @@ const collectWorkspacePackages = Effect.fn("ChangesetGraph.collectWorkspacePacka
     packageJsonFiles,
     Effect.fn(function* (file) {
       const filePath = path.join(repoRoot, file);
-      const document = yield* readChangesetGraphWorkspaceManifest(yield* readPackageJsonText(filePath), filePath);
+      const readPackageJsonText2 = yield* readPackageJsonText(filePath);
+      const document = yield* readChangesetGraphWorkspaceManifest(readPackageJsonText2, filePath);
       if (P.isUndefined(document.name)) {
         return yield* ChangesetGraphError.make({
           message: `Workspace package manifest ${file} does not declare a package name.`,

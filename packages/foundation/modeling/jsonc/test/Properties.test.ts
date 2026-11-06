@@ -71,7 +71,8 @@ const commentsRejected = JsoncParseOptions.make({ disallowComments: true });
 
 // Parse a document and read the result back as a JSON value.
 const parseJson = Effect.fnUntraced(function* (text: string, options?: JsoncParseOptions) {
-  return yield* decodeJson(yield* Jsonc.parse(text, options));
+  const parsed1 = yield* Jsonc.parse(text, options);
+  return yield* decodeJson(parsed1);
 });
 
 // The members of a JSON container as `[key, value]` pairs (array keys are
@@ -129,7 +130,8 @@ const decorate = (json: string): string =>
   `// lead\n${pipe(json, Str.replace(/\n(\s*[}\]])/g, ",\n$1"), Str.replaceAll("\n", "\n/* c */"))} /* tail */`;
 
 const render = Effect.fnUntraced(function* (value: S.Json, options: JsoncStringifyOptions) {
-  return decorate(yield* Jsonc.stringify(value, options));
+  const stringify2 = yield* Jsonc.stringify(value, options);
+  return decorate(stringify2);
 });
 
 // Formatting options whose `eol` is a real line ending; the schema itself
@@ -216,7 +218,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* encode(value);
         const decoded = yield* decode(encoded);
         assertTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* encode(decoded), encoded);
+        const encoded3 = yield* encode(decoded);
+        assert.deepStrictEqual(encoded3, encoded);
       }),
     runs
   );
@@ -256,7 +259,9 @@ describe("jsonc property floor", () => {
         Effect.gen(function* () {
           const codec = Jsonc.fromString(options);
           const text = yield* S.encodeEffect(codec)(value);
-          assertTrue(jsonEquivalent(yield* decodeJson(yield* S.decodeEffect(codec)(text)), value));
+          const value26 = yield* S.decodeEffect(codec)(text);
+          const decodedJson = yield* decodeJson(value26);
+          assertTrue(jsonEquivalent(decodedJson, value));
         }),
       runs
     );
@@ -268,8 +273,10 @@ describe("jsonc property floor", () => {
         Effect.gen(function* () {
           const codec = Jsonc.schema(Config, options);
           const text = yield* S.encodeEffect(codec)(value);
-          assertTrue(configEquivalent(yield* S.decodeEffect(codec)(text), value));
-          assertTrue(configEquivalent(yield* decodeConfigJsonc(decorate(text)), value));
+          const value4 = yield* S.decodeEffect(codec)(text);
+          assertTrue(configEquivalent(value4, value));
+          const decodedConfigJsonc = yield* decodeConfigJsonc(decorate(text));
+          assertTrue(configEquivalent(decodedConfigJsonc, value));
         }),
       runs
     );
@@ -281,8 +288,10 @@ describe("jsonc property floor", () => {
         Effect.gen(function* () {
           const bound = Jsonc.bind(Config);
           const text = yield* bound.encode(value);
-          assertTrue(configEquivalent(yield* bound.decode(text), value));
-          assert.strictEqual(yield* S.encodeEffect(bound.schema)(value), text);
+          const decoded5 = yield* bound.decode(text);
+          assertTrue(configEquivalent(decoded5, value));
+          const value6 = yield* S.encodeEffect(bound.schema)(value);
+          assert.strictEqual(value6, text);
         }),
       runs
     );
@@ -294,9 +303,12 @@ describe("jsonc property floor", () => {
       [Arbitrary.schema(S.Json), Arbitrary.schema(JsoncStringifyOptions), Arbitrary.schema(JsoncStringifyOptions)],
       ([value, rendering, restringify]) =>
         Effect.gen(function* () {
-          const parsed = yield* parseJson(yield* render(value, rendering));
+          const render7 = yield* render(value, rendering);
+          const parsed = yield* parseJson(render7);
           assertTrue(jsonEquivalent(parsed, value));
-          assertTrue(jsonEquivalent(yield* parseJson(yield* Jsonc.stringify(parsed, restringify)), parsed));
+          const stringify27 = yield* Jsonc.stringify(parsed, restringify);
+          const parsedJson = yield* parseJson(stringify27);
+          assertTrue(jsonEquivalent(parsedJson, parsed));
         }),
       runs
     );
@@ -307,8 +319,11 @@ describe("jsonc property floor", () => {
       ([value, rendering]) =>
         Effect.gen(function* () {
           const text = yield* render(value, rendering);
-          const root = yield* Effect.fromOption(yield* Jsonc.parseTree(text));
-          assertTrue(jsonEquivalent(yield* decodeJson(root.toValue()), yield* parseJson(text)));
+          const parsedTree = yield* Jsonc.parseTree(text);
+          const root = yield* Effect.fromOption(parsedTree);
+          const decodedJson8 = yield* decodeJson(root.toValue());
+          const parsedJson28 = yield* parseJson(text);
+          assertTrue(jsonEquivalent(decodedJson8, parsedJson28));
         }),
       runs
     );
@@ -342,10 +357,12 @@ describe("jsonc property floor", () => {
           const text = yield* render(value, rendering);
           const stripped = Jsonc.stripComments(text);
           assert.strictEqual(Jsonc.stripComments(stripped), stripped);
-          assertTrue(jsonEquivalent(yield* parseJson(stripped, commentsRejected), value));
+          const parsedJson9 = yield* parseJson(stripped, commentsRejected);
+          assertTrue(jsonEquivalent(parsedJson9, value));
           const blanked = Jsonc.stripComments(text, " ");
           assert.strictEqual(blanked.length, text.length);
-          assertTrue(jsonEquivalent(yield* parseJson(blanked, commentsRejected), value));
+          const parsedJson10 = yield* parseJson(blanked, commentsRejected);
+          assertTrue(jsonEquivalent(parsedJson10, value));
         }),
       runs
     );
@@ -368,7 +385,8 @@ describe("jsonc property floor", () => {
       ([value, rendering]) =>
         Effect.gen(function* () {
           const text = yield* render(value, rendering);
-          assertTrue(Jsonc.equals(text, yield* Jsonc.stringify(reverseKeys(value), compact)));
+          const stringify11 = yield* Jsonc.stringify(reverseKeys(value), compact);
+          assertTrue(Jsonc.equals(text, stringify11));
           assertTrue(Jsonc.equalsValue(text, value));
           assertFalse(Jsonc.equalsValue(text, [value]));
         }),
@@ -383,7 +401,8 @@ describe("jsonc property floor", () => {
           const json = yield* Jsonc.stringify(value, rendering);
           const text = decorate(json);
           const parsed = yield* Jsonc.parse(text);
-          const root = yield* Effect.fromOption(yield* Jsonc.parseTree(text));
+          const parsedTree12 = yield* Jsonc.parseTree(text);
+          const root = yield* Effect.fromOption(parsedTree12);
           const events = yield* Stream.runCollect(JsoncVisitor.visit(text));
           assert.deepStrictEqual(A.filter(events, JsoncVisitorEvent.guards.Error), []);
           assert.strictEqual(A.filter(events, JsoncVisitorEvent.guards.Comment).length, 2 + lineBreaks(json));
@@ -412,7 +431,8 @@ describe("jsonc property floor", () => {
           const once = JsoncFormatter.formatToString(text, undefined, formatting);
           assert.strictEqual(JsoncFormatter.formatToString(once, undefined, formatting), once);
           assert.deepStrictEqual(JsoncFormatter.format(once, undefined, formatting), []);
-          assertTrue(jsonEquivalent(yield* parseJson(once), value));
+          const parsedJson13 = yield* parseJson(once);
+          assertTrue(jsonEquivalent(parsedJson13, value));
         }),
       runs
     );
@@ -453,12 +473,14 @@ describe("jsonc property floor", () => {
           assert.strictEqual(edits.length, 1);
           const [edit] = edits;
           assertDefined(edit);
-          const root = yield* Effect.fromOption(yield* Jsonc.parseTree(text));
+          const parsedTree14 = yield* Jsonc.parseTree(text);
+          const root = yield* Effect.fromOption(parsedTree14);
           assertSome(
             O.map(root.find([key]), (node) => [node.offset, node.length]),
             [edit.offset, edit.length]
           );
-          assertTrue(jsonEquivalent(yield* parseJson(JsoncEdit.applyAll(text, edits)), { ...document, [key]: next }));
+          const parsedJson15 = yield* parseJson(JsoncEdit.applyAll(text, edits));
+          assertTrue(jsonEquivalent(parsedJson15, { ...document, [key]: next }));
         }),
       runs
     );
@@ -469,8 +491,10 @@ describe("jsonc property floor", () => {
       ([document, key, rendering]) =>
         Effect.gen(function* () {
           const text = yield* render(document, rendering);
-          const result = JsoncEdit.applyAll(text, yield* JsoncModifier.modify(text, [key], undefined));
-          assertTrue(jsonEquivalent(yield* parseJson(result), R.remove(document, key)));
+          const modify16 = yield* JsoncModifier.modify(text, [key], undefined);
+          const result = JsoncEdit.applyAll(text, modify16);
+          const parsedJson17 = yield* parseJson(result);
+          assertTrue(jsonEquivalent(parsedJson17, R.remove(document, key)));
           assertTrue(Str.startsWith("// lead\n")(result));
           assertTrue(Str.endsWith(" /* tail */")(result));
         }),
@@ -493,7 +517,8 @@ describe("jsonc property floor", () => {
             A.map(edits, (edit) => edit.length),
             [0]
           );
-          assertTrue(jsonEquivalent(yield* parseJson(JsoncEdit.applyAll(text, edits)), { ...document, delta: next }));
+          const parsedJson18 = yield* parseJson(JsoncEdit.applyAll(text, edits));
+          assertTrue(jsonEquivalent(parsedJson18, { ...document, delta: next }));
         }),
       runs
     );
@@ -506,10 +531,15 @@ describe("jsonc property floor", () => {
       ([value]) =>
         Effect.gen(function* () {
           const canonical = yield* JsoncFingerprint.canonicalize(value);
-          assert.strictEqual(yield* JsoncFingerprint.canonicalize(yield* Jsonc.parse(canonical)), canonical);
-          assertTrue(jsonEquivalent(yield* parseJson(canonical, commentsRejected), value));
-          assert.strictEqual(yield* JsoncFingerprint.canonicalize(reverseKeys(value)), canonical);
-          assertTrue(Jsonc.equals(canonical, yield* Jsonc.stringify(value)));
+          const parsed29 = yield* Jsonc.parse(canonical);
+          const canonicalize19 = yield* JsoncFingerprint.canonicalize(parsed29);
+          assert.strictEqual(canonicalize19, canonical);
+          const parsedJson20 = yield* parseJson(canonical, commentsRejected);
+          assertTrue(jsonEquivalent(parsedJson20, value));
+          const canonicalize21 = yield* JsoncFingerprint.canonicalize(reverseKeys(value));
+          assert.strictEqual(canonicalize21, canonical);
+          const stringify22 = yield* Jsonc.stringify(value);
+          assertTrue(Jsonc.equals(canonical, stringify22));
         }),
       runs
     );
@@ -535,9 +565,12 @@ describe("jsonc property floor", () => {
         ([value]) =>
           Effect.gen(function* () {
             const digest = yield* JsoncFingerprint.hash(value);
-            assert.strictEqual(yield* JsoncFingerprint.hashText(yield* JsoncFingerprint.canonicalize(value)), digest);
+            const canonicalize30 = yield* JsoncFingerprint.canonicalize(value);
+            const hashText23 = yield* JsoncFingerprint.hashText(canonicalize30);
+            assert.strictEqual(hashText23, digest);
             assertSuccess(JsoncFingerprint.hashResult(value, syncDigest), digest);
-            assert.strictEqual(yield* JsoncFingerprint.hash(reverseKeys(value)), digest);
+            const hash24 = yield* JsoncFingerprint.hash(reverseKeys(value));
+            assert.strictEqual(hash24, digest);
           }),
         runs
       );
@@ -549,7 +582,8 @@ describe("jsonc property floor", () => {
           Effect.gen(function* () {
             const normalize = JsoncTextHashOptions.make({ normalizeEol: true });
             const digest = yield* JsoncFingerprint.hashText(text, normalize);
-            assert.strictEqual(yield* JsoncFingerprint.hashText(JsoncFingerprint.normalizeEol(text)), digest);
+            const hashText25 = yield* JsoncFingerprint.hashText(JsoncFingerprint.normalizeEol(text));
+            assert.strictEqual(hashText25, digest);
             assertSuccess(JsoncFingerprint.hashTextResult(text, syncDigest, normalize), digest);
           }),
         runs

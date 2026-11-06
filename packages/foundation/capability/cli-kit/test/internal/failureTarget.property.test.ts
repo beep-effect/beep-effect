@@ -35,7 +35,8 @@ it.effect.prop(
         guardConsumerLines(lines).pipe(Effect.provideService(FailureTargetCell, cell));
       const once = yield* guard([`\u001b[31m${text}\u001b[0m`]);
       assert.deepStrictEqual(once, [sanitize(text)]);
-      assert.deepStrictEqual(yield* guard(once), once);
+      const guard1 = yield* guard(once);
+      assert.deepStrictEqual(guard1, once);
     }),
   runs
 );
@@ -65,8 +66,10 @@ it.effect.prop(
       const parsed = yield* parse(Str.toUpperCase(setting));
       assert.deepStrictEqual(parsed, { spans: setting, invalid: undefined });
       if (parsed.spans === undefined) return assert.fail("a valid setting failed to parse");
-      assert.deepStrictEqual(yield* parse(parsed.spans), parsed);
-      assert.deepStrictEqual(yield* parse((yield* parse(parsed.spans)).spans ?? ""), parsed);
+      const parsed2 = yield* parse(parsed.spans);
+      assert.deepStrictEqual(parsed2, parsed);
+      const parsed3 = yield* parse((yield* parse(parsed.spans)).spans ?? "");
+      assert.deepStrictEqual(parsed3, parsed);
     }),
   runs
 );

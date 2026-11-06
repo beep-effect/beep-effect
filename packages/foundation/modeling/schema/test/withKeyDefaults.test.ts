@@ -14,24 +14,31 @@ describe("ArrayKeyDefaultEmpty", () => {
     [Arbitrary.schema(TextSettings)],
     Effect.fnUntraced(function* ([settings]) {
       const encoded = yield* S.encodeEffect(TextSettings)(settings);
-      expect(yield* S.decodeEffect(TextSettings)(encoded)).toEqual(settings);
+      const value = yield* S.decodeEffect(TextSettings)(encoded);
+      expect(value).toEqual(settings);
     })
   );
 
   it.effect("defaults absent keys while preserving element decoding and encoding", () =>
     Effect.gen(function* () {
       expect(Settings.make({}).values).toEqual([]);
-      expect(yield* S.decodeEffect(Settings)({})).toEqual({ values: [] });
-      expect(yield* S.decodeEffect(Settings)({ values: ["42"] })).toEqual({ values: [42] });
-      expect(yield* S.encodeEffect(Settings)({ values: [42] })).toEqual({ values: ["42"] });
-      expect(yield* S.encodeEffect(Settings)({ values: [] })).toEqual({ values: [] });
+      const value1 = yield* S.decodeEffect(Settings)({});
+      expect(value1).toEqual({ values: [] });
+      const value2 = yield* S.decodeEffect(Settings)({ values: ["42"] });
+      expect(value2).toEqual({ values: [42] });
+      const value3 = yield* S.encodeEffect(Settings)({ values: [42] });
+      expect(value3).toEqual({ values: ["42"] });
+      const value4 = yield* S.encodeEffect(Settings)({ values: [] });
+      expect(value4).toEqual({ values: [] });
     })
   );
 
   it.effect("rejects explicit undefined and invalid elements", () =>
     Effect.gen(function* () {
-      expect(yield* Effect.isFailure(S.decodeUnknownEffect(Settings)({ values: undefined }))).toBe(true);
-      expect(yield* Effect.isFailure(S.decodeUnknownEffect(Settings)({ values: [42] }))).toBe(true);
+      const isFailure5 = yield* Effect.isFailure(S.decodeUnknownEffect(Settings)({ values: undefined }));
+      expect(isFailure5).toBe(true);
+      const isFailure6 = yield* Effect.isFailure(S.decodeUnknownEffect(Settings)({ values: [42] }));
+      expect(isFailure6).toBe(true);
     })
   );
 });

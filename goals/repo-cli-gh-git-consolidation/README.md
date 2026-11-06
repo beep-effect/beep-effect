@@ -31,13 +31,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3/P4 Close (this PR, #2654), proposing `completed-retained`. Every wave merged: W0 (#2514), the W1 kit (#2522),
-W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11), the W3 kit (#2556), W3 sites (#2614, D-12), the W4 kit
-(#2600), W4 sites (#2622, D-13), W5 (#2642, D-14) and W6 (#2648, D-15). `history/closeout-ledger.md` maps every
-site-list row to its migration or its named KEEP reason; the reflection is `history/reflections/2026-11-03-claude.md`.
+P1 Implement, W7a in review (#2708). `research/w7-site-census-2026-11-03.md` counted 279 remaining git and gh
+argv templates, 208 without a recorded outcome (SPEC D-16); the W7 kit (#2665, SPEC D-17) added the `@beep/git` members
+and options the 37 (B) rows need and moved `patientGit` to `internal/repo-run/PatientGit.ts`; #2708 moves the Yeet
+census rows Y1-Y88 onto it (SPEC D-18). Earlier waves merged: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546),
+W2 (#2593, D-10), W2b (#2606, D-11), the W3 kit (#2556), W3 sites (#2614, D-12), the W4 kit (#2600), W4 sites (#2622,
+D-13), W5 (#2642, D-14), W6 (#2648, D-15) and the W7 kit (#2665, D-17). Next: W7b and W7c, then the runner retirement,
+then closeout C.
 
 ## Latest Evidence
 
+- 2026-11-03 W7a: `research/yeet-differential-w7.json` (81 scenarios, 72 same, 9 classified, 0 unclassified);
+  repo-cli `check` and `docgen` clean, every `yeet-*`, `proof-job`, `session-ledger` and `ci-runner-security` suite
+  green on Node (1868 tests; `yeet-merge-gate` holds 3 reds only on a host with an active merge reservation)
+  and the 8 touched suites on Bun, `goals/tsconfig.ops.json` clean; `lint effect-vitest`, Fallow audit, health and
+  dead-code introduce 0.
 - 2026-11-02 W6: `research/yeet-gh-seams-differential-w6.json` (51 scenarios, 40 same, 11 classified, 0 unclassified);
   repo-cli `check` clean, every `yeet-*`, `proof-job` and `shared-internals` suite green on Node and Bun (65 files,
   1885 tests), `goals/tsconfig.ops.json` clean; `lint effect-vitest`, Fallow audit and Fallow health introduce 0.

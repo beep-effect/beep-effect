@@ -117,7 +117,8 @@ export class ActionsProvenance {
     const issuer = yield* OidcTokenIssuer;
     const env = yield* ActionEnvironment;
     const claims = yield* issuer.claims(audience);
-    const serverUrl = O.getOrElse(yield* env.getOptional("GITHUB_SERVER_URL"), () => DEFAULT_SERVER_URL);
+    const gotOptional = yield* env.getOptional("GITHUB_SERVER_URL");
+    const serverUrl = O.getOrElse(gotOptional, () => DEFAULT_SERVER_URL);
     return SlsaProvenance.forGitHubWorkflow({
       serverUrl,
       repository: claims.repository,

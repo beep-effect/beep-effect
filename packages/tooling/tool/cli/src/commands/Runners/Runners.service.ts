@@ -8,6 +8,8 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { hashFileSha256 } from "@beep/repo-cli-kit/cli/FsGuards";
+import { formatCommandLine, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -26,8 +28,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
-import { formatCommandLine, runCaptured } from "../../internal/process/StepExec.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
 import {
@@ -850,7 +850,8 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
   // Only image creation ships the revision to a guest clone; --plan and
   // --check must keep working on an unpushed HEAD.
   yield* assertRevisionPushed(inputs.repoRoot, inputs.gitRevision);
-  const startedAt = DateTime.formatIso(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const startedAt = DateTime.formatIso(now1);
   const bakeDate = Str.slice(0, 10)(startedAt);
   const baseAmiId = yield* getParameter(config.region, config.baseAmiSsmParameter);
   const priorPin = yield* getPriorPin(config.region);
@@ -863,7 +864,8 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
     }),
     (instanceId) => terminateInstance(config.region, instanceId)
   );
-  const completedAt = DateTime.formatIso(yield* DateTime.now);
+  const now2 = yield* DateTime.now;
+  const completedAt = DateTime.formatIso(now2);
   const pulumiPinCommand = `cd infra/ci-runners && pulumi config set ciFleetController:amiId ${amiId} --stack production`;
   const report = BakeReport.make({
     amiId,
