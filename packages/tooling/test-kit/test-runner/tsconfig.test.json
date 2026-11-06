@@ -12,5 +12,10 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node"]
-  }
+  },
+  "references": [
+    {
+      "path": "../fc-runs/tsconfig.json"
+    }
+  ]
 }

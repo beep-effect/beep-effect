@@ -1,5 +1,7 @@
 coverage/
 *.tsbuildinfo
+# Machine-local tsrs scheduling history; never a build input or shared artifact.
+*.tsrs-cost-cache
 node_modules/
 .DS_Store
 tmp/

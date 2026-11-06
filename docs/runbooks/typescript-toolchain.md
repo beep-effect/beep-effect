@@ -12,14 +12,14 @@ binary; the Effect-patched tsrs is the build/check gate.
 | `typescript` | `^7.0.2` | Native TypeScript 7 package; no classic `lib/typescript.js` API. |
 | `@typescript/native` | `npm:typescript@^7.0.2` | The same TypeScript 7 package under the retained alias, used by patching and unstable API consumers. Alias consolidation is a separate follow-up. |
 | `@typescript/typescript6` | `6.0.2` (exact) | Microsoft’s classic JS API bridge for the schema-opaque codemod/fixup, scratchpad JSDoc census; declared at root and in scratchpad. |
-| `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.67.1` | The Effect language service build of TypeScript 7. Editors and the tsgo-only quality lanes use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
-| `tsrs` + seven `@tsrs/<platform>` optional packages | `0.21.0-ts7.1.0-beta` | The Rust port of the TypeScript 7 compiler ([oxc-project/tsrs](https://github.com/oxc-project/tsrs)); the version tag names the TypeScript it ports (`7.1.0-beta`). `effect-tsgo patch --tsrs` replaces the installed `@tsrs/<platform>` binary with the Effect build of that exact tsrs version, which `@effect/tsgo` 0.67.1 ships for linux-x64, linux-arm64 and darwin-arm64 (Effect-TS/tsgo #901, the 1:1 Rust port of the language service). Runs generated library `beep:build`, `beep:check` and `beep:check:tests` gates, the root `check:configs`, and infra's `-b` check. Framework apps retain their own build commands. |
+| `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.67.4` | The Effect language service build of TypeScript 7. Editors and the tsgo-only quality lanes use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
+| `tsrs` + seven `@tsrs/<platform>` optional packages | `0.22.0-ts7.1.0-beta` | The Rust port of the TypeScript 7 compiler ([oxc-project/tsrs](https://github.com/oxc-project/tsrs)); the version tag names the TypeScript it ports (`7.1.0-beta`). `effect-tsgo patch --tsrs` replaces the installed `@tsrs/<platform>` binary with the Effect build of that exact tsrs version, which `@effect/tsgo` 0.67.4 ships for linux-x64, linux-arm64 and darwin-arm64 (Effect-TS/tsgo #901, the 1:1 Rust port of the language service). Runs generated library `beep:build`, `beep:check` and `beep:check:tests` gates, the root `check:configs`, and infra's `-b` check. Framework apps retain their own build commands. |
 
 The root `prepare` script (`effect-tsgo unpatch --tsrs && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch --tsrs`)
 copies the Effect binaries over the native package's Go binary and over the
 `@tsrs/<platform>` binary, keeping the stock ones beside them as `tsc.original`
 and `tsrs.original`. After install, both of these print
-`Version 7.0.2+effect-tsgo.0.67.1`:
+`Version 7.0.2+effect-tsgo.0.67.4`:
 
 ```text
 node_modules/.bin/tsc      -> @typescript/native/bin/tsc  (patched Go binary)
@@ -35,7 +35,7 @@ the current one (`tools/tsgo-shim/tsgo.js`).
 
 The typecheck and build gates run on the Effect-patched `tsrs` (adopted in
 `goals/tsrs-gates`, which succeeded the tsc-rs gates of 2026-10-14), which
-prints `Version 7.1.0-beta+effect-tsgo.0.67.1 (tsrs 0.21.0-ts7.1.0-beta, …)`:
+prints `Version 7.1.0-beta+effect-tsgo.0.67.4 (tsrs 0.22.0-ts7.1.0-beta, …)`:
 
 ```text
 node_modules/.bin/tsrs     -> tsrs/bin/tsrs  (tsrs's JS launcher; execs the patched @tsrs/<platform>/tsrs)
@@ -57,11 +57,11 @@ compiler (3.7× faster at half the RSS) is in `goals/tsc-rs-gates`. Rules of the
   proxy command that 0.59.0 added runs the same Effect build without patching,
   but its Node start-up costs about 160 ms per invocation, so the generated
   scripts call the patched `tsrs` bin directly.
-- `--fast` stays off in generated scripts and CI: tsrs documents it as
-  "performance modes that may differ from pinned TypeScript behavior", and the
-  tsc-rs measurement (−7 % wall for +35 % CPU and +4.7 GB peak on the test
-  projects) has not been repeated on tsrs. If it is ever added, it goes after
-  `-b`: `tsrs -b --fast`, never `--fast -b`.
+- The quality runner enables the qualified fast preset through `TSRS_FAST=1`;
+  explicit `TSRS_FAST=0` restores reference behavior. Generated scripts do not
+  hard-code `--fast`. See [Compiler performance defaults](#compiler-performance-defaults)
+  for the tsrs measurements and diagnostic limitations. If invoking the flag
+  manually with build mode, place it after `-b`: `tsrs -b --fast`.
 - A failing `tsrs` exits 2, not 1. Yeet's issue parser keys on the
   diagnostic text, so the code does not matter to the gates.
 - `tsrs --version` prints the `+effect-tsgo.<version>` suffix and the installed
@@ -106,9 +106,123 @@ After updating:
    through Check": update the root severity map and copied profiles, keep
    the declared-off ledger explicit, and use the full check graph as the census.
 
+## Type-aware Oxlint on tsrs
+
+The installed `@effect/tsgo` 0.67.4 ships the Effect build of tsrs
+`0.22.0-ts7.1.0-beta`, including its type-aware lint backend. There are two
+separate integrations:
+
+- `effect-tsgo patch --tsrs` patches the installed compiler binary. This is
+  what this repository's `prepare` runs; it does not enable the Oxlint plugin.
+- `effect-tsgo --tsrs-lint oxlint <args>` runs the installed Oxlint with the
+  Effect native binding and Effect-patched Rust lint backend, without patching
+  Oxlint on disk. Effect lint rules also require `plugins: ["effecttsgo"]`,
+  type-aware mode, and explicit `effecttsgo/<rule>` severities or a preset.
+  `effect-tsgo patch --oxlint` is the separate on-disk Oxlint integration.
+
+For the existing standard TypeScript deprecated-API rule, the patched tsrs
+launcher can be selected directly for an isolated comparison:
+
+```sh
+OXLINT_TSGOLINT_PATH="$PWD/node_modules/.bin/tsrs-lint" \
+  node_modules/.bin/oxlint --config .oxlintrc.deprecated-apis.jsonc \
+  --disable-nested-config --threads=4 packages/tooling/library/repo-utils
+```
+
+Use `tsrs-lint`, not `tsrs`: Oxlint appends `headless`, and the launcher adds
+`--lint`. To run an Effect-enabled Oxlint profile, use the proxy above so the
+Oxlint binding recognizes the Effect plugin as well as selecting the backend.
+See [the Effect Oxlint setup](https://github.com/Effect-TS/tsgo/blob/main/docs/README.md)
+and [the pinned tsrs lint documentation](https://github.com/oxc-project/tsrs/blob/ed745c993a1310daa5e6866b101d2e48818b351d/tools/tsgolint/README.md).
+
+### Qualification status
+
+A 2026-11-05 local probe of `@beep/repo-utils` checked 111 files with
+`typescript/no-deprecated`. After one warm-up per backend, five alternating
+runs with four workers and `TSRS_FAST=0` had median wall times of 2.35 seconds
+(stock tsgolint 7.0.2005) and 0.90 seconds (Effect-patched tsrs 0.22.0), with
+median maximum RSS of 3.41 GiB and 1.88 GiB respectively. Both returned zero
+findings and exit 0. Separate deprecated-API and Effect `global-console`
+positive controls produced matching diagnostic records and failing exits.
+These are bounded local measurements, not full-repository or hosted CI proof.
+A separate end-to-end worker probe included CLI startup and the coverage guard:
+one warm-up followed by three alternating rounds at four workers measured
+3.02 seconds for Go and 1.76 seconds for Rust (42% less time), with median
+maximum RSS of 3.79 GiB and 1.90 GiB. All eight runs passed. The backend-only
+and complete-command samples are separate measurements.
+
+The default deprecated-API worker now selects the installed patched `tsrs-lint`
+launcher directly. Before linting, it asks Oxlint for its exact selected files
+(`--debug=files`) and uses `tsrs/async` config parsing to prove TypeScript file
+ownership. Config parsing handles extends, include/exclude and solution
+references; parsed membership is cached within the invocation. A failed or
+truncated file inventory, invalid config, or orphan TypeScript input fails the
+gate. Composite-reference traversal is conservative where the API does not
+expose the backend's pruning predicate. The full `packages`, `apps`, `infra`
+sweep passed this guard and lint. `BEEP_LINT_TSGOLINT=true` restores the old Go
+backend and its debug-summary guard for comparison or rollback.
+
+Keep Effect compiler diagnostics enabled: they already gate through Check,
+including the repository's explicit severity map. The upgrade adds the new
+`matchToResultOrOption` rule at error severity to every copied profile (146
+rules: 141 errors and five explicitly off). Effect-enabled Oxlint presets
+must not silently replace that map or duplicate the same rules in both gates.
+
+### Compiler performance defaults
+
+The quality runner supplies `TSRS_FAST=1` to direct and secret-session-wrapped
+Turbo processes, preserving an explicit `TSRS_FAST=0`. Turbo hashes and passes
+this setting, so reference-mode and fast-mode task results cannot share a
+cache key. Standalone compiler invocations and editors retain their existing
+settings. The lint worker explicitly uses `TSRS_FAST=0`: fast mode was slower
+on the measured lint workload.
+
+The CLI's owned `beep:check` implementation gives its large source and test
+projects separate `--checkerCostCache` files. These machine-local
+`*.tsrs-cost-cache` files are gitignored and excluded from build artifacts;
+they can be deleted to reset scheduling history. They help repeated fast-mode
+checks, including checks whose incremental compilation is disabled. Keep
+separate files for different projects. The generated public task bindings
+remain managed by `beep lint package-scripts --write`.
+
+Local qualification on 2026-11-05 (shared workstation; these are not hosted CI
+speedup promises):
+
+| Probe | Reference | Selected configuration | Result |
+| --- | --- | --- | --- |
+| Six compiler projects, sum of per-project median wall times, three cold-incremental rounds | 8.48 s | Fast, automatic checkers: 3.78 s | 55% less time; all exits and diagnostics matched |
+| CLI source, four warm scheduling-cache rounds, cold incremental state | Fast without cost cache: 1.35 s | With per-project cost cache: 1.16 s | About 14% less time |
+| CLI tests, same protocol | Fast without cost cache: 1.92 s | With per-project cost cache: 1.66 s | About 14% less time |
+| Direct Rust lint launcher versus Effect proxy, five rounds | Proxy: 1.03 s | Direct: 0.91 s | Avoids proxy startup for the existing standard rule |
+| Six-project parallel compiler batch, three rounds | Fixed four checkers: 4.24–4.34 s | Automatic checkers: 2.19–2.27 s | Keep automatic checker sizing |
+
+Parallel batch widths of two, four and eight were effectively tied with
+automatic checker sizing. Keep the existing host-aware Turbo admission and
+concurrency profiles; this sample does not justify widening the entire build
+graph. Fast mode passed all 342 repository build/check tasks and the Effect
+smoke canary. A controlled emission comparison produced identical bytes for
+4,524 JS, declaration and map files across the CLI, schema and GitHub Actions
+packages. Upstream documents check-order-sensitive diagnostic cases, so retain
+the reference-mode rollback when investigating a compiler regression.
+
+`TSRS_FAST=1 oxlint --type-aware --type-check` was also tested. It checks the
+programs reached by lint, including intentionally invalid compiler fixtures,
+and does not match Beep's separate source, test, script, configuration and
+build scopes. On the repo-utils sample it took about 8.3 seconds and reported
+fixture errors, versus about 0.9 seconds for lint alone. It is not enabled.
+Do not remove the separate compiler gate based on this option.
+
+Memory targets (`--maxMemory`) recycle checker state in exchange for more CPU;
+they are capacity controls, not unconditional speed improvements. The existing
+quality admission controls remain responsible for host memory pressure. The
+fast preset already enables the qualified lazy-member, declaration-parsing,
+checker-cache and scheduling optimizations; experimental overrides remain at
+upstream defaults. See [tsrs performance options](https://github.com/oxc-project/tsrs/blob/ed745c993a1310daa5e6866b101d2e48818b351d/docs/USAGE.md#performance-options)
+and [persistent scheduling history](https://github.com/oxc-project/tsrs/blob/ed745c993a1310daa5e6866b101d2e48818b351d/notes/perf-balance.md).
+
 ## Binary paths (Linux x64)
 
-Verified at 0.67.1. Substitute the platform triple on other machines.
+Verified at 0.67.4. Substitute the platform triple on other machines.
 
 - `node_modules/@effect/tsgo-linux-x64/lib/tsc` is the latest TypeScript (7.0.2)
   Effect artifact. Since 0.52 it is shipped once in `lib`, not duplicated under
@@ -270,7 +384,8 @@ passed. It stays out of hosted checks because it moves daily; the beta excludes
 7.1 beta/stable to the hosted matrix when available. See
 `goals/ts7-tstyche8-type-tests` for the lane-C ruling and migration evidence.
 Commitlint loads its config through jiti; ts-morph vendors its compiler.
-Deprecated API scanning uses oxlint + oxlint-tsgolint's bundled native compiler.
+Deprecated API scanning uses Oxlint with the patched `tsrs-lint` worker by default;
+`BEEP_LINT_TSGOLINT=true` restores the bundled Go worker for rollback.
 
 Circular dependency lint uses oxlint’s native `import/no-cycle` rule on the two
 tooling source roots. It ignores type-only cycles and requires a positive checked

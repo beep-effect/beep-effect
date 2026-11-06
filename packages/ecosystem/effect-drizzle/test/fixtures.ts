@@ -9,7 +9,7 @@ import { head } from "effect/Array";
 import * as O from "effect/Option";
 import { getOrThrow } from "effect/Option";
 import { isNumber } from "effect/Predicate";
-import { fromEntries } from "effect/Record";
+import * as R from "effect/Record";
 import {
   Array,
   BigInt,
@@ -1079,7 +1079,7 @@ export const _pgEmptyModel = () => {
   return EmptyModel;
 };
 export const _pgTooManyColumns = () => {
-  const fields: Record<string, typeof WaveEString> = fromEntries(
+  const fields: Record<string, typeof WaveEString> = R.fromEntries(
     globalThis.Array.from({ length: 1_601 }, (_, index) => [`field_${index}`, WaveEString])
   );
   // @ts-expect-error -- invariant: dynamic widened keys defer to the runtime model validator. Owner: @beep/effect-drizzle. Exit: remove if the API is meant to accept this.
@@ -1087,14 +1087,14 @@ export const _pgTooManyColumns = () => {
   return TooManyColumns;
 };
 export const _pgTooManyIndexColumns = () => {
-  const fields: Record<string, typeof WaveEString> = fromEntries(
+  const fields: Record<string, typeof WaveEString> = R.fromEntries(
     globalThis.Array.from({ length: 33 }, (_, index) => [`field_${index}`, WaveEString])
   );
   class TooManyIndexColumns extends Model<TooManyIndexColumns>("TooManyIndexColumns")(
     // @ts-expect-error -- invariant: dynamic widened keys defer to the runtime model validator. Owner: @beep/effect-drizzle. Exit: remove if the API is meant to accept this.
     fields,
     (columns) => {
-      const values = Object.values(columns);
+      const values = R.values(columns);
       return [Table.index("too_many_index_columns", [getOrThrow(head(values)), ...values.slice(1)])];
     }
   ) {}
