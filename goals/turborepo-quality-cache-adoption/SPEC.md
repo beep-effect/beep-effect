@@ -1094,6 +1094,20 @@ links together to reverse this component; runtime configuration is unchanged.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
 
+### Preserve external suite inputs across all CLI test consumers, 2026-11-06
+
+All three CLI test consumers execute the architecture proof suite, which reads
+the live external proof trees. Property tests lacked these inputs; coverage
+also lacked the two economics reports consumed by its gate-order suite. Extend
+the already reviewed input set consistently across all three tasks, retaining
+package inheritance and generated-output exclusions. Native Turbo metadata
+confirms seven actual external files are selected for each task, and coverage
+still inherits cache false. This repairs invalidation and affected selection;
+it grants no computation qualification or production trust. Hosted CI remains
+authoritative, with no local task bodies or quality suites executed.
+
+Reverse: Restore the prior property-test and coverage input arrays while retaining the diagnostic Python inputs, metadata receipt and unchanged coverage cache false policy.
+
 ### Count native query packages and bind prepared-source history, 2026-11-06
 
 After accepted PR #2695, nonempty affected-query summaries still reported zero packages. Count distinct valid package.name identities with existing Effect helpers; retain the accepted optional-array codec fix. Extend the three-task/two-package and explicit-empty assertions for hosted CI without running local quality suites. Bind the initial SCM report explicitly to f48bf842, whose two recorded hashes match, and preserve every historical hash and native capture. Record the current repair source separately. This changes diagnostic metadata only and grants no qualification, signing, capacity or whole-goal completion.

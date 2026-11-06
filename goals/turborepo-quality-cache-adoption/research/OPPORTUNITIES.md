@@ -1255,3 +1255,18 @@ After #2695 landed, the affected-query summary still initialized `packages` to z
 ### 2026-11-06: Use the current Option extraction helper
 
 The package-counter change failed Repo Sanity and Heavy / Check with TS2375 and the existing positive assertion returned zero instead of two. The callback supplied Option to Array.filterMap, whose current contract consumes Result. Use Array.map followed by Array.getSomes, matching the Effect reference and existing TurboLaneDigest code. Preserve the failing hosted receipts and both counter assertions. This is an introduced defect fixed in its owning PR; no local test, verify, publish or quality suite was run.
+
+### 2026-11-06 — external test inputs must follow every actual consumer
+
+During the adoption audit, `architecture-operation-plan.test.ts` was found to
+read the live architecture-lab, architecture-lab-proof and db-admin proof trees.
+The CLI's `test`, `test:property` and `coverage` scripts all execute this suite,
+but only `test` declared these external trees and generated-output exclusions.
+The two economics source reports were also absent from coverage inputs despite
+its execution of `gate-order-handoff.test.ts`. Copy the already reviewed external
+input set to all three consumers, preserving inherited package inputs and
+`coverage.cache: false`. Native dry metadata must show actual proof source files
+and economics inputs for each consumer; hosted CI remains the behavioral proof.
+No computation qualification or production-cache activation follows from this
+repair. Prevent recurrence by auditing the script's full executed suite rather
+than treating property tests or coverage as narrower without source evidence.

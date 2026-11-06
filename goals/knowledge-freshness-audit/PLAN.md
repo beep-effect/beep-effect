@@ -142,6 +142,14 @@ home paths in the public packet.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug knowledge-freshness-audit`; add a `kind: checkpoint` file there, never edit this block._
 
+### Review changed linked paths without claiming exhaustive coverage, 2026-11-06
+
+Review the frozen-to-current diff and targeted context for all 80 changed linked paths at source1d21c0e007. Preserve private per-path dispositions and original claims. Repair reproduced query invalidation omission P4-V002 and the obsolete audit resume instruction P4-V003. Existing CI, observability, fleet and compiler owners keep their code and proof obligations. P4 remains in progress; PM and ADHD stay separate; no spending.
+
+Lane `codex/knowledge-audit-p4-linked`
+
+Reverse: Revert this checkpoint and its scoped documentation repairs; retain original private evidence and historical receipts.
+
 ### Begin final-tree reconciliation with explicit unresolved coverage, 2026-11-06
 
 P4 is in progress under the operator instruction of 2026-11-06. Reconcile frozen inventory e462bc12 against source snapshot 914ede95a490cf26e1fe435762ec191fd2e69da1. Keep raw per-entry ledgers and full reports in the private archive; publish compact accounting and review limits. Inventory, entry linkage, whole-body reading, claim acceptance and delivery readiness are separate obligations. PM and ADHD remain separate holds; no spending or cloud work is admitted.
