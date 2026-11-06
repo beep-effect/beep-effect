@@ -1,16 +1,35 @@
-import { ClaimInputCollection, ClaimInputRecord } from "@beep/law-practice-domain/values/ClaimElement";
+import { ContentDigest } from "@beep/file-processing/Artifact";
+import {
+  ClaimInputCollection,
+  ClaimInputRecord,
+  decomposeClaimInput,
+} from "@beep/law-practice-domain/values/ClaimElement";
+import { PatentNumber } from "@beep/law-practice-domain/values/PatentNumber";
 import {
   ClaimInspectionWithLexicalEvidenceLive,
   claimInspectionWithTokenizationLayer,
 } from "@beep/law-practice-server/ClaimInspection";
-import { ClaimInspection, UsptoClaimInputs, UsptoClaimsError } from "@beep/law-practice-use-cases/ClaimSelfCheck";
+import {
+  ClaimInspection,
+  ClaimInspectionPageRequest,
+  UsptoClaimInputSet,
+  UsptoClaimInputs,
+  UsptoClaimSource,
+  UsptoClaimsError,
+} from "@beep/law-practice-use-cases/ClaimSelfCheck";
+import { claimInspectInput } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
-import { WinkEngineError } from "@beep/wink";
+import { WinkEngine, WinkEngineError, WinkEngineLive, WinkTokenization, WinkTokenizationError } from "@beep/wink";
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as Str from "effect/String";
 import type { ClaimInputInspectionReport } from "@beep/law-practice-domain/values/ClaimElement";
 
 const live = ClaimInspectionWithLexicalEvidenceLive.pipe(
@@ -523,3 +542,319 @@ it.layer(live, { timeout: "30 seconds" })("fixed lexical inspection runtime", (i
     })
   );
 });
+
+const lifetimeDigest = ContentDigest.make(`sha256:${Str.repeat(64)("d")}`);
+const lifetimeFamily = (index: number, texts: A.NonEmptyReadonlyArray<string>, unnumbered = false) => {
+  const documentIdentifier = `lifetime-family-${index}.xml`;
+  return UsptoClaimInputSet.make({
+    documentIdentifier,
+    sourceDocumentDigest: lifetimeDigest,
+    source: UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make(`2013003681${index}`) }),
+    input: ClaimInputCollection.make({
+      sourceKey: `${documentIdentifier}:${lifetimeDigest}`,
+      records: unnumbered
+        ? A.append(
+            A.map(texts, (text, offset) =>
+              ClaimInputRecord.cases.text.make({
+                sourceOrdinal: offset + 1,
+                numberText: O.some(`${offset + 1}`),
+                sourceText: text,
+                canonicalText: text,
+              })
+            ),
+            ClaimInputRecord.cases.text.make({
+              sourceOrdinal: texts.length + 1,
+              numberText: O.none(),
+              sourceText: "Unnumbered preserved record.",
+              canonicalText: "Unnumbered preserved record.",
+            })
+          )
+        : A.map(texts, (text, offset) =>
+            ClaimInputRecord.cases.text.make({
+              sourceOrdinal: offset + 1,
+              numberText: O.some(`${offset + 1}`),
+              sourceText: text,
+              canonicalText: text,
+            })
+          ),
+    }),
+  });
+};
+const lifetimeFamilyLayer = (
+  runtime: Layer.Layer<ClaimInspection, never, UsptoClaimInputs>,
+  family: UsptoClaimInputSet,
+  finalized: Ref.Ref<number>
+) =>
+  runtime.pipe(
+    Layer.provide(
+      Layer.effect(
+        UsptoClaimInputs,
+        Effect.gen(function* () {
+          yield* Effect.addFinalizer(() => Ref.update(finalized, (count) => count + 1));
+          return UsptoClaimInputs.of({
+            inputs: Effect.fn("LifetimeFamily.acquire")((requested) => {
+              assert.deepStrictEqual(requested, family.source);
+              return Effect.succeed(family);
+            }),
+          });
+        })
+      )
+    )
+  );
+const exerciseLifetimeFamily = Effect.fn("LifetimeFamily.exercise")(function* (
+  runtime: Layer.Layer<ClaimInspection, never, UsptoClaimInputs>,
+  family: UsptoClaimInputSet,
+  finalized: Ref.Ref<number>
+) {
+  const context = yield* Layer.build(lifetimeFamilyLayer(runtime, family, finalized));
+  const service = yield* ClaimInspection.pipe(Effect.provideContext(context));
+  const supplied = yield* service.inspect(family.input);
+  const published = yield* service.inspectPublished(family.source);
+  assert.deepStrictEqual(published.source, family);
+  assert.deepStrictEqual(published.report, supplied);
+  const page = yield* claimInspectInput(ClaimInspectionPageRequest.make({ input: family.input })).pipe(
+    Effect.provideContext(context)
+  );
+  assert.strictEqual(page.input.sourceKey, family.input.sourceKey);
+  assert.deepStrictEqual(page.records, supplied.records);
+  const warm = yield* service.inspect(family.input);
+  assert.deepStrictEqual(warm, supplied);
+  assert.deepStrictEqual(supplied.input, family.input);
+  if (A.some(family.input.records, (record) => O.isNone(record.numberText)))
+    assert.strictEqual(O.getOrThrow(A.last(supplied.records)).status, "unchecked");
+  return supplied;
+});
+
+const exerciseLifetimeBudgets = Effect.fn("LifetimeFamily.budgets")(function* (
+  runtime: Layer.Layer<ClaimInspection, never, UsptoClaimInputs>,
+  calls: Ref.Ref<number>,
+  finalized: Ref.Ref<number>
+) {
+  const large = `A system comprising a ${Str.repeat(27_000)("x")}.`;
+  const family = lifetimeFamily(4, A.prepend(A.replicate(large, 39), large));
+  const context = yield* Layer.build(lifetimeFamilyLayer(runtime, family, finalized));
+  const service = yield* ClaimInspection.pipe(Effect.provideContext(context));
+  const before = yield* Ref.get(calls);
+  for (const count of [1, 2]) {
+    const report = yield* service.inspect(family.input);
+    assert.deepStrictEqual(report.input, family.input);
+    assert.isTrue(A.every(report.records, (record) => record.status !== "complete"));
+    // The same 1MiB admission allowance is spent anew on each input call.
+    const observedCount1 = yield* Ref.get(calls);
+    assert.strictEqual(observedCount1, before + count * 38);
+  }
+  const oversized = lifetimeFamily(5, [`A system comprising a ${Str.repeat(33_000)("x")}.`]);
+  const report = yield* service.inspect(oversized.input);
+  assert.deepStrictEqual(report.input, oversized.input);
+  assert.isTrue(A.every(report.records, (record) => record.status !== "complete"));
+  const observedCount2 = yield* Ref.get(calls);
+  assert.strictEqual(observedCount2, before + 76);
+});
+
+it.effect("owns one fixed provider across family scopes while tokenizing every eligible record anew", () =>
+  Effect.gen(function* () {
+    const acquired = yield* Ref.make(0);
+    const finalized = yield* Ref.make(0);
+    const familiesFinalized = yield* Ref.make(0);
+    const calls = yield* Ref.make(0);
+    const observed = Layer.effect(
+      WinkEngine,
+      Effect.gen(function* () {
+        const original = yield* WinkEngine;
+        yield* Ref.update(acquired, (count) => count + 1);
+        yield* Effect.addFinalizer(() => Ref.update(finalized, (count) => count + 1));
+        return WinkEngine.of({
+          ...original,
+          getWinkDoc: Effect.fn("LifetimeProvider.tokenize")(function* (text) {
+            yield* Ref.update(calls, (count) => count + 1);
+            return yield* original.getWinkDoc(text);
+          }),
+        });
+      })
+    ).pipe(Layer.provide(WinkEngineLive));
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const tokenizer = yield* WinkTokenization.pipe(Layer.provide(observed), Layer.build, Effect.result);
+        const fixed =
+          tokenizer._tag === "Success"
+            ? Layer.succeedContext(tokenizer.success)
+            : tokenizer.failure.pipe(Effect.fail, Layer.effectContext);
+        const runtime = claimInspectionWithTokenizationLayer(fixed);
+        for (const index of [1, 2, 3]) {
+          const family = lifetimeFamily(index, [
+            "A system comprising a sensor; the missing panel.",
+            "The system of claim 1 wherein the sensor detects a signal.",
+          ]);
+          yield* exerciseLifetimeFamily(runtime, family, familiesFinalized).pipe(Effect.scoped);
+          const observedCount3 = yield* Ref.get(acquired);
+          assert.strictEqual(observedCount3, 1);
+          const observedCount4 = yield* Ref.get(finalized);
+          assert.strictEqual(observedCount4, 0);
+          const observedCount5 = yield* Ref.get(familiesFinalized);
+          assert.strictEqual(observedCount5, index);
+          const observedCount6 = yield* Ref.get(calls);
+          assert.strictEqual(observedCount6, index * 8);
+        }
+      })
+    );
+    const observedCount9 = yield* Ref.get(finalized);
+    assert.strictEqual(observedCount9, 1);
+  })
+);
+
+it.effect("retains per-input and per-record admission declines with a borrowed provider", () =>
+  Effect.gen(function* () {
+    const attempts = yield* Ref.make(0);
+    const calls = yield* Ref.make(0);
+    const finalized = yield* Ref.make(0);
+    const observed = Layer.effect(
+      WinkEngine,
+      Effect.gen(function* () {
+        const original = yield* WinkEngine;
+        yield* Ref.update(attempts, (count) => count + 1);
+        return WinkEngine.of({
+          ...original,
+          getWinkDoc: Effect.fn("LifetimeBudget.unavailable")(function* () {
+            yield* Ref.update(calls, (count) => count + 1);
+            return yield* WinkTokenizationError.fromCause("Deterministic budget-admission control.", "getWinkDoc", {});
+          }),
+        });
+      })
+    ).pipe(Layer.provide(WinkEngineLive));
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const tokenizer = yield* WinkTokenization.pipe(Layer.provide(observed), Layer.build, Effect.result);
+        const fixed =
+          tokenizer._tag === "Success"
+            ? Layer.succeedContext(tokenizer.success)
+            : tokenizer.failure.pipe(Effect.fail, Layer.effectContext);
+        yield* exerciseLifetimeBudgets(claimInspectionWithTokenizationLayer(fixed), calls, finalized).pipe(
+          Effect.scoped
+        );
+      })
+    );
+    const acquired = yield* Ref.get(attempts);
+    assert.strictEqual(acquired, 1);
+    const released = yield* Ref.get(finalized);
+    assert.strictEqual(released, 1);
+  })
+);
+
+it.effect("reuses one typed initialization failure without clearing findings or changing source ledgers", () =>
+  Effect.gen(function* () {
+    const attempts = yield* Ref.make(0);
+    const finalized = yield* Ref.make(0);
+    const error = WinkEngineError.fromCause("deterministic lifetime initialization refusal", "initialize");
+    const unavailable = Layer.effect(
+      WinkEngine,
+      Ref.update(attempts, (count) => count + 1).pipe(Effect.andThen(Effect.fail(error)))
+    );
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const tokenizer = yield* WinkTokenization.pipe(Layer.provide(unavailable), Layer.build, Effect.result);
+        assert.strictEqual(tokenizer._tag, "Failure");
+        if (tokenizer._tag !== "Failure") return;
+        assert.strictEqual(tokenizer.failure, error);
+        const runtime = claimInspectionWithTokenizationLayer(tokenizer.failure.pipe(Effect.fail, Layer.effectContext));
+        for (const index of [1, 2, 3]) {
+          const family = lifetimeFamily(index, [
+            "A system comprising a sensor; the missing panel.",
+            "The system of claim 1 wherein the sensor detects a signal.",
+          ]);
+          const report = yield* exerciseLifetimeFamily(runtime, family, finalized).pipe(Effect.scoped);
+          const old = yield* decomposeClaimInput(family.input);
+          assert.deepStrictEqual(
+            A.map(report.records, (record) => record.decomposition),
+            old
+          );
+          assert.isTrue(A.every(A.take(report.records, 2), (record) => record.status === "partial"));
+          assert.isTrue(
+            A.some(
+              report.records,
+              (record) =>
+                record.status === "partial" &&
+                A.some(record.findings, (finding) => finding.kind === "missing-antecedent")
+            )
+          );
+        }
+        const family = lifetimeFamily(4, [
+          "A system comprising sensor.",
+          "A system comprising a sensor.",
+          "The system of claims 1 or 2 wherein the sensors detect a signal.",
+        ]);
+        const report = yield* exerciseLifetimeFamily(runtime, family, finalized).pipe(Effect.scoped);
+        const record = O.getOrThrow(A.get(report.records, 2));
+        assert.isTrue(
+          record.status === "partial" && A.some(record.findings, (finding) => finding.rule === "source-role-unresolved")
+        );
+        assert.isTrue(
+          record.status === "partial" &&
+            A.some(
+              record.findings,
+              (finding) =>
+                finding.kind === "number-mismatch" &&
+                A.join(
+                  A.map(finding.chain, (value) => `${value}`),
+                  ","
+                ) === "3,2"
+            )
+        );
+        const unnumbered = lifetimeFamily(5, ["A system comprising a sensor."], true);
+        const preserved = yield* exerciseLifetimeFamily(runtime, unnumbered, finalized).pipe(Effect.scoped);
+        const original = yield* decomposeClaimInput(unnumbered.input);
+        assert.deepStrictEqual(
+          A.map(preserved.records, (record) => record.decomposition),
+          original
+        );
+      })
+    );
+    const observedCount10 = yield* Ref.get(attempts);
+    assert.strictEqual(observedCount10, 1);
+    const observedCount11 = yield* Ref.get(finalized);
+    assert.strictEqual(observedCount11, 5);
+  })
+);
+
+it.effect("keeps provider defects outside the typed unavailable fallback", () =>
+  Effect.gen(function* () {
+    const exit = yield* WinkTokenization.pipe(
+      Layer.provide(Layer.effect(WinkEngine, Effect.die("lifetime defect control"))),
+      Layer.build,
+      Effect.result,
+      Effect.exit,
+      Effect.scoped
+    );
+    assert.isTrue(Exit.hasDies(exit));
+  })
+);
+
+it.effect("preserves cancellation during provider acquisition and closes its outer scope", () =>
+  Effect.gen(function* () {
+    const started = yield* Deferred.make<void>();
+    const finalized = yield* Ref.make(0);
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const pending = Layer.effect(
+          WinkEngine,
+          Effect.gen(function* () {
+            yield* Effect.addFinalizer(() => Ref.update(finalized, (count) => count + 1));
+            yield* Deferred.succeed(started, undefined);
+            return yield* Effect.never;
+          })
+        );
+        const fiber = yield* WinkTokenization.pipe(
+          Layer.provide(pending),
+          Layer.build,
+          Effect.result,
+          Effect.forkChild
+        );
+        yield* Deferred.await(started);
+        yield* Fiber.interrupt(fiber);
+        const interrupted = yield* Fiber.await(fiber);
+        assert.isTrue(Exit.hasInterrupts(interrupted));
+      })
+    );
+    const observedCount12 = yield* Ref.get(finalized);
+    assert.strictEqual(observedCount12, 1);
+  })
+);

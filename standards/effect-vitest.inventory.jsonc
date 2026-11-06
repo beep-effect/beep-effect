@@ -10897,6 +10897,50 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Fixed-count independent race trials, not retries: every trial asserts its result and a single failure fails the test. TestClock and explicit lease completion govern ownership; no failed trial is retried. Owner: @beep/law-practice-server. Exit: detector distinguishes repeated independent cases from retry-until-success loops. Re-reviewed after expression-only Effect 4.1.2 adaptation; independent trials and shorter child Scope are unchanged."
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/ClaimInspection.lexical.test.ts:688:scoped@81#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/ClaimInspection.lexical.test.ts",
+      "line": 688,
+      "endLine": 688,
+      "symbol": "scoped",
+      "occurrence": "v2:a0e89e4dac2fabf550ef12b4837662eedcb14d3d2e084a6318cb2e91648522d4",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only one successful borrowed-provider family helper before finalizer assertions; outer tokenizer ownership remains alive. Removing or hoisting the scope invalidates the acquisition/finalizer subject. No source-code fix or semantic waiver required. Owner: claim-check-performance provider-lifetime implementation owner. Source binding: fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4. Expiry: Re-review on any change to test SHA256 fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4 or to the deliberate family-versus-outer provider lifetime invariant. Independent review: provider-lifetime-implementation-independent-review-001/delivery-ratchet-addendum.md."
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/ClaimInspection.lexical.test.ts:764:scoped@88#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/ClaimInspection.lexical.test.ts",
+      "line": 764,
+      "endLine": 764,
+      "symbol": "scoped",
+      "occurrence": "v2:f78b6fc474f4d6190c67fcf2afcff705a748205bbdac4e8c0bd5294fdc581842",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only one typed-unavailable borrowed-provider family helper before finalizer assertions; outer tokenizer ownership remains alive. Removing or hoisting the scope invalidates the acquisition/finalizer subject. No source-code fix or semantic waiver required. Owner: claim-check-performance provider-lifetime implementation owner. Source binding: fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4. Expiry: Re-review on any change to test SHA256 fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4 or to the deliberate family-versus-outer provider lifetime invariant. Independent review: provider-lifetime-implementation-independent-review-001/delivery-ratchet-addendum.md."
     }
   ]
 }

@@ -5,7 +5,7 @@ import {
   ClaimInputInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentNumber } from "@beep/law-practice-domain/values/PatentNumber";
-import { ClaimInspectionWithLexicalEvidenceLive } from "@beep/law-practice-server/ClaimInspection";
+import { claimInspectionWithTokenizationLayer } from "@beep/law-practice-server/ClaimInspection";
 import { UsptoClaimInputsLive } from "@beep/law-practice-server/UsptoClaims";
 import {
   ClaimInspection,
@@ -17,6 +17,7 @@ import {
 import { claimInspectInput } from "@beep/law-practice-use-cases/server";
 import { Uspto, UsptoConfigInput } from "@beep/uspto";
 import { getSomesStruct } from "@beep/utils/Option";
+import { WinkTokenizationLive } from "@beep/wink";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -348,6 +349,15 @@ const program = Effect.gen(function* () {
     });
   }
   yield* fs.makeDirectory(output, { recursive: true });
+  // The evaluation Scope owns one fixed provider, independently of family
+  // acquisition scopes. A typed failed attempt is reused as the same failure;
+  // the shared enhancement factory retains honest unavailable coverage.
+  const tokenizer = yield* WinkTokenizationLive.pipe(Layer.build, Effect.result);
+  const fixedTokenizer =
+    tokenizer._tag === "Success"
+      ? Layer.succeedContext(tokenizer.success)
+      : tokenizer.failure.pipe(Effect.fail, Layer.effectContext);
+  const inspectionRuntime = claimInspectionWithTokenizationLayer(fixedTokenizer);
   const rows = yield* Effect.forEach(
     inputs,
     ({ family, source, gold, canonical, xml }, index) =>
@@ -373,7 +383,7 @@ const program = Effect.gen(function* () {
           Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
           Layer.provide(transport)
         );
-        const live = ClaimInspectionWithLexicalEvidenceLive.pipe(Layer.provide(replayInputs));
+        const live = inspectionRuntime.pipe(Layer.provide(replayInputs));
         const bundle = yield* Effect.gen(function* () {
           const context = yield* Layer.build(live);
           const acquired = yield* ClaimInspection.use((service) =>
