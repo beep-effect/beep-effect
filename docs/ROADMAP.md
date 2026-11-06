@@ -369,6 +369,16 @@ ratchets hold at zero — keep-green only, no new clicks past zero.
   `lint:promotion-records`, architecture known-unknowns closure. Each
   re-enters only via a lane slot.
 
+## Audit execution update, 2026-11-06
+
+The operator activated
+[`knowledge-freshness-audit`](../goals/knowledge-freshness-audit/README.md)
+after the planning snapshot below. Reviewed repairs landed in #2752 and #2759;
+P4 final-tree reconciliation began in #2765. P1-P3 remain partial, P4 is in
+progress, and P5 is pending. This dated update removes the audit's obsolete
+resume instruction without reordering other packets or claiming audit closure.
+The current packet manifest and review receipts govern its execution.
+
 ## Parked packets — resume conditions
 
 **Queue doctrine (2026-08-17):** the parked portfolio is the deliberate work
@@ -396,7 +406,6 @@ renders their current local status view.
 | [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes after practice-kg-mcp P8 hands off and `agentic-professional-runtime` closes; also needs `citation-verified-span-substrate`. |
 | [`time-to-certainty`](../goals/time-to-certainty/README.md) | Paused 2026-09-28 on ruling 80 (P0, P1, P3 complete; P2 complete except C4.2). Resumes when `bun run beep yeet proof-report --since <ruling-83 merge instant>` in the owning clone reads ready (200 attempts, 10 branches, 0 disagreements, counting only rows recorded after that merge) with `malformed rows: 0` on the sample, every C5 fixture green (ruling 82 closed the ruling-69 root-input gap); the flip PR turns reuse on, retires the legacy stores and closes the packet. |
 | [`turborepo-quality-cache-adoption`](../goals/turborepo-quality-cache-adoption/README.md) | Scaffolded paused 2026-09-08, unstarted. Resumes behind the two active cache packets (conformance, trust-observability) once their shared Cache contracts ship. |
-| [`knowledge-freshness-audit`](../goals/knowledge-freshness-audit/README.md) | Paused 2026-09-25 after the planning packet (#1218). Resumes on explicit operator activation of P1 reporting; audited-content mutation follows each report and its false-positive review. |
 | [`agent-pool-picker`](../goals/agent-pool-picker/README.md) | Scaffolded paused 2026-09-16. Resumes when `agent-pool-doctrine` ships its seat map and floors (P1 implement there). |
 | [`lejeune-knowledge-desk-lab`](../goals/lejeune-knowledge-desk-lab/README.md) | Paused 2026-08-26. Resumes when `lejeune-demo-corpus-and-ontology` closes and a pitch date exists. |
 | [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md) | Paused 2026-08-23 (1/8). Resumes when a Lane 3 slot frees and a capped-step incident recurs. |
