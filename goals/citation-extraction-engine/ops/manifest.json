@@ -441,6 +441,10 @@
     {
       "path": "ops/probe-stop-word-patterns.py",
       "purpose": "Independently bind the two original cleanup patterns and all three regex-V0 flag profiles to frozen source and parser identities."
+    },
+    {
+      "path": "ops/probe-case-name-process-patterns.py",
+      "purpose": "Observe original candidate split/removal profiles and direct CPython integer outcomes, including signed large values, native Unicode, parser whitespace and the 4300-digit ceiling."
     }
   ]
 }

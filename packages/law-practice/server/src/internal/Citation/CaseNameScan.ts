@@ -16,10 +16,9 @@ import * as Str from "effect/String";
 import { makeCitationCaseNamePredicates } from "./CaseNamePredicates.ts";
 import {
   copyCitationMetadataPatterns,
-  decodeCitationMetadataConfiguration,
+  decodeCitationMetadataRuntimeConfiguration,
   makeCitationMetadataOperation,
 } from "./MetadataComposition.ts";
-import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
@@ -29,6 +28,7 @@ import { CitationTextBudget } from "./TextBudget.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import { CitationTokenSeed } from "./TokenObjects.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseNameScan");
 const max = CitationEngineAbsoluteMaxima;
@@ -353,16 +353,13 @@ export const makeCitationCaseNameScan = Effect.fn("Citation.makeCaseNameScan")(f
   runtimeInput: unknown,
   configurationInput: unknown
 ) {
-  const { limits, configuration: decoded } = yield* decodeCitationMetadataConfiguration(
-    policy,
-    configurationInput,
-    Config,
-    () => fail("invalid-configuration")
+  const {
+    limits,
+    configuration: decoded,
+    runtime,
+  } = yield* decodeCitationMetadataRuntimeConfiguration(policy, runtimeInput, configurationInput, Config, () =>
+    fail("invalid-configuration")
   );
-  const rawRuntime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
-  const runtime = CitationNativeProcessRuntime.make({ ...rawRuntime });
   const patterns = yield* copyCitationMetadataPatterns(limits, decoded.patterns, fingerprints, () =>
     fail("invalid-configuration")
   );

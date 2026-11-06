@@ -7,21 +7,22 @@ import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/serve
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
   copyCitationMetadataPatterns,
-  decodeCitationMetadataConfiguration,
+  decodeCitationMetadataRuntimeConfiguration,
   makeCitationMetadataOperation,
+  substituteCitationMetadataMatches,
 } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
-import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
-import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
+import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/StopWords");
 const Patterns = S.Struct({ stopWords: CitationPythonUnicodeStorage, leadingIn: CitationPythonUnicodeStorage });
@@ -73,7 +74,10 @@ const Config = S.toType(CitationStopWordsConfiguration);
 const Native = S.toType(CitationPythonUnicodeStorage);
 const space = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([32]) });
 const commaSpace = (point: number) => point === 44 || point === 32;
-const runCleanup = Effect.fn("Citation.runStopWordCleanup")(function* (
+/** Run under an enclosing admitted operation, native Scope and text budget.
+ * @internal @category operations @since 0.0.0
+ */
+export const cleanCitationStopWords = Effect.fn("Citation.runStopWordCleanup")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationStopWordsConfiguration,
@@ -81,7 +85,6 @@ const runCleanup = Effect.fn("Citation.runStopWordCleanup")(function* (
 ) {
   const request = yield* S.decodeUnknownEffect(Native)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
   const input = yield* makeCitationRegexInput(limits);
-  const budget = yield* CitationTextBudget;
   const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings, "python-regex-v0");
   const substitute = Effect.fn("Citation.substituteStopWordPattern")(function* (
     name: keyof typeof fingerprints,
@@ -90,23 +93,9 @@ const runCleanup = Effect.fn("Citation.runStopWordCleanup")(function* (
     withSpace: boolean
   ) {
     const evaluated = yield* worker.evaluate(config.patterns[name], source, flags);
-    if (evaluated.result.matches === 0) return evaluated.source.value.storage;
-    const ranges = A.empty<{
-      readonly source: CitationPythonUnicodeStorage;
-      readonly start: number;
-      readonly end: number;
-    }>();
-    let cursor = 0;
-    for (let index = 0; index < evaluated.result.matches; index++) {
-      const capture = yield* evaluated.result.capture(index, 0);
-      if (capture._tag === "Unmatched" || capture.start < cursor || capture.start === capture.end)
-        return yield* fail("invalid-match");
-      ranges.push({ source: evaluated.source.value.storage, start: cursor, end: capture.start });
-      if (withSpace) ranges.push({ source: space, start: 0, end: 1 });
-      cursor = capture.end;
-    }
-    ranges.push({ source: evaluated.source.value.storage, start: cursor, end: evaluated.source.value.pythonLength });
-    return yield* concatCitationPythonRanges(ranges, (layout) => budget.reserve(layout.utf16Units));
+    return yield* substituteCitationMetadataMatches(evaluated, withSpace ? O.some(space) : O.none(), () =>
+      fail("invalid-match")
+    );
   });
   const trim = Effect.fn("Citation.trimStopWordText")(function* (
     source: CitationPythonUnicodeStorage,
@@ -152,34 +141,40 @@ const runCleanup = Effect.fn("Citation.runStopWordCleanup")(function* (
  * cumulative text budget. Each call owns fresh scoped workers; methods are R=never.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationStopWords = Effect.fn("Citation.makeStopWords")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+export const copyCitationStopWordsConfiguration = Effect.fn("Citation.copyStopWordsConfiguration")(function* (
+  limits: CitationEngineLimits,
+  decoded: CitationStopWordsConfiguration
 ) {
-  const { limits, configuration: decoded } = yield* decodeCitationMetadataConfiguration(
-    policy,
-    configurationInput,
-    Config,
-    () => fail("invalid-configuration")
-  );
-  const rawRuntime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
-  const runtime = CitationNativeProcessRuntime.make({ ...rawRuntime });
   const patterns = yield* copyCitationMetadataPatterns(limits, decoded.patterns, fingerprints, () =>
     fail("invalid-configuration")
   );
   const owned = yield* S.decodeUnknownEffect(Patterns)(patterns).pipe(
     Effect.mapError(() => fail("invalid-configuration"))
   );
-  const config = CitationStopWordsConfiguration.make({
+  return CitationStopWordsConfiguration.make({
     patterns: owned,
     bindings: A.map(decoded.bindings, copyCitationRegexDescriptor),
   });
+});
+/** Install the standalone admitted cleaner with captured services and timing.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationStopWords = Effect.fn("Citation.makeStopWords")(function* (
+  policy: unknown,
+  runtimeInput: unknown,
+  configurationInput: unknown
+) {
+  const {
+    limits,
+    configuration: decoded,
+    runtime,
+  } = yield* decodeCitationMetadataRuntimeConfiguration(policy, runtimeInput, configurationInput, Config, () =>
+    fail("invalid-configuration")
+  );
+  const config = yield* copyCitationStopWordsConfiguration(limits, decoded);
   const installed = yield* makeCitationMetadataOperation(
     limits,
-    (raw: unknown) => runCleanup(limits, runtime, config, raw),
+    (raw: unknown) => cleanCitationStopWords(limits, runtime, config, raw),
     () => fail("invalid-configuration")
   );
   const clean = Effect.fn("Citation.stripStopWords")(

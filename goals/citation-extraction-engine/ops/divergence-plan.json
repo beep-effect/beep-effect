@@ -88,7 +88,15 @@
         "packages/law-practice/server/test/CitationStopWords.test.ts",
         "packages/law-practice/server/test/integration/CitationStopWords.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/stop-word-patterns.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-stop-word-cleanup.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-stop-word-cleanup.md",
+        "goals/citation-extraction-engine/ops/probe-case-name-process-patterns.py",
+        "packages/law-practice/server/src/internal/Citation/CaseNameProcess.ts",
+        "packages/law-practice/server/src/internal/Citation/PythonInteger.ts",
+        "packages/law-practice/server/test/CitationCaseNameProcess.fixtures.ts",
+        "packages/law-practice/server/test/CitationCaseNameProcess.test.ts",
+        "packages/law-practice/server/test/integration/CitationCaseNameProcess.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process-patterns.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-processing-target.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -117,7 +125,15 @@
       "id": "integer-decimal-wrapper",
       "statement": "Encode integers outside the exact JavaScript numeric range as decimal-string records; preserve their complete mathematical value.",
       "referencePaths": [
-        "goals/citation-extraction-engine/ops/export-operations.py"
+        "goals/citation-extraction-engine/ops/export-operations.py",
+        "goals/citation-extraction-engine/ops/probe-case-name-process-patterns.py",
+        "packages/law-practice/server/src/internal/Citation/CaseNameProcess.ts",
+        "packages/law-practice/server/src/internal/Citation/PythonInteger.ts",
+        "packages/law-practice/server/test/CitationCaseNameProcess.fixtures.ts",
+        "packages/law-practice/server/test/CitationCaseNameProcess.test.ts",
+        "packages/law-practice/server/test/integration/CitationCaseNameProcess.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process-patterns.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-processing-target.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -417,7 +433,15 @@
         "packages/law-practice/server/test/CitationStopWords.test.ts",
         "packages/law-practice/server/test/integration/CitationStopWords.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/stop-word-patterns.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-stop-word-cleanup.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-stop-word-cleanup.md",
+        "goals/citation-extraction-engine/ops/probe-case-name-process-patterns.py",
+        "packages/law-practice/server/src/internal/Citation/CaseNameProcess.ts",
+        "packages/law-practice/server/src/internal/Citation/PythonInteger.ts",
+        "packages/law-practice/server/test/CitationCaseNameProcess.fixtures.ts",
+        "packages/law-practice/server/test/CitationCaseNameProcess.test.ts",
+        "packages/law-practice/server/test/integration/CitationCaseNameProcess.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process-patterns.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-case-name-processing-target.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

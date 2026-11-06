@@ -22,6 +22,7 @@ import { CitationMetadataYearBound, makeCitationMetadataYearFromBound } from "./
 import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
+import { concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
@@ -31,6 +32,44 @@ import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type * as Scope from "effect/Scope";
 import type { CitationContextMatch } from "./ContextMatcher.ts";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
+import type { makeCitationRegexWorker } from "./RegexWorker.ts";
+
+type RegexEvaluation = Effect.Success<
+  ReturnType<Effect.Success<ReturnType<typeof makeCitationRegexWorker>>["evaluate"]>
+>;
+/** Replace complete nonempty matches with a literal native value under the
+ * enclosing budget. Nullable substitution and replacement templates are separate.
+ * @internal @category operations @since 0.0.0
+ */
+export const substituteCitationMetadataMatches = Effect.fn("Citation.substituteMetadataMatches")(function* <E>(
+  evaluated: RegexEvaluation,
+  replacement: O.Option<CitationPythonUnicodeStorage>,
+  invalid: () => E
+) {
+  if (evaluated.result.matches === 0) return evaluated.source.value.storage;
+  const budget = yield* CitationTextBudget;
+  const ranges = A.empty<{
+    readonly source: CitationPythonUnicodeStorage;
+    readonly start: number;
+    readonly end: number;
+  }>();
+  let cursor = 0;
+  for (let index = 0; index < evaluated.result.matches; index++) {
+    const capture = yield* evaluated.result.capture(index, 0);
+    if (capture._tag === "Unmatched" || capture.start < cursor || capture.start === capture.end)
+      return yield* Effect.fail(invalid());
+    ranges.push({ source: evaluated.source.value.storage, start: cursor, end: capture.start });
+    if (O.isSome(replacement))
+      ranges.push({
+        source: replacement.value,
+        start: 0,
+        end: replacement.value.bytes.length / replacement.value.width,
+      });
+    cursor = capture.end;
+  }
+  ranges.push({ source: evaluated.source.value.storage, start: cursor, end: evaluated.source.value.pythonLength });
+  return yield* concatCitationPythonRanges(ranges, (layout) => budget.reserve(layout.utf16Units));
+});
 
 /** Read one native source capture through its existing prepared context owner.
  * @internal @category operations @since 0.0.0
@@ -138,6 +177,18 @@ export const decodeCitationMetadataConfiguration = Effect.fn("Citation.decodeMet
   const configuration = yield* S.decodeUnknownEffect(schema)(input).pipe(Effect.mapError(invalid));
   return { limits, configuration };
 });
+/** Decode and snapshot the shared trusted runtime/configuration boundary.
+ * @internal @category operations @since 0.0.0
+ */
+export const decodeCitationMetadataRuntimeConfiguration = Effect.fn("Citation.decodeMetadataRuntimeConfiguration")(
+  function* <A, I, E>(policy: unknown, runtimeInput: unknown, input: unknown, schema: S.Codec<A, I>, invalid: () => E) {
+    const decoded = yield* decodeCitationMetadataConfiguration(policy, input, schema, invalid);
+    const runtime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
+      Effect.mapError(invalid)
+    );
+    return { ...decoded, runtime: CitationNativeProcessRuntime.make({ ...runtime }) };
+  }
+);
 /** Shared captured source year pattern and import-time calendar bound.
  * @internal @category models @since 0.0.0
  */
