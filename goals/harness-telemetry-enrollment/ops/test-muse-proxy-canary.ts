@@ -19,6 +19,8 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -32,7 +34,7 @@ const id = (c: string) => Sha256Hex.make(Str.repeat(64)(c));
 const digest = (text: string | Uint8Array) => createHash("sha256").update(text).digest("hex");
 const compile = promisify(execFile);
 const nativeFixture =
-  '#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <sys/stat.h>\nint main(int argc,char **argv){\n if(argc>1&&!strcmp(argv[1],"--version")){puts("2.1.318 (Claude Code)");return 0;}\n const char *home=getenv("HOME");if(!home)return 83;char p[8192],cwd[4096],mode[64]="ok";getcwd(cwd,sizeof(cwd));\n snprintf(p,sizeof(p),"%s/source-count",home);FILE *f=fopen(p,"a");if(f){fputs("1\\n",f);fclose(f);}\n snprintf(p,sizeof(p),"%s/fixture-mode",home);f=fopen(p,"r");if(f){fgets(mode,sizeof(mode),f);fclose(f);}\n if(!getenv("ANTHROPIC_BASE_URL")||strcmp(getenv("ANTHROPIC_BASE_URL"),"http://127.0.0.1:8317")||!getenv("ANTHROPIC_AUTH_TOKEN")||strcmp(getenv("ANTHROPIC_AUTH_TOKEN"),"synthetic-not-a-secret"))return 84;\n int model=0;for(int i=1;i+1<argc;i++)if(!strcmp(argv[i],"--model")&&!strcmp(argv[i+1],"muse-wonder-1.0(medium)"))model=1;if(!model)return 85;\n struct stat exe;stat("/proc/self/exe",&exe);char line[8192],ticks[128]="";FILE *self=fopen("/proc/self/stat","r");\n if(self){fgets(line,sizeof(line),self);fclose(self);char *save,*token=strtok_r(strrchr(line,\')\')+2," ",&save);for(int i=0;token&&i<19;i++)token=strtok_r(NULL," ",&save);if(token)snprintf(ticks,sizeof(ticks),"%s",token);}\n snprintf(p,sizeof(p),"%s/fixture-identity",home);FILE *identity=fopen(p,"w");if(identity){fprintf(identity,"%ld:%s:%llu:%llu",(long)getpid(),ticks,(unsigned long long)exe.st_dev,(unsigned long long)exe.st_ino);fclose(identity);}\n usleep(300000);if(!strcmp(mode,"source-fail"))return 7;\nprintf("{\\"type\\":\\"system\\",\\"subtype\\":\\"init\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"claude_code_version\\":\\"2.1.318\\",\\"cwd\\":\\"%s\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"apiKeySource\\":\\"none\\",\\"tools\\":[],\\"mcp_servers\\":[],\\"plugins\\":[{\\"name\\":\\"cc-plugin-agents-md\\"},{\\"name\\":\\"cc-plugin-privacy\\"},{\\"name\\":\\"cc-plugin-plugin-authoring\\"}],\\"skills\\":[],\\"slash_commands\\":[],\\"agents\\":[\\"claude\\",\\"Explore\\",\\"general-purpose\\",\\"Plan\\"]}\\n",cwd);\nif(!strcmp(mode,"reported-error")){puts("{\\"type\\":\\"assistant\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"parent_tool_use_id\\":null,\\"error\\":\\"rate_limit\\",\\"uuid\\":\\"PRIVATE_UUID\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"PRIVATE_PROVIDER_MESSAGE\\"}]}}");puts("{\\"type\\":\\"result\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"subtype\\":\\"error_during_execution\\",\\"is_error\\":true,\\"errors\\":[\\"PRIVATE_ACCOUNT_OR_TOKEN\\"],\\"result\\":\\"PRIVATE_PROVIDER_RESULT\\"}");return 7;}\nif(!strcmp(mode,"wrong-reply"))puts("{\\"type\\":\\"tool_use\\",\\"content\\":\\"PRIVATE_CONTENT\\"}");\nputs("{\\"type\\":\\"assistant\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"parent_tool_use_id\\":null,\\"message\\":{\\"role\\":\\"assistant\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"ENROLLMENT_CANARY_OK\\"}]}}");\nputs("{\\"type\\":\\"result\\",\\"subtype\\":\\"success\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"is_error\\":false,\\"result\\":\\"ENROLLMENT_CANARY_OK\\",\\"duration_ms\\":1,\\"duration_api_ms\\":1,\\"num_turns\\":1,\\"permission_denials\\":[]}");\nputs("{\\"type\\":\\"rate_limit_event\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"rate_limit_info\\":{\\"status\\":\\"allowed_warning\\",\\"utilization\\":1.25},\\"message\\":\\"PRIVATE_PROXY_WARNING\\"}");\nreturn 0;}\n';
+  '#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <sys/stat.h>\nint main(int argc,char **argv){\n if(argc>1&&!strcmp(argv[1],"--version")){puts("2.1.318 (Claude Code)");return 0;}\n const char *home=getenv("HOME");if(!home)return 83;char p[8192],cwd[4096],mode[64]="ok";getcwd(cwd,sizeof(cwd));\n snprintf(p,sizeof(p),"%s/source-count",home);FILE *f=fopen(p,"a");if(f){fputs("1\\n",f);fclose(f);}\n snprintf(p,sizeof(p),"%s/fixture-mode",home);f=fopen(p,"r");if(f){fgets(mode,sizeof(mode),f);fclose(f);}\n if(!getenv("ANTHROPIC_BASE_URL")||strcmp(getenv("ANTHROPIC_BASE_URL"),"http://127.0.0.1:8317")||!getenv("ANTHROPIC_AUTH_TOKEN")||strcmp(getenv("ANTHROPIC_AUTH_TOKEN"),"synthetic-not-a-secret"))return 84;\n int model=0;for(int i=1;i+1<argc;i++)if(!strcmp(argv[i],"--model")&&!strcmp(argv[i+1],"muse-wonder-1.0(medium)"))model=1;if(!model)return 85;\n struct stat exe;stat("/proc/self/exe",&exe);char line[8192],ticks[128]="";FILE *self=fopen("/proc/self/stat","r");\n if(self){fgets(line,sizeof(line),self);fclose(self);char *save,*token=strtok_r(strrchr(line,\')\')+2," ",&save);for(int i=0;token&&i<19;i++)token=strtok_r(NULL," ",&save);if(token)snprintf(ticks,sizeof(ticks),"%s",token);}\n snprintf(p,sizeof(p),"%s/fixture-identity",home);FILE *identity=fopen(p,"w");if(identity){fprintf(identity,"%ld:%s:%llu:%llu",(long)getpid(),ticks,(unsigned long long)exe.st_dev,(unsigned long long)exe.st_ino);fclose(identity);}\n if(!strcmp(mode,"hang"))sleep(5);else usleep(300000);if(!strcmp(mode,"source-fail"))return 7;\nprintf("{\\"type\\":\\"system\\",\\"subtype\\":\\"init\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"claude_code_version\\":\\"2.1.318\\",\\"cwd\\":\\"%s\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"apiKeySource\\":\\"none\\",\\"tools\\":[],\\"mcp_servers\\":[],\\"plugins\\":[{\\"name\\":\\"cc-plugin-agents-md\\"},{\\"name\\":\\"cc-plugin-privacy\\"},{\\"name\\":\\"cc-plugin-plugin-authoring\\"}],\\"skills\\":[],\\"slash_commands\\":[],\\"agents\\":[\\"claude\\",\\"Explore\\",\\"general-purpose\\",\\"Plan\\"]}\\n",cwd);\nif(!strcmp(mode,"reported-error")){puts("{\\"type\\":\\"assistant\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"parent_tool_use_id\\":null,\\"error\\":\\"rate_limit\\",\\"uuid\\":\\"PRIVATE_UUID\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"PRIVATE_PROVIDER_MESSAGE\\"}]}}");puts("{\\"type\\":\\"result\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"subtype\\":\\"error_during_execution\\",\\"is_error\\":true,\\"errors\\":[\\"PRIVATE_ACCOUNT_OR_TOKEN\\"],\\"result\\":\\"PRIVATE_PROVIDER_RESULT\\"}");return 7;}\nif(!strcmp(mode,"wrong-reply"))puts("{\\"type\\":\\"tool_use\\",\\"content\\":\\"PRIVATE_CONTENT\\"}");\nputs("{\\"type\\":\\"assistant\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"parent_tool_use_id\\":null,\\"message\\":{\\"role\\":\\"assistant\\",\\"model\\":\\"muse-wonder-1.0(medium)\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"ENROLLMENT_CANARY_OK\\"}]}}");\nputs("{\\"type\\":\\"result\\",\\"subtype\\":\\"success\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"is_error\\":false,\\"result\\":\\"ENROLLMENT_CANARY_OK\\",\\"duration_ms\\":1,\\"duration_api_ms\\":1,\\"num_turns\\":1,\\"permission_denials\\":[]}");\nputs("{\\"type\\":\\"rate_limit_event\\",\\"session_id\\":\\"PRIVATE_SESSION\\",\\"rate_limit_info\\":{\\"status\\":\\"allowed_warning\\",\\"utilization\\":1.25},\\"message\\":\\"PRIVATE_PROXY_WARNING\\"}");\nreturn 0;}\n';
 const fixture = async (
   options: { readonly rejectTraceOnce?: boolean; readonly mode?: string; readonly driftAuthAtPrepared?: boolean } = {}
 ) => {
@@ -94,6 +96,10 @@ const fixture = async (
   let epoch = 2;
   let traces = 0;
   const facts: Array<string> = [];
+  let signalStarted = () => {};
+  const started = new Promise<void>((resolve) => {
+    signalStarted = resolve;
+  });
   const server = Http.createServer((incoming, response) => {
     const handle = async () => {
       let body = "";
@@ -115,6 +121,7 @@ const fixture = async (
       } else if (incoming.url === "/v1/launch-facts") {
         const submission = await Effect.runPromise(S.decodeEffect(S.fromJsonString(ObservationLaunchSubmission))(body));
         facts.push(submission.fact._tag);
+        if (submission.fact._tag === "Started") signalStarted();
         response.end(
           await Effect.runPromise(
             S.encodeEffect(S.fromJsonString(ObservationLaunchReceipt))(
@@ -170,6 +177,7 @@ const fixture = async (
     request,
     run,
     facts,
+    started,
     count,
     traces: () => traces,
     setEpoch: (value: number) => {
@@ -253,6 +261,31 @@ it.live("wrapper bytes drift refuses before consumer invocation", () =>
       await Fs.appendFile(f.request.canonicalWrapperFile, "\n# changed");
       expect((await Effect.runPromise(f.run.pipe(Effect.result)))._tag).toBe("Failure");
       expect(await f.count("source-count")).toBe(0);
+    } finally {
+      await f.close();
+    }
+  })
+);
+
+it.live("external source interruption terminalizes after cleanup", () =>
+  Effect.tryPromise(async () => {
+    const f = await fixture({ mode: "hang" });
+    try {
+      const fiber = Effect.runFork(f.run);
+      await f.started;
+      await Effect.runPromise(Fiber.interrupt(fiber));
+      const result = await Effect.runPromise(Fiber.await(fiber));
+      expect(Exit.hasInterrupts(result)).toBe(true);
+      expect(f.facts).toEqual(["Prepared", "Started", "Finished"]);
+      const text = await Fs.readFile(
+        Path.join(f.request.attemptDirectory, "diagnostic-lifecycle-validated.json"),
+        "utf8"
+      );
+      const diagnostic = await Effect.runPromise(S.decodeEffect(S.fromJsonString(NativeAttemptDiagnostic))(text));
+      expect(diagnostic.lifecycleOutcome).toEqual(O.some("cancelled"));
+      expect(diagnostic.lifecycleDelivery).toEqual(O.some("acknowledged"));
+      expect(diagnostic.nativeExitStatus).toEqual(O.none());
+      expect(text).not.toContain("PRIVATE_");
     } finally {
       await f.close();
     }
