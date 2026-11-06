@@ -1094,6 +1094,14 @@ links together to reverse this component; runtime configuration is unchanged.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
 
+### Bind pilot selection and mounts to one reviewed recipe, 2026-11-06
+
+Centralize the existing identity pilot computation, package filter, selected package path, and fresh dependency paths in one internal schema-backed recipe. Route activation, closure validation, native summary selection, filters, sandbox mounts, and mutation paths through that recipe. Identity remains the sole admitted recipe. This is the first implementation step toward additional reviewed computation recipes, beginning with dependency-free types lint; it does not add types execution or reuse authority. Static substitution of the unchanged recipe values reproduces the prior runner source exactly before formatting. Hosted CI remains required runtime and type-check evidence. No manual local verify, publish, tests, check, docgen or package verification was run, per operator instruction. Both whole goals and all qualification and rollout obligations remain open.
+
+Lane `codex/cache-pilot-recipes-20261106`
+
+Reverse: Revert the recipe refactor; no task cache setting or qualification state changes.
+
 ### Preserve external suite inputs across all CLI test consumers, 2026-11-06
 
 All three CLI test consumers execute the architecture proof suite, which reads
