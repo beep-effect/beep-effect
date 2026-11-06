@@ -150,6 +150,14 @@ Lane `codex/knowledge-audit-p4-linked`
 
 Reverse: Revert this checkpoint and its scoped documentation repairs; retain original private evidence and historical receipts.
 
+### Close two omissions in already reviewed example families, 2026-11-06
+
+Parent review revalidated original T9 t9-dd93a013201032ab and T10 t10-c6ad1b6701cf3daf against frozen blob and exact line hashes. The skill TopicName copy was already repaired, but the standards duplicate still filtered empty segments before validation. The extracted standards example rejects :a after the repair and passes all six boundary cases; before it failed on accepting :a. Remove the unused filtering helper and use Str.split directly. The Atom runtime comment named a nonexistent defaultMemoMap export; installed source defines runtime = context() and a registry-scoped memo-map atom. Correct only the comment, with dependency bytes archived separately from Git provenance. Fresh paginated16-open-PR target census found no overlap. No ontology work, package source, external service, spending or broad runtime certification; PM and ADHD remain separate.
+
+Lane `codex/knowledge-audit-p4-enforcement-context`
+
+Reverse: Restore only the two example edits; retain the original parent evidence and six-case counterfactual.
+
 ### Distinguish implemented architecture checks from planned enforcement, 2026-11-06
 
 Parent review of original T5 t5-f8e5feb0d8e0f72d and T3 kfa-t3-003 at source 6dbf4e543148c1ac30838fa9a72d7a2cc6047d62 validated two description corrections. Source hashes still match at fresh base ff3970ddf0c0848d65830d60af080ad903ed4b6a. Promotion-record lint is planned; required manual PR review and record schema remain binding. The effect-drizzle member and ecosystem-polarity command exist; member-local boundary tests and configured CI proof remain required, without inferring their execution from a command registration. Fresh file census found no overlap in 14 open PRs. Use a direct Git worktree in canonical sibling placement to avoid the optional worktree helper's local-only file copying under this task's no-credential-copy constraint. No root switch, source package change, cloud work or spending. PM, ADHD, other owners and broader P4 obligations remain separate.
