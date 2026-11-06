@@ -87,6 +87,9 @@ const blockerText = (state: SweepGitState, id: SweepStepId): ReadonlyArray<strin
 const liveCheckout = (head: string): string =>
   `HEAD ${head} is main or the swept branch feat/merge-loop; another branch is a live checkout the sweep leaves alone`;
 
+const laneKeepsBranch =
+  "the checkout is the owning clone; a linked worktree keeps feat/merge-loop for `yeet sweep --retire`";
+
 const emptyPlan = SweepPlan.make({
   schemaVersion: "yeet-sweep-plan/v1",
   createdAt,
@@ -382,10 +385,22 @@ describe("end state", () => {
   it("requires a movable HEAD, a clean worktree, and a free main to switch back", () => {
     const step = stepFor(stateWith({ headBranch: "feat/merge-loop" }), "end-state");
     expect(A.map(step.preconditions, (observed) => observed.description)).toEqual([
+      laneKeepsBranch,
       liveCheckout("feat/merge-loop"),
       "worktree is clean",
       "main is not checked out in another worktree",
     ]);
+  });
+
+  // Receipts #1939, #1985, #2017, #2700: the readiness monitor's post-merge sweep
+  // ran inside the lane, found `main` free (the owning clone stood on another
+  // branch) and switched the lane to it, so `yeet sweep --retire` then judged
+  // `main` and left the lane's branch behind.
+  it("keeps a linked lane on its branch even when main is free", () => {
+    const lane = SweepGitState.make({ ...mergedFacts, headBranch: "feat/merge-loop", linkedWorktree: true });
+    expect(blockerText(lane, "end-state")).toEqual([laneKeepsBranch]);
+    expect(blockerText(lane, "lockfile-install")).toEqual([laneKeepsBranch]);
+    expect(blockerText(SweepGitState.make({ ...mergedFacts, linkedWorktree: true }), "end-state")).toEqual([]);
   });
 });
 
@@ -556,6 +571,20 @@ const mergedSweepStubs: ReadonlyArray<readonly [string, CommandStub]> = [
 // can only come from the truncation itself.
 const truncatedWorktreeOutput = Str.repeat(40_000)("worktree /repo/detached-worktree\0HEAD aaaa1111\0detached\0\0");
 
+// A lane at /repo/lanes/merge-loop on the merged branch, with the owning clone
+// listed first and standing on another branch, so `main` is free.
+const linkedLaneStubs: ReadonlyArray<readonly [string, CommandStub]> = [
+  ["git rev-parse --abbrev-ref HEAD", ok("feat/merge-loop")],
+  ["git rev-parse --show-toplevel", ok("/repo/lanes/merge-loop")],
+  [
+    "git worktree list --porcelain",
+    ok(
+      `worktree /repo\0HEAD ${mainTipBeforeUpdate}\0branch refs/heads/@slop/live\0\0worktree /repo/lanes/merge-loop\0HEAD ${mergedTip}\0branch refs/heads/feat/merge-loop\0\0`
+    ),
+  ],
+  ...mergedSweepStubs,
+];
+
 const truncatedWorktreeStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["git worktree list --porcelain", ok(truncatedWorktreeOutput)],
   ...mergedSweepStubs,
@@ -666,6 +695,36 @@ describe("executeSweep", () => {
             const written = yield* fs.readFileString(sweepReportPath1);
             const decoded = yield* SweepReportJson.decode(written);
             expect(decoded).toEqual(report);
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(sweepTestLayer(linkedLaneStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("reads a checkout that is not the first listed worktree as a linked lane", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const state = yield* observeSweepGitState(sweepContext(root));
+            expect(state.linkedWorktree).toBe(true);
+            expect(state.mainCheckedOutElsewhere).toBe(false);
+            expect(blockerText(state, "end-state")).toEqual([laneKeepsBranch]);
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(sweepTestLayer(mergedSweepStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("reads the first listed worktree as the owning clone", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const state = yield* observeSweepGitState(sweepContext(root));
+            expect(state.linkedWorktree).toBe(false);
           }),
         removeTempDirectory
       )
@@ -869,6 +928,53 @@ describe("executeSweep", () => {
               "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
             );
             expect(outcomeOf(report, "delete-remote-branch").status).toBe("executed");
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      ["git rev-parse --verify --quiet --end-of-options refs/remotes/origin/feat/merge-loop", nonzero(1)],
+      ["git ls-remote origin refs/heads/feat/merge-loop", nonzero(128)],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("leaves the remote tip unknown, not absent, when ls-remote cannot be read", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const state = yield* observeSweepGitState(sweepContext(root)).pipe(
+              Effect.provideServiceEffect(Git, Git.make)
+            );
+            assertNone(state.remoteTip);
+            expect(state.remoteBranchAbsent).toBe(false);
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      ["git fetch --prune origin", nonzero(1)],
+      ["git merge --ff-only refs/remotes/origin/main", nonzero(1)],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("skips a failed fetch --prune and a failed fast-forward with git's exit", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const { report, spawned } = yield* recordedSweep(root);
+            expect(spawned).toContain("git fetch --prune origin");
+            expect(outcomeOf(report, "fetch-prune").status).toBe("skipped");
+            expect(outcomeOf(report, "ff-main").status).toBe("skipped");
           }),
         removeTempDirectory
       )

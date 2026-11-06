@@ -117,5 +117,12 @@
   "schemaVersion": "initiative-manifest/v2",
   "lifecycle": "completed-retained",
   "mergedPullRequest": 401,
-  "packetPath": "goals/oip-web-production-hardening"
+  "packetPath": "goals/oip-web-production-hardening",
+  "researchReports": [
+    "research/aeo-seo-llms.md",
+    "research/cms-crm-contact-analytics.md",
+    "research/deployment-iac-vercel-cloudflare-pulumi.md",
+    "research/security-pwa-lighthouse.md",
+    "research/synthesis-and-decisions.md"
+  ]
 }

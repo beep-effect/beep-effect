@@ -24,7 +24,6 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertExitSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -44,6 +43,7 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import {
   expectReportedExit,
+  NodeTestLayer,
   permutedDirectoryReadsFileSystem,
   temporaryWorkingDirectory,
   writeProjectFile,
@@ -103,9 +103,7 @@ const expectGolden = Effect.fn("expectGolden")(function* (name: string, plan: Ma
   const golden = yield* fs.readFileString(goldenPath);
   expect(rendered).toBe(golden);
 });
-const commandTestLayer = PacketEventStoreLive.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
-);
+const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeTestLayer));
 
 it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
   describe("goals bootstrap --plan golden fixtures", { concurrent: false }, () => {
@@ -234,7 +232,6 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           expect(unmodeledKeys).toStrictEqual([
             "agentLaunchers",
             "currentSourceOfTruth",
-            "researchReports",
             "stopConditions",
             "verificationCommands",
           ]);
@@ -311,13 +308,7 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
         const encoded: unknown = yield* encodeGoalManifest(decoded);
         expect(isJsonRecord(encoded)).toBe(true);
         const roundTripKeys = isJsonRecord(encoded) ? R.keys(encoded) : A.empty<string>();
-        for (const lost of [
-          "agentLaunchers",
-          "currentSourceOfTruth",
-          "researchReports",
-          "stopConditions",
-          "verificationCommands",
-        ]) {
+        for (const lost of ["agentLaunchers", "currentSourceOfTruth", "stopConditions", "verificationCommands"]) {
           expect(originalKeys).toContain(lost);
           expect(roundTripKeys).not.toContain(lost);
         }

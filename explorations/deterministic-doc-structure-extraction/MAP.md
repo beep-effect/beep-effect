@@ -34,8 +34,8 @@ retains its own named consumer, corpus, calibration, or streaming gate.
 
 | Need | Exact capability path | Disposition |
 | --- | --- | --- |
-| Clean/original legal spans | `packages/law-practice/domain/src/values/Span/Span.model.ts` | Reuse the half-open span value. |
-| Segment mapping | `packages/law-practice/domain/src/values/SegmentMap/SegmentMap.model.ts` | Reuse the clean/original mapping pattern where compatible with the verified-anchor substrate. |
+| Clean/original legal spans | `packages/foundation/capability/langextract/src/VerifiedSpan/index.ts` | Use the canonical verified-span adapter; the former coordinate-only Span is retired. |
+| Segment mapping | `packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.normalization.ts` | Use normalized-to-raw locator mapping and verify the final range; the former SegmentMap is retired. |
 | Span-bearing extraction | `packages/foundation/capability/langextract/src/Extraction/index.ts` | Consume `GroundedExtraction[]` through an explicit adapter; never use `AnnotatedDocument` as evidence. |
 | Raw evidence anchor | `packages/foundation/modeling/provenance/src/TextAnchor.ts` | Reuse through the stronger verified construction supplied by `citation-verified-span-substrate`. |
 | Canonical confidence | `packages/foundation/modeling/schema/src/UnitInterval.ts` | Decode at every evidence/admission boundary; do not absorb unrelated cleanup. |

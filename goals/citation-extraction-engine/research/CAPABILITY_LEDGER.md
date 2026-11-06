@@ -53,6 +53,11 @@ they are not dispositions.
 | C-021 | `eyecite/helpers.py`, `utils.py` | Court parenthetical parser, name validity, punctuation, markup placeholders/style balancing | Port or subsume every test-observed behavior | required | audit |
 | C-022 | `tests/assets/opinion.txt` | Whole-opinion extraction/annotation fixture | Attributed normalized oracle fixture | required | audit |
 
+The source inventory additionally assigns `C-023` to the eight pinned
+`test_factories.py` constructors. These are explicit fixture-support obligations,
+not production exports. Each model/helper/public source row has its own
+capability obligation; seed family ownership does not waive individual proof.
+
 ## Official unittest-method inventory
 
 The exact pin has 52 unittest methods. These IDs are source anchors, not the
@@ -135,9 +140,10 @@ These are family-level seed rows. P0 must enumerate every public export and
 test-observed unique behavior at the pinned commits, identify overlap between
 the ports, and then assign one terminal disposition.
 
-Both pinned suite attempts are currently environment-blocked by absent
-JavaScript dependencies; see `EYECITE_BASELINE.md`. Source inspection can seed
-rows, but no extension becomes “proven” until its donor tests execute.
+The initial pinned suite attempts were environment-blocked. The authorized
+2026-10-28 runs now provide executable baselines; see `EYECITE_BASELINE.md` and
+the source baseline receipt. Source inspection can seed rows, but a passing
+donor suite alone does not prove any adopted extension or target regression.
 
 | ID | Reference capability | Provisional target | Reason/boundary | Disposition | Workflow |
 | --- | --- | --- | --- | --- | --- |

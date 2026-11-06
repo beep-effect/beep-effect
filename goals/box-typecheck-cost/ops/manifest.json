@@ -216,5 +216,6 @@
     "budgetAmendment": "The original <=1.5M absolute per-file budget sat below the 1,649,265 schema-import floor and was unachievable by construction. Restated as <=750K marginal (total minus floor). Package budget <=3M absolute unchanged and met.",
     "attribution": "apps/professional-desktop has 168 typecheck errors both before and after this change (byte-identical error sets) - inherited, not introduced. @beep/box and @beep/documents-server are clean.",
     "incidentalFix": "resolveBoxPaths hardcoded repoRoot/node_modules/box-node-sdk, which does not exist in a git worktree; it now walks up for the installed SDK."
-  }
+  },
+  "researchReports": ["research/measurements.md"]
 }

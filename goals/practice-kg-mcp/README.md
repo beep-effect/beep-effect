@@ -6,6 +6,15 @@ Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Corpus storage handoff — 2026-11-05
+
+Read the
+[workstation consolidation handoff](../oppold-corpus-salvage-restoration/history/2026-11-05-workstation-consolidation-handoff.md)
+before rebuilding a bundle from the corpus. Legacy paths can now be links to
+retained active keepers, and a separate native extraction family is still being
+verified. No deployed v1 bundle, source acceptance or semantic ingestion changed
+in this cleanup. Keep governed provenance and bundle-comparison gates intact.
+
 ## Mission
 
 Ship the first queryable IP-law knowledge graph over the Oppold practice corpus

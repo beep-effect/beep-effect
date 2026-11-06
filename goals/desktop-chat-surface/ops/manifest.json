@@ -78,5 +78,9 @@
     "The same blocker repeats after reasonable investigation.",
     "A dependency packet (rich-text-foundation, workspace-thread-domain) is not closed."
   ],
-  "mission": "Ship the control plane's command surface E2E in `apps/professional-desktop`: streamed block turns, edit-as-branch, cancel-in-flight, PGlite persistence, UsageRecord capture — agents-slice turn kernel serving both the Anthropic streaming implementation and the deterministic fixture agent."
+  "mission": "Ship the control plane's command surface E2E in `apps/professional-desktop`: streamed block turns, edit-as-branch, cancel-in-flight, PGlite persistence, UsageRecord capture — agents-slice turn kernel serving both the Anthropic streaming implementation and the deterministic fixture agent.",
+  "researchReports": [
+    "research/2026-06-14-port-findings.md",
+    "research/2026-07-31-usage-record-capture-design.md"
+  ]
 }

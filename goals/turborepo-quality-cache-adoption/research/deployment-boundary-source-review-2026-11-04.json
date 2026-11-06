@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "cache-deployment-boundary-source-review/v1",
+  "recordedAt": "2026-11-04T00:29:57.867816+00:00",
+  "sourceBaseRevision": "31e2ac20f34a1c699a35be55f67881dbf0d8ffd0",
+  "authority": "Tracked source discovery and selected actual caller review. No native execution, real pruned build, boundary-policy equivalence, deployment or feature/tuple acceptance.",
+  "sourceDiscovery": {
+    "capturedAt": "2026-11-04T00:26:27.793599+00:00",
+    "captureHead": "c987e205488547565a4106bbfa70c86cedd73084",
+    "selectedFileCount": 13142,
+    "sourceCorpusSha256": "a91e6180975456a6b910299b88ec88916e3c70b4cf4345bad42236ca09fd89d5",
+    "selection": {
+      "suffixes": [
+        ".bash",
+        ".bat",
+        ".cjs",
+        ".cmd",
+        ".cts",
+        ".fish",
+        ".js",
+        ".json",
+        ".jsonc",
+        ".jsx",
+        ".lua",
+        ".mjs",
+        ".mts",
+        ".nix",
+        ".pl",
+        ".ps1",
+        ".py",
+        ".rb",
+        ".sh",
+        ".toml",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml",
+        ".zsh"
+      ],
+      "excludedPrefixes": [
+        "goals/",
+        "explorations/",
+        "research/",
+        "docs/",
+        ".repos/"
+      ],
+      "filenameIncludes": "dockerfile",
+      "maxFileBytes": 2097152
+    },
+    "coMentionFileCount": 60,
+    "pruneCoMentionFiles": 20,
+    "boundaryCoMentionFiles": 44,
+    "oversizedFilesNotParsed": [
+      "packages/foundation/modeling/html/data/webref/dfns-html.json",
+      "packages/law-practice/domain/src/internal/generated/free-law-project/courts-vocabulary.data.json",
+      "packages/law-practice/domain/src/internal/generated/free-law-project/courts-vocabulary.ts",
+      "standards/cache-qualification-baseline.json",
+      "standards/jsdoc-documentation.inventory.jsonc"
+    ],
+    "nonUtf8Count": 11,
+    "callerSearchLimitation": "Tracked textual source co-mention discovery, requiring manual caller classification; dynamic and host-only commands are not resolved.",
+    "completeSemanticClassificationOfAllCandidates": false
+  },
+  "reviewedCallers": [
+    {
+      "path": ".github/workflows/deploy-beep-effect-web.yml",
+      "sha256": "f7e1034abb1d75f5da39723f759e85bd67a19db6a4023cb38b211632596da0eb",
+      "classification": "Full monorepo setup, app route-tree build/test and Alchemy deployment; no prune invocation."
+    },
+    {
+      "path": ".github/workflows/release-desktop.yml",
+      "sha256": "f21b58853ce8c72231acb98c5988f92c9560b9fe94eac15b1db26c58048b0018",
+      "classification": "Full monorepo setup plus Bun sidecar and Tauri bundle; no pruned build comparison."
+    },
+    {
+      "path": "apps/oip-web/vercel.json",
+      "sha256": "e052162a7789cd73b87ee31760b34933fe1a4a455647df3e9fffb864cd4df08c",
+      "classification": "Full frozen root install with the repository Bun pin; app build:pwa."
+    },
+    {
+      "path": "apps/todox/vercel.json",
+      "sha256": "1ba4df03f56325bfe48f29429ef697a14bb630076a7f3065c856ff483f9d0184",
+      "classification": "Full frozen root install with the repository Bun pin; filtered Turbo build after compiler-state cleanup."
+    },
+    {
+      "path": "apps/storybook/vercel.json",
+      "sha256": "9ea0062341fda9391ebc55120984ba599264585f9a560317dacf066f7ae7d2df",
+      "classification": "Prepare a frozen full root install; Storybook build and output directory retained."
+    },
+    {
+      "path": "packages/tooling/test-kit/test-utils/docker/pglite/Dockerfile",
+      "sha256": "9fb5d7e6e8a8dd15f4f7f1c00e328f2348d516fc896556b4914a5b45d7f80b13",
+      "classification": "Independent npm database-test image, not a Beep app deployment."
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Fallow/Fallow.command.ts",
+      "sha256": "a4ee5a67e4fdf768e22d519843779e0958aae8b47ae6b9d588d1de95bf7457f8",
+      "classification": "Existing manifest/doctrine boundary owner; source does not establish equivalence with native Turbo boundaries."
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "sha256": "4c7f02f11a6202e2cc4b1fbe67fb85ee505dad14828cba69a2d1f19a22c6b457",
+      "classification": "Existing Fallow configuration-check caller; no new Turbo boundary enforcement is claimed."
+    }
+  ],
+  "introducedRepair": {
+    "path": "apps/storybook/vercel.json",
+    "beforeSha256": "78d486483e9b39f90f8aee5d1719bb030b320350d45d16124c9f2204cceefea0",
+    "afterSha256": "9ea0062341fda9391ebc55120984ba599264585f9a560317dacf066f7ae7d2df",
+    "beforeInstallCommand": "cd ../.. && bun install",
+    "afterInstallCommand": "cd ../.. && bun install --frozen-lockfile",
+    "otherDecodedFieldsEqual": true,
+    "reason": "Require the committed dependency lockfile rather than allowing install-time lockfile changes.",
+    "runtimeBunVersionVerified": false,
+    "liveDeploymentProven": false
+  },
+  "featureDisposition": {
+    "pruning": "Pending: use the named Vercel/Alchemy/desktop build contracts for a real pruned install/build and missing-input comparison; absence of a current prune command does not establish no benefit.",
+    "boundaries": "Pending: map native package-boundary semantics to the existing manifest/doctrine owner and current aliases; no equivalence or clean-repository assertion follows from a text scan.",
+    "deployment-workflows": "Pending: frozen installation is one prerequisite repair, not complete profile, output or deployment proof."
+  },
+  "featureDecisionCountsUnchanged": {
+    "accepted": 11,
+    "pending": 25
+  },
+  "localQualitySuitesRun": false,
+  "noNativeExperimentsRun": true,
+  "noDeploymentsOrCloudChanges": true,
+  "allWholeGoalCriteriaRemainUnproven": true,
+  "rollback": "Revert the Storybook install constraint and source-review registration through a reviewed Git change; retain the discovery evidence and remaining qualification obligations."
+}

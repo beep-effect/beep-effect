@@ -19,3 +19,8 @@ This is the slice's documented cross-slice bounded exception: importing
 `@beep/epistemic-*` is sanctioned at the use-cases tier per the spike SPEC
 Exception Ledger and `DECISIONS.md`. The law-practice DOMAIN tier stays clean —
 no epistemic dependency there.
+
+Citation policy schemas export from `/server`. Citation oracle corpus,
+accounting, divergence and benchmark schemas export only from `/test`;
+production code must not import that subpath. These test schemas are evidence
+contracts and do not provide a live citation engine or imply parity.

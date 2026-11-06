@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { readContainedFileBytesNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
 import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
@@ -33,6 +35,7 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { CacheProducerAcceptanceReference, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
 import {
@@ -125,6 +128,7 @@ import {
   loadCacheProducerExecutionRuntime,
   runCacheProducerWorkflow,
 } from "./Cache.workflow.ts";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { CacheConformanceBearers, CacheConformanceCorpus } from "./Cache.conformance.schemas.ts";
 
 const TurboTaskCache = S.Struct({
@@ -239,14 +243,26 @@ const assertWarmEnvironment = Effect.fn("Cache.assertWarmEnvironment")(function*
   }
 });
 
+// The capture's two wordings over the kit: git never ran, or git exited with its stderr.
+const cacheGitErrors: GitCommandErrorAdapter<CacheCommandError> = {
+  onSpawnFailure: (commandLine) => (cause) => CacheCommandError.new(`Unable to run ${commandLine}.`, cause),
+  onNonZeroExit: ({ commandLine, exitCode, output }) =>
+    CacheCommandError.new(`${commandLine} exited ${exitCode}: ${Str.trim(output)}`),
+  onTruncated: O.none(),
+};
+
 const readWarmGitIdentity = Effect.fn("Cache.readWarmGitIdentity")(function* (repoRoot: string) {
+  const git = yield* Git;
+  const tracked = { untrackedFiles: "normal" } as const;
+  const revision = (ref: string) =>
+    git.revParse(repoRoot, ref).pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse(ref), cacheGitErrors)));
   const [status, head, base, tree] = yield* Effect.all([
-    runText(["git", "status", "--porcelain=v1", "--untracked-files=normal"], repoRoot),
-    runText(["git", "rev-parse", "HEAD"], repoRoot),
-    runText(["git", "rev-parse", "origin/main"], repoRoot),
-    runText(["git", "rev-parse", "HEAD^{tree}"], repoRoot),
+    git.status(repoRoot, tracked).pipe(Effect.mapError(adaptGitKitError(GitCommand.status(tracked), cacheGitErrors))),
+    revision("HEAD"),
+    revision("origin/main"),
+    revision("HEAD^{tree}"),
   ]);
-  return { status, head, base, tree };
+  return { clean: A.isReadonlyArrayEmpty(status), head, base, tree };
 });
 
 const assertWarmPreconditions = Effect.fn("Cache.assertWarmPreconditions")(function* (repoRoot: string) {
@@ -258,7 +274,7 @@ const assertWarmPreconditions = Effect.fn("Cache.assertWarmPreconditions")(funct
       catch: (cause) => CacheCommandError.new("Failed to read .bun-version.", cause),
     }),
   ]);
-  if (!Str.isEmpty(identity.status)) return yield* CacheCommandError.new("cache warm requires a clean checkout.");
+  if (!identity.clean) return yield* CacheCommandError.new("cache warm requires a clean checkout.");
   if (identity.head !== identity.base) {
     return yield* CacheCommandError.new("cache warm requires HEAD to equal origin/main exactly.");
   }
@@ -275,7 +291,7 @@ const assertWarmIdentityUnchanged = Effect.fn("Cache.assertWarmIdentityUnchanged
 ) {
   const actual = yield* readWarmGitIdentity(repoRoot);
   if (
-    !Str.isEmpty(actual.status) ||
+    !actual.clean ||
     actual.head !== expected.head ||
     actual.base !== expected.base ||
     actual.tree !== expected.tree ||
@@ -330,9 +346,10 @@ const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
  *
  * ```ts
  * import { CacheCommandError, CacheWarmReceipt, runCacheWarm } from "@beep/repo-cli/commands/Cache"
+ * import type { Git } from "@beep/git/Git"
  * import * as Effect from "effect/Effect";
  * import * as Option from "effect/Option";
- * const warm: Effect.Effect<CacheWarmReceipt, CacheCommandError> = runCacheWarm(".", Option.none())
+ * const warm: Effect.Effect<CacheWarmReceipt, CacheCommandError, Git> = runCacheWarm(".", Option.none())
  * console.log(Effect.isEffect(warm)) // true
  * ```
  *
@@ -651,9 +668,10 @@ const cacheDashboardCommand = Command.make(
   },
   ({ lambdaLogs, output, runsDir }: CacheDashboardOptions) =>
     Effect.gen(function* () {
-      const changed = yield* runText(["git", "diff", "--name-only", "origin/main...HEAD", "--"], process.cwd()).pipe(
-        Effect.map((text) => A.filter(A.map(Str.split(/\r?\n/)(text), Str.trim), (line) => !Str.isEmpty(line)))
-      );
+      const git = yield* Git;
+      const changed = yield* git
+        .changedFiles(process.cwd(), { base: "origin/main", head: "HEAD" })
+        .pipe(Effect.mapError(adaptGitKitError(GitCommand.changedFiles("origin/main", "HEAD"), cacheGitErrors)));
       const report = yield* buildCacheDashboard(runsDir, lambdaLogs, changed);
       yield* writeEncoded(report, CacheDashboardReportJson, output);
     }).pipe(renderCacheFailure)

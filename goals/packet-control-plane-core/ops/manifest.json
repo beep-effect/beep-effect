@@ -33,7 +33,7 @@
     "goals/packet-control-plane-core/GOAL.md",
     "goals/packet-control-plane-core/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

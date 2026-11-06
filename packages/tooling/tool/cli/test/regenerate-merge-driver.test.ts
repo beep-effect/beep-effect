@@ -50,6 +50,15 @@ const mergeDriverScenario = Effect.fnUntraced(function* () {
   const readFileString1 = yield* fs.readFileString(current);
   expect(readFileString1).toBe("current\n");
 
+  const [manifest, , manifestStderr] = yield* run(driverPath, [
+    ancestor,
+    current,
+    other,
+    "goals/demo/ops/manifest.json",
+  ]);
+  expect(manifest).not.toBe(0);
+  expect(manifestStderr).toContain("left goals/demo/ops/manifest.json conflicted");
+
   const [refused, , refusedStderr] = yield* run(driverPath, [ancestor, current, other, "bun.lock"]);
   expect(refused).not.toBe(0);
   expect(refusedStderr).toContain("refused non-projection path: bun.lock");

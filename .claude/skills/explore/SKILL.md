@@ -101,8 +101,9 @@ an existing brick.
 owning stage, grilling the operator on the gap when only they can close it. Then, per approved candidate: scaffold `goals/<slug>/` from
 `goals/_template/` (per `goals/README.md` rules, GOAL.md launcher included);
 seed `SPEC.md` from the brief (no-gos -> non-goals, rabbit holes ->
-constraints, DECISIONS -> decision log) with back-links to the exploration,
-not copies; cross-link both manifests; carry the exploration's
+constraints, DECISIONS -> one decision file each via
+`bun run beep goals decisions add <slug> ...`, never a hand-written Decision
+log tail) with back-links to the exploration, not copies; cross-link both manifests; carry the exploration's
 `research/SOURCES.md` into
 the goal (`goals/<slug>/research/SOURCES.md`), reproducing the source corpus for
 implementation and linking the exploration's ledger as primary, and register it

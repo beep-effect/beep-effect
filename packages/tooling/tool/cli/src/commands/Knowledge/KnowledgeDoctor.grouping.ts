@@ -13,6 +13,7 @@ import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -27,6 +28,7 @@ import {
   KnowledgePathRemoval,
   KnowledgeRootAttribution,
 } from "./KnowledgeDoctor.schemas.ts";
+import type { CommitLogEntry, NameStatusEntry } from "@beep/git/Git";
 import type { GoalDoctorFinding } from "../Goals/Doctor.ts";
 import type { KnowledgeFindingId } from "./Knowledge.schemas.ts";
 import type { KnowledgeDoctorFinding } from "./KnowledgeDoctor.schemas.ts";
@@ -144,86 +146,105 @@ export const knowledgeDelegatedRow = (finding: GoalDoctorFinding): KnowledgeDele
  * ---------------------------------------------------------------------------------------------- */
 
 /**
- * The `git log` arguments whose output {@link parseKnowledgePathRemovals} reads, newest commit first.
+ * The `Git.log` options whose listing {@link knowledgePathRemovalsFromLog} reads, newest commit first.
+ *
+ * **Details**
+ *
+ * The walk starts at a tree commit (the caller adds `revisions`), keeps only deletions and renames
+ * (`--diff-filter=DR`), detects renames at git's default 50 % similarity (`-M`), and reads paths raw.
  *
  * **Example** (Read the diff filter)
  *
  * ```ts
- * import { KNOWLEDGE_PATH_REMOVAL_LOG_ARGS } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.grouping"
+ * import { KNOWLEDGE_PATH_REMOVAL_LOG } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.grouping"
  *
- * console.log(KNOWLEDGE_PATH_REMOVAL_LOG_ARGS.includes("--diff-filter=DR")) // true
+ * console.log(KNOWLEDGE_PATH_REMOVAL_LOG.diffFilter) // "DR"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const KNOWLEDGE_PATH_REMOVAL_LOG_ARGS: ReadonlyArray<string> = [
-  "-c",
-  "core.quotePath=false",
-  "log",
-  "--diff-filter=DR",
-  "-M",
-  "--name-status",
-  "--format=%x1e%H%x1f%s",
-];
+export const KNOWLEDGE_PATH_REMOVAL_LOG = {
+  nameStatus: true,
+  diffFilter: "DR",
+  findRenames: 50,
+  quotePath: false,
+} as const;
 
-const RECORD_SEPARATOR = "\u001e";
-const UNIT_SEPARATOR = "\u001f";
-
-// `git log --name-status` letters for a rename (`R<score>`) and a deletion.
-const STATUS_CHANGES: ReadonlyArray<readonly [string, KnowledgePathChange]> = [
-  ["R", KnowledgePathChange.Enum.renamed],
-  ["D", KnowledgePathChange.Enum.deleted],
-];
-
-const removalOf = (commit: KnowledgeCommitSha, subject: string, line: string): O.Option<KnowledgePathRemoval> => {
-  const [status = "", path = "", renamedTo] = Str.split("\t")(line);
-  const change = O.map(
-    A.findFirst(STATUS_CHANGES, ([prefix]) => Str.startsWith(prefix)(status)),
-    ([, value]) => value
+// A deletion removes its path; a rename removes its source and names its target.
+const removalOfChange = (commit: KnowledgeCommitSha, subject: string, change: NameStatusEntry) =>
+  Match.value(change.status).pipe(
+    Match.when("deleted", () =>
+      O.some(
+        KnowledgePathRemoval.make({
+          path: change.path,
+          commit,
+          subject,
+          change: KnowledgePathChange.Enum.deleted,
+          renamedTo: O.none(),
+        })
+      )
+    ),
+    Match.when("renamed", () =>
+      O.map(O.fromUndefinedOr(change.oldPath), (path) =>
+        KnowledgePathRemoval.make({
+          path,
+          commit,
+          subject,
+          change: KnowledgePathChange.Enum.renamed,
+          renamedTo: O.some(change.path),
+        })
+      )
+    ),
+    Match.orElse(() => O.none<KnowledgePathRemoval>())
   );
-  return O.map(
-    O.filter(change, () => Str.isNonEmpty(path)),
-    (value) =>
-      KnowledgePathRemoval.make({ path, commit, subject, change: value, renamedTo: O.fromUndefinedOr(renamedTo) })
-  );
-};
 
-const commitRemovals = (record: string): ReadonlyArray<KnowledgePathRemoval> => {
-  const [header = "", ...lines] = Str.split("\n")(record);
-  const [commit = "", subject = ""] = Str.split(UNIT_SEPARATOR)(header);
-  return isCommitSha(commit)
-    ? A.getSomes(A.map(A.filter(lines, Str.isNonEmpty), (line) => removalOf(commit, subject, line)))
+const commitRemovals = (entry: CommitLogEntry): ReadonlyArray<KnowledgePathRemoval> =>
+  isCommitSha(entry.sha)
+    ? A.getSomes(A.map(entry.changes ?? [], (change) => removalOfChange(entry.sha, entry.subject, change)))
     : A.empty();
-};
 
 /**
- * Parses the output of `git log` run with {@link KNOWLEDGE_PATH_REMOVAL_LOG_ARGS}.
+ * Maps a `Git.log` listing read with {@link KNOWLEDGE_PATH_REMOVAL_LOG} onto path removals.
  *
  * **Details**
  *
- * Every deleted (`D`) or renamed-away (`R`) path becomes one removal, in log order (newest commit
- * first). Records whose header is not a full commit id are skipped.
+ * Every deleted or renamed-away path becomes one removal, in log order (newest commit first): a
+ * deletion names its path, a rename its source with the target as `renamedTo`. Commits whose id is
+ * not a full commit id are skipped.
  *
- * **Example** (Parse one deletion)
+ * **Example** (Map one deletion)
  *
  * ```ts
- * import { parseKnowledgePathRemovals } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.grouping"
+ * import { CommitLogEntry, NameStatusEntry } from "@beep/git/Git"
+ * import { knowledgePathRemovalsFromLog } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.grouping"
+ * import * as DateTime from "effect/DateTime"
  *
- * const removals = parseKnowledgePathRemovals(
- *   "\u001e1111111111111111111111111111111111111111\u001fchore: drop\n\nD\tdocs/old.md\n"
- * )
+ * const at = DateTime.makeUnsafe("2026-11-03T00:00:00Z")
+ * const removals = knowledgePathRemovalsFromLog([
+ *   CommitLogEntry.make({
+ *     sha: "1111111111111111111111111111111111111111",
+ *     authoredAt: at,
+ *     committedAt: at,
+ *     authorName: "a",
+ *     authorEmail: "a@example.invalid",
+ *     subject: "chore: drop",
+ *     paths: ["docs/old.md"],
+ *     changes: [NameStatusEntry.make({ status: "deleted", path: "docs/old.md" })],
+ *   }),
+ * ])
  *
  * console.log(removals[0]?.path) // "docs/old.md"
  * ```
  *
- * @param text - Raw log output.
+ * @param entries - The log listing, newest commit first.
  * @returns The removals, newest first.
  * @category parsing
  * @since 0.0.0
  */
-export const parseKnowledgePathRemovals = (text: string): ReadonlyArray<KnowledgePathRemoval> =>
-  A.flatMap(Str.split(RECORD_SEPARATOR)(text), commitRemovals);
+export const knowledgePathRemovalsFromLog: (
+  entries: ReadonlyArray<CommitLogEntry>
+) => ReadonlyArray<KnowledgePathRemoval> = A.flatMap(commitRemovals);
 
 // Each removed path and every directory above it, mapped to its newest removal.
 const removalIndex = (removals: ReadonlyArray<KnowledgePathRemoval>): HashMap.HashMap<string, KnowledgePathRemoval> => {

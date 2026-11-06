@@ -1,0 +1,743 @@
+{
+  "schemaVersion": "citation-live-case-resources/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "pythonHashSeed": "0",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "producerSha256": "a2ecb0b5142100fde3cf5f22438a4a4780deb930b9d4ce6128b16b2d78b96760",
+  "sources": {
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "utils.py": "8e27eb1207f6c0fdb695530e3677a3e9f039986b2baf68461ba680ee2bff902e"
+  },
+  "scope": "Actual case-resource/table composition only; full callback dispatch and arbitrary host keys remain open.",
+  "cases": [
+    {
+      "name": "same-bucket-live-alias",
+      "initial": [
+        {
+          "volume": "1",
+          "reporter": "U.S.",
+          "page": "1"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "change",
+            "reference": 0,
+            "field": "page",
+            "value": "2"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        }
+      ]
+    },
+    {
+      "name": "changed-bucket-live-alias",
+      "initial": [
+        {
+          "volume": "1",
+          "reporter": "U.S.",
+          "page": "1"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "change",
+            "reference": 0,
+            "field": "page",
+            "value": "20"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 0,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "remove",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        }
+      ]
+    },
+    {
+      "name": "distinct-resources-shared-citation",
+      "initial": [
+        {
+          "volume": "1",
+          "reporter": "U.S.",
+          "page": "1"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": [[0, 1]]
+        },
+        {
+          "operation": {
+            "kind": "change",
+            "reference": 0,
+            "field": "page",
+            "value": "20"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "equal",
+            "left": 0,
+            "right": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": true
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [[0, 1]]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [[1, 0]]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        }
+      ]
+    },
+    {
+      "name": "distinct-citations-current-equality",
+      "initial": [
+        {
+          "volume": "1",
+          "reporter": "U.S.",
+          "page": "1"
+        },
+        {
+          "volume": "1",
+          "reporter": "U.S.",
+          "page": "2"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 1,
+            "value": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "change",
+            "reference": 0,
+            "field": "page",
+            "value": "2"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "equal",
+            "left": 0,
+            "right": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": true
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": [[0, 1]]
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 1
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            },
+            {
+              "objectId": 1,
+              "value": 1
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "clear"
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 2
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 2
+            }
+          ],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "get",
+            "resource": 1
+          },
+          "outcome": {
+            "status": "value",
+            "result": 2
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 2
+            }
+          ],
+          "comparisons": [[0, 1]]
+        }
+      ]
+    },
+    {
+      "name": "create-does-not-hash",
+      "initial": [
+        {
+          "volume": "1",
+          "page": "1"
+        }
+      ],
+      "events": [
+        {
+          "operation": {
+            "kind": "create",
+            "reference": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": 0
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "error",
+            "field": "reporter"
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "change",
+            "reference": 0,
+            "field": "reporter",
+            "value": "U.S."
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "hash",
+            "resource": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": "1986750081022884797"
+          },
+          "entries": [],
+          "comparisons": []
+        },
+        {
+          "operation": {
+            "kind": "set",
+            "resource": 0,
+            "value": 0
+          },
+          "outcome": {
+            "status": "value",
+            "result": null
+          },
+          "entries": [
+            {
+              "objectId": 0,
+              "value": 0
+            }
+          ],
+          "comparisons": []
+        }
+      ]
+    }
+  ]
+}

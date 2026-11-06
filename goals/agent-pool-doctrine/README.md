@@ -38,7 +38,11 @@ a committed deny list, and a runbook every orchestrator can copy from.
    its accounts meter (closes the Junie open decision).
 8. [`history/2026-10-18-codex-claude-fallback.md`](./history/2026-10-18-codex-claude-fallback.md) - the
    2026-10-18 amendment: Codex `gpt-6.1-sol` becomes step 2 of the Claude Code chain (R11).
-9. [`../../explorations/cursor-agent-pool/`](../../explorations/cursor-agent-pool/) - BRIEF, DECISIONS
+9. [`history/2026-11-05-base-conflict-merge-main.md`](./history/2026-11-05-base-conflict-merge-main.md) - the
+   2026-11-05 coordination ruling: a base-conflict P0 row means merge `origin/main` now (B1), the
+   merge-gate sibling broadcast and `yeet siblings` (B2), three open PRs per packet (B3), finals
+   merged as they arrive (B4).
+10. [`../../explorations/cursor-agent-pool/`](../../explorations/cursor-agent-pool/) - BRIEF, DECISIONS
    D1–D21, RESEARCH with the hooks smoke test and the Codex meter proof.
 
 ## Current Phase

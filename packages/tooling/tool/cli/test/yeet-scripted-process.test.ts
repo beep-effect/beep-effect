@@ -49,6 +49,7 @@ import {
   withYeetGithubCredentialHint,
   YeetEnsuredPullRequest,
   YeetExecutedStep,
+  YeetPrBodyRequest,
   YeetPullRequestTitle,
   YeetReadyOptions,
   YeetReadyPullRequestRead,
@@ -163,6 +164,24 @@ const PULL_CREATE = "gh api -X POST repos/{owner}/{repo}/pulls";
 const ORIGIN = "git remote get-url --push origin";
 const ORIGIN_URL = "git@github.com:beep-effect/beep-effect.git";
 
+// The kit's `Git.log` reads, as the argv the scripted spawner sees: the title read walks
+// `--no-merges --reverse`, the body read asks for `%b`. Each answer is the kit's NUL record stream:
+// a record opener, the six header fields and, for the body read, the raw `%b` (W7a Y54/Y55).
+const TITLE_LOG = "--no-merges --reverse --end-of-options";
+const BODY_LOG = "%x00%b --reverse --end-of-options";
+const logHeader = (subject: string) =>
+  `\u0000${Str.repeat(40)("a")}\u00002026-01-01T00:00:00Z\u00002026-01-01T00:00:00Z\u0000Ada\u0000ada@example.com\u0000${subject}`;
+const titleLog = (...subjects: ReadonlyArray<string>) =>
+  A.join(
+    A.map(subjects, (subject) => `${logHeader(subject)}\u0000`),
+    ""
+  );
+const bodyLog = (...commits: ReadonlyArray<readonly [subject: string, body: string]>) =>
+  A.join(
+    A.map(commits, ([subject, body]) => `${logHeader(subject)}\u0000${body}\u0000`),
+    ""
+  );
+
 // One scripted process response, matched by a substring of the whole command
 // line. The first matching reply wins; an unscripted command exits 1. A
 // negative exit code scripts a command that could not be spawned at all.
@@ -254,6 +273,11 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
         [{ reuseVerified: true, stagedOnly: true }, "yeet publish --staged-only cannot be combined"],
         [{ amend: true, stagedOnly: true }, "yeet publish --staged-only cannot be combined"],
         [{ pushOnly: true, reuseVerified: true, stagedOnly: true }, "yeet publish --staged-only cannot be combined"],
+        [{ hostedProof: true, mode: "verify" }, "yeet open is a publish that always opens or reuses a pull request."],
+        [{ hostedProof: true, pr: false }, "yeet open is a publish that always opens or reuses a pull request."],
+        [{ hostedProof: true, proveFirst: true }, "yeet open pushes the committed HEAD without a local proof"],
+        [{ hostedProof: true, stagedOnly: true }, "yeet open pushes the committed HEAD without a local proof"],
+        [{ bodyFile: "body.md", mode: "verify" }, "yeet --body-file is only valid for publish and open."],
       ];
       const messages = yield* Effect.forEach(cases, ([options]) => guardFailure(options));
       A.forEach(A.zip(messages, cases), ([message, [, expected]]) => expect(message).toContain(expected));
@@ -542,14 +566,14 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           withProcesses(
             [
               ["merge-base", 0, "abc123\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n\nbody text\n"],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", "body text\n"])],
             ],
             commands
           )
         );
         expect(body).toContain("## feat(repo-cli): ship\n\nbody text\n\n## Local proof\n\n");
         expect(body).toContain("- full:cheap-gates: passed\n- full:pre-push: failed\n\nVerdict: .beep/yeet/runs/");
-        expect(A.some(commandLines(commands), Str.endsWith("abc123..HEAD"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.endsWith("--end-of-options abc123..HEAD --"))).toBe(true);
       })
     );
 
@@ -558,10 +582,27 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         const commands = yield* makeCommands;
         const recorder = yield* makeRecorder;
         const body = yield* buildPrBody(contextAt("/repo"), recorder).pipe(
-          withProcesses([["log --reverse", 0, "## docs: note\n"]], commands)
+          withProcesses([[BODY_LOG, 0, bodyLog(["docs: note", ""])]], commands)
         );
         expect(body).toContain("- no local proof lane ran before the push; hosted CI is the authoritative proof");
-        expect(A.some(commandLines(commands), Str.endsWith(" HEAD"))).toBe(true);
+        expect(A.some(commandLines(commands), Str.endsWith("--end-of-options HEAD --"))).toBe(true);
+      })
+    );
+
+    it.effect("uses the --body-file summary and names the yeet open route without reading git", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([executedStep(0)]);
+        const request = YeetPrBodyRequest.make({
+          summary: O.some("## Summary\n\nWhy it changed.\n"),
+          hostedProof: true,
+        });
+        const body = yield* buildPrBody(contextAt("/repo"), recorder, request).pipe(withProcesses([], commands));
+        expect(body).toContain(
+          "## Summary\n\nWhy it changed.\n\n## Local proof\n\n- none: `yeet open` pushed without local gates; hosted CI is the authoritative proof\n\nVerdict: .beep/yeet/runs/"
+        );
+        expect(body).not.toContain("full:cheap-gates");
+        expect(commandLines(commands)).toEqual([]);
       })
     );
 
@@ -592,8 +633,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): ship")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", ""])],
               [ORIGIN, 0, ORIGIN_URL],
               [PULL_CREATE, 0, restPullJson()],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
@@ -638,8 +679,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): ship")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", ""])],
               [ORIGIN, 0, ORIGIN_URL],
               [PULL_CREATE, 0, restPullJson({ draft: true })],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
@@ -672,8 +713,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         ).pipe(
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): ship")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", ""])],
               [ORIGIN, 0, "git@github.com:fork-owner/beep-effect.git"],
               [PULL_CREATE, 0, restPullJson({ headRefName: branch, draft: true })],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
@@ -704,8 +745,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): ship")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", ""])],
               [ORIGIN, 0, ORIGIN_URL],
               [PULL_CREATE, 0, restPullJson()],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson("trunk")],
@@ -732,8 +773,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           Effect.flip,
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): ship")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", ""])],
               [DEFAULT_BRANCH_READ, 1, "HTTP 502: Bad Gateway"],
             ],
             commands
@@ -760,8 +801,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           Effect.flip,
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): ship")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", ""])],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson(" ")],
             ],
             commands
@@ -785,8 +826,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           Effect.flip,
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): ship")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", ""])],
               [ORIGIN, 0, "/srv/git/beep-effect.git"],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
             ],
@@ -812,8 +853,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           Effect.flip,
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
-              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): ship")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): ship", ""])],
               [ORIGIN, 0, ORIGIN_URL],
               [PULL_CREATE, 1, "a pull request for this branch already exists"],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
@@ -862,7 +903,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         ).pipe(
           withProcesses(
             [
-              ["log --reverse", 0, `## ${MERGE_TITLE}\n`],
+              [BODY_LOG, 0, bodyLog([MERGE_TITLE, ""])],
               [ORIGIN, 0, ORIGIN_URL],
               [PULL_CREATE, 0, restPullJson({ draft: true })],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
@@ -877,7 +918,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           O.map(create, Str.startsWith(`${PULL_CREATE} title=feat(repo-cli): title from message head=`)),
           true
         );
-        expect(A.some(lines, Str.includes("--pretty=%s"))).toBe(false);
+        expect(A.some(lines, Str.includes(TITLE_LOG))).toBe(false);
       })
     );
 
@@ -892,8 +933,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(
           withProcesses(
             [
-              ["log --no-merges", 0, "feat(repo-cli): first real change\nfix(repo-cli): follow-up\n"],
-              ["log --reverse", 0, `## feat(repo-cli): first real change\n\n## ${MERGE_TITLE}\n`],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): first real change", "fix(repo-cli): follow-up")],
+              [BODY_LOG, 0, bodyLog(["feat(repo-cli): first real change", ""], [MERGE_TITLE, ""])],
               [ORIGIN, 0, ORIGIN_URL],
               [PULL_CREATE, 0, restPullJson()],
               [DEFAULT_BRANCH_READ, 0, defaultBranchJson("main")],
@@ -902,7 +943,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           )
         );
         const lines = commandLines(commands);
-        expect(A.some(lines, Str.includes("git log --no-merges --reverse --pretty=%s HEAD"))).toBe(true);
+        expect(A.some(lines, Str.includes(`${TITLE_LOG} HEAD --`))).toBe(true);
         expect(A.some(lines, Str.includes("log -1 --pretty=%s"))).toBe(false);
         const create = A.findFirst(lines, Str.startsWith(PULL_CREATE));
         assertSome(O.map(create, Str.startsWith(`${PULL_CREATE} title=feat(repo-cli): first real change head=`)), true);
@@ -917,7 +958,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         const recorder = yield* makeRecorder;
         const error = yield* ensurePullRequest(contextAt(root), recorder, O.some(createStep), O.none(), {
           findOpen: () => Effect.succeedNone,
-        }).pipe(Effect.flip, withProcesses([["log --no-merges", 0, "\n"]], commands));
+        }).pipe(Effect.flip, withProcesses([[TITLE_LOG, 0, titleLog("")]], commands));
         expect(error.message).toContain("no non-merge commit in HEAD");
         expect(error.message).toContain('pass --message "<conventional subject>"');
         expect(A.some(commandLines(commands), Str.includes("-X POST"))).toBe(false);
@@ -970,7 +1011,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           withProcesses(
             [
               ["gh pr view", 0, prView({ title: MERGE_TITLE })],
-              ["log --no-merges", 0, "feat(repo-cli): from history\n"],
+              [TITLE_LOG, 0, titleLog("feat(repo-cli): from history")],
               ["gh api -X PATCH repos/{owner}/{repo}/pulls/7", 0, restPullJson()],
             ],
             commands

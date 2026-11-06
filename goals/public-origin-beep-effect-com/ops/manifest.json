@@ -40,7 +40,12 @@
     "standards/architecture/DECISIONS.md",
     "standards/ARCHITECTURE.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/retired-iri-authorities-baseline-request.json",
+    "research/retired-iri-authorities-baseline-review.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -56,6 +56,7 @@ const isolatedSuites = [
   "test/goals-bootstrap-plan.test.ts",
   "test/goals-completion-evidence.test.ts",
   "test/goals-completion-observation.test.ts",
+  "test/goals-decisions.test.ts",
   "test/goals-doctor-path-security.test.ts",
   "test/goals-doctor.test.ts",
   "test/goals-graph.test.ts",

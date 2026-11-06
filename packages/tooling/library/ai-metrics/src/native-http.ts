@@ -371,6 +371,12 @@ export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(
             error.reason === "hash-failure" || error.reason === "missing-salt" ? 503 : 400,
             error.reason === "hash-failure" || error.reason === "missing-salt" ? "unavailable" : "malformed"
           ),
+        ObservationLaunchFactsError: (error) =>
+          refused(
+            contentType,
+            error.reason === "retired" ? 410 : error.reason === "conflict" ? 409 : 503,
+            error.reason === "retired" ? "expired" : error.reason === "capacity" ? "capacity" : "storage"
+          ),
         TranscriptIntakeError: (error) =>
           refused(
             contentType,
