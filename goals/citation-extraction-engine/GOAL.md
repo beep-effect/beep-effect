@@ -74,6 +74,12 @@ and push ready changes while continuing this goal. Draft status is not an
 acceptance gate. Readiness for review does not claim completion or authorize
 merging; all accounting, parity, safety and closeout requirements still apply.
 
+Approved 2026-11-05: after PR #2511 merged, continue the unchanged goal in a
+follow-up PR, starting with the committed scanner and word-boundary changes.
+This is an explicit exception to the one-PR delivery and reviewability stop
+condition. Preserve the prior PR and evidence links; all acceptance requirements
+remain binding. See `decisions/2026-11-05-follow-up-publication.md`.
+
 Stop without weakening scope on incompatible prerequisites, unprovable
 exhaustive parity, unrecorded safety/fidelity divergence, or loss of one-PR
 reviewability.

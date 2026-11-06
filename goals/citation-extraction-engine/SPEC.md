@@ -1380,6 +1380,19 @@ See [Unicode source evidence](./history/evidence/2026-11-02-cleaner-unicode.md).
   its dependent snapshot assertions without changing the frozen source corpus.
   See [native controlled cleaners](./history/evidence/2026-11-02-native-controlled-cleaners.md).
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-extraction-engine`; add a `kind: decision` file there, never edit this block._
+
+### Continue unchanged goal after PR 2511 merged, 2026-11-05
+
+On 2026-11-05 the operator explicitly authorized continuing the unchanged citation-extraction-engine goal in a follow-up PR, starting with committed scanner and word-boundary work, after PR #2511 was squash-merged as 96a7698b63ed3e187981faf3b5b2d0663706ee91. This is a scoped exception to the one-PR delivery and reviewability stop condition. All parity, accounting, safety, proof, reflection, and lifecycle requirements remain binding; the prior PR merge does not prove goal completion. Preserve links to the prior PR and exact evidence, and publish ready changes using hosted CI.
+
+Lane `citation-extraction-engine`
+
+Reverse: Requires a new explicit operator instruction; this publication exception does not relax any acceptance requirement.
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
