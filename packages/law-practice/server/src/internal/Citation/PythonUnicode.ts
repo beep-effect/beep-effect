@@ -195,6 +195,30 @@ const materializeSlice = Effect.fn("Citation.materializeNativeSlice")(function* 
   return CitationPythonUnicodeStorage.make({ width, bytes });
 });
 
+/** Normalized unit-step Python slice bounds over trusted native storage.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationPythonSliceBounds extends S.Opaque<CitationPythonSliceBounds, { readonly brand: unique symbol }>()(
+  S.Struct({ start: S.Natural, end: S.Natural }).pipe(
+    $I.annoteSchema("CitationPythonSliceBounds", {
+      description: "Clamped native slice bounds with empty reversed intervals.",
+    })
+  )
+) {}
+/** Normalize signed Python slice endpoints without allocating source text.
+ * @internal @category operations @since 0.0.0
+ */
+export const normalizeCitationPythonSlice: {
+  (start: number, end: number): (source: CitationPythonUnicodeStorage) => CitationPythonSliceBounds;
+  (source: CitationPythonUnicodeStorage, start: number, end: number): CitationPythonSliceBounds;
+} = dual(3, (source: CitationPythonUnicodeStorage, start: number, end: number) => {
+  const size = source.bytes.length / source.width;
+  const normalize = (position: number) =>
+    Num.clamp(position < 0 ? size + position : position, { minimum: 0, maximum: size });
+  const lower = normalize(start);
+  return CitationPythonSliceBounds.make({ start: lower, end: Num.max(lower, normalize(end)) });
+});
+
 /** Materialize a range already validated by its captured source owner. Native
  * storage and bounds are trusted here, never issued by decoding this layout.
  * The receiver reserves exact units/bytes before allocating the new payload.
@@ -305,17 +329,47 @@ export const concatCitationPythonRanges = Effect.fn("Citation.concatNativeRanges
   return CitationPythonUnicodeStorage.make({ width, bytes });
 });
 
+const nativeLiteralCandidate = (
+  source: CitationPythonUnicodeStorage,
+  needle: CitationPythonUnicodeStorage,
+  start: number
+) => needle.bytes.length === 0 || citationPythonPointAt(source, start) === citationPythonPointAt(needle, 0);
 const nativeReplacementMatches = Effect.fn("Citation.nativeReplacementMatches")(function* (
   source: CitationPythonUnicodeStorage,
   needle: CitationPythonUnicodeStorage,
   start: number
 ) {
   const count = needle.bytes.length / needle.width;
-  for (let offset = 0; offset < count; offset++) {
+  if (!nativeLiteralCandidate(source, needle, start)) return false;
+  for (let offset = 1; offset < count; offset++) {
     if (offset % 4096 === 0) yield* Effect.yieldNow;
     if (citationPythonPointAt(source, start + offset) !== citationPythonPointAt(needle, offset)) return false;
   }
   return true;
+});
+/** Find a literal native word in a normalized Python slice, returning offsets
+ * relative to that slice. Retain only the first/last match, not a match array.
+ * @internal @category operations @since 0.0.0
+ */
+export const findCitationPythonLiteral = Effect.fn("Citation.findNativeLiteral")(function* (
+  source: CitationPythonUnicodeStorage,
+  needle: CitationPythonUnicodeStorage,
+  start: number,
+  end: number,
+  last?: boolean
+) {
+  const bounds = normalizeCitationPythonSlice(source, start, end);
+  const count = needle.bytes.length / needle.width;
+  const [initial, stop, step] =
+    last === true ? [bounds.end - count, bounds.start, -1] : [bounds.start, bounds.end - count, 1];
+  let visited = 0;
+  for (let index = initial; step * (index - stop) <= 0; index += step) {
+    if (visited++ % 4096 === 0) yield* Effect.yieldNow;
+    if (!nativeLiteralCandidate(source, needle, index)) continue;
+    if (yield* nativeReplacementMatches(source, needle, index))
+      return O.some(CitationPythonSliceBounds.make({ start: index - bounds.start, end: index - bounds.start + count }));
+  }
+  return O.none<CitationPythonSliceBounds>();
 });
 const visitNativeReplacement = Effect.fn("Citation.visitNativeReplacement")(function* <E>(
   source: CitationPythonUnicodeStorage,

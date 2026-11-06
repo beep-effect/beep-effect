@@ -1261,6 +1261,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert annotation preparation and restore the prior single Document forward-map implementation together; retain all original source corpora and open acceptance requirements.
 
+### Preserve original annotation style-span expansion, 2026-11-06
+
+The original i/em/b proximity helper now preserves initial-span membership, first/last literal searches, raw signed arithmetic and Python slice bounds on native text. Shared Unicode range/search primitives avoid whole candidate copies and arrays; exact final slice allocation uses the captured parent budget. All 685 original source observations compare, and sixteen tests across style, annotation, native Unicode and literal composition pass. XML balance checking, wrap substitution, full skip/wrap dispatch and general host/numeric behavior remain open. See history/evidence/2026-11-06-annotation-style.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the style helper and shared native search/slice migration together; restore the prior assembly normalizer and retain all open annotation obligations.
+
 ### Authenticated source through verified extraction, 2026-11-06
 
 A genuine parent source capability now drives the actual primitive extraction request. Unchanged text retains its existing proof. Changed tokenizer text receives a verified manifestation with preserved artifact/locator/normalization identity and a versioned parent/engine/cleaning-mode/output commitment. Source derivation and occurrence projection share one admitted operation, deadline and cumulative budget with extraction. Plain, Unicode and raw HTML replay pass on both runtimes; output evidence is produced by production code. Determinism, mode/engine changes, malformed-text refusal and shortcut bypass controls pass. Public service/Layer, authenticated runtime asset loading, final document adaptation and full accounting/safety qualification remain open. See history/evidence/2026-11-06-verified-extraction.md.

@@ -12,7 +12,7 @@ import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
 import * as Num from "effect/Number";
 import * as S from "effect/Schema";
-import { concatCitationPythonRanges } from "./PythonUnicode.ts";
+import { concatCitationPythonRanges, normalizeCitationPythonSlice } from "./PythonUnicode.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonSliceLayout, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
@@ -36,9 +36,6 @@ export class CitationAnnotationReplacement extends S.Opaque<
   )
 ) {}
 const length = (value: CitationPythonUnicodeStorage) => value.bytes.length / value.width;
-// Python's unit-step slice normalization is independent for each endpoint.
-const sliceIndex = (position: number, size: number) =>
-  Num.clamp(position < 0 ? size + position : position, { minimum: 0, maximum: size });
 /** Capture the enclosing operation's budget. The caller owns validated immutable
  * native inputs, source-defined tuple sorting and offset mapping. This executes
  * the unchecked/default-concatenation branch only; HTML balancing and custom
@@ -70,10 +67,8 @@ export const makeCitationAnnotationAssembly = Effect.fn("Citation.makeAnnotation
       readonly end: number;
     }>();
     const append = (value: CitationPythonUnicodeStorage, start: number, end: number) => {
-      const size = length(value);
-      const lower = sliceIndex(start, size);
-      const upper = sliceIndex(end, size);
-      MutableList.append(ranges, { source: value, start: lower, end: Num.max(lower, upper) });
+      const bounds = normalizeCitationPythonSlice(value, start, end);
+      MutableList.append(ranges, { source: value, ...bounds });
     };
     let lastEnd = 0;
     for (const replacement of ordered) {
