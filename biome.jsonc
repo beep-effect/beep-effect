@@ -92,6 +92,8 @@
       // Keep one authenticated source dispatch vector per line for review.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/token-dispatch.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/token-context.json",
+      // Source process traces are hash-authenticated by CitationCaseNameProcess.fixtures.ts.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/case-name-process.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/vocabulary-mapping.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-adversarial-corpus.json",

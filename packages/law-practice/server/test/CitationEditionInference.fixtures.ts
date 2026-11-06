@@ -87,6 +87,12 @@ export const replayCitationEditionGuesses = Effect.fn("EditionInferenceTest.gues
     DateTime.withCurrentZoneOffset(0)
   );
   const ref = (index: number) => A.getUnsafe(corpus.synthetic, index).edition;
+  const invalidReference = yield* inference.includesYear("not-an-edition", 2026).pipe(Effect.flip);
+  expect(invalidReference).toMatchObject({ reason: "invalid-input" });
+  const invalidYear = yield* inference.includesYear(ref(0), 2026.5).pipe(Effect.flip);
+  expect(invalidYear).toMatchObject({ reason: "invalid-input" });
+  const invalidCandidates = yield* inference.guess({}).pipe(Effect.flip);
+  expect(invalidCandidates).toMatchObject({ reason: "invalid-input" });
   const maybe = (index: number | null) => (index === null ? null : ref(index));
   for (const [exact, variation, year, prior, expected, calls, clockReads] of corpus.cases) {
     reads.length = 0;

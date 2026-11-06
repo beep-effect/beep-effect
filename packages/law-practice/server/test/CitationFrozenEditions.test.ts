@@ -47,6 +47,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
         adapter.lookup(CitationEditionRef.make(Str.repeat(64)("0")), first.family)
       );
       expect(citationResult4.reason).toBe("missing-edition");
+      const missingSource = yield* adapter.source(CitationEditionRef.make(Str.repeat(64)("0"))).pipe(Effect.flip);
+      expect(missingSource.reason).toBe("missing-edition");
       const returned = yield* adapter.lookup(first.edition, first.family);
       const originalName = returned.value.reporter.name;
       const mutable: { name: string } = returned.value.reporter;
@@ -125,6 +127,21 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
         )
       );
       expect(failure.reason).toBe("digest-failed");
+      expect("cause" in failure).toBe(false);
+    })
+  );
+
+  it.effect("rejects malformed digest output before accepting an authenticated bundle", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const failure = yield* makeCitationFrozenEditions(bundle).pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
+        ),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "CitationFrozenEditionFailure", reason: "digest-failed" });
       expect("cause" in failure).toBe(false);
     })
   );

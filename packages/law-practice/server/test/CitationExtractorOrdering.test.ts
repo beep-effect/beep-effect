@@ -27,6 +27,10 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         }
         const selector = yield* makeCitationExtractorSelection(limits, controls.ordering.bindings);
         const ordering = yield* makeCitationExtractorOrdering(limits, controls.ordering.bindings);
+        const invalidPolicy = yield* makeCitationExtractorOrdering({}, controls.ordering.bindings).pipe(Effect.flip);
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+        const invalidBindings = yield* makeCitationExtractorOrdering(limits, {}).pipe(Effect.flip);
+        expect(invalidBindings).toMatchObject({ reason: "invalid-bindings" });
         let nonIndexOrders = 0;
         for (const row of controls.ordering.cases) {
           const citationResult2 = yield* selector.select(row.source);

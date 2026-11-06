@@ -153,6 +153,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
       expect(incoherent).toMatchObject({ _tag: "CitationSpanOffsetsFailure", reason: "invalid-plan" });
       const invalid = yield* map.update(0.5, "right").pipe(Effect.flip);
       expect(invalid).toMatchObject({ reason: "invalid-offset" });
+      const invalidSide = yield* map.update(0, "middle").pipe(Effect.flip);
+      expect(invalidSide).toMatchObject({ reason: "invalid-offset" });
+      const invalidPolicy = yield* makeCitationSpanOffsets({}, source).pipe(Effect.flip);
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+      const invalidPlan = yield* makeCitationSpanOffsets(limits, {}).pipe(Effect.flip);
+      expect(invalidPlan).toMatchObject({ reason: "invalid-plan" });
     })
   );
   it.effect("copies exposed tag buffers and rejects ambiguous geometry without partial text", () =>
