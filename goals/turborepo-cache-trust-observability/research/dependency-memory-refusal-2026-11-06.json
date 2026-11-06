@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "cache-dependency-memory-refusal-checkpoint/v1",
+  "recordedAt": "2026-11-06T11:37:47.264424+00:00",
+  "sourceRevision": "4d79b1d1c4bbf5925c1129d83f79209abfbeb2df",
+  "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42209083425",
+  "jobId": 127862986718,
+  "jobLogSha256": "9a6ad8ef15c1dd5f9dec746899bb3221dbfafdd3254b7aafbbf689d1517c1b96",
+  "sourceInspectionPassed": true,
+  "diagnosticStatus": "refused",
+  "diagnosticCode": "memory-limit",
+  "aggregateReportBytes": 2740743,
+  "artifacts": [
+    {
+      "id": 13498632235,
+      "name": "cache-producer-inspection-42209083425-1",
+      "archiveBytes": 2740786,
+      "archiveSha256": "e5622d88013832770d55ffee89ed24bf4cadd8cb6030c377fba6c6331a82d89a",
+      "reportBytes": 2740650,
+      "reportSha256": "65b6b971d1e1995d7679bfffbfac2a53e1627a2f82429a7461e0daf439fd0123"
+    },
+    {
+      "id": 13497349679,
+      "name": "cache-producer-dependencies-42209083425-1",
+      "archiveBytes": 241,
+      "archiveSha256": "4daf5d54d6c7eae3e6b14c9a1ad8d1a249f8ee6c1e06d8973d7965abb2a97f2b",
+      "reportBytes": 93,
+      "reportSha256": "b5e44a2dc91beeb192977b8d5fa468c2a0c4e2d31aa7cd18b88f63cd2d88630a"
+    }
+  ],
+  "observedDependencyTree": {
+    "regularFiles": 229632,
+    "entries": 251068,
+    "bytes": 4380753067,
+    "pythonExecutableTarget": "/usr/bin/python3.9"
+  },
+  "repairScope": "Add bounded module-family and line metadata for memory refusals, plus Python version. The allocation site is still unknown until a new hosted observation. Do not raise resource caps, change archive identity or count this refused attempt as successful.",
+  "boundsUnchanged": {
+    "runnerJobsAtOnce": 1,
+    "jobMinutes": 10,
+    "diagnosticSeconds": 300,
+    "archivePasses": 2,
+    "archiveBytesPerPass": 6442450944,
+    "processMemoryMiB": 256,
+    "entriesPerPass": 600000,
+    "groupsPerPass": 4096,
+    "aggregateReportBytes": 4194304,
+    "retentionDays": 1
+  },
+  "regressionsAuthored": [
+    "Private module names, file paths, exception payloads and frame values are absent from memory-location metadata.",
+    "A second MemoryError while collecting location metadata retains the original minimal refusal."
+  ],
+  "localValidation": "AST parsing only. Local test, verify and publish commands were skipped by operator instruction. Functional proof is pending hosted CI.",
+  "successfulDiagnosticObservations": 0,
+  "requiredSuccessfulDiagnosticObservations": 2,
+  "producerApprovalGranted": false,
+  "credentialsSigningOrCapacityChanged": false,
+  "wholeGoalAcceptanceChanged": false
+}

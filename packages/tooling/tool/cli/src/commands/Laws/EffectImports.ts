@@ -6,6 +6,8 @@
  */
 
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { createRepoTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
@@ -31,7 +33,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { runGitRawOutput } from "../../internal/repo-run/GitExec.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { messageGitErrorAdapter } from "./internal/TrackedTextFiles.ts";
 import { scriptFences } from "./internal/TypeScriptFences.ts";
 import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
@@ -1723,12 +1725,28 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
 // the walk, keeps the corpus to what a commit can carry. Outside a git work
 // tree the listing fails and the walk is kept unfiltered.
 const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(function* () {
-  return yield* runGitRawOutput(
-    process.cwd(),
-    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-    messageGitErrorAdapter((message) => message)
-  ).pipe(
-    Effect.map((output) => O.some(HashSet.fromIterable(A.filter(Str.split("\0")(output), Str.isNonEmpty)))),
+  // Tracked plus visible untracked paths through the kit (`ls-files -z` and `ls-files --others
+  // --exclude-standard -z`), as the retired `ls-files --cached --others` capture listed them (SPEC D-21).
+  const git = yield* Git;
+  const adapter = messageGitErrorAdapter((message) => message);
+  const cwd = process.cwd();
+  return yield* Effect.all([
+    git.lsFiles(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles([]), adapter))),
+    // `relative: true` keeps the untracked half cwd-relative, as `lsFiles` and the Markdown filter are.
+    git
+      .untrackedFiles(cwd, { relative: true })
+      .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(true), adapter))),
+  ]).pipe(
+    Effect.map(([tracked, untracked]) =>
+      O.some(
+        HashSet.fromIterable(
+          A.appendAll(
+            A.map(tracked, (entry) => entry.path),
+            untracked
+          )
+        )
+      )
+    ),
     Effect.orElseSucceed(O.none<HashSet.HashSet<string>>)
   );
 });
