@@ -15,5 +15,19 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../../drivers/pretext/tsconfig.json"
+    },
+    {
+      "path": "../../modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../dock/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/test-runner/tsconfig.json"
+    }
+  ]
 }

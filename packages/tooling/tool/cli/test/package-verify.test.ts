@@ -504,14 +504,38 @@ export const invalidCategory = 1;
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
-    it.effect("rejects more than one package argument before discovery", () =>
-      runPackageVerifyCli({ packageArgs: ["@beep/a", "@beep/b"], quick: true }).pipe(
-        Effect.flip,
-        Effect.map((error) => {
-          expect(error.message).toContain("expected at most one package argument");
-        }),
-        Effect.provideServiceEffect(Console.Console, TestConsole.make)
-      )
+    it.effect("finishes later packages after a diagnostic failure and deduplicates names", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
+        Effect.acquireUseRelease(
+          Effect.sync(() => vi.spyOn(process, "cwd").mockReturnValue(tmpDir)),
+          () =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              yield* seedWorkspaceRepository(tmpDir, { "beep:lint": "false", "beep:check": "true" });
+              const second = path.join(tmpDir, "packages/second");
+              yield* fs.makeDirectory(second, { recursive: true });
+              const manifest = yield* encodeJson({
+                name: "@beep/second",
+                private: true,
+                scripts: { "beep:lint": "printf checked >> checked", "beep:check": "true" },
+              });
+              yield* fs.writeFileString(path.join(second, "package.json"), manifest);
+              const turbo = path.join(tmpDir, "node_modules/.bin/turbo");
+              yield* fs.makeDirectory(path.dirname(turbo), { recursive: true });
+              yield* fs.writeFileString(turbo, "#!/bin/sh\nexit 0\n");
+              yield* fs.chmod(turbo, 0o755);
+              const error = yield* runPackageVerifyCli({
+                packageArgs: ["@beep/demo", "@beep/second", "@beep/second"],
+                quick: true,
+              }).pipe(Effect.flip);
+              expect(error.message).toBe("pkg-verify failed.");
+              const checked = yield* fs.readFileString(path.join(second, "checked"));
+              expect(checked).toBe("checked");
+            }),
+          (cwdSpy) => Effect.sync(() => cwdSpy.mockRestore())
+        )
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
     it.effect("selects an explicit workspace package", () =>
