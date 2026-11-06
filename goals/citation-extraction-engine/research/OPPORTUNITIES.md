@@ -456,3 +456,13 @@ history/evidence/2026-11-03-edition-inference.md.
   replace only the error handler, and replay the complete original corpus.
 - Prevention: use tightly bounded edits for nested pipelines and inspect the
   resulting method before running source-fidelity proof.
+
+## 2026-11-06 — confirm identity ownership before calling it a defect
+
+- Work: separate canonical source evidence from extraction-specific behavior.
+- Evidence: focused root/nested resolver identity-mutation controls passed on
+  the previous code; canonical constructors already preserved the expectation.
+- Resolution: retain the controls and describe the work as shared evidence
+  extraction, not a verification vulnerability fix.
+- Prevention: run the focused baseline before diagnosing reference ownership;
+  inspect canonical constructor/verifier behavior instead of assuming aliasing.

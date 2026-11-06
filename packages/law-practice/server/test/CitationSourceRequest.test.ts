@@ -64,6 +64,38 @@ it.layer(citationTokenizerTestLayer)("canonical single-source request adapter", 
       expect(calls).toBe(1);
     })
   );
+  it.effect("rejects resolver-side identity mutation instead of changing the authorized expectation", () =>
+    Effect.gen(function* () {
+      const proof = yield* citationFixtureSourceProof("Alpha");
+      const expected = proof.source;
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      for (const field of ["root", "nested"]) {
+        const resolver = SourceTextResolver.of({
+          resolve: Effect.fn("SourceRequestTest.mutateResolverIdentity")((request) =>
+            Effect.sync(() => {
+              if (field === "root")
+                expect(Reflect.set(request.identity, "sourceRef", "citation-test:substituted")).toBe(true);
+              else expect(Reflect.set(request.identity.extractor, "version", "substituted")).toBe(true);
+              return ResolvedSourceText.make({ identity: request.identity, text: "Alpha" });
+            })
+          ),
+        });
+        const adapter = yield* makeCitationSourceRequestAdapter(limits).pipe(
+          Effect.provideService(SourceTextResolver, resolver)
+        );
+        const failure = yield* adapter
+          .prepare({ source: expected, sourceText: "Alpha", role: "plain" })
+          .pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "CitationPrerequisiteError",
+          operation: "extract",
+          dependency: "source-evidence",
+        });
+        expect(expected.sourceRef).toBe(proof.source.sourceRef);
+        expect(expected.extractor.version).toBe(proof.source.extractor.version);
+      }
+    })
+  );
   it.effect("leaves all shortcut-ignored options unread while independently verifying the source", () =>
     Effect.gen(function* () {
       const source = yield* citationFixtureSourceProof("eyecite");

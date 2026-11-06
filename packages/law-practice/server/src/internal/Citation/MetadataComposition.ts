@@ -30,7 +30,7 @@ import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { CitationRegexOperation, decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { makeCitationTextBudget } from "./TextBudget.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -176,10 +176,12 @@ const captureDependencies = Effect.fn("Citation.captureMetadataDependencies")(fu
   const supplied = yield* Effect.serviceOption(CitationNativeProcessAdmission);
   const admission = O.isSome(supplied) ? supplied.value : yield* makeCitationNativeProcessAdmission(limits);
   const clock = yield* Clock.Clock;
+  const selectedOperation = yield* CitationRegexOperation;
   const digest = yield* Digest.Digest;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner;
   return Context.make(Clock.Clock, clock).pipe(
+    Context.add(CitationRegexOperation, selectedOperation),
     Context.add(Digest.Digest, digest),
     Context.add(Path.Path, path),
     Context.add(ChildProcessSpawner, spawner),
@@ -287,7 +289,7 @@ export const makeCitationMetadataStage = <
     const invoke = Effect.fn("Citation.invokeMetadataStage")(
       (raw: unknown) =>
         installed.operation.run(
-          "extract",
+          installed.timing.operation,
           Effect.gen(function* () {
             const [patch, units] = yield* installed.run(raw);
             return definition.project(patch, units);

@@ -2,31 +2,25 @@
  * Reuses the canonical SourceTextResolver and provenance verifier.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { ResolvedSourceText, ResolveSourceTextRequest, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineExtractionOptions,
   CitationEngineLimits,
   CitationEngineSourceInput,
   CitationInputError,
-  CitationPrerequisiteError,
   CitationSafetyLimitExceeded,
   CitationSourceRole,
 } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import {
-  VerifiedSourceText,
-  VerifySourceTextIdentityInput,
-  verifySourceTextIdentity,
-} from "@beep/provenance/VerifiedTextAnchor";
+import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
-import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
+import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceRequest");
@@ -75,7 +69,6 @@ const MarkupProbe = S.Struct({ markup: Slot.pipe(S.withDecodingDefaultKey(Effect
 const SourceJson = SourceTextIdentity.pipe(S.toCodecJson, S.fromJsonString);
 const LimitsJson = CitationEngineLimits.pipe(S.toCodecJson, S.fromJsonString);
 const inputFailure = () => CitationInputError.make({ operation: "extract" });
-const prerequisite = () => CitationPrerequisiteError.make({ operation: "extract", dependency: "source-evidence" });
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const prepareOptions = Effect.fn("Citation.prepareSourceRequestOptions")(function* (raw: unknown, maximum: number) {
@@ -100,54 +93,23 @@ export const makeCitationSourceRequestAdapter = Effect.fn("Citation.makeSourceRe
 ) {
   const decoded = yield* decodeCitationRegexPolicy(policy, inputFailure);
   const limits = yield* snapshotCitationValue(LimitsJson, decoded, inputFailure);
-  const resolver = yield* SourceTextResolver;
-  const digest = yield* Digest.Digest;
+  const evidence = yield* makeCitationSourceEvidence(limits);
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const resolve = Effect.fn("Citation.resolveRequestSource")(function* (source: SourceTextIdentity, text: string) {
-    const resolved = yield* resolver.resolve(ResolveSourceTextRequest.make({ identity: source })).pipe(
-      Effect.tapError(() =>
-        Effect.logDebug("Citation canonical source resolution refused").pipe(
-          Effect.annotateLogs({ operation: "extract", dependency: "source-evidence", stage: "resolve" })
-        )
-      ),
-      Effect.mapError(prerequisite),
-      Effect.flatMap(S.decodeUnknownEffect(ResolvedSourceText)),
-      Effect.mapError(prerequisite)
-    );
-    if (Str.length(resolved.text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
-    const proof = yield* verifySourceTextIdentity(
-      VerifySourceTextIdentityInput.make({
-        expectedSource: source,
-        source: resolved.identity,
-        sourceText: resolved.text,
-      })
-    ).pipe(
-      Effect.tapError(() =>
-        Effect.logDebug("Citation canonical source verification refused").pipe(
-          Effect.annotateLogs({ operation: "extract", dependency: "source-evidence", stage: "verify" })
-        )
-      ),
-      Effect.mapError(prerequisite)
-    );
-    if (proof.sourceText !== text) return yield* inputFailure();
-    return proof;
-  });
+  const resolve = Effect.fn("Citation.resolveRequestSource")((source: SourceTextIdentity, text: string) =>
+    evidence.resolve({ source, sourceText: text })
+  );
   const prepare: (raw: unknown) => Effect.Effect<CitationPreparedSourceRequest, CitationEngineFailure> = Effect.fn(
     "Citation.prepareSourceRequest"
-  )(
-    function* (raw: unknown) {
-      const input = yield* S.decodeUnknownEffect(Probe)(raw).pipe(Effect.mapError(inputFailure));
-      if (Str.length(input.sourceText) > limits.sourceUtf16) return yield* safety("sourceUtf16");
-      const source = yield* snapshotCitationValue(SourceJson, input.source, inputFailure);
-      const shortcut = isShortcut(input);
-      const options = shortcut ? O.none() : yield* prepareOptions(raw, limits.resolutionIterations).pipe(Effect.asSome);
-      const proof = yield* resolve(source, input.sourceText);
-      if (O.isNone(options)) return CitationPreparedSourceRequest.cases.Shortcut.make({ source: proof });
-      return CitationPreparedSourceRequest.cases.Extract.make({ source: proof, role: input.role, ...options.value });
-    },
-    Effect.provideService(Digest.Digest, digest),
-    timing.timed
-  );
+  )(function* (raw: unknown) {
+    const input = yield* S.decodeUnknownEffect(Probe)(raw).pipe(Effect.mapError(inputFailure));
+    if (Str.length(input.sourceText) > limits.sourceUtf16) return yield* safety("sourceUtf16");
+    const source = yield* snapshotCitationValue(SourceJson, input.source, inputFailure);
+    const shortcut = isShortcut(input);
+    const options = shortcut ? O.none() : yield* prepareOptions(raw, limits.resolutionIterations).pipe(Effect.asSome);
+    const proof = yield* resolve(source, input.sourceText);
+    if (O.isNone(options)) return CitationPreparedSourceRequest.cases.Shortcut.make({ source: proof });
+    return CitationPreparedSourceRequest.cases.Extract.make({ source: proof, role: input.role, ...options.value });
+  }, timing.timed);
   const captureSlot = Effect.fn("Citation.captureRequestSourceSlot")(function* (slot: typeof Slot.Type) {
     if (slot === null) return null;
     if (Str.length(slot.sourceText) > limits.sourceUtf16) return yield* safety("sourceUtf16");
@@ -158,35 +120,31 @@ export const makeCitationSourceRequestAdapter = Effect.fn("Citation.makeSourceRe
     slot === null ? Effect.succeed(null) : resolve(slot.source, slot.sourceText);
   const preparePair: (raw: unknown) => Effect.Effect<CitationPreparedSourceRequest, CitationEngineFailure> = Effect.fn(
     "Citation.prepareSourcePairRequest"
-  )(
-    function* (raw: unknown) {
-      const first = yield* S.decodeUnknownEffect(PlainProbe)(raw).pipe(Effect.mapError(inputFailure));
-      const plain = yield* captureSlot(first.plain);
-      // Read only the plain slot before the original shortcut. Markup and all
-      // option getters stay unread on that path.
-      if (plain !== null && plain.sourceText === "eyecite") {
-        const source = yield* resolve(plain.source, plain.sourceText);
-        return CitationPreparedSourceRequest.cases.Shortcut.make({ source });
-      }
-      const second = yield* S.decodeUnknownEffect(MarkupProbe)(raw).pipe(Effect.mapError(inputFailure));
-      const markup = yield* captureSlot(second.markup);
-      if (plain === null && markup === null) return yield* inputFailure();
-      const options = yield* prepareOptions(raw, limits.resolutionIterations);
-      const plainProof = yield* resolveSlot(plain);
-      const markupProof = yield* resolveSlot(markup);
-      if (plainProof !== null) {
-        return CitationPreparedSourceRequest.cases.Extract.make({
-          source: plainProof,
-          role: "plain",
-          ...options,
-          ...O.getSomesStruct({ companion: O.fromNullishOr(markupProof) }),
-        });
-      }
-      if (markupProof === null) return yield* inputFailure();
-      return CitationPreparedSourceRequest.cases.Extract.make({ source: markupProof, role: "markup", ...options });
-    },
-    Effect.provideService(Digest.Digest, digest),
-    timing.timed
-  );
+  )(function* (raw: unknown) {
+    const first = yield* S.decodeUnknownEffect(PlainProbe)(raw).pipe(Effect.mapError(inputFailure));
+    const plain = yield* captureSlot(first.plain);
+    // Read only the plain slot before the original shortcut. Markup and all
+    // option getters stay unread on that path.
+    if (plain !== null && plain.sourceText === "eyecite") {
+      const source = yield* resolve(plain.source, plain.sourceText);
+      return CitationPreparedSourceRequest.cases.Shortcut.make({ source });
+    }
+    const second = yield* S.decodeUnknownEffect(MarkupProbe)(raw).pipe(Effect.mapError(inputFailure));
+    const markup = yield* captureSlot(second.markup);
+    if (plain === null && markup === null) return yield* inputFailure();
+    const options = yield* prepareOptions(raw, limits.resolutionIterations);
+    const plainProof = yield* resolveSlot(plain);
+    const markupProof = yield* resolveSlot(markup);
+    if (plainProof !== null) {
+      return CitationPreparedSourceRequest.cases.Extract.make({
+        source: plainProof,
+        role: "plain",
+        ...options,
+        ...O.getSomesStruct({ companion: O.fromNullishOr(markupProof) }),
+      });
+    }
+    if (markupProof === null) return yield* inputFailure();
+    return CitationPreparedSourceRequest.cases.Extract.make({ source: markupProof, role: "markup", ...options });
+  }, timing.timed);
   return { prepare, preparePair };
 });

@@ -1445,6 +1445,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert server-only failure/operation exports and the narrow translator; preserve safety payloads and all goal requirements.
 
+### Share canonical source evidence and capture operation ownership, 2026-11-06
+
+Canonical resolver/verifier behavior now has one shared helper, reused by single/paired extraction and independently qualified under annotation timing without extraction shortcuts. Shared metadata ownership captures the operation reference for admission and children. Fifteen source/routing tests pass in 8.00s and two actual Bun/Node paired tests pass in 53.33s. Root/nested resolver mutation controls passed before the refactor; no verification vulnerability is claimed. Server checks, named-capability declarations, blocking laws and scoped Fallow pass with zero introduced findings. Admitted annotation/raw-source/public engine composition, general host/nested callbacks, builtin difflib and every open law/fidelity/proof obligation remain required. See history/evidence/2026-11-06-shared-source-evidence.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the shared helper extraction and operation routing together while preserving canonical verification, source corpora and every unfinished acceptance requirement.
+
 ### Verify raw source components through the existing resolver, 2026-11-06
 
 Server-only source/options components share builtin/container/role schemas with private implementation. The adapter reuses SourceTextResolver and the public provenance verifier, snapshots before resolver work, preflights sizes and preserves ignored shortcut getters. Connected replay now issues input proofs through that production boundary. Single-source scope is explicit; complete dual-source/retained-input dispatch, reports, ports and service/Layer remain open. Corrected hosted JSDoc/docgen missing-since failures by separating tags, without baseline changes. See history/evidence/2026-11-06-source-request-boundary.md.
