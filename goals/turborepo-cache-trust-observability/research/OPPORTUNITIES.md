@@ -2519,3 +2519,15 @@ privately retained; their sanitized identities and hashes are in the paired
 observation report. While adding this evidence, source review found the two consumed Python files absent from the CLI test, test:property and coverage
 inputs. Adding them preserves inherited inputs and prevents Python-only edits
 from being missed; coverage caching remains disabled.
+
+### 2026-11-06 — refresh decision projections after body edits
+
+Hosted Lint Policy job 128014054310 failed with one new goals-doctor finding:
+`decision-log-drift` in this packet. The decision body had been edited after its
+generated SPEC projection was written. This was introduced in the current PR.
+Refresh through `bun run beep goals decisions write --slug
+turborepo-cache-trust-observability`; the writer reports zero remaining drift.
+Push that generated correction and let hosted CI provide the next proof, without
+running a local quality suite or weakening the baseline. Prevent recurrence by
+refreshing the decision projection after the final decision-body edit. The failed
+job log remains privately retained; this repair changes no runtime behavior.
