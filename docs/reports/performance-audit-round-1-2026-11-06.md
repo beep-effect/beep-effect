@@ -14,7 +14,7 @@ records independent decisions rather than adopting reviewer claims as proof.
 
 | ID | Candidate | Independent validation and disposition |
 | --- | --- | --- |
-| F1a | Share adjacent final-check repository fingerprints | Implemented in #2767 using the existing quality-battery pattern. Real subprocess controls measured three commands with four hashes instead of six; three resumed hits with one instead of three; an intervening live mutation forces fresh identity. All 51 focused tests, package lint/check and docgen pass. Full package audit remains in progress. |
+| F1a | Share adjacent final-check repository fingerprints | Implemented in this follow-up using the existing quality-battery pattern; #2767 landed the initial proof reuse before this refinement was published. Real subprocess controls measured three commands with four hashes instead of six; three resumed hits with one instead of three; an intervening live mutation forces fresh identity. All 51 focused tests, package lint/check and docgen passed on the original refinement checkout; full package verification passed (audit 148.4s, docgen 44.7s). Fresh-base verification is recorded in the follow-up pull request. |
 | F1b | Seed proof index from the current Git index | Rejected as proposed. A real Git fixture with a modified tracked file marked assume-unchanged produced different trees: a fresh index captured the edit, while a copied index missed it. Retain fresh-index semantics. |
 | F2 | Persist per-environment-key hashes for refusal diagnostics | Not accepted as proposed. The measured tracing-ID miss is fixed and separate-command resume succeeds. Persisting hashes of arbitrary environment values adds sensitive fingerprint data, and a public salt does not prevent low-entropy guessing. No further unexplained miss has been reproduced. Future diagnostic work needs a bounded non-secret design and a demonstrated miss. |
 | F3 | Reuse clean-install proof across commits with unchanged manifests | Rejected as proposed. Root prepare executes `scripts/prune-tsgo-backups.mjs`, outside the enumerated manifest/lock/config digest set; lifecycle behavior can change without those inputs changing. Exact-head/tree identity remains required. |
@@ -26,6 +26,14 @@ session data, source reflections or historical logs. Those are open ground for
 subsequent reviewers, not evidence of no opportunity.
 
 ## Additional observed friction
+
+- Fresh-base `quality package-verify @beep/repo-cli` passed (audit 231.2s,
+  docgen 55.2s), then publication's cheap policy gate found an introduced EV006
+  assertion in `yeet-tier-dedupe.test.ts`. The test now uses the existing
+  `assertTrue` helper, preserving its aggregate predicate. A scoped detector
+  replay reports zero findings and the 20-test suite passes. A Biome-only early
+  preflight would not catch this policy failure; any future package preflight
+  must account for the existing cheap-policy coverage before claiming parity.
 
 - A CLI CI job reached its one-hour limit in `apt-get update` before testing.
   #2766 now bounds package-manager network and whole-operation waits; eleven
@@ -41,7 +49,7 @@ subsequent reviewers, not evidence of no opportunity.
 
 - After #2766 became ready, Yeet claimed no monitor was watching even while its
   attached publication monitor wrote fresh matching-head status. The lookup checks
-  detached registration only. #2767 now names that limit and directs agents to
+  detached registration only. This follow-up names that limit and directs agents to
   retain an attached monitor, preventing a misleading duplicate-monitor prompt.
   This is a wording correction; no numerical API/token saving is claimed.
 - The #2754 integration retry also lost its runner. GitHub reported communication

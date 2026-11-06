@@ -41,7 +41,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -525,12 +525,12 @@ describe("resumable final-check steps", () => {
         );
         expect(resumed.hashes).toBe(1); // Reused steps and the recorded skip execute no command.
         expect(A.map(resumed.result.steps, (step) => step.status)).toEqual(["passed", "skipped", "passed", "passed"]);
-        expect(
+        assertTrue(
           A.every(
             A.filter(resumed.result.steps, (step) => step.status === "passed"),
             (step) => O.isSome(O.fromUndefinedOr(step.reason))
           )
-        ).toBe(true);
+        );
         const fs = yield* FileSystem.FileSystem;
         const executions = yield* fs.readFileString(`${root}/.beep/executions`);
         expect(executions).toBe("xxx");
