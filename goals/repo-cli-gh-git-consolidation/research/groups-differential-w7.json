@@ -339,10 +339,7 @@
       "site": "Doctest.discoverChangedDoctestFiles",
       "scenario": "a non-ASCII path",
       "old": {
-        "ok": [
-          "packages/a/src/dirty.ts",
-          "packages/a/src/index.ts"
-        ]
+        "ok": ["packages/a/src/dirty.ts", "packages/a/src/index.ts"]
       },
       "new": {
         "ok": [
@@ -358,15 +355,10 @@
       "site": "Doctest.discoverChangedDoctestFiles",
       "scenario": "a clean clone",
       "old": {
-        "ok": [
-          "packages/a/src/index.ts"
-        ]
+        "ok": ["packages/a/src/index.ts"]
       },
       "new": {
-        "ok": [
-          "packages/a/src/index.ts",
-          "packages/a/src/naïve.ts"
-        ]
+        "ok": ["packages/a/src/index.ts", "packages/a/src/naïve.ts"]
       },
       "verdict": "classified",
       "note": "D-19: the kit reads -z output, so a path with a non-ASCII character arrives raw where the line capture received git's C-quoted form"
@@ -375,20 +367,10 @@
       "site": "Knowledge.readKnowledgeGitRefNames",
       "scenario": "a clone with remote branches",
       "old": {
-        "ok": [
-          "feature",
-          "origin/HEAD",
-          "origin/feature",
-          "origin/main"
-        ]
+        "ok": ["feature", "origin/HEAD", "origin/feature", "origin/main"]
       },
       "new": {
-        "ok": [
-          "feature",
-          "origin/HEAD",
-          "origin/feature",
-          "origin/main"
-        ]
+        "ok": ["feature", "origin/HEAD", "origin/feature", "origin/main"]
       },
       "verdict": "same"
     },
@@ -412,30 +394,14 @@
       "scenario": "a rename and a deletion",
       "old": {
         "ok": [
-          [
-            "docs/gone.md",
-            "deleted",
-            ""
-          ],
-          [
-            "docs/old.md",
-            "renamed",
-            "docs/new.md"
-          ]
+          ["docs/gone.md", "deleted", ""],
+          ["docs/old.md", "renamed", "docs/new.md"]
         ]
       },
       "new": {
         "ok": [
-          [
-            "docs/gone.md",
-            "deleted",
-            ""
-          ],
-          [
-            "docs/old.md",
-            "renamed",
-            "docs/new.md"
-          ]
+          ["docs/gone.md", "deleted", ""],
+          ["docs/old.md", "renamed", "docs/new.md"]
         ]
       },
       "verdict": "same"
@@ -601,23 +567,15 @@
       "old": {
         "ok": {
           "shallow": false,
-          "recentPaths": [
-            "goals/demo/README.md"
-          ],
-          "subjects": [
-            "chore: seed"
-          ]
+          "recentPaths": ["goals/demo/README.md"],
+          "subjects": ["chore: seed"]
         }
       },
       "new": {
         "ok": {
           "shallow": false,
-          "recentPaths": [
-            "goals/demo/README.md"
-          ],
-          "subjects": [
-            "chore: seed"
-          ]
+          "recentPaths": ["goals/demo/README.md"],
+          "subjects": ["chore: seed"]
         }
       },
       "verdict": "same"
@@ -628,25 +586,15 @@
       "old": {
         "ok": {
           "shallow": true,
-          "recentPaths": [
-            "goals/demo/PLAN.md",
-            "goals/demo/README.md"
-          ],
-          "subjects": [
-            "feat: move and drop"
-          ]
+          "recentPaths": ["goals/demo/PLAN.md", "goals/demo/README.md"],
+          "subjects": ["feat: move and drop"]
         }
       },
       "new": {
         "ok": {
           "shallow": true,
-          "recentPaths": [
-            "goals/demo/PLAN.md",
-            "goals/demo/README.md"
-          ],
-          "subjects": [
-            "feat: move and drop"
-          ]
+          "recentPaths": ["goals/demo/PLAN.md", "goals/demo/README.md"],
+          "subjects": ["feat: move and drop"]
         }
       },
       "verdict": "same"
@@ -755,20 +703,14 @@
       "old": {
         "ok": {
           "outcome": "done",
-          "tracked": [
-            ".gitignore",
-            "inbox/note.md"
-          ],
+          "tracked": [".gitignore", "inbox/note.md"],
           "commits": "1"
         }
       },
       "new": {
         "ok": {
           "outcome": "done",
-          "tracked": [
-            ".gitignore",
-            "inbox/note.md"
-          ],
+          "tracked": [".gitignore", "inbox/note.md"],
           "commits": "1"
         }
       },
@@ -780,18 +722,14 @@
       "old": {
         "ok": {
           "outcome": "done",
-          "tracked": [
-            "inbox/note.md"
-          ],
+          "tracked": ["inbox/note.md"],
           "commits": "1"
         }
       },
       "new": {
         "ok": {
           "outcome": "done",
-          "tracked": [
-            "inbox/note.md"
-          ],
+          "tracked": ["inbox/note.md"],
           "commits": "1"
         }
       },
@@ -1392,9 +1330,7 @@
             "target": "branch",
             "conditions": {
               "ref_name": {
-                "include": [
-                  "~ALL"
-                ],
+                "include": ["~ALL"],
                 "exclude": []
               }
             },
@@ -1409,9 +1345,7 @@
             "target": "branch",
             "conditions": {
               "ref_name": {
-                "include": [
-                  "~ALL"
-                ],
+                "include": ["~ALL"],
                 "exclude": []
               }
             },
