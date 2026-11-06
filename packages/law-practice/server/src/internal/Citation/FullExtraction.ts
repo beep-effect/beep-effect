@@ -187,22 +187,26 @@ export const inheritCitationParallelCase = Effect.fn("Citation.inheritParallelCa
     },
   };
 });
-const emptyCase = CitationCaseMetadataFields.make({
-  plaintiff: null,
-  defendant: null,
-  antecedentGuess: null,
-  court: null,
-  pinCite: null,
-  pinCiteSpanStart: null,
-  pinCiteSpanEnd: null,
-  extra: null,
-  parenthetical: null,
-  year: null,
-  month: null,
-  day: null,
-  resolvedCaseName: null,
-  resolvedCaseNameShort: null,
-});
+/** Original fresh full-case defaults shared with the import-time shortcut model.
+ * @internal @category models @since 0.0.0
+ */
+export const makeCitationEmptyCaseMetadata = () =>
+  CitationCaseMetadataFields.make({
+    plaintiff: null,
+    defendant: null,
+    antecedentGuess: null,
+    court: null,
+    pinCite: null,
+    pinCiteSpanStart: null,
+    pinCiteSpanEnd: null,
+    extra: null,
+    parenthetical: null,
+    year: null,
+    month: null,
+    day: null,
+    resolvedCaseName: null,
+    resolvedCaseNameShort: null,
+  });
 /** Select the original model class, instantiate fresh built-in state and run the
  * existing family service. Exactly one selected family owns operation admission;
  * the captured outer deadline covers source selection plus metadata. Returned
@@ -262,7 +266,7 @@ export const makeCitationFullExtraction = Effect.fn("Citation.makeFullExtraction
             spanStart: token.start,
             fullSpanStart: null,
             fullSpanEnd: null,
-            metadata: emptyCase,
+            metadata: makeCitationEmptyCaseMetadata(),
             geometry: request.geometry,
           })
           .pipe(Effect.map((metadata) => CitationFullExtractionOutcome.cases.FullCaseCitation.make(metadata)))

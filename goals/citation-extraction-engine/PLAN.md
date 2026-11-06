@@ -1,5 +1,14 @@
 # Citation Extraction Engine Plan
 
+Primitive entry checkpoint (2026-11-06): raw text/None and named schema modes
+now issue live values before the existing Document/extraction path. Original
+empty-string/None defaults and the early eyecite singleton are preserved; other
+shortcut arguments remain unread. Sixteen original entry observations, source
+seals/controls and Bun/Node raw-document smoke pass. Full 36-document raw-entry
+replay is registered for hosted execution. Public service/semantic adaptation
+and broad host fidelity remain open. See
+[entry evidence](history/evidence/2026-11-06-extraction-entry.md).
+
 Live Document extraction checkpoint (2026-11-06): issued plain/markup/step
 handles now compose actual initialization, cleaning, geometry and complete native
 extraction under one operation/text authority. Six original documents match on

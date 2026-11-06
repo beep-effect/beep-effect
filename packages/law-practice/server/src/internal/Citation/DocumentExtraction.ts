@@ -98,7 +98,10 @@ const Input = S.toType(CitationDocumentExtractionInput);
 const Configuration = S.toType(CitationDocumentExtractionConfiguration);
 const ConfigurationJson = Configuration.pipe(S.toCodecJson);
 const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array() });
-const own = Effect.fn("Citation.ownDocumentExtraction")(function* (
+/** Snapshot configuration and capture existing live Document services.
+ * @internal @category operations @since 0.0.0
+ */
+export const ownCitationDocumentExtraction = Effect.fn("Citation.ownDocumentExtraction")(function* (
   _limits: CitationEngineLimits,
   configuration: CitationDocumentExtractionConfiguration
 ) {
@@ -127,7 +130,7 @@ const markupValue = Effect.fn("Citation.extractDocumentMarkup")(function* (
 const extractDocument = Effect.fn("Citation.extractDecodedDocument")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof own>>,
+  owned: Effect.Success<ReturnType<typeof ownCitationDocumentExtraction>>,
   request: CitationDocumentExtractionInput
 ) {
   const initializer = yield* makeCitationInputDocument(limits, runtime, owned.config.document);
@@ -147,7 +150,7 @@ const prepare = Effect.fn("Citation.extractLiveDocument")(
   (
     limits: CitationEngineLimits,
     runtime: CitationNativeProcessRuntime,
-    owned: Effect.Success<ReturnType<typeof own>>,
+    owned: Effect.Success<ReturnType<typeof ownCitationDocumentExtraction>>,
     raw: unknown
   ) =>
     S.decodeUnknownEffect(Input)(raw).pipe(
@@ -166,7 +169,7 @@ export const makeCitationDocumentExtraction = makeCitationMetadataStage({
   method: "extract",
   schema: Configuration,
   invalid: () => fail("invalid-configuration"),
-  own,
+  own: ownCitationDocumentExtraction,
   prepare,
   project: (result, reservedUnits) => {
     const completed = CitationDocumentExtractionResult.make({ ...result, reservedUnits });

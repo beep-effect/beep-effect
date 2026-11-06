@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "0bc149d526d0745ed074e7500015e1885e36b6132b52d05c95e7ba4af415217e",
+  "planSha256": "28f648cde5be9f871f7d4e914cb081c20b36d88c5c24cb73af84d8aedde7d079",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -600,7 +600,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/DocumentCleanerProtocols.ts",
-          "sha256": "2788adc17118c3e45a5620d83156de547ec3ea12487b17750f6da84fe346ec9f"
+          "sha256": "28f25650db7ded9b4c61b8f7c5ba371e5baeaf990926b09a3e58fed00dc9ad50"
         },
         {
           "path": "packages/law-practice/server/test/CitationDocumentCleanerProtocols.test.ts",
@@ -792,7 +792,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/FullExtraction.ts",
-          "sha256": "6bb6d33913853702b52c2e3930bc12c76fb6c91595b9e0a16d838d60bd6acfbd"
+          "sha256": "9a8af944edf42e7f7026c4bb61552bd682d994f5c4e0ab90f010be1dd154adb4"
         },
         {
           "path": "packages/law-practice/server/test/CitationFullExtraction.fixtures.ts",
@@ -955,12 +955,52 @@
           "sha256": "996732e13df95f74fae9dedfe89ae189a8bb30a7c738f91ece4b87136687213d"
         },
         {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-entry.md",
+          "sha256": "68842b9225c72ed48a174a181df934e42fb398512d54f4fb589369abb4597d87"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-extraction-shortcut.py",
+          "sha256": "3845143687fc8bd675020078e1e630f16f365db8a46f5a506c2dd23d4964474c"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-extraction-shortcut.py",
+          "sha256": "06a114ab28fe40d700cc3c8d9c6c48885d9d531c8e75e2d1a305e3648471a821"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/extraction-shortcut.json",
+          "sha256": "1e676df2e8da2fae7831d9b93223b88d0f46a9a26587d5fc82833835fed12328"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/ExtractionEntry.ts",
+          "sha256": "f85bce9ab6de71fea0a2d47e8295ca0472c10bc16b65596dffe5aaead533692b"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/ExtractionShortcut.ts",
+          "sha256": "84edfdb9c480e519052e976608d0fc654676c71b62b0fe27088cd12e95a5bee6"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationExtractionEntry.fixtures.ts",
+          "sha256": "d286e4f4da019d1386cd7761aa33fce117d2ffc6aa071150fb0f483522892b8f"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationExtractionEntry.test.ts",
+          "sha256": "460055e107c26409e5d576838ee9752ac4e5ab783a8cdedbcf1ed88ac232e8b4"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationExtractionShortcut.test.ts",
+          "sha256": "156f61e365f5e185209d8b046af8a43e75258f99f12e1c52aa7aebb45594a9f9"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationExtractionEntry.test.ts",
+          "sha256": "0e6a3783d397f7ec07994bcb86851f75fcdb7a18222647b90c2068276e937643"
+        },
+        {
           "path": "packages/law-practice/server/src/internal/Citation/DocumentExtraction.ts",
-          "sha256": "f681baa6062e7cc2ab2fedbe76c5dc302e676d9921629a80b0cb194b4b946927"
+          "sha256": "46fdcbf396d0aa20186f0d65bee33d151a6792c531aa6fb0411cd279ccab29f4"
         },
         {
           "path": "packages/law-practice/server/test/CitationDocumentExtraction.fixtures.ts",
-          "sha256": "3a24125d87ea2d982ce3fc83078d60163883e5b12b83053f77ecebd600a66074"
+          "sha256": "fae7eed95227251facf08181a29519b7adb0b5b59ce06959ba7e1c69eefbbccf"
         },
         {
           "path": "packages/law-practice/server/test/CitationDocumentExtraction.test.ts",

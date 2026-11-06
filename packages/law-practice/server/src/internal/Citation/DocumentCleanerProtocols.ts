@@ -7,6 +7,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -220,3 +221,11 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
   );
   return { create, inspect, document, cleaner };
 });
+
+/** Captured named-container issuance, never a function-valued raw request field.
+ * @internal @category services @since 0.0.0
+ */
+export class CitationDocumentStepContainers extends Context.Service<
+  CitationDocumentStepContainers,
+  Pick<Effect.Success<ReturnType<typeof makeCitationDocumentCleanerProtocols>>, "create">
+>()($I`CitationDocumentStepContainers`) {}

@@ -121,7 +121,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-markup-references.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-loop.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenized-extraction.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-06-document-extraction.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-document-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-entry.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -213,7 +214,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-extraction-selection.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-generated-references.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-reference-template.py --self-test",
-    "python3 goals/citation-extraction-engine/ops/verify-extraction-loop.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-extraction-loop.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-extraction-shortcut.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -598,6 +600,14 @@
     {
       "path": "ops/verify-extraction-loop.py",
       "purpose": "Seal original extraction-loop evidence, corruption controls and exact pinned replay."
+    },
+    {
+      "path": "ops/probe-extraction-shortcut.py",
+      "purpose": "Observe actual primitive shortcut, ignored arguments, defaults and original singleton state/identity."
+    },
+    {
+      "path": "ops/verify-extraction-shortcut.py",
+      "purpose": "Seal shortcut/default evidence and corruption controls; optionally replay the pinned original."
     }
   ]
 }

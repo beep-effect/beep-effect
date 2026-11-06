@@ -9,7 +9,10 @@ import {
 } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
 import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { makeCitationDocumentCleanerProtocols } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
-import { makeCitationDocumentExtraction } from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
+import {
+  CitationDocumentExtractionConfiguration,
+  makeCitationDocumentExtraction,
+} from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
 import { CitationDocumentInputProtocols } from "@beep/law-practice-server/internal/Citation/InputDocument";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -40,10 +43,9 @@ const documentRequest = Effect.fn("DocumentExtractionTest.request")(function* (
   const steps = yield* adapter.create({ kind: "list", names: hasMarkup ? ["html"] : [] });
   return { plain, markup, steps, source: hasMarkup ? markup : plain, removeAmbiguous: row.removeAmbiguous };
 });
-/** Builtin protocols, actual cleaner registry and complete default extractor catalog. */
-export const replayCitationDocumentExtraction = Effect.fn("DocumentExtractionTest.replay")(function* (
-  kind: CitationNativeRuntimeKind,
-  full: boolean
+/** Install original live input services with the complete authenticated catalog. */
+export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtractionTest.install")(function* (
+  kind: CitationNativeRuntimeKind
 ) {
   const { corpus, setup, configuration, translated } = yield* installCitationTokenizedExtractionFixture(kind);
   const fs = yield* FileSystem.FileSystem;
@@ -73,20 +75,41 @@ export const replayCitationDocumentExtraction = Effect.fn("DocumentExtractionTes
     Context.add(CitationDocumentInputProtocols, adapter.document),
     Context.add(CitationCleanerRuntime, registry.runtime)
   );
-  const stage = yield* makeCitationDocumentExtraction(setup.limits, setup.runtime, {
+  const documentConfiguration = CitationDocumentExtractionConfiguration.make({
     document: { discovery: discovery.configuration, diffRuntime },
     extraction: configuration,
-  }).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
+  });
+  const stage = yield* makeCitationDocumentExtraction(setup.limits, setup.runtime, documentConfiguration).pipe(
+    Effect.provideContext(provided),
+    DateTime.withCurrentZoneOffset(0)
+  );
+  return {
+    corpus,
+    setup,
+    configuration: documentConfiguration,
+    translated,
+    provided,
+    adapter,
+    values: h.values,
+    stage,
+  };
+});
+/** Builtin protocols, actual cleaner registry and complete default extractor catalog. */
+export const replayCitationDocumentExtraction = Effect.fn("DocumentExtractionTest.replay")(function* (
+  kind: CitationNativeRuntimeKind,
+  full: boolean
+) {
+  const { corpus, setup, adapter, values, stage, translated } = yield* installCitationDocumentExtractionFixture(kind);
   const rows = A.filter(corpus.cases, (row) => full || A.contains([0, 4, 18, 20, 22, 32], row.id));
   for (const row of rows) {
-    const request = yield* documentRequest(h.values, adapter, row);
+    const request = yield* documentRequest(values, adapter, row);
     const invocation = stage.extract(request);
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
     const result = yield* closed;
     yield* assertCitationTokenizedExtractionRow(result.extraction, row, translated);
-    const sourceIdentity = yield* h.values.same(result.document.source, request.source);
+    const sourceIdentity = yield* values.same(result.document.source, request.source);
     expect(sourceIdentity).toBe(true);
-    const stepIdentity = yield* h.values.same(result.document.steps, request.steps);
+    const stepIdentity = yield* values.same(result.document.steps, request.steps);
     expect(stepIdentity).toBe(true);
     expect(result.reservedUnits).toBe(result.extraction.reservedUnits);
   }
