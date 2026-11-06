@@ -152,7 +152,15 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
   text("openinference.span.kind", span.kind),
   text("ai_metrics.event_id", span.eventId),
   text("ai_metrics.route_id", span.routeId),
-  text("ai_metrics.stream", "native"),
+  text("ai_metrics.stream", O.isSome(span.managedController) ? "managed-controller" : "native"),
+  ...A.flatMap(O.toArray(span.managedController), (controller) => [
+    text("ai_metrics.producer_origin", "managed-controller"),
+    text("ai_metrics.launch_id", controller.launchId),
+    text("ai_metrics.launch_route_id", controller.launchRouteId),
+    text("ai_metrics.process_instance_id", controller.processInstanceId),
+    text("ai_metrics.evidence_id", controller.evidenceId),
+    text("ai_metrics.controller_elapsed_nanos", controller.elapsedNanos),
+  ]),
   ...O.toArray(O.map(span.fixtureSurface, (surface) => text("ai_metrics.fixture.surface", surface))),
   ...(O.isSome(span.fixtureSurface)
     ? [flag("ai_metrics.synthetic", true), text("ai_metrics.fixture.provenance", "declared_synthetic_fixture")]
@@ -167,7 +175,11 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
   flag("ai_metrics.duration_known", span.durationKnown),
   text(
     "ai_metrics.time_basis",
-    O.isSome(span.startTimeUnixNano) || O.isSome(span.endTimeUnixNano) ? "source_event" : "intake_observation"
+    O.isSome(span.managedController)
+      ? "controller-canary-interval"
+      : O.isSome(span.startTimeUnixNano) || O.isSome(span.endTimeUnixNano)
+        ? "source_event"
+        : "intake_observation"
   ),
   ...O.toArray(O.map(span.startTimeUnixNano, (value) => text("ai_metrics.source_start_time_unix_nano", value))),
   ...O.toArray(O.map(span.endTimeUnixNano, (value) => text("ai_metrics.source_end_time_unix_nano", value))),
@@ -215,7 +227,9 @@ export const encodeNativeTraceBatch = Effect.fn("AiMetrics.encodeNativeTraceBatc
           : undefined,
         name: O.isSome(span.fixtureSurface)
           ? `fixture.${span.fixtureSurface.value}.${Str.toLowerCase(span.kind)}`
-          : `agent.${Str.toLowerCase(span.kind)}`,
+          : O.isSome(span.managedController)
+            ? "managed.controller.canary"
+            : `agent.${Str.toLowerCase(span.kind)}`,
         kind: 1,
         startTimeUnixNano: point,
         endTimeUnixNano: span.durationKnown ? O.getOrElse(span.endTimeUnixNano, () => point) : point,
