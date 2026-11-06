@@ -140,6 +140,18 @@ const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Arra
 const bound = (index: number, length: number) => Num.max(0, Num.min(length, index < 0 ? length + index : index));
 const plaintiffBoundary = (point: number) =>
   point === 32 || (point >= 9 && point <= 13) || point === 44 || point === 40;
+const priorWordsLength = <W extends { readonly value: { readonly pythonLength: number } }>(
+  words: ReadonlyArray<W>,
+  request: CitationCaseNameProcessInput
+): number => {
+  const first = bound(request.startIndex === null ? 0 : request.startIndex, words.length);
+  const last = bound(request.index - 1, words.length);
+  return A.reduce(
+    A.take(A.drop(words, first), Num.max(0, last - first)),
+    0,
+    (sum, word) => sum + word.value.pythonLength
+  );
+};
 const processName = Effect.fn("Citation.processNativeCaseName")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
@@ -191,37 +203,31 @@ const processName = Effect.fn("Citation.processNativeCaseName")(function* (
     const removed = yield* substituteCitationMetadataMatches(evaluated, O.none(), () => fail("invalid-match"));
     return yield* clean(removed);
   });
-  let plaintiff = O.none<CitationPythonUnicodeStorage>();
-  let defendant = candidate;
-  if (request.hasV) {
+  const splitName = Effect.fnUntraced(function* () {
+    if (!request.hasV) return { plaintiff: O.none<CitationPythonUnicodeStorage>(), defendant: candidate };
     const selected = yield* split();
     const name = yield* cleanPlaintiff(selected.plaintiff);
-    plaintiff = O.some(name);
-    defendant = selected.defendant;
-  }
-  const cleaned = yield* clean(defendant);
-  let named = O.none<CitationPythonUnicodeStorage>();
-  let fullSpanStart = O.none<number>();
-  if (cleaned.bytes.length > 0) {
+    return { plaintiff: O.some(name), defendant: selected.defendant };
+  });
+  const nameDefendant = Effect.fnUntraced(function* (defendant: CitationPythonUnicodeStorage) {
+    const cleaned = yield* clean(defendant);
+    if (cleaned.bytes.length === 0)
+      return { named: O.none<CitationPythonUnicodeStorage>(), fullSpanStart: O.none<number>() };
     const name = request.short ? yield* clean(defendant) : cleaned;
-    named = O.some(name);
-    const first = bound(request.startIndex === null ? 0 : request.startIndex, words.length);
-    const last = bound(request.index - 1, words.length);
-    const length = A.reduce(
-      A.take(A.drop(words, first), Num.max(0, last - first)),
-      0,
-      (sum, word) => sum + word.value.pythonLength
-    );
-    fullSpanStart = O.some(request.spanStart - length - 1);
-  }
-  let year = O.none<CitationPythonUnicodeStorage>();
-  let numericYear = O.none<bigint>();
-  if (request.preCiteYear !== null && request.preCiteYear.bytes.length > 0) {
-    const prepared = yield* input.prepareUnicode(request.preCiteYear, () => Effect.void);
-    year = O.some(prepared.value.storage);
-    numericYear = yield* parseCitationPythonInteger(prepared.value);
+    return { named: O.some(name), fullSpanStart: O.some(request.spanStart - priorWordsLength(words, request) - 1) };
+  });
+  const parseYear = Effect.fnUntraced(function* () {
+    const raw = request.preCiteYear;
+    if (raw === null || raw.bytes.length === 0)
+      return { year: O.none<CitationPythonUnicodeStorage>(), numericYear: O.none<bigint>() };
+    const prepared = yield* input.prepareUnicode(raw, () => Effect.void);
+    const numericYear = yield* parseCitationPythonInteger(prepared.value);
     if (O.isNone(numericYear)) return yield* fail("invalid-year");
-  }
+    return { year: O.some(prepared.value.storage), numericYear };
+  });
+  const { plaintiff, defendant } = yield* splitName();
+  const { named, fullSpanStart } = yield* nameDefendant(defendant);
+  const { year, numericYear } = yield* parseYear();
   return CitationCaseNameProcessPatch.make({
     plaintiff,
     defendant: request.short ? O.none() : named,
