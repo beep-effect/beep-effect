@@ -1373,6 +1373,7 @@
           "@beep/alchemy-postgres",
           "@beep/identity",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ],
@@ -1380,6 +1381,7 @@
           "@beep/alchemy-postgres",
           "@beep/identity",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ]

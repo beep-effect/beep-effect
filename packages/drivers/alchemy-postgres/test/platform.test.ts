@@ -10,7 +10,6 @@ import {
   AlchemyPostgresError,
   AlchemyPostgresPlatform,
   AlchemyPostgresTables,
-  AlchemyPostgresUnsupported,
   migrate,
 } from "@beep/alchemy-postgres";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
@@ -59,34 +58,11 @@ const CardAuditLive = CardAudit.toLayer(
 );
 class Unit extends Domain.Model("Unit", { aggregates: [Card], policies: [CardAudit] }) {}
 
-class CardSummary extends Domain.View("CardSummary", {
-  from: [Card],
-  key: Card,
-  state: S.Struct({ holder: S.String }),
-  initial: { holder: "" },
-  evolve: { CardIssued: (_view, event) => ({ holder: event.holder }) },
-}) {}
-class WithView extends Domain.Model("UnitWithView", { aggregates: [Card], views: [CardSummary] }) {}
-
-class CardFeed extends Domain.Stream("CardFeed", { key: Card, entries: [CardIssued] }) {}
-class WithStream extends Domain.Model("UnitWithStream", { aggregates: [Card], streams: [CardFeed] }) {}
-
-class CardLedger extends Domain.Projection("CardLedger", { from: [Card], key: Card, on: [CardIssued] }) {}
-const CardLedgerLive = CardLedger.toLayer(Effect.succeed(() => Effect.void));
-class WithProjection extends Domain.Model("UnitWithProjection", {
-  aggregates: [Card],
-  projections: [CardLedger],
-}) {}
-
 /** The squashed defect of a cause, when it is an instance of `schema`. */
 const defectOf =
   <Schema extends S.Top>(schema: Schema) =>
   <E>(cause: Cause.Cause<E>) =>
     cause.pipe(Cause.squash, O.fromNullishOr, O.filter(S.is(schema)));
-
-/** The defect a model's build died with, when it is the driver's unsupported-concept error. */
-const unsupportedOf = <ROut, E, R>(build: Layer.Layer<ROut, E, R>) =>
-  Layer.build(build).pipe(Effect.sandbox, Effect.flip, Effect.map(defectOf(AlchemyPostgresUnsupported)));
 
 const TableName = S.Struct({ tablename: S.String });
 /** Decode the rows a SQL statement returned. */
@@ -107,21 +83,6 @@ const hosted = Unit.layer(CardAuditLive).pipe(
 
 describe("AlchemyPostgresPlatform", () => {
   layer(hosted, { timeout: "30 seconds", excludeTestServices: true, concurrent: false })("on PGlite", (it) => {
-    it.effect("dies with AlchemyPostgresUnsupported for views, streams and projections", () =>
-      Effect.gen(function* () {
-        const view = yield* unsupportedOf(WithView.layer(Layer.empty));
-        const stream = yield* unsupportedOf(WithStream.layer(Layer.empty));
-        const projection = yield* unsupportedOf(WithProjection.layer(CardLedgerLive));
-        deepStrictEqual(
-          A.map(
-            [view, stream, projection],
-            O.map(({ concept, definition }) => [concept, definition])
-          ),
-          [O.some(["view", "CardSummary"]), O.some(["stream", "CardFeed"]), O.some(["projection", "CardLedger"])]
-        );
-      })
-    );
-
     it.effect("migrates idempotently under a custom table prefix", () =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -143,6 +104,15 @@ describe("AlchemyPostgresPlatform", () => {
               tables.aggregateSchedule,
               tables.delivery,
               tables.hostedModel,
+              tables.consumerGeneration,
+              tables.consumerInput,
+              tables.viewKey,
+              tables.viewEntry,
+              tables.projectionPartition,
+              tables.streamKey,
+              tables.streamEntry,
+              tables.backfillKv,
+              tables.backfillJob,
             ],
             Order.String
           )
@@ -164,13 +134,13 @@ describe("AlchemyPostgresPlatform", () => {
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`INSERT INTO alchemy_delivery
-          (model, aggregate, source, source_seq, target_kind, target_name, target_key, delivery, status, at)
+          (model, producer, source, source_seq, target_kind, target_name, target_key, delivery, status, at)
           VALUES ('Unit', 'Ghost', 'Ghost/g-1', 1, 'policy', 'Haunting', 'Ghost/g-1', '{}'::jsonb, 'pending', 0)`;
         const cards = yield* Card;
         yield* cards.send(CardId.make("wakes-the-worker"), IssueCard.make({ holder: "quin" }));
         yield* Effect.sleep(Duration.millis(600));
         const rows = yield* sql`SELECT status, attempts, locked_until FROM alchemy_delivery
-          WHERE model = 'Unit' AND aggregate = 'Ghost'`.pipe(Effect.flatMap(decodeOutboxRows));
+          WHERE model = 'Unit' AND producer = 'Ghost'`.pipe(Effect.flatMap(decodeOutboxRows));
         deepStrictEqual(rows, [{ status: "pending", attempts: 0, locked_until: 0 }]);
       })
     );

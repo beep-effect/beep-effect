@@ -4,6 +4,7 @@
  */
 import * as Domain from "@alchemy.run/domain";
 import * as Layer from "effect/Layer";
+import { consumers } from "./consumers.ts";
 import { conformance } from "./scenarios.ts";
 
 conformance({
@@ -13,3 +14,4 @@ conformance({
   durable: false,
   redelivers: false,
 });
+consumers({ name: "Domain.InMemory", base: Layer.empty, platform: Domain.InMemory, durable: false });
