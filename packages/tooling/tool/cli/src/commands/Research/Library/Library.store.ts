@@ -48,7 +48,7 @@ export const hashBytes = Effect.fn("ResearchLibrary.hashBytes")(function* (bytes
 });
 
 // The writer lock admits one writer at a time, so a process may reuse the catalog it last wrote while the
-// canonical file still carries the same modification time and size. Any other writer changes them.
+// canonical file still holds exactly the bytes it wrote. Any other writer changes them.
 interface WrittenCatalog {
   readonly catalog: LibraryCatalog;
   readonly fingerprint: string;
@@ -59,15 +59,11 @@ let lastWrittenCatalog: O.Option<WrittenCatalog> = O.none();
 const catalogFingerprint = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const info = yield* fs.stat(path.join(root, "catalog/library.json")).pipe(Effect.option);
-  return O.map(
-    info,
-    (stat) =>
-      `${O.getOrElse(
-        O.map(stat.mtime, (date) => date.getTime()),
-        () => -1
-      )}:${stat.size}`
-  );
+  // Content identity, not mtime and size: rewrites within one clock tick at equal length must still invalidate.
+  const bytes = yield* fs.readFile(path.join(root, "catalog/library.json")).pipe(Effect.option);
+  if (O.isNone(bytes)) return O.none<string>();
+  const digest = yield* hashBytes(bytes.value);
+  return O.some(digest);
 });
 
 /**
@@ -538,10 +534,8 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
     yield* fs
       .rename(temporary, path.join(root, "catalog/library.json"))
       .pipe(mapFailure("Cannot replace library catalog atomically."));
-    const after = yield* catalogFingerprint(root);
-    lastWrittenCatalog = migrateLegacyIdentities
-      ? O.map(after, (fingerprint) => ({ root, fingerprint, catalog }))
-      : O.none();
+    // The written bytes' digest is the canonical file's fingerprint; no reread is needed.
+    lastWrittenCatalog = migrateLegacyIdentities ? O.some({ root, fingerprint: hash, catalog }) : O.none();
     return catalog;
   });
   return yield* Effect.acquireUseRelease(
@@ -560,13 +554,10 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
         (written) =>
           migrateLegacyIdentities && written.root === root && O.isSome(before) && written.fingerprint === before.value
       );
-      if (O.isSome(reusable)) {
-        // The cached catalog was migrated and its artifacts admitted when it was written.
-        const catalog = yield* update(reusable.value.catalog);
-        return yield* writeCatalog(catalog);
-      }
-      const loadedCatalog = yield* loadCatalog(root);
-      const migrated = migrateLegacyIdentities ? yield* migrateCatalogIdentities(loadedCatalog) : loadedCatalog;
+      // A reused catalog skips only the decode. Identity migration and the object-store check still run:
+      // updates can add records that need migration, and objects can change on disk without the catalog.
+      const current = O.isSome(reusable) ? reusable.value.catalog : yield* loadCatalog(root);
+      const migrated = migrateLegacyIdentities ? yield* migrateCatalogIdentities(current) : current;
       const artifacts = migrateLegacyIdentities
         ? [
             ...migrated.artifacts,
