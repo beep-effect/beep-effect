@@ -108,8 +108,8 @@ const LedgerProvisioningLive = LedgerProvisioning.toLayer(
     const ledgers = yield* Ledger;
     return Effect.fn(function* ({ source, event }) {
       const run = countRun(source.id);
-      // The first run for a `flaky-*` account dies: a platform that redelivers runs it again.
-      if (Str.startsWith("flaky-")(source.id) && run === 1) return yield* Effect.die("flaky policy run");
+      // The first run for a `*flaky-*` account dies: a platform that redelivers runs it again.
+      if (Str.includes("flaky-")(source.id) && run === 1) return yield* Effect.die("flaky policy run");
       yield* ledgers.send(AccountId.make(source.id), CreateLedger.make({ owner: event.owner }));
     });
   })
@@ -214,15 +214,19 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
     Layer.provideMerge(target.base)
   );
   describe(`Platform conformance: ${target.name}`, () => {
+    // Ids are scoped per target: the policy run counter is module state, and a runner that shares
+    // one module instance across the InMemory and PGlite files must not add their runs together.
+    const scope = Str.toLowerCase(Str.replace(/[^A-Za-z0-9]+/g, "-")(target.name));
+    const accountId = (name: string) => AccountId.make(`${scope}-${name}`);
     // Sequential: several scenarios build a second platform on the same store, whose workers
     // would otherwise deliver or fire another scenario's rows while it runs.
     layer(hosted, { timeout: "30 seconds", excludeTestServices: true, concurrent: false })("scenarios", (it) => {
       it.effect("an accepted command commits its events and state", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
-          const id = AccountId.make("accepted");
+          const id = accountId("accepted");
           const receipt = yield* accounts.send(id, OpenAccount.make({ owner: "ada" })).pipe(asUser);
-          strictEqual(receipt.stream, "Account/accepted");
+          strictEqual(receipt.stream, `Account/${id}`);
           strictEqual(receipt.version, 1);
           deepStrictEqual(
             A.map(receipt.events, (event) => event._tag),
@@ -236,7 +240,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
       it.effect("a duplicate commandId returns the same receipt and commits once", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
-          const id = AccountId.make("duplicate");
+          const id = accountId("duplicate");
           yield* accounts.send(id, OpenAccount.make({ owner: "bo" })).pipe(asUser);
           const first = yield* accounts.send(id, Deposit.make({ amount: 5 }), { commandId: "dep-1" }).pipe(asUser);
           const second = yield* accounts.send(id, Deposit.make({ amount: 5 }), { commandId: "dep-1" }).pipe(asUser);
@@ -250,7 +254,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
       it.effect("a rejection commits nothing", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
-          const id = AccountId.make("rejected");
+          const id = accountId("rejected");
           const rejection = yield* accounts.send(id, Deposit.make({ amount: 1 })).pipe(asUser, Effect.flip);
           strictEqual(rejection._tag, "NotOpen");
           const state3 = yield* accounts.state(id);
@@ -263,7 +267,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
       it.effect("concurrent sends to one id serialize without gaps", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
-          const id = AccountId.make("concurrent");
+          const id = accountId("concurrent");
           yield* accounts.send(id, OpenAccount.make({ owner: "di" })).pipe(asUser);
           const receipts = yield* Effect.forEach(
             A.range(1, 10),
@@ -286,7 +290,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
         Effect.gen(function* () {
           const accounts = yield* Account;
           const ledgers = yield* Ledger;
-          const id = AccountId.make("policy");
+          const id = accountId("policy");
           yield* accounts.send(id, OpenAccount.make({ owner: "eve" })).pipe(asUser);
           const ledger = yield* eventually(ledgers.state(id), (state) => state._tag === "Created");
           deepStrictEqual(ledger, { _tag: "Created", owner: "eve" });
@@ -296,7 +300,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
       it.effect("a scheduled command fires once and unschedule fails correctly", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
-          const id = AccountId.make("scheduled");
+          const id = accountId("scheduled");
           yield* accounts.send(id, OpenAccount.make({ owner: "fay" })).pipe(asUser);
           const scheduled = yield* accounts.schedule(id, Remind.make({}), {
             after: "150 millis",
@@ -354,7 +358,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
         () =>
           Effect.gen(function* () {
             const accounts = yield* Account;
-            const id = AccountId.make("durable");
+            const id = accountId("durable");
             yield* accounts.send(id, OpenAccount.make({ owner: "gus" })).pipe(asUser);
             yield* accounts.send(id, Deposit.make({ amount: 7 })).pipe(asUser);
             const rebuilt = yield* Effect.gen(function* () {
@@ -377,7 +381,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
       it.effect("a scheduled command sent early under its command id does not run again", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
-          const id = AccountId.make("sent-early");
+          const id = accountId("sent-early");
           yield* accounts.send(id, OpenAccount.make({ owner: "jay" })).pipe(asUser);
           yield* accounts.schedule(id, Remind.make({}), { after: "100 millis", commandId: "early" });
           yield* accounts.send(id, Remind.make({}), { commandId: "early" }).pipe(asUser);
@@ -392,7 +396,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
       it.effect("a scheduled command whose commit is rejected frees its command id", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
-          const id = AccountId.make("refused");
+          const id = accountId("refused");
           const commandId = `${refusedPrefix}remind`;
           yield* accounts.send(id, OpenAccount.make({ owner: "kim" })).pipe(asUser);
           yield* accounts.schedule(id, Remind.make({}), { after: "50 millis", commandId });
@@ -420,7 +424,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           Effect.gen(function* () {
             const accounts = yield* Account;
             const ledgers = yield* Ledger;
-            const id = AccountId.make("flaky-ledger");
+            const id = accountId("flaky-ledger");
             yield* accounts.send(id, OpenAccount.make({ owner: "lee" })).pipe(asUser);
             if (target.redelivers) {
               const ledger = yield* eventually(ledgers.state(id), (state) => state._tag === "Created");
@@ -446,7 +450,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
               Conformance.layer(LedgerProvisioningLive).pipe(Layer.provide(target.platform.pipe(refusing, Layer.fresh)))
             );
             const there = Context.get(context, Account);
-            const ids = A.map(A.range(1, 12), (n) => AccountId.make(`burst-${n}`));
+            const ids = A.map(A.range(1, 12), (n) => accountId(`burst-${n}`));
             yield* Effect.forEach(
               ids,
               (id, n) => (n % 2 === 0 ? here : there).send(id, OpenAccount.make({ owner: "mo" })).pipe(asUser),
@@ -471,7 +475,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const internals = yield* Internals;
           const store = yield* storeOf("Account");
           const seed = yield* Effect.fromOption(O.fromUndefinedOr(store.seed));
-          const id = AccountId.make("seeded");
+          const id = accountId("seeded");
           const opened = yield* internals.kernel.encodeEvent(AccountOpened.make({ owner: "nia" }));
           yield* seed(id, [opened]);
           const state = yield* accounts.state(id);
@@ -479,7 +483,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const events = yield* eventsOf(store, id);
           deepStrictEqual(
             A.map(events, ({ envelope }) => [envelope.seq, envelope.commandId]),
-            [[1, "seed:seeded:0"]]
+            [[1, `seed:${id}:0`]]
           );
           yield* Effect.sleep(Duration.millis(200));
           const ledger = yield* ledgers.state(id);
@@ -492,7 +496,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
         Effect.gen(function* () {
           const accounts = yield* Account;
           const store = yield* storeOf("Account");
-          const id = AccountId.make("streamed");
+          const id = accountId("streamed");
           yield* accounts.send(id, OpenAccount.make({ owner: "oli" })).pipe(asUser);
           const current = yield* Stream.runCollect(store.changes(id).pipe(Stream.take(1)));
           deepStrictEqual(
@@ -521,7 +525,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
         it.effect("event rows hold the request context and each class's schema version", () =>
           Effect.gen(function* () {
             const accounts = yield* Account;
-            const id = AccountId.make("audited");
+            const id = accountId("audited");
             yield* accounts.send(id, OpenAccount.make({ owner: "hal" })).pipe(asUser);
             yield* accounts
               .send(id, Deposit.make({ amount: 3 }))
