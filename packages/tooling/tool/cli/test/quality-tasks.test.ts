@@ -3140,6 +3140,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         if (control === "tracked source link") {
           yield* fs.makeDirectory(path.join(root, "packages/example/src"), { recursive: true });
           yield* fs.symlink("../../../.beep/targets/target.test.ts", path.join(root, "packages/example/src/linked.ts"));
+          yield* runGit(root, ["add", "-f", "packages/example/src"]);
         }
         if (control === "tracked directory link" || control === "benign directory link") {
           if (control === "benign directory link") {
@@ -3147,6 +3148,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* fs.writeFileString(path.join(root, ".beep/targets/data.yaml"), "fixture: true\n");
           }
           yield* fs.symlink("../../.beep/targets", path.join(root, "packages/example/src"));
+          yield* runGit(root, ["add", "-f", "packages/example/src"]);
         }
       });
 
@@ -3154,6 +3156,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "ignored test",
         "ignored build test",
         "ignored config",
+        "ignored hidden source",
         "tracked source link",
         "tracked directory link",
         "ignored directory link",
@@ -3195,6 +3198,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             if (control === "ignored build test") {
               yield* fs.makeDirectory(path.join(root, "packages/example/build/test"), { recursive: true });
               yield* fs.writeFileString(path.join(root, "packages/example/build/test/probe.ts"), badSource);
+            }
+            if (control === "ignored hidden source") {
+              yield* fs.makeDirectory(path.join(root, "packages/example/src/.internal"), { recursive: true });
+              yield* fs.writeFileString(path.join(root, "packages/example/src/.internal/probe.ts"), badSource);
             }
             if (control === "ignored config")
               yield* fs.writeFileString(path.join(root, "packages/example/docgen.json"), "{}");

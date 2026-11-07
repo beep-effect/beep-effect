@@ -2296,7 +2296,7 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
     const options = GlobOptions.make({ cwd: root, absolute: true, ignore: ["**/node_modules/**"] });
     // JSDoc inventory follows source-directory links. Preserve lexical names
     // to refuse linked ancestors before reading any source or configuration.
-    const projectOptions = GlobOptions.make({ ...options, followSymlinks: true });
+    const projectOptions = GlobOptions.make({ ...options, dot: true, followSymlinks: true });
     const metadata = yield* fs.globFiles(
       [
         "*.{json,jsonc}",

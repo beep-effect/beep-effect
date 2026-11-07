@@ -441,7 +441,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("48672c1a0778dd8ffce08c4154a5ed750f694935b381a73b681043dff5e7e379");
+        expect(Hex.encode(bytes)).toBe("4fccd6c5198374bf73b62e34a9840be10ea9c35365aa0a25d43a2945bc186a69");
       })
     );
   });
