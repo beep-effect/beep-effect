@@ -15,8 +15,8 @@
  * a commitlint run that gave no verdict, and, in strict mode, a required
  * context with no check run.
  *
- * The read also predicts the squash commit message GitHub will write for the
- * merge (`SquashCommitlint.ts`) and lints it with the repo's commitlint: `main`
+ * The read predicts GitHub's default squash message, folds its body, and lints
+ * the exact explicit header/body the merge sends (`SquashCommitlint.ts`): `main`
  * is squash-only and its Commitlint range is previous-main..new-main, so a
  * squash body that fails `commitlint.config.ts` is a red on `main` that only
  * the next merge clears (ep47, 2026-10-19). A failing or missing verdict holds
@@ -532,7 +532,7 @@ export class MergeGateHold extends S.Opaque<MergeGateHold, { readonly brand: uni
 ) {}
 
 /**
- * The gate is met: merge at this head with this squash title.
+ * The gate is met: merge at this head with this linted squash title and body.
  *
  * **Details**
  *
@@ -548,6 +548,7 @@ export class MergeGateHold extends S.Opaque<MergeGateHold, { readonly brand: uni
  *   prNumber: 7,
  *   headSha: "abc",
  *   commitTitle: "fix: x (#7)",
+ *   commitMessage: "The exact linted body.",
  *   windowAgeSeconds: 1260,
  *   tolerated: [],
  *   relaxed: false,
@@ -564,6 +565,7 @@ export class MergeGateMerge extends S.Opaque<MergeGateMerge, { readonly brand: u
     prNumber: S.Finite,
     headSha: S.NonEmptyString,
     commitTitle: S.NonEmptyString,
+    commitMessage: S.String,
     windowAgeSeconds: S.Finite,
     tolerated: S.Array(MergeGateTolerance),
     relaxed: S.Boolean,
@@ -1114,7 +1116,8 @@ export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
         MergeGateMerge.make({
           prNumber: read.prNumber,
           headSha: read.headSha,
-          commitTitle: `${read.title} (#${read.prNumber})`,
+          commitTitle: read.squashCommitlint.message.header,
+          commitMessage: read.squashCommitlint.message.body,
           // Every hold above is None here, so the ruleset and window steps succeeded.
           windowAgeSeconds: Result.getOrThrow(window),
           tolerated: A.filter(options.tolerate, (tolerance) => HashMap.has(latest, tolerance.check)),
@@ -1409,11 +1412,12 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
     withReviewerOperatorClient(process.cwd()),
     Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
   );
-  // No commit message: GitHub writes the body its squash settings prescribe.
+  // Send the exact header/body whose commitlint verdict admitted this decision.
   const result = yield* GithubRest.use((rest) =>
     rest.mergePullRequest(decision.prNumber, {
       sha: decision.headSha,
       commitTitle: decision.commitTitle,
+      commitMessage: decision.commitMessage,
       method: "squash",
     })
   ).pipe(Effect.mapError(yeetGithubFailure(`gh api merge #${decision.prNumber}`)));

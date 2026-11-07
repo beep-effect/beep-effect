@@ -355,11 +355,11 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
     )
   );
 
-  it.effect("honors the repo's 150-character footer budget for squash bullets", () =>
+  it.effect("folds historical squash bullets before real commitlint without changing default prediction", () =>
     Effect.forEach(
       [
         { subject: longSubject, expected: "pass" },
-        { subject: `${longSubject} ${longSubject}`, expected: "fail" },
+        { subject: `${longSubject} ${longSubject}`, expected: "pass" },
       ],
       ({ subject, expected }) =>
         withScripted(
@@ -374,15 +374,24 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
             Effect.gen(function* () {
               const report = yield* readSquashCommitlint(context, pullFacts);
               expect(report.verdict._tag).toBe(expected);
-              if (report.verdict._tag === "fail") {
-                expect(report.verdict.rules).toEqual(["footer-max-line-length"]);
-                expect(A.map(report.verdict.offendingLines, (line) => [line.length, line.text])).toEqual([
-                  [Str.length(subject) + 2, `* ${subject}`],
-                ]);
-                expect(renderSquashCommitlintVerdict(report.verdict)).toContain(`"* ${subject}"`);
-              }
+              expect(A.every(Str.split(report.message.body, "\n"), (line) => Str.length(line) < 100)).toBe(true);
+              const predicted = predictSquashCommitMessage(source(["fix(x): one", subject]));
+              expect(predicted.body).toContain(`* ${subject}`);
+              expect(Str.replaceAll(report.message.body, "\n", " ")).toContain(subject);
             })
         )
+    )
+  );
+
+  it.effect("an unbreakable invalid body still fails real commitlint", () =>
+    withScripted(
+      { commits: [commit("fix(x): one", Str.repeat(160)("x")), commit("fix(x): two")] },
+      (_calls, context) =>
+        Effect.gen(function* () {
+          const report = yield* readSquashCommitlint(context, pullFacts);
+          expect(report.verdict._tag).toBe("fail");
+          expect(report.message.body).toContain(Str.repeat(160)("x"));
+        })
     )
   );
 

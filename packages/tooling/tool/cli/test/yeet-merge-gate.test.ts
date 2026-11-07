@@ -177,6 +177,21 @@ const withRun = (name: string, patch: Partial<{ status: string; conclusion: stri
   A.map(fixtureRuns, (run) => (run.name === name ? MergeGateCheckRun.make({ ...run, ...patch }) : run));
 
 describe("yeet merge-gate decision", () => {
+  it("carries the exact linted header and body into the admitted merge decision", () => {
+    const message = SquashCommitMessage.make({ ...squashMessage, body: "* A folded historical subject\ncontinued.\n" });
+    const decision = decideMergeGate(
+      MergeGateInput.make({
+        read: read({ squashCommitlint: SquashCommitlintReport.make({ ...squashPass, message }) }),
+        options: options(),
+      })
+    );
+    expect(decision._tag).toBe("merge");
+    if (decision._tag === "merge") {
+      expect(decision.commitTitle).toBe(message.header);
+      expect(decision.commitMessage).toBe(message.body);
+    }
+  });
+
   it("merges the recorded green PR once the window elapsed and threads are zero", () => {
     const decision = decideMergeGate(MergeGateInput.make({ read: read(), options: options() }));
     expect(decision._tag).toBe("merge");
@@ -1289,7 +1304,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             ).pipe(Effect.flip);
             // The recorded #1459 title is 116 characters with its suffix, so the header is listed first.
             expect(error.message).toContain("HOLD squash-commitlint: footer-max-line-length at line 1 (116 chars)");
-            expect(error.message).toContain(`line 7 (102 chars): "${longBullet}"`);
+            expect(error.message).not.toContain(`line 7 (102 chars): "${longBullet}"`);
             const mergeWasSent2 = yield* mergeWasSent(calls);
             expect(mergeWasSent2).toBe(false);
             const logLines3 = yield* TestConsole.logLines;
@@ -1672,6 +1687,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             expect(merge.value).toContain("merge_method=squash");
             expect(merge.value).toContain(`sha=${headSha}`);
             expect(merge.value).toContain(`commit_title=${pullFixture.title} (#${pullFixture.number})`);
+            expect(merge.value).toContain("commit_message=The one commit.");
           }
         })
       )
