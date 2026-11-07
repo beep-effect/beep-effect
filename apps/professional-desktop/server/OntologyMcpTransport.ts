@@ -173,26 +173,9 @@ const ontologyEgressSink = ExecutionSink.make({
 // expire together and an expired run can only deny.
 const ontologySessionGrantTtl = Duration.hours(12);
 
-/**
- * Transport function a test injects beneath the governed egress boundary.
- *
- * **Details**
- *
- * A function value is a runtime capability held by reference, so its schema
- * only recognizes a function; it is never encoded or decoded.
- *
- * **Example** (Type an injected fetch)
- *
- * ```ts
- * import type { OntologyMcpEgressFetch } from "./OntologyMcpTransport.ts"
- * const egressFetch: OntologyMcpEgressFetch = globalThis.fetch
- * console.log(typeof egressFetch)
- * // "function"
- * ```
- * @category models
- * @since 0.0.0
- */
-export type OntologyMcpEgressFetch = typeof globalThis.fetch;
+// A function value is a runtime capability held by reference: its schema only recognizes a
+// function and is never encoded or decoded.
+type OntologyMcpEgressFetch = typeof globalThis.fetch;
 
 const OntologyMcpEgressFetch = S.declare((u: unknown): u is OntologyMcpEgressFetch => P.isFunction(u)).pipe(
   $I.annoteSchema("OntologyMcpEgressFetch", {
