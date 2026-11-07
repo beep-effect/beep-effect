@@ -36,6 +36,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -323,7 +324,7 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
   return { policy, journal, control, namespaceId, deliver, runtime };
 });
 
-const syntheticHelperOutput = Effect.fnUntraced(function* (fault: string, policy: CursorLifecyclePolicy) {
+const syntheticHelperFrames = Effect.fnUntraced(function* (fault: string, policy: CursorLifecyclePolicy) {
   const ready = yield* encode({ ready: fault === "ready" ? false : true });
   const observed = yield* encode({
     peer: {
@@ -337,6 +338,10 @@ const syntheticHelperOutput = Effect.fnUntraced(function* (fault: string, policy
     },
     callback: start,
   });
+  return { ready, observed };
+});
+const syntheticHelperOutput = Effect.fnUntraced(function* (fault: string, policy: CursorLifecyclePolicy) {
+  const { ready, observed } = yield* syntheticHelperFrames(fault, policy);
   const lines = fault === "overflow" ? Str.repeat(16385)("x") : `${ready}\n${fault === "observed" ? "{}" : observed}\n`;
   return fault === "timeout"
     ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
@@ -354,6 +359,129 @@ const projectCopiedRuntimeStat = (stat: FileSystem.File.Info, fault: string) => 
   if (fault === "wrong-owner") return { ...stat, uid: O.map(stat.uid, (owner) => owner + 1) };
   return projectMissingRuntimeInode(stat, fault);
 };
+
+for (const scenario of [
+  {
+    name: "delayed startup retains the full post-ready window",
+    startup: 8000,
+    message: 9000,
+    initialAdvance: 8000,
+    receiveAdvance: 9000,
+    success: true,
+    ready: true,
+  },
+  {
+    name: "startup expires before readiness",
+    startup: 11000,
+    message: 0,
+    initialAdvance: 10000,
+    receiveAdvance: 0,
+    success: false,
+    ready: false,
+  },
+  {
+    name: "receive deadline expires only after readiness",
+    startup: 0,
+    message: 11000,
+    initialAdvance: 0,
+    receiveAdvance: 10000,
+    success: false,
+    ready: true,
+  },
+]) {
+  it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
+    it.effect(`synthetic lifecycle timing: ${scenario.name}`, () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const spawning = yield* Deferred.make<void>();
+        const readySeen = yield* Deferred.make<void>();
+        const policySeen = yield* Deferred.make<void>();
+        const ackSeen = yield* Deferred.make<void>();
+        let releases = 0;
+        let readyCount = 0;
+        let policies = 0;
+        let acknowledgements = 0;
+        let startupMillis = 0;
+        const frames = yield* syntheticHelperFrames("valid", f.policy);
+        const output = Stream.concat(
+          policySeen.pipe(Deferred.await, Stream.fromEffect, Stream.drain),
+          Stream.concat(
+            Stream.make(new TextEncoder().encode(`${frames.ready}\n`)),
+            Stream.fromEffect(
+              Effect.sleep(scenario.message).pipe(Effect.as(new TextEncoder().encode(`${frames.observed}\n`)))
+            )
+          )
+        );
+        const spawner = ChildProcessSpawner.make((command) =>
+          Effect.gen(function* () {
+            yield* Effect.acquireRelease(Effect.void, () =>
+              Effect.sync(() => {
+                releases++;
+              })
+            );
+            yield* Deferred.succeed(spawning, undefined);
+            const startedAt = yield* Clock.currentTimeMillis;
+            yield* Effect.sleep(scenario.startup);
+            const readyAt = yield* Clock.currentTimeMillis;
+            startupMillis = readyAt - startedAt;
+            const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
+            if (!Stream.isStream(input)) return yield* Effect.die("timing fixture input stream missing");
+            yield* Effect.forkScoped(
+              Stream.runForEach(input, (chunk) => {
+                if (!(chunk instanceof Uint8Array)) return Effect.die("timing fixture input chunk invalid");
+                if (Str.includes("receiptId")(new TextDecoder().decode(chunk))) {
+                  acknowledgements++;
+                  return Deferred.succeed(ackSeen, undefined);
+                }
+                policies++;
+                return Deferred.succeed(policySeen, undefined);
+              })
+            );
+            return ChildProcessSpawner.makeHandle({
+              ...syntheticHandle(output, Sink.drain, false),
+              // A synthetic successful child cannot exit before actually consuming its durable ACK.
+              exitCode: ackSeen.pipe(Deferred.await, Effect.as(ChildProcessSpawner.ExitCode(0))),
+            });
+          })
+        );
+        const receiver = yield* makeCursorLifecycleFixtureReceiver(f.policy).pipe(
+          Effect.provideService(CursorLifecycleRuntime, { journal: f.journal, control: f.control }),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+        );
+        const running = yield* Effect.forkChild(
+          receiver.open().pipe(
+            Effect.tap(() =>
+              Effect.sync(() => {
+                readyCount++;
+              }).pipe(Effect.andThen(Deferred.succeed(readySeen, undefined)))
+            ),
+            Effect.flatMap((opened) => opened.accept),
+            Effect.result,
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          )
+        );
+        yield* Deferred.await(spawning);
+        yield* TestClock.adjust(scenario.initialAdvance);
+        if (scenario.ready) {
+          yield* Deferred.await(readySeen);
+          expect(startupMillis).toBe(scenario.startup);
+          yield* TestClock.adjust(scenario.receiveAdvance);
+        }
+        const result = yield* Fiber.join(running);
+        if (scenario.success) {
+          if (Result.isFailure(result)) return yield* result.failure;
+          expect(result.success.accepted).toBe(1);
+        } else assertFailure(result, CursorLifecycleError.make({ reason: "transport" }));
+        expect(readyCount).toBe(scenario.ready ? 1 : 0);
+        expect(policies).toBe(scenario.ready ? 1 : 0);
+        expect(acknowledgements).toBe(scenario.success ? 1 : 0);
+        expect((yield* f.journal.stats).pages).toBe(scenario.success ? 1 : 0);
+        expect(releases).toBe(1);
+        // These are synthetic protocol/clock oracles, separate from the retained real-peer cleanup tests.
+      })
+    )
+  );
+}
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
   for (const fault of ["canonical", "owner", "writable", "size", "digest", "changed", "growth"]) {
