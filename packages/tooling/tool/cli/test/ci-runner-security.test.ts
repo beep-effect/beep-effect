@@ -886,9 +886,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
-  it.effect(
-    "classifies goals-only and docs-only pull requests without suppressing mixed or push runs",
-    Effect.fnUntraced(function* () {
+  it.effect.each([
+    { scenario: "packet prose" },
+    { scenario: "nested fixture paths" },
+    { scenario: "documentation and push" },
+    { scenario: "executable and mixed" },
+  ])("classifies $scenario without suppressing mixed or push runs", ({ scenario }) =>
+    Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
@@ -931,26 +935,32 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       // Compare both classifiers once per unchanged fixture state; reuse the
       // result for field assertions instead of starting the full CLI again.
-      const baselineProfile = profile("pull_request");
-      assert.strictEqual(baselineProfile.goals_only, "false");
-      assert.strictEqual(baselineProfile.docs_only, "false");
-      assert.strictEqual(baselineProfile.desktop_rust_relevant, "false");
+      if (scenario === "packet prose") {
+        const baselineProfile = profile("pull_request");
+        assert.strictEqual(baselineProfile.goals_only, "false");
+        assert.strictEqual(baselineProfile.docs_only, "false");
+        assert.strictEqual(baselineProfile.desktop_rust_relevant, "false");
+      }
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
       git(["add", "."]);
       git(["commit", "-m", "goals-only"]);
-      const outputPath = path.join(tempRoot, "profile-output.txt");
-      assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
-      // goals_only implies docs_only.
-      assert.strictEqual(profile("pull_request").docs_only, "true");
-      const readFileString7 = yield* fs.readFileString(outputPath);
-      assert.strictEqual(parseProfileOutput(readFileString7).goals_only, "true");
-      yield* fs.remove(outputPath);
+      if (scenario === "packet prose") {
+        const outputPath = path.join(tempRoot, "profile-output.txt");
+        assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
+        // goals_only implies docs_only.
+        assert.strictEqual(profile("pull_request").docs_only, "true");
+        const readFileString7 = yield* fs.readFileString(outputPath);
+        assert.strictEqual(parseProfileOutput(readFileString7).goals_only, "true");
+        yield* fs.remove(outputPath);
+      }
 
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
       git(["add", "."]);
       git(["commit", "-m", "goal metadata"]);
-      assert.strictEqual(profile("pull_request").goals_only, "true");
+      if (scenario === "packet prose") {
+        assert.strictEqual(profile("pull_request").goals_only, "true");
+      }
       // The goal bootstrap emits these markers. They must not turn packet
       // prose into a code-bearing diff (the #2750 unit-d regression).
       for (const directory of ["history", "history/reflections", "research"]) {
@@ -959,50 +969,59 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       git(["add", "."]);
       git(["commit", "-m", "generated packet scaffolding"]);
-      const scaffoldingProfile = profile("pull_request");
-      assert.strictEqual(scaffoldingProfile.goals_only, "true");
-      assert.strictEqual(scaffoldingProfile.docs_only, "true");
+      if (scenario === "packet prose") {
+        const scaffoldingProfile = profile("pull_request");
+        assert.strictEqual(scaffoldingProfile.goals_only, "true");
+        assert.strictEqual(scaffoldingProfile.docs_only, "true");
+        return;
+      }
       const metadataHead = git(["rev-parse", "HEAD"]);
 
-      for (const directory of ["docs", "designs", "history", "research"] as const) {
-        git(["reset", "--hard", metadataHead]);
-        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory, "fixtures"), { recursive: true });
-        yield* fs.writeFileString(
-          path.join(tempRoot, "goals", "example", directory, "fixtures", "expected.md"),
-          "# Executable test fixture\n"
-        );
-        git(["add", "."]);
-        git(["commit", "-m", `nested ${directory} markdown fixture`]);
-        const fixtureProfile = profile("pull_request");
-        assert.strictEqual(fixtureProfile.goals_only, "false");
-        // Heavy admission's path rule counts markdown outside the code roots
-        // as documentation, wherever it sits.
-        assert.strictEqual(fixtureProfile.docs_only, "true");
+      if (scenario === "nested fixture paths") {
+        for (const directory of ["docs", "designs", "history", "research"] as const) {
+          git(["reset", "--hard", metadataHead]);
+          yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory, "fixtures"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(tempRoot, "goals", "example", directory, "fixtures", "expected.md"),
+            "# Executable test fixture\n"
+          );
+          git(["add", "."]);
+          git(["commit", "-m", `nested ${directory} markdown fixture`]);
+          const fixtureProfile = profile("pull_request");
+          assert.strictEqual(fixtureProfile.goals_only, "false");
+          // Heavy admission's path rule counts markdown outside the code roots
+          // as documentation, wherever it sits.
+          assert.strictEqual(fixtureProfile.docs_only, "true");
+        }
+        return;
       }
 
-      // Documentation outside packet prose is docs-only, never goals-only; the
-      // same file under a code root carries code.
-      git(["reset", "--hard", metadataHead]);
-      for (const [relative, content] of [
-        ["docs/runbooks/ci.md", "# runbook\n"],
-        ["research/ledger/claims.jsonl", "{}\n"],
-        [".changeset/quiet-lane.md", "---\n---\n"],
-        ["README.md", "# readme\n"],
-      ] as const) {
-        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relative)), { recursive: true });
-        yield* fs.writeFileString(path.join(tempRoot, relative), content);
+      if (scenario === "documentation and push") {
+        // Documentation outside packet prose is docs-only, never goals-only; the
+        // same file under a code root carries code.
+        git(["reset", "--hard", metadataHead]);
+        for (const [relative, content] of [
+          ["docs/runbooks/ci.md", "# runbook\n"],
+          ["research/ledger/claims.jsonl", "{}\n"],
+          [".changeset/quiet-lane.md", "---\n---\n"],
+          ["README.md", "# readme\n"],
+        ] as const) {
+          yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relative)), { recursive: true });
+          yield* fs.writeFileString(path.join(tempRoot, relative), content);
+        }
+        git(["add", "."]);
+        git(["commit", "-m", "documentation only"]);
+        const docsProfile = profile("pull_request");
+        assert.strictEqual(docsProfile.goals_only, "false");
+        assert.strictEqual(docsProfile.docs_only, "true");
+        assert.strictEqual(profile("push").docs_only, "false");
+        yield* fs.makeDirectory(path.join(tempRoot, "packages", "demo"), { recursive: true });
+        yield* fs.writeFileString(path.join(tempRoot, "packages", "demo", "README.md"), "# package readme\n");
+        git(["add", "."]);
+        git(["commit", "-m", "package readme"]);
+        assert.strictEqual(profile("pull_request").docs_only, "false");
+        return;
       }
-      git(["add", "."]);
-      git(["commit", "-m", "documentation only"]);
-      const docsProfile = profile("pull_request");
-      assert.strictEqual(docsProfile.goals_only, "false");
-      assert.strictEqual(docsProfile.docs_only, "true");
-      assert.strictEqual(profile("push").docs_only, "false");
-      yield* fs.makeDirectory(path.join(tempRoot, "packages", "demo"), { recursive: true });
-      yield* fs.writeFileString(path.join(tempRoot, "packages", "demo", "README.md"), "# package readme\n");
-      git(["add", "."]);
-      git(["commit", "-m", "package readme"]);
-      assert.strictEqual(profile("pull_request").docs_only, "false");
 
       git(["reset", "--hard", metadataHead]);
 
