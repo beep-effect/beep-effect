@@ -858,31 +858,41 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
     })
   );
 
-  // Each group owns a fresh fixture and the same 30-second test deadline.
-  it.effect.each([
-    {
-      name: "operator-adjacent assignments",
-      checkOwnedDriftDiagnostic: false,
-      texts: A.map(
-        [";", "&&", "||", "|", "&", "(", "\n"],
-        (operator) =>
-          `:${operator}ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n`
-      ),
-    },
-    {
-      name: "unsupported forms",
-      checkOwnedDriftDiagnostic: true,
-      texts: [
-        "export 'ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong'; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n",
-        'export "ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong"; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n',
-        "ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\nANTHROPIC_DEFAULT_HAIKU_MODEL+=wrong\n",
-        ":;ANTHROPIC_DEFAULT_HAIKU_MODEL+=wrong\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
-        "# ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
-        "x\\ ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
-        "cat <<'EOF'\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\nEOF\n",
+  // Each independent refusal owns a fresh fixture and the same 30-second deadline.
+  it.effect.each(
+    A.flatMap(
+      [
+        {
+          name: "operator-adjacent assignments",
+          checkOwnedDriftDiagnostic: false,
+          texts: A.map(
+            [";", "&&", "||", "|", "&", "(", "\n"],
+            (operator) =>
+              `:${operator}ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n`
+          ),
+        },
+        {
+          name: "unsupported forms",
+          checkOwnedDriftDiagnostic: true,
+          texts: [
+            "export 'ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong'; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n",
+            'export "ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong"; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n',
+            "ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\nANTHROPIC_DEFAULT_HAIKU_MODEL+=wrong\n",
+            ":;ANTHROPIC_DEFAULT_HAIKU_MODEL+=wrong\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
+            "# ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
+            "x\\ ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
+            "cat <<'EOF'\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\nEOF\n",
+          ],
+        },
       ],
-    },
-  ])("reports $name through both check commands", ({ texts, checkOwnedDriftDiagnostic }) =>
+      (group) =>
+        A.map(group.texts, (text, index) => ({
+          name: `${group.name} ${index + 1}`,
+          text,
+          checkOwnedDriftDiagnostic: group.checkOwnedDriftDiagnostic && index === 0,
+        }))
+    )
+  )("reports $name through both check commands", ({ text, checkOwnedDriftDiagnostic }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -915,13 +925,11 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       yield* fs.writeFileString(shellFile, "ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n");
       yield* run(["apply", ...flags, "--check"]);
       yield* run(["check", ...flags]);
-      for (const text of texts) {
-        yield* fs.writeFileString(shellFile, text);
-        yield* Effect.flip(run(["apply", ...flags, "--check"]));
-        yield* Effect.flip(run(["check", ...flags]));
-        const readFileString54 = yield* fs.readFileString(shellFile);
-        expect(readFileString54).toBe(text);
-      }
+      yield* fs.writeFileString(shellFile, text);
+      yield* Effect.flip(run(["apply", ...flags, "--check"]));
+      yield* Effect.flip(run(["check", ...flags]));
+      const readFileString54 = yield* fs.readFileString(shellFile);
+      expect(readFileString54).toBe(text);
       const errorLines55 = yield* TestConsole.errorLines;
       // The owned-drift diagnostic belongs to unsupported assignment forms;
       // operator-adjacent refusal is checked by both command failures above.

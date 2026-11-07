@@ -247,7 +247,8 @@ const generatedComposers = $I.compose(
   "party-use-cases",
   "party-server",
   "repo-cli-kit",
-  "alchemy-postgres"
+  "alchemy-postgres",
+  "firecrawl"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3639,3 +3640,20 @@ export const $RepoCliKitId: Identity.IdentityComposer<"@beep/repo-cli-kit"> = co
  * @since 0.0.0
  */
 export const $AlchemyPostgresId: Identity.IdentityComposer<"@beep/alchemy-postgres"> = composers.$AlchemyPostgresId;
+
+/**
+ * Identity composer for `@beep/firecrawl`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $FirecrawlId } from "@beep/identity/packages"
+ *
+ * const id = $FirecrawlId.make("Firecrawl")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $FirecrawlId: Identity.IdentityComposer<"@beep/firecrawl"> = composers.$FirecrawlId;
