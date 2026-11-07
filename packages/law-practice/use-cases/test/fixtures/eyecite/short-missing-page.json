@@ -1,0 +1,70 @@
+{
+  "cases": [
+    {
+      "citations": [
+        {
+          "fullSpan": [0, 16],
+          "groups": {
+            "page": null,
+            "reporter": "U.S.",
+            "volume": "576"
+          },
+          "kind": "ShortCaseCitation",
+          "matchedText": "576 U.S., at ___",
+          "metadata": {
+            "antecedent_guess": null,
+            "court": "scotus",
+            "day": null,
+            "month": null,
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_end": null,
+            "pin_cite_span_start": null,
+            "year": null
+          },
+          "span": [0, 13],
+          "spanWithPincite": [0, 16]
+        }
+      ],
+      "input": "576 U.S., at ___"
+    },
+    {
+      "citations": [
+        {
+          "fullSpan": [0, 16],
+          "groups": {
+            "page": null,
+            "reporter": "U.S.",
+            "volume": "576"
+          },
+          "kind": "ShortCaseCitation",
+          "matchedText": "576 U.S., at ___",
+          "metadata": {
+            "antecedent_guess": null,
+            "court": "scotus",
+            "day": null,
+            "month": null,
+            "parenthetical": null,
+            "pin_cite": null,
+            "pin_cite_span_end": null,
+            "pin_cite_span_start": null,
+            "year": null
+          },
+          "span": [0, 13],
+          "spanWithPincite": [0, 16]
+        }
+      ],
+      "input": "576 U.S., at ___, 13"
+    }
+  ],
+  "license": "BSD-2-Clause",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "producerSha256": "3d93a7bcbcdb02b09ca8ed6081fa8ceca220c26094bdad26e7fb1a6ed7bf8f87",
+  "python": "3.11.15",
+  "schemaVersion": "citation-short-missing-page/v1",
+  "sourceSha256": {
+    "eyecite/find.py": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d",
+    "eyecite/models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "eyecite/regexes.py": "73f2508f914bda85bfddab8d5c3821c5c13fbf778b09415f2c32db22fdbe23df"
+  }
+}

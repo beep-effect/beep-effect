@@ -201,7 +201,13 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
         editions: descriptors.pipe(HashMap.values, A.fromIterable),
         outcome: { status: "value", groups: A.map(body.stages.resolutionGroups, (group) => group.members) },
       });
-      return { context, sourceSiteId: row.sourceSiteId, sourceNormalizedSha256: row.normalizedSha256 };
+      return {
+        context,
+        sourceSiteId: row.sourceSiteId,
+        sourceNormalizedSha256: row.normalizedSha256,
+        sourceCitationModels: body.input.citations,
+        sourceResolutionGroups: body.stages.resolutionGroups,
+      };
     })
   );
   return { corpusSha256, contexts, sourceSiteIds: A.dedupe(A.map(observations, (row) => row.sourceSiteId)) };

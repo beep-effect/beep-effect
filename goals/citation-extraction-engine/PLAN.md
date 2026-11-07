@@ -1517,6 +1517,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the supported profile and its independent layout evidence together; retain every unfinished source/donor and whole-engine obligation.
 
+### Bind six completed canonical count assertions to full public-pipeline proof, 2026-11-07
+
+Ten focused Bun/Node tests pass in 110.04 seconds through raw input and default production cleaning/extraction. Validate original comparison operands before checking target ordered kinds. Bind only six exact count assertion events as complete-case proof; parallel attribute assertions, parent capabilities, other tokenizers and whole-engine acceptance remain separate. The 23 annotation-stage bindings stay ready. See history/evidence/2026-11-07-canonical-count-case-proof.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the explicit six-case binding and regenerate to restore audit state if its criterion or execution proof is invalid; preserve all original observations.
+
 ### Bind table capacity failures to engine budgets, 2026-11-07
 
 Existing dictionary/set owners now bind capacity/work refusals to actual engine ceilings without guessing categories for unbound guards. Resolution, cleaner registry, extractor ordering and edition deduplication preserve those bindings. Fifty-one regression tests pass in 4.74s and seven final capacity/extractor/edition controls in 2.86s. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Complete public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-table-capacity-bindings.md.
@@ -1549,6 +1557,22 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the extraction wrapper and typed translator together, preserving native corpora and every unfinished acceptance requirement.
 
+### Compare every canonical primary full and pin-inclusive range, 2026-11-07
+
+Share the existing three-range comparison between original public corpora and extend the 150-input canonical replay to full and pin-inclusive source coordinates. Add focused Bun/Node tests for original input 11, whose primary/full/pin-inclusive ranges differ. Original capture coordinates remain authoritative; no inferred expected spans or ledger completion promotion. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Revert only an unsound coordinate projection after recording the source mismatch; retain the original captured ranges and verification requirement.
+
+### Compare original attribute operands through existing production correction and year kernels, 2026-11-07
+
+The default public engine replay now links all 182 original builtin attribute assertions to 150 count invocations. Reuse production ResourceCorrection and MetadataYear operations on actual public data, with source argument/frame/operand checks. All ten focused tests pass in 124.53 seconds; six exercised attribute cases receive local complete-case proof beside six existing count cases. Other attributes, model protocols and full hosted acceptance remain open. Repair the hosted TSDoc literal-brace warning without changing template parsing. See history/evidence/2026-11-07-canonical-attribute-proof.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the six explicit attribute bindings and return them to audit if their represented-data projection is unsound; retain original operands and all general model obligations.
+
 ### Compare public court and reporter identities with sealed evidence, 2026-11-07
 
 The public extraction corpus and private semantic replay independently compare case reporter ids, publication/court artifact versions and known/unmapped court objects against the sealed vocabulary mapping. All eighty original projection models and explicit unknown/empty/null controls are covered. Seven public/projection tests pass; the factored projection replay passes five tests. Prior head 50a493cef5 now passes hosted Labs and Fallow envelopes. See history/evidence/2026-11-07-public-vocabulary-identities.md. All full-goal proof rows remain open.
@@ -1564,6 +1588,14 @@ Strengthen the shared public/private semantic comparator with whole represented 
 Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Remove the stronger assertion while retaining original frozen metadata, edition observations and all unfinished proof duties.
+
+### Compose production default engine owners and capture installation data, 2026-11-07
+
+CitationEngineDefaultLive reuses Effect Layer.effectContext and existing authenticated default installers to create coherent cleaner/container owners and shared operation/native admission. Trusted host/source/identity/platform dependencies remain injected; no synthetic production identity is added. Both configured and default engines capture complete schema data before async use. Four Bun/Node assembly combinations plus one property pass in 60.60s; mixed-runtime/missing-asset refusals, post-build worker-path mutation and scope closure are covered. Package lint/types, declarations, blocking laws and zero-introduced scoped Fallow pass. Deployment, whole-engine safety/scaling and exhaustive source/donor/lifecycle acceptance remain open.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the default Layer and complete configuration snapshot together with their runtime controls; preserve explicit host identity and every unfinished goal requirement.
 
 ### Compose the captured four-operation CitationEngine Layer, 2026-11-07
 
@@ -1589,6 +1621,36 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the per-report Schema policy snapshot and its mutation controls together; doing so reopens the demonstrated nested deadline alias and must not be described as captured-authority proof.
 
+### Exercise the default production Layer in the original extraction corpus, 2026-11-07
+
+The focused seven-document replay and hosted full 36-document Bun/Node replay now build the default public Layer. Resolver admission and final quiescence checks inspect the default owners, not the separately preassembled fixture owners. Original expectations and comparison scope remain unchanged. Full hosted replay and production identity remain unqualified; see history/evidence/2026-11-07-default-engine-corpus.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Restore the configured Layer only if default assembly cannot preserve the source observations; record the failure rather than change expectations.
+
+### Implement source-derived builtin annotation diff in the existing worker, 2026-11-07
+
+Explicit useDmp=false selects CPython 3.11.15 SequenceMatcher semantics in the existing admitted Effect RPC diff child. All 4231 independent step observations, source bounds controls, 22 acknowledged Bun/Node child exits and public annotation outcomes pass. Nineteen canonical builtin SpanUpdater maps match all 328 queries. The lone-surrogate public source case remains a prerequisite refusal with native exact-string coverage; no fidelity waiver. Compact source rows, exact replay and eight corruption controls are retained. Focused package/type/declaration/law/Fallow gates pass without new findings or suppression. See history/evidence/2026-11-07-builtin-annotation-diff.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Revert the builtin selector, algorithm and source corpus together; preserve DMP behavior, source prerequisite refusals and every unfinished goal acceptance obligation.
+
+### Include every original law journal and Tax Court extraction input, 2026-11-07
+
+Extend the same authenticated canonical replay with all 10 builtin law inputs, 6 journal inputs and 4 Tax Court inputs. The complete hosted replay now covers 150 original inputs per runtime. Add focused first-input checks for each new family on both runtimes. Preserve every original ID and independent expected object; no ready/complete ledger promotion follows from scheduling coverage. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove a family replay only after recording why its source projection is unsound; retain original assertions and never change expected outputs to fit the target.
+
+### Normalize short-form missing-page groups after original pin-prefix extraction, 2026-11-07
+
+Address the valid PR review by applying the shared CitationBase page normalization to returned reference models after metadata and pin-prefix extraction. A clean pinned Python probe captures two original inputs; its repeat is byte-identical. Both inputs pass complete groups, metadata and verified range comparisons on Bun and Node. The four-input proof fixes this constructor defect without completing broad corpus or safety obligations. See history/evidence/2026-11-07-short-missing-page-review-repair.md.
+
+Reverse: Retain the original raw-prefix ordering and independent source observations if constructor composition changes.
+
 ### Own annotation contracts and reported source operation, 2026-11-07
 
 Server use cases own annotation mode/replacement/input/result schemas; native stages reuse them without aliases. Reported annotation preserves genuine proofs, exact native output and measured admitted work. Twelve final annotation/resolver tests, eleven regressions and four contract tests pass; lint/types/declarations/laws/Fallow pass with zero introduced findings. Shared Schema policy capture removes duplicated installer code. Final service/Layer and all goal acceptance remain open. See history/evidence/2026-11-07-public-annotation-operation.md.
@@ -1605,6 +1667,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert public result production and restore the previous private source/diagnostic definitions together; retain all original source, native and restoration corpora.
 
+### Preserve authenticated canonical annotation-stage proof during ledger regeneration, 2026-11-07
+
+Replay all 23 original canonical annotation assertions through the default public engine on Bun and Node. Bind their exact source observations to hashed evidence and target tests through the explicit proof plan. These are nonterminal annotation-stage proofs: original upstream cleaning/extraction are not recomputed, no case is complete, and all full-goal acceptance duties remain. The validator and exporter reject stale or escaping references, duplicate identities and stage proof promoted to completion. See history/evidence/2026-11-07-canonical-annotation-ledger.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the explicit binding and regenerate the ledgers; cases return to audit without changing original observations.
+
 ### Preserve exact resolution safety diagnostics, 2026-11-07
 
 Resolution admission, callback/list/resource guards and projection now retain actual closed budget names through nested sanitizers using Effect Struct.pick. Thirty-one tests pass in 3.97s, including original 76 default contexts, receipt restoration and retained mutation/alias safety controls. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Generic table/set owner attribution, public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-resolution-limit-diagnostics.md.
@@ -1612,6 +1682,18 @@ Resolution admission, callback/list/resource guards and projection now retain ac
 Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional private limit metadata and its producers/translators together, retaining source corpora and exact-category regression evidence without weakening any acceptance requirement.
+
+### Preserve static XML worker entry reachability after Bun startup repair, 2026-11-07
+
+Fix the three source-backed unused-file findings from hosted Fallow run 42353625579 by selecting literal URL constructors. Preserve actual worker paths, limits, redaction and assertions. All six callback/XML tests and both original resolution assertion tests pass; hosted unit-d and exhaustive acceptance remain open. Evidence: history/evidence/2026-11-07-xml-worker-entry-reachability.md.
+
+Reverse: Revisit when the scanner can follow conditional URL arguments without explicit literal constructors.
+
+### Qualify all original edition-year assertions against authenticated production data, 2026-11-07
+
+Replay all eight original Edition.includes_year assertions through the existing production inference service using authenticated frozen editions and the captured Effect TestClock date. The retained test passes in 6.08 seconds; lint/types and Fallow pass. Bind only these exact original model-method cases as complete, without claiming whole-document extraction or a parent model capability. See history/evidence/2026-11-07-canonical-edition-years.md.
+
+Reverse: Preserve the original source calendar, actual edition references and assertion operands if date inference changes.
 
 ### Qualify original extraction observations through the public engine, 2026-11-07
 
@@ -1621,6 +1703,18 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Remove the public replay entrypoints while retaining original oracle observations and unresolved acceptance obligations.
 
+### Qualify original resolution assertions through the default public engine, 2026-11-07
+
+Bind all 23 original formatted resource-map and seven reference-index equality assertions to the existing 30 operation snapshots. Both runtime configurations pass the final public default-engine replay, with real admission and cleanup checks retained. Validate all 94 original input models and finite conditions for all 45 source resource groups; preserve optional authority examples without treating them as resource-key capabilities. Only these 30 resolver-boundary cases are completed; parser, outer helper, general model/hash and whole-engine obligations remain open. See history/evidence/2026-11-07-canonical-resolution-assertions.md.
+
+Reverse: Retain exact original operands, complete source-input matching and scoped label conditions if resolution representation changes.
+
+### Remove repeated Bun XML module startup from native qualification fixtures, 2026-11-07
+
+Reuse the existing scoped worker bundler for the Bun XML test entry, matching the established regex/HTML and Node fixture strategy. All eight selected callback/XML/default-resolution tests pass; Bun markup callback time is 9.30 seconds versus the earlier 90.35-second diagnostic sample, with unchanged 120-second limits. The samples are not a controlled benchmark and hosted acceptance remains required. No production worker or callback algorithm changes. See history/evidence/2026-11-07-bun-xml-startup.md.
+
+Reverse: Retain the actual Bun entrypoint and all source outcomes, byte limits and physical-exit assertions if startup packaging changes.
+
 ### Repair hosted JSDoc since tags without weakening the ratchet, 2026-11-07
 
 Hosted job 128250296967 reports nine missing since tags plus one leading/trailing blank. Public comments now separate category/since tags, and the mode alias has a lead description. The actual repository tag/shape parser passes 86 focused export comments. Main ce87ff21b2 is merged at 0ef0edc00a. Full hosted ratchet remains pending; baselines/thresholds unchanged. See history/evidence/2026-11-07-public-source-resolution.md.
@@ -1628,6 +1722,46 @@ Hosted job 128250296967 reports nine missing since tags plus one leading/trailin
 Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert only the documentation tag/lead normalization; this reopens the observed hosted since/blank findings and does not change runtime semantics.
+
+### Repair source replay contracts and original missing-page models, 2026-11-07
+
+Repair required tokenizer counts and schema-encoded HTML startup, and replay private cleaner categories under existing admission without changing public errors. Normalize original missing-page model groups and retain independent canonical regressions. Selected unit and cleaner tests pass; callback diagnostic replay passes at existing limits but its historical timeout cause remains unknown. Record source-free row and confirmed-child diagnostics and use hosted integration for broad qualification. See history/evidence/2026-11-07-citation-fixture-and-missing-page-repairs.md.
+
+Reverse: Retain exact source expectations and public redaction if replay ownership changes.
+
+### Replay every original builtin find-citations input through the default engine, 2026-11-07
+
+Add all 130 original builtin Tokenizer inputs from the canonical assertion capture to the default public engine replay. Thirteen ten-document shards per runtime cover the full set in hosted integration; focused tests run the first two cases. Compare independent expected citation kinds/components/metadata and original observed primary spans. Alternate tokenizers and unrepresented methods remain separate obligations; no case is promoted on scheduled tests. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the new replay only if its projection is unsound; preserve original cases and report any failing source outcome without changing its expectation.
+
+### Replay original ambiguity and markup-name families with their actual options, 2026-11-07
+
+Add all 11 builtin disambiguation and 32 markup/name inputs, preserving remove_ambiguous and original cleaners. Full integration now schedules 193 inputs and 234 attribute assertions per runtime, including final partial groups. Sixteen focused tests pass in 171.44 seconds; three count and two attribute events receive complete local proof, bringing completed cases to 17. General protocols, alternate tokenizers, safety and scaling, and full hosted acceptance remain open. See history/evidence/2026-11-07-canonical-markup-ambiguity.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the five new explicit bindings if their source linkage or target proof is invalid, preserving every original input and unqualified full-corpus duty.
+
+### Replay original HTML reference ordering and overlap assertions through the default engine, 2026-11-07
+
+Add four original HTML reference/filtering inputs to the public-engine replay, bringing scheduled extraction inputs to 197 per runtime. Four focused tests pass on Bun and Node and qualify two exact original assertion events with authenticated complete-case proof. The other two filtering assertions and full hosted integration remain unqualified. Preserve original order, duplicate names, complete semantic metadata, verified range distinctions and physical exits. See history/evidence/2026-11-07-canonical-reference-markup.md.
+
+Reverse: Retain original assertion criteria and complete source models if replay composition changes.
+
+### Replay original parenthetical court assertions through public extraction, 2026-11-07
+
+Join 29 original court parser calls to independent equality assertions. Schedule all 29 on both native configurations and qualify five diverse originals locally. Four final court/parser tests pass; package lint/types and Fallow pass. Retain the remaining 70 nonhelper extraction calls, including exact HTML/whitespace modes and the server-captured straighten_quotes callback, as open integration work. Evidence: history/evidence/2026-11-07-canonical-court-extraction.md; reflection: history/reflections/2026-11-07-codex-capture-profiles.md.
+
+Reverse: Revisit finite court bindings if the authenticated source observations or replay dependencies change.
+
+### Replay original resolution parser fragments through the default public engine, 2026-11-07
+
+Join all 77 original parser calls to their exact single-citation assertions. Schedule all fragments on both runtimes; qualify the first of each seven observed kinds locally. Share Effect Ref source ownership, semantic edition comparisons, verified ranges and physical retirement checks with original HTML replay. Six focused tests pass. The remaining 70 parser assertions, full hosted corpus, alternate tokenizers, model laws and exhaustive acceptance remain open. Evidence: history/evidence/2026-11-07-original-resolution-parser-fragments.md.
+
+Reverse: Revisit finite assertion bindings if authenticated source observations or retained replay dependencies change.
 
 ### Replay public resolution groups and require explicit identity ownership, 2026-11-07
 
@@ -1652,6 +1786,12 @@ Hosted Labs and Fallow dead-code failed after main archived goal inputs still re
 Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Restore the original consumer paths only together with an executable retained source for those archived inputs; preserve source bytes and metrics.
+
+### Retain original complex markup regressions and integrated parity reflection, 2026-11-07
+
+Original canonical inputs 122, 123 and 129 pass on Bun and Node with unchanged engine and canonical test limits. Retain six focused public-engine regressions and record implementation sequencing lessons. These passing isolated checks do not explain the earlier hosted operation deadline or close the full corpus, safety or accounting obligations. See history/reflections/2026-11-07-integrated-parity-feedback.md.
+
+Reverse: Preserve all original inputs and assertions if regression placement changes.
 
 ### Verify pin-cite-inclusive source components, 2026-11-07
 

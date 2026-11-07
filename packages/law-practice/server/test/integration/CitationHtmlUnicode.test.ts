@@ -1,9 +1,6 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationOperationAdmission,
-  makeCitationOperationAdmission,
-} from "@beep/law-practice-server/internal/Citation/Admission";
-import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
+import { makeCitationOperationAdmission } from "@beep/law-practice-server/internal/Citation/Admission";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
@@ -56,10 +53,12 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             const owned = yield* makeCitationUnicodePipelineHarness(true).pipe(
               Effect.provideService(CitationNativeProcessAdmission, nativeAdmission)
             );
-            const operation = yield* makeCitationCleanerOperation(limits).pipe(
-              Effect.provideService(CitationOperationAdmission, admission),
+            const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
               Effect.provideService(CitationCleaner, owned.runtime)
             );
+            const operation = {
+              run: Effect.fn("HtmlUnicodeTest.run")((input: unknown) => admission.run("clean", pipeline.run(input))),
+            };
             const citationResult1 = yield* defaultCitationEnginePolicy;
             const hash = yield* makeCitationPythonHash(citationResult1.limits);
             let histories = 0;
