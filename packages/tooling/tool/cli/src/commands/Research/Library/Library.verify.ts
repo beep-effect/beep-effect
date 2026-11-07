@@ -19,6 +19,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { requiredLibraryAdapters } from "./Library.acquire.ts";
 import { encodeLibraryCaptureJson, runLibraryCommand } from "./Library.adapter.ts";
+import { libraryBoxFileId } from "./Library.box.ts";
 import { LibraryCaptureCorrection } from "./Library.corrections.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { libraryEffectiveCaptures, libraryEffectiveCategory, librarySourceEvidenceValid } from "./Library.evidence.ts";
@@ -120,6 +121,9 @@ const pinIdentityMatches = (
   pin.clone === `repos/github/${source.repository}` &&
   pin.remote === `https://github.com/${source.repository}.git`;
 const targetRevision = (source: LibrarySource, capture: LibraryCapture) => {
+  // Box captures record `<fileId>:<versionId>`; the version id is the cited source revision.
+  if (O.isSome(libraryBoxFileId(source.canonicalUrl)))
+    return { revision: capture.requestedRevision, reason: "Box requested version differs from source versions" };
   if (source.kind === "youtube")
     return { revision: capture.requestedRevision, reason: "video request differs from inventoried source target" };
   if (source.kind === "paper" && Str.startsWith("arxiv:")(source.identity))

@@ -2089,6 +2089,7 @@
     {"name":"Library.artifactIntegrity","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.artifactsValid","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.assembleOntology","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Library.box.requestedVersion","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"Library.box.sha1","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"Library.box.source","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"Library.canonicalObjectIntegrity","owner":"@beep/repo-cli","family":"tooling","conforms":true},

@@ -33,6 +33,7 @@ import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
@@ -41,7 +42,7 @@ import * as Str from "effect/String";
 import { encodeLibraryJson, LibraryAdapterResult, saveLibraryText } from "./Library.adapter.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { LibraryArtifact, LibraryCatalog, LibrarySource, LibrarySourceVersion } from "./Library.schemas.ts";
-import { hashBytes, mergeLibraryVersions, saveImmutable, withCatalog } from "./Library.store.ts";
+import { hashBytes, loadCatalog, mergeLibraryVersions, saveImmutable, withCatalog } from "./Library.store.ts";
 import type { LibraryAccessClass } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.box");
@@ -653,12 +654,40 @@ export const libraryBoxSource = Effect.fn("Library.box.source")(function* (
   });
 });
 
+const BoxListing = S.fromJsonString(S.Struct({ files: S.Array(LibraryBoxFile) })).pipe(
+  $I.annoteSchema("LibraryBoxListing", { description: "Retained Box listing receipt with file versions." })
+);
+
+// The requested version is the current one, or a superseded one whose SHA-1 a retained listing recorded.
+const requestedBoxVersion = Effect.fn("Library.box.requestedVersion")(function* (
+  root: string,
+  current: LibraryBoxFile,
+  revision: string
+) {
+  if (Str.isEmpty(revision) || current.versionId === revision) return O.some(current);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const catalog = yield* loadCatalog(root);
+  const listings = A.filter(catalog.artifacts, (artifact) => artifact.role === "box-listing");
+  for (const listing of A.reverse(listings)) {
+    const decoded = yield* fs
+      .readFileString(path.resolve(root, listing.path))
+      .pipe(Effect.flatMap(S.decodeEffect(BoxListing)), Effect.option);
+    const match = O.flatMap(decoded, (value) =>
+      A.findFirst(value.files, (file) => file.id === current.id && file.versionId === revision)
+    );
+    if (O.isSome(match)) return match;
+  }
+  return O.none<LibraryBoxFile>();
+});
+
 /**
  * Download the current version of one Box file, verify Box's SHA-1 and retain the original bytes.
  *
  * **Details**
  *
- * The captured revision is `<fileId>:<versionId>`. Byte-identical downloads share one object under
+ * The captured revision is `<fileId>:<versionId>`. A superseded version is downloaded by its version id,
+ * checked against the SHA-1 its registration listing recorded. Byte-identical downloads share one object under
  * `objects/sha256`, so a resumed run never stores a duplicate.
  *
  * **Example** (Prepare a Box file acquisition)
@@ -688,15 +717,17 @@ export const acquireLibraryBoxFile = Effect.fn("Library.acquireBoxFile")(functio
       reason: "Source is not a Box file locator.",
     });
   const box = yield* LibraryBox;
-  const file = yield* box.describeFile(fileId.value);
-  if (Str.isNonEmpty(source.revision) && file.versionId !== source.revision)
+  const current = yield* box.describeFile(fileId.value);
+  const pinned = yield* requestedBoxVersion(root, current, source.revision);
+  if (O.isNone(pinned))
     return LibraryAdapterResult.make({
       artifacts: [],
       revision: "",
       status: "blocked",
       complete: false,
-      reason: `Box file ${file.id} is now version ${file.versionId}, not the registered ${source.revision}; re-run acquire --route box to register it.`,
+      reason: `Box file ${current.id} version ${source.revision} has no retained listing with its SHA-1; re-run acquire --route box to register it.`,
     });
+  const file = pinned.value;
   const bytes = yield* box.download(file, LIBRARY_BOX_MAX_BYTES);
   const sha1 = yield* libraryBoxSha1(bytes);
   const safeName = Str.replace(/[^A-Za-z0-9._-]+/g, "_")(file.name);
