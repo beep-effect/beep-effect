@@ -106,8 +106,10 @@ export const citationNodeTestExecutable = Effect.gen(function* () {
   });
 });
 
-/** Bundle one trusted entrypoint per scoped installation, retaining the actual runtime's platform layers. */
-const makeCitationBundledTestRuntime = Effect.fn("NativeSourceTest.bundledRuntime")(function* (
+/** Bundle one trusted entrypoint per scoped installation, retaining the actual runtime's platform layers.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationBundledTestRuntime = Effect.fn("NativeSourceTest.bundledRuntime")(function* (
   kind: CitationNativeRuntimeKind,
   entrypoint: string,
   cwd: string
