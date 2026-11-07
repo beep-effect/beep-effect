@@ -17,7 +17,7 @@ import {
   nativeTraceWire,
   prepareCoworkLifecycleFixtureHook,
 } from "@beep/repo-ai-metrics/test/claude-cowork-lifecycle";
-import { makeCoworkAncestorFixture } from "@beep/repo-ai-metrics/test/cowork-ancestor";
+import { coworkAncestorFixture } from "@beep/repo-ai-metrics/test/cowork-ancestor";
 import { cursorLifecycleFixtureCodecs } from "@beep/repo-ai-metrics/test/cursor-lifecycle";
 import { makeLifecycleAckServer } from "@beep/repo-ai-metrics/test/lifecycle-ack-server";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
@@ -109,7 +109,7 @@ const makeDelivery = (
   policy: CoworkLifecyclePolicy,
   journal: Effect.Success<ReturnType<typeof makeNativeIntakeJournal>>,
   control: ObservationControl,
-  ancestor: Effect.Success<ReturnType<typeof makeCoworkAncestorFixture>>
+  ancestor: Effect.Success<typeof coworkAncestorFixture>
 ) => {
   const deliver = Effect.fn("CoworkLifecycleTest.deliver")(function* (
     body: unknown,
@@ -144,7 +144,7 @@ const makeDelivery = (
 const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 32) {
   yield* TestClock.adjust("1 second");
   const fs = yield* FileSystem.FileSystem;
-  const ancestor = yield* makeCoworkAncestorFixture();
+  const ancestor = yield* coworkAncestorFixture;
   const runtimeExecutable = ancestor.runtime.executable;
   const pythonExecutable = yield* fs.realPath("/usr/bin/python3");
   const namespaceId = yield* hashPrivateIdentifier("ai-metrics-hash-salt-namespace/v1", O.some(salt));
@@ -246,7 +246,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
     it.effect("owned Cowork application and callback exit before their sealed copy is removed", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const ancestor = yield* makeCoworkAncestorFixture();
+        const ancestor = yield* coworkAncestorFixture;
         assertTrue(ancestor.appPid !== process.pid && ancestor.peerPid !== ancestor.appPid);
         yield* ancestor.close;
         yield* ancestor.closed;
@@ -265,7 +265,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const server = yield* makeLifecycleAckServer("", true);
-        const ancestor = yield* makeCoworkAncestorFixture();
+        const ancestor = yield* coworkAncestorFixture;
         const body = yield* encode({ callback: start });
         const sending = yield* Effect.forkChild(ancestor.send(server.path, body));
         yield* server.awaitRequest;

@@ -97,16 +97,20 @@ input.on("line", line => {
 `;
 
 /**
- * Own a sealed executable, a real app parent and a persistent real callback child.
+ * Lazily own a sealed executable, a real app parent and a persistent real callback child.
  * **Example** (Inspect the fixture factory)
  * ```ts
- * import { makeCoworkAncestorFixture } from "@beep/repo-ai-metrics/test/cowork-ancestor"
- * console.log(typeof makeCoworkAncestorFixture)
+ * import { coworkAncestorFixture } from "@beep/repo-ai-metrics/test/cowork-ancestor"
+ * console.log(typeof coworkAncestorFixture)
  * ```
  * @category testing
  * @since 0.0.0
  */
-export const makeCoworkAncestorFixture = Effect.fn("CoworkTest.ancestor")(function* () {
+export const coworkAncestorFixture: Effect.Effect<
+  CoworkAncestorFixture,
+  CursorLifecycleError,
+  Effect.Services<ReturnType<typeof makeSealedRuntimeFixture>>
+> = Effect.gen(function* () {
   const runtime = yield* makeSealedRuntimeFixture();
   const parent = yield* Effect.scope;
   const owned = yield* Scope.fork(parent);
@@ -163,4 +167,7 @@ export const makeCoworkAncestorFixture = Effect.fn("CoworkTest.ancestor")(functi
     Effect.onError(() => close),
     Effect.mapError(() => failure("transport"))
   );
-});
+}).pipe(
+  Effect.mapError(() => failure("transport")),
+  Effect.withSpan("CoworkTest.ancestor")
+);
