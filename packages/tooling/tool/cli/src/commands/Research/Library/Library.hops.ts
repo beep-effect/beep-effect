@@ -336,7 +336,8 @@ export const recordLibraryHops = Effect.fn("Library.recordHops")(function* (
   recordedAt: string,
   intakeIds?: ReadonlyArray<string>
 ) {
-  const sources = A.fromIterable(catalog.sources);
+  // Copy: A.fromIterable returns an array argument as-is, and the input catalog must stay unchanged.
+  const sources = [...catalog.sources];
   let childrenByParent = HashMap.empty<string, ReadonlyArray<string>>();
   // Primary ids map to themselves and aliases to their primary, so membership and resolution are lookups.
   let primaryOf = HashMap.fromIterable(
