@@ -2233,17 +2233,8 @@
     "./packages/drivers/alchemy-postgres/src/index.ts"
   ],
   "@beep/alchemy-postgres/*": ["./packages/drivers/alchemy-postgres/src/*"],
-  "@beep/execution-authority-domain": [
-    "./packages/execution-authority/domain/src/index.ts"
-  ],
-  "@beep/execution-authority-use-cases": [
-    "./packages/execution-authority/use-cases/src/index.ts"
-  ],
-  "@beep/execution-authority-tables": [
-    "./packages/execution-authority/tables/src/index.ts"
-  ],
-  "@beep/execution-authority-server": [
-    "./packages/execution-authority/server/src/index.ts"
+  "@beep/repo-cli/commands/History": [
+    "./packages/tooling/tool/cli/src/commands/History/index.ts"
   ],
   "@beep/execution-authority-config": [
     "./packages/execution-authority/config/src/index.ts"
@@ -2263,6 +2254,9 @@
   "@beep/execution-authority-config/test": [
     "./packages/execution-authority/config/src/test.ts"
   ],
+  "@beep/execution-authority-domain": [
+    "./packages/execution-authority/domain/src/index.ts"
+  ],
   "@beep/execution-authority-domain/entities": [
     "./packages/execution-authority/domain/src/entities/index.ts"
   ],
@@ -2281,6 +2275,9 @@
   "@beep/execution-authority-domain/values/GrantSet": [
     "./packages/execution-authority/domain/src/values/GrantSet/index.ts"
   ],
+  "@beep/execution-authority-server": [
+    "./packages/execution-authority/server/src/index.ts"
+  ],
   "@beep/execution-authority-server/ExecutionLedger": [
     "./packages/execution-authority/server/src/ExecutionLedger/index.ts"
   ],
@@ -2290,11 +2287,17 @@
   "@beep/execution-authority-server/GovernedTierGate": [
     "./packages/execution-authority/server/src/GovernedTierGate/index.ts"
   ],
+  "@beep/execution-authority-tables": [
+    "./packages/execution-authority/tables/src/index.ts"
+  ],
   "@beep/execution-authority-tables/entities": [
     "./packages/execution-authority/tables/src/entities/index.ts"
   ],
   "@beep/execution-authority-tables/entities/ExecutionRecord": [
     "./packages/execution-authority/tables/src/entities/ExecutionRecord/index.ts"
+  ],
+  "@beep/execution-authority-use-cases": [
+    "./packages/execution-authority/use-cases/src/index.ts"
   ],
   "@beep/execution-authority-use-cases/ExecutionLedger": [
     "./packages/execution-authority/use-cases/src/ExecutionLedger/index.ts"

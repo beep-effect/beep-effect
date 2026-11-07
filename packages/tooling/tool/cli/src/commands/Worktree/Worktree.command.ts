@@ -20,6 +20,7 @@ import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import * as Bool from "effect/Boolean";
+import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
@@ -38,6 +39,7 @@ import {
   runRepoCommandCapture,
   runRepoCommandStreamingCapture,
 } from "../../internal/repo-run/index.ts";
+import { HistoryNotes, HistoryNotesLive, renderHistoryNotesSync } from "../History/index.ts";
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "../Refs/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
@@ -885,6 +887,37 @@ export const linkReferences = Effect.fn("Worktree.linkReferences")(
   })
 );
 
+/**
+ * Configures the commit-message overlay for a new worktree's clone.
+ *
+ * **Details**
+ *
+ * Sets the `refs/notes/history` fetch refspec and display ref without
+ * fetching. Linked worktrees share their clone's config, so this is
+ * idempotent across lanes. It is never fatal: any failure becomes a warning
+ * and worktree creation carries on.
+ *
+ * **Example** (Configure the overlay for a new lane)
+ *
+ * ```ts
+ * import { syncHistoryNotesConfig } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(syncHistoryNotesConfig("/repo-worktrees/lane"))) // true
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const syncHistoryNotesConfig = Effect.fn("Worktree.syncHistoryNotesConfig")(function* (targetPath: string) {
+  yield* HistoryNotes.use((history) => history.sync({ root: targetPath, fetch: false })).pipe(
+    Effect.flatMap((report) => Console.log(A.join(renderHistoryNotesSync(report), "\n"))),
+    Effect.catchCause((cause) =>
+      Console.warn(`history notes sync skipped (worktree creation continues): ${Cause.pretty(cause)}`)
+    )
+  );
+});
+
 const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: {
   readonly name: string;
   readonly branch: O.Option<string>;
@@ -892,7 +925,12 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
 }): Effect.fn.Return<
   void,
   WorktreeCommandError | WorktreeExistsError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git
+  | HistoryNotes
 > {
   const context = yield* resolveWorktreeContext();
   const branch = O.getOrElse(options.branch, () => defaultWorktreeBranch(options.name));
@@ -915,6 +953,7 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
     );
   yield* runStreamingStep("bun", ["install"], targetPath, "Failed to run bun install in the new worktree.");
   yield* installRegenerateMergeDriver(targetPath);
+  yield* syncHistoryNotesConfig(targetPath);
   const copies = yield* copyLocalFiles(context.mainCheckout, targetPath);
   const references = yield* linkReferences(context.currentRoot, targetPath);
   yield* renderCreationSummary(options.name, branch, targetPath, copies, references);
@@ -1198,7 +1237,8 @@ const worktreeNewCommand = Command.make(
     );
   })
 ).pipe(
-  Command.withDescription("Create a sibling worktree, bootstrap it, and copy local-only files from the main checkout")
+  Command.withDescription("Create a sibling worktree, bootstrap it, and copy local-only files from the main checkout"),
+  Command.provide(HistoryNotesLive)
 );
 
 const worktreeRemoveCommand = Command.make(
