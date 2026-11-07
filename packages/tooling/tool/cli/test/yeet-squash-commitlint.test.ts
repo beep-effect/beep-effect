@@ -384,7 +384,7 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
               );
               const predicted = predictSquashCommitMessage(source(["fix(x): one", subject]));
               expect(predicted.body).toContain(`* ${subject}`);
-              expect(Str.replaceAll(report.message.body, "\n", " ")).toContain(subject);
+              expect(pipe(report.message.body, Str.replaceAll("\n", " "))).toContain(subject);
             })
         )
     )
