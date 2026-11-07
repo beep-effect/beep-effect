@@ -8,6 +8,7 @@ import { BoxMirror, VaultSyncPass } from "@beep/documents-use-cases/aggregates/V
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -202,7 +203,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
             const destination = yield* destinations.state(destinationId);
             if (destination._tag !== "Registered" || destination.paused || destination.rootId === null) return null;
             const item = yield* items.state(itemId);
-            const operation = yield* operations
+            let operation = yield* operations
               .state(operationId)
               .pipe(
                 Effect.repeat({ until: (state) => state !== null, schedule: Schedule.spaced("10 millis") }),
@@ -210,7 +211,21 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
                 Effect.orDie
               );
             if (item === null || operation === null) return null;
-            if (operation.status !== "queued" && !(operation.status === "leased" && operation.holder === key))
+            const now = yield* Clock.currentTimeMillis;
+            if (operation.status === "leased" && operation.holder === key && operation.expiresAt <= now) {
+              yield* operations.send(
+                operationId,
+                V.ExpireLease.make({ attempt: operation.leaseEpoch }),
+                options(`expire/${operationId}/${operation.leaseEpoch}`)
+              );
+              operation = yield* operations.state(operationId);
+              if (operation === null) return null;
+            }
+            if (
+              operation.status !== "queued" &&
+              operation.status !== "succeeded" &&
+              !(operation.status === "leased" && operation.holder === key)
+            )
               return null;
             const input = operation.input;
             const parentPath = path.dirname(input.path);
@@ -231,7 +246,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
                   parentRemoteId,
                   itemRemoteId: item.remoteId,
                 }),
-                options(`lease/${operationId}`)
+                options(`lease/${operationId}/${operation.leaseEpoch + 1}`)
               );
             const leased = yield* operations.state(operationId);
             if (leased === null) return null;
@@ -280,27 +295,28 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
               return null;
             }
             const receipt = result.success;
-            yield* items.send(
-              itemId,
-              V.MarkItemPushed.make({
-                remoteId: receipt.remoteId,
-                remoteName: receipt.name,
-                remoteParentId: receipt.parentRemoteId,
-                generation: input.generation,
+            if (operation.status !== "succeeded") {
+              yield* items.send(
+                itemId,
+                V.MarkItemPushed.make({
+                  remoteId: receipt.remoteId,
+                  remoteName: receipt.name,
+                  remoteParentId: receipt.parentRemoteId,
+                  generation: input.generation,
+                  operationId,
+                }),
+                options(`ack/${operationId}`)
+              );
+              yield* checkpoint("item-acknowledged");
+              yield* operations.send(
                 operationId,
-              }),
-              options(`ack/${operationId}`)
-            );
-            yield* checkpoint("item-acknowledged");
-            yield* operations.send(
-              operationId,
-              V.CompleteOperation.make({
-                holder: key,
-                attempt: leased.leaseEpoch,
-              }),
-              options(`complete/${operationId}`)
-            );
-
+                V.CompleteOperation.make({
+                  holder: key,
+                  attempt: leased.leaseEpoch,
+                }),
+                options(`complete/${operationId}/${leased.leaseEpoch}`)
+              );
+            }
             return {
               ...receipt,
               kind:

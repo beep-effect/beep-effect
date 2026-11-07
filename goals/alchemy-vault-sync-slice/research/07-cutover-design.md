@@ -22,14 +22,17 @@ In citations below, bare sync filenames resolve under
 `packages/documents/server/src/entities/SyncOperation/`. Desktop `runtime/` citations resolve
 under `apps/professional-desktop/src/`.
 
-The checkout contains PR 2a, not the complete driver described in the task brief.
-`packages/drivers/alchemy-postgres/src/AlchemyPostgresPlatform.ts:583` still rejects views,
-projections and streams; `:590` starts aggregate/policy workers only. There is no
-`AlchemyPostgresWorkflows` or `test/conformance/saga.test.ts` here. PR 3b depends on PR 2b
-providing the projection host, Backfill catch-up, read upcasters and the workflow Layer.
-Reconcile these seams against the landed 2b files, rather than implementing another runner.
-The available durability pattern shares a database between platform builds
-(`packages/drivers/alchemy-postgres/test/conformance/pglite.test.ts:1`, `:68`).
+Implementation reconciliation (PR 3b part 1, 2026-11-07): this branch includes PR 2b.
+`packages/drivers/alchemy-postgres/src/AlchemyPostgresWorkflows.ts` provides
+`ClusterWorkflowEngine.layer` over `SingleRunner.layer({ runnerStorage: "sql" })`
+and WebCrypto Digest. `AlchemyPostgres.layer()` combines that engine with the Platform.
+The restart pattern is `packages/drivers/alchemy-postgres/test/saga.test.ts`, not
+`test/conformance/saga.test.ts`: close the owning runtime scope, then build a fresh runtime
+over the same ambient PGlite SqlClient. This is runtime teardown proof, not an OS SIGKILL test.
+`internal/projection.ts` persists each key's accepted input log, deduplicates source sequences,
+and resumes accepted but unprocessed input after restart. Application SQL writes still need
+their own transaction/checkpoint because a handler result can be redelivered. Backfill and
+read upcasting are implemented by 2b; no replacement runner is needed.
 
 Installed API receipts:
 
@@ -566,11 +569,42 @@ remain the vendor-mapping baseline; adapter tests add secure-read and durable-re
    Reversal: rename through DestinationNameReservation; never move the remote root implicitly.
 6. **Echo wording.** Preserve edited token consumption from live code, with unexplained edits
    always drift, as section 3.1 specifies. Reversal is a deliberate classifier change with tests.
-7. **Driver readiness.** Projection/Backfill/workflow support is absent at this base. Block 3b
-   activation until PR 2b's real implementations and crash tests pass. Reversal is retaining the
+7. **Driver readiness.** Projection/Backfill/workflow support is present on the implementation base.
+   Use the PR 2b Layers and retain separate slice recovery tests before activation. Reversal is retaining the
    legacy writer before cutover, not substituting InMemory durability in production.
 
 Completion evidence for implementation is the forced-kill/resume receipt, all-column zero diff
 from two clean rebuilds, importer rerun safety, both rollback tests, adapter uncertainty tests,
 and a source/runtime proof that the old mutation path is gone. This document provides the plan;
 it does not claim those checks have run.
+
+
+## 11. Part 1 integration receipts and boundary
+
+PR 3a chose `aggregates/VaultSync/` for domain and use-case declarations.
+The legacy server hosting folder remains `aggregates/Sync/`. The implementation uses
+`VaultSyncPassModel`, keeping the domain-only `VaultSyncModel` useful for pure scenarios.
+The new model is not wired into the desktop or the legacy writer in part 1.
+
+Box mutation arguments now include operationId, generation and passId, with itemKind on
+move/rename and structured remote page metadata. Intent receipts are keyed by operation
+and generation. Pass id is excluded from the fingerprint so another pass can recover the
+same effect. Authoritative evidence settlement is an explicit server service; the existing
+DmsMirrorBox port cannot prove an uncertain file version outcome and must return no evidence
+in that case. An absent result holds the operation instead of resending the mutation.
+See the decision file for uncertain Box mutation handling.
+
+Optional v1 event fields carry new live projection metadata without invalidating existing
+3a callers: observed file size, acknowledged remote name/parent, conflict kind/id/path and
+cursor last event id. Genesis compatibility still needs the complete snapshots and audit
+contract in sections 4-6; these additions do not claim historical row parity.
+
+The SQL projection host requires a historical audit resolver. It must resolve the original
+source envelope provenance and authoritative workspace ownership; a current user or a guessed
+org id is not an acceptable resolver. The part 1 tests supply only synthetic provenance.
+Snapshot-backed projections are asynchronous; beta.85's aggregate-receipt caughtUp helper
+does not itself wait for all transitive snapshot deliveries. SQL acceptance tests wait for
+the expected projected state as well.
+
+Genesis, all-column legacy replay/diff, writer fencing, rollback, writer deletion and app
+activation remain part 2. No part 1 result authorizes cutover.

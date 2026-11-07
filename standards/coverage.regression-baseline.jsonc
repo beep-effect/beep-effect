@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T09:52:59.601Z",
-  "git_sha": "d7607b65b363315ed10019d48013e87be2259a4a",
-  "command": "bun run coverage -- --filter=@beep/documents-domain --filter=@beep/documents-use-cases --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-07T10:25:32.653Z",
+  "git_sha": "1ec0b7b6acd244312432a7d720879ad52c57713e",
+  "command": "bun run coverage -- --filter=@beep/documents-server --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -7503,6 +7503,126 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/BoxMirror.ts": {
+          "lines": 88.57,
+          "statements": 84.81,
+          "branches": 91.66,
+          "functions": 60.86,
+          "uncovered": {
+            "lines": 8,
+            "statements": 12,
+            "branches": 1,
+            "functions": 9
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/LegacySync.projection.ts": {
+          "lines": 100,
+          "statements": 94.11,
+          "branches": 66.03,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 3,
+            "branches": 18,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultPush.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.drift.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.push.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.reconcile.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.review.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts": {
+          "lines": 78.51,
+          "statements": 73.54,
+          "branches": 47.88,
+          "functions": 90,
+          "uncovered": {
+            "lines": 29,
+            "statements": 41,
+            "branches": 74,
+            "functions": 2
           }
         }
       }
