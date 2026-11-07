@@ -27,6 +27,9 @@ const Source = S.Struct({
     })
   ),
 });
+const SourceFromJson = S.fromJsonString(Source);
+const CorrectionFromJson = S.fromJsonString(Correction);
+
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPath.layer))(
   "immutable authored plan fixture correction",
   (it) => {
@@ -48,8 +51,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPath.layer))(
         assert.strictEqual(correctionDigest, "ed5a6ddec6e22f31c3e847cbaa5a694cebe2b97cb2e4e398feb2068aa09d8255");
         const rawSource = yield* fs.readFileString(sourcePath);
         const rawCorrection = yield* fs.readFileString(correctionPath);
-        const source = yield* S.decodeEffect(S.fromJsonString(Source))(rawSource);
-        const correction = yield* S.decodeEffect(S.fromJsonString(Correction))(rawCorrection);
+        const source = yield* S.decodeEffect(SourceFromJson)(rawSource);
+        const correction = yield* S.decodeEffect(CorrectionFromJson)(rawCorrection);
         assert.strictEqual(correction.originalSha256, originalDigest);
         assert.strictEqual(correction.replacements.length, 3);
         for (const row of correction.replacements) {

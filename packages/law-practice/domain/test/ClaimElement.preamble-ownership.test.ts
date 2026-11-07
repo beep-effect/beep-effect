@@ -34,6 +34,8 @@ import * as Str from "effect/String";
 import fixtures from "./fixtures/claim-element/preamble-ownership-plans.json" with { type: "json" };
 import routeFixtures from "./fixtures/claim-element/preamble-ownership-routes.json" with { type: "json" };
 
+const textList = S.NonEmptyArray(S.String);
+
 const nominal = S.Struct({
   id: S.String,
   core: TextAnchor,
@@ -373,9 +375,7 @@ const inspectRouteTexts = Effect.fn("PreambleOwnershipTest.inspectRoutes")(funct
   return { report, result, prepared, evidence };
 });
 const actualAlternativeRoutes = Effect.fn("PreambleOwnershipTest.actualAlternatives")(function* () {
-  const texts = yield* S.decodeUnknownEffect(S.NonEmptyArray(S.String))(
-    A.map(routeFixtures.sources, (source) => source.text)
-  );
+  const texts = yield* S.decodeUnknownEffect(textList)(A.map(routeFixtures.sources, (source) => source.text));
   const { report } = yield* inspectRouteTexts(texts);
   const direct = O.getOrThrow(A.get(report.records, 2));
   assert.strictEqual(direct.decomposition.status, "decomposed");

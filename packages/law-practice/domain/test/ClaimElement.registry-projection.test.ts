@@ -89,6 +89,8 @@ const treeAt = (result: ClaimRoleDecomposition, claimNumber: number): ClaimEleme
     )
   ).tree;
 const acceptedNumbers = (result: ClaimRoleDecomposition) => A.map(result.plans, (plan) => plan.claimNumber);
+const claimInputCollectionType = S.toType(ClaimInputCollection);
+
 const endpointIndex = S.Record(S.String, S.Struct({ claimNumber: S.Int, kind: S.String, anchor: TextAnchor }));
 const assertReviewedEndpointIdentities = Effect.fn("RegistryProjectionTest.assertReviewedEndpointIdentities")(
   function* (name: string, result: ClaimRoleDecomposition) {
@@ -259,7 +261,7 @@ describe("canonical source projection across dependency routes", () => {
       const reversedResult = yield* decomposePreparedClaimRoles(prepared, A.reverse(evidence));
       assert.deepStrictEqual(reversedResult, result);
       const failure = yield* Effect.flip(
-        S.decodeUnknownEffect(S.toType(ClaimInputCollection))({ sourceKey, records: A.reverse(input.records) })
+        S.decodeUnknownEffect(claimInputCollectionType)({ sourceKey, records: A.reverse(input.records) })
       );
       assert.strictEqual(failure._tag, "SchemaError");
     })

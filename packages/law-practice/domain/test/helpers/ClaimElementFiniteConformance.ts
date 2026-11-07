@@ -19,6 +19,11 @@ import wireCorrection from "../fixtures/claim-element/finite-clause-synthetic-wi
 };
 import { decomposeFiniteSourceFixture } from "./ClaimElementFiniteSource.ts";
 
+const jsonArray = S.Array(S.Json);
+const jsonRecord = S.Record(S.String, S.Json);
+const jsonFromString = S.fromJsonString(S.Json);
+const treeFromString = S.fromJsonString(ClaimElementTree);
+
 const nominal = S.Struct({
   id: S.NonEmptyString,
   core: TextAnchor,
@@ -149,8 +154,8 @@ const headCorrectionSchema = S.Struct({
 const jsonAt = (value: S.Json, path: string): S.Json => {
   let current = value;
   for (const part of A.drop(Str.split("/")(path), 1)) {
-    if (S.is(S.Array(S.Json))(current)) current = O.getOrThrow(A.get(current, Number(part)));
-    else if (S.is(S.Record(S.String, S.Json))(current)) current = O.getOrThrow(O.fromUndefinedOr(current[part]));
+    if (S.is(jsonArray)(current)) current = O.getOrThrow(A.get(current, Number(part)));
+    else if (S.is(jsonRecord)(current)) current = O.getOrThrow(O.fromUndefinedOr(current[part]));
     else throw new Error("reviewed correction path must exist");
   }
   return current;
@@ -159,11 +164,11 @@ const replaceJsonPath = (value: S.Json, path: ReadonlyArray<string>, replacement
   const first = A.head(path);
   if (O.isNone(first)) return replacement;
   const rest = A.drop(path, 1);
-  if (S.is(S.Array(S.Json))(value))
+  if (S.is(jsonArray)(value))
     return A.map(value, (entry, index) =>
       index === Number(first.value) ? replaceJsonPath(entry, rest, replacement) : entry
     );
-  if (typeof value === "object" && value !== null && !A.isArray(value) && S.is(S.Record(S.String, S.Json))(value))
+  if (typeof value === "object" && value !== null && !A.isArray(value) && S.is(jsonRecord)(value))
     return R.map(value, (entry, key) => (key === first.value ? replaceJsonPath(entry, rest, replacement) : entry));
   throw new Error("reviewed correction path must have a container");
 };
@@ -187,8 +192,8 @@ const correctedSourceRow = Effect.fn("FiniteTopology.correctedSourceRow")(functi
   );
   assert.strictEqual(oldHash, correction.originalExpectedSha256);
   assert.strictEqual(newHash, correction.correctedExpectedSha256);
-  const original = yield* S.decodeEffect(S.fromJsonString(S.Json))(correction.originalExpectedCanonicalJson);
-  const corrected = yield* S.decodeEffect(S.fromJsonString(S.Json))(correction.correctedExpectedCanonicalJson);
+  const original = yield* S.decodeEffect(jsonFromString)(correction.originalExpectedCanonicalJson);
+  const corrected = yield* S.decodeEffect(jsonFromString)(correction.correctedExpectedCanonicalJson);
   assert.deepStrictEqual<unknown>(
     original,
     O.getOrThrow(A.findFirst(controls.cases, (c) => c.case === row.case)).expected
@@ -249,19 +254,13 @@ const correctedPublicTree = Effect.fn("FiniteTopology.correctedPublicTree")(func
     );
     assert.strictEqual(oldHash, correction.originalPublicTreeSha256);
     assert.strictEqual(newHash, correction.correctedPublicTreeSha256);
-    const oldTree = yield* S.decodeEffect(S.fromJsonString(ClaimElementTree))(
-      correction.originalPublicTreeCanonicalJson
-    );
-    const newTree = yield* S.decodeEffect(S.fromJsonString(ClaimElementTree))(
-      correction.correctedPublicTreeCanonicalJson
-    );
+    const oldTree = yield* S.decodeEffect(treeFromString)(correction.originalPublicTreeCanonicalJson);
+    const newTree = yield* S.decodeEffect(treeFromString)(correction.correctedPublicTreeCanonicalJson);
     assert.deepStrictEqual(oldTree, original);
     assert.deepStrictEqual(newTree, correction.correctedPublicTree);
     assert.deepStrictEqual(newTree, O.getOrThrow(O.fromUndefinedOr(row.expected.publicTree)));
-    const oldExpected = yield* S.decodeEffect(S.fromJsonString(S.Json))(correction.originalExpectedCanonicalJson);
-    const correctedExpected = yield* S.decodeEffect(S.fromJsonString(S.Json))(
-      correction.correctedExpectedCanonicalJson
-    );
+    const oldExpected = yield* S.decodeEffect(jsonFromString)(correction.originalExpectedCanonicalJson);
+    const correctedExpected = yield* S.decodeEffect(jsonFromString)(correction.correctedExpectedCanonicalJson);
     const oldFromExpected = yield* S.decodeUnknownEffect(ClaimElementTree)(jsonAt(oldExpected, "/publicTree"));
     const newFromExpected = yield* S.decodeUnknownEffect(ClaimElementTree)(jsonAt(correctedExpected, "/publicTree"));
     assert.deepStrictEqual(oldFromExpected, oldTree);
@@ -280,9 +279,7 @@ const correctedPublicTree = Effect.fn("FiniteTopology.correctedPublicTree")(func
     new TextEncoder().encode(correction.originalTreeCanonicalJson)
   );
   assert.strictEqual(oldDigest, correction.originalTreeSha256);
-  const frozenOriginal = yield* S.decodeEffect(S.fromJsonString(ClaimElementTree))(
-    correction.originalTreeCanonicalJson
-  );
+  const frozenOriginal = yield* S.decodeEffect(treeFromString)(correction.originalTreeCanonicalJson);
   assert.deepStrictEqual(frozenOriginal, original);
   assert.deepStrictEqual(original.edges, correction.originalEdges);
   const candidate = yield* S.decodeEffect(ClaimElementTree)({ ...original, edges: correction.correctedTree.edges });
@@ -291,9 +288,7 @@ const correctedPublicTree = Effect.fn("FiniteTopology.correctedPublicTree")(func
     new TextEncoder().encode(correction.correctedTreeCanonicalJson)
   );
   assert.strictEqual(correctedDigest, correction.correctedTreeSha256);
-  const frozenCorrected = yield* S.decodeEffect(S.fromJsonString(ClaimElementTree))(
-    correction.correctedTreeCanonicalJson
-  );
+  const frozenCorrected = yield* S.decodeEffect(treeFromString)(correction.correctedTreeCanonicalJson);
   assert.deepStrictEqual(candidate, frozenCorrected);
   assert.deepStrictEqual({ ...candidate, edges: correction.originalEdges }, original);
   return candidate;

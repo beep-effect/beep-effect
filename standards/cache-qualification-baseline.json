@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
-      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
+      "reviewer": "GPT-6.1-Sol independent review; receipt SHA256 eb4886fe133d6cf53ec6c3a61ae3b1ab9e6a4b26e6b9333b7b9c2a8ed43b335f",
+      "reason": "Record only 23 changed computation projections across five subjects, caused by the two claim inspection workspace dependencies and three accepted-main Turbo inputs; no qualification/scope/profile/epoch or exception growth.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
-        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
+        "path": "goals/claim-check-performance/research/cache-baseline-review-2026-11-07.md",
+        "sha256": "8a7265f2a2a3357fc7924b37e13e3ae1aae77552ed107f3670755d052ede405b"
       }
     },
     "@beep/acp": {
@@ -600,11 +600,11 @@
       }
     },
     "@beep/identity": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "GPT-6.1-Sol independent review; receipt SHA256 eb4886fe133d6cf53ec6c3a61ae3b1ab9e6a4b26e6b9333b7b9c2a8ed43b335f",
+      "reason": "Record only 23 changed computation projections across five subjects, caused by the two claim inspection workspace dependencies and three accepted-main Turbo inputs; no qualification/scope/profile/epoch or exception growth.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/claim-check-performance/research/cache-baseline-review-2026-11-07.md",
+        "sha256": "8a7265f2a2a3357fc7924b37e13e3ae1aae77552ed107f3670755d052ede405b"
       }
     },
     "@beep/infra": {
@@ -648,11 +648,11 @@
       }
     },
     "@beep/law-practice-server": {
-      "reviewer": "Codex (citation native capture / CI repair)",
-      "reason": "Preserve the Node-only static boundary suite as a disjoint Node continuation while excluding it from incompatible Bun coverage; no production exclusion, floor, cache flag or qualification scope changes.",
+      "reviewer": "GPT-6.1-Sol independent review; receipt SHA256 eb4886fe133d6cf53ec6c3a61ae3b1ab9e6a4b26e6b9333b7b9c2a8ed43b335f",
+      "reason": "Record only 23 changed computation projections across five subjects, caused by the two claim inspection workspace dependencies and three accepted-main Turbo inputs; no qualification/scope/profile/epoch or exception growth.",
       "basis": {
-        "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-node-boundary-coverage-review.md",
-        "sha256": "18d54673811c8c4aae6ee9491df6a5884931d59b60ada1b929e4a0ce86890cae"
+        "path": "goals/claim-check-performance/research/cache-baseline-review-2026-11-07.md",
+        "sha256": "8a7265f2a2a3357fc7924b37e13e3ae1aae77552ed107f3670755d052ede405b"
       }
     },
     "@beep/law-practice-tables": {
@@ -664,11 +664,11 @@
       }
     },
     "@beep/law-practice-use-cases": {
-      "reviewer": "GPT-6.1-Sol medium (citation-extraction-engine)",
-      "reason": "Record intentional citation test/integration commands, test configuration and runtime adapter dependency classifications for the server and use-cases subjects. Preserve existing cache settings and qualification scope; grant no qualification.",
+      "reviewer": "GPT-6.1-Sol independent review; receipt SHA256 eb4886fe133d6cf53ec6c3a61ae3b1ab9e6a4b26e6b9333b7b9c2a8ed43b335f",
+      "reason": "Record only 23 changed computation projections across five subjects, caused by the two claim inspection workspace dependencies and three accepted-main Turbo inputs; no qualification/scope/profile/epoch or exception growth.",
       "basis": {
-        "path": "goals/citation-extraction-engine/history/evidence/2026-11-03-citation-cache-posture-review.md",
-        "sha256": "b5b0aa5b0026651522777c7bc6711fe2fb40fb77b75bb721d33e23bcfd1ddf07"
+        "path": "goals/claim-check-performance/research/cache-baseline-review-2026-11-07.md",
+        "sha256": "8a7265f2a2a3357fc7924b37e13e3ae1aae77552ed107f3670755d052ede405b"
       }
     },
     "@beep/lejeune-bolt-workbench": {
@@ -1440,11 +1440,11 @@
       }
     },
     "@beep/types": {
-      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
-      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
+      "reviewer": "GPT-6.1-Sol independent review; receipt SHA256 eb4886fe133d6cf53ec6c3a61ae3b1ab9e6a4b26e6b9333b7b9c2a8ed43b335f",
+      "reason": "Record only 23 changed computation projections across five subjects, caused by the two claim inspection workspace dependencies and three accepted-main Turbo inputs; no qualification/scope/profile/epoch or exception growth.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
-        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
+        "path": "goals/claim-check-performance/research/cache-baseline-review-2026-11-07.md",
+        "sha256": "8a7265f2a2a3357fc7924b37e13e3ae1aae77552ed107f3670755d052ede405b"
       }
     },
     "@beep/ui": {
@@ -2752,7 +2752,7 @@
           "@beep/repo-cli#lint:policy-fingerprint:laws"
         ],
         "configuration": {
-          "cache": true,
+          "cache": false,
           "inputs": [
             "!**/.beep/**",
             "!**/.git/**",
@@ -2774,7 +2774,9 @@
             "./tsconfig.json",
             "./tsconfig.packages.json"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -3000,7 +3002,7 @@
           "@beep/repo-cli#lint:policy-fingerprint:laws"
         ],
         "configuration": {
-          "cache": true,
+          "cache": false,
           "inputs": [
             "!**/.beep/**",
             "!**/.next/**",
@@ -3024,7 +3026,9 @@
             "tsconfig.base.json",
             "tsconfig.json"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -3087,7 +3091,7 @@
           "@beep/repo-cli#lint:policy-fingerprint:lint-opaque-roundtrips"
         ],
         "configuration": {
-          "cache": true,
+          "cache": false,
           "inputs": [
             "!**/node_modules/**",
             "!.claude/worktrees/**",
@@ -3106,7 +3110,9 @@
             "{apps,packages,infra,goals,explorations,tools}/**/test/**/*.{ts,tsx}",
             "{apps,packages,infra,scratchpad,goals,explorations,tools}/**/tsconfig*.json"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -3557,7 +3563,7 @@
           "@beep/repo-cli#lint:policy-fingerprint:laws"
         ],
         "configuration": {
-          "cache": true,
+          "cache": false,
           "inputs": [
             "!**/.beep/**",
             "!**/.git/**",
@@ -3579,7 +3585,9 @@
             "./tsconfig.json",
             "./tsconfig.packages.json"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -3599,7 +3607,7 @@
           "@beep/repo-cli#lint:policy-fingerprint:laws"
         ],
         "configuration": {
-          "cache": true,
+          "cache": false,
           "inputs": [
             "!**/.beep/**",
             "!**/.git/**",
@@ -3621,7 +3629,9 @@
             "./tsconfig.json",
             "./tsconfig.packages.json"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -49285,6 +49295,7 @@
             "!../../../../.beep/**",
             "!../../../../.claude/worktrees/**",
             "!../../../../.fallow/**",
+            "!../../../../.repos/**",
             "!.beep/**",
             "!.fallow/**",
             "../../../../**/.gitignore",
@@ -52679,7 +52690,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": true,
@@ -52762,7 +52774,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": true,
@@ -52831,7 +52844,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": false,
@@ -52950,7 +52964,8 @@
           "@beep/tika#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/wink#transit"
         ],
         "configuration": {
           "cache": true,
@@ -53061,7 +53076,8 @@
           "@beep/test-utils#transit",
           "@beep/tika#transit",
           "@beep/uspto#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/wink#transit"
         ],
         "configuration": {
           "cache": true,
@@ -53292,7 +53308,8 @@
           "@beep/test-utils#transit",
           "@beep/tika#transit",
           "@beep/uspto#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/wink#transit"
         ],
         "configuration": {
           "cache": false,
@@ -53365,7 +53382,8 @@
           "@beep/tika#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/wink#transit"
         ],
         "configuration": {
           "cache": true,
@@ -53444,7 +53462,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": false,
@@ -53513,7 +53532,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": false,
@@ -54135,6 +54155,7 @@
           "@beep/law-practice-domain#build",
           "@beep/mcp-kit#build",
           "@beep/nlp#build",
+          "@beep/nlp-processing#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -54202,6 +54223,7 @@
           "@beep/law-practice-domain#build",
           "@beep/mcp-kit#build",
           "@beep/nlp#build",
+          "@beep/nlp-processing#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -54255,6 +54277,7 @@
           "@beep/law-practice-domain#build",
           "@beep/mcp-kit#build",
           "@beep/nlp#build",
+          "@beep/nlp-processing#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -54390,6 +54413,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/mcp-kit#transit",
           "@beep/nlp#transit",
+          "@beep/nlp-processing#transit",
           "@beep/provenance#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -54606,6 +54630,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/mcp-kit#transit",
           "@beep/nlp#transit",
+          "@beep/nlp-processing#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -54662,6 +54687,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/mcp-kit#transit",
           "@beep/nlp#transit",
+          "@beep/nlp-processing#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -54726,6 +54752,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/mcp-kit#transit",
           "@beep/nlp#transit",
+          "@beep/nlp-processing#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -113394,17 +113421,19 @@
         "configuration": {
           "cache": false,
           "inputs": [
-            "!../../../../tsconfig*.json",
             "!.beep/**",
-            "!.beep/**",
-            "!.fallow/**",
             "!.fallow/**",
             "../../../../.bun-version",
+            "../../../../.gitignore",
             "../../../../.nvmrc",
             "../../../../biome.jsonc",
             "../../../../package.json",
+            "../../../../packages/.gitignore",
+            "../../../../packages/foundation/.gitignore",
+            "../../../../packages/foundation/primitive/.gitignore",
             "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
             "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+            "../../../../tsconfig*.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json"
@@ -122442,11 +122471,11 @@
       },
       {
         "path": "packages/foundation/modeling/identity/turbo.json",
-        "sha256": "1c694094dcfeef53b714e7980f8193cf93b2c34690f9a9a4dcd5936f328456e8"
+        "sha256": "91fae88ab5bd2b458852a0bde1d2cee7fc81e2045ad0256c63bf2b10d66cfed3"
       },
       {
         "path": "packages/foundation/primitive/types/turbo.json",
-        "sha256": "7a3bc28477bb6761fefb109a38019dfc9b75e6c6d070be51251cd2b29328f486"
+        "sha256": "06e627058b8867187be271aa6ca71ce0d487ba42d2260feb0864212dd6a486c6"
       },
       {
         "path": "packages/tooling/library/ai-sync/turbo.json",
@@ -122470,7 +122499,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "d008d4886ce9b68d4e90a661e823afb525185d1c14d5aef85dfe29c54681a769"
+        "sha256": "be1227e514ca4e6fb17ce0d334b2380f8cb14fdabd42799185f8dea3e702de84"
       }
     ]
   }
