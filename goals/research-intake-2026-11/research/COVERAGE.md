@@ -103,9 +103,11 @@ captions, 45 VidBee bundle imports (caption fetches hit HTTP 429), Box.
 | Refused: domain cap | 3,032 |
 | Refused: arXiv catalogue only | 1,660 |
 
-Of the 400 admitted, 303 have readable captures; 74 are blocked, 12
-unsupported and 11 failed, each with a receipt. No GitHub source was acquired
-transitively and no hop-2 source was acquired outside the gate.
+Of the 400 admitted, 303 have readable captures. The other 97 (74 blocked, 12
+unsupported, 11 failed) each keep their failed receipt and carry a reviewed
+disposition: 78 `tool-blocked`, 13 `unavailable`, 5 `operational`, 1
+`incomplete`. No GitHub source was acquired transitively and no hop-2 source
+was acquired outside the gate.
 
 ### Mining
 
@@ -124,6 +126,25 @@ argv). Findings route as follows (detail in [`ROUTING.md`](./ROUTING.md)):
 | routed | 5,609 | 2,863 | 8,472 |
 | parked | 2,515 | 1,082 | 3,597 |
 | rejected | 177 | 84 | 261 |
+
+### Library verify
+
+`bun run beep research library verify` over the whole library (13m46s, 35 GB peak):
+
+| Measure | Result |
+| --- | --- |
+| SHACL | conforms, 0 violations |
+| Integrity lines | 8, all from the 2026-10-06 intakes (4 version gaps, 2 census mismatches, 2 occurrence misses) |
+| Missing sources | 4, all October |
+| November and legal-pile sources missing or failing integrity | 0 |
+
+The first full run failed on November data. It found 3,339 hop-1 derivations
+whose report parent the shapes typed as a Source, 12 spans with astral-plane
+characters rejected by `rdf-validation`'s `xsd:string` pattern, 14 census lines
+on one report re-extracted against later hop-2 identities, 97 hop-2 sources
+without reviewed dispositions, 6 private repository identities never acquired
+and one paper cited at `v2` with only a `v3` capture. Each is fixed or captured;
+see `decisions/2026-11-07-verify-november-defects.md`.
 
 ## Box legal-ontology pile
 

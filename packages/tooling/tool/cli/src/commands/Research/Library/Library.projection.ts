@@ -192,7 +192,9 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
   const reference = (name: string, key: string, value: unknown): Rdf.ObjectTerm => {
     if (!P.isString(value)) return literal(value);
     const matched = HashMap.get(key === "intakeId" ? intakeNodes : known, value);
-    if (A.contains(["derivedId", "intakeId"], key) && O.isSome(matched)) return matched.value;
+    // A derivation's parent is a Report on hop 1 and a Source on hop 2: link whichever record the id names.
+    const derivationParent = name === "Derivation" && key === "sourceId";
+    if ((A.contains(["derivedId", "intakeId"], key) || derivationParent) && O.isSome(matched)) return matched.value;
     const ref = libraryReferenceClass(name, key);
     if (O.isNone(ref) || !Str.isNonEmpty(value)) return literal(value);
     if (ref.value === "Source") return O.getOrElse(HashMap.get(sourcesByAlias, value), () => iri("Source", value));

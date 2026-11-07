@@ -239,7 +239,10 @@ export const libraryShapes = (assembled: AssembledOntology): ReadonlyArray<Shacl
     const ast = fieldAst(cls.name, predicate.key);
     const ref = referenceClass(cls.name, predicate.key);
     const scalar = A.head(leaves(ast));
-    const flexible = A.contains(["findingId", "occurrenceId", "modelRunId", "intakeId", "derivedId"], predicate.key);
+    // A derivation's parent is a hop-0 Report on hop 1 and a Source on hop 2, so its class is open like derivedId.
+    const flexible =
+      A.contains(["findingId", "occurrenceId", "modelRunId", "intakeId", "derivedId"], predicate.key) ||
+      (cls.name === "Derivation" && predicate.key === "sourceId");
     return ShaclPropertyShape.make({
       path: nn(predicate.termIri),
       minCount:

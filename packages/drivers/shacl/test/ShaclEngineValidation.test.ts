@@ -1,7 +1,7 @@
 import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_INTEGER } from "@beep/rdf/Vocab/Xsd";
+import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { it } from "@beep/test-runner";
@@ -18,6 +18,7 @@ const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
 const SH_TARGET_NODE = makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
 const SH_MIN_COUNT = makeNamedNode(`${SHACL_NAMESPACE}minCount`);
 const SH_HAS_VALUE = makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
+const SH_DATATYPE = makeNamedNode(`${SHACL_NAMESPACE}datatype`);
 
 const material = makeNamedNode("https://example.test/materials#Material");
 const marker = makeNamedNode("https://example.test/marker");
@@ -41,6 +42,27 @@ const validationRequest = (dataset = violatingDataset): ShaclValidationRequest =
     dataset,
     shapes: [],
     shapesDataset: O.some(shapesDataset),
+    maxResults: O.none(),
+  });
+
+const label = makeNamedNode("https://example.test/label");
+const labelShape = makeNamedNode("urn:shape:string-label");
+const labelProperty = makeBlankNode("shape-string-label-property");
+
+// One xsd:string-typed label on `material`, checked against sh:datatype xsd:string.
+const labelRequest = (text: string): ShaclValidationRequest =>
+  ShaclValidationRequest.make({
+    dataset: makeDataset([makeQuad(material, label, makeLiteral(text, XSD_STRING.value))]),
+    shapes: [],
+    shapesDataset: O.some(
+      makeDataset([
+        makeQuad(labelShape, RDF_TYPE, SH_NODE_SHAPE),
+        makeQuad(labelShape, SH_TARGET_NODE, material),
+        makeQuad(labelShape, SH_PROPERTY, labelProperty),
+        makeQuad(labelProperty, SH_PATH, label),
+        makeQuad(labelProperty, SH_DATATYPE, XSD_STRING),
+      ])
+    ),
     maxResults: O.none(),
   });
 
@@ -73,6 +95,24 @@ it.layer(ShaclValidationServiceLive, { timeout: "30 seconds" })("@beep/shacl rea
       pipe(result.conforms, assertTrue);
       expect(result.violations).toHaveLength(0);
       pipe(result.truncated, assertFalse);
+    })
+  );
+
+  it.effect.each(["plain text", "lobster \u{1F99E} emoji", "a \u{1D712} 2-test"])(
+    "accepts astral-plane characters as xsd:string (%s)",
+    Effect.fnUntraced(function* (text) {
+      const result = yield* runValidation(labelRequest(text));
+
+      pipe(result.conforms, assertTrue);
+    })
+  );
+
+  it.effect(
+    "rejects a lone surrogate as xsd:string",
+    Effect.fnUntraced(function* () {
+      const result = yield* runValidation(labelRequest("broken \uD83E pair"));
+
+      pipe(result.conforms, assertFalse);
     })
   );
 });

@@ -3,10 +3,13 @@ import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import {
   inventoryLibrary,
   inventoryLibraryWithHops,
+  LibraryCatalog,
   LibraryInventoryOptions,
+  LibrarySource,
   libraryStatus,
   renderLibrary,
   verifyLibrary,
+  withCatalog,
 } from "@beep/repo-cli/commands/Research";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -24,7 +27,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import type { LibraryCatalog } from "@beep/repo-cli/commands/Research";
 
 const InventoryPlatform = Layer.mergeAll(
   NodeServices.layer,
@@ -132,6 +134,43 @@ it.layer(LibraryPlatform, { timeout: "60 seconds" })("research library private i
       yield* fs.writeFileString(video, "a longer recording");
       const after = yield* Effect.exit(verifyLibrary(root));
       expect(Exit.match(after, { onFailure: Cause.pretty, onSuccess: () => "" })).toContain(issue);
+    })
+  );
+
+  it.effect("keeps a report's citation census when hop derivation later catalogues a matching identity", () =>
+    Effect.gen(function* () {
+      const { fs, path, aggregation, root, options } = yield* nestedFixture();
+      yield* fs.writeFileString(
+        path.join(aggregation, "shorthand.md"),
+        "# Shorthand report\nCompare owner/tool here.\n"
+      );
+      yield* inventoryLibrary(options);
+      const census = "citation census mismatch";
+      const before = yield* Effect.exit(verifyLibrary(root));
+      expect(Exit.match(before, { onFailure: Cause.pretty, onSuccess: () => "" })).not.toContain(census);
+      // A hop-2 identity scanned from capture text, cited by no hop-0 document.
+      yield* withCatalog(root, (catalog) =>
+        Effect.succeed(
+          LibraryCatalog.make({
+            ...catalog,
+            sources: [
+              ...catalog.sources,
+              LibrarySource.make({
+                id: "hop2-owner-tool",
+                kind: "github-repository",
+                canonicalUrl: "https://github.com/owner/tool",
+                identity: "owner/tool",
+                revision: "",
+                repository: "owner/tool",
+                ownership: "external",
+                locators: ["https://github.com/owner/tool"],
+              }),
+            ],
+          })
+        )
+      );
+      const after = yield* Effect.exit(verifyLibrary(root));
+      expect(Exit.match(after, { onFailure: Cause.pretty, onSuccess: () => "" })).not.toContain(census);
     })
   );
 

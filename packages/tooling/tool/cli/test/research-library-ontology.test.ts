@@ -112,6 +112,8 @@ const fixture = {
   derivations: [
     { id: "d1", sourceId: "s1", derivedId: "f1", intakeId: "i1", rootId: "r1", hopDepth: 1, recordedAt: "2026-11-06" },
     { id: "d2", sourceId: "s1", derivedId: "f1", intakeId: "s1", rootId: "r1", hopDepth: 1, recordedAt: "2026-11-06" },
+    // A recorded hop-1 edge: its parent is the hop-0 report, not a source.
+    { id: "d3", sourceId: "r1", derivedId: "s1", intakeId: "i1", rootId: "r1", hopDepth: 1, recordedAt: "2026-11-06" },
   ],
   modelRuns: [{ id: "m1", model: "fixture", effort: "medium", route: "local", startedAt: "2026-11-06" }],
   intakes: [
@@ -233,6 +235,15 @@ describe("research library ontology", () => {
               Str.endsWith("/Occurrence/o1")(q.subject.value) &&
               Str.endsWith("/sourceId")(q.predicate.value) &&
               Str.endsWith("/Source/s1")(q.object.value)
+          )
+        ).toBe(true);
+        expect(
+          A.some(
+            dataset.quads,
+            (q) =>
+              Str.endsWith("/Derivation/d3")(q.subject.value) &&
+              Str.endsWith("/sourceId")(q.predicate.value) &&
+              Str.endsWith("/Report/r1")(q.object.value)
           )
         ).toBe(true);
         const missing = yield* validate(
