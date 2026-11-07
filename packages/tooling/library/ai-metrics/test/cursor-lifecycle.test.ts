@@ -358,6 +358,7 @@ const projectCopiedRuntimeStat = (stat: FileSystem.File.Info, fault: string) => 
   if (fault === "wrong-owner") return { ...stat, uid: O.map(stat.uid, (owner) => owner + 1) };
   return projectMissingRuntimeInode(stat, fault);
 };
+const expectedTimingCount = (occurred: boolean) => (occurred ? 1 : 0);
 
 for (const scenario of [
   {
@@ -471,10 +472,10 @@ for (const scenario of [
           if (Result.isFailure(result)) return yield* result.failure;
           expect(result.success.accepted).toBe(1);
         } else assertFailure(result, CursorLifecycleError.make({ reason: "transport" }));
-        expect(readyCount).toBe(scenario.ready ? 1 : 0);
-        expect(policies).toBe(scenario.ready ? 1 : 0);
-        expect(acknowledgements).toBe(scenario.success ? 1 : 0);
-        expect((yield* f.journal.stats).pages).toBe(scenario.success ? 1 : 0);
+        expect(readyCount).toBe(expectedTimingCount(scenario.ready));
+        expect(policies).toBe(expectedTimingCount(scenario.ready));
+        expect(acknowledgements).toBe(expectedTimingCount(scenario.success));
+        expect((yield* f.journal.stats).pages).toBe(expectedTimingCount(scenario.success));
         expect(releases).toBe(1);
         // These are synthetic protocol/clock oracles, separate from the retained real-peer cleanup tests.
       })

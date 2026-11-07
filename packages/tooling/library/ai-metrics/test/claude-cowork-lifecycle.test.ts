@@ -194,6 +194,35 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
   return { policy, journal, control, namespaceId, ancestor, deliver: makeDelivery(policy, journal, control, ancestor) };
 });
 
+const syntheticCoworkOutput = Effect.fnUntraced(function* (fault: string, policy: CoworkLifecyclePolicy) {
+  const body = yield* encode(start);
+  const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
+  const envelope = coworkLifecycleFixtureCodecs.makeEnvelope({
+    callback,
+    occurrenceId: "synthetic-mismatch-occurrence",
+  });
+  const ready = yield* encode({ ready: true });
+  const observed = yield* encode({
+    peer: {
+      peerPid: 1,
+      peerStartTicks: "1",
+      runtimePid: 1,
+      runtimeStartTicks: "1",
+      uid: 1000,
+      cwd: fault === "cwd" ? "/synthetic-wrong-root" : policy.workspace,
+      runtimeSha256: fault === "runtime" ? id : policy.runtimeSha256,
+      appPid: fault === "app-pid" ? policy.appPid + 1 : policy.appPid,
+      appStartTicks: fault === "app-generation" ? "not-the-enrolled-generation" : policy.appStartTicks,
+    },
+    callback: envelope,
+  });
+  return fault === "startup-timeout"
+    ? Stream.never
+    : fault === "listen-timeout"
+      ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
+      : Stream.make(new TextEncoder().encode(`${ready}\n${observed}\n`));
+});
+
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
   it.layer(TestClock.layer())((it) =>
     it.effect("bounded startup qualification does not consume the configured post-readiness listen window", () =>
@@ -332,33 +361,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
             let policyFrames = 0;
             let acknowledgements = 0;
             let releases = 0;
-            const body = yield* encode(start);
-            const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
-            const envelope = coworkLifecycleFixtureCodecs.makeEnvelope({
-              callback,
-              occurrenceId: "synthetic-mismatch-occurrence",
-            });
-            const ready = yield* encode({ ready: true });
-            const observed = yield* encode({
-              peer: {
-                peerPid: 1,
-                peerStartTicks: "1",
-                runtimePid: 1,
-                runtimeStartTicks: "1",
-                uid: 1000,
-                cwd: fault === "cwd" ? "/synthetic-wrong-root" : f.policy.workspace,
-                runtimeSha256: fault === "runtime" ? id : f.policy.runtimeSha256,
-                appPid: fault === "app-pid" ? f.policy.appPid + 1 : f.policy.appPid,
-                appStartTicks: fault === "app-generation" ? "not-the-enrolled-generation" : f.policy.appStartTicks,
-              },
-              callback: envelope,
-            });
-            const response =
-              fault === "startup-timeout"
-                ? Stream.never
-                : fault === "listen-timeout"
-                  ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
-                  : Stream.make(new TextEncoder().encode(`${ready}\n${observed}\n`));
+            const response = yield* syntheticCoworkOutput(fault, f.policy);
             const output = policySeen.pipe(Deferred.await, Stream.fromEffect, Stream.drain, Stream.concat(response));
             const spawner = ChildProcessSpawner.make((command) =>
               Effect.gen(function* () {
