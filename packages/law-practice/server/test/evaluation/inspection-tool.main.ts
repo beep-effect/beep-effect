@@ -5,7 +5,6 @@ import {
   ClaimInputInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentNumber } from "@beep/law-practice-domain/values/PatentNumber";
-import { claimInspectionWithTokenizationLayer } from "@beep/law-practice-server/ClaimInspection";
 import { UsptoClaimInputsLive } from "@beep/law-practice-server/UsptoClaims";
 import {
   ClaimInspection,
@@ -17,7 +16,6 @@ import {
 import { claimInspectInput } from "@beep/law-practice-use-cases/server";
 import { Uspto, UsptoConfigInput } from "@beep/uspto";
 import { getSomesStruct } from "@beep/utils/Option";
-import { WinkTokenizationLive } from "@beep/wink";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -34,6 +32,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeEvaluationInspectionRuntime } from "./inspection-tool.lexical.ts";
 import { compareStructuralFamily, StructuralEvaluationError } from "./Structural.ts";
 import type { ClaimInspectionCursor } from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import type * as Result from "effect/Result";
@@ -352,12 +351,7 @@ const program = Effect.gen(function* () {
   // The evaluation Scope owns one fixed provider, independently of family
   // acquisition scopes. A typed failed attempt is reused as the same failure;
   // the shared enhancement factory retains honest unavailable coverage.
-  const tokenizer = yield* WinkTokenizationLive.pipe(Layer.build, Effect.result);
-  const fixedTokenizer =
-    tokenizer._tag === "Success"
-      ? Layer.succeedContext(tokenizer.success)
-      : tokenizer.failure.pipe(Effect.fail, Layer.effectContext);
-  const inspectionRuntime = claimInspectionWithTokenizationLayer(fixedTokenizer);
+  const inspectionRuntime = yield* makeEvaluationInspectionRuntime();
   const rows = yield* Effect.forEach(
     inputs,
     ({ family, source, gold, canonical, xml }, index) =>

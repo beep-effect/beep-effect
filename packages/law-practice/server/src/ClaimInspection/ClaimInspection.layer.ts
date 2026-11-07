@@ -17,7 +17,7 @@ import type { WinkEngineError, WinkTokenizationLive } from "@beep/wink";
 
 /**
  * Inspection over the installed fixed Wink POS/lemma assets; acquisition remains separately supplied.
- * @example
+ * **Example** (Inspect with the complete fixed provider)
  * ```ts
  * import { ClaimInspectionWithLexicalEvidenceLive } from "@beep/law-practice-server"
  * import * as Layer from "effect/Layer"
@@ -38,6 +38,14 @@ const initializationFallback = (error: WinkEngineError) =>
 /**
  * Compose the fixed identity with a tokenizer layer and preserve typed initialization unavailability as partial coverage.
  *
+ * **Example** (Compose the tokenization-only compatibility path)
+ * ```ts
+ * import { claimInspectionWithTokenizationLayer } from "@beep/law-practice-server/ClaimInspection"
+ * import { WinkTokenizationLive } from "@beep/wink"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(claimInspectionWithTokenizationLayer(WinkTokenizationLive))) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -48,20 +56,51 @@ export const claimInspectionWithTokenizationLayer = (tokenization: typeof WinkTo
   );
 
 /**
- * Runtime inspection provider using the installed pinned Wink POS/lemma model.
+ * One fixed engine supplying both tokenization and intrinsic membership.
+ *
+ * **Example** (Select the complete fixed lexical runtime)
+ * ```ts
+ * import { ClaimInspectionLexicalRuntimeLive } from "@beep/law-practice-server/ClaimInspection"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(ClaimInspectionLexicalRuntimeLive)) // true
+ * ```
  *
  * @category layers
  * @since 0.0.0
  */
-const fixedLexicalRuntime = Layer.merge(WinkTokenization, claimLexicalMembershipWinkLayer(identity)).pipe(
-  Layer.provide(WinkEngineLive)
-);
+export const ClaimInspectionLexicalRuntimeLive = Layer.merge(
+  WinkTokenization,
+  claimLexicalMembershipWinkLayer(identity)
+).pipe(Layer.provide(WinkEngineLive));
 /**
- * Fixed local inspection provider over one owned lexical runtime.
+ * Compose the complete lexical context while preserving typed initialization failures.
+ *
+ * **Example** (Compose both lexical services)
+ * ```ts
+ * import { ClaimInspectionLexicalRuntimeLive, claimInspectionWithLexicalRuntimeLayer } from "@beep/law-practice-server/ClaimInspection"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(claimInspectionWithLexicalRuntimeLayer(ClaimInspectionLexicalRuntimeLive))) // true
+ * ```
  * @category layers
  * @since 0.0.0
  */
-export const ClaimInspectionWithLexicalEvidenceLive = claimInspectionWithLexicalEvidence(identity).pipe(
-  Layer.provide(fixedLexicalRuntime),
-  Layer.catchTag("WinkEngineError", initializationFallback)
+export const claimInspectionWithLexicalRuntimeLayer = (runtime: typeof ClaimInspectionLexicalRuntimeLive) =>
+  claimInspectionWithLexicalEvidence(identity).pipe(
+    Layer.provide(runtime),
+    Layer.catchTag("WinkEngineError", initializationFallback)
+  );
+/**
+ * Production inspection over the same complete fixed lexical runtime used by replay.
+ *
+ * **Example** (Select the production inspection provider)
+ * ```ts
+ * import { ClaimInspectionWithLexicalEvidenceLive } from "@beep/law-practice-server/ClaimInspection"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(ClaimInspectionWithLexicalEvidenceLive)) // true
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export const ClaimInspectionWithLexicalEvidenceLive = claimInspectionWithLexicalRuntimeLayer(
+  ClaimInspectionLexicalRuntimeLive
 );

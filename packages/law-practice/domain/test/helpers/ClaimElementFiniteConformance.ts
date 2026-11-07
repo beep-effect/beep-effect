@@ -89,11 +89,11 @@ const selector = S.Struct({
   ),
 });
 const tokenOwner = S.Union([
-  S.Struct({ kind: S.Literal("public-core"), id: S.NonEmptyString }),
-  S.Struct({ kind: S.Literal("private-description-core"), id: S.NonEmptyString }),
-  S.Struct({ kind: S.Literal("certified-predicate"), id: S.NonEmptyString }),
+  S.Struct({ kind: S.tag("public-core"), id: S.NonEmptyString }),
+  S.Struct({ kind: S.tag("private-description-core"), id: S.NonEmptyString }),
+  S.Struct({ kind: S.tag("certified-predicate"), id: S.NonEmptyString }),
   S.Struct({
-    kind: S.Literal("certified-structural-control"),
+    kind: S.tag("certified-structural-control"),
     certificate: S.NonEmptyString,
     sourceWord: S.NonEmptyString,
   }),
