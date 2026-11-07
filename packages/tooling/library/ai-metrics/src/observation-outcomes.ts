@@ -126,25 +126,27 @@ export const makeObservationOutcomes = Effect.fn("AiMetrics.makeObservationOutco
     const receipts = yield* launches.read(launchId, epoch);
     const prepared = A.findFirst(receipts, (r) => r.fact._tag === "Prepared");
     if (O.isNone(prepared) || prepared.value.fact._tag !== "Prepared") return O.none<ObservationLaunchOutcome>();
-    const processId = A.findFirst(receipts, (r) => r.fact._tag === "Started");
-    const session = A.findFirst(receipts, (r) => r.fact._tag === "SessionBound");
-    const terminal = A.findFirst(receipts, (r) => r.fact._tag === "Finished");
+    const processId = A.findFirstMap(receipts, (r) =>
+      r.fact._tag === "Started" ? O.some(r.fact.processInstanceId) : O.none()
+    );
+    const session = A.findFirstMap(receipts, (r) =>
+      r.fact._tag === "SessionBound" ? O.some(r.fact.sourceSessionId) : O.none()
+    );
+    const terminal = A.findFirstMap(receipts, (r) =>
+      r.fact._tag === "Finished" ? O.some({ outcome: r.fact.outcome, recordedAt: r.recordedAt }) : O.none()
+    );
     return O.some(
       ObservationLaunchOutcome.make({
         launchId,
         evidenceEpoch: epoch,
         declaredIdentity: prepared.value.fact.identity,
-        processInstanceId: O.flatMap(processId, (r) =>
-          r.fact._tag === "Started" ? O.some(r.fact.processInstanceId) : O.none()
-        ),
-        sourceSessionId: O.flatMap(session, (r) =>
-          r.fact._tag === "SessionBound" ? O.some(r.fact.sourceSessionId) : O.none()
-        ),
+        processInstanceId: processId,
+        sourceSessionId: session,
         preparedObservedAt: prepared.value.recordedAt,
         terminalObservedAt: O.map(terminal, (r) => r.recordedAt),
         outcome: O.match(terminal, {
           onNone: () => "pending",
-          onSome: (r) => (r.fact._tag === "Finished" ? r.fact.outcome : "unknown"),
+          onSome: (r) => r.outcome,
         }),
       })
     );

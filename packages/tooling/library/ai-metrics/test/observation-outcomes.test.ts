@@ -1,6 +1,9 @@
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import { EvidenceRetentionPolicy, makeEvidenceRetention } from "@beep/repo-ai-metrics/evidence-retention";
-import { makeObservationAvailability } from "@beep/repo-ai-metrics/observation-availability";
+import {
+  makeObservationAvailability,
+  ObservationAvailabilityReceipt,
+} from "@beep/repo-ai-metrics/observation-availability";
 import { ObservationIdentity, ObservationRootBinding } from "@beep/repo-ai-metrics/observation-inventory";
 import {
   makeObservationLaunchFacts,
@@ -8,6 +11,7 @@ import {
   ObservationLaunchIdentity,
 } from "@beep/repo-ai-metrics/observation-launch-facts";
 import { makeObservationOutcomes } from "@beep/repo-ai-metrics/observation-outcomes";
+import { hashPublicTextSha256 } from "@beep/repo-ai-metrics/privacy";
 import { makeTranscriptIntakeJournal, TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -17,11 +21,14 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 
 const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
+const receiptJson = S.fromJsonString(ObservationAvailabilityReceipt);
+const encodeAvailabilityReceipt = S.encodeEffect(receiptJson);
 const id = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
 const config = TranscriptIntakeConfig.make({
   hostId: id("a"),
@@ -71,6 +78,71 @@ const makeRetention = Effect.fn("ObservationOutcomesTest.retention")(() =>
     })
   )
 );
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
+  it.effect("reads a separately bound source session through the original launch receipts", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.launches.record(prepare, 0);
+      yield* f.launches.record(start, 0);
+      yield* f.launches.record(
+        ObservationLaunchFact.cases.SessionBound.make({ launchId: id("7"), sourceSessionId: id("f") }),
+        0
+      );
+      const pendingRead = yield* f.views.launch(id("7"), 0);
+      const pending = O.getOrThrow(pendingRead);
+      assertSome(pending.processInstanceId, id("c"));
+      assertSome(pending.sourceSessionId, id("f"));
+      expect(pending.outcome).toBe("pending");
+      yield* f.launches.record(
+        ObservationLaunchFact.cases.Finished.make({ launchId: id("7"), outcome: "succeeded" }),
+        0
+      );
+      const finishedRead = yield* f.views.launch(id("7"), 0);
+      const finished = O.getOrThrow(finishedRead);
+      assertSome(finished.processInstanceId, id("c"));
+      assertSome(finished.sourceSessionId, id("f"));
+      expect(finished.outcome).toBe("succeeded");
+      expect(finished.model).toBe("unknown");
+      expect(finished.nativeRuntime).toBe("unknown");
+    })
+  );
+});
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
+  it.effect("maps hash-valid malformed stored receipts to finite storage failure", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.quota.record(snapshot(), 0);
+      const sql = yield* SqlClient.SqlClient;
+      const payload = "{}";
+      const digest = yield* hashPublicTextSha256(payload);
+      yield* sql`UPDATE observation_availability_snapshots SET payload=${payload},digest=${digest},payload_bytes=2 WHERE snapshot_id=${id("1")}`;
+      const failed = yield* f.quota.read(id("1"), 0).pipe(Effect.flip);
+      expect(failed.reason).toBe("storage");
+      expect((yield* f.journal.stats).pages).toBe(0);
+    })
+  );
+});
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
+  it.effect("refuses a hash-valid receipt whose stored host differs from the journal owner", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const receipt = yield* f.quota.record(snapshot(), 0);
+      const payload = yield* encodeAvailabilityReceipt(
+        ObservationAvailabilityReceipt.make({ ...receipt, hostId: id("c") })
+      );
+      const digest = yield* hashPublicTextSha256(payload);
+      const bytes = new TextEncoder().encode(payload).byteLength;
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`UPDATE observation_availability_snapshots SET payload=${payload},digest=${digest},payload_bytes=${bytes} WHERE snapshot_id=${id("1")}`;
+      const failed = yield* f.views.availability(id("1"), 0).pipe(Effect.flip);
+      expect(failed.reason).toBe("storage");
+      expect((yield* f.journal.stats).pages).toBe(0);
+    })
+  );
+});
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("keeps a failed process and independent quota report separate", () =>
