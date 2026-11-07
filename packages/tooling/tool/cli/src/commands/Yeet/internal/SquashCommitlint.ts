@@ -1,6 +1,6 @@
 /**
- * Predict the squash commit message GitHub writes for a pull request and lint
- * it with the repo's commitlint before the merge gate decides.
+ * Predict GitHub's default squash message, then lint the explicit body-folded
+ * message the merge gate sends.
  *
  * **Details**
  *
@@ -13,14 +13,16 @@
  * round-2 commit). {@link predictSquashCommitMessage} is the pure model of
  * GitHub's composition under the repository's `squash_merge_commit_title` /
  * `squash_merge_commit_message` settings, recorded from merged squashes on
- * `main`; {@link lintSquashCommitMessage} runs the same `bunx commitlint` the
- * `commitlint` CI lane runs, on that prediction, over stdin.
+ * `main`; the reader folds its body with the existing word-boundary formatter,
+ * then {@link lintSquashCommitMessage} runs the same `bunx commitlint` the CI
+ * lane runs. The exact linted header/body is carried into the merge request.
  *
  * **Gotchas**
  *
  * The merge gate pins `commit_title` to `<PR title> (#n)` when it merges, so
  * the title the repository setting would compose is overridden there; the
- * reader passes that pinned title and the setting only shapes the body. GitHub
+ * reader passes that pinned title. Settings shape the default body; the gate
+ * explicitly overrides it with the linted folded body. GitHub
  * also appends normalized `Co-authored-by:` trailers after the `---------`
  * separator for some merges; they are shorter than any commitlint limit and
  * the prediction leaves them out.
@@ -45,7 +47,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { GithubRest } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
+import { foldCommitMessage, provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -854,7 +856,7 @@ export class SquashPullRequestFacts extends S.Opaque<SquashPullRequestFacts, { r
 /**
  * Predict the squash message the merge gate will produce for this pull request
  * and lint it: repository defaults and the PR commits over REST, the title
- * pinned to `<PR title> (#n)` as `executeMergeGate` pins it.
+ * pinned to `<PR title> (#n)` and body folded before the exact message is sent.
  *
  * **Example** (Build the read effect)
  *
@@ -866,7 +868,7 @@ export class SquashPullRequestFacts extends S.Opaque<SquashPullRequestFacts, { r
  *
  * @param context - Resolves the repository root the commitlint run executes in (and, for a number, the gh login).
  * @param facts - The pull request number, title and description the prediction is built from.
- * @returns The predicted message and commitlint's verdict.
+ * @returns The explicit, body-folded merge message and commitlint's verdict.
  * @category workflows
  * @since 0.0.0
  */
@@ -888,7 +890,7 @@ export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(funct
       Effect.mapError(yeetGithubFailure(`gh api pulls/${facts.number}/commits`)),
       Effect.flatMap(decodeGithubAnswer("the pull request commits", decodeCommits))
     );
-  const message = predictSquashCommitMessage(
+  const predicted = predictSquashCommitMessage(
     SquashMessageSource.make({
       prNumber: facts.number,
       title: facts.title,
@@ -898,6 +900,9 @@ export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(funct
       commitTitle: O.some(`${facts.title} (#${facts.number})`),
     })
   );
+  // Prediction remains GitHub's unchanged default. The merge pins this explicit
+  // body instead, so historical long subjects need no history rewrite or waiver.
+  const message = SquashCommitMessage.make({ header: predicted.header, body: foldCommitMessage(predicted.body) });
   return yield* lintSquashCommitMessage(context, message);
 });
 
