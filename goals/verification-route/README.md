@@ -37,13 +37,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Slice 1 complete (2026-10-31, lane `verification-route-s1`). Next: P1 Slice 2,
-starting from the ranked refinements in
-[`research/census-2026-10-31.md`](./research/census-2026-10-31.md): the taxonomy refinement
-for packet data files first, then footprint refinements with mutation fixtures.
+P1 Slice 2 implemented 2026-11-07 (lane `verification-route-s2`): taxonomy refinement, the first
+enforced refinement (packet markdown and commits out of build and check, recall 100%), the
+catalog-free root `package.json` projection in turbo's global inputs, and the final-check route
+section. Next: P2 Slice 3, hosted per-lane `skip-satisfied`.
 
 ## Latest Evidence
 
+- [`research/slice-2-replay.md`](./research/slice-2-replay.md): refined-record replay, recall 100%,
+  242 skipped lane runs, 0 skipped reds; [`research/slice-2-layer1-dryrun.md`](./research/slice-2-layer1-dryrun.md).
 - [`research/census-2026-10-31.md`](./research/census-2026-10-31.md): census and replay over
   6,328 hosted runs (5,083 PR heads, 11,710 h); replay recall 100% at the all-`unknown`
   record; the corpus is pinned by sha256 in `research/corpus/RECEIPTS.json`.

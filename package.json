@@ -585,6 +585,7 @@
     "packages/party/domain",
     "packages/party/use-cases",
     "packages/party/server",
-    "packages/drivers/alchemy-postgres"
+    "packages/drivers/alchemy-postgres",
+    "packages/drivers/firecrawl"
   ]
 }
