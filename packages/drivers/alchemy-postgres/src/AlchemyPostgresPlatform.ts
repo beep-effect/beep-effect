@@ -9,15 +9,18 @@
  * instance (`SELECT ... FOR UPDATE` on its instance row inside one
  * transaction), `commandId` dedupe through stored receipts, an atomic commit
  * of events, state, receipt and outbox deliveries, then delivery at least once
- * in outbox order. Scheduled commands are rows fired by a polling worker
- * through the same commit path. Live reads (`changes`, `tail`) poll at
- * `pollMillis`.
+ * in outbox order. Outbox rows are claimed with `FOR UPDATE SKIP LOCKED` under
+ * a per-host lease (`locked_until`, `claimed_by`), and only the oldest pending
+ * row of each `(source, target)` is claimable, so several hosts on one
+ * database deliver each row once and in order. A failed delivery stays
+ * pending with bounded backoff and holds the rows behind it. Scheduled
+ * commands are rows fired by a polling worker through the same commit path.
+ * Live reads (`changes`, `tail`) poll at `pollMillis`.
  *
  * **Gotchas**
  *
  * Views, projections and streams are not hosted yet: hosting a model that
- * declares one dies with {@link AlchemyPostgresUnsupported}. Deliveries are
- * drained by one worker per model and process, so ordering holds per process.
+ * declares one dies with {@link AlchemyPostgresUnsupported}.
  *
  * @packageDocumentation
  * @since 0.0.0
