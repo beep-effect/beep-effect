@@ -41,6 +41,8 @@ jobs:
       verdict: ${{ steps.decide.outputs.verdict }}
       admitted: ${{ steps.decide.outputs.admitted }}
       docs_only: ${{ steps.decide.outputs.docs_only }}
+      route_skips: ${{ steps.decide.outputs.route_skips }}
+      route_receipt: ${{ steps.decide.outputs.route_receipt }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -80,3 +82,7 @@ jobs:
     secrets: inherit
     with:
       admitted: ${{ needs.admission.outputs.verdict == 'run' }}
+      # Verification route: the label path is usually a PR's first admission, so it forwards the
+      # same route skips and receipt as check.yml.
+      route_skips: ${{ needs.admission.outputs.route_skips }}
+      route_receipt: ${{ needs.admission.outputs.route_receipt }}

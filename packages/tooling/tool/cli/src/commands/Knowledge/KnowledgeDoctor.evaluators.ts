@@ -17,6 +17,10 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { isGoalStatus } from "../Goals/Goals.schemas.ts";
+import { matchKnowledgeEntrypoint } from "./Knowledge.packages.ts";
+
+export { matchKnowledgeEntrypoint } from "./Knowledge.packages.ts";
+
 import { knowledgeInlineSpans, knowledgeLineMatches } from "./Knowledge.refs.ts";
 import { KnowledgeFindingCandidate, KnowledgeFindingLocation } from "./Knowledge.schemas.ts";
 import { KNOWLEDGE_SKILLS_DIR, KNOWLEDGE_SKILLS_LOCK_PATH, KNOWLEDGE_TSCONFIG_PATH } from "./KnowledgeDoctor.domain.ts";
@@ -25,7 +29,6 @@ import {
   EvaluationResolved,
   ExportWitness,
   KnowledgeEvaluationFailure,
-  KnowledgePackageEntrypoint,
   KnowledgeSpan,
   KnowledgeSpanForm,
   LockEntryWitness,
@@ -532,75 +535,6 @@ const symbolFailure = (span: KnowledgeSpan, subject: string, message: string, ca
       causeKey,
     })
   );
-
-const patternTarget = (entry: KnowledgePackageEntrypoint, key: string): O.Option<KnowledgePackageEntrypoint> => {
-  const [prefix = "", suffix = ""] = Str.split("*")(entry.key);
-  const fits =
-    Str.startsWith(prefix)(key) &&
-    Str.endsWith(suffix)(key) &&
-    Str.length(key) > Str.length(prefix) + Str.length(suffix);
-  return fits
-    ? O.some(
-        KnowledgePackageEntrypoint.make({
-          key: entry.key,
-          target: O.map(
-            entry.target,
-            Str.replace("*", Str.slice(Str.length(prefix), Str.length(key) - Str.length(suffix))(key))
-          ),
-        })
-      )
-    : O.none();
-};
-
-const patternLength = Order.mapInput(Order.Number, (entry: KnowledgePackageEntrypoint) => Str.length(entry.key));
-
-/**
- * Matches a subpath against entry points the way Node resolves `exports`: an exact key first, then
- * the wildcard key with the longest pattern.
- *
- * **Example** (Resolve through a wildcard key)
- *
- * ```ts
- * import { matchKnowledgeEntrypoint } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.evaluators"
- * import { KnowledgePackageEntrypoint } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
- * import * as O from "effect/Option"
- *
- * const entry = matchKnowledgeEntrypoint(
- *   [KnowledgePackageEntrypoint.make({ key: "./commands/*", target: O.some("pkg/src/commands/*\/index.ts") })],
- *   "./commands/Goals"
- * )
- *
- * console.log(O.getOrNull(O.flatMap(entry, (value) => value.target))) // "pkg/src/commands/Goals/index.ts"
- * ```
- *
- * @param entrypoints - Exports-map keys or path aliases of one manifest.
- * @param key - Subpath (`.`, `./Sub`) or full specifier for a path alias.
- * @returns The matched entry point with its target substituted, when one matches.
- * @category predicates
- * @since 0.0.0
- */
-export const matchKnowledgeEntrypoint: {
-  (key: string): (entrypoints: ReadonlyArray<KnowledgePackageEntrypoint>) => O.Option<KnowledgePackageEntrypoint>;
-  (entrypoints: ReadonlyArray<KnowledgePackageEntrypoint>, key: string): O.Option<KnowledgePackageEntrypoint>;
-} = dual(
-  2,
-  (entrypoints: ReadonlyArray<KnowledgePackageEntrypoint>, key: string): O.Option<KnowledgePackageEntrypoint> =>
-    O.orElse(
-      A.findFirst(entrypoints, (entry) => entry.key === key),
-      () =>
-        A.head(
-          A.sort(
-            A.getSomes(
-              A.map(
-                A.filter(entrypoints, (entry) => Str.includes("*")(entry.key)),
-                (entry) => patternTarget(entry, key)
-              )
-            ),
-            Order.flip(patternLength)
-          )
-        )
-    )
-);
 
 type ResolvedEntry = {
   readonly witness: ExportWitness;

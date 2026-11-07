@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,7 +31,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close — final PR [#2868](https://github.com/beep-effect/beep-effect/pull/2868) carries the reflection and `proposedCloseout` (`completed-retained`); adoption follows its merge.
+Closed — `completed-retained`. Implementation PR
+[#2868](https://github.com/beep-effect/beep-effect/pull/2868) merged as `821f4287e2`
+over attributed S11 reds. The closeout was re-finaled through the goals-only
+[#2882](https://github.com/beep-effect/beep-effect/pull/2882) (merged `e1c960da1e`
+at `merge-ready: yes`), whose completion receipt verified, and adopted in this
+packet-state PR. The routes now serve `goals/research-intake-2026-11`.
 
 ## Latest Evidence
 
