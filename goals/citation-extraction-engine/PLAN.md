@@ -1721,6 +1721,12 @@ Lane `feat/citation-default-owners` · PR #2847
 
 Reverse: Remove the five new explicit bindings if their source linkage or target proof is invalid, preserving every original input and unqualified full-corpus duty.
 
+### Replay original HTML reference ordering and overlap assertions through the default engine, 2026-11-07
+
+Add four original HTML reference/filtering inputs to the public-engine replay, bringing scheduled extraction inputs to 197 per runtime. Four focused tests pass on Bun and Node and qualify two exact original assertion events with authenticated complete-case proof. The other two filtering assertions and full hosted integration remain unqualified. Preserve original order, duplicate names, complete semantic metadata, verified range distinctions and physical exits. See history/evidence/2026-11-07-canonical-reference-markup.md.
+
+Reverse: Retain original assertion criteria and complete source models if replay composition changes.
+
 ### Replay public resolution groups and require explicit identity ownership, 2026-11-07
 
 The public resolver replays all thirty original default operation groups across ninety-four mentions. This exposed omitted short-case selected editions, now authenticated as case editions, and an absent missing-page identity owner. The Layer now explicitly requires the existing identity factory at installation. Test identity values are controlled; production allocation and exact native hash proof remain open. Fourteen public/private regression tests pass; no source expectation or semantic waiver changes. See history/evidence/2026-11-07-public-resolution-groups.md.

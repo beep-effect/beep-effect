@@ -792,7 +792,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/FullExtraction.ts",
-          "sha256": "161a1c2f712264a382cf72e40a147caddb05a6057fd1067f35bac653dfb6691d"
+          "sha256": "01a0aa2506a69b149a76852ef253549a7129a56ee2a9591fa18e52650b995233"
         },
         {
           "path": "packages/law-practice/server/test/CitationFullExtraction.fixtures.ts",
@@ -804,11 +804,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ExtractionContext.ts",
-          "sha256": "06e6d17dbe8845ef04cae5ec7f264ccd9c373e902d2e4e9f1bff0e57296d9396"
+          "sha256": "c1bbe84841ccebe882fd765f67a57f2291ce8709a6323495c977509e1ba76c24"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ReferenceTokenExtraction.ts",
-          "sha256": "8fc8940f68c09df593d99413152ef836c3eff015d47ad7db15d6b684cff051ed"
+          "sha256": "cc632717610825e7eb547496409094d8fd7d666a35e1bf031bf736db6650245b"
         },
         {
           "path": "packages/law-practice/server/test/CitationReferenceToken.fixtures.ts",
@@ -1444,7 +1444,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationCallback.fixtures.ts",
-          "sha256": "97c8ee4d20b9aab554efdcbd135dd7e438a1ad2ccc117ee2f11a4a4f52f9577f"
+          "sha256": "ea4f5bb19c95729be0ab8932f53aa80e8b3f888186e9603abcbc03545f7640ab"
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationCallback.test.ts",
@@ -1712,7 +1712,7 @@
         },
         {
           "path": "packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts",
-          "sha256": "c55850954ff7655f28b00aaee3cb3a78dccf98ad43a9fc65953eb101953dc8e1"
+          "sha256": "1c417d476fb78ca789e631e94b045a6938c43150f0dc9fa1a312b81e304ac487"
         },
         {
           "path": "packages/law-practice/domain/test/CitationBluebook.test.ts",
@@ -1752,7 +1752,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
-          "sha256": "ac40ae15b4572e40c1c2a794ee73c529e28a789aae38abae7ca9b5c764aff8de"
+          "sha256": "3684e4fe99b83885d94b4414d7d0c8b38b9295a6e1aedcbb5846a86851be6d95"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
@@ -2521,7 +2521,7 @@
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
-          "sha256": "af51a0d15223c4324a2ec7694a565be24310da5c8c185da0d49e9a5f19013bb1"
+          "sha256": "d48825b9ea1f02280dcfd840cd806bf120d983b362b3c392a1ade4e1b068bfd3"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md",

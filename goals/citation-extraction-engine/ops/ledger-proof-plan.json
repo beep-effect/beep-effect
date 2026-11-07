@@ -595,6 +595,57 @@
           }
         ]
       }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_reference_extraction_from_markup::tests/test_FindTest.py:1261:8:caseDeclaration::1",
+          "observationSha256": "bae5b5228188f1acf831330832c0ea495f90cef3a9c9239ae01189ea1c3f7a89"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_reference_filtering::tests/test_FindTest.py:1299:12:caseDeclaration::1",
+          "observationSha256": "69b75e3617f5e7dac4b6996205f91b1709866ce4b622bb19301393afd1e13e7d"
+        }
+      ],
+      "rationale": "Complete local public-engine replay of these exact original reference-order and overlap-filtering assertions on both runtimes. Other original inputs and parent capabilities remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/canonical-reference-markup-final-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-reference-markup.md",
+        "evidenceSha256": "93883ea6fc16fd8456c21d11f94e8c9255640e88160e056624ffbf51fcabca40",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalReferenceMarkup.test.ts",
+            "name": "replays the original",
+            "sha256": "cb0e0ec58d5a303c995566d5c9d5f43a6f087df21fad613b129492a6f9864e44"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalReferenceMarkup.fixtures.ts",
+            "sha256": "41005a5ead89eec3e530e9ae3bce41b1c8d4d28ee12686fa49d80480a799eac3"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          }
+        ]
+      }
     }
   ]
 }
