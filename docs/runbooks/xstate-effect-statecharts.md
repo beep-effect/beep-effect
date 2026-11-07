@@ -197,8 +197,10 @@ These were found while building the reference machine. Re-check them on each alp
    `fromEffectEventStream` and events mapped by `enq.listen` or `enq.subscribeTo`: they are dropped
    as `internalEvent` dead letters. Raise the internal event from the parent (`onSnapshot` +
    `enq.raise`), or declare the relayed event in `schemas.events`.
-4. `EffectActor.send` does not apply the internal-event check at runtime. Internal events are
-   excluded from the type of `send`, which is the only protection for a root actor.
+4. In the pinned beta, `EffectActor.send` checks internal events at runtime. For a state-machine
+   actor, its delivery guard emits an `internalEvent` dead letter and returns before adding a
+   rejected event to the mailbox. The `void`-returning call reports rejection through the actor
+   system.
 5. With nested state contracts, transition targets must be declared siblings or descendants. `#id`
    targets are not expressible, so shape the chart with compound states and final-state outputs.
 6. `@xstate/test` rejects a machine that declares `schemas.emitted` at the type level. Assign it to
