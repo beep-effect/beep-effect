@@ -14,7 +14,7 @@ Tracked, authored documentation for the beep-effect monorepo.
 | `docs/generated/` | **no** (gitignored) | Docgen aggregate output. Produced by `bun run docgen` / `bun run docs:aggregate`; safe to delete, regenerable. |
 | `docs/_internal/` | **no** (gitignored) | Private working notes. This repository is public — never commit anything under `_internal/`. |
 
-Operational guidance: timer units, their refresh, and the agent-run post-merge closeout: [systemd timers](runbooks/systemd-timers.md). The 1Password `BEEP_SECRETS` item's section rule and rename debt: [BEEP_SECRETS layout](runbooks/onepassword-beep-secrets-layout.md).
+Operational guidance: timer units, their refresh, and the agent-run post-merge closeout: [systemd timers](runbooks/systemd-timers.md). Where the CLI looks for the fleet, the authored seat registry, and the `worktree fleet --join`, `describe` and `register` views: [fleet roots and registry](runbooks/fleet-roots-and-registry.md). The 1Password `BEEP_SECRETS` item's section rule and rename debt: [BEEP_SECRETS layout](runbooks/onepassword-beep-secrets-layout.md).
 External research intake, source acquisition, provenance, and portable navigation:
 [research reference library](runbooks/research-library.md).
 Which TypeScript compiler runs where, how `typescript@7`, its native alias, and the TS6 bridge coexist, and

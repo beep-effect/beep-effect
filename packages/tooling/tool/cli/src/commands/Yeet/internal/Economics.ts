@@ -43,6 +43,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
+import { readCloneFleetRepository, readConfiguredFleetRoots } from "../../Worktree/internal/FleetRoots.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "../../Worktree/Worktree.constants.ts";
 import {
   EconomicsAttempt,
@@ -682,9 +683,14 @@ const hasRunsDirectory = Effect.fnUntraced(function* (runsDirectory: string) {
 // `--fleet` candidates (ruling 73): every `beep-effect*` directory under the
 // projects root, every lane inside a `beep-effect*-worktrees` directory, and
 // every lane under a clone's `.claude/worktrees`. Symlinks are never followed.
-const fleetCandidates = Effect.fnUntraced(function* (projectsRoot: string) {
+// With a configured fleet roots list each root contributes the same shapes,
+// filtered by its own name prefix (none: every real directory).
+const fleetCandidates = Effect.fnUntraced(function* (
+  projectsRoot: string,
+  keep: (name: string) => boolean = Str.startsWith(CHECKOUT_PREFIX)
+) {
   const path = yield* Path.Path;
-  const names = yield* realDirectoryNames(projectsRoot, Str.startsWith(CHECKOUT_PREFIX));
+  const names = yield* realDirectoryNames(projectsRoot, keep);
   const nested = yield* Effect.forEach(names, (name) => {
     const directory = path.join(projectsRoot, name);
     const isWorktreesRoot = Str.endsWith(WORKTREES_ROOT_SUFFIX)(name);
@@ -701,13 +707,40 @@ const fleetCandidates = Effect.fnUntraced(function* (projectsRoot: string) {
 // The checkout roots a scope reads: the checkout alone, or with `--fleet`
 // every sibling checkout and lane under the projects root (ruling 73). Both
 // sources resolve their files from these roots.
+// The fleet's candidates: the configured roots list shared with `worktree fleet`
+// (`BEEP_FLEET_ROOTS`, then `roots.json`) when set, else the derived projects root.
+const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, projectsRoot: string) {
+  const clone = yield* cloneRootOf(repoRoot);
+  const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => repoRoot));
+  // A report never fails over its scope: an undecodable roots.json warns and falls back to the derived root,
+  // where `worktree fleet` refuses it outright.
+  const configured = yield* readConfiguredFleetRoots(repository).pipe(
+    Effect.catchTag("WorktreeCommandError", (error) =>
+      Effect.as(
+        Effect.logWarning(`yeet economics --fleet: ${error.message} Using the derived projects root.`),
+        O.none()
+      )
+    )
+  );
+  return yield* O.match(configured, {
+    onNone: () => fleetCandidates(projectsRoot),
+    onSome: ({ roots }) =>
+      Effect.map(
+        Effect.forEach(roots, (root) =>
+          fleetCandidates(root.path, root.namePrefix === undefined ? constTrue : Str.startsWith(root.namePrefix))
+        ),
+        A.flatten
+      ),
+  });
+});
+
 const resolveScopeRoots = Effect.fnUntraced(function* (request: EconomicsScopeRequest) {
   const path = yield* Path.Path;
   const repoRoot = path.resolve(request.repoRoot);
   const projectsRoot = yield* projectsRootOf(repoRoot);
   const roots = request.fleet
     ? yield* Effect.map(
-        Effect.map(fleetCandidates(projectsRoot), (value) => A.prepend(value, repoRoot)),
+        Effect.map(fleetScopeCandidates(repoRoot, projectsRoot), (value) => A.prepend(value, repoRoot)),
         A.dedupe
       )
     : A.of(repoRoot);

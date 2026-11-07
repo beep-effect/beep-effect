@@ -25,7 +25,9 @@
       "mergeBase": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
       "branchDiffCount": 0,
       "liveness": "live",
-      "livenessEvidence": ["worktree-mtime"],
+      "livenessEvidence": [
+        "worktree-mtime"
+      ],
       "conflict": "clean",
       "conflictReason": null,
       "conflictPaths": [],
@@ -43,7 +45,9 @@
       "mergeBase": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
       "branchDiffCount": 0,
       "liveness": "live",
-      "livenessEvidence": ["worktree-mtime"],
+      "livenessEvidence": [
+        "worktree-mtime"
+      ],
       "conflict": "clean",
       "conflictReason": null,
       "conflictPaths": [],
@@ -61,7 +65,9 @@
       "mergeBase": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
       "branchDiffCount": 0,
       "liveness": "live",
-      "livenessEvidence": ["worktree-mtime"],
+      "livenessEvidence": [
+        "worktree-mtime"
+      ],
       "conflict": "clean",
       "conflictReason": null,
       "conflictPaths": [],
@@ -79,7 +85,9 @@
       "mergeBase": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
       "branchDiffCount": 0,
       "liveness": "live",
-      "livenessEvidence": ["worktree-mtime"],
+      "livenessEvidence": [
+        "worktree-mtime"
+      ],
       "conflict": "clean",
       "conflictReason": null,
       "conflictPaths": [],

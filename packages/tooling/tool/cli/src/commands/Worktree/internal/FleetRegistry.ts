@@ -1,0 +1,604 @@
+/**
+ * The authored fleet registry: store, scan adoption, explicit registration,
+ * and the joins behind `fleet --join` and `fleet describe`.
+ *
+ * The registry lives at `<state>/beep/fleet/<repo-key>/registry.json` beside
+ * the session ledger. It never duplicates a ledger field: the joined views
+ * read lane, PR and state from the ledger's newest rows for each checkout.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { Git } from "@beep/git/Git";
+import { $RepoCliId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { publishJournalTextAtomically } from "../../../internal/repo-run/JournalFile.ts";
+import { SessionLedger } from "../../Session/SessionLedger.service.ts";
+import { FleetMirrorService } from "../Fleet.service.ts";
+import { WorktreeCommandError } from "../Worktree.errors.ts";
+import {
+  FleetCheckoutDescription,
+  FleetJoinedRow,
+  FleetRegistryDocument,
+  FleetRegistryRow,
+  FleetSeatRole,
+} from "./FleetRegistry.schemas.ts";
+import { fleetStateDirectory } from "./FleetRoots.ts";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type { SessionLedgerRow } from "../../Session/Session.schemas.ts";
+import type { PrRepository } from "../../Yeet/internal/Provenance.ts";
+import type { FleetCheckout, FleetScanOptions, FleetSnapshot } from "../Worktree.schemas.ts";
+import type { ConfiguredFleetRoots } from "./FleetRoots.schemas.ts";
+
+const $I = $RepoCliId.create("commands/Worktree/internal/FleetRegistry");
+
+/**
+ * The registry document a repository starts from before anything is written.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const EMPTY_FLEET_REGISTRY: FleetRegistryDocument = FleetRegistryDocument.make({
+  schemaVersion: "fleet-registry/v1",
+  rows: [],
+});
+
+const sortRows = (rows: ReadonlyArray<FleetRegistryRow>): ReadonlyArray<FleetRegistryRow> =>
+  A.sortWith(rows, (row) => row.checkout, Order.String);
+
+/**
+ * One checkout the scan saw, with the role adoption would give it.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FleetAdoptionCandidate = {
+  readonly checkout: string;
+  readonly role: FleetSeatRole;
+  readonly owningSeat: string | null;
+};
+
+/**
+ * Add a row for every candidate the registry does not know yet.
+ *
+ * **Details**
+ *
+ * Adoption is idempotent and additive: a checkout that already has a row
+ * keeps it untouched (an explicit `register` therefore survives every
+ * rescan), and no row is ever removed, even for a checkout the scan no longer
+ * sees. Rows stay sorted by checkout path.
+ *
+ * **Example** (A registered row survives adoption)
+ *
+ * ```ts
+ * import {
+ *   adoptFleetRegistryRows,
+ *   EMPTY_FLEET_REGISTRY,
+ *   FleetRegistryDocument,
+ *   FleetRegistryRow,
+ * } from "@beep/repo-cli/test/Worktree"
+ *
+ * const registered = FleetRegistryDocument.make({
+ *   schemaVersion: "fleet-registry/v1",
+ *   rows: [FleetRegistryRow.make({ checkout: "/p/beep-effect0", seatRole: "main" })],
+ * })
+ * const result = adoptFleetRegistryRows(registered, [{ checkout: "/p/beep-effect0", role: "legacy", owningSeat: null }])
+ * console.log(result.document.rows[0]?.seatRole, result.adopted.length) // "main" 0
+ * console.log(EMPTY_FLEET_REGISTRY.rows.length) // 0
+ * ```
+ *
+ * @param document - The current registry.
+ * @param candidates - Every checkout the scan saw.
+ * @returns The extended document and the rows it added.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const adoptFleetRegistryRows: {
+  (
+    candidates: ReadonlyArray<FleetAdoptionCandidate>
+  ): (document: FleetRegistryDocument) => {
+    readonly document: FleetRegistryDocument;
+    readonly adopted: ReadonlyArray<FleetRegistryRow>;
+  };
+  (
+    document: FleetRegistryDocument,
+    candidates: ReadonlyArray<FleetAdoptionCandidate>
+  ): { readonly document: FleetRegistryDocument; readonly adopted: ReadonlyArray<FleetRegistryRow> };
+} = dual(2, (document: FleetRegistryDocument, candidates: ReadonlyArray<FleetAdoptionCandidate>) => {
+  const known = HashSet.fromIterable(A.map(document.rows, (row) => row.checkout));
+  const adopted = pipe(
+    candidates,
+    A.dedupeWith((left, right) => left.checkout === right.checkout),
+    A.filter((candidate) => !HashSet.has(known, candidate.checkout)),
+    A.map((candidate) =>
+      FleetRegistryRow.make({
+        checkout: candidate.checkout,
+        seatRole: candidate.role,
+        owningSeat: candidate.owningSeat,
+      })
+    )
+  );
+  return {
+    document: FleetRegistryDocument.make({
+      schemaVersion: document.schemaVersion,
+      rows: sortRows(A.appendAll(document.rows, adopted)),
+    }),
+    adopted,
+  };
+});
+
+/**
+ * Insert or replace one checkout's row.
+ *
+ * **Example** (Override an adopted role)
+ *
+ * ```ts
+ * import { EMPTY_FLEET_REGISTRY, FleetRegistryRow, registerFleetRegistryRow } from "@beep/repo-cli/test/Worktree"
+ *
+ * const next = registerFleetRegistryRow(
+ *   EMPTY_FLEET_REGISTRY,
+ *   FleetRegistryRow.make({ checkout: "/p/beep/seats/review", seatRole: "review" })
+ * )
+ * console.log(next.rows[0]?.seatRole) // "review"
+ * ```
+ *
+ * @param document - The current registry.
+ * @param row - The row to write.
+ * @returns The registry with exactly one row for `row.checkout`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const registerFleetRegistryRow: {
+  (row: FleetRegistryRow): (document: FleetRegistryDocument) => FleetRegistryDocument;
+  (document: FleetRegistryDocument, row: FleetRegistryRow): FleetRegistryDocument;
+} = dual(2, (document: FleetRegistryDocument, row: FleetRegistryRow) =>
+  FleetRegistryDocument.make({
+    schemaVersion: document.schemaVersion,
+    rows: sortRows(
+      A.append(
+        A.filter(document.rows, (existing) => existing.checkout !== row.checkout),
+        row
+      )
+    ),
+  })
+);
+
+/**
+ * The adoption role for one mirror row.
+ *
+ * **Details**
+ *
+ * A clone whose parent is a legacy root is `legacy`; every other checkout is
+ * `adopted`. Legacy roots are the prefix-matched entries of a configured list,
+ * or the single root when the list was derived.
+ *
+ * **Example** (Classify a legacy clone)
+ *
+ * ```ts
+ * import { ConfiguredFleetRoots, fleetAdoptionRole, FleetRootEntry } from "@beep/repo-cli/test/Worktree"
+ *
+ * const roots = ConfiguredFleetRoots.make({ source: "derived", roots: [FleetRootEntry.make({ path: "/p" })] })
+ * console.log(fleetAdoptionRole({ roots, checkout: "/p/beep-effect0", kind: "clone" })) // "legacy"
+ * console.log(fleetAdoptionRole({ roots, checkout: "/p/beep-effect0-worktrees/x", kind: "linked-worktree" })) // "adopted"
+ * ```
+ *
+ * @param input - The roots the scan read, the checkout's absolute path and its mirror kind.
+ * @returns `legacy` or `adopted`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const fleetAdoptionRole = ({
+  roots,
+  checkout,
+  kind,
+}: {
+  readonly roots: ConfiguredFleetRoots;
+  readonly checkout: string;
+  readonly kind: FleetCheckout["kind"];
+}): FleetSeatRole => {
+  const legacyRoots = A.filter(roots.roots, (root) => roots.source === "derived" || root.namePrefix !== undefined);
+  const parent = pipe(
+    Str.lastIndexOf("/")(checkout),
+    O.map((slash) => Str.slice(0, slash)(checkout))
+  );
+  const inLegacyRoot = O.exists(parent, (dir) => A.some(legacyRoots, (root) => root.path === dir));
+  return kind === "clone" && inLegacyRoot ? FleetSeatRole.Enum.legacy : FleetSeatRole.Enum.adopted;
+};
+
+/**
+ * Derive each linked worktree's owning seat from `git rev-parse --git-common-dir`.
+ *
+ * **Details**
+ *
+ * The owning seat is the clone whose `.git` holds the lane's state, the same
+ * directory `yeet sweep --retire` and Codex `--add-dir` resolve. A clone owns
+ * itself, so it gets `null`; a lane whose common dir cannot be read gets
+ * `null` too, never a guess.
+ *
+ * **Example** (Build the derivation)
+ *
+ * ```ts
+ * import { fleetAdoptionCandidates } from "@beep/repo-cli/test/Worktree"
+ *
+ * console.log(typeof fleetAdoptionCandidates) // "function"
+ * ```
+ *
+ * @param roots - The roots the scan read.
+ * @param checkouts - The mirror rows of that scan.
+ * @returns One adoption candidate per mirror row.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const fleetAdoptionCandidates = Effect.fn("FleetRegistry.adoptionCandidates")(function* (
+  roots: ConfiguredFleetRoots,
+  checkouts: ReadonlyArray<FleetCheckout>
+): Effect.fn.Return<ReadonlyArray<FleetAdoptionCandidate>, never, Git | Path.Path> {
+  const git = yield* Git;
+  const path = yield* Path.Path;
+  return yield* Effect.forEach(
+    checkouts,
+    Effect.fnUntraced(function* (row): Effect.fn.Return<FleetAdoptionCandidate> {
+      const role = fleetAdoptionRole({ roots, checkout: row.path, kind: row.kind });
+      if (row.kind === "clone") {
+        return { checkout: row.path, role, owningSeat: null };
+      }
+      const commonDir = yield* git.commonDir(row.path).pipe(Effect.option);
+      const owningSeat = O.getOrNull(
+        O.map(commonDir, (output) => path.dirname(path.resolve(row.path, Str.trim(output))))
+      );
+      return { checkout: row.path, role, owningSeat };
+    }),
+    { concurrency: 8 }
+  );
+});
+
+const newestFirst = Order.flip(Order.mapInput(DateTime.Order, (row: SessionLedgerRow) => row.recordedAt));
+
+/**
+ * The newest ledger rows recorded for one checkout, newest first.
+ *
+ * **Example** (No history reads empty)
+ *
+ * ```ts
+ * import { ledgerRowsForCheckout } from "@beep/repo-cli/test/Worktree"
+ *
+ * console.log(ledgerRowsForCheckout({ rows: [], checkout: "/p/beep-effect0", limit: 5 })) // []
+ * ```
+ *
+ * @param input - Every ledger row of the repository, the checkout's absolute path, and how many rows to keep.
+ * @returns At most `limit` rows for `checkout`, newest first.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ledgerRowsForCheckout = ({
+  rows,
+  checkout,
+  limit,
+}: {
+  readonly rows: ReadonlyArray<SessionLedgerRow>;
+  readonly checkout: string;
+  readonly limit: number;
+}): ReadonlyArray<SessionLedgerRow> =>
+  A.take(
+    A.sort(
+      A.filter(rows, (row) => row.checkout === checkout),
+      newestFirst
+    ),
+    limit
+  );
+
+const latestLedgerByCheckout = (rows: ReadonlyArray<SessionLedgerRow>): HashMap.HashMap<string, SessionLedgerRow> =>
+  A.reduce(A.sort(rows, Order.flip(newestFirst)), HashMap.empty<string, SessionLedgerRow>(), (latest, row) =>
+    HashMap.set(latest, row.checkout, row)
+  );
+
+const fallbackRow = (row: FleetCheckout): FleetRegistryRow =>
+  FleetRegistryRow.make({ checkout: row.path, seatRole: FleetSeatRole.Enum.adopted });
+
+/**
+ * Join mirror rows with registry rows and each checkout's newest ledger row.
+ *
+ * **Details**
+ *
+ * One output row per mirror row, in mirror order. A mirror row with no
+ * registry row (only possible when the caller skipped adoption) reads as
+ * `adopted` with defaults; a checkout with no ledger history has `null` lane,
+ * PR and state.
+ *
+ * **Example** (Join an empty fleet)
+ *
+ * ```ts
+ * import { EMPTY_FLEET_REGISTRY, joinFleetRows } from "@beep/repo-cli/test/Worktree"
+ *
+ * console.log(joinFleetRows({ checkouts: [], registry: EMPTY_FLEET_REGISTRY, ledger: [] })) // []
+ * ```
+ *
+ * @param input - The mirror's checkout rows, the authored registry, and every session-ledger row of the repository.
+ * @returns One compact joined row per checkout.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const joinFleetRows = ({
+  checkouts,
+  registry,
+  ledger,
+}: {
+  readonly checkouts: ReadonlyArray<FleetCheckout>;
+  readonly registry: FleetRegistryDocument;
+  readonly ledger: ReadonlyArray<SessionLedgerRow>;
+}): ReadonlyArray<FleetJoinedRow> => {
+  const registered = HashMap.fromIterable(A.map(registry.rows, (row) => [row.checkout, row] as const));
+  const latest = latestLedgerByCheckout(ledger);
+  return A.map(checkouts, (row) => {
+    const authored = O.getOrElse(HashMap.get(registered, row.path), () => fallbackRow(row));
+    const session = HashMap.get(latest, row.path);
+    return FleetJoinedRow.make({
+      path: row.path,
+      kind: row.kind,
+      branch: row.branch,
+      liveness: row.liveness,
+      dirtyCount: row.dirtyCount,
+      seatRole: authored.seatRole,
+      owningSeat: authored.owningSeat,
+      drainStatus: authored.drainStatus,
+      retentionExempt: authored.retentionExempt,
+      lane: O.getOrNull(O.map(session, (entry) => entry.lane)),
+      pr: O.getOrNull(O.flatMap(session, (entry) => entry.pr)),
+      state: O.getOrNull(O.map(session, (entry) => entry.state)),
+    });
+  });
+};
+
+/**
+ * Expand one checkout into its full mirror record, registry row and newest
+ * ledger rows.
+ *
+ * **Example** (A checkout the mirror does not know)
+ *
+ * ```ts
+ * import { describeFleetCheckout, EMPTY_FLEET_REGISTRY } from "@beep/repo-cli/test/Worktree"
+ * import * as O from "effect/Option"
+ *
+ * const description = describeFleetCheckout({
+ *   checkouts: [],
+ *   registry: EMPTY_FLEET_REGISTRY,
+ *   ledger: [],
+ *   checkout: "/p/x",
+ *   ledgerLimit: 5,
+ * })
+ * console.log(O.isNone(description)) // true
+ * ```
+ *
+ * @param input - The mirror rows, registry, ledger rows, the checkout to expand, and how many ledger rows to include.
+ * @returns The description, or `O.none()` when the mirror has no such checkout.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const describeFleetCheckout = ({
+  checkouts,
+  registry,
+  ledger,
+  checkout,
+  ledgerLimit,
+}: {
+  readonly checkouts: ReadonlyArray<FleetCheckout>;
+  readonly registry: FleetRegistryDocument;
+  readonly ledger: ReadonlyArray<SessionLedgerRow>;
+  readonly checkout: string;
+  readonly ledgerLimit: number;
+}): O.Option<FleetCheckoutDescription> =>
+  O.map(
+    A.findFirst(checkouts, (row) => row.path === checkout),
+    (row) =>
+      FleetCheckoutDescription.make({
+        checkout: row,
+        registry: O.getOrElse(
+          A.findFirst(registry.rows, (entry) => entry.checkout === checkout),
+          () => fallbackRow(row)
+        ),
+        ledger: ledgerRowsForCheckout({ rows: ledger, checkout, limit: ledgerLimit }),
+      })
+  );
+
+/**
+ * Service contract for the file-backed registry.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface FleetRegistryStoreShape {
+  /**
+   * Read a repository's registry; a missing file reads as an empty registry.
+   *
+   * @since 0.0.0
+   */
+  readonly read: (repository: PrRepository) => Effect.Effect<FleetRegistryDocument, WorktreeCommandError>;
+  /**
+   * Replace a repository's registry atomically.
+   *
+   * @since 0.0.0
+   */
+  readonly write: (
+    repository: PrRepository,
+    document: FleetRegistryDocument
+  ) => Effect.Effect<void, WorktreeCommandError>;
+}
+
+/**
+ * Service tag for the fleet registry store.
+ *
+ * **Example** (Access the store)
+ *
+ * ```ts
+ * import { FleetRegistryStore } from "@beep/repo-cli/test/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.flatMap(FleetRegistryStore.asEffect(), (store) =>
+ *   store.read({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class FleetRegistryStore extends Context.Service<FleetRegistryStore, FleetRegistryStoreShape>()(
+  $I`FleetRegistryStore`
+) {}
+
+const RegistryJson = S.fromJsonString(FleetRegistryDocument, { space: 2 });
+const decodeRegistry = S.decodeUnknownEffect(RegistryJson);
+const encodeRegistry = S.encodeEffect(RegistryJson);
+
+const registryFile = Effect.fn("FleetRegistry.file")(function* (repository: PrRepository) {
+  const path = yield* Path.Path;
+  const directory = yield* fleetStateDirectory(repository);
+  return { directory, file: path.join(directory, "registry.json") };
+});
+
+const readRegistry = Effect.fn("FleetRegistryStore.read")(function* (repository: PrRepository) {
+  const fs = yield* FileSystem.FileSystem;
+  const { file } = yield* registryFile(repository);
+  const content = yield* fs.readFileString(file).pipe(
+    Effect.asSome,
+    Effect.catchTag("PlatformError", (error) =>
+      error.reason._tag === "NotFound"
+        ? Effect.succeedNone
+        : Effect.fail(WorktreeCommandError.make({ message: `Failed to read ${file}.`, path: file, cause: error }))
+    )
+  );
+  if (O.isNone(content)) {
+    return EMPTY_FLEET_REGISTRY;
+  }
+  return yield* decodeRegistry(content.value).pipe(
+    Effect.mapError(WorktreeCommandError.new(`Failed to decode ${file} as a fleet registry.`, { path: file }))
+  );
+});
+
+const writeRegistry = Effect.fn("FleetRegistryStore.write")(function* (
+  repository: PrRepository,
+  document: FleetRegistryDocument
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const { directory, file } = yield* registryFile(repository);
+  const text = yield* encodeRegistry(document).pipe(
+    Effect.mapError(WorktreeCommandError.new("Failed to encode the fleet registry.", { path: file }))
+  );
+  yield* fs
+    .makeDirectory(directory, { recursive: true })
+    .pipe(Effect.mapError(WorktreeCommandError.new(`Failed to create ${directory}.`, { path: directory })));
+  yield* publishJournalTextAtomically(file, `${text}\n`, "fleet registry").pipe(
+    Effect.mapError(WorktreeCommandError.new(`Failed to write ${file}.`, { path: file }))
+  );
+});
+
+/**
+ * Live file-backed layer for {@link FleetRegistryStore}.
+ *
+ * **Example** (Reference the live layer)
+ *
+ * ```ts
+ * import { FleetRegistryStoreLive } from "@beep/repo-cli/test/Worktree"
+ *
+ * console.log(typeof FleetRegistryStoreLive) // "object"
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const FleetRegistryStoreLive: Layer.Layer<
+  FleetRegistryStore,
+  never,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
+> = Layer.effect(
+  FleetRegistryStore,
+  Effect.gen(function* () {
+    const context = yield* Effect.context<FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom>();
+    return FleetRegistryStore.of({
+      read: Effect.fn("FleetRegistryStore.read")((repository) =>
+        readRegistry(repository).pipe(Effect.provide(context))
+      ),
+      write: Effect.fn("FleetRegistryStore.write")((repository, document) =>
+        writeRegistry(repository, document).pipe(Effect.provide(context))
+      ),
+    });
+  })
+);
+
+/**
+ * Everything the joined views read from one scan.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FleetJoin = {
+  readonly roots: ConfiguredFleetRoots;
+  readonly snapshot: FleetSnapshot;
+  readonly registry: FleetRegistryDocument;
+  readonly adopted: ReadonlyArray<FleetRegistryRow>;
+  readonly ledger: ReadonlyArray<SessionLedgerRow>;
+};
+
+/**
+ * Scan the fleet, adopt unregistered checkouts into the registry, and read
+ * the repository's session ledger.
+ *
+ * **Details**
+ *
+ * This is the only fleet path that writes: it persists adopted rows, and only
+ * when adoption added any. Plain `beep worktree fleet` never calls it.
+ *
+ * **Example** (Build the join)
+ *
+ * ```ts
+ * import { FleetScanOptions, loadFleetJoin } from "@beep/repo-cli/test/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * const join = loadFleetJoin(FleetScanOptions.make({}), { host: "github.com", owner: "beep-effect", name: "beep-effect" })
+ * console.log(Effect.isEffect(join)) // true
+ * ```
+ *
+ * @param options - Scan options; discovery roots resolve from them as for `fleet --json`.
+ * @param repository - The repository keying the registry and the session ledger.
+ * @returns The roots, snapshot, persisted registry, rows adopted by this scan, and ledger rows.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const loadFleetJoin = Effect.fn("FleetRegistry.loadJoin")(function* (
+  options: FleetScanOptions,
+  repository: PrRepository
+): Effect.fn.Return<
+  FleetJoin,
+  WorktreeCommandError,
+  FleetMirrorService | FleetRegistryStore | SessionLedger | Git | Path.Path
+> {
+  const mirror = yield* FleetMirrorService;
+  const store = yield* FleetRegistryStore;
+  const ledgerStore = yield* SessionLedger;
+  const roots = yield* mirror.roots(options);
+  const snapshot = yield* mirror.scan(options);
+  const current = yield* store.read(repository);
+  const candidates = yield* fleetAdoptionCandidates(roots, snapshot.checkouts);
+  const { document, adopted } = adoptFleetRegistryRows(current, candidates);
+  if (A.isReadonlyArrayNonEmpty(adopted)) {
+    yield* store.write(repository, document);
+  }
+  const ledger = yield* ledgerStore
+    .list(repository)
+    .pipe(Effect.mapError(WorktreeCommandError.new("Failed to read the session ledger.")));
+  return { roots, snapshot, registry: document, adopted, ledger };
+});

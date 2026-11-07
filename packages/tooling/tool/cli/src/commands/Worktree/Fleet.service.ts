@@ -42,6 +42,9 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { parseAdmissionProcStatStartTime } from "../../internal/repo-run/index.ts";
+import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
+import { ConfiguredFleetRoots, FleetRootEntry } from "./internal/FleetRoots.schemas.ts";
+import { FleetRootsStore, FleetRootsStoreLive } from "./internal/FleetRoots.ts";
 import { selectFleetScannerDir } from "./internal/FleetScannerDir.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import {
@@ -342,6 +345,13 @@ export interface FleetMirrorServiceShape {
    */
   readonly listCheckouts: (options?: FleetScanOptions) => Effect.Effect<ReadonlyArray<string>, WorktreeCommandError>;
   /**
+   * Resolve the discovery roots a scan with these options reads, and where
+   * the list came from.
+   *
+   * @since 0.0.0
+   */
+  readonly roots: (options?: FleetScanOptions) => Effect.Effect<ConfiguredFleetRoots, WorktreeCommandError>;
+  /**
    * Derive one read-only fleet snapshot: enumerate checkouts sharing the
    * origin, classify liveness, materialize the epoch target into the scanner
    * object database, predict conflicts for live checkouts, and evaluate
@@ -358,6 +368,8 @@ type FleetMirrorServiceRequirements =
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
   | Git;
+
+type FleetScopeRequirements = FleetMirrorServiceRequirements | FleetRootsStore;
 
 /**
  * Service tag for the fleet-mirror derivation scan.
@@ -468,22 +480,58 @@ const cloneMatchesOrigin = Effect.fn("Fleet.cloneMatchesOrigin")(function* (
   });
 });
 
-const discoverClones = Effect.fn("Fleet.discoverClones")(function* (
-  fleetRoot: string,
-  normalizedOrigin: string
-): Effect.fn.Return<ReadonlyArray<string>, WorktreeCommandError, FleetMirrorServiceRequirements> {
+// A linked worktree directly under a configured root (a `beep/lanes` lane) brings in the clone owning its `.git`.
+const linkedCheckoutClone = Effect.fn("Fleet.linkedCheckoutClone")(function* (
+  candidate: string
+): Effect.fn.Return<O.Option<string>, never, FleetMirrorServiceRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const names = yield* fs
-    .readDirectory(fleetRoot)
-    .pipe(
-      Effect.mapError(WorktreeCommandError.new(`Failed to read the fleet root ${fleetRoot}.`, { path: fleetRoot }))
-    );
+  const gitInfo = yield* fs.stat(path.join(candidate, ".git")).pipe(Effect.option);
+  if (O.isNone(gitInfo) || gitInfo.value.type !== "File") {
+    return O.none();
+  }
+  const git = yield* Git;
+  const commonDir = yield* gitProbe(git.commonDir(candidate));
+  return O.map(commonDir, (output) => path.dirname(path.resolve(candidate, Str.trim(output))));
+});
+
+const rootChildNames = Effect.fn("Fleet.rootChildNames")(function* (
+  root: FleetRootEntry,
+  tolerateMissing: boolean
+): Effect.fn.Return<ReadonlyArray<string>, WorktreeCommandError, FleetMirrorServiceRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const names = yield* fs.readDirectory(root.path).pipe(
+    Effect.catchTag("PlatformError", (error) =>
+      tolerateMissing && error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(error)
+    ),
+    Effect.mapError(WorktreeCommandError.new(`Failed to read the fleet root ${root.path}.`, { path: root.path }))
+  );
+  return O.match(O.fromUndefinedOr(root.namePrefix), {
+    onNone: () => names,
+    onSome: (prefix) => A.filter(names, Str.startsWith(prefix)),
+  });
+});
+
+// One level under one root, origin-matched, never recursing. Configured roots (`configured`) also tolerate
+// a root that does not exist yet and admit linked-worktree children through their owning clone; the derived
+// root keeps the pre-list behavior exactly.
+const discoverClones = Effect.fn("Fleet.discoverClones")(function* (
+  root: FleetRootEntry,
+  normalizedOrigin: string,
+  configured: boolean
+): Effect.fn.Return<ReadonlyArray<string>, WorktreeCommandError, FleetMirrorServiceRequirements> {
+  const path = yield* Path.Path;
+  const names = yield* rootChildNames(root, configured);
   const clones: Array<string> = [];
   for (const name of A.sort(names, Order.String)) {
-    const candidate = path.join(fleetRoot, name);
+    const candidate = path.join(root.path, name);
     if (yield* cloneMatchesOrigin(candidate, normalizedOrigin)) {
       clones.push(candidate);
+      continue;
+    }
+    const owner = configured ? yield* linkedCheckoutClone(candidate) : O.none<string>();
+    if (O.isSome(owner) && (yield* cloneMatchesOrigin(owner.value, normalizedOrigin))) {
+      clones.push(owner.value);
     }
   }
   return clones;
@@ -525,14 +573,16 @@ const dedupeStubs = (stubs: ReadonlyArray<CheckoutStub>): ReadonlyArray<Checkout
 };
 
 const enumerateFleet = Effect.fn("Fleet.enumerateFleet")(function* (
-  fleetRoot: string,
+  roots: ConfiguredFleetRoots,
   normalizedOrigin: string
 ): Effect.fn.Return<
   { readonly clones: ReadonlyArray<string>; readonly stubs: ReadonlyArray<CheckoutStub> },
   WorktreeCommandError,
   FleetMirrorServiceRequirements
 > {
-  const clones = yield* discoverClones(fleetRoot, normalizedOrigin);
+  const configured = roots.source !== "derived";
+  const perRoot = yield* Effect.forEach(roots.roots, (root) => discoverClones(root, normalizedOrigin, configured));
+  const clones = A.dedupe(A.flatten(perRoot));
   const forEach2 = yield* Effect.forEach(clones, cloneStubs);
   const stubs = dedupeStubs(A.flatten(forEach2));
   return { clones, stubs: A.sortWith(stubs, (stub) => stub.path, Order.String) };
@@ -1234,16 +1284,54 @@ const deriveCheckout = Effect.fn("Fleet.deriveCheckout")(function* (
 const homeDirectory = (): O.Option<string> => configStringOptionSync("HOME");
 
 type FleetScope = {
+  readonly roots: ConfiguredFleetRoots;
   readonly fleetRoot: string;
   readonly normalizedOrigin: string;
   readonly originUrl: string;
 };
 
-// The origin and fleet root every fleet enumeration is scoped to, resolved from the invoking checkout.
+// The pre-list fleet root: the common dir's grandparent, so a linked worktree resolves to its clone's parent.
+const derivedFleetRoot = Effect.fn("Fleet.derivedFleetRoot")(function* (
+  currentRoot: string
+): Effect.fn.Return<string, never, FleetMirrorServiceRequirements> {
+  const path = yield* Path.Path;
+  const git = yield* Git;
+  const probe = yield* gitProbe(git.commonDir(currentRoot));
+  return pipe(
+    probe,
+    O.map((output) => path.dirname(path.dirname(path.resolve(currentRoot, Str.trim(output))))),
+    O.getOrElse(() => path.dirname(currentRoot))
+  );
+});
+
+const singleRoot = (rootPath: string): ConfiguredFleetRoots =>
+  ConfiguredFleetRoots.make({ source: "derived", roots: [FleetRootEntry.make({ path: rootPath })] });
+
+// Precedence: `options.roots`, then `options.fleetRoot`, then `BEEP_FLEET_ROOTS` / `roots.json`, then derived.
+const resolveFleetRoots = Effect.fn("Fleet.resolveFleetRoots")(function* (
+  options: FleetScanOptions,
+  currentRoot: string
+): Effect.fn.Return<ConfiguredFleetRoots, WorktreeCommandError, FleetScopeRequirements> {
+  if (options.roots !== undefined) {
+    return ConfiguredFleetRoots.make({ source: "option", roots: options.roots });
+  }
+  if (options.fleetRoot !== undefined) {
+    return singleRoot(options.fleetRoot);
+  }
+  const store = yield* FleetRootsStore;
+  const repository = yield* detectPrRepository(currentRoot).pipe(Effect.option);
+  const configured = yield* store.configured(repository);
+  if (O.isSome(configured)) {
+    return configured.value;
+  }
+  const derived = yield* derivedFleetRoot(currentRoot);
+  return singleRoot(derived);
+});
+
+// The origin and discovery roots every fleet enumeration is scoped to, resolved from the invoking checkout.
 const resolveFleetScope = Effect.fn("Fleet.resolveFleetScope")(function* (
   options: FleetScanOptions
-): Effect.fn.Return<FleetScope, WorktreeCommandError, FleetMirrorServiceRequirements> {
-  const path = yield* Path.Path;
+): Effect.fn.Return<FleetScope, WorktreeCommandError, FleetScopeRequirements> {
   const currentRoot = yield* findRepoRoot(options.startFrom).pipe(
     Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
   );
@@ -1259,38 +1347,27 @@ const resolveFleetScope = Effect.fn("Fleet.resolveFleetScope")(function* (
     });
   }
   const normalizedOrigin = normalizeOriginUrl(originUrl);
-
-  const fleetRoot = yield* O.match(O.fromUndefinedOr(options.fleetRoot), {
-    onSome: Effect.succeed,
-    onNone: () =>
-      Effect.map(gitProbe(git.commonDir(currentRoot)), (probe): string =>
-        pipe(
-          probe,
-          O.map((output) => path.dirname(path.dirname(path.resolve(currentRoot, Str.trim(output))))),
-          O.getOrElse(() => path.dirname(currentRoot))
-        )
-      ),
-  });
-  return { fleetRoot, normalizedOrigin, originUrl };
+  const roots = yield* resolveFleetRoots(options, currentRoot);
+  return { roots, fleetRoot: roots.roots[0].path, normalizedOrigin, originUrl };
 });
 
 const listFleetCheckouts = Effect.fn("Fleet.listFleetCheckouts")(function* (
   options: FleetScanOptions
-): Effect.fn.Return<ReadonlyArray<string>, WorktreeCommandError, FleetMirrorServiceRequirements> {
-  const { fleetRoot, normalizedOrigin } = yield* resolveFleetScope(options);
-  const { stubs } = yield* enumerateFleet(fleetRoot, normalizedOrigin);
+): Effect.fn.Return<ReadonlyArray<string>, WorktreeCommandError, FleetScopeRequirements> {
+  const { roots, normalizedOrigin } = yield* resolveFleetScope(options);
+  const { stubs } = yield* enumerateFleet(roots, normalizedOrigin);
   return A.map(stubs, (stub) => stub.path);
 });
 
 const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
   options: FleetScanOptions
-): Effect.fn.Return<FleetSnapshot, WorktreeCommandError, FleetMirrorServiceRequirements> {
+): Effect.fn.Return<FleetSnapshot, WorktreeCommandError, FleetScopeRequirements> {
   const nowMillis = yield* Clock.currentTimeMillis;
   const now10 = yield* DateTime.now;
   const scannedAt = DateTime.formatIso(now10);
   const windowSeconds = options.livenessWindowSeconds ?? FLEET_LIVENESS_WINDOW_SECONDS;
   const targetRef = options.targetRef ?? "main";
-  const { fleetRoot, normalizedOrigin, originUrl } = yield* resolveFleetScope(options);
+  const { roots, fleetRoot, normalizedOrigin, originUrl } = yield* resolveFleetScope(options);
 
   const homeDir = O.orElse(O.fromUndefinedOr(options.homeDir), () => homeDirectory());
   const scannerDir = yield* selectFleetScannerDir({
@@ -1299,7 +1376,7 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
     fleetRoot,
   });
 
-  const { clones, stubs } = yield* enumerateFleet(fleetRoot, normalizedOrigin);
+  const { clones, stubs } = yield* enumerateFleet(roots, normalizedOrigin);
   const processScan = yield* scanProcesses(A.map(stubs, (stub) => stub.path));
   const sessionCounts = yield* scanSessionRegistry(
     homeDir,
@@ -1333,13 +1410,19 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
 });
 
 const makeFleetMirrorService = Effect.fn("FleetMirrorService.make")(function* () {
-  const runtimeContext = yield* Effect.context<FleetMirrorServiceRequirements>();
+  const runtimeContext = yield* Effect.context<FleetScopeRequirements>();
   return FleetMirrorService.of({
     scan: Effect.fn("FleetMirrorService.scan")((options) =>
       scanFleet(options ?? FleetScanOptions.make({})).pipe(Effect.provide(runtimeContext))
     ),
     listCheckouts: Effect.fn("FleetMirrorService.listCheckouts")((options) =>
       listFleetCheckouts(options ?? FleetScanOptions.make({})).pipe(Effect.provide(runtimeContext))
+    ),
+    roots: Effect.fn("FleetMirrorService.roots")((options) =>
+      resolveFleetScope(options ?? FleetScanOptions.make({})).pipe(
+        Effect.map((scope) => scope.roots),
+        Effect.provide(runtimeContext)
+      )
     ),
   });
 });
@@ -1359,4 +1442,4 @@ const makeFleetMirrorService = Effect.fn("FleetMirrorService.make")(function* ()
  * @since 0.0.0
  */
 export const FleetMirrorServiceLive: Layer.Layer<FleetMirrorService, never, FleetMirrorServiceRequirements> =
-  Layer.effect(FleetMirrorService, makeFleetMirrorService());
+  Layer.effect(FleetMirrorService, makeFleetMirrorService()).pipe(Layer.provide(FleetRootsStoreLive));

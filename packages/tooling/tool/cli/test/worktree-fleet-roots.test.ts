@@ -1,10 +1,35 @@
 import { Git } from "@beep/git/Git";
 import { FleetMirrorService, FleetMirrorServiceLive, FleetScanOptions } from "@beep/repo-cli/commands/Worktree";
 import { repoRunOutputBound, runCaptured } from "@beep/repo-cli/test/Process";
+import {
+  layerSessionLedgerMemory,
+  PrNumber,
+  PrRepository,
+  SessionLedger,
+  SessionLedgerRow,
+} from "@beep/repo-cli/test/Session";
+import {
+  adoptFleetRegistryRows,
+  describeFleetCheckout,
+  EMPTY_FLEET_REGISTRY,
+  FleetRegistryDocument,
+  FleetRegistryRow,
+  FleetRegistryStore,
+  FleetRegistryStoreLive,
+  FleetRootEntry,
+  fleetRepositoryFromOriginUrl,
+  joinFleetRows,
+  loadFleetJoin,
+  originUrlFromGitConfig,
+  parseFleetRootsPathList,
+  registerFleetRegistryRow,
+} from "@beep/repo-cli/test/Worktree";
 import { it } from "@beep/test-runner";
-import { A, Str } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -16,7 +41,14 @@ const SCAN_TIMEOUT_MILLIS = 120_000;
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const platformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
-const testLayer = Layer.mergeAll(platformLayer, FleetMirrorServiceLive.pipe(Layer.provide(platformLayer)));
+const testLayer = Layer.mergeAll(
+  platformLayer,
+  FleetMirrorServiceLive.pipe(Layer.provide(platformLayer)),
+  FleetRegistryStoreLive.pipe(Layer.provide(platformLayer)),
+  layerSessionLedgerMemory
+);
+
+const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 // Fixed identity and dates make every commit SHA, and so every snapshot byte, reproducible.
 const FIXTURE_GIT_ENV = {
@@ -149,6 +181,19 @@ const stableSnapshotText = Effect.fn("FleetRootsTest.stableSnapshotText")(functi
   return `${Str.replaceAll(tmpDir, "<tmp>")(text)}\n`;
 });
 
+const fixtureRoots = (fixture: FleetRootsFixture) =>
+  [
+    FleetRootEntry.make({ path: fixture.projects, namePrefix: "beep-effect" }),
+    FleetRootEntry.make({ path: `${fixture.projects}/beep/seats` }),
+    FleetRootEntry.make({ path: `${fixture.projects}/beep/lanes` }),
+  ] as const;
+
+const allFleetCheckouts = (fixture: FleetRootsFixture): ReadonlyArray<string> =>
+  A.sort(
+    [fixture.legacy0, fixture.siblingLane, fixture.legacy1, fixture.nestedLane, fixture.seat, fixture.seatLane],
+    Str.Order
+  );
+
 describe("fleet discovery roots", () => {
   it.layer(testLayer, { timeout: "120 seconds" })("fixture fleet", (it) => {
     it.effect(
@@ -180,10 +225,234 @@ describe("fleet discovery roots", () => {
         // without -u and review the diff.
         const text = yield* stableSnapshotText(snapshot, fixture.tmpDir);
         yield* Effect.promise(() =>
-          expect(text).toMatchFileSnapshot(path.join(__dirname, "fixtures", "fleet-roots", "roots-unset.json"))
+          expect(text).toMatchFileSnapshot(path.join(__dirname, "fixtures", "fleet-roots", "roots-unset.snapshot.txt"))
         );
       }),
       SCAN_TIMEOUT_MILLIS
     );
+
+    it.effect(
+      "roots configured: the three roots list every checkout and skip the unrelated project",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* acquireFleetRootsFixture;
+        const service = yield* FleetMirrorService;
+        const checkouts = yield* service.listCheckouts(
+          FleetScanOptions.make({
+            startFrom: fixture.legacy0,
+            originUrl: fixture.originPath,
+            roots: fixtureRoots(fixture),
+          })
+        );
+
+        expect(checkouts).toEqual(allFleetCheckouts(fixture));
+        expect(checkouts).not.toContain(fixture.unrelated);
+      }),
+      SCAN_TIMEOUT_MILLIS
+    );
+
+    it.effect(
+      "BEEP_FLEET_ROOTS overrides roots.json, and roots.json decodes when the environment is unset",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* acquireFleetRootsFixture;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const service = yield* FleetMirrorService;
+        const stateRoot = path.join(fixture.tmpDir, "fleet-state");
+        const stateDir = path.join(stateRoot, "github.com__beep-effect__beep-effect");
+        yield* fs.makeDirectory(stateDir, { recursive: true });
+        // roots.json names only the seats root; the environment names all three.
+        yield* fs.writeFileString(
+          path.join(stateDir, "roots.json"),
+          `{"schemaVersion":"fleet-roots/v1","roots":[{"path":"${path.join(fixture.projects, "beep", "seats")}"}]}\n`
+        );
+        // A github.com origin gives the scope its repository key; listing never contacts the remote.
+        const githubOrigin = "git@github.com:beep-effect/beep-effect.git";
+        for (const clone of [fixture.legacy0, fixture.legacy1, fixture.seat]) {
+          yield* fixtureGit(clone, ["remote", "set-url", "origin", githubOrigin]);
+        }
+        const options = FleetScanOptions.make({ startFrom: fixture.legacy0, originUrl: githubOrigin });
+        const withEnv = (env: Record<string, string>) =>
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
+
+        const fromFile = yield* service.roots(options).pipe(withEnv({ BEEP_FLEET_STATE_ROOT: stateRoot }));
+        expect(fromFile.source).toBe("file");
+        expect(A.map(fromFile.roots, (root) => root.path)).toEqual([path.join(fixture.projects, "beep", "seats")]);
+        const fileCheckouts = yield* service.listCheckouts(options).pipe(withEnv({ BEEP_FLEET_STATE_ROOT: stateRoot }));
+        expect(fileCheckouts).toEqual([fixture.seatLane, fixture.seat].sort());
+
+        const envList = A.join(
+          [
+            `${fixture.projects}/beep-effect*`,
+            path.join(fixture.projects, "beep", "seats"),
+            path.join(fixture.projects, "beep", "lanes"),
+          ],
+          ":"
+        );
+        const fromEnv = yield* service
+          .roots(options)
+          .pipe(withEnv({ BEEP_FLEET_STATE_ROOT: stateRoot, BEEP_FLEET_ROOTS: envList }));
+        expect(fromEnv.source).toBe("env");
+        expect(fromEnv.roots[0]).toEqual(FleetRootEntry.make({ path: fixture.projects, namePrefix: "beep-effect" }));
+        const envCheckouts = yield* service
+          .listCheckouts(options)
+          .pipe(withEnv({ BEEP_FLEET_STATE_ROOT: stateRoot, BEEP_FLEET_ROOTS: envList }));
+        expect(envCheckouts).toEqual(allFleetCheckouts(fixture));
+
+        yield* fs.writeFileString(path.join(stateDir, "roots.json"), '{"schemaVersion":"fleet-roots/v1","roots":[]}\n');
+        const refused = yield* service.roots(options).pipe(withEnv({ BEEP_FLEET_STATE_ROOT: stateRoot }), Effect.flip);
+        expect(refused.message).toContain("fleet roots document");
+      }),
+      SCAN_TIMEOUT_MILLIS
+    );
+
+    it.effect(
+      "join adopts legacy clones and lanes, reads the ledger, and keeps a registered role across rescans",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* acquireFleetRootsFixture;
+        const path = yield* Path.Path;
+        const ledger = yield* SessionLedger;
+        const store = yield* FleetRegistryStore;
+        const stateRoot = path.join(fixture.tmpDir, "fleet-state");
+        const withState = Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { BEEP_FLEET_STATE_ROOT: stateRoot } })
+        );
+        const options = FleetScanOptions.make({
+          startFrom: fixture.legacy0,
+          originUrl: fixture.originPath,
+          scannerDir: fixture.scannerDir,
+          homeDir: fixture.homeDir,
+          roots: fixtureRoots(fixture),
+        });
+        for (const [recordedAt, state] of [
+          [1, "open"],
+          [2, "blocked"],
+        ] as const) {
+          yield* ledger
+            .append(
+              SessionLedgerRow.make({
+                schemaVersion: "session-ledger/v1",
+                repository,
+                clone: fixture.legacy0,
+                checkout: fixture.siblingLane,
+                lane: "lane-a",
+                branch: "lane-a",
+                state,
+                next: `step ${recordedAt}`,
+                summary: O.none(),
+                pr: O.some(PrNumber.make(4242)),
+                harness: "claude-code",
+                sessionId: O.none(),
+                recordedAt: DateTime.makeUnsafe(recordedAt),
+              })
+            )
+            .pipe(Effect.orDie);
+        }
+
+        const first = yield* loadFleetJoin(options, repository).pipe(withState);
+        expect(A.length(first.adopted)).toBe(6);
+        const rows = joinFleetRows({
+          checkouts: first.snapshot.checkouts,
+          registry: first.registry,
+          ledger: first.ledger,
+        });
+        const byPath = (checkout: string) => O.getOrThrow(A.findFirst(rows, (row) => row.path === checkout));
+        expect(A.map(rows, (row) => row.path)).toEqual(allFleetCheckouts(fixture));
+        expect(byPath(fixture.legacy0).seatRole).toBe("legacy");
+        expect(byPath(fixture.legacy1).seatRole).toBe("legacy");
+        expect(byPath(fixture.seat).seatRole).toBe("adopted");
+        expect(byPath(fixture.seatLane)).toMatchObject({ seatRole: "adopted", owningSeat: fixture.seat });
+        expect(byPath(fixture.nestedLane)).toMatchObject({ seatRole: "adopted", owningSeat: fixture.legacy1 });
+        expect(byPath(fixture.siblingLane)).toMatchObject({
+          owningSeat: fixture.legacy0,
+          drainStatus: "active",
+          lane: "lane-a",
+          pr: 4242,
+          state: "blocked",
+        });
+        expect(byPath(fixture.legacy0)).toMatchObject({ lane: null, pr: null, state: null });
+
+        const registered = registerFleetRegistryRow(
+          first.registry,
+          FleetRegistryRow.make({ checkout: fixture.seat, seatRole: "main", retentionExempt: true })
+        );
+        yield* store.write(repository, registered).pipe(withState);
+        const second = yield* loadFleetJoin(options, repository).pipe(withState);
+        expect(second.adopted).toEqual([]);
+        const seatRow = O.getOrThrow(A.findFirst(second.registry.rows, (row) => row.checkout === fixture.seat));
+        expect(seatRow).toMatchObject({ seatRole: "main", retentionExempt: true });
+
+        const description = O.getOrThrow(
+          describeFleetCheckout({
+            checkouts: second.snapshot.checkouts,
+            registry: second.registry,
+            ledger: second.ledger,
+            checkout: fixture.siblingLane,
+            ledgerLimit: 1,
+          })
+        );
+        expect(description.checkout.path).toBe(fixture.siblingLane);
+        expect(description.registry.owningSeat).toBe(fixture.legacy0);
+        expect(A.map(description.ledger, (row) => row.next)).toEqual(["step 2"]);
+      }),
+      SCAN_TIMEOUT_MILLIS
+    );
   });
+});
+
+describe("fleet roots and registry documents", () => {
+  it("parses a BEEP_FLEET_ROOTS path list, prefix entries included", () => {
+    const roots = O.getOrThrow(parseFleetRootsPathList(" /p/beep-effect* : /p/beep/seats ::/p/beep/lanes "));
+    expect(roots).toEqual([
+      FleetRootEntry.make({ path: "/p", namePrefix: "beep-effect" }),
+      FleetRootEntry.make({ path: "/p/beep/seats" }),
+      FleetRootEntry.make({ path: "/p/beep/lanes" }),
+    ]);
+    expect(O.isNone(parseFleetRootsPathList(" : "))).toBe(true);
+  });
+
+  it("reads the origin URL from git config text and keys github remotes in either spelling", () => {
+    const config =
+      '[core]\n\tbare = false\n[remote "upstream"]\n\turl = git@github.com:other/repo.git\n' +
+      '[remote "origin"]\n\turl = https://github.com/Beep-Effect/beep-effect.git\n\tfetch = +refs/heads/*\n';
+    const url = O.getOrThrow(originUrlFromGitConfig(config));
+    expect(url).toBe("https://github.com/Beep-Effect/beep-effect.git");
+    const https = O.getOrThrow(fleetRepositoryFromOriginUrl(url));
+    const scp = O.getOrThrow(fleetRepositoryFromOriginUrl("git@github.com:beep-effect/beep-effect.git"));
+    expect({ ...https }).toEqual({ ...scp });
+    expect(O.isNone(fleetRepositoryFromOriginUrl("/srv/git/beep-effect.git"))).toBe(true);
+  });
+
+  it.effect(
+    "decodes hand-authored registry rows with defaults and adopts idempotently",
+    Effect.fnUntraced(function* () {
+      const decodeRegistry = S.decodeUnknownEffect(FleetRegistryDocument);
+      const document = yield* decodeRegistry({
+        schemaVersion: "fleet-registry/v1",
+        rows: [{ checkout: "/p/beep/seats/main", seatRole: "main" }],
+      });
+      expect(document.rows[0]).toMatchObject({ owningSeat: null, drainStatus: "active", retentionExempt: false });
+      const refused = yield* Effect.flip(
+        decodeRegistry({ schemaVersion: "fleet-registry/v1", rows: [{ checkout: "/p/x", seatRole: "a" }] })
+      );
+      expect(S.isSchemaError(refused)).toBe(true);
+
+      const candidates = [
+        { checkout: "/p/beep/seats/main", role: "adopted" as const, owningSeat: null },
+        { checkout: "/p/beep/lanes/x", role: "adopted" as const, owningSeat: "/p/beep/seats/main" },
+      ];
+      const once = adoptFleetRegistryRows(document, candidates);
+      expect(A.map(once.adopted, (row) => row.checkout)).toEqual(["/p/beep/lanes/x"]);
+      expect(A.map(once.document.rows, (row) => [row.checkout, row.seatRole])).toEqual([
+        ["/p/beep/lanes/x", "adopted"],
+        ["/p/beep/seats/main", "main"],
+      ]);
+      const twice = adoptFleetRegistryRows(once.document, candidates);
+      expect(twice.adopted).toEqual([]);
+      expect(twice.document).toEqual(once.document);
+      // Adoption never deletes a row for a checkout the scan stopped seeing.
+      expect(adoptFleetRegistryRows(once.document, []).document.rows).toHaveLength(2);
+      expect(EMPTY_FLEET_REGISTRY.rows).toEqual([]);
+    })
+  );
 });

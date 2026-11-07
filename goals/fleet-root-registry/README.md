@@ -34,22 +34,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research complete (2026-11-06 re-grounding). P1 Implement is next: schemas
-first (`FleetRoots`, `FleetRegistry`, seat-role and drain-status kits), then
-the `Context.Service` contracts, then stores, discovery plumbing and the
-`--join`/`describe`/`register` commands.
+P1 Implement and P2 Verify complete (2026-11-06). P3 Yeet is next: one PR
+driven to mergeable, with the closeout reflection in the same PR.
 
 ## Latest Evidence
 
-2026-11-06: packet re-grounded against live source in a `/grill-with-docs`
-session. Findings: the fleet root already exists as a per-call option
-(`Fleet.service.ts resolveFleetScope`); discovery is one level deep and
-origin-matched, so the original nested `projects/beep/seats/main` criterion
-could not pass; the session ledger already records lane, branch and PR per
-checkout. Eleven decisions locked under `decisions/`. Workstation census moved
-from 223 checkouts in 23 clones (2026-10-05) to 37 clones, 24 worktree roots
-holding 249 lanes, and 56 lanes under the sibling `beep-effect-worktrees`
-root.
+2026-11-06: roots list (`BEEP_FLEET_ROOTS`, `roots.json`, derived), registry
+overlay, `fleet --join`, `fleet describe` and `fleet register` landed in
+`packages/tooling/tool/cli/src/commands/Worktree/` with the runbook
+[`docs/runbooks/fleet-roots-and-registry.md`](../../docs/runbooks/fleet-roots-and-registry.md).
+The fixture fleet proves byte-identity with roots unset against a pre-change
+snapshot, and the workstation parity diff carries only live changes. The
+`beep-effect0-worktrees` undercount is an origin-spelling mismatch (HTTPS clone
+among SCP clones), fixed in #2852. Evidence:
+[`history/evidence/2026-11-06-p1-p2.md`](./history/evidence/2026-11-06-p1-p2.md).
 
 ## Notes
 
