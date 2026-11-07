@@ -39,6 +39,18 @@ const Capture = S.fromJsonString(
   })
 );
 const Header = S.fromJsonString(S.Struct({ context: S.Struct({ values: S.JsonObject }) }));
+const CountOperand = S.Struct({
+  kind: S.tag("value"),
+  value: S.Array(S.Struct({ pythonType: S.String })),
+});
+const CountAssertion = S.fromJsonString(
+  S.Struct({
+    passed: S.tag(true),
+    relation: S.Struct({ kind: S.tag("comparison"), equal: S.tag(true) }),
+    operands: S.Tuple([CountOperand, CountOperand, S.Struct({ kind: S.tag("value"), value: S.String })]),
+  })
+);
+
 const Input = S.Struct({
   q: S.String,
   kwargs: S.Struct({
@@ -122,6 +134,13 @@ export const readCitationCanonicalExtractions = Effect.fn("CanonicalExtractionTe
     const header = yield* S.decodeEffect(Header)(row.payload);
     if (!S.is(Input)(header.context.values)) continue;
     const input = yield* S.decodeEffect(Input)(header.context.values);
+    const assertion = yield* S.decodeEffect(CountAssertion)(row.payload);
+    const expectedTypes = A.map(assertion.operands[1].value, (value) => value.pythonType);
+    expect(expectedTypes, row.id).toEqual(A.map(input.expected_cites, (cite) => `eyecite.models.${cite.citationType}`));
+    expect(
+      A.map(assertion.operands[0].value, (value) => value.pythonType),
+      row.id
+    ).toEqual(expectedTypes);
     rows.push({ id: row.id, input });
   }
   expect(rows).toHaveLength(families[family].count);

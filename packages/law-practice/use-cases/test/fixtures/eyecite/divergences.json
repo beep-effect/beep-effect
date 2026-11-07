@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "661477b7e1ae4af7df07b9a4315d4b721b1d8b129a1e212e1c77d979231cff7f",
+  "planSha256": "330cfa1b381f82da85d8a9ce2be157d2b2902006717a8b9e3b4eb6c2e8917511",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1752,7 +1752,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
-          "sha256": "de739e2df65338c84640cea152ec550e8a63f4a687e7daf114aa8515138dc8b8"
+          "sha256": "f691057b93b639397b277a69f5ee5f280ceb73db053032e32a1a51b9e5f5a333"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
@@ -1776,7 +1776,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-          "sha256": "c4b0c5b7c418d6835b058e6e20e696a4b743e75334db481cbf31c13144eddd7d"
+          "sha256": "f1c006671df7db6f2cb1b87980827a2e5a97634a980163c22b3f9997cacead8c"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -1789,6 +1789,10 @@
         {
           "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
           "sha256": "620288628ce88c8676755d1ac9ae7908ad9f5091ae4bd73454837db2fd8a9b8e"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
+          "sha256": "7a0fa1dc12b772e4dbf722f8657fa9b4a716711b3f4273535f50a128046d35f4"
         }
       ],
       "workflowState": "audit",

@@ -320,7 +320,8 @@
     "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
     "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
     "packages/law-practice/server/test/integration/CitationCanonicalExtraction.test.ts",
-    "packages/law-practice/server/test/CitationCanonicalRanges.test.ts"
+    "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

@@ -119,6 +119,147 @@
           }
         ]
       }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "4c4bfb5134e442ce720957d30dfd78b6ed9940d348e8f4d8f918d17bd2fd4775"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:76:20:caseDeclaration::4",
+          "observationSha256": "9b5d77aa6bda39f00991c5ae598eef4bfd7b83dfc1deac074c56bccbfd8e8cf2"
+        }
+      ],
+      "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
+        "evidenceSha256": "7a0fa1dc12b772e4dbf722f8657fa9b4a716711b3f4273535f50a128046d35f4",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "replays original basic and whitespace cases on",
+            "sha256": "6cb4a75e1d28e7dc78366ed17484e86096f088a16f793e66eeb7016f36df94d7"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "f1c006671df7db6f2cb1b87980827a2e5a97634a980163c22b3f9997cacead8c"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_law_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "e2e958509841740f070e990e14ce7c2894787c237fbb877d1d8b98acc33a70ec"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_journal_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "0e8a1aac8bcb255b1273d0de5d57058f569d7bc700d393906eb04f03f615a752"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_tc_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "9bbc94adc131368c0e2e419db7532f860896e29ec1f76ed7a9fec599d51ec9c8"
+        }
+      ],
+      "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
+        "evidenceSha256": "7a0fa1dc12b772e4dbf722f8657fa9b4a716711b3f4273535f50a128046d35f4",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "replays the original",
+            "sha256": "6cb4a75e1d28e7dc78366ed17484e86096f088a16f793e66eeb7016f36df94d7"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "f1c006671df7db6f2cb1b87980827a2e5a97634a980163c22b3f9997cacead8c"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:76:20:caseDeclaration::31",
+          "observationSha256": "3b456c4c2e72cac91ebc9bae7461506f831478619db932f0887d10327ae70f54"
+        }
+      ],
+      "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
+        "evidenceSha256": "7a0fa1dc12b772e4dbf722f8657fa9b4a716711b3f4273535f50a128046d35f4",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+            "name": "retains different primary full and pin-cite ranges on",
+            "sha256": "620288628ce88c8676755d1ac9ae7908ad9f5091ae4bd73454837db2fd8a9b8e"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "f1c006671df7db6f2cb1b87980827a2e5a97634a980163c22b3f9997cacead8c"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          }
+        ]
+      }
     }
   ]
 }

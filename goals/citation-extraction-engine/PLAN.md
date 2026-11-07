@@ -1517,6 +1517,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the supported profile and its independent layout evidence together; retain every unfinished source/donor and whole-engine obligation.
 
+### Bind six completed canonical count assertions to full public-pipeline proof, 2026-11-07
+
+Ten focused Bun/Node tests pass in 110.04 seconds through raw input and default production cleaning/extraction. Validate original comparison operands before checking target ordered kinds. Bind only six exact count assertion events as complete-case proof; parallel attribute assertions, parent capabilities, other tokenizers and whole-engine acceptance remain separate. The 23 annotation-stage bindings stay ready. See history/evidence/2026-11-07-canonical-count-case-proof.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the explicit six-case binding and regenerate to restore audit state if its criterion or execution proof is invalid; preserve all original observations.
+
 ### Bind table capacity failures to engine budgets, 2026-11-07
 
 Existing dictionary/set owners now bind capacity/work refusals to actual engine ceilings without guessing categories for unbound guards. Resolution, cleaner registry, extractor ordering and edition deduplication preserve those bindings. Fifty-one regression tests pass in 4.74s and seven final capacity/extractor/edition controls in 2.86s. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Complete public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-table-capacity-bindings.md.
