@@ -20,7 +20,7 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { CursorCallbackEnrollment, cursorCallbackFixture } from "./cursor-lifecycle-hook.ts";
 
-const exec = promisify(execFile);
+const execFileAsync = promisify(execFile);
 // Resolve only the public test runtime; enrollment still binds its exact executable and digest.
 const bun = process.versions.bun
   ? process.execPath
@@ -140,7 +140,7 @@ const fixture = Effect.fn("CursorCallbackTest.fixture")(function* () {
   const run = Effect.fn("CursorCallbackTest.run")(function* (input: unknown = body, repeat = 1) {
     const text = yield* encode(input);
     const result = yield* io(() =>
-      exec(node, [`${root}/native.cjs`, root, bun, text, `${repeat}`], {
+      execFileAsync(node, [`${root}/native.cjs`, root, bun, text, `${repeat}`], {
         cwd: process.cwd(),
         env: { PATH: "/usr/bin:/bin", TMPDIR: root },
         timeout: 20000,
@@ -331,12 +331,16 @@ it.effect(
 it.effect("installed command rejects config arguments silently without reading the fixed owner root", () =>
   Effect.gen(function* () {
     const rejected = yield* io(() =>
-      exec(bun, ["--no-env-file", `${scriptRoot}/cursor-lifecycle-hook.ts`, "--enrollment-file", "/nonexistent"], {
-        cwd: process.cwd(),
-        env: { PATH: "/usr/bin:/bin" },
-        timeout: 10000,
-        maxBuffer: 4096,
-      })
+      execFileAsync(
+        bun,
+        ["--no-env-file", `${scriptRoot}/cursor-lifecycle-hook.ts`, "--enrollment-file", "/nonexistent"],
+        {
+          cwd: process.cwd(),
+          env: { PATH: "/usr/bin:/bin" },
+          timeout: 10000,
+          maxBuffer: 4096,
+        }
+      )
     ).pipe(Effect.flip);
     const result = yield* decodeExecFailure(rejected);
     expect(result.code).toBe(1);
