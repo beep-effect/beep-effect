@@ -119,12 +119,15 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       const event = NativeLifecycleMetadata.make({
         kind: "sessionEnd",
         sessionHash: O.getOrThrow(span.sessionHash),
+        generationHash: O.none(),
         runtimeInstanceId: id("c"),
         rootId: id("d"),
         hostId: input.hostId,
         reportedDurationMillis: O.some(1234),
         reportedReason: O.some("completed"),
         reportedStatus: O.some("completed"),
+        reportedModelId: O.none(),
+        reportedEffort: O.none(),
       });
       const lifecycle = NativeTraceMetadata.make({
         ...span,
