@@ -26,6 +26,15 @@ Upstream repositories:
   - Affected material: extraction-pipeline behavior, ported/reimplemented
     expressions and regular expressions, and attribution-safe parity fixtures.
 
+The private citation `AnnotationAssembly.ts` adapts unchecked default annotation
+assembly from pinned eyecite `annotate.py`, preserving Python slicing and overlap
+behavior with native Unicode ranges. `AnnotationPreparation.ts` adapts primitive
+tuple ordering and left/right source-map application using Effect Array/Order
+and the existing offset/diff owners. `AnnotationStyle.ts` adapts the original
+literal style-tag proximity helper from `utils.py`, using the shared native
+Unicode search/slicing primitives. Source-generated primitive fixtures retain
+that attribution; broader annotation integration remains unfinished.
+
 The private citation `ExtractorSelection.ts` adapts required-string selection
 from the pinned eyecite `tokenizers.py`, using Effect Trie and HashSet.
 `ExtractorOrdering.ts` connects source match introductions to the existing
@@ -276,7 +285,7 @@ SOFTWARE.
 Upstream: <https://github.com/medelman17/eyecite-ts>
 
 Pinned commit: `34133d03143ea65861f48a5ed0eb32c931581666`.
-Affected material: citation-engine donor baseline logs. No donor runtime dependency is introduced.
+Affected material: citation-engine donor baseline logs and the U.S. Reports Bluebook layout reference fixture and schema transformation in `packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts`. The three constructed layout observations come from `src/utils/bluebook.ts` at the pinned commit. No donor runtime dependency is introduced.
 
 MIT License
 
@@ -305,7 +314,7 @@ SOFTWARE.
 Upstream: <https://github.com/beshkenadze/eyecite-js>
 
 Pinned commit: `53a49f2412da668aaf262e5f92584c2c3781043b`.
-Affected material: citation-engine donor baseline logs. No donor runtime dependency is introduced.
+Affected material: citation-engine donor baseline logs and the U.S. Reports Bluebook layout reference fixture and schema transformation in `packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts`. The three constructed layout observations come from `src/utils/bluebook.ts` at the pinned commit. No donor runtime dependency is introduced.
 
 BSD 2-Clause License
 
@@ -734,6 +743,25 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+## Citation diff WebAssembly core
+
+The private `packages/law-practice/server/assets/citation-diff/kernel.wasm`
+compiles the unchanged `diff-match-patch-cpp-stl/diff_match_patch.h` distributed
+inside fast-diff-match-patch 2.0.1. Google Inc. (2008), Neil Fraser, Mike Slemmer,
+Sergey Nozhenko and Christian Leutloff are credited in the original header.
+The complete source archive and Apache-2.0 license ship beside the authored
+`kernel.cpp` adapter. The adapter selects the original eyecite configuration:
+four-byte Unicode points, no diff timeout, no line checking and no cleanup.
+
+The core links WASI SDK 34 libc, libc++, libc++abi, libunwind and compiler-rt.
+Complete runtime license texts, including LLVM Exceptions and legacy notices,
+are retained under `assets/citation-diff/licenses/`; `notices.json` binds the
+source archive and additional C++ runtime notices to their upstream revisions.
+The shared libc/compiler notice inventory is the adjacent citation-html
+inventory. The checksum-verified build recipe and receipt record the exact
+source, SDK, options and resulting binary. This core is not a worker transport
+or a public engine service.
+
 ## Citation HTML WebAssembly runtime
 
 The private `packages/law-practice/server/assets/citation-html/kernel.wasm`
@@ -876,3 +904,30 @@ Info.private_groups behavior from regex/_regex_core.py. Its existing complete
 Apache-2.0/CNRI notices apply. CPython parser control observations retain the
 existing PSF attribution. Full-case/supra pattern observations derive from
 eyecite 2.7.6 regexes.py at the pinned revision (Free Law Project, BSD-2-Clause).
+
+## Annotation XML query — existing libxml2/runtime distribution
+
+`packages/law-practice/server/assets/citation-xml/kernel.c` adapts eyecite 2.7.6
+`utils.is_balanced_html` and lxml 5.1.0 parser defaults/Unicode input handling.
+The Free Law Project BSD-2-Clause and lxml BSD-3-Clause notices above apply.
+The public diagnostic ABI prefix follows unchanged libxml2 2.12.3. This query
+links the same unchanged complete parser, converter and runtime archives as the
+HTML kernel. Their complete licenses, converter source and relink archives ship
+in the adjacent citation-html directory. The XML wrapper source, receipt and
+rebuild/replacement-library recipe accompany the new binary. No upstream library
+source changes are incorporated. See citation-xml/README.md and the existing
+libxml2/libiconv/runtime license texts above.
+
+## Citation annotation replacement templates
+
+The private `AnnotationTemplate.ts` adapts the fixed one-capture replacement
+behavior of CPython 3.11.15 `Lib/re/_parser.py` (`parse_template`). Python
+Software Foundation attribution and the complete PSF license retained above
+apply. Source SHA-256:
+`4748e39c77d6dc14f81af80e68a62ad99031a8182d5e0b219a6666d0cfb1626f`.
+The adaptation uses Effect services, cooperative native Unicode ranges and
+captured allocation limits. It supports the two equal whole/tag references of
+original eyecite's `wrap_html_tags`; it is not a general Python regex runtime.
+Original wrapping observations derive from eyecite 2.7.6 `utils.py` under its
+existing BSD-2-Clause notice. Source exception diagnostics are retained only in
+public synthetic fixtures; target failures and warnings contain no source text.

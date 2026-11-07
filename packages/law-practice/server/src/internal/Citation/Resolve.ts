@@ -21,6 +21,7 @@ import {
   CitationUnresolved,
   FullCitation,
 } from "@beep/law-practice-domain/values";
+import { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
@@ -30,6 +31,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
 import { makeCitationAuthorityId } from "./AuthorityIdentity.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
@@ -84,13 +86,13 @@ export class CitationResolveFailure extends S.TaggedError<CitationResolveFailure
   $I`CitationResolveFailure`
 )(
   "CitationResolveFailure",
-  { reason: FailureReason },
+  { reason: FailureReason, limit: S.optionalKey(CitationSafetyBudget) },
   $I.annoteError<CitationResolveFailure>("CitationResolveFailure", {
     description: "Default resolution failed without retaining caller data or nested causes.",
   })
 ) {}
 const invalid = () => CitationResolveFailure.make({ reason: "invalid-input" });
-const exceeded = () => CitationResolveFailure.make({ reason: "limit-exceeded" });
+const exceeded = (limit: CitationSafetyBudget) => CitationResolveFailure.make({ reason: "limit-exceeded", limit });
 const isFull = S.is(FullCitation);
 const idsOf = (entries: ReadonlyArray<typeof Entry.Type>) => A.dedupe(A.map(entries, (entry) => entry.authorityId));
 const matchesParty = (entry: typeof Entry.Type, name: string): boolean =>
@@ -111,7 +113,12 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
   input: unknown
 ): Effect.fn.Return<CitationDocument, CitationResolveFailure, Digest.Digest> {
   const snapshot = yield* prepareCitationResolution(input).pipe(
-    Effect.mapError((error) => CitationResolveFailure.make({ reason: error.reason }))
+    Effect.mapError((error) =>
+      CitationResolveFailure.make({
+        reason: error.reason,
+        ...Struct.pick(error, ["limit"]),
+      })
+    )
   );
   const limits = snapshot.limits;
   const mentions = snapshot.mentions;
@@ -124,7 +131,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
   let iterations = 0;
   let edges = 0;
   const step = Effect.suspend(() => {
-    if (iterations >= limits.resolutionIterations) return Effect.fail(exceeded());
+    if (iterations >= limits.resolutionIterations) return Effect.fail(exceeded("resolutionIterations"));
     iterations += 1;
     return Effect.void;
   });
@@ -132,7 +139,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     candidates: ReadonlyArray<typeof Entry.Type>,
     mention: CitationMention
   ) {
-    if (edges + A.length(candidates) > limits.resolutionEdges) return yield* exceeded();
+    if (edges + A.length(candidates) > limits.resolutionEdges) return yield* exceeded("resolutionEdges");
     edges += A.length(candidates);
     const ids = idsOf(candidates);
     if (A.length(ids) === 1)
@@ -156,7 +163,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
       Effect.mapError(() => CitationResolveFailure.make({ reason: "identity-failed" }))
     );
     if (!HashMap.has(representatives, id)) {
-      if (Chunk.size(authorities) >= limits.authorities) return yield* exceeded();
+      if (Chunk.size(authorities) >= limits.authorities) return yield* exceeded("authorities");
       representatives = HashMap.set(representatives, id, citation);
       authorities = Chunk.append(
         authorities,
@@ -182,7 +189,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
         metadataValues: values,
       })
     );
-    if (edges >= limits.resolutionEdges) return yield* exceeded();
+    if (edges >= limits.resolutionEdges) return yield* exceeded("resolutionEdges");
     edges += 1;
     return CitationResolved.make({ mentionId: mention.id, authorityId: id, confidence: O.none() });
   });
@@ -193,7 +200,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
       Effect.mapError(() => CitationResolveFailure.make({ reason: "text-failed" }))
     );
     if (invalidPin) return CitationUnresolved.make({ mentionId: mention.id, reason: "invalid-pin-cite" });
-    if (edges >= limits.resolutionEdges) return yield* exceeded();
+    if (edges >= limits.resolutionEdges) return yield* exceeded("resolutionEdges");
     edges++;
     return CitationResolved.make({ mentionId: mention.id, authorityId: last.value, confidence: O.none() });
   });

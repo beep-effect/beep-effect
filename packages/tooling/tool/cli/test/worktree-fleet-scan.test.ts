@@ -205,6 +205,26 @@ it.layer(testLayer, { timeout: "30 seconds" })("fleet mirror scan", (it) => {
     SCAN_TIMEOUT_MILLIS
   );
 
+  it.effect(
+    "matches SCP and HTTPS spellings of one origin as the same fleet",
+    Effect.fnUntraced(function* () {
+      const fixture = yield* acquireScratchFleet;
+      yield* runGit(fixture.alpha, ["remote", "set-url", "origin", "git@example.test:acme/fleet.git"]);
+      yield* runGit(fixture.beta, ["remote", "set-url", "origin", "https://example.test/acme/fleet.git"]);
+      const service = yield* FleetMirrorService;
+      const checkouts = yield* service.listCheckouts(
+        FleetScanOptions.make({
+          startFrom: fixture.alpha,
+          fleetRoot: fixture.fleetRoot,
+          originUrl: "git@example.test:acme/fleet.git",
+        })
+      );
+
+      expect(checkouts).toEqual([fixture.alpha, fixture.beta]);
+    }),
+    SCAN_TIMEOUT_MILLIS
+  );
+
   it.layer(legacyListingLayer, { timeout: "30 seconds" })((it) => {
     it.effect(
       "retains a clone as degraded when its worktree listing omits NUL delimiters",

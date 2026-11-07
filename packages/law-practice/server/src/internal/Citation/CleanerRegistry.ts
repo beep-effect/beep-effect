@@ -5,7 +5,14 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationBuiltinCleanerName,
+  CitationCleaner,
+  CitationCleanerFailure,
+  CitationEngineLimits,
+  CitationLiveCleanerObject,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
@@ -17,8 +24,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { CitationBuiltinCleaners } from "./BuiltinCleaners.ts";
-import { CitationCleanerFailure, CitationCleanerObject, CitationCleanerRuntime } from "./CleanerPipeline.ts";
-import { CitationBuiltinCleanerName, CitationCleanerValues } from "./CleanerValues.ts";
+import { CitationCleanerValues } from "./CleanerValues.ts";
 import { makeCitationPythonHash } from "./PythonHash.ts";
 import {
   CitationRuntimeDictionaryComparison,
@@ -26,7 +32,12 @@ import {
   CitationRuntimeDictionaryKey,
   makeCitationRuntimeDictionary,
 } from "./RuntimeDictionary.ts";
-import type { CitationCleanerCursor, CitationCleanerProduced, CitationCleanerWork } from "./CleanerPipeline.ts";
+import type {
+  CitationCleanerCursor,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerWork,
+} from "@beep/law-practice-use-cases/server";
 import type { CitationPythonHashFailure } from "./PythonHash.ts";
 
 const crossPrimitiveKinds = (leftText: boolean, rightText: boolean, leftBytes: boolean, rightBytes: boolean) =>
@@ -34,14 +45,11 @@ const crossPrimitiveKinds = (leftText: boolean, rightText: boolean, leftBytes: b
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerRegistry");
 const Limits = S.toType(CitationEngineLimits);
 const Hash = S.toType(CitationRuntimeDictionaryKey.fields.hash);
-const LiveObject = CitationCleanerObject.pipe(
-  S.is,
-  S.declare<CitationCleanerObject>,
-  $I.annoteSchema("LiveObject", {
-    description: "Retain an issued runtime handle without reconstructing its identity during a structural decode.",
-  })
-);
-const RegistryEntry = S.Tuple([LiveObject, LiveObject, S.Option(CitationBuiltinCleanerName)]).pipe(
+const RegistryEntry = S.Tuple([
+  CitationLiveCleanerObject,
+  CitationLiveCleanerObject,
+  S.Option(CitationBuiltinCleanerName),
+]).pipe(
   $I.annoteSchema("RegistryEntry", {
     description:
       "Ordered live key/value handles and the owner's builtin-function classification; not a persisted registry record.",
@@ -160,7 +168,12 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     if (crossPrimitiveKinds(aPlain, bPlain, O.isSome(aBytes), O.isSome(bBytes))) return false;
     return yield* protocols.equal(a, b);
   });
-  const table = yield* makeCitationRuntimeDictionary({ entries: limits.authorities, iterations: maximum }).pipe(
+  const table = yield* makeCitationRuntimeDictionary({
+    entries: limits.authorities,
+    iterations: maximum,
+    entryLimit: "authorities",
+    iterationLimit: "resolutionIterations",
+  }).pipe(
     Effect.provideService(CitationRuntimeDictionaryComparison, {
       exactUnicode: (id) => capture(exact(id)),
       equal: (a, b) => capture(equal(a, b)),
@@ -170,8 +183,8 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
   );
   const translate = (error: CitationRuntimeDictionaryFailure): Failure =>
     O.getOrElse(callbackFailure, () =>
-      error.reason === "limit-exceeded"
-        ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: "authorities" })
+      error.reason === "limit-exceeded" && error.limit !== undefined
+        ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: error.limit })
         : fail("runtime-failed")
     );
   const prune = Effect.gen(function* () {
@@ -300,14 +313,12 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
   );
   const checkWork = (work: CitationCleanerWork) =>
     work.snapshot.pipe(Effect.flatMap((snapshot) => (snapshot.closed ? Effect.fail(fail("closed-work")) : ensureOpen)));
-  const runtime = CitationCleanerRuntime.of({
+  const runtime = CitationCleaner.of({
     fromText: Effect.fn("Citation.registrySource")((text) => ensureOpen.pipe(Effect.andThen(values.sourceText(text)))),
     assertOwned: Effect.fn("Citation.registryAssertOwned")((value) =>
       ensureOpen.pipe(Effect.andThen(values.assertOwned(value)))
     ),
-    textUnits: Effect.fn("Citation.registryTextUnits")((value) =>
-      values.getUnicode(value).pipe(Effect.map(O.map((text) => text.utf16Units)))
-    ),
+    textUnits: Effect.fn("Citation.registryTextUnits")((value) => values.getUnicodeUnits(value)),
     open: Effect.fn("Citation.registryOpen")((plan, initial, work) =>
       checkWork(work).pipe(Effect.andThen(protocols.open(plan, initial, work)))
     ),

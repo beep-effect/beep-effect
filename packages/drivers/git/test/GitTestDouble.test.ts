@@ -1,4 +1,4 @@
-import { Git, LsTreeEntry, NotStubbedError } from "@beep/git/Git";
+import { Git, LsTreeEntry, NotesCommit, NotStubbedError } from "@beep/git/Git";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -211,6 +211,15 @@ describe("Git.makeTest", () => {
         revListCount: () => double.revListCount(cwd, "main..HEAD"),
         updateRef: () => double.updateRef(cwd, "refs/archive/x", { create: "HEAD" }),
         upstream: () => double.upstream(cwd, "main"),
+        notesList: () => double.notesList(cwd, "refs/notes/history"),
+        hashObject: () => double.hashObject(cwd, "body\n"),
+        replaceNotes: () =>
+          double.replaceNotes(
+            cwd,
+            "refs/notes/history",
+            [],
+            NotesCommit.make({ message: "notes", name: "bot", email: "bot@example.com", timestamp: 0 })
+          ),
       };
       for (const method of R.keys(double)) {
         const fn = double[method];

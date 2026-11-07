@@ -62,6 +62,8 @@ export {
   collectCacheFileCreationMask,
   collectCacheGitExclusions,
   collectCacheToolchain,
+  collectCacheTrackedSourceIndex,
+  collectCacheTrackedTestMembership,
   fingerprintCacheComputation,
   projectCacheActivation,
   projectCacheSignedActivation,

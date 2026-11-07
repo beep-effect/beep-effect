@@ -92,7 +92,216 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-value-ownership.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-31-unicode-dictionary.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-31-python-hashes.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-kernel.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-host.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-diff-worker.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-html-discovery-worker.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-html-document-maps.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-html-geometry-preparation.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-owned-input.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-document-input-modes.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-input-document-constructor.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-document-cleaner-protocols.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-shared-text-capacity.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-05-cleaner-parent-budget.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-source.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-html-case-name-target.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-plain-case-name-composition.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-case-name-selection.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-full-case-metadata.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-full-citation-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-selection.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-reference-source.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-name-preparation.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-reference-pattern-construction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-pin-references.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-generated-markup-references.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-loop.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenized-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-document-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-entry.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-projection.md",
+    "packages/law-practice/server/src/internal/Citation/SemanticProjection.ts",
+    "packages/law-practice/server/src/internal/Citation/SemanticVocabulary.ts",
+    "packages/law-practice/server/assets/citation/semantic-editions.json",
+    "packages/law-practice/server/test/CitationSemanticProjection.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-extraction.md",
+    "packages/law-practice/server/src/internal/Citation/SemanticExtraction.ts",
+    "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+    "packages/law-practice/server/test/CitationSemanticExtraction.test.ts",
+    "packages/law-practice/server/test/integration/CitationSemanticExtraction.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-occurrence-projection.md",
+    "packages/law-practice/server/src/internal/Citation/OccurrenceProjection.ts",
+    "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+    "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts",
+    "packages/foundation/capability/langextract/test/VerifiedSpanOffsets.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-full-span-warnings.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-verified-extraction.md",
+    "packages/law-practice/server/src/internal/Citation/CanonicalSource.ts",
+    "packages/law-practice/server/src/internal/Citation/VerifiedExtraction.ts",
+    "packages/law-practice/server/test/CitationCanonicalSource.test.ts",
+    "packages/law-practice/server/test/CitationVerifiedExtraction.fixtures.ts",
+    "packages/law-practice/server/test/CitationVerifiedExtraction.test.ts",
+    "packages/law-practice/server/test/integration/CitationVerifiedExtraction.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-parser-catalog.md",
+    "packages/law-practice/server/src/internal/Citation/ParserCatalog.ts",
+    "packages/law-practice/server/assets/citation/parser-catalog.data",
+    "packages/law-practice/server/test/CitationParserCatalog.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-production-helpers.md",
+    "packages/law-practice/server/assets/citation/helper-configurations.data",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-default-configuration.md",
+    "packages/law-practice/server/src/internal/Citation/DefaultConfiguration.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-engine-artifact.md",
+    "packages/law-practice/server/src/internal/Citation/EngineArtifact.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-document-services.md",
+    "packages/law-practice/server/src/internal/Citation/DocumentServices.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-server-failure-contract.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.errors.ts",
+    "packages/law-practice/server/src/internal/Citation/EngineFailure.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-runtime-kind-review.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-source-request-boundary.md",
+    "packages/law-practice/server/src/internal/Citation/SourceRequest.ts",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.input.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-source-extraction.md",
+    "packages/law-practice/server/src/internal/Citation/SourceExtraction.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-paired-source-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-retained-document-reuse.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-extraction-reports.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.report.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-port.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.cleaner.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-tokenizer-port.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.runtime.ts",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.tokenizer.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-cleaner-unchanged-reservation.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-assembly.md",
+    "packages/law-practice/server/src/internal/Citation/AnnotationAssembly.ts",
+    "goals/citation-extraction-engine/ops/probe-annotation-assembly.py",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-preparation.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-mapping.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationPreparation.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-mapping.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-style.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-style.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationStyle.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-style.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-xml-kernel.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-xml.py",
+    "goals/citation-extraction-engine/ops/build-annotation-xml.py",
+    "packages/law-practice/server/src/internal/Citation/XmlBalanceKernel.ts",
+    "packages/law-practice/server/assets/citation-xml/kernel.c",
+    "packages/law-practice/server/assets/citation-xml/build-receipt.json",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-xml.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-xml-worker-transport.md",
+    "packages/law-practice/server/src/internal/Citation/MarkupWorker.ts",
+    "packages/law-practice/server/src/internal/Citation/XmlWorker.ts",
+    "packages/law-practice/server/src/internal/Citation/XmlWorkerProgram.ts",
+    "packages/law-practice/server/src/internal/Citation/XmlWorkerProtocol.ts",
+    "packages/law-practice/server/src/internal/Citation/XmlWorkerRpc.ts",
+    "packages/law-practice/server/test/CitationXmlWorker.test.ts",
+    "packages/law-practice/server/test/CitationXmlWorkerProtocol.test.ts",
+    "packages/law-practice/server/test/integration/CitationXmlWorker.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-skip.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-skip.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationSpan.ts",
+    "packages/law-practice/server/src/internal/Citation/AnnotationSkip.ts",
+    "packages/law-practice/server/test/CitationAnnotationSkip.fixtures.ts",
+    "packages/law-practice/server/test/CitationAnnotationSkip.test.ts",
+    "packages/law-practice/server/test/integration/CitationAnnotationSkip.test.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-skip.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-template.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-wrap.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationTemplate.ts",
+    "packages/law-practice/server/src/internal/Citation/AnnotationBudget.ts",
+    "packages/law-practice/server/test/CitationAnnotationTemplate.test.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-wrap.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-wrap.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-wrap-composition.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationWrap.ts",
+    "packages/law-practice/server/test/CitationAnnotationReplay.fixtures.ts",
+    "packages/law-practice/server/test/CitationAnnotationTemplate.fixtures.ts",
+    "packages/law-practice/server/test/CitationAnnotationWrap.fixtures.ts",
+    "packages/law-practice/server/test/CitationAnnotationWrap.test.ts",
+    "packages/law-practice/server/test/CitationRegexOperation.test.ts",
+    "packages/law-practice/server/test/integration/CitationAnnotationWrap.test.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-wrap-composition.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-callback.md",
+    "goals/citation-extraction-engine/ops/probe-annotation-callback.py",
+    "packages/law-practice/server/src/internal/Citation/AnnotationCallback.ts",
+    "packages/law-practice/server/test/CitationAnnotationCallback.fixtures.ts",
+    "packages/law-practice/server/test/CitationAnnotationCallback.test.ts",
+    "packages/law-practice/server/test/CitationAnnotationCallbackBoundary.test.ts",
+    "packages/law-practice/server/test/integration/CitationAnnotationCallback.test.ts",
+    "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-callback.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-shared-source-evidence.md",
+    "packages/law-practice/server/src/internal/Citation/SourceEvidence.ts",
+    "packages/law-practice/server/test/CitationSourceEvidence.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-annotation-entry.md",
+    "packages/law-practice/server/src/internal/Citation/AnnotationEntry.ts",
+    "packages/law-practice/server/test/CitationAnnotationEntry.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-verified-source-annotation.md",
+    "packages/law-practice/server/src/internal/Citation/SourceAnnotation.ts",
+    "packages/law-practice/server/test/CitationSourceAnnotation.test.ts",
+    "packages/law-practice/server/test/CitationSourceAnnotationTiming.test.ts",
+    "packages/law-practice/server/test/CitationAnnotationEntry.fixtures.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-annotation-failure-boundary.md",
+    "packages/law-practice/server/src/internal/Citation/AnnotationFailure.ts",
+    "packages/law-practice/server/test/CitationAnnotationFailure.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-06-connected-source-document.md",
+    "packages/law-practice/server/src/internal/Citation/SourceDocument.ts",
+    "packages/law-practice/server/test/CitationSourceDocument.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-resolution-limit-diagnostics.md",
+    "packages/law-practice/server/test/CitationResolutionLimit.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-table-capacity-bindings.md",
+    "packages/law-practice/server/test/CitationTableCapacity.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-cleaner-resolver-boundaries.md",
+    "packages/law-practice/server/src/internal/Citation/PortFailure.ts",
+    "packages/law-practice/server/test/CitationPortFailure.test.ts",
+    "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-extraction-method-boundary.md",
+    "packages/law-practice/server/test/CitationEngineFailure.test.ts",
+    "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-admitted-resolver-operation.md",
+    "packages/law-practice/server/src/internal/Citation/ResolverOperation.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-extraction-result.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.evidence.ts",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.result.ts",
+    "packages/law-practice/use-cases/test/CitationEngineInput.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-annotation-operation.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.annotation.ts",
+    "packages/law-practice/server/src/internal/Citation/AnnotationOperation.ts",
+    "packages/law-practice/server/src/internal/Citation/Snapshot.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-source-resolution.md",
+    "packages/law-practice/server/src/internal/Citation/SourceResolution.ts",
+    "packages/law-practice/server/src/internal/Citation/ResolutionEditions.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-four-operation-engine-layer.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.service.ts",
+    "packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts",
+    "packages/law-practice/server/src/internal/Citation/SourceCleaning.ts",
+    "packages/law-practice/server/src/internal/Citation/TextBudget.ts",
+    "packages/law-practice/server/test/CitationEngineLayer.test.ts",
+    "packages/law-practice/server/test/CitationSourceCleaning.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-engine-corpus.md",
+    "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+    "packages/law-practice/server/test/CitationEngineCorpus.fixtures.ts",
+    "packages/law-practice/server/test/CitationEngineCorpus.test.ts",
+    "packages/law-practice/server/test/integration/CitationEngineCorpus.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-resolution-groups.md",
+    "packages/law-practice/server/test/CitationEngineResolution.test.ts",
+    "packages/law-practice/server/test/CitationResolve.fixtures.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-semantic-metadata.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-verified-pincite-components.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-archive-consumer-ci-repair.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-vocabulary-identities.md",
+    "packages/law-practice/server/test/CitationSemanticVocabulary.fixtures.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-bluebook-codecs.md",
+    "packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts",
+    "packages/law-practice/domain/test/CitationBluebook.test.ts",
+    "packages/law-practice/domain/test/dtslint/CitationBluebook.test-d.ts",
+    "packages/law-practice/domain/test/fixtures/bluebook-layout.json"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -172,7 +381,24 @@
     "bun run beep lint reflection-artifacts",
     "bun run goals/citation-extraction-engine/ops/check-cleaner-pipeline.ts",
     "python3 goals/citation-extraction-engine/ops/verify-cleaner-unicode.py",
-    "python3 goals/citation-extraction-engine/ops/verify-case-name-process.py --self-test"
+    "python3 goals/citation-extraction-engine/ops/verify-case-name-process.py --self-test",
+    "python goals/citation-extraction-engine/ops/verify-diff-kernel.py",
+    "python goals/citation-extraction-engine/ops/verify-diff-kernel.py --runtime bun",
+    "python3 goals/citation-extraction-engine/ops/verify-html-case-names.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-plain-case-name.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-case-name-selection.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-case-metadata.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-full-citation.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-reference-token.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-extraction-selection.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-generated-references.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-reference-template.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-extraction-loop.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-extraction-shortcut.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/verify-semantic-editions.py --self-test",
+    "python3 goals/citation-extraction-engine/ops/export-parser-catalog.py --check",
+    "python3 goals/citation-extraction-engine/ops/export-helper-configurations.py --check",
+    "python3 goals/citation-extraction-engine/ops/verify-bluebook-layout.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -449,6 +675,146 @@
     {
       "path": "ops/probe-span-offsets.py",
       "purpose": "Observe actual DMP/builtin SpanUpdater construction, every left/right lookup and real Document emphasis geometry without claiming a target diff producer."
+    },
+    {
+      "path": "ops/probe-html-discovery.py",
+      "purpose": "Observe original placeholder replacement and emphasis discovery over malformed tags, native source points, case-folded backreferences and CPython stripping without DOM normalization."
+    },
+    {
+      "path": "ops/build-diff-kernel.py",
+      "purpose": "Reproducibly compile the unchanged pinned default-diff header with a bounded private source-point ABI."
+    },
+    {
+      "path": "ops/probe-diff-kernel.py",
+      "purpose": "Capture exact original default edit steps across exhaustive short pairs and seeded Unicode/NUL/surrogate controls."
+    },
+    {
+      "path": "ops/verify-diff-kernel.py",
+      "purpose": "Replay sealed exact default edit steps and refusal controls through the authenticated compiled core; not worker proof."
+    },
+    {
+      "path": "ops/probe-html-discovery-patterns.py",
+      "purpose": "Bind the two fixed discovery programs and compare finite backreference lowering with exact original captures over sealed cases and exhaustive short tag sequences."
+    },
+    {
+      "path": "ops/probe-document-input-modes.py",
+      "purpose": "Observe actual Document mode branches, reversed insert arguments, step protocols, generator state, partial fields and original phase order without replacing constructor logic."
+    },
+    {
+      "path": "ops/probe-html-case-names.py",
+      "purpose": "Capture original full/short HTML case-name mutation and ordered geometry/cleanup calls across all five helper branches."
+    },
+    {
+      "path": "ops/verify-html-case-names.py",
+      "purpose": "Seal original HTML case-name evidence, reject corrupted observations and optionally replay the pinned oracle; not target parity."
+    },
+    {
+      "path": "ops/probe-html-case-name-pattern.py",
+      "purpose": "Derive the original HTML versus split literal/profile from pinned source and regex-V0 parser with direct split observations."
+    },
+    {
+      "path": "ops/probe-plain-case-name.py",
+      "purpose": "Execute original find_case_name across all sealed scan inputs and full/short/seeded modes, retaining guard decisions, mutations and regex-call counts."
+    },
+    {
+      "path": "ops/verify-plain-case-name.py",
+      "purpose": "Seal original whole plain-name evidence, reject corruption and optionally replay the pinned oracle; not target proof."
+    },
+    {
+      "path": "ops/probe-case-name-selection.py",
+      "purpose": "Observe actual original full/short callers selecting HTML and plain helpers, including retained or assigned empty fields, with name-phase and final model state separated."
+    },
+    {
+      "path": "ops/verify-case-name-selection.py",
+      "purpose": "Seal original caller evidence, reject corruption and optionally replay the pinned oracle; not target parity proof."
+    },
+    {
+      "path": "ops/probe-case-metadata.py",
+      "purpose": "Observe actual full-case model transitions across post/name/pre/court/edition phases, preserving complete state, native fields and lossless ordered regex-call runs."
+    },
+    {
+      "path": "ops/verify-case-metadata.py",
+      "purpose": "Seal full-case transition evidence, reject corruption and optionally replay the pinned oracle; not target proof."
+    },
+    {
+      "path": "ops/probe-full-citation.py",
+      "purpose": "Capture actual original full-citation construction from default-tokenized case/law/journal Documents, preserving selected class, complete state and native source words."
+    },
+    {
+      "path": "ops/verify-full-citation.py",
+      "purpose": "Seal full-citation constructor evidence, reject corruption and optionally replay the clean pinned oracle; not exhaustive target extraction proof."
+    },
+    {
+      "path": "ops/probe-reference-token.py",
+      "purpose": "Capture original short/Id./supra/unknown construction from default-tokenized Documents, complete state and spans, retaining no-target observations."
+    },
+    {
+      "path": "ops/verify-reference-token.py",
+      "purpose": "Seal original reference constructor evidence and shared V0 profile dependency; reject corruption and optionally replay the pinned oracle."
+    },
+    {
+      "path": "ops/probe-extraction-selection.py",
+      "purpose": "Observe original built-in filtering, reporter disambiguation and parallel inheritance, retaining source object ids, stable order and warning pairs."
+    },
+    {
+      "path": "ops/verify-extraction-selection.py",
+      "purpose": "Seal original final-selection evidence, reject structural corruption and optionally replay the exact clean pinned oracle."
+    },
+    {
+      "path": "ops/probe-generated-references.py",
+      "purpose": "Observe original pin/markup/combined generated references, actual stdlib patterns and capture traces, native model state and unchanged name-validation behavior."
+    },
+    {
+      "path": "ops/verify-generated-references.py",
+      "purpose": "Seal generated-reference source evidence and profile dependency, reject structural corruption and optionally replay the clean pinned oracle; not target generation or dynamic regex authority."
+    },
+    {
+      "path": "ops/probe-reference-template.py",
+      "purpose": "Observe original pin/markup insertion boundaries, stdlib escaping over all Python points and original literal pattern/profile cases."
+    },
+    {
+      "path": "ops/verify-reference-template.py",
+      "purpose": "Seal template and exhaustive-escape observations, reject structural corruption and optionally replay the clean pinned oracle; not full target generation proof."
+    },
+    {
+      "path": "ops/probe-extraction-loop.py",
+      "purpose": "Capture actual original get_citations Document/token and pre/post-filter model identity."
+    },
+    {
+      "path": "ops/verify-extraction-loop.py",
+      "purpose": "Seal original extraction-loop evidence, corruption controls and exact pinned replay."
+    },
+    {
+      "path": "ops/probe-extraction-shortcut.py",
+      "purpose": "Observe actual primitive shortcut, ignored arguments, defaults and original singleton state/identity."
+    },
+    {
+      "path": "ops/verify-extraction-shortcut.py",
+      "purpose": "Seal shortcut/default evidence and corruption controls; optionally replay the pinned original."
+    },
+    {
+      "path": "ops/export-semantic-editions.py",
+      "purpose": "Project the complete reviewed P0 edition-to-public identity mapping into a production artifact."
+    },
+    {
+      "path": "ops/verify-semantic-editions.py",
+      "purpose": "Verify exact source-derived semantic identities, producer seal and five corruption controls."
+    },
+    {
+      "path": "ops/export-parser-catalog.py",
+      "purpose": "Project/check complete source-sealed runtime extractor metadata and frozen publications without runtime test dependencies."
+    },
+    {
+      "path": "ops/export-helper-configurations.py",
+      "purpose": "Project/check all source-sealed static helper configurations without fixture cases or frozen calendar cutoffs."
+    },
+    {
+      "path": "ops/probe-bluebook-layout.mjs",
+      "purpose": "Observe three constructed supported U.S. Reports layouts in the unchanged pinned eyecite-ts formatter; not extraction or complete donor qualification."
+    },
+    {
+      "path": "ops/verify-bluebook-layout.py",
+      "purpose": "Authenticate the separately observed layout fixture and producer, reject seven corruptions and optionally replay the pinned donor."
     }
   ]
 }

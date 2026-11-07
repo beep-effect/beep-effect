@@ -3,6 +3,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import {
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
@@ -11,6 +16,7 @@ import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -21,12 +27,11 @@ import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { CitationMetadataYearBound, makeCitationMetadataYearFromBound } from "./MetadataYear.ts";
 import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationTextBudget, makeCitationTextBudget } from "./TextBudget.ts";
+import { CitationRegexOperation, decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationTextBudget } from "./TextBudget.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type * as Scope from "effect/Scope";
@@ -95,6 +100,18 @@ export const fingerprintCitationMetadataPattern = Effect.fn("Citation.fingerprin
       Effect.catchDefect(() => Effect.fail(invalid()))
     )
 );
+/** Detach a trusted configuration through its hoisted upstream canonical codec.
+ * Native declarations use their Schema representation; failures stay source-free.
+ * @internal @category operations @since 0.0.0
+ */
+export const detachCitationMetadataConfiguration = Effect.fn("Citation.detachMetadataConfiguration")(function* <
+  A,
+  I,
+  E,
+>(codec: S.Codec<A, I>, configuration: A, invalid: () => E) {
+  const encoded = yield* S.encodeEffect(codec)(configuration).pipe(Effect.mapError(invalid));
+  return yield* S.decodeEffect(codec)(encoded).pipe(Effect.mapError(invalid));
+});
 /** Own and authenticate fixed native patterns before retaining configuration.
  * @internal @category operations @since 0.0.0
  */
@@ -135,18 +152,38 @@ export const copyCitationMetadataPatternConfiguration = Effect.fn("Citation.copy
 );
 type Dependencies =
   | Digest.Digest
+  | Path.Path
   | ChildProcessSpawner
   | CitationNativeProcessAdmission
   | CitationTextBudget
   | Scope.Scope;
+/** Decode a built-in word request before enforcing its captured token ceiling.
+ * Schema errors retain the caller's closed family error; oversize input uses
+ * the shared extraction safety failure before word preparation.
+ * @internal @category operations @since 0.0.0
+ */
+export const decodeCitationMetadataWordRequest = Effect.fn("Citation.decodeMetadataWordRequest")(function* <
+  C extends { readonly words: ReadonlyArray<unknown> },
+  I,
+  E,
+>(limits: CitationEngineLimits, schema: S.Codec<C, I>, raw: unknown, invalid: () => E) {
+  const request = yield* S.decodeUnknownEffect(schema)(raw).pipe(Effect.mapError(invalid));
+  if (request.words.length > limits.tokens)
+    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
+  return request;
+});
 const captureDependencies = Effect.fn("Citation.captureMetadataDependencies")(function* (limits: CitationEngineLimits) {
   const supplied = yield* Effect.serviceOption(CitationNativeProcessAdmission);
   const admission = O.isSome(supplied) ? supplied.value : yield* makeCitationNativeProcessAdmission(limits);
   const clock = yield* Clock.Clock;
+  const selectedOperation = yield* CitationRegexOperation;
   const digest = yield* Digest.Digest;
+  const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner;
   return Context.make(Clock.Clock, clock).pipe(
+    Context.add(CitationRegexOperation, selectedOperation),
     Context.add(Digest.Digest, digest),
+    Context.add(Path.Path, path),
     Context.add(ChildProcessSpawner, spawner),
     Context.add(CitationNativeProcessAdmission, admission)
   );
@@ -252,7 +289,7 @@ export const makeCitationMetadataStage = <
     const invoke = Effect.fn("Citation.invokeMetadataStage")(
       (raw: unknown) =>
         installed.operation.run(
-          "extract",
+          installed.timing.operation,
           Effect.gen(function* () {
             const [patch, units] = yield* installed.run(raw);
             return definition.project(patch, units);

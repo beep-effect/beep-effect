@@ -1,5 +1,57 @@
 # Citation engine friction receipts
 
+## 2026-11-05 — text/native capacity acquisition order
+
+- Work: join bounded cleaner production to the shared parent text authority.
+- Evidence: HTML production can hold text capacity before native admission;
+  regex input previously acquired native admission before waiting for text
+  reservation. Concurrent operations could form a wait cycle.
+- Resolution: retain complete regex frame preflight, then reserve text before
+  the native grant and receiving copy. The focused single-slot control observes
+  no native claim while text is held, and interrupted waits release cleanly.
+- Prevention: preserve one acquisition order across composed authorities and
+  test the held-capacity state before extending another producer integration.
+
+## 2026-11-05 — two real Node worker fixtures shared one compiled output
+
+- Work: run regex and diff workers together in HTML geometry preparation.
+- Evidence: the first Node replay returned invalid-frame because the shared
+  runtime builder emitted node-worker.mjs for both families in one directory;
+  the second build replaced the first entry. Bun's distinct source paths passed.
+- Resolution: give each actual-runtime build a distinct scoped directory while
+  sharing the same native admission and observed process spawner. Both runtime
+  geometry replays and independent exit checks then pass.
+- Prevention: isolate compiled entry artifacts by runtime family or use separate
+  build directories when composing actual worker fixtures.
+
+## 2026-11-05 — shared-layout assumption concealed asymmetric document maps
+
+- Work: compose HTML discovery with original Document diff geometry.
+- Evidence: Document constructs plain-to-placeholder and original-markup-to-plain
+  maps. The previous producer instead constructed placeholder-to-plain, while
+  the adapter required both markup layouts to match. An attribute containing
+  `Foo` maps that supplied range to plain `Foo` only through the original map;
+  the placeholder map returns an empty string.
+- Resolution: correct the producer, compare both captured indexes with actual
+  Document-owned indexes, add attribute/native-width controls and preserve only
+  the source-required equal point count across original/placeholder markup.
+- Prevention: assert prepared artifacts against actual owner state in source
+  probes, and add controls that distinguish each apparently shared input.
+
+## 2026-11-05 — publication succeeds before detached monitor admission fails
+
+- Work: push the owned diff worker and original HTML discovery continuation to
+  PR #2737 while using hosted verification.
+- Evidence: Yeet pushed the committed head, then reported: `Detached proof jobs
+  require an active systemd user manager; no attached fallback was started.`
+  The overall exit code was nonzero although GitHub held the expected head.
+- Resolution: verify the remote head and ready state independently, preserve
+  the provenance footer, and run the supported attached readiness monitor.
+  No duplicate push or user-manager repair is required.
+- Prevention: publish with the attached monitor in environments without a user
+  manager, and distinguish push success from monitor-submission failure in
+  publication results.
+
 ## 2026-10-28 — stale prerequisite and source state
 
 - Work: establish P0 prerequisites and the exact official source baseline.
@@ -346,3 +398,71 @@ history/evidence/2026-11-03-edition-inference.md.
   flagged compound capture validation/projection and repeated release assertions;
   separate source checks and a shared real-exit/capacity assertion retain proof
   without suppressions or changed floors.
+
+- 2026-11-06 semantic extraction: parallel pre-commit catalog/formatter hooks
+  collided while staging fixed files (`index.lock: File exists`). The commit
+  failed; after its terminal result the lock was absent and intended changes
+  remained staged. Retrying normal hooks preserves validation. A single staging
+  owner after parallel generators would prevent this race.
+
+- 2026-11-06 occurrence adaptation: the canonical code-point converter built a
+  whole-source character array and joined two prefixes for every citation.
+  Reading its actual implementation exposed unnecessary text/array allocations
+  before integrating verified mentions. The same public helper now scans numeric
+  coordinates cooperatively; independent former-algorithm range comparisons,
+  source-ceiling and interruption controls preserve its contract.
+
+- 2026-11-06 canonical source composition: declaration emission reported TS4094
+  when inferred exported helpers retained the prerequisite's private source-proof
+  class. Explicit public result contracts and Effect dual overloads preserve the
+  opaque alias without weakening evidence. A non-generator fnUntraced callback
+  also erased test effect channels; the typed generator helper prevents that
+  cascade. Declaration generation belongs beside the cheap package check.
+
+- 2026-11-06 runtime catalog publication: gitleaks generic-api-key classified the
+  public canonical-tokenizer source SHA-256 as a credential because its JSON key
+  includes tokenizer. The source seal is already independently fixed by the
+  exporter and full metadata comparison. An exact digest/path/detector exception
+  preserves every other value and rule; changing provenance bytes to evade the
+  detector would obscure the source relationship.
+
+## 2026-11-06 — shared API quota after successful publication
+
+- Work: publish native wrap composition and its upstream context reference.
+- Evidence: `beep yeet open` pushed the expected head, then its PR lookup failed
+  with `403: API rate limit exceeded`. The connected GitHub integration still
+  verified the exact head, ready state, provenance and review threads.
+- Resolution: verify through that integration and preserve the published work;
+  the post-push lookup failure is not a failed push or a reason to replay it.
+- Prevention: distinguish publication from follow-up API inspection and support
+  the available integration when the CLI credential's shared quota is exhausted.
+
+## 2026-11-06 — distinct native test roles shared a bundle pathname
+
+- Work: compose actual Node XML and regex workers in one annotation operation.
+- Evidence: the XML conversation received an invalid frame after the test regex
+  bundler overwrote the XML bundle in the same temporary directory.
+- Resolution: give the two generated worker bundles separate scoped directories.
+  Both-runtime output/refusal and physical-retirement regression then passed.
+- Prevention: allocate a directory per generated worker role when a test owns
+  multiple bundled entrypoints; production runtime paths remain explicit.
+
+## 2026-11-06 — nested method replacement crossed a parser boundary
+
+- Work: share annotation Unicode refusal translation with template parsing.
+- Evidence: an automated multiline edit removed adjacent group parsing; the
+  compiler reported missing values and original template regression failed.
+- Resolution: restore the unchanged group parser from the owned committed head,
+  replace only the error handler, and replay the complete original corpus.
+- Prevention: use tightly bounded edits for nested pipelines and inspect the
+  resulting method before running source-fidelity proof.
+
+## 2026-11-06 — confirm identity ownership before calling it a defect
+
+- Work: separate canonical source evidence from extraction-specific behavior.
+- Evidence: focused root/nested resolver identity-mutation controls passed on
+  the previous code; canonical constructors already preserved the expectation.
+- Resolution: retain the controls and describe the work as shared evidence
+  extraction, not a verification vulnerability fix.
+- Prevention: run the focused baseline before diagnosing reference ownership;
+  inspect canonical constructor/verifier behavior instead of assuming aliasing.

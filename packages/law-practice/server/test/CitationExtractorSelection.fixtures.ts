@@ -5,7 +5,7 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationExtractorOrderingBinding } from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
 import { CitationExtractorSelectionBinding } from "@beep/law-practice-server/internal/Citation/ExtractorSelection";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
