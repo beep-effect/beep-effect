@@ -419,7 +419,7 @@ agent message board in the field and *still cannot guarantee its agents
 communicate effectively* — which is the operator's argument, and Buzz's own
 repo is the evidence.
 
-`docs/welcome-kickoff-silent-failures.md` is a postmortem on agents failing to
+[upstream kickoff postmortem](https://github.com/block/buzz/blob/a7ea86cdcf2aa3cbb1486baabc4c9d6aea8c576c/docs/welcome-kickoff-silent-failures.md) is a postmortem on agents failing to
 communicate **inside Buzz**, in three directions at once:
 
 | Class | Failure | Status in-repo |
@@ -474,7 +474,7 @@ question.
 
 ## Sources
 
-- [block/buzz](https://github.com/block/buzz) · `VISION_AGENT.md` · `VISION_REMOTE_AGENTS.md` · `docs/welcome-kickoff-silent-failures.md` (read from a local clone at `~/YeeBois/dev/buzz`, `a7ea86cdc`, 2026-08-05)
+- [block/buzz](https://github.com/block/buzz) · `VISION_AGENT.md` · `VISION_REMOTE_AGENTS.md` · [upstream kickoff postmortem](https://github.com/block/buzz/blob/a7ea86cdcf2aa3cbb1486baabc4c9d6aea8c576c/docs/welcome-kickoff-silent-failures.md) (read from a local clone at `~/YeeBois/dev/buzz`, `a7ea86cdc`, 2026-08-05)
 - [clash-sh/clash](https://github.com/clash-sh/clash)
 - [MCP Agent Mail](https://mcpagentmail.com/) · [Dicklesworthstone/mcp_agent_mail](https://github.com/Dicklesworthstone/mcp_agent_mail) · [mcp_agent_mail_rust](https://github.com/Dicklesworthstone/mcp_agent_mail_rust)
 - [aannoo/hcom](https://github.com/aannoo/hcom) · [hcom README](https://github.com/aannoo/hcom/blob/main/README.md)
