@@ -9,7 +9,7 @@ The research-intake-2026-11 intake routed 373 findings to this packet (215 affir
 
 - citesAsEvidence: https://github.com/beep-effect/beep-effect/blob/main/docs/ROADMAP.md — The stated agent workflow feeds reflection back into later implementation packets, establishing a recurring improvement loop.
 - citesAsEvidence: https://arxiv.org/abs/2609.30123 — The reported benchmark results support testing compiled skill execution against native document-following agents. Gains vary substantially by task: LiveMath improves by 31.4–38.0 percentage points, wh
-- citesAsEvidence: https://commonplace.workforcefutures.net/paper/arxiv:2604.00555 — The digest reports favorable comparative results for ontology grounding across three agent-quality measures. This is preliminary evidence relevant to agent-effectiveness experiments; the capture does 
+- citesAsEvidence: https://commonplace.workforcefutures.net/paper/arxiv:2604.00555 — The digest reports favorable comparative results for ontology grounding across three agent-quality measures. This is preliminary evidence relevant to agent-effectiveness experiments; the capture does
 - citesAsEvidence: https://github.com/beep-effect/beep-effect/blob/main/goals/agentic-professional-runtime/README.md — The stated agent workflow closes a feedback loop from reflection into subsequent planning packets.
 - supports: https://humanlayer.dev/resources — Argues that common agent metrics (one-shot test passes, token usage, task count) fail to capture maintainability, relevant to measuring agent effectiveness beyond pass rates.
 

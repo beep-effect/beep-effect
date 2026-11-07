@@ -274,7 +274,7 @@ The research-intake-2026-11 intake routed 506 findings to this packet (165 affir
 
 - citesAsEvidence: https://govtribe.com/file/government-file/sam-dot-gov-announcement-october-15-ai-roundtable-dot-pdf — USPTO names agentic analysis of patent applications as a desired analytics capability.
 - citesAsEvidence: https://github.com/beep-effect/beep-effect/blob/main/docs/ROADMAP.md — The product strategy places attorney approval between agent proposals and retained practice knowledge, making human admission authority central to the professional runtime.
-- citesAsEvidence: https://www.steptoe.com/en/news-publications/the-mother-court-blog/public-ai-use-not-privileged-takeaways-and-best-practices.html — The article identifies the absence of counsel direction as a material fact in Heppner. Professional AI workflows should preserve evidence of who initiated and directed work, without treating attorney 
+- citesAsEvidence: https://www.steptoe.com/en/news-publications/the-mother-court-blog/public-ai-use-not-privileged-takeaways-and-best-practices.html — The article identifies the absence of counsel direction as a material fact in Heppner. Professional AI workflows should preserve evidence of who initiated and directed work, without treating attorney
 - citesAsEvidence: https://legora.com/newsroom — Legora explicitly positions its product as an agentic operating system spanning legal research, review, and drafting. This is evidence of vendor positioning relevant to a professional legal-agent runt
 - citesAsEvidence: https://www.nber.org/papers/w35720 — The reported unaided follow-up advantage was concentrated among senior lawyers. Evaluations of professional AI assistance should therefore examine experience-specific outcomes, since an aggregate impr
 

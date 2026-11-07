@@ -20,7 +20,7 @@ allowance gains with no study design.
   - a ground-truth audit of legal citation and retrieval benchmarks;
   - evaluation designs that grade responsive authority;
   - measured evidence for AI in patent prosecution.
-  
+
   One report writer synthesized their notes.
 - Sources: public web and academic sources only. These were arXiv full texts
   (HTML and PDF), the TREC Legal Track overviews, ACL Anthology, Federal
@@ -157,7 +157,7 @@ allowance gains with no study design.
   - 800 queries and 55,192 candidates;
   - "a two-level candidate set pooling strategy" to depth 30;
   - aspect relevance (characterization, penalty, procedure).
-  
+
   It covers Chinese criminal law, where courts do not cite
   ([2310.17609](https://arxiv.org/abs/2310.17609)). LeCaRD v1 is the
   predecessor.
@@ -176,7 +176,7 @@ allowance gains with no study design.
   - GPT-3.5: 0.67 legal facts, 0.62 material facts;
   - fine-tuned Qwen-2: 0.69 / 0.60;
   - Llama-2: 0.41 / 0.25.
-  
+
   Chinese only ([2403.18405](https://arxiv.org/abs/2403.18405)).
   Counterpoint: LLM labels "still can't replace" human relevance assessment
   ([2412.17156](https://arxiv.org/abs/2412.17156), secondary).

@@ -11,6 +11,6 @@ The research-intake-2026-11 intake routed 223 findings to this packet (86 affirm
 - citesAsEvidence: https://arxiv.org/abs/2606.21155 — Agentic verification has a large step cost, which bears on budgeting and performance for claim checking.
 - usesMethodIn: https://github.com/gfodor/legal-skills — Mechanical checks such as the claim dependency graph, antecedent candidates and dates are computed deterministically, not by the model.
 - citesAsEvidence: https://github.com/boschresearch/pedantic-patentsemtech — Indefiniteness under §112(b) is among the most frequent rejection grounds, which motivates automated claim-definiteness checking.
-- citesAsEvidence: https://patentlyo.com/uspto-news — The September 1 excerpt reports that both a drafting AI and a reviewing AI missed nonexistent patent-record citations in a claim-construction filing, followed by a public OED reprimand. This supplies 
+- citesAsEvidence: https://patentlyo.com/uspto-news — The September 1 excerpt reports that both a drafting AI and a reviewing AI missed nonexistent patent-record citations in a claim-construction filing, followed by a public OED reprimand. This supplies
 
 This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
