@@ -285,6 +285,10 @@ it.effect("keeps finite SVO object coordination in one element and declines ambi
 it.effect("keeps grammatical NP ownership and auxiliary operators source-bound under the shared reservation", () =>
   Effect.gen(function* () {
     const text = "A system comprising a plate of the unit; the plate is attached to a frame.";
+    const prepared = yield* prepareClaimInspection(inputOf(text));
+    const qualification = O.getOrThrow(A.head(prepared.qualifications));
+    if (qualification.status !== "context-ready") throw new Error("control must qualify");
+    const preframe = O.getOrThrow(compileClaimClauseRoles(qualification.claim, compositionEvidence(text)));
     const result = yield* compositionControl(text);
     assert.strictEqual(result.plans.length, 1);
     const bound = O.getOrThrow(A.head(result.plans));
@@ -311,7 +315,8 @@ it.effect("keeps grammatical NP ownership and auxiliary operators source-bound u
     assert.strictEqual(object.role, "prepositional-complement");
     assert.strictEqual(O.getOrThrow(object.predicate).quote, "is attached");
     assert.deepStrictEqual(object.ownerNominal, O.none());
-    assert.isBelow(source.remainingWork, bound.plan.remainingWork);
+    assert.strictEqual(source.remainingWork, bound.plan.remainingWork);
+    assert.isBelow(source.remainingWork, preframe.remainingWork);
     assert.isAtLeast(source.remainingWork, 0);
   })
 );

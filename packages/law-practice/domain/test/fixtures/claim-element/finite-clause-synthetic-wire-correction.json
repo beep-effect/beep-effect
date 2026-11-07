@@ -1,0 +1,812 @@
+{
+  "schemaVersion": "finite-ac-synthetic-wire-correction/v1",
+  "reviewedPrivateOverlaySha256": "e1ec75e1750e096902bb034243083cfdae09c09d59784622b45fe0c269268cfb",
+  "repositoryOriginal25Sha256": "75d0cf96952c95f815b00af0fa20d05e4d24021b0fa2a0af0b48c53f9a863fd8",
+  "entries": [
+    {
+      "case": "action-declaration-actual-three-public-nodes",
+      "source": "A method comprising the steps of: receiving on a channel a packet; storing the packet.",
+      "sourceSha256": "99f3481620fb7397bc5db9d097e062bff8f72ae49f120056ec962a06295fe5fe",
+      "originalTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"anchor\":{\"endChar\":47,\"quote\":\"receiving on \",\"startChar\":34},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":56,\"quote\":\"a channel\",\"startChar\":47},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":57,\"quote\":\" \",\"startChar\":56},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":65,\"quote\":\"a packet\",\"startChar\":57},\"path\":\"1.a\"}}]},{\"child\":\"1.b\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.b\",\"kind\":\"functional\",\"parts\":[{\"anchor\":{\"endChar\":75,\"quote\":\"storing \",\"startChar\":67},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":85,\"quote\":\"the packet\",\"startChar\":75},\"path\":\"1.b\"}}]}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A method\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A method\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"method\"}]},{\"anchor\":{\"endChar\":65,\"quote\":\"receiving on a channel a packet\",\"startChar\":34},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":56,\"quote\":\"a channel\",\"startChar\":47},\"determiner\":\"a\",\"head\":\"channel\"},{\"anchor\":{\"endChar\":65,\"quote\":\"a packet\",\"startChar\":57},\"determiner\":\"a\",\"head\":\"packet\"}]},{\"anchor\":{\"endChar\":85,\"quote\":\"storing the packet\",\"startChar\":67},\"kind\":\"functional-relation\",\"path\":\"1.b\",\"terms\":[{\"anchor\":{\"endChar\":85,\"quote\":\"the packet\",\"startChar\":75},\"determiner\":\"the\",\"head\":\"packet\"}]}],\"producer\":\"rule\"}",
+      "originalTreeSha256": "092eae1b6e9b6b01854178e81906faefc7c6e25f20f58a5ccf48da4d038c1457",
+      "originalEdges": [
+        {
+          "kind": "part-of",
+          "child": "1.a",
+          "parent": "1"
+        },
+        {
+          "kind": "functional",
+          "element": "1.a",
+          "parts": [
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 34,
+                "endChar": 47,
+                "quote": "receiving on "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 47,
+                  "endChar": 56,
+                  "quote": "a channel"
+                }
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 56,
+                "endChar": 57,
+                "quote": " "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 57,
+                  "endChar": 65,
+                  "quote": "a packet"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "kind": "part-of",
+          "child": "1.b",
+          "parent": "1"
+        },
+        {
+          "kind": "functional",
+          "element": "1.b",
+          "parts": [
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 75,
+                "quote": "storing "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 75,
+                  "endChar": 85,
+                  "quote": "the packet"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "correctedTree": {
+        "claimNumber": 1,
+        "producer": "rule",
+        "elements": [
+          {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "kind": "preamble-subject",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                },
+                "head": "method",
+                "determiner": "a"
+              }
+            ]
+          },
+          {
+            "path": "1.a",
+            "anchor": {
+              "startChar": 34,
+              "endChar": 65,
+              "quote": "receiving on a channel a packet"
+            },
+            "kind": "functional-relation",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 47,
+                  "endChar": 56,
+                  "quote": "a channel"
+                },
+                "head": "channel",
+                "determiner": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 57,
+                  "endChar": 65,
+                  "quote": "a packet"
+                },
+                "head": "packet",
+                "determiner": "a"
+              }
+            ]
+          },
+          {
+            "path": "1.b",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 85,
+              "quote": "storing the packet"
+            },
+            "kind": "functional-relation",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 75,
+                  "endChar": 85,
+                  "quote": "the packet"
+                },
+                "head": "packet",
+                "determiner": "the"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "kind": "part-of",
+            "child": "1.a",
+            "parent": "1"
+          },
+          {
+            "kind": "part-of",
+            "child": "1.b",
+            "parent": "1"
+          },
+          {
+            "kind": "functional",
+            "element": "1.a",
+            "parts": [
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 34,
+                  "endChar": 47,
+                  "quote": "receiving on "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.a",
+                  "anchor": {
+                    "startChar": 47,
+                    "endChar": 56,
+                    "quote": "a channel"
+                  }
+                }
+              },
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 56,
+                  "endChar": 57,
+                  "quote": " "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.a",
+                  "anchor": {
+                    "startChar": 57,
+                    "endChar": 65,
+                    "quote": "a packet"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "kind": "functional",
+            "element": "1.b",
+            "parts": [
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 67,
+                  "endChar": 75,
+                  "quote": "storing "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.b",
+                  "anchor": {
+                    "startChar": 75,
+                    "endChar": 85,
+                    "quote": "the packet"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "kind": "antecedent",
+            "referring": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 75,
+                "endChar": 85,
+                "quote": "the packet"
+              }
+            },
+            "introducing": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 65,
+                "quote": "a packet"
+              }
+            }
+          }
+        ]
+      },
+      "correctedTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"child\":\"1.b\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"anchor\":{\"endChar\":47,\"quote\":\"receiving on \",\"startChar\":34},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":56,\"quote\":\"a channel\",\"startChar\":47},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":57,\"quote\":\" \",\"startChar\":56},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":65,\"quote\":\"a packet\",\"startChar\":57},\"path\":\"1.a\"}}]},{\"element\":\"1.b\",\"kind\":\"functional\",\"parts\":[{\"anchor\":{\"endChar\":75,\"quote\":\"storing \",\"startChar\":67},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":85,\"quote\":\"the packet\",\"startChar\":75},\"path\":\"1.b\"}}]},{\"introducing\":{\"anchor\":{\"endChar\":65,\"quote\":\"a packet\",\"startChar\":57},\"path\":\"1.a\"},\"kind\":\"antecedent\",\"referring\":{\"anchor\":{\"endChar\":85,\"quote\":\"the packet\",\"startChar\":75},\"path\":\"1.b\"}}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A method\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A method\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"method\"}]},{\"anchor\":{\"endChar\":65,\"quote\":\"receiving on a channel a packet\",\"startChar\":34},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":56,\"quote\":\"a channel\",\"startChar\":47},\"determiner\":\"a\",\"head\":\"channel\"},{\"anchor\":{\"endChar\":65,\"quote\":\"a packet\",\"startChar\":57},\"determiner\":\"a\",\"head\":\"packet\"}]},{\"anchor\":{\"endChar\":85,\"quote\":\"storing the packet\",\"startChar\":67},\"kind\":\"functional-relation\",\"path\":\"1.b\",\"terms\":[{\"anchor\":{\"endChar\":85,\"quote\":\"the packet\",\"startChar\":75},\"determiner\":\"the\",\"head\":\"packet\"}]}],\"producer\":\"rule\"}",
+      "correctedTreeSha256": "d940a2c2a641a9a4307a2088c2639dcdb9221b4294cca5570a9a4db984601840"
+    },
+    {
+      "case": "coordinated-action-actual-one-body-node",
+      "source": "A method comprising receiving on a channel a packet and storing the packet.",
+      "sourceSha256": "b691d7b59bc81f447bdb972326af1e59d7ab431f31f3a79db1a765aaa44a68f8",
+      "originalTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"anchor\":{\"endChar\":33,\"quote\":\"receiving on \",\"startChar\":20},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":42,\"quote\":\"a channel\",\"startChar\":33},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":43,\"quote\":\" \",\"startChar\":42},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":51,\"quote\":\"a packet\",\"startChar\":43},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":64,\"quote\":\" and storing \",\"startChar\":51},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":74,\"quote\":\"the packet\",\"startChar\":64},\"path\":\"1.a\"}}]}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A method\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A method\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"method\"}]},{\"anchor\":{\"endChar\":74,\"quote\":\"receiving on a channel a packet and storing the packet\",\"startChar\":20},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":42,\"quote\":\"a channel\",\"startChar\":33},\"determiner\":\"a\",\"head\":\"channel\"},{\"anchor\":{\"endChar\":51,\"quote\":\"a packet\",\"startChar\":43},\"determiner\":\"a\",\"head\":\"packet\"},{\"anchor\":{\"endChar\":74,\"quote\":\"the packet\",\"startChar\":64},\"determiner\":\"the\",\"head\":\"packet\"}]}],\"producer\":\"rule\"}",
+      "originalTreeSha256": "2519c8902bc6d4062d0fe9c86346009689a80dd94288076fd879533c1b9be53e",
+      "originalEdges": [
+        {
+          "kind": "part-of",
+          "child": "1.a",
+          "parent": "1"
+        },
+        {
+          "kind": "functional",
+          "element": "1.a",
+          "parts": [
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 33,
+                "quote": "receiving on "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 33,
+                  "endChar": 42,
+                  "quote": "a channel"
+                }
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 42,
+                "endChar": 43,
+                "quote": " "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 43,
+                  "endChar": 51,
+                  "quote": "a packet"
+                }
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 64,
+                "quote": " and storing "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 64,
+                  "endChar": 74,
+                  "quote": "the packet"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "correctedTree": {
+        "claimNumber": 1,
+        "producer": "rule",
+        "elements": [
+          {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "kind": "preamble-subject",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                },
+                "head": "method",
+                "determiner": "a"
+              }
+            ]
+          },
+          {
+            "path": "1.a",
+            "anchor": {
+              "startChar": 20,
+              "endChar": 74,
+              "quote": "receiving on a channel a packet and storing the packet"
+            },
+            "kind": "functional-relation",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 33,
+                  "endChar": 42,
+                  "quote": "a channel"
+                },
+                "head": "channel",
+                "determiner": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 43,
+                  "endChar": 51,
+                  "quote": "a packet"
+                },
+                "head": "packet",
+                "determiner": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 64,
+                  "endChar": 74,
+                  "quote": "the packet"
+                },
+                "head": "packet",
+                "determiner": "the"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "kind": "part-of",
+            "child": "1.a",
+            "parent": "1"
+          },
+          {
+            "kind": "functional",
+            "element": "1.a",
+            "parts": [
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 33,
+                  "quote": "receiving on "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.a",
+                  "anchor": {
+                    "startChar": 33,
+                    "endChar": 42,
+                    "quote": "a channel"
+                  }
+                }
+              },
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 42,
+                  "endChar": 43,
+                  "quote": " "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.a",
+                  "anchor": {
+                    "startChar": 43,
+                    "endChar": 51,
+                    "quote": "a packet"
+                  }
+                }
+              },
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 51,
+                  "endChar": 64,
+                  "quote": " and storing "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.a",
+                  "anchor": {
+                    "startChar": 64,
+                    "endChar": 74,
+                    "quote": "the packet"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "kind": "antecedent",
+            "referring": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 74,
+                "quote": "the packet"
+              }
+            },
+            "introducing": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 43,
+                "endChar": 51,
+                "quote": "a packet"
+              }
+            }
+          }
+        ]
+      },
+      "correctedTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"anchor\":{\"endChar\":33,\"quote\":\"receiving on \",\"startChar\":20},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":42,\"quote\":\"a channel\",\"startChar\":33},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":43,\"quote\":\" \",\"startChar\":42},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":51,\"quote\":\"a packet\",\"startChar\":43},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":64,\"quote\":\" and storing \",\"startChar\":51},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":74,\"quote\":\"the packet\",\"startChar\":64},\"path\":\"1.a\"}}]},{\"introducing\":{\"anchor\":{\"endChar\":51,\"quote\":\"a packet\",\"startChar\":43},\"path\":\"1.a\"},\"kind\":\"antecedent\",\"referring\":{\"anchor\":{\"endChar\":74,\"quote\":\"the packet\",\"startChar\":64},\"path\":\"1.a\"}}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A method\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A method\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"method\"}]},{\"anchor\":{\"endChar\":74,\"quote\":\"receiving on a channel a packet and storing the packet\",\"startChar\":20},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":42,\"quote\":\"a channel\",\"startChar\":33},\"determiner\":\"a\",\"head\":\"channel\"},{\"anchor\":{\"endChar\":51,\"quote\":\"a packet\",\"startChar\":43},\"determiner\":\"a\",\"head\":\"packet\"},{\"anchor\":{\"endChar\":74,\"quote\":\"the packet\",\"startChar\":64},\"determiner\":\"the\",\"head\":\"packet\"}]}],\"producer\":\"rule\"}",
+      "correctedTreeSha256": "07c6668cb17a781770e82eea10f629b19a1cd6eb9a76dceb6c2d450c5a49dc38"
+    },
+    {
+      "case": "independent-finite-subject-actual-sibling-topology",
+      "source": "A system comprising the unit displays during a scan a curve; the sensor detects a signal.",
+      "sourceSha256": "89dbe857d38cbbc583290a2801a30bd00f3261a125d73a501a587231fdd06aac",
+      "originalTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":28,\"quote\":\"the unit\",\"startChar\":20},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":45,\"quote\":\" displays during \",\"startChar\":28},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":51,\"quote\":\"a scan\",\"startChar\":45},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":52,\"quote\":\" \",\"startChar\":51},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":59,\"quote\":\"a curve\",\"startChar\":52},\"path\":\"1.a\"}}]},{\"child\":\"1.b\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.b\",\"kind\":\"functional\",\"parts\":[{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":71,\"quote\":\"the sensor\",\"startChar\":61},\"path\":\"1.b\"}},{\"anchor\":{\"endChar\":80,\"quote\":\" detects \",\"startChar\":71},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":88,\"quote\":\"a signal\",\"startChar\":80},\"path\":\"1.b\"}}]}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":59,\"quote\":\"the unit displays during a scan a curve\",\"startChar\":20},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":28,\"quote\":\"the unit\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"unit\"},{\"anchor\":{\"endChar\":51,\"quote\":\"a scan\",\"startChar\":45},\"determiner\":\"a\",\"head\":\"scan\"},{\"anchor\":{\"endChar\":59,\"quote\":\"a curve\",\"startChar\":52},\"determiner\":\"a\",\"head\":\"curve\"}]},{\"anchor\":{\"endChar\":88,\"quote\":\"the sensor detects a signal\",\"startChar\":61},\"kind\":\"functional-relation\",\"path\":\"1.b\",\"terms\":[{\"anchor\":{\"endChar\":71,\"quote\":\"the sensor\",\"startChar\":61},\"determiner\":\"the\",\"head\":\"sensor\"},{\"anchor\":{\"endChar\":88,\"quote\":\"a signal\",\"startChar\":80},\"determiner\":\"a\",\"head\":\"signal\"}]}],\"producer\":\"rule\"}",
+      "originalTreeSha256": "5510f62c02cc55488987b7d7f21b5af9a2eabb80c5071f710dd8d46796e895c4",
+      "originalEdges": [
+        {
+          "kind": "part-of",
+          "child": "1.a",
+          "parent": "1"
+        },
+        {
+          "kind": "functional",
+          "element": "1.a",
+          "parts": [
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 28,
+                  "quote": "the unit"
+                }
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 28,
+                "endChar": 45,
+                "quote": " displays during "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 45,
+                  "endChar": 51,
+                  "quote": "a scan"
+                }
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 52,
+                "quote": " "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 52,
+                  "endChar": 59,
+                  "quote": "a curve"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "kind": "part-of",
+          "child": "1.b",
+          "parent": "1"
+        },
+        {
+          "kind": "functional",
+          "element": "1.b",
+          "parts": [
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 61,
+                  "endChar": 71,
+                  "quote": "the sensor"
+                }
+              }
+            },
+            {
+              "kind": "text",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 80,
+                "quote": " detects "
+              }
+            },
+            {
+              "kind": "term",
+              "term": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 80,
+                  "endChar": 88,
+                  "quote": "a signal"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "correctedTree": {
+        "claimNumber": 1,
+        "producer": "rule",
+        "elements": [
+          {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "kind": "preamble-subject",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "head": "system",
+                "determiner": "a"
+              }
+            ]
+          },
+          {
+            "path": "1.a",
+            "anchor": {
+              "startChar": 20,
+              "endChar": 59,
+              "quote": "the unit displays during a scan a curve"
+            },
+            "kind": "functional-relation",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 28,
+                  "quote": "the unit"
+                },
+                "head": "unit",
+                "determiner": "the"
+              },
+              {
+                "anchor": {
+                  "startChar": 45,
+                  "endChar": 51,
+                  "quote": "a scan"
+                },
+                "head": "scan",
+                "determiner": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 52,
+                  "endChar": 59,
+                  "quote": "a curve"
+                },
+                "head": "curve",
+                "determiner": "a"
+              }
+            ]
+          },
+          {
+            "path": "1.b",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 88,
+              "quote": "the sensor detects a signal"
+            },
+            "kind": "functional-relation",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 61,
+                  "endChar": 71,
+                  "quote": "the sensor"
+                },
+                "head": "sensor",
+                "determiner": "the"
+              },
+              {
+                "anchor": {
+                  "startChar": 80,
+                  "endChar": 88,
+                  "quote": "a signal"
+                },
+                "head": "signal",
+                "determiner": "a"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "kind": "part-of",
+            "child": "1.a",
+            "parent": "1"
+          },
+          {
+            "kind": "part-of",
+            "child": "1.b",
+            "parent": "1"
+          },
+          {
+            "kind": "functional",
+            "element": "1.a",
+            "parts": [
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.a",
+                  "anchor": {
+                    "startChar": 20,
+                    "endChar": 28,
+                    "quote": "the unit"
+                  }
+                }
+              },
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 28,
+                  "endChar": 45,
+                  "quote": " displays during "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.a",
+                  "anchor": {
+                    "startChar": 45,
+                    "endChar": 51,
+                    "quote": "a scan"
+                  }
+                }
+              },
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 51,
+                  "endChar": 52,
+                  "quote": " "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.a",
+                  "anchor": {
+                    "startChar": 52,
+                    "endChar": 59,
+                    "quote": "a curve"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "kind": "functional",
+            "element": "1.b",
+            "parts": [
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.b",
+                  "anchor": {
+                    "startChar": 61,
+                    "endChar": 71,
+                    "quote": "the sensor"
+                  }
+                }
+              },
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 71,
+                  "endChar": 80,
+                  "quote": " detects "
+                }
+              },
+              {
+                "kind": "term",
+                "term": {
+                  "path": "1.b",
+                  "anchor": {
+                    "startChar": 80,
+                    "endChar": 88,
+                    "quote": "a signal"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "correctedTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"child\":\"1.b\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":28,\"quote\":\"the unit\",\"startChar\":20},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":45,\"quote\":\" displays during \",\"startChar\":28},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":51,\"quote\":\"a scan\",\"startChar\":45},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":52,\"quote\":\" \",\"startChar\":51},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":59,\"quote\":\"a curve\",\"startChar\":52},\"path\":\"1.a\"}}]},{\"element\":\"1.b\",\"kind\":\"functional\",\"parts\":[{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":71,\"quote\":\"the sensor\",\"startChar\":61},\"path\":\"1.b\"}},{\"anchor\":{\"endChar\":80,\"quote\":\" detects \",\"startChar\":71},\"kind\":\"text\"},{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":88,\"quote\":\"a signal\",\"startChar\":80},\"path\":\"1.b\"}}]}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":59,\"quote\":\"the unit displays during a scan a curve\",\"startChar\":20},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":28,\"quote\":\"the unit\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"unit\"},{\"anchor\":{\"endChar\":51,\"quote\":\"a scan\",\"startChar\":45},\"determiner\":\"a\",\"head\":\"scan\"},{\"anchor\":{\"endChar\":59,\"quote\":\"a curve\",\"startChar\":52},\"determiner\":\"a\",\"head\":\"curve\"}]},{\"anchor\":{\"endChar\":88,\"quote\":\"the sensor detects a signal\",\"startChar\":61},\"kind\":\"functional-relation\",\"path\":\"1.b\",\"terms\":[{\"anchor\":{\"endChar\":71,\"quote\":\"the sensor\",\"startChar\":61},\"determiner\":\"the\",\"head\":\"sensor\"},{\"anchor\":{\"endChar\":88,\"quote\":\"a signal\",\"startChar\":80},\"determiner\":\"a\",\"head\":\"signal\"}]}],\"producer\":\"rule\"}",
+      "correctedTreeSha256": "96f1848253e1665c9ca0d15ac16037653d6f4359ee30b85972eb2061bde7f391"
+    }
+  ]
+}

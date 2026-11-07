@@ -8,8 +8,12 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
+import type {
+  ClaimLexicalMembershipRequest,
+  ClaimLexicalMembershipResult,
+} from "@beep/law-practice-domain/values/ClaimElement";
 import type * as Effect from "effect/Effect";
-import type { UsptoClaimsError } from "./ClaimSelfCheck.errors.ts";
+import type { ClaimLexicalMembershipQueryError, UsptoClaimsError } from "./ClaimSelfCheck.errors.ts";
 import type { UsptoClaimInputSet, UsptoClaimSet, UsptoClaimSource } from "./ClaimSelfCheck.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("ClaimSelfCheck/ClaimSelfCheck.ports");
@@ -98,4 +102,23 @@ export interface UsptoClaimInputsShape {
  */
 export class UsptoClaimInputs extends Context.Service<UsptoClaimInputs, UsptoClaimInputsShape>()(
   $I`UsptoClaimInputs`
+) {}
+
+/**
+ * Optional application-local exact-form lexical capability; the server owns its driver bridge.
+ * @category ports
+ * @since 0.0.0
+ */
+export interface ClaimLexicalMembershipShape {
+  readonly query: (
+    request: ClaimLexicalMembershipRequest
+  ) => Effect.Effect<ClaimLexicalMembershipResult, ClaimLexicalMembershipQueryError>;
+}
+/**
+ * Optional local lexical input; absence supplies no affirmative noun fact.
+ * @category ports
+ * @since 0.0.0
+ */
+export class ClaimLexicalMembership extends Context.Service<ClaimLexicalMembership, ClaimLexicalMembershipShape>()(
+  $I`ClaimLexicalMembership`
 ) {}

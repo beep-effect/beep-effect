@@ -54,6 +54,7 @@ export { fixtureSource, TestCrypto } from "./internal/officeActionFixture.ts";
  * @since 0.0.0
  */
 export {
+  projectClaimFrameLexicalView,
   projectClaimRoleTerms,
   validateClaimSourceOwnership,
 } from "./values/ClaimElement/ClaimClauseRole.projection.ts";

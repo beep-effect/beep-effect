@@ -388,6 +388,14 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/drivers/wink/src/WinkIntrinsicNoun.models.ts",
+      "symbol": "WinkIntrinsicNounShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/wink",
+      "reason": "This is a live scoped SDK capability: provider identity plus a query function returning Effect with typed failures. It holds a captured engine/cache lifetime and is not serializable pure data. Request, result, raw witness and activation errors are annotated schemas; runtime adapter is immutable and scoped. Modeling this executable service object as a data codec would neither validate captured ownership nor its lifetime. Owner: @beep/wink. Exit: re-review if the executable contract or captured engine ownership changes."
+    },
+    {
       "file": "packages/drivers/xstate/src/StatelyInspector.service.ts",
       "symbol": "StatelyInspectorShape",
       "kind": "exported-interface",
@@ -2501,7 +2509,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 125,
+      "line": 128,
       "owner": "@beep/law-practice-domain",
       "reason": "Fixed reviewed source grammar regression controls decode 54 authored source plans and three route families to assert exact UTF-16 terms, head/outer extents, kinds, topology, frame argument provenance, functional partitions and route verdicts, plus atomic negative controls. Random codec round trips cannot establish those source grammar obligations. Public claim/tree model properties remain covered by the existing domain model tests; no arbitrary padding is introduced. This exception is limited to @beep/law-practice-domain fixed source-regression tests and must be re-reviewed when this file or its asserted invariants change."
     },

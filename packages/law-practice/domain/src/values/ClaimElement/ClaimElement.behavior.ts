@@ -31,7 +31,7 @@ import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.ts";
 import { compileClaimClauseRoles } from "./ClaimClauseRole.behavior.ts";
 import { ClaimBoundRolePlan, ClaimRoleDecomposition } from "./ClaimClauseRole.model.ts";
-import { projectClaimRoleTerms, validateClaimSourceOwnership } from "./ClaimClauseRole.projection.ts";
+import { projectClaimRoleTerms } from "./ClaimClauseRole.projection.ts";
 import { compileClaimSourceElements } from "./ClaimClauseRole.structure.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
@@ -1601,16 +1601,33 @@ type StructuralReferenceStrategy = (
 const legacyStructuralReferences: StructuralReferenceStrategy = (elements, ancestors) =>
   antecedentEdges(elements, ancestors);
 const inspectionStructuralReferencesFor =
-  (abbreviation: typeof isExplicitAbbreviatedHead): StructuralReferenceStrategy =>
+  (
+    abbreviation: typeof isExplicitAbbreviatedHead,
+    donorAllowed: (path: string, term: EncodedTerm) => boolean = () => true
+  ): StructuralReferenceStrategy =>
   (elements, ancestors, parents, ancestorBindings) => {
     // Foreign referring edges are evidence for binding an ancestor's owner only.
     // The returned reference list is still produced for current elements alone.
     const baseline = A.appendAll(
-      antecedentEdges(elements, ancestors, legacyAntecedentStrategy, abbreviation),
+      antecedentEdges(
+        elements,
+        ancestors,
+        { ...legacyAntecedentStrategy, allows: (_path, _term, path, term) => donorAllowed(path, term) },
+        abbreviation
+      ),
       ancestorBindings()
     );
     const { strategy, facts } = ownershipStrategy(elements, ancestors, baseline);
-    const references = antecedentEdges(elements, ancestors, strategy, abbreviation);
+    const references = antecedentEdges(
+      elements,
+      ancestors,
+      {
+        ...strategy,
+        allows: (path, term, candidatePath, candidate) =>
+          donorAllowed(candidatePath, candidate) && strategy.allows(path, term, candidatePath, candidate),
+      },
+      abbreviation
+    );
     const dependencies = A.getSomes(
       A.map(
         A.filter(facts, (fact) => fact.reason === "part-location"),
@@ -2245,35 +2262,75 @@ const sourcePlanFor = (
     TextAnchor.make(anchorOf(parts.value.body))
   );
 };
+const sourceCoreKey = (anchor: typeof TextAnchor.Encoded): string => `${anchor.startChar}:${anchor.endChar}`;
+
+const sourcePathLetterWidth = (siblings: number, charge: (amount: number) => boolean): number => {
+  let value = siblings;
+  let letters = 1;
+  while (value >= 26) {
+    if (!charge(2)) return -1;
+    value = Math.floor(value / 26) - 1;
+    letters++;
+  }
+  return letters;
+};
+const sourceElementPaths = (
+  structural: ClaimSourceElementPlan,
+  rootPath: string,
+  charge: (amount: number) => boolean
+): O.Option<HashMap.HashMap<number, string>> => {
+  let paths = HashMap.empty<number, string>();
+  let siblingCounts = HashMap.empty<number, number>();
+  for (const element of structural.elements) {
+    const parent = O.flatMap(element.parent, (ordinal) => HashMap.get(paths, ordinal));
+    const key = O.getOrElse(element.parent, () => 0);
+    const siblings = O.getOrElse(HashMap.get(siblingCounts, key), () => 0);
+    const letters = sourcePathLetterWidth(siblings, charge);
+    if (letters < 0) return O.none();
+    if (
+      !charge(
+        O.getOrElse(
+          O.map(parent, (path) => path.length),
+          () => rootPath.length
+        ) +
+          letters * letters +
+          4
+      )
+    )
+      return O.none();
+    const path = O.match(parent, { onNone: () => rootPath, onSome: (value) => `${value}.${letterSegment(siblings)}` });
+    paths = HashMap.set(paths, element.ordinal, path);
+    siblingCounts = HashMap.set(siblingCounts, key, siblings + 1);
+  }
+  // Pay the added successful Option carrier before allocation; no source allowance is restored.
+  return charge(1) ? O.some(paths) : O.none();
+};
 const projectedClaimInput = (
   claim: PatentClaim,
   structural: ClaimSourceElementPlan
-): O.Option<ReturnType<typeof inspectionTreeInput>> => {
+): O.Option<{
+  readonly input: ReturnType<typeof inspectionTreeInput>;
+  readonly opaqueNonDonors: HashSet.HashSet<string>;
+}> => {
   let remaining = structural.remainingWork;
   const charge = (amount: number): boolean => {
     remaining -= amount;
     return remaining >= 0;
   };
-  if (!validateClaimSourceOwnership(structural, charge)) return O.none();
-  if (!charge(structural.elements.length ** 2 + structural.roles.nominals.length)) return O.none();
-  const paths = A.reduce(structural.elements, HashMap.empty<number, string>(), (index, element) => {
-    const parent = O.flatMap(element.parent, (ordinal) => HashMap.get(index, ordinal));
-    const siblings = A.countBy(
-      structural.elements,
-      (previous) => previous.ordinal < element.ordinal && O.getOrNull(previous.parent) === O.getOrNull(element.parent)
-    );
-    const path = O.match(parent, {
-      onNone: () => `${claim.claimNumber}`,
-      onSome: (value) => `${value}.${letterSegment(siblings)}`,
-    });
-    return HashMap.set(index, element.ordinal, path);
-  });
+  // The sole private caller immediately supplies the immutable result of
+  // sourcePlanFor, whose compiler has already completed global ownership/DAG
+  // validation under this same remaining allowance. Projection charges only
+  // its actual path/term construction; external plans never enter this seam.
+  if (!charge(structural.elements.length * 16 + structural.roles.nominals.length + 32)) return O.none();
+  const rootPath = `${claim.claimNumber}`;
+  const paths = sourceElementPaths(structural, rootPath, charge);
+  if (O.isNone(paths)) return O.none();
   const terms = O.all(A.map(structural.elements, (element) => projectClaimRoleTerms(element, charge)));
   if (O.isNone(terms)) return O.none();
   const elements = A.map(
     structural.elements,
     (element, index): EncodedElement => ({
-      path: O.getOrThrow(HashMap.get(paths, element.ordinal)),
+      path: O.getOrThrow(HashMap.get(paths.value, element.ordinal)),
       anchor: element.extent,
       kind: element.kind,
       terms: O.getOrThrow(A.get(terms.value, index)),
@@ -2285,13 +2342,24 @@ const projectedClaimInput = (
       onSome: (ordinal): ReadonlyArray<EncodedEdge> => [
         {
           kind: "part-of",
-          child: O.getOrThrow(HashMap.get(paths, element.ordinal)),
-          parent: O.getOrThrow(HashMap.get(paths, ordinal)),
+          child: O.getOrThrow(HashMap.get(paths.value, element.ordinal)),
+          parent: O.getOrThrow(HashMap.get(paths.value, ordinal)),
         },
       ],
     })
   );
-  return remaining >= 0 && A.isArrayNonEmpty(elements) ? O.some(assembleTree(claim, elements, containment)) : O.none();
+  let opaqueNonDonors = HashSet.empty<string>();
+  for (const selection of structural.roles.opaqueSelections) {
+    // Registry storage belongs to this successful immutable source projection.
+    // All public anchors/quotes were globally validated against this source.
+    // The immutable per-claim input registry therefore makes coordinates an
+    // exact source-core identity; a foreign quote cannot enter this seam.
+    if (!charge(selection.core.quote.length * 2 + 12)) return O.none();
+    opaqueNonDonors = HashSet.add(opaqueNonDonors, sourceCoreKey(selection.core));
+  }
+  return remaining >= 0 && A.isArrayNonEmpty(elements)
+    ? O.some({ input: assembleTree(claim, elements, containment), opaqueNonDonors })
+    : O.none();
 };
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,
@@ -2312,7 +2380,10 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
     A.filter(prepared.qualifications, ClaimInputQualification.guards["context-ready"]),
     ({ claim }) => claim
   );
-  let inputs = HashMap.empty<number, ReturnType<typeof inspectionTreeInput>>();
+  let inputs = HashMap.empty<
+    number,
+    { readonly input: ReturnType<typeof inspectionTreeInput>; readonly opaqueNonDonors: HashSet.HashSet<string> }
+  >();
   const plans = A.empty<ClaimBoundRolePlan>();
   const boundedEvidence = boundedSourceEvidence(prepared, evidence);
   for (const qualification of prepared.qualifications) {
@@ -2345,7 +2416,10 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
     );
   }
   const construct: typeof inspectionTreeInput = (claim, parts) =>
-    O.getOrElse(HashMap.get(inputs, claim.claimNumber), () => inspectionTreeInput(claim, parts));
+    O.getOrElse(
+      O.map(HashMap.get(inputs, claim.claimNumber), (projected) => projected.input),
+      () => inspectionTreeInput(claim, parts)
+    );
   const enhancedRoots = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => `${claimNumber}`));
   const sourceAbbreviation: typeof isExplicitAbbreviatedHead = (head) => (candidate) =>
     isExplicitAbbreviatedHead(head)(candidate) || isSourcePrefixAbbreviatedHead(head)(candidate);
@@ -2353,7 +2427,12 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
     inspectionStructuralReferencesFor(
       O.exists(A.head(elements), ({ path }) => HashSet.has(enhancedRoots, path))
         ? sourceAbbreviation
-        : isExplicitAbbreviatedHead
+        : isExplicitAbbreviatedHead,
+      (path, term) =>
+        !O.exists(
+          O.flatMap(claimOfMention(path), (number) => HashMap.get(inputs, number)),
+          (projected) => HashSet.has(projected.opaqueNonDonors, sourceCoreKey(term.anchor))
+        )
     )(elements, ancestors, parents, ancestorBindings);
   const decompositions = yield* Effect.forEach(prepared.qualifications, inputDecomposition(claims, construct, resolve));
   return ClaimRoleDecomposition.make({ decompositions, plans });

@@ -11,25 +11,46 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
+import { claimCitationIntroducers, validateClaimCitationWitness } from "./ClaimClauseRole.behavior.ts";
 import {
   ClaimAttachedNominal,
+  ClaimCitationWitness,
   ClaimClauseRolePlan,
+  ClaimFiniteSourceProof,
   ClaimFrameArgument,
+  ClaimFrameSubjectInheritance,
   ClaimListDeclaration,
+  ClaimNominalCandidateState,
+  ClaimOperatorLexicalSlot,
   ClaimOwnedTermRegion,
   ClaimPlannedElement,
+  ClaimPrivateFrameArgument,
   ClaimSourceDeclaration,
   ClaimSourceElementPlan,
   ClaimSourceExclusion,
   ClaimSourceFrame,
+  ClaimSourceOperatorBinding,
   ClaimSourceProof,
+  ClaimSourceProofOrdinal,
+  ClaimSourceProofRef,
   ClaimTermOwnerCertificate,
 } from "./ClaimClauseRole.model.ts";
-import { validateClaimSourceOwnership } from "./ClaimClauseRole.projection.ts";
+import {
+  deriveClaimQualifiedHeaderMembership,
+  deriveClaimSourceTokenOwnership,
+  validateClaimSourceOwnership,
+} from "./ClaimClauseRole.projection.ts";
+import { sourceLowerBound, sourceSelectionFrameMember } from "./ClaimClauseRole.sourceQuery.ts";
 import type { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
-import type { ClaimElementGrouping, ClaimNominalSpan, ClaimPredicateSpan } from "./ClaimClauseRole.model.ts";
+import type {
+  ClaimElementGrouping,
+  ClaimNominalSpan,
+  ClaimPredicateSpan,
+  ClaimPrivateBasisCandidate,
+} from "./ClaimClauseRole.model.ts";
 import type { ClaimLexicalToken } from "./ClaimLexicalEvidence.model.ts";
 
+const nominalSourceStart = (nominal: ClaimNominalSpan): number => nominal.anchor.startChar;
 const compositions = HashSet.make("includes", "including", "comprises", "comprising", "having");
 const separators = HashSet.make(",", ";", "and", "or");
 const relatives = HashSet.make("that", "which", "wherein", "whereby", "when", "if", "while");
@@ -53,14 +74,6 @@ const locativePP = HashSet.make(
   "beside",
   "near"
 );
-const citationIntroducers: ReadonlyArray<ReadonlyArray<string>> = [
-  ["as", "set", "forth", "in"],
-  ["as", "recited", "in"],
-  ["as", "claimed", "in"],
-  ["in", "accordance", "with"],
-  ["according", "to"],
-  ["of"],
-];
 const citationWords = HashSet.make("claim", "claims");
 const citationSeparators = HashSet.make(",", "and", "or");
 const articles = HashSet.make("a", "an", "the", "said", "each", "its", "their", "this", "these", "those");
@@ -107,7 +120,7 @@ class SourcePlanner {
     this.body = body;
   }
   private readonly claim: PatentClaim;
-  private readonly roles: ClaimClauseRolePlan;
+  private roles: ClaimClauseRolePlan;
   private readonly tokens: ReadonlyArray<ClaimLexicalToken>;
   private readonly preamble: TextAnchor;
   private readonly body: TextAnchor;
@@ -139,10 +152,48 @@ class SourcePlanner {
   };
   private located = (span: TextAnchor): ReadonlyArray<number> =>
     A.filter(A.range(0, this.tokens.length - 1), (i) => O.exists(this.token(i), (t) => inside(span, t.anchor)));
-  private owned = (span: TextAnchor): ReadonlyArray<ClaimNominalSpan> =>
-    A.filter(this.roles.nominals, (n) => inside(span, n.anchor));
-  private predicates = (span: TextAnchor) =>
-    A.filter(this.roles.predicates, (p) => inside(span, p.anchor) && p.kind !== "adjunct");
+  private nominalIndexReady = false;
+  private nominalSourceOrdered = false;
+  private prepareNominalIndex = (): boolean => {
+    if (!this.charge(1)) return false;
+    if (this.nominalIndexReady) return true;
+    if (!this.charge(this.roles.nominals.length * 2 + 2)) return false;
+    let previous = -1;
+    this.nominalSourceOrdered = A.every(this.roles.nominals, (nominal) => {
+      const ordered = nominal.anchor.startChar >= previous;
+      previous = nominal.anchor.startChar;
+      return ordered;
+    });
+    this.nominalIndexReady = true;
+    return true;
+  };
+  private ownedLowerBound(span: TextAnchor): number {
+    return sourceLowerBound(this.roles.nominals, span.startChar, nominalSourceStart, this.charge);
+  }
+  private ownedFrom(span: TextAnchor, lower: number): ReadonlyArray<ClaimNominalSpan> {
+    if (!this.charge(1)) return [];
+    const result: Array<ClaimNominalSpan> = [];
+    for (let i = lower; i < this.roles.nominals.length; i++) {
+      if (!this.charge(3)) return [];
+      const nominal = O.getOrThrow(A.get(this.roles.nominals, i));
+      if (nominal.anchor.startChar >= span.endChar) break;
+      if (inside(span, nominal.anchor)) result.push(nominal);
+    }
+    return result;
+  }
+  private owned = (span: TextAnchor): ReadonlyArray<ClaimNominalSpan> => {
+    if (!this.prepareNominalIndex()) return [];
+    if (!this.nominalSourceOrdered)
+      return this.charge(this.roles.nominals.length * 2 + 1)
+        ? A.filter(this.roles.nominals, (n) => inside(span, n.anchor))
+        : [];
+    const lower = this.ownedLowerBound(span);
+    return lower < 0 ? [] : this.ownedFrom(span, lower);
+  };
+  private predicates = (span: TextAnchor): ReadonlyArray<ClaimPredicateSpan> =>
+    this.charge(this.roles.predicates.length * 2 + 1)
+      ? A.filter(this.roles.predicates, (p) => inside(span, p.anchor) && p.kind !== "adjunct")
+      : [];
   private trimEnd = (start: number, end: number): number => {
     while (end > start && HashSet.has(HashSet.make(".", ";", ","), this.word(end - 1))) end--;
     return end;
@@ -151,9 +202,9 @@ class SourcePlanner {
     while (start < end && HashSet.has(HashSet.make("and", "or", ",", ";"), this.word(start))) start++;
     return start;
   };
-  private reserve = (span: TextAnchor): boolean =>
-    this.charge(this.roles.nominals.length + this.roles.predicates.length + span.quote.length + 1);
+  private reserve = (span: TextAnchor): boolean => this.charge(span.quote.length + 1);
   private protectedSource = (): boolean => {
+    if (!this.prepareCertificateBindings()) return false;
     if (!this.charge(this.claim.claimText.length + this.tokens.length * 3)) return false;
     const quotes = A.fromIterable(
       Str.matchAll(/"(?:\\.|[^"\\])*"|“[^”]*”|‘(?:[^’]|’(?=[\p{L}\p{N}]))*’/gu)(this.claim.claimText)
@@ -236,7 +287,33 @@ class SourcePlanner {
         (n) => n.anchor
       )
     );
+    if (!this.charge(nominals.length * (this.roles.opaqueSelections.length + 3)))
+      return { subject: O.none(), arguments: [] };
+    let previousArgument = O.none<ClaimFrameArgument>();
+    let objectSeen = false;
     const args = A.map(nominals, (n, ordinal) => {
+      const selection = A.findFirst(
+        this.roles.opaqueSelections,
+        (s) => s.core.startChar === n.anchor.startChar && s.core.endChar === n.anchor.endChar
+      );
+      if (O.isSome(selection)) {
+        const proof = A.get(this.roles.certificates, selection.value.proof.ordinal - 1);
+        const owner = O.flatMap(proof, (p) =>
+          p.kind === "selection"
+            ? O.flatMap(p.owner, (r) =>
+                O.flatMap(A.get(this.roles.certificates, r.ordinal - 1), (head) =>
+                  head.kind === "head" ? O.some(head.core) : O.none()
+                )
+              )
+            : O.none()
+        );
+        return ClaimFrameArgument.make({
+          role: "selection-value",
+          nominal: n.anchor,
+          predicate: O.none(),
+          ownerNominal: owner,
+        });
+      }
       const index = HashMap.get(this.tokenIndex, n.anchor.startChar);
       const before = O.flatMap(index, (i) => this.token(i - 1));
       const predicate = A.findLast(predicates, (p) => p.anchor.endChar <= n.anchor.startChar);
@@ -247,15 +324,31 @@ class SourcePlanner {
       );
       const modifier = this.modifierArgument(previous, predicate, before);
       const isSubject = O.exists(subject, (a) => a.startChar === n.anchor.startChar);
-      const role = this.argumentRole(isSubject, modifier, prep, O.isSome(predicate));
       const head = this.argumentHead(isSubject, modifier, first, predicate);
       const operator = O.flatMap(head, (p) => A.findFirst(operators, (op) => inside(op, p.anchor)));
-      return ClaimFrameArgument.make({
+      const coordinatedPP =
+        !objectSeen &&
+        O.exists(before, (t) => HashSet.has(HashSet.make("and", "or"), Str.toLowerCase(t.anchor.quote))) &&
+        O.exists(
+          previousArgument,
+          (argument) =>
+            argument.role === "prepositional-complement" &&
+            O.exists(argument.predicate, (left) =>
+              O.exists(operator, (right) => left.startChar === right.startChar && left.endChar === right.endChar)
+            )
+        );
+      const role = coordinatedPP
+        ? "prepositional-complement"
+        : this.argumentRole(isSubject, modifier, prep, O.isSome(predicate));
+      const argument = ClaimFrameArgument.make({
         role,
         nominal: n.anchor,
         predicate: operator,
         ownerNominal: modifier ? O.map(previous, (left) => left.anchor) : O.none(),
       });
+      previousArgument = O.some(argument);
+      objectSeen = objectSeen || role === "object";
+      return argument;
     });
     return { subject, arguments: args };
   };
@@ -313,11 +406,26 @@ class SourcePlanner {
   private adjectiveProperty = (
     predicates: ReadonlyArray<ClaimPredicateSpan>,
     nominals: ReadonlyArray<ClaimNominalSpan>
-  ): boolean =>
-    predicates.length > 0 &&
-    A.every(predicates, (p) => p.kind === "auxiliary-head" || p.kind === "adjectival") &&
-    A.some(predicates, (p) => p.kind === "adjectival") &&
-    !A.some(nominals, (n) => O.exists(A.head(predicates), (p) => n.anchor.startChar > p.anchor.endChar));
+  ): boolean => {
+    if (!this.charge(predicates.length * 2 + nominals.length + 3)) return false;
+    if (
+      predicates.length === 0 ||
+      !A.every(predicates, (p) => p.kind === "auxiliary-head" || p.kind === "adjectival") ||
+      !A.some(predicates, (p) => p.kind === "adjectival") ||
+      A.some(nominals, (n) => O.exists(A.head(predicates), (p) => n.anchor.startChar > p.anchor.endChar))
+    )
+      return false;
+    if (!this.charge(this.roles.certificates.length * (predicates.length + 2) + 2)) return false;
+    return !A.some(
+      this.roles.certificates,
+      (p) =>
+        p.kind === "description" &&
+        O.exists(
+          A.get(this.roles.certificates, p.operator.ordinal - 1),
+          (op) => op.kind === "operator" && A.some(predicates, (predicate) => inside(predicate.anchor, op.extent))
+        )
+    );
+  };
   private elementKind = (
     grouping: ClaimElementGrouping,
     container: boolean,
@@ -427,6 +535,57 @@ class SourcePlanner {
         )
       : arguments_;
   };
+  private localClauseEnd(span: TextAnchor, end: number): number {
+    for (const clause of this.roles.clauses)
+      if (clause.kind !== "main" && clause.anchor.startChar > span.startChar && clause.anchor.startChar < end)
+        end = clause.anchor.startChar;
+    return end;
+  }
+  private localInfinitiveEnd(span: TextAnchor, end: number): number {
+    for (const predicate of this.roles.predicates) {
+      if (
+        predicate.kind !== "infinitive" ||
+        predicate.anchor.startChar <= span.startChar ||
+        predicate.anchor.startChar >= end
+      )
+        continue;
+      const index = HashMap.get(this.tokenIndex, predicate.anchor.startChar);
+      const to = O.flatMap(index, (i) => this.token(i - 1));
+      if (
+        O.exists(
+          to,
+          (t) => Str.toLowerCase(t.anchor.quote) === "to" && t.pos === "PART" && t.anchor.startChar > span.startChar
+        )
+      )
+        end = O.getOrThrow(to).anchor.startChar;
+    }
+    return end;
+  }
+  private localCoordinateEnd(span: TextAnchor, end: number): number {
+    for (const proof of this.roles.proofs)
+      if (
+        proof.kind === "coordinated-action" &&
+        proof.coordinator.startChar > span.startChar &&
+        proof.coordinator.startChar < end
+      )
+        end = proof.coordinator.startChar;
+    return end;
+  }
+  private localFrameExtent = (element: ClaimPlannedElement): TextAnchor => {
+    const span = element.extent;
+    if (element.grouping === "preamble") return span;
+    if (!this.charge(this.roles.clauses.length + this.roles.predicates.length + this.roles.proofs.length + 4))
+      return span;
+    let end = this.localClauseEnd(span, span.endChar);
+    end = this.localInfinitiveEnd(span, end);
+    end = this.localCoordinateEnd(span, end);
+    if (end === span.endChar || !this.charge(end - span.startChar + 2)) return span;
+    return TextAnchor.make({
+      startChar: span.startChar,
+      endChar: end,
+      quote: Str.slice(span.startChar, end)(this.claim.claimText),
+    });
+  };
   private appendElementFrame = (
     element: ClaimPlannedElement,
     operators: ReadonlyArray<TextAnchor>,
@@ -441,8 +600,15 @@ class SourcePlanner {
       )
     );
     const compositionChild = this.isCompositionChild(element, parentFrame);
-    if (!this.charge(nominals.length * (args.arguments.length + 1) + this.roles.proofs.length + 2)) return false;
-    const arguments_ = this.inheritedArguments(nominals, parentFrame, args.arguments, compositionChild);
+    const local = this.localFrameExtent(element);
+    if (!this.charge(nominals.length + operators.length + 2)) return false;
+    const localNominals = A.filter(nominals, (n) => inside(local, n.anchor));
+    const localOperators = A.filter(operators, (op) => inside(local, op));
+    const localArguments =
+      local.endChar === span.endChar ? args : this.argumentPlan(local, localNominals, localOperators);
+    if (!this.charge(nominals.length * (localArguments.arguments.length + 1) + this.roles.proofs.length + 2))
+      return false;
+    const arguments_ = this.inheritedArguments(localNominals, parentFrame, localArguments.arguments, compositionChild);
     this.frames.push(
       ClaimSourceFrame.make({
         ordinal: frame,
@@ -452,11 +618,11 @@ class SourcePlanner {
         parent: parentFrame,
         attachment: compositionChild ? "composition-child" : this.frameAttachment(grouping),
         introducer: O.orElse(introduced, () => this.actionIntroducer(element)),
-        predicates: operators,
-        nominals: A.map(nominals, (n) => n.anchor),
+        predicates: localOperators,
+        nominals: A.map(localNominals, (n) => n.anchor),
         coordination: O.none(),
         sharedSubject: O.none(),
-        ...args,
+        ...localArguments,
         arguments: arguments_,
       })
     );
@@ -1030,12 +1196,46 @@ class SourcePlanner {
         (proof) => proof.kind === "coordinated-action" && proof.operator.startChar === predicate.anchor.startChar
       )) &&
     HashSet.has(HashSet.make("and", "or"), this.word(index - 1));
+  private copularInfinitive = (predicate: ClaimPredicateSpan, index: number, enclosing: ClaimSourceFrame): boolean => {
+    if (
+      predicate.kind !== "infinitive" ||
+      O.isNone(enclosing.subject) ||
+      !this.charge(this.roles.predicates.length + 4)
+    )
+      return false;
+    const to = O.getOrThrow(this.token(index - 1)).anchor;
+    const governor = A.findLast(
+      this.roles.predicates,
+      (p) =>
+        p.kind === "auxiliary" &&
+        p.anchor.endChar <= to.startChar &&
+        inside(enclosing.extent, p.anchor) &&
+        this.blankGap(p.anchor.endChar, to.startChar)
+    );
+    const at = O.flatMap(governor, (p) => HashMap.get(this.tokenIndex, p.anchor.startChar));
+    if (O.isNone(at)) return false;
+    let before = at.value - 1;
+    while (
+      O.exists(
+        this.token(before),
+        (token) => token.pos === "ADV" || HashSet.has(HashSet.make("not", "n't"), Str.toLowerCase(token.anchor.quote))
+      )
+    ) {
+      if (!this.charge(1)) return false;
+      before--;
+    }
+    return O.exists(
+      this.token(before),
+      (token) => token.pos === "AUX" && O.exists(token.lemma, (lemma) => Str.toLowerCase(lemma) === "be")
+    );
+  };
   private predicateAttachment = (
     predicate: ClaimPredicateSpan,
     index: number,
     enclosing: ClaimSourceFrame
   ): O.Option<ClaimSourceFrame["attachment"]> => {
-    if (this.eventPosition(predicate, index)) return O.some("event-complement");
+    if (this.eventPosition(predicate, index))
+      return O.some(this.copularInfinitive(predicate, index, enclosing) ? "complement" : "event-complement");
     return this.coordinatePosition(predicate, index, enclosing) ? O.some("coordinate") : O.none();
   };
   private coordinatedEvent = (predicate: ClaimPredicateSpan): boolean =>
@@ -1065,7 +1265,7 @@ class SourcePlanner {
     end: number
   ): TextAnchor => {
     const index = O.getOrThrow(HashMap.get(this.tokenIndex, predicate.anchor.startChar));
-    return attachment === "event-complement"
+    return attachment === "event-complement" || attachment === "complement"
       ? this.span(index - 1, this.eventEnd(predicate, predicates, end))
       : this.span(index, end);
   };
@@ -1075,6 +1275,7 @@ class SourcePlanner {
       this.roles.predicates,
       (predicate) =>
         inside(parent.extent, predicate.anchor) &&
+        A.some(parent.predicates, (operator) => inside(operator, predicate.anchor)) &&
         predicate.anchor.endChar <= span.startChar &&
         HashSet.has(HashSet.make("finite", "auxiliary-head", "possession"), predicate.kind)
     );
@@ -1139,6 +1340,22 @@ class SourcePlanner {
       );
     });
   };
+  private licensedPredicateOuter(
+    parent: ClaimSourceFrame,
+    span: TextAnchor,
+    predicate: ClaimPredicateSpan,
+    licensed: O.Option<TextAnchor>
+  ): boolean {
+    const predicateIndex = HashMap.get(this.tokenIndex, predicate.anchor.startChar);
+    if (O.exists(predicateIndex, (index) => this.copularInfinitive(predicate, index, parent)))
+      return this.remaining >= 0;
+    // A relative predicate's complement remains governed by that frame; an
+    // NP-initial nonfinite modifier can also prove its complete nominal outer.
+    const first = A.head(parent.nominals);
+    return O.exists(first, (n) => n.startChar === parent.extent.startChar)
+      ? this.nominalEventOuter(parent, span, licensed)
+      : this.remaining >= 0;
+  }
   private predicateOuter = (
     parent: ClaimSourceFrame,
     span: TextAnchor,
@@ -1147,14 +1364,7 @@ class SourcePlanner {
   ): boolean => {
     if (attachment !== "event-complement") return true;
     const licensed = this.infinitiveGovernor(parent, span, predicate);
-    if (O.isSome(licensed)) {
-      // A relative predicate's complement remains governed by that frame; an
-      // NP-initial nonfinite modifier can also prove its complete nominal outer.
-      const first = A.head(parent.nominals);
-      return O.exists(first, (n) => n.startChar === parent.extent.startChar)
-        ? this.nominalEventOuter(parent, span, licensed)
-        : this.remaining >= 0;
-    }
+    if (O.isSome(licensed)) return this.licensedPredicateOuter(parent, span, predicate, licensed);
     const governor = this.eventGovernor(parent, span);
     if (this.remaining < 0) return false;
     if (O.isNone(governor))
@@ -1162,6 +1372,38 @@ class SourcePlanner {
     const index = HashMap.get(this.tokenIndex, span.startChar);
     return predicate.kind === "gerund" && O.exists(index, (i) => this.word(i) === "by");
   };
+  private appendAttachedPredicate(
+    predicate: ClaimPredicateSpan,
+    enclosing: ClaimSourceFrame,
+    index: number,
+    span: TextAnchor,
+    parent: ClaimSourceFrame,
+    attachment: ClaimSourceFrame["attachment"]
+  ): boolean {
+    const owned = this.owned(span);
+    const args = this.argumentPlan(span, owned, [predicate.anchor]);
+    if (this.remaining < 0) return false;
+    const controlled = attachment === "complement";
+    const shared = attachment === "coordinate" ? enclosing.subject : controlled ? parent.subject : O.none();
+    this.frames.push(
+      ClaimSourceFrame.make({
+        ordinal: this.frames.length + 1,
+        publicOwner: enclosing.publicOwner,
+        extent: span,
+        lexicalHeader: span,
+        parent: O.some(parent.ordinal),
+        attachment: attachment,
+        introducer: O.map(this.token(index - 1), (t) => t.anchor),
+        predicates: [predicate.anchor],
+        nominals: A.map(owned, (n) => n.anchor),
+        coordination: attachment === "coordinate" ? O.some(enclosing.ordinal) : O.none(),
+        sharedSubject: shared,
+        ...args,
+        subject: O.orElse(shared, () => args.subject),
+      })
+    );
+    return this.predicateOuter(parent, span, attachment, predicate);
+  }
   private appendPredicate = (
     predicate: ClaimPredicateSpan,
     enclosing: ClaimSourceFrame,
@@ -1171,36 +1413,16 @@ class SourcePlanner {
     if (!this.charge(this.frames.length + 2)) return false;
     const index = HashMap.get(this.tokenIndex, predicate.anchor.startChar);
     if (O.isNone(index)) return false;
-    const attachment = this.predicateAttachment(predicate, index.value, enclosing);
-    if (O.isNone(attachment)) return true;
-    const span = this.predicateSpan(predicate, attachment.value, predicates, end);
+    const provisional = this.eventPosition(predicate, index.value) ? "event-complement" : "coordinate";
+    const span = this.predicateSpan(predicate, provisional, predicates, end);
     if (!this.reserve(span)) return false;
-    const owned = this.owned(span);
-    const args = this.argumentPlan(span, owned, [predicate.anchor]);
     const parent = O.getOrElse(
       A.findLast(this.frames, (f) => f.ordinal >= enclosing.ordinal && inside(f.extent, span)),
       () => enclosing
     );
-    if (this.remaining < 0) return false;
-    const shared = attachment.value === "coordinate" ? enclosing.subject : O.none();
-    this.frames.push(
-      ClaimSourceFrame.make({
-        ordinal: this.frames.length + 1,
-        publicOwner: enclosing.publicOwner,
-        extent: span,
-        lexicalHeader: span,
-        parent: O.some(parent.ordinal),
-        attachment: attachment.value,
-        introducer: O.map(this.token(index.value - 1), (t) => t.anchor),
-        predicates: [predicate.anchor],
-        nominals: A.map(owned, (n) => n.anchor),
-        coordination: attachment.value === "coordinate" ? O.some(enclosing.ordinal) : O.none(),
-        sharedSubject: shared,
-        ...args,
-        subject: O.orElse(shared, () => args.subject),
-      })
-    );
-    return this.predicateOuter(parent, span, attachment.value, predicate);
+    const attachment = this.predicateAttachment(predicate, index.value, parent);
+    if (O.isNone(attachment)) return this.remaining >= 0;
+    return this.appendAttachedPredicate(predicate, enclosing, index.value, span, parent, attachment.value);
   };
   private predicateAttachments = (start: number, end: number, main: number): boolean => {
     const extent = this.span(start, end);
@@ -1256,29 +1478,68 @@ class SourcePlanner {
     }
     return true;
   };
+  private finalizedInheritance(
+    frame: ClaimSourceFrame,
+    subject: O.Option<TextAnchor>,
+    original: ReadonlyArray<ClaimSourceFrame>
+  ): O.Option<ClaimFrameSubjectInheritance> {
+    let inheritedSubject = O.none<ClaimFrameSubjectInheritance>();
+    if (
+      (frame.attachment === "relative" || frame.attachment === "complement") &&
+      O.isSome(subject) &&
+      O.isSome(frame.parent)
+    ) {
+      const parent = A.get(original, frame.parent.value - 1);
+      if (
+        !this.charge(
+          O.getOrElse(
+            O.map(parent, (p) => p.nominals.length),
+            () => 0
+          ) + 4
+        )
+      )
+        return O.none();
+      if (O.exists(parent, (p) => A.some(p.nominals, (n) => this.sameCore(n, subject.value))))
+        inheritedSubject = O.some(
+          ClaimFrameSubjectInheritance.make({ fromFrame: frame.parent.value, nominal: subject.value })
+        );
+    }
+    return inheritedSubject;
+  }
+  private finalizeFrame(original: ReadonlyArray<ClaimSourceFrame>, i: number): boolean {
+    const frame = O.getOrThrow(A.get(original, i));
+    const children = A.filter(original, (child) => O.contains(child.parent, frame.ordinal));
+    const refs = frame.predicates.length + frame.nominals.length + frame.arguments.length;
+    if (!this.charge((refs + 1) * (children.length + 1) * 4)) return false;
+    const nested = (anchor: TextAnchor): boolean => A.some(children, (child) => inside(child.extent, anchor));
+    const predicates = A.filter(frame.predicates, (predicate) => !nested(predicate));
+    const nominals = A.filter(frame.nominals, (nominal) => !nested(nominal));
+    const args = A.filter(
+      frame.arguments,
+      (argument) => !nested(argument.nominal) && !O.exists(argument.predicate, nested)
+    );
+    const subject =
+      frame.attachment === "relative" || O.isSome(frame.sharedSubject)
+        ? frame.subject
+        : O.filter(frame.subject, (s) =>
+            A.some(args, (argument) => argument.role === "subject" && argument.nominal.startChar === s.startChar)
+          );
+    const inheritedSubject = this.finalizedInheritance(frame, subject, original);
+    if (this.remaining < 0) return false;
+    this.frames[i] = ClaimSourceFrame.make({
+      ...frame,
+      predicates,
+      nominals,
+      arguments: args,
+      subject,
+      inheritedSubject,
+    });
+    return true;
+  }
   private finalizeFrames = (): boolean => {
     if (!this.charge(this.frames.length ** 2 + this.frames.length * 2)) return false;
     const original = A.copy(this.frames);
-    for (let i = 0; i < original.length; i++) {
-      const frame = O.getOrThrow(A.get(original, i));
-      const children = A.filter(original, (child) => O.contains(child.parent, frame.ordinal));
-      const refs = frame.predicates.length + frame.nominals.length + frame.arguments.length;
-      if (!this.charge((refs + 1) * (children.length + 1) * 4)) return false;
-      const nested = (anchor: TextAnchor): boolean => A.some(children, (child) => inside(child.extent, anchor));
-      const predicates = A.filter(frame.predicates, (predicate) => !nested(predicate));
-      const nominals = A.filter(frame.nominals, (nominal) => !nested(nominal));
-      const args = A.filter(
-        frame.arguments,
-        (argument) => !nested(argument.nominal) && !O.exists(argument.predicate, nested)
-      );
-      const subject =
-        frame.attachment === "relative" || O.isSome(frame.sharedSubject)
-          ? frame.subject
-          : O.filter(frame.subject, (s) =>
-              A.some(args, (argument) => argument.role === "subject" && argument.nominal.startChar === s.startChar)
-            );
-      this.frames[i] = ClaimSourceFrame.make({ ...frame, predicates, nominals, arguments: args, subject });
-    }
+    for (let i = 0; i < original.length; i++) if (!this.finalizeFrame(original, i)) return false;
     return true;
   };
   private ancestor = (parent: number, child: ClaimPlannedElement): boolean => {
@@ -1619,14 +1880,27 @@ class SourcePlanner {
     this.word(index) === "of" &&
     !HashSet.has(HashSet.make("the", "said"), this.word(index + 1));
   private partitiveTokenAdmitted = (index: number): boolean => {
-    if (!this.charge(this.roles.proofs.length + 1)) return false;
-    return (
-      !this.barePartitive(index) ||
-      A.some(
-        this.roles.proofs,
-        (proof) => proof.kind === "quantity" && inside(proof.core, O.getOrThrow(this.token(index)).anchor)
-      )
-    );
+    if (!this.charge(2)) return false;
+    if (!this.barePartitive(index)) return true;
+    if (!this.charge(this.roles.proofs.length + this.roles.opaqueSelections.length * 5 + 2)) return false;
+    const token = O.getOrThrow(this.token(index));
+    if (A.some(this.roles.proofs, (proof) => proof.kind === "quantity" && inside(proof.core, token.anchor)))
+      return true;
+    return A.some(this.roles.opaqueSelections, (selection) => {
+      const proof = A.get(this.roles.certificates, selection.proof.ordinal - 1);
+      if (O.isNone(proof) || proof.value.kind !== "selection" || !this.charge(proof.value.selector.length + 3))
+        return false;
+      const owns = (ref: ClaimSourceProofRef): boolean =>
+        O.exists(
+          A.get(this.roles.certificates, ref.ordinal - 1),
+          (p) =>
+            ref.slot === "token" &&
+            p.kind === "token" &&
+            p.tokenOrdinal === index + 1 &&
+            this.sameCore(p.token.anchor, token.anchor)
+        );
+      return owns(proof.value.linkage) || A.some(proof.value.selector, owns);
+    });
   };
   private partitiveAdmitted = (start: number, end: number, span: TextAnchor): boolean => {
     if (this.predicates(span).length > 0 || !HashSet.has(HashSet.make("a", "an"), this.word(start))) return true;
@@ -1652,13 +1926,25 @@ class SourcePlanner {
   private nominalGap = (span: TextAnchor, left: ClaimNominalSpan, right: ClaimNominalSpan): boolean => {
     if (!this.charge(right.anchor.startChar - left.anchor.endChar + 1)) return false;
     const blank = Str.trim(Str.slice(left.anchor.endChar, right.anchor.startChar)(this.claim.claimText)) === "";
-    return !blank || this.PPFollowedByObject(span, left);
+    if (!blank) return true;
+    if (!this.charge(this.roles.certificates.length + 4)) return false;
+    const ordered = A.some(this.roles.certificates, (proof) => {
+      if (proof.kind !== "ordered-arguments") return false;
+      const pp = A.get(this.roles.certificates, proof.pp.ordinal - 1);
+      const direct = A.get(this.roles.certificates, proof.direct.ordinal - 1);
+      return (
+        O.exists(pp, (p) => p.kind === "head" && p.core.startChar === left.anchor.startChar) &&
+        O.exists(direct, (p) => p.kind === "head" && p.core.startChar === right.anchor.startChar)
+      );
+    });
+    return ordered || this.PPFollowedByObject(span, left);
   };
   private unambiguousAuxiliaryPP = (span: TextAnchor, nominals: ReadonlyArray<ClaimNominalSpan>): boolean => {
-    if (!this.charge(this.roles.predicates.length + nominals.length * 2 + this.tokens.length)) return false;
+    if (!this.charge(this.roles.predicates.length * 2 + 2)) return false;
     const predicates = this.predicates(span);
     if (predicates.length !== 1 || !O.exists(A.head(predicates), (p) => p.kind === "auxiliary-head")) return true;
     // A bare auxiliary cannot choose between successive PP attachments.
+    if (!this.charge(nominals.length * 4 + 2)) return false;
     const pp = A.filter(nominals, (nominal) =>
       O.exists(HashMap.get(this.tokenIndex, nominal.anchor.startChar), (index) =>
         O.exists(this.token(index - 1), (token) => token.pos === "ADP")
@@ -1900,7 +2186,7 @@ class SourcePlanner {
     return true;
   };
   private citationStart = (index: number): number => {
-    for (const words of citationIntroducers) {
+    for (const words of claimCitationIntroducers) {
       if (!this.charge(1)) return index;
       const start = index - words.length;
       if (start >= 0 && this.citationPrefix(start, words)) return start;
@@ -1922,11 +2208,18 @@ class SourcePlanner {
     if (actual.length !== expected.length || !A.every(actual, (n, i) => O.contains(A.get(expected, i), n)))
       return this.unresolvedCitation(index, end);
     const start = this.citationStart(index);
-    if (!this.charge(references.length + 4)) return false;
+    if (!this.charge(references.length + (end - start) * 5 + 8)) return false;
+    const tokens = A.map(A.range(start, end - 1), (i) => O.getOrThrow(HashMap.get(this.rawCertificateIndex, i + 1)));
+    const witness = ClaimCitationWitness.make({
+      claim: this.claim,
+      keyword: O.getOrThrow(HashMap.get(this.rawCertificateIndex, index + 1)),
+      tokens,
+    });
     this.sourceExclusions.push(
       ClaimSourceExclusion.cases["dependency-citation"].make({
         extent: this.span(start, end),
         claimReferences: expected,
+        witness: O.some(witness),
       })
     );
     return true;
@@ -1978,6 +2271,187 @@ class SourcePlanner {
       if (inside(this.preamble, O.getOrThrow(this.token(i)).anchor) && !this.citationExclusion(i)) return false;
     }
     return true;
+  };
+  private keepCitationState(state: ClaimNominalCandidateState, states: Array<ClaimNominalCandidateState>): boolean {
+    states.push(state);
+    return true;
+  }
+  private citationRawMatches(
+    nominal: ClaimNominalSpan,
+    first: O.Option<ClaimFiniteSourceProof>,
+    last: O.Option<ClaimFiniteSourceProof>
+  ): boolean {
+    return (
+      O.isSome(first) &&
+      O.isSome(last) &&
+      first.value.kind === "token" &&
+      last.value.kind === "token" &&
+      first.value.token.anchor.startChar === nominal.anchor.startChar &&
+      last.value.token.anchor.endChar === nominal.anchor.endChar &&
+      inside(nominal.head, last.value.token.anchor) &&
+      HashSet.has(HashSet.make("NOUN", "PROPN", "PRON"), last.value.token.pos)
+    );
+  }
+  private certifyCitationRawState(
+    state: Extract<ClaimNominalCandidateState, { readonly kind: "unproved" }>,
+    citation: Extract<ClaimSourceExclusion, { readonly kind: "dependency-citation" }>,
+    witness: ClaimCitationWitness,
+    certificates: Array<ClaimFiniteSourceProof>,
+    states: Array<ClaimNominalCandidateState>,
+    scope: Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>,
+    opening: Extract<ClaimFiniteSourceProof, { readonly kind: "opening" }>
+  ): boolean {
+    const nominal = state.nominal;
+    if (!this.charge(certificates.length + 8)) return false;
+    const raw = A.filter(certificates, (p) => p.kind === "token" && inside(nominal.anchor, p.token.anchor));
+    const first = A.head(raw);
+    const last = A.last(raw);
+    if (!this.citationRawMatches(nominal, first, last)) return this.keepCitationState(state, states);
+    if (!this.charge(raw.length * 4 + 20)) return false;
+    const scopeRef = ClaimSourceProofRef.make({ ordinal: scope.ordinal, slot: "scope" });
+    const citationToken = A.head(witness.tokens);
+    if (O.isNone(citationToken)) return false;
+    const boundary = ClaimSourceProofRef.make({
+      ordinal: ClaimSourceProofOrdinal.make(certificates.length + 1),
+      slot: "boundary",
+    });
+    certificates.push(
+      ClaimFiniteSourceProof.cases["citation-boundary"].make({
+        ordinal: boundary.ordinal,
+        scope: scopeRef,
+        token: citationToken.value,
+        extent: citation.extent,
+        witness,
+      })
+    );
+    const closure = ClaimSourceProofRef.make({
+      ordinal: ClaimSourceProofOrdinal.make(certificates.length + 1),
+      slot: "closure",
+    });
+    const gap =
+      citation.extent.startChar > nominal.anchor.endChar
+        ? O.some(
+            TextAnchor.make({
+              startChar: nominal.anchor.endChar,
+              endChar: citation.extent.startChar,
+              quote: Str.slice(nominal.anchor.endChar, citation.extent.startChar)(this.claim.claimText),
+            })
+          )
+        : O.none();
+    certificates.push(
+      ClaimFiniteSourceProof.cases.closure.make({
+        ordinal: closure.ordinal,
+        coreEnd: nominal.anchor.endChar,
+        scope: scopeRef,
+        boundary: O.some(boundary),
+        gap,
+      })
+    );
+    const head = ClaimSourceProofRef.make({
+      ordinal: ClaimSourceProofOrdinal.make(certificates.length + 1),
+      slot: "core",
+    });
+    certificates.push(
+      ClaimFiniteSourceProof.cases.head.make({
+        ordinal: head.ordinal,
+        core: nominal.anchor,
+        head: nominal.head,
+        terminal: ClaimSourceProofRef.make({ ordinal: O.getOrThrow(last).ordinal, slot: "token" }),
+        opening: ClaimSourceProofRef.make({ ordinal: opening.ordinal, slot: "opening" }),
+        closure,
+        tokens: A.map(raw, (p) => ClaimSourceProofRef.make({ ordinal: p.ordinal, slot: "token" })),
+      })
+    );
+    states.push(ClaimNominalCandidateState.cases.proved.make({ nominal, proof: head, use: "public" }));
+    return true;
+  }
+  private certifyCitationOpeningState(
+    state: Extract<ClaimNominalCandidateState, { readonly kind: "unproved" }>,
+    citation: Extract<ClaimSourceExclusion, { readonly kind: "dependency-citation" }>,
+    witness: ClaimCitationWitness,
+    certificates: Array<ClaimFiniteSourceProof>,
+    states: Array<ClaimNominalCandidateState>
+  ): boolean {
+    const nominal = state.nominal;
+    const openings = A.filter(certificates, (p) => p.kind === "opening" && p.coreStart === nominal.anchor.startChar);
+    const scope = A.findFirst(certificates, (p) => p.kind === "scope" && p.role === "preamble");
+    if (openings.length !== 1 || O.isNone(scope) || scope.value.kind !== "scope")
+      return this.keepCitationState(state, states);
+    const opening = O.getOrThrow(A.head(openings));
+    if (opening.kind !== "opening" || opening.scope.ordinal !== scope.value.ordinal)
+      return this.keepCitationState(state, states);
+    return this.certifyCitationRawState(state, citation, witness, certificates, states, scope.value, opening);
+  }
+  private citationWitnessMatches(
+    nominal: ClaimNominalSpan,
+    citation: Extract<ClaimSourceExclusion, { readonly kind: "dependency-citation" }>,
+    witness: ClaimCitationWitness,
+    certificates: ReadonlyArray<ClaimFiniteSourceProof>
+  ): boolean {
+    return (
+      Str.trim(Str.slice(nominal.anchor.endChar, citation.extent.startChar)(this.claim.claimText)) === "" &&
+      validateClaimCitationWitness(
+        this.claim.claimText,
+        certificates,
+        citation.extent,
+        citation.claimReferences,
+        witness,
+        this.charge
+      )
+    );
+  }
+  private certifyCitationWitnessState(
+    state: Extract<ClaimNominalCandidateState, { readonly kind: "unproved" }>,
+    citation: Extract<ClaimSourceExclusion, { readonly kind: "dependency-citation" }>,
+    witness: ClaimCitationWitness,
+    certificates: Array<ClaimFiniteSourceProof>,
+    states: Array<ClaimNominalCandidateState>
+  ): boolean {
+    if (!this.charge(citation.extent.startChar - state.nominal.anchor.endChar + certificates.length * 3 + 8))
+      return false;
+    if (!this.citationWitnessMatches(state.nominal, citation, witness, certificates)) {
+      if (this.remaining < 0) return false;
+      return this.keepCitationState(state, states);
+    }
+    return this.certifyCitationOpeningState(state, citation, witness, certificates, states);
+  }
+  private certifyCitationState(
+    state: ClaimNominalCandidateState,
+    certificates: Array<ClaimFiniteSourceProof>,
+    states: Array<ClaimNominalCandidateState>
+  ): boolean {
+    if (!this.charge(1)) return false;
+    if (state.kind !== "unproved") return this.keepCitationState(state, states);
+    const nominal = state.nominal;
+    if (!this.charge(this.sourceExclusions.length + 2)) return false;
+    const candidates = A.filter(
+      this.sourceExclusions,
+      (e) => e.kind === "dependency-citation" && e.extent.startChar >= nominal.anchor.endChar
+    );
+    if (candidates.length !== 1) return this.keepCitationState(state, states);
+    const citation = O.getOrThrow(A.head(candidates));
+    if (citation.kind !== "dependency-citation" || O.isNone(citation.witness))
+      return this.keepCitationState(state, states);
+    return this.certifyCitationWitnessState(state, citation, citation.witness.value, certificates, states);
+  }
+  private certifyCitationClosures = (): boolean => {
+    if (
+      !this.charge(
+        this.roles.certificates.length + this.roles.candidateStates.length + this.sourceExclusions.length + 4
+      )
+    )
+      return false;
+    if (
+      !A.some(this.roles.candidateStates, (state) => state.kind === "unproved") ||
+      !A.some(this.sourceExclusions, (e) => e.kind === "dependency-citation")
+    )
+      return true;
+    const certificates = A.copy(this.roles.certificates);
+    const states: Array<ClaimNominalCandidateState> = [];
+    for (const state of this.roles.candidateStates)
+      if (!this.certifyCitationState(state, certificates, states)) return false;
+    this.roles = ClaimClauseRolePlan.make({ ...this.roles, certificates, candidateStates: states });
+    return this.remaining >= 0;
   };
   private prepareSourceExclusions = (): boolean =>
     this.charge(this.claim.claimText.length + this.tokens.length + this.declarations.length + 2) &&
@@ -2170,7 +2644,13 @@ class SourcePlanner {
     return true;
   };
   private prepareTermOwnership = (): boolean => {
-    if (!this.prepareSourceExclusions() || !this.expandPreambleOwnership() || !this.indexAttachedCores()) return false;
+    if (
+      !this.prepareSourceExclusions() ||
+      !this.certifyCitationClosures() ||
+      !this.expandPreambleOwnership() ||
+      !this.indexAttachedCores()
+    )
+      return false;
     for (let i = 0; i < this.elements.length; i++) {
       const element = O.getOrThrow(A.get(this.elements, i));
       const regions = this.ownerRegions(element);
@@ -2179,13 +2659,285 @@ class SourcePlanner {
     }
     return true;
   };
+  private readonly operatorBindings: Array<ClaimSourceOperatorBinding> = [];
+  private rawCertificateIndex = HashMap.empty<number, ClaimSourceProofRef>();
+  private operatorCertificateIndex: Array<
+    readonly [ClaimFiniteSourceProof & { readonly kind: "operator" }, ClaimSourceProofRef]
+  > = [];
+  private certificateBindingsReady = false;
+  private prepareCertificateBindings = (): boolean => {
+    if (!this.charge(1)) return false;
+    if (this.certificateBindingsReady) return true;
+    if (!this.charge(this.roles.certificates.length * 8 + 2)) return false;
+    for (const proof of this.roles.certificates) {
+      if (proof.kind === "token")
+        this.rawCertificateIndex = HashMap.set(
+          this.rawCertificateIndex,
+          proof.tokenOrdinal,
+          ClaimSourceProofRef.make({ ordinal: proof.ordinal, slot: "token" })
+        );
+      if (proof.kind === "operator")
+        this.operatorCertificateIndex.push([
+          proof,
+          ClaimSourceProofRef.make({ ordinal: proof.ordinal, slot: "operator" }),
+        ]);
+    }
+    this.certificateBindingsReady = true;
+    return true;
+  };
+  private operatorSlotCertificate(
+    token: ClaimLexicalToken,
+    parts: ReadonlyArray<readonly [ClaimFiniteSourceProof & { readonly kind: "operator" }, ClaimSourceProofRef]>,
+    members: ReadonlyArray<readonly [ClaimFiniteSourceProof & { readonly kind: "operator" }, ClaimSourceProofRef]>,
+    adjunct: boolean
+  ): O.Option<ClaimSourceProofRef> {
+    let certificate = O.map(A.head(members), ([, ref]) => ref);
+    if (adjunct && O.isNone(certificate)) {
+      const licensed = A.some(this.roles.predicates, (p) => p.kind === "adjunct" && inside(p.anchor, token.anchor));
+      const next = A.findFirst(parts, ([proof]) => proof.extent.startChar >= token.anchor.endChar);
+      if (!licensed || O.isNone(next)) return O.none();
+      certificate = O.some(next.value[1]);
+    }
+    return certificate;
+  }
+  private appendOperatorSlot(
+    index: number,
+    cursor: number,
+    parts: ReadonlyArray<readonly [ClaimFiniteSourceProof & { readonly kind: "operator" }, ClaimSourceProofRef]>,
+    slots: Array<ClaimOperatorLexicalSlot>,
+    lexical: Array<readonly [ClaimSourceProofRef, ClaimSourceProofRef, ClaimLexicalToken]>
+  ): number {
+    const token = O.getOrThrow(this.token(index));
+    const raw = HashMap.get(this.rawCertificateIndex, index + 1);
+    if (O.isNone(raw)) return -1;
+    if (token.anchor.startChar > cursor)
+      slots.push(
+        ClaimOperatorLexicalSlot.cases.gap.make({
+          extent: TextAnchor.make({
+            startChar: cursor,
+            endChar: token.anchor.startChar,
+            quote: Str.slice(cursor, token.anchor.startChar)(this.claim.claimText),
+          }),
+        })
+      );
+    const members = A.filter(parts, ([proof]) => A.some(proof.lexical, (ref) => ref.ordinal === raw.value.ordinal));
+    const licensedAdjunct = A.some(
+      this.roles.predicates,
+      (p) => p.kind === "adjunct" && inside(p.anchor, token.anchor)
+    );
+    const adjunct = licensedAdjunct || token.pos === "ADV" || HashSet.has(HashSet.make("not", "n't"), this.word(index));
+    if (members.length > 1) return -1;
+    const certificate = this.operatorSlotCertificate(token, parts, members, adjunct);
+    if (O.isNone(certificate)) return -1;
+    if (adjunct)
+      slots.push(
+        ClaimOperatorLexicalSlot.cases.adjunct.make({
+          token: raw.value,
+          certificate: certificate.value,
+          extent: token.anchor,
+        })
+      );
+    else {
+      slots.push(
+        ClaimOperatorLexicalSlot.cases.lexical.make({
+          token: raw.value,
+          certificate: certificate.value,
+          extent: token.anchor,
+        })
+      );
+      lexical.push([raw.value, certificate.value, token]);
+    }
+    return token.anchor.endChar;
+  }
+  private operatorBindingHead(
+    parts: ReadonlyArray<readonly [ClaimFiniteSourceProof & { readonly kind: "operator" }, ClaimSourceProofRef]>
+  ): ClaimSourceOperatorBinding["head"] {
+    const provedHeads = A.filter(parts, ([proof]) => proof.headRole === "predicate");
+    const candidate = parts.length === 1 ? A.head(parts) : provedHeads.length === 1 ? A.head(provedHeads) : O.none();
+    return O.map(candidate, ([proof, certificate]) => ({
+      token: proof.head.token,
+      certificate,
+      rule:
+        proof.head.kind === "scalar"
+          ? ("scalar-participle" as const)
+          : proof.head.kind === "reduced"
+            ? ("reduced-modifier" as const)
+            : parts.length === 1
+              ? ("single-operator" as const)
+              : ("auxiliary-complement" as const),
+    }));
+  }
+  private finishOperatorBinding(
+    frame: ClaimSourceFrame,
+    operator: TextAnchor,
+    slots: Array<ClaimOperatorLexicalSlot>,
+    parts: ReadonlyArray<readonly [ClaimFiniteSourceProof & { readonly kind: "operator" }, ClaimSourceProofRef]>,
+    lexical: Array<readonly [ClaimSourceProofRef, ClaimSourceProofRef, ClaimLexicalToken]>,
+    cursor: number
+  ): boolean {
+    if (cursor !== operator.endChar || !this.charge(lexical.length * 2 + frame.arguments.length + 6)) return false;
+    const head = this.operatorBindingHead(parts);
+    if (
+      O.isNone(head) &&
+      A.some(frame.arguments, (arg) =>
+        O.exists(arg.predicate, (p) => p.startChar === operator.startChar && p.endChar === operator.endChar)
+      )
+    )
+      return false;
+    this.operatorBindings.push(ClaimSourceOperatorBinding.make({ frame: frame.ordinal, operator, slots, head }));
+    return true;
+  }
+  private bindOperator = (frame: ClaimSourceFrame, operator: TextAnchor): boolean => {
+    if (!this.charge(this.operatorCertificateIndex.length + operator.quote.length + 8)) return false;
+    const parts = A.filter(this.operatorCertificateIndex, ([proof]) => inside(operator, proof.extent));
+    const from = HashMap.get(this.tokenIndex, operator.startChar);
+    if (!this.charge(this.tokens.length * 2 + parts.length + operator.quote.length + 4)) return false;
+    const located = this.located(operator);
+    if (O.isNone(from) || located.length === 0 || parts.length === 0) return false;
+    const membershipCount = A.reduce(parts, 0, (count, [proof]) => count + proof.lexical.length);
+    if (!this.charge(located.length * (parts.length + membershipCount + this.roles.predicates.length + 8) + 8))
+      return false;
+    const slots: Array<ClaimOperatorLexicalSlot> = [];
+    const lexical: Array<readonly [ClaimSourceProofRef, ClaimSourceProofRef, ClaimLexicalToken]> = [];
+    let cursor = operator.startChar;
+    for (const index of located) {
+      cursor = this.appendOperatorSlot(index, cursor, parts, slots, lexical);
+      if (cursor < 0) return false;
+    }
+    return this.finishOperatorBinding(frame, operator, slots, parts, lexical, cursor);
+  };
+  private bindFrameOperators(frame: ClaimSourceFrame): boolean {
+    if (!this.charge(frame.predicates.length + 1)) return false;
+    for (const operator of frame.predicates) if (!this.bindOperator(frame, operator)) return false;
+    return true;
+  }
+  private bindSourceOperators = (): boolean => {
+    if (!this.prepareCertificateBindings()) return false;
+    for (const frame of this.frames) if (!this.bindFrameOperators(frame)) return false;
+    return true;
+  };
+  private frameAncestor = (ancestor: number, descendant: number): boolean => {
+    let next = O.some(descendant);
+    let depth = 0;
+    while (O.isSome(next)) {
+      if (++depth > 128 || !this.charge(2)) return false;
+      if (next.value === ancestor) return true;
+      const frame = A.get(this.frames, next.value - 1);
+      if (O.isNone(frame)) return false;
+      next = frame.value.parent;
+    }
+    return false;
+  };
+  private bindPrivateSelection = (
+    candidate: ClaimPrivateBasisCandidate,
+    certificate: Extract<ClaimFiniteSourceProof, { readonly kind: "selection" }>
+  ): boolean => {
+    if (!this.charge(this.roles.opaqueSelections.length + this.frames.length + 4)) return false;
+    const selection = A.findFirst(
+      this.roles.opaqueSelections,
+      (group) => group.proof.ordinal === candidate.certificate.ordinal
+    );
+    if (O.isNone(selection)) return false;
+    const owner = O.flatMap(certificate.owner, (ref) => A.get(this.roles.certificates, ref.ordinal - 1));
+    if (O.isSome(certificate.owner) && !O.exists(owner, (p) => p.kind === "head")) return false;
+    const core = selection.value.core;
+    const frames = A.filter(this.frames, (frame) =>
+      sourceSelectionFrameMember(frame, A.get(this.elements, frame.publicOwner - 1), core, owner, this.charge)
+    );
+    if (!this.charge(frames.length ** 2 + 4)) return false;
+    const frame = A.findFirst(frames, (candidate) =>
+      A.every(frames, (other) => this.frameAncestor(other.ordinal, candidate.ordinal))
+    );
+    if (O.isNone(frame) || this.remaining < 0 || !this.charge(frame.value.privateArguments.length + 8)) return false;
+    const argument = ClaimPrivateFrameArgument.cases.selection.make({
+      candidate: candidate.seed,
+      certificate: candidate.certificate,
+      core: candidate.core,
+      marker: selection.value.operator,
+      group: selection.value.group,
+      owner: certificate.owner,
+    });
+    this.frames[frame.value.ordinal - 1] = ClaimSourceFrame.make({
+      ...frame.value,
+      privateArguments: A.append(frame.value.privateArguments, argument),
+    });
+    return true;
+  };
+  private privateArgumentBindingMatches(binding: ClaimSourceOperatorBinding, operator: ClaimSourceProofRef): boolean {
+    const current = A.get(this.frames, binding.frame - 1);
+    if (
+      !this.charge(
+        binding.slots.length +
+          O.getOrElse(
+            O.map(current, (f) => f.nominals.length),
+            () => 0
+          ) +
+          2
+      )
+    )
+      return false;
+    if (!A.some(binding.slots, (slot) => slot.kind !== "gap" && slot.certificate.ordinal === operator.ordinal))
+      return false;
+    return true;
+  }
+  private bindPrivateArgumentOwner(
+    candidate: ClaimPrivateBasisCandidate,
+    bindings: ReadonlyArray<ClaimSourceOperatorBinding>
+  ): boolean {
+    if (!this.charge(bindings.length ** 2 + 4)) return false;
+    const owner = A.findFirst(bindings, (binding) =>
+      A.every(bindings, (other) => this.frameAncestor(other.frame, binding.frame))
+    );
+    if (O.isNone(owner) || this.remaining < 0) return false;
+    const frame = O.getOrThrow(A.get(this.frames, owner.value.frame - 1));
+    if (!this.charge(frame.privateArguments.length + 6)) return false;
+    const argument = ClaimPrivateFrameArgument.cases.predicate.make({
+      candidate: candidate.seed,
+      certificate: candidate.certificate,
+      core: candidate.core,
+      predicate: owner.value.operator,
+    });
+    this.frames[frame.ordinal - 1] = ClaimSourceFrame.make({
+      ...frame,
+      privateArguments: A.append(frame.privateArguments, argument),
+    });
+    return true;
+  }
+  private bindPrivateArgument = (candidate: ClaimPrivateBasisCandidate): boolean => {
+    if (!this.charge(this.operatorBindings.length * 2 + this.roles.opaqueSelections.length + 6)) return false;
+    const certificate = A.get(this.roles.certificates, candidate.certificate.ordinal - 1);
+    if (O.isNone(certificate) || (certificate.value.kind !== "description" && certificate.value.kind !== "selection"))
+      return false;
+    if (candidate.origin === "opaque-branch")
+      return certificate.value.kind === "selection" && this.bindPrivateSelection(candidate, certificate.value);
+    const operator = certificate.value.operator;
+    const bindings = A.filter(this.operatorBindings, (binding) =>
+      this.privateArgumentBindingMatches(binding, operator)
+    );
+    return this.bindPrivateArgumentOwner(candidate, bindings);
+  };
+  private bindPrivateArguments = (): boolean => {
+    for (const candidate of this.roles.privateCandidates) if (!this.bindPrivateArgument(candidate)) return false;
+    return true;
+  };
   private finishSourceFacts = (): boolean =>
     this.deriveLabelledDeclarations() &&
     this.nominalAttachments() &&
     this.prepareTermOwnership() &&
     this.finalizeFrames() &&
+    this.bindSourceOperators() &&
+    this.bindPrivateArguments() &&
     this.validatePlan() &&
     this.charge(this.attached.length + this.elements.length + 3);
+  private appendHeaderMemberships(
+    plan: ClaimSourceElementPlan,
+    headerMemberships: Array<ClaimSourceElementPlan["headerMemberships"][number]>
+  ): void {
+    for (const frame of this.frames) {
+      const membership = deriveClaimQualifiedHeaderMembership(plan, frame, this.charge);
+      if (O.isSome(membership)) headerMemberships.push(membership.value);
+    }
+  }
   private finish = (): O.Option<ClaimSourceElementPlan> => {
     if (!this.charge(this.declarationPlans.length ** 2)) return O.none();
     this.declarationPlans = A.sort(
@@ -2194,7 +2946,7 @@ class SourcePlanner {
         left.anchor.startChar < right.anchor.startChar ? -1 : left.anchor.startChar > right.anchor.startChar ? 1 : 0
     );
     if (!this.finishSourceFacts()) return O.none();
-    const plan = ClaimSourceElementPlan.make({
+    let plan = ClaimSourceElementPlan.make({
       qualifiedText: this.claim.claimText,
       remainingWork: this.remaining,
       frames: this.frames,
@@ -2203,14 +2955,28 @@ class SourcePlanner {
       elements: this.elements,
       declarations: this.declarations,
       declarationPlans: this.declarationPlans,
+      operatorBindings: this.operatorBindings,
       proofs: this.roles.proofs,
       roles: ClaimClauseRolePlan.make({
         ...this.roles,
         nominals: A.flatMap(this.elements, (element) => element.nominals),
       }),
     });
+    if (!this.charge(this.frames.length + 1)) return O.none();
+    const headerMemberships: Array<ClaimSourceElementPlan["headerMemberships"][number]> = [];
+    this.appendHeaderMemberships(plan, headerMemberships);
+    plan = ClaimSourceElementPlan.make({ ...plan, headerMemberships });
+    const tokenOwnership = deriveClaimSourceTokenOwnership(plan, this.charge);
+    if (O.isNone(tokenOwnership)) return O.none();
+    plan = ClaimSourceElementPlan.make({ ...plan, tokenOwnership: tokenOwnership.value });
     if (!validateClaimSourceOwnership(plan, this.charge) || !this.charge(1)) return O.none();
-    return O.some(ClaimSourceElementPlan.make({ ...plan, remainingWork: this.remaining }));
+    return O.some(
+      ClaimSourceElementPlan.make({
+        ...plan,
+        remainingWork: this.remaining,
+        roles: ClaimClauseRolePlan.make({ ...plan.roles, stage: "committed", remainingWork: this.remaining }),
+      })
+    );
   };
   run = (): O.Option<ClaimSourceElementPlan> => {
     if (!this.charge(this.tokens.length * 32 + this.claim.claimText.length) || !this.protectedSource()) return O.none();

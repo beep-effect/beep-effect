@@ -1,3 +1,4 @@
+import type { WinkIntrinsicNounActivationError } from "@beep/wink";
 /**
  * Injected read handlers for the practice knowledge-graph MCP toolkit.
  *
@@ -325,7 +326,10 @@ const queryPglite = <A>(
  * @category layers
  * @since 0.0.0
  */
-export const PracticeKgLocalClaimChecksLive: Layer.Layer<ClaimSelfCheck | ClaimInspection> = Layer.merge(
+export const PracticeKgLocalClaimChecksLive: Layer.Layer<
+  ClaimSelfCheck | ClaimInspection,
+  WinkIntrinsicNounActivationError
+> = Layer.merge(
   ClaimSelfCheckLive.pipe(
     Layer.provide(
       Layer.succeed(UsptoClaims, {
@@ -376,7 +380,7 @@ export const PracticeKgLocalClaimChecksLive: Layer.Layer<ClaimSelfCheck | ClaimI
  */
 export const PracticeKgToolkitHandlersLive: Layer.Layer<
   Tool.HandlersFor<typeof PracticeKgToolkit.tools>,
-  never,
+  WinkIntrinsicNounActivationError,
   DuckDb | Path.Path | PracticeKgBundle | SqlClientService
 > = PracticeKgToolkit.toLayer(
   Effect.gen(function* () {

@@ -1,3 +1,4 @@
+import { TestCrypto } from "@beep/law-practice-domain/test";
 import {
   ClaimElementKind,
   ClaimFrameAttachment,
@@ -22,8 +23,10 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import materialOverlay from "./fixtures/claim-element/finite-clause-material-correction.json" with { type: "json" };
 import routeInput from "./fixtures/claim-element/recurrence-route-plans.json" with { type: "json" };
 import sourceInput from "./fixtures/claim-element/recurrence-source-plans.json" with { type: "json" };
+import { assertVersionedMaterialConformance } from "./helpers/ClaimElementMaterialConformance.ts";
 import type {
   AntecedentFinding,
   ClaimElementTree,
@@ -565,7 +568,12 @@ describe("reviewed recurrence source frames and actual enhanced topology", () =>
       }
     })
   );
-  for (const raw of sourceInput.fixtures)
+  //52 unchanged historical rows; the two accepted material versions execute
+  // their full separate schema below. Original54 bytes and raw diagnostics stay.
+  for (const raw of A.filter(
+    sourceInput.fixtures,
+    (row) => !A.some(materialOverlay.entries, (entry) => entry.historicalCase === row.case)
+  ))
     it.effect(raw.case, () =>
       Effect.gen(function* () {
         const controls = yield* S.decodeUnknownEffect(sourceControls)(sourceInput);
@@ -573,6 +581,10 @@ describe("reviewed recurrence source frames and actual enhanced topology", () =>
         yield* runControl(record);
       })
     );
+  it.layer(TestCrypto)("two explicit accepted material versions (historical54 retained)", (it) => {
+    for (const entry of materialOverlay.entries)
+      it.effect(entry.historicalCase, () => assertVersionedMaterialConformance(entry.historicalCase));
+  });
   for (const raw of routeInput.fixtures)
     it.effect(raw.case, () =>
       Effect.gen(function* () {

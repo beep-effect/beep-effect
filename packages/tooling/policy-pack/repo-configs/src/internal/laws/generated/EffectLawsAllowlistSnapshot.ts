@@ -6,6 +6,14 @@ export const ALLOWLIST_SNAPSHOT = {
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/drivers/wink/src/internal/WinkIntrinsicRuntime.ts",
+      "kind": "object-method",
+      "reason": "Object.freeze seals the operation-local model adapter before the fixed external Wink constructor receives it. Its overridden core factory captures the sole existing engine core without modifying the imported model or its functions. Runtime replacement of the core callback or model fields would invalidate that one-owner proof; TypeScript readonly typing and Effect collections cannot freeze the plain-object SDK protocol. Only the detached adapter shell is frozen; imported model/core objects remain unchanged.",
+      "owner": "@beep/wink",
+      "issue": "CLAIM-INSPECTION-INTRINSIC-SINGLE-CORE-ADAPTER"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/law-practice/server/src/internal/Citation/CallbackObservations.ts",
       "kind": "weak-collection",
       "reason": "Default-branch observations are capabilities bound to the exact callback result object. Weak issuer membership rejects copied or structurally forged results without retaining every result and its encoded observation for the lifetime of the module. Effect collections cannot provide weak keys or identity-only issuance.",

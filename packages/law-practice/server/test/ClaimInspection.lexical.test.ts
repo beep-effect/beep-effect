@@ -20,7 +20,14 @@ import {
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import { claimInspectInput } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
-import { WinkEngine, WinkEngineError, WinkEngineLive, WinkTokenization, WinkTokenizationError } from "@beep/wink";
+import {
+  WinkEngine,
+  WinkEngineError,
+  WinkEngineLive,
+  WinkIntrinsicNounActivationError,
+  WinkTokenization,
+  WinkTokenizationError,
+} from "@beep/wink";
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
@@ -31,18 +38,16 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const live = ClaimInspectionWithLexicalEvidenceLive.pipe(
-  Layer.provide(
-    Layer.succeed(UsptoClaimInputs, {
-      inputs: Effect.fn("LexicalRuntime.noAcquisition")(() =>
-        Effect.fail(UsptoClaimsError.make({ reason: "unavailable", message: "Supplied-source test only." }))
-      ),
-    })
-  )
-);
+const suppliedSourceOnly = Layer.succeed(UsptoClaimInputs, {
+  inputs: Effect.fn("LexicalRuntime.noAcquisition")(() =>
+    Effect.fail(UsptoClaimsError.make({ reason: "unavailable", message: "Supplied-source test only." }))
+  ),
+});
+const live = ClaimInspectionWithLexicalEvidenceLive.pipe(Layer.provide(suppliedSourceOnly));
 const inspect = Effect.fn("LexicalInspectionTest.inspect")(function* (texts: A.NonEmptyReadonlyArray<string>) {
   const input = ClaimInputCollection.make({
     sourceKey: "synthetic-source-role",
@@ -65,6 +70,63 @@ const heads = (report: ClaimInputInspectionReport) =>
   );
 
 it.layer(live, { timeout: "30 seconds" })("fixed lexical inspection runtime", (it) => {
+  it.effect("uses intrinsic eligibility uniformly without claiming adjective sense or countability", () =>
+    Effect.gen(function* () {
+      for (const noun of ["joint", "smooth", "green", "elderly"]) {
+        const report = yield* inspect([`A system comprising a welded ${noun} is fixed.`]);
+        assert.deepStrictEqual(heads(report), [["system", `welded ${noun}`]]);
+      }
+      for (const missing of ["inaccessible", "unpainted", "porous"]) {
+        const report = yield* inspect([`A system comprising a welded ${missing} is fixed.`]);
+        const row = O.getOrThrow(A.head(report.records));
+        assert.strictEqual(row.status, "partial");
+        if (row.status !== "partial") return;
+        assert.strictEqual(
+          A.some(row.coverage, (issue) => issue.kind === "policy-uncovered"),
+          true
+        );
+      }
+    })
+  );
+  it.effect("keeps an intrinsic introduction on its actual ancestor route", () =>
+    Effect.gen(function* () {
+      const report = yield* inspect([
+        "A system comprising a welded joint is fixed.",
+        "The system of claim 1, wherein a controller is mounted.",
+      ]);
+      assert.deepStrictEqual(heads(report), [
+        ["system", "welded joint"],
+        ["system", "controller"],
+      ]);
+      const child = O.getOrThrow(A.get(report.records, 1));
+      assert.strictEqual(child.status, "complete");
+      assert.strictEqual(
+        child.status !== "unchecked" && A.some(child.findings, (finding) => finding.kind === "missing-antecedent"),
+        false
+      );
+    })
+  );
+
+  it.effect("retains adverse coverage for an unproved definite ADJ terminal instead of borrowing article proof", () =>
+    Effect.gen(function* () {
+      const report = yield* inspect([
+        "A system comprising a welded joint is fixed.",
+        "The system of claim 1, wherein the welded joint is mounted.",
+      ]);
+      assert.deepStrictEqual(heads(report), [
+        ["system", "welded joint"],
+        ["system", "welded joint"],
+      ]);
+      const child = O.getOrThrow(A.get(report.records, 1));
+      assert.strictEqual(child.status, "partial");
+      if (child.status !== "partial") return;
+      assert.strictEqual(
+        A.some(child.coverage, (issue) => issue.kind === "policy-uncovered"),
+        true
+      );
+    })
+  );
+
   it.effect(
     "declines contradictory relative agreement through licensed adjunct and negation plans",
     Effect.fnUntraced(function* () {
@@ -583,7 +645,7 @@ const lifetimeFamily = (index: number, texts: A.NonEmptyReadonlyArray<string>, u
   });
 };
 const lifetimeFamilyLayer = (
-  runtime: Layer.Layer<ClaimInspection, never, UsptoClaimInputs>,
+  runtime: Layer.Layer<ClaimInspection, WinkIntrinsicNounActivationError, UsptoClaimInputs>,
   family: UsptoClaimInputSet,
   finalized: Ref.Ref<number>
 ) =>
@@ -604,7 +666,7 @@ const lifetimeFamilyLayer = (
     )
   );
 const exerciseLifetimeFamily = Effect.fn("LifetimeFamily.exercise")(function* (
-  runtime: Layer.Layer<ClaimInspection, never, UsptoClaimInputs>,
+  runtime: Layer.Layer<ClaimInspection, WinkIntrinsicNounActivationError, UsptoClaimInputs>,
   family: UsptoClaimInputSet,
   finalized: Ref.Ref<number>
 ) {
@@ -628,7 +690,7 @@ const exerciseLifetimeFamily = Effect.fn("LifetimeFamily.exercise")(function* (
 });
 
 const exerciseLifetimeBudgets = Effect.fn("LifetimeFamily.budgets")(function* (
-  runtime: Layer.Layer<ClaimInspection, never, UsptoClaimInputs>,
+  runtime: Layer.Layer<ClaimInspection, WinkIntrinsicNounActivationError, UsptoClaimInputs>,
   calls: Ref.Ref<number>,
   finalized: Ref.Ref<number>
 ) {
@@ -895,3 +957,24 @@ it.layer(live, { timeout: "30 seconds" })("real source projection topology", (it
     })
   );
 });
+
+it.effect("refuses fixed-asset activation mismatch instead of returning unavailable coverage", () =>
+  Effect.gen(function* () {
+    const refusal = WinkIntrinsicNounActivationError.make({
+      reason: "core-owner",
+      cause: "synthetic owner protocol violation",
+    });
+    const wrapped = WinkEngineError.fromCause(refusal, "initialize");
+    const result = yield* wrapped.pipe(
+      Effect.fail,
+      Layer.effectContext,
+      claimInspectionWithTokenizationLayer,
+      Layer.provide(suppliedSourceOnly),
+      Layer.build,
+      Effect.result,
+      Effect.scoped
+    );
+    assert.strictEqual(Result.isFailure(result), true);
+    if (Result.isFailure(result)) assert.strictEqual(result.failure, refusal);
+  })
+);

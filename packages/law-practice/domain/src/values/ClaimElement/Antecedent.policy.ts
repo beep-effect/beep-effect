@@ -190,6 +190,12 @@ type PossibleBasis = (
   referring: LocatedTerm,
   remaining: MutableRef.MutableRef<number>
 ) => O.Option<boolean>;
+type PrivateBasis = (
+  referring: LocatedTerm,
+  chain: Chain,
+  remaining: MutableRef.MutableRef<number>
+) => O.Option<boolean>;
+const noPrivateBasis: PrivateBasis = () => O.some(false);
 const noPossibleBasis: PossibleBasis = () => O.some(false);
 const noAliasEvidence: AliasEligible = () => false;
 const legacyRole: RoleFor = () => "legacy";
@@ -484,7 +490,9 @@ const roleAwareVerdict = (
   referring: LocatedTerm,
   verdict: Verdict,
   remaining: MutableRef.MutableRef<number>,
-  possibleBasis: PossibleBasis
+  possibleBasis: PossibleBasis,
+  privateBasis: PrivateBasis,
+  chain: Chain
 ): Verdict => {
   if (hasAdverseRoleVerdict(verdict)) return verdict;
   if (!spendChainWork(remaining, (terms.length + 1) * 6)) return O.some(uncovered(referring, rule.chainWorkLimit));
@@ -492,7 +500,9 @@ const roleAwareVerdict = (
     const adverse = candidateBasisRule(candidate, referring, remaining, possibleBasis);
     if (O.isSome(adverse)) return O.some(uncovered(referring, adverse.value));
   }
-  return verdict;
+  const privatePossible = privateBasis(referring, chain, remaining);
+  if (O.isNone(privatePossible)) return O.some(uncovered(referring, rule.chainWorkLimit));
+  return privatePossible.value ? O.some(uncovered(referring, rule.sourceRoleUnresolved)) : verdict;
 };
 
 const readableVerdict =
@@ -500,7 +510,8 @@ const readableVerdict =
     introductionsByHead: R.ReadonlyRecord<string, ReadonlyArray<LocatedTerm>>,
     remaining: MutableRef.MutableRef<number>,
     enhanced: boolean,
-    possibleBasis: PossibleBasis
+    possibleBasis: PossibleBasis,
+    privateBasis: PrivateBasis
   ) =>
   (
     terms: ReadonlyArray<LocatedTerm>,
@@ -518,7 +529,9 @@ const readableVerdict =
     const verdict = A.every(chain.claims, (claimNumber) => HashSet.has(decomposed, claimNumber))
       ? fullVerdict(introductionsByHead, remaining)(introductions, referring, chain)
       : partialVerdict(introductions, referring, chain);
-    return enhanced ? roleAwareVerdict(terms, referring, verdict, remaining, possibleBasis) : verdict;
+    return enhanced
+      ? roleAwareVerdict(terms, referring, verdict, remaining, possibleBasis, privateBasis, chain)
+      : verdict;
   };
 
 // These coverage outcomes do not inspect chain term candidates. Keeping them
@@ -629,7 +642,8 @@ const policyInContext = (
   claims: ReadonlyArray<PatentClaim>,
   roleFor: RoleFor = legacyRole,
   aliasEligible: AliasEligible = noAliasEvidence,
-  possibleBasis: PossibleBasis = noPossibleBasis
+  possibleBasis: PossibleBasis = noPossibleBasis,
+  privateBasis: PrivateBasis = noPrivateBasis
 ): ReadonlyArray<AntecedentFinding> => {
   const claimIndex = HashMap.fromIterable(
     A.map(claims, (claim): readonly [number, PatentClaim] => [claim.claimNumber, claim])
@@ -676,7 +690,13 @@ const policyInContext = (
             return A.map(referringTerms, (referring) => rank(referring, [], uncovered(referring, rule.chainWorkLimit)));
           const prepared = A.replicate(O.none<ReadonlyArray<LocatedTerm>>(), chains.length);
           const lookup = cachedChainTerms(termsByClaim, termWork, prepared);
-          const read = readableVerdict(introductionsByHead, termWork, roleFor !== legacyRole, possibleBasis);
+          const read = readableVerdict(
+            introductionsByHead,
+            termWork,
+            roleFor !== legacyRole,
+            possibleBasis,
+            privateBasis
+          );
           const evaluate = boundedChainVerdict(
             lookup,
             (terms, referring, chain) => read(terms, decomposed, referring, chain),
@@ -843,7 +863,8 @@ const inspectionReport = (
   decompositions: ReadonlyArray<ClaimInputDecomposition>,
   roleFor: RoleFor = legacyRole,
   aliasEligible: AliasEligible = noAliasEvidence,
-  possibleBasis: PossibleBasis = noPossibleBasis
+  possibleBasis: PossibleBasis = noPossibleBasis,
+  privateBasis: PrivateBasis = noPrivateBasis
 ): ClaimInputInspectionReport => {
   const unavailable = unavailableAncestors(decompositions);
   const eligible = A.filter(
@@ -860,7 +881,8 @@ const inspectionReport = (
       A.map(usable, ({ qualification }) => qualification.claim),
       roleFor,
       aliasEligible,
-      possibleBasis
+      possibleBasis,
+      privateBasis
     ),
     indexComplete
   );
@@ -892,6 +914,20 @@ const inspectionReport = (
   return ClaimInputInspectionReport.make({ input, indexStatus: indexComplete ? "complete" : "incomplete", records });
 };
 
+type InspectionRecord = ClaimInputInspectionReport["records"][number];
+const policyUncoveredRecord = (
+  record: Exclude<InspectionRecord, { readonly status: "unchecked" }>
+): InspectionRecord => {
+  const coverage = record.status === "partial" ? record.coverage : [];
+  return ClaimInputInspection.cases.partial.make({
+    decomposition: record.decomposition,
+    findings: record.findings,
+    coverage: A.prepend(
+      A.filter(coverage, (issue) => issue.kind !== "policy-uncovered"),
+      ClaimInputCoverageIssue.cases["policy-uncovered"].make({})
+    ),
+  });
+};
 const lexicalCoverage = (
   report: ClaimInputInspectionReport,
   accepted: HashSet.HashSet<number>
@@ -900,15 +936,7 @@ const lexicalCoverage = (
     ...report,
     records: A.map(report.records, (record) => {
       if (record.status === "unchecked" || HashSet.has(accepted, record.decomposition.tree.claimNumber)) return record;
-      const coverage = record.status === "partial" ? record.coverage : [];
-      return ClaimInputInspection.cases.partial.make({
-        decomposition: record.decomposition,
-        findings: record.findings,
-        coverage: A.prepend(
-          A.filter(coverage, (issue) => issue.kind !== "policy-uncovered"),
-          ClaimInputCoverageIssue.cases["policy-uncovered"].make({})
-        ),
-      });
+      return policyUncoveredRecord(record);
     }),
   });
 
@@ -929,17 +957,46 @@ const reserveRoleProofs = (sourcePlan: ClaimBoundRolePlan["sourcePlan"], availab
   }
   return O.some(remaining);
 };
+const reserveCandidateState = (
+  state: ClaimBoundRolePlan["plan"]["candidateStates"][number],
+  remaining: number
+): number => {
+  remaining -= 4;
+  if (remaining < 0) return remaining;
+  return state.kind === "proved" && state.use === "public"
+    ? remaining - state.nominal.anchor.quote.length * 4 - 64
+    : remaining;
+};
+const reserveCandidateStateBudget = (plan: ClaimBoundRolePlan["plan"], remaining: number): number => {
+  for (const state of plan.candidateStates) {
+    remaining = reserveCandidateState(state, remaining);
+    if (remaining < 0) return remaining;
+  }
+  return remaining;
+};
+const reservePrivateCandidateBudget = (plan: ClaimBoundRolePlan["plan"], remaining: number): number => {
+  for (const candidate of plan.privateCandidates) {
+    remaining -= candidate.head.quote.length * 4 + 4;
+    if (remaining < 0) return remaining;
+  }
+  return remaining;
+};
+const reserveRolePlanBudget = ({ plan, sourcePlan }: ClaimBoundRolePlan, remaining: number): number => {
+  remaining -= plan.nominals.length * 64 + plan.candidateStates.length * 4 + plan.privateCandidates.length * 8 + 1;
+  if (remaining < 0) return remaining;
+  remaining = reserveCandidateStateBudget(plan, remaining);
+  if (remaining < 0) return remaining;
+  remaining = reservePrivateCandidateBudget(plan, remaining);
+  if (remaining < 0) return remaining;
+  const reserved = reserveRoleProofs(sourcePlan, remaining);
+  if (O.isNone(reserved)) return -1;
+  remaining = reserved.value;
+  return remaining - A.reduce(plan.nominals, 0, (sum, nominal) => sum + nominal.anchor.quote.length * 4);
+};
 const roleInputBudget = (plans: ReadonlyArray<ClaimBoundRolePlan>): O.Option<number> => {
   let remaining = 262_144;
-  for (const { plan, sourcePlan } of plans) {
-    // Reserve scans, entry/key allocation and persistent map storage before
-    // preparing them. Merely reading quote lengths is charged by this pass.
-    remaining -= plan.nominals.length * 64 + 1;
-    if (remaining < 0) return O.none();
-    const reserved = reserveRoleProofs(sourcePlan, remaining);
-    if (O.isNone(reserved)) return O.none();
-    remaining = reserved.value;
-    remaining -= A.reduce(plan.nominals, 0, (sum, nominal) => sum + nominal.anchor.quote.length * 4);
+  for (const entry of plans) {
+    remaining = reserveRolePlanBudget(entry, remaining);
     if (remaining < 0) return O.none();
   }
   return O.some(remaining);
@@ -992,6 +1049,33 @@ const alternativeBranchIndex = (
   }
   return branches;
 };
+const indexNominalRoles = (
+  roles: HashMap.HashMap<string, ClaimNominalPolicyRole>,
+  claimNumber: number,
+  plan: ClaimBoundRolePlan["plan"]
+): HashMap.HashMap<string, ClaimNominalPolicyRole> => {
+  for (const nominal of plan.nominals)
+    roles = HashMap.set(
+      roles,
+      `${claimNumber}:${nominal.anchor.startChar}:${nominal.anchor.endChar}:${nominal.anchor.quote}`,
+      nominal.role
+    );
+  return roles;
+};
+const indexAliasEligibility = (
+  aliasKeys: HashSet.HashSet<string>,
+  roles: HashMap.HashMap<string, ClaimNominalPolicyRole>,
+  claimNumber: number,
+  plan: ClaimBoundRolePlan["plan"]
+): HashSet.HashSet<string> => {
+  for (const state of plan.candidateStates) {
+    if (state.kind !== "proved" || state.use !== "public") continue;
+    const core = state.nominal.anchor;
+    const key = `${claimNumber}:${core.startChar}:${core.endChar}:${core.quote}`;
+    if (HashMap.has(roles, key)) aliasKeys = HashSet.add(aliasKeys, key);
+  }
+  return aliasKeys;
+};
 const sourceRoleIndex = (
   plans: ReadonlyArray<ClaimBoundRolePlan>,
   decompositions: ReadonlyArray<ClaimInputDecomposition>
@@ -1000,25 +1084,24 @@ const sourceRoleIndex = (
     HashMap.HashMap<string, ClaimNominalPolicyRole>,
     HashSet.HashSet<number>,
     HashMap.HashMap<string, ReadonlyArray<string>>,
+    HashSet.HashSet<string>,
   ]
 > => {
   const budget = roleInputBudget(plans);
   if (O.isNone(budget)) return O.none();
-  const contextReady = enhancedContextReady(plans, decompositions, budget.value);
+  const contextBudget = budget.value - decompositions.length * (plans.length + 8) - plans.length * 4;
+  if (contextBudget < 0) return O.none();
+  const contextReady = enhancedContextReady(plans, decompositions, contextBudget);
   if (O.isNone(contextReady)) return O.none();
   let roles = HashMap.empty<string, ClaimNominalPolicyRole>();
   let branches = HashMap.empty<string, ReadonlyArray<string>>();
+  let aliasKeys = HashSet.empty<string>();
   for (const { claimNumber, plan, sourcePlan } of plans) {
-    for (const nominal of plan.nominals) {
-      roles = HashMap.set(
-        roles,
-        `${claimNumber}:${nominal.anchor.startChar}:${nominal.anchor.endChar}:${nominal.anchor.quote}`,
-        nominal.role
-      );
-    }
+    roles = indexNominalRoles(roles, claimNumber, plan);
+    aliasKeys = indexAliasEligibility(aliasKeys, roles, claimNumber, plan);
     branches = alternativeBranchIndex(claimNumber, sourcePlan, branches);
   }
-  return O.some([roles, contextReady.value, branches]);
+  return O.some([roles, contextReady.value, branches, aliasKeys]);
 };
 const alternativeBasis = (branches: HashMap.HashMap<string, ReadonlyArray<string>>): PossibleBasis => {
   if (HashMap.isEmpty(branches)) return noPossibleBasis;
@@ -1046,6 +1129,80 @@ const alternativeBasis = (branches: HashMap.HashMap<string, ReadonlyArray<string
     return O.some(A.some(possible.value, (branch) => compatibleUnknownHead(sourceReferenceHead(referring), branch)));
   };
 };
+// Internal scan outcomes: -1 exhausts work, 0 has no candidate, 1 finds a possible basis. No result escapes policy.
+const privateSingleCandidateBasis = (
+  referring: LocatedTerm,
+  number: number,
+  referenceHead: string,
+  candidate: ClaimBoundRolePlan["plan"]["privateCandidates"][number],
+  remaining: MutableRef.MutableRef<number>
+): -1 | 0 | 1 => {
+  if (!spendChainWork(remaining, 4)) return -1;
+  if (number === referring.claimNumber && candidate.core.endChar > referring.term.anchor.startChar) return 0;
+  if (!spendChainWork(remaining, 24 * (candidate.head.quote.length + referenceHead.length + 1) + 8)) return -1;
+  const head = Str.trim(Str.replace(/\s+/gu, " ")(Str.toLowerCase(candidate.head.quote)));
+  return compatibleUnknownHead(referenceHead, head) ? 1 : 0;
+};
+const privateCandidateBasis = (
+  referring: LocatedTerm,
+  number: number,
+  referenceHead: string,
+  candidates: ClaimBoundRolePlan["plan"]["privateCandidates"],
+  remaining: MutableRef.MutableRef<number>
+): -1 | 0 | 1 => {
+  for (const candidate of candidates) {
+    const result = privateSingleCandidateBasis(referring, number, referenceHead, candidate, remaining);
+    if (result !== 0) return result;
+  }
+  return 0;
+};
+const privateSourceBasis = (
+  plans: ReadonlyArray<ClaimBoundRolePlan>,
+  referring: LocatedTerm,
+  number: number,
+  referenceHead: string,
+  remaining: MutableRef.MutableRef<number>
+): -1 | 0 | 1 => {
+  if (!spendChainWork(remaining, plans.length + 1)) return -1;
+  const source = A.findFirst(plans, (entry) => entry.claimNumber === number);
+  return O.isNone(source)
+    ? 0
+    : privateCandidateBasis(referring, number, referenceHead, source.value.plan.privateCandidates, remaining);
+};
+const privateRouteBasis = (plans: ReadonlyArray<ClaimBoundRolePlan>): PrivateBasis => {
+  if (!A.some(plans, ({ plan }) => plan.privateCandidates.length > 0)) return noPrivateBasis;
+  return (referring, chain, remaining) => {
+    if (!spendChainWork(remaining, chain.claims.length ** 2 + plans.length + referring.term.head.length * 4 + 4))
+      return O.none();
+    const route = A.dedupe(A.sort(chain.claims, Num.Order));
+    const referenceHead = sourceReferenceHead(referring);
+    for (const number of route) {
+      const result = privateSourceBasis(plans, referring, number, referenceHead, remaining);
+      if (result < 0) return O.none();
+      if (result > 0) return O.some(true);
+    }
+    return O.some(false);
+  };
+};
+const privateOriginCoverage = (
+  report: ClaimInputInspectionReport,
+  plans: ReadonlyArray<ClaimBoundRolePlan>
+): ClaimInputInspectionReport =>
+  ClaimInputInspectionReport.make({
+    ...report,
+    records: A.map(report.records, (record) => {
+      if (
+        record.status === "unchecked" ||
+        !A.some(
+          plans,
+          (entry) =>
+            entry.claimNumber === record.decomposition.tree.claimNumber && entry.plan.privateCandidates.length > 0
+        )
+      )
+        return record;
+      return policyUncoveredRecord(record);
+    }),
+  });
 /**
  * Inspect prepared source roles through the same coverage/report policy.
  *
@@ -1068,18 +1225,22 @@ export const inspectPreparedClaimRoles = Effect.fn("ClaimElement.inspectPrepared
       ),
       () => unknownBareRole(claimNumber, term)
     );
-  return lexicalCoverage(
-    inspectionReport(
-      prepared.input,
-      result.decompositions,
-      roleFor,
-      (claimNumber, term) =>
-        HashMap.has(
-          indexed.value[0],
-          `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`
-        ),
-      alternativeBasis(indexed.value[2])
+  return privateOriginCoverage(
+    lexicalCoverage(
+      inspectionReport(
+        prepared.input,
+        result.decompositions,
+        roleFor,
+        (claimNumber, term) =>
+          HashSet.has(
+            indexed.value[3],
+            `${claimNumber}:${term.anchor.startChar}:${term.anchor.endChar}:${term.anchor.quote}`
+          ),
+        alternativeBasis(indexed.value[2]),
+        privateRouteBasis(result.plans)
+      ),
+      indexed.value[1]
     ),
-    indexed.value[1]
+    result.plans
   );
 });

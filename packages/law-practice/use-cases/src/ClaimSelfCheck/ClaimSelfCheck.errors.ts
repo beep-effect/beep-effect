@@ -7,6 +7,7 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
+import { ClaimLexicalSourceWork } from "@beep/law-practice-domain/values/ClaimElement";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";
@@ -185,5 +186,27 @@ export class ClaimSelfCheckError extends S.TaggedError<ClaimSelfCheckError, { re
   },
   $I.annoteError<ClaimSelfCheckError>("ClaimSelfCheckError", {
     description: "Failure decomposing, fetching, or mapping claims during an antecedent self-check.",
+  })
+) {}
+
+/**
+ * Expected local query failure retains its paid portion of the original source allowance.
+ * @category errors
+ * @since 0.0.0
+ */
+export class ClaimLexicalMembershipQueryError extends S.TaggedError<
+  ClaimLexicalMembershipQueryError,
+  { readonly brand: unique symbol }
+>($I`ClaimLexicalMembershipQueryError`)(
+  "ClaimLexicalMembershipQueryError",
+  {
+    operation: S.tag("intrinsic-noun"),
+    reason: S.Literals(["query-failed", "invalid-response", "invalid-request"]),
+    cause: S.Defect({ includeStack: true }),
+    workDebit: ClaimLexicalSourceWork,
+    remainingWork: ClaimLexicalSourceWork,
+  },
+  $I.annoteError<ClaimLexicalMembershipQueryError>("ClaimLexicalMembershipQueryError", {
+    description: "No credit is restored and no unknown result is converted to a false lexical fact.",
   })
 ) {}

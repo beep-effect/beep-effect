@@ -15,10 +15,13 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import { constructWinkWithIntrinsicOwner } from "./internal/WinkIntrinsicRuntime.ts";
 import { WinkEngineError, WinkEntityError, WinkTokenizationError } from "./Wink.errors.ts";
 import { WinkEngineCustomEntities } from "./Wink.models.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
 import type { AsHelpers, ItemToken, ItsHelpers, Document as WinkDocument, WinkMethods } from "wink-nlp";
+import type { WinkIntrinsicNounActivationError } from "./WinkIntrinsicNoun.errors.ts";
+import type { WinkIntrinsicNounShape } from "./WinkIntrinsicNoun.models.ts";
 
 const $I = $WinkId.create("Wink/WinkEngine");
 
@@ -30,6 +33,7 @@ type WinkEngineShape = {
   readonly getWinkTokenCount: (text: string) => Effect.Effect<number, WinkTokenizationError>;
   readonly getCurrentCustomEntities: Effect.Effect<O.Option<WinkEngineCustomEntities>>;
   readonly its: Effect.Effect<ItsHelpers, WinkEngineError>;
+  readonly intrinsicNoun: Effect.Effect<WinkIntrinsicNounShape, WinkIntrinsicNounActivationError>;
   readonly learnCustomEntities: (customEntities: WinkEngineCustomEntities) => Effect.Effect<void, WinkEntityError>;
 };
 
@@ -159,14 +163,7 @@ const loadWinkRuntime = Effect.all(
     Effect.tryPromise({ try: () => import("wink-eng-lite-web-model"), catch: initializationError }),
   ],
   { concurrency: 2 }
-).pipe(
-  Effect.flatMap(([engine, model]) =>
-    Effect.try({
-      try: () => engine.default(model.default),
-      catch: initializationError,
-    })
-  )
-);
+).pipe(Effect.flatMap(([engine, model]) => constructWinkWithIntrinsicOwner(engine.default, model.default)));
 
 const nextInstanceId = (nowMs: number, counter: number): InstanceId =>
   InstanceId.make(`wink-engine-${nowMs}-${counter}`);
@@ -211,7 +208,9 @@ const collectTokens = (state: WinkEngineRuntimeState, text: string): Array<ItemT
 };
 
 const makeWinkEngine = Effect.gen(function* () {
-  const nlp = yield* loadWinkRuntime;
+  const runtime = yield* Effect.acquireRelease(loadWinkRuntime, ({ owner }) => owner.release);
+  const nlp = runtime.nlp;
+  const intrinsicNoun = yield* Effect.cached(runtime.owner.activate);
   const instanceCounterRef = yield* Ref.make(0);
   const initialTimeMs = yield* Clock.currentTimeMillis;
   const stateRef = yield* Ref.make<WinkEngineRuntimeState>({
@@ -220,6 +219,7 @@ const makeWinkEngine = Effect.gen(function* () {
     nlp,
   });
 
+  runtime.owner.setCurrent(Ref.get(stateRef).pipe(Effect.map((state) => state.nlp === nlp)));
   const allocateInstanceId = pipe(
     Ref.updateAndGet(instanceCounterRef, (current) => current + 1),
     Effect.flatMap(
@@ -230,6 +230,7 @@ const makeWinkEngine = Effect.gen(function* () {
   );
 
   return WinkEngine.of({
+    intrinsicNoun,
     as: Ref.get(stateRef).pipe(Effect.map((state) => state.nlp.as)),
     getRef: Effect.succeed(stateRef),
     getWinkDoc: Effect.fn("Wink.WinkEngine.getWinkDoc")(function* (text: string) {
