@@ -257,6 +257,7 @@
         "packages/drivers/exiftool/package.json",
         "packages/drivers/ffmpeg/package.json",
         "packages/drivers/ffmpeg/src/**",
+        "packages/drivers/firecrawl/package.json",
         "packages/drivers/freshbooks/package.json",
         "packages/drivers/git/package.json",
         "packages/drivers/git/src/**",

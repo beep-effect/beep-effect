@@ -9,10 +9,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (research-library-routes lane, feat/research-library-routes)",
-      "reason": "Record manifest and configuration drift from adding the @beep/firecrawl drivers package (root registration, identity composer) and the Box, Firecrawl and 1Password dependencies of @beep/repo-cli; no qualification is granted.",
+      "reason": "Record root drift from resealing the policy-tools fingerprint after @beep/repo-cli gained driver dependencies; no qualification is granted.",
       "basis": {
-        "path": "goals/research-library-routes/research/cache-baseline-review-routes.md",
-        "sha256": "336f41610de8f411f5d8f0084bc3b1cae4bcd06e9d9930da8e7c988957d51c2d"
+        "path": "goals/research-library-routes/research/cache-baseline-review-routes-policy.md",
+        "sha256": "f19991185442544dc295cbef54d42d00bdf470d0048e6be6e22d9f53044c4f7b"
       }
     },
     "@beep/acp": {
@@ -3333,6 +3333,7 @@
             "packages/drivers/exiftool/package.json",
             "packages/drivers/ffmpeg/package.json",
             "packages/drivers/ffmpeg/src/**",
+            "packages/drivers/firecrawl/package.json",
             "packages/drivers/freshbooks/package.json",
             "packages/drivers/git/package.json",
             "packages/drivers/git/src/**",
@@ -123068,7 +123069,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "be1227e514ca4e6fb17ce0d334b2380f8cb14fdabd42799185f8dea3e702de84"
+        "sha256": "122d44e602a2d8874bf9da2439d328f7816e9bdc5eb9d3f3816720a8bc997882"
       }
     ]
   }
