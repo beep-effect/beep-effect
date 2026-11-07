@@ -64,14 +64,25 @@ const inventory = Command.make(
     "Snapshot input documents, record hop-1 citations and hop-2 identities from readable hop-1 captures, without fetching"
   )
 );
+const hopPolicyOf = Effect.fn("ResearchLibrary.hopPolicyOf")(function* (hop2DomainCap: number, hop2Limit: number) {
+  if (hop2DomainCap < 0)
+    return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+  if (hop2Limit < 0)
+    return yield* LibraryError.make({ message: "--hop2-limit must be zero or more.", cause: hop2Limit });
+  return LibraryHopPolicy.make({ domainCap: hop2DomainCap, hop2Limit });
+});
+const hop2LimitFlag = Flag.Int("hop2-limit").pipe(
+  Flag.withDefault(400),
+  Flag.withDescription("Acquired hop-2 sources allowed in total, most routed hop-1 parents first")
+);
 const validateAcquireFlags = Effect.fn("ResearchLibrary.validateAcquireFlags")(function* (
   concurrency: number,
-  hop2DomainCap: number
+  hop2DomainCap: number,
+  hop2Limit: number
 ) {
   if (concurrency < 1 || concurrency > 8)
     return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: concurrency });
-  if (hop2DomainCap < 0)
-    return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+  return yield* hopPolicyOf(hop2DomainCap, hop2Limit);
 });
 const acquireBoxSelection = Effect.fn("ResearchLibrary.acquireBoxSelection")(function* (
   root: string,
@@ -120,6 +131,7 @@ const acquire = Command.make(
       Flag.withDefault(25),
       Flag.withDescription("Acquired hop-2 sources allowed per domain per intake")
     ),
+    hop2Limit: hop2LimitFlag,
     concurrency: Flag.Int("concurrency").pipe(Flag.withDefault(2)),
     retryFailed: Flag.Boolean("retry-failed").pipe(Flag.withDefault(false)),
   },
@@ -131,11 +143,12 @@ const acquire = Command.make(
     boxFile,
     boxPublic,
     hop2DomainCap,
+    hop2Limit,
     concurrency,
     retryFailed,
   }) {
     const research = yield* ResearchLibrary;
-    yield* validateAcquireFlags(concurrency, hop2DomainCap);
+    const hopPolicy = yield* validateAcquireFlags(concurrency, hop2DomainCap, hop2Limit);
     const root = yield* resolveLibraryRoot(library);
     yield* route === "box"
       ? acquireBoxSelection(root, { boxFolder, boxFile, boxPublic, retryFailed })
@@ -145,7 +158,7 @@ const acquire = Command.make(
             sourceIds: source,
             concurrency,
             retryFailed,
-            hopPolicy: LibraryHopPolicy.make({ domainCap: hop2DomainCap }),
+            hopPolicy,
           })
         );
     yield* Console.log(`Acquisition receipts recorded in ${root}; run verify for coverage.`);
@@ -162,13 +175,13 @@ const hops = Command.make(
     library,
     limit: Flag.Int("limit").pipe(Flag.withDefault(50), Flag.withDescription("Hop-2 gate decisions to print")),
     hop2DomainCap: Flag.Int("hop2-domain-cap").pipe(Flag.withDefault(25)),
+    hop2Limit: hop2LimitFlag,
   },
-  Effect.fn("ResearchLibrary.hopsCommand")(function* ({ library, limit, hop2DomainCap }) {
+  Effect.fn("ResearchLibrary.hopsCommand")(function* ({ library, limit, hop2DomainCap, hop2Limit }) {
     const research = yield* ResearchLibrary;
-    if (hop2DomainCap < 0)
-      return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+    const policy = yield* hopPolicyOf(hop2DomainCap, hop2Limit);
     const root = yield* resolveLibraryRoot(library);
-    yield* research.hops(root, limit, LibraryHopPolicy.make({ domainCap: hop2DomainCap }));
+    yield* research.hops(root, limit, policy);
   })
 ).pipe(
   Command.provide(ResearchLibraryLive),

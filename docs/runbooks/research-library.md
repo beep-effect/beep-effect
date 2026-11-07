@@ -159,6 +159,13 @@ on the edge; nothing is dropped, and re-running inventory on the same roots adds
 
 `acquire` fetches a hop-2-only source only when the gate admits it:
 
+- a URL that names no content is refused as `non-content` before any other rule:
+  a reserved or placeholder host (`example.com`, `example.org`, `example.net`, and
+  any host under `example`, `invalid`, `test` or `localhost`, subdomains included),
+  a literal IPv4 or IPv6 host, or a path ending in a static-asset or media extension
+  (`png jpg jpeg gif svg webp ico css js woff woff2 ttf mp4 mp3 webm zip tar gz`).
+  The lists are `LibraryHopNonContentHosts` and `LibraryHopNonContentExtensions`,
+  the defaults of the policy's `nonContentHosts` and `nonContentExtensions`;
 - a hop-1 parent has a `Finding` whose topics name a live packet concept: a goal
   whose status is `active` or `paused`, or an exploration that is not `parked`,
   `killed`, or `graduated`;
@@ -167,8 +174,15 @@ on the edge; nothing is dropped, and re-running inventory on the same roots adds
 - arXiv hop 2 is catalogued only; name it with `--source <id>` to acquire it on
   demand;
 - every other domain admits at most 25 acquired hop-2 sources per intake
-  (`--hop2-domain-cap <n>`), counting sources already captured; candidates are taken
-  in canonical-URL order.
+  (`--hop2-domain-cap <n>`), counting sources already captured;
+- the whole gate admits at most 400 hop-2 sources (`--hop2-limit <n>` on `acquire`
+  and `hops`), again counting sources already captured; candidates past it are
+  refused as `budget`.
+
+Candidates are taken in descending routed in-degree, the number of distinct hop-1
+parents that have a routed `Finding` and a hop-2 edge to the candidate, then in
+canonical-URL order. The domain cap and the budget are both spent in that order, so
+the most widely cited sources are acquired first and the cut is deterministic.
 
 Catalogued-only hop-2 identities are counted as `cataloguedHop2` by `verify` instead
 of being reported missing. `status` ends with per-hop totals:
@@ -179,8 +193,10 @@ hop 1: identities=<n> readable=<n>
 hop 2: identities=<n> readable=<n> cataloguedOnly=<n> gateAdmitted=<n> gateRefused=<n> (<reason>=<n> ...)
 ```
 
-`hops --limit <n>` prints the same totals and the first `n` gate decisions
-(`admit|refuse <reason> <domain> <sourceId> <url>`) without acquiring.
+`hops --limit <n>` prints the same totals and the first `n` gate decisions, admitted
+ones first, each group in admission order
+(`admit|refuse <reason> in=<routed in-degree> <domain> <sourceId> <url>`), without
+acquiring.
 
 ## Session-owned provider results
 

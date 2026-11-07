@@ -471,6 +471,8 @@ export const LibraryHopGateReason = LiteralKit([
   "github-not-transitive",
   "arxiv-catalogue-only",
   "domain-cap",
+  "non-content",
+  "budget",
 ]).pipe($I.annoteSchema("LibraryHopGateReason", { description: "Why the hop-2 gate admitted or refused a source." }));
 
 /**
@@ -489,7 +491,7 @@ export type LibraryHopGateReason = typeof LibraryHopGateReason.Type;
  * ```ts
  * import { LibraryHopDecision } from "@beep/repo-cli/commands/Research"
  *
- * const decision = LibraryHopDecision.make({ sourceId: "s", intakeId: "i", domain: "example.org", parentIds: [], admitted: false, reason: "unrouted-parent" })
+ * const decision = LibraryHopDecision.make({ sourceId: "s", intakeId: "i", domain: "other.org", parentIds: [], admitted: false, reason: "unrouted-parent" })
  * console.log(decision.admitted) // false
  * ```
  *
@@ -502,9 +504,17 @@ export class LibraryHopDecision extends S.Opaque<LibraryHopDecision, { readonly 
     intakeId: S.String,
     domain: S.String,
     parentIds: S.Array(S.String),
+    routedInDegree: S.Int.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
     admitted: S.Boolean,
     reason: LibraryHopGateReason,
-  }).pipe($I.annoteSchema("LibraryHopDecision", { description: "Admission decision for one hop-2 source." }))
+  }).pipe(
+    $I.annoteSchema("LibraryHopDecision", {
+      description: "Admission decision for one hop-2 source, with the count of its routed hop-1 parents.",
+    })
+  )
 ) {}
 
 /**
@@ -530,6 +540,61 @@ export const librarySourceDomain = (url: string) =>
     ),
     () => ""
   );
+
+const urlHost = (url: string) =>
+  O.getOrElse(
+    O.map(Str.match(/^[a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?(\[[^\]]*\]|[^/?#:]*)/i)(url), (match) =>
+      Str.replace(/\.$/, "")(Str.toLowerCase(match[1] ?? ""))
+    ),
+    () => ""
+  );
+const urlPathExtension = (url: string) =>
+  O.getOrElse(
+    O.flatMap(Str.match(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*([^?#]*)/i)(url), (path) =>
+      O.map(Str.match(/\.([a-z0-9]+)$/i)(path[1] ?? ""), (extension) => Str.toLowerCase(extension[1] ?? ""))
+    ),
+    () => ""
+  );
+const isIpLiteral = (host: string) => Str.startsWith("[")(host) || /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host);
+
+/**
+ * Whether a URL names no readable content under the policy.
+ *
+ * **Details**
+ *
+ * True for a host in `policy.nonContentHosts` or a subdomain of one, a literal IPv4 or
+ * bracketed IPv6 host, and a path whose last extension is in `policy.nonContentExtensions`.
+ *
+ * **Example** (Classify placeholder and asset URLs)
+ *
+ * ```ts
+ * import { libraryHopNonContent, LibraryHopPolicy } from "@beep/repo-cli/commands/Research"
+ *
+ * const policy = LibraryHopPolicy.make({})
+ * console.log(libraryHopNonContent("http://a.example/", policy)) // true
+ * console.log(libraryHopNonContent("https://cdn.site.org/fig1.PNG?x=1", policy)) // true
+ * console.log(libraryHopNonContent("https://site.org/post", policy)) // false
+ * ```
+ *
+ * @param url - Canonical source URL.
+ * @param policy - Hop policy holding the non-content lists.
+ * @returns True when the gate refuses the URL as `non-content`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const libraryHopNonContent: {
+  (policy: LibraryHopPolicy): (url: string) => boolean;
+  (url: string, policy: LibraryHopPolicy): boolean;
+} = dual(2, (url: string, policy: LibraryHopPolicy): boolean => {
+  const host = urlHost(url);
+  if (
+    host !== "" &&
+    (isIpLiteral(host) ||
+      A.some(policy.nonContentHosts, (reserved) => host === reserved || Str.endsWith(`.${reserved}`)(host)))
+  )
+    return true;
+  return A.contains(policy.nonContentExtensions, urlPathExtension(url));
+});
 
 const isGithub = (source: LibrarySource) => Str.startsWith("github-")(source.kind);
 const isArxiv = (source: LibrarySource) => Str.startsWith("arxiv:")(source.identity);
@@ -572,6 +637,7 @@ const policyOutcome = (
   input: LibraryHopGateInput,
   routed: (parent: LibrarySource) => boolean
 ): O.Option<GateOutcome> => {
+  if (libraryHopNonContent(source.canonicalUrl, input.policy)) return O.some([false, "non-content"]);
   if (!input.policy.githubTransitive && (isGithub(source) || A.some(parents, isGithub)))
     return O.some([false, "github-not-transitive"]);
   if (isArxiv(source))
@@ -589,9 +655,12 @@ const hopTwoEdges = (catalog: LibraryCatalog, source: LibrarySource): ReadonlyAr
  *
  * A hop-2 source is admitted only when a hop-1 parent has a `Finding` whose topics name a live
  * packet concept. GitHub is never transitive: a GitHub child, or a child of a GitHub parent, is
- * refused. arXiv is catalogued only unless `explicit` names it. Every other domain admits at most
- * `domainCap` acquired hop-2 sources per intake, counting sources already captured. Candidates are
- * ordered by canonical URL so the cap is deterministic.
+ * refused. arXiv is catalogued only unless `explicit` names it. A URL that names no content
+ * (see {@link libraryHopNonContent}) is refused as `non-content` before any other rule. Every
+ * other domain admits at most `domainCap` acquired hop-2 sources per intake, and the whole gate
+ * at most `hop2Limit`, both counting sources already captured. Candidates are taken, and
+ * returned, in descending routed in-degree (distinct routed hop-1 parents with an edge to the
+ * candidate), then canonical URL, so the cap and the `budget` cut are deterministic.
  *
  * **Example** (Gate an empty catalog)
  *
@@ -602,7 +671,7 @@ const hopTwoEdges = (catalog: LibraryCatalog, source: LibrarySource): ReadonlyAr
  * console.log(libraryHopGate(catalog, LibraryHopGateInput.make({ concepts: [], policy: LibraryHopPolicy.make({}) }))) // []
  * ```
  *
- * @returns One decision per hop-2-only source.
+ * @returns One decision per hop-2-only source, in admission priority order.
  * @category use-cases
  * @since 0.0.0
  */
@@ -617,48 +686,79 @@ export const libraryHopGate: {
     )
   );
   const index = hopIndex(catalog);
-  const routed = (parent: LibrarySource) =>
-    A.some([parent.id, ...parent.aliasIds], (id) =>
+  // Memoized per parent: a hop-1 parent is shared by many candidates.
+  let routedCache = HashMap.empty<string, boolean>();
+  const routed = (parent: LibrarySource) => {
+    const cached = HashMap.get(routedCache, parent.id);
+    if (O.isSome(cached)) return cached.value;
+    const value = A.some([parent.id, ...parent.aliasIds], (id) =>
       A.some(O.getOrElse(HashMap.get(index.findingsBySource, id), A.empty<LibraryFinding>), (finding) =>
         A.some(finding.topicIds, (topic) => HashSet.has(live, topic))
       )
     );
-  const candidates = A.sort(
+    routedCache = HashMap.set(routedCache, parent.id, value);
+    return value;
+  };
+  const evaluated = A.map(
     A.filter(catalog.sources, (source) => libraryHopTwoOnly(catalog, source.id)),
-    Order.mapInput(Str.Order, (source: LibrarySource) => `${source.canonicalUrl}\n${source.id}`)
+    (source) => {
+      const edges = hopTwoEdges(catalog, source);
+      const parentIds = A.dedupe(A.map(edges, (d) => d.sourceId));
+      const parents = A.flatMap(parentIds, (id) => A.fromOption(HashMap.get(index.sourcesById, id)));
+      return {
+        source,
+        parentIds,
+        parents,
+        inDegree: A.filter(parents, routed).length,
+        intakeId: O.getOrElse(
+          A.head(
+            A.sort(
+              A.map(edges, (d) => d.intakeId),
+              Str.Order
+            )
+          ),
+          () => ""
+        ),
+      };
+    }
   );
-  const intakeOf = (source: LibrarySource) =>
-    O.getOrElse(
-      A.head(
-        A.sort(
-          A.map(hopTwoEdges(catalog, source), (d) => d.intakeId),
-          Str.Order
-        )
-      ),
-      () => ""
-    );
-  const captured = (source: LibrarySource) => HashSet.has(index.liveCaptured, source.id);
-  const capKey = (source: LibrarySource) => `${intakeOf(source)}\n${librarySourceDomain(source.canonicalUrl)}`;
+  type Candidate = (typeof evaluated)[number];
+  // Admission priority: most routed hop-1 parents first, then canonical URL, so caps and budget are deterministic.
+  const candidates = A.sort(
+    evaluated,
+    Order.combine(
+      Order.mapInput(Order.flip(Order.Number), (candidate: Candidate) => candidate.inDegree),
+      Order.mapInput(Str.Order, (candidate: Candidate) => `${candidate.source.canonicalUrl}\n${candidate.source.id}`)
+    )
+  );
+  const captured = (candidate: Candidate) => HashSet.has(index.liveCaptured, candidate.source.id);
+  const capKey = (candidate: Candidate) =>
+    `${candidate.intakeId}\n${librarySourceDomain(candidate.source.canonicalUrl)}`;
   let acquired = HashMap.empty<string, number>();
   const count = (key: string) => O.getOrElse(HashMap.get(acquired, key), () => 0);
-  for (const source of A.filter(candidates, (item) => captured(item) && !isGithub(item) && !isArxiv(item)))
-    acquired = HashMap.set(acquired, capKey(source), count(capKey(source)) + 1);
-  const capOutcome = (source: LibrarySource): GateOutcome => {
-    if (captured(source)) return [true, "routed-parent"];
-    const key = capKey(source);
+  // Already-captured sources hold their domain-cap and budget slots before any new admission.
+  const held = A.filter(candidates, (item) => captured(item) && !isGithub(item.source) && !isArxiv(item.source));
+  for (const candidate of held) acquired = HashMap.set(acquired, capKey(candidate), count(capKey(candidate)) + 1);
+  let spent = held.length;
+  const capOutcome = (candidate: Candidate): GateOutcome => {
+    if (captured(candidate)) return [true, "routed-parent"];
+    const key = capKey(candidate);
     if (count(key) >= input.policy.domainCap) return [false, "domain-cap"];
+    if (spent >= input.policy.hop2Limit) return [false, "budget"];
     acquired = HashMap.set(acquired, key, count(key) + 1);
+    spent++;
     return [true, "routed-parent"];
   };
-  return A.map(candidates, (source) => {
-    const parentIds = A.dedupe(A.map(hopTwoEdges(catalog, source), (d) => d.sourceId));
-    const parents = A.flatMap(parentIds, (id) => A.fromOption(HashMap.get(index.sourcesById, id)));
-    const [admitted, reason] = O.getOrElse(policyOutcome(source, parents, input, routed), () => capOutcome(source));
+  return A.map(candidates, (candidate) => {
+    const [admitted, reason] = O.getOrElse(policyOutcome(candidate.source, candidate.parents, input, routed), () =>
+      capOutcome(candidate)
+    );
     return LibraryHopDecision.make({
-      sourceId: source.id,
-      intakeId: intakeOf(source),
-      domain: librarySourceDomain(source.canonicalUrl),
-      parentIds,
+      sourceId: candidate.source.id,
+      intakeId: candidate.intakeId,
+      domain: librarySourceDomain(candidate.source.canonicalUrl),
+      parentIds: candidate.parentIds,
+      routedInDegree: candidate.inDegree,
       admitted,
       reason,
     });

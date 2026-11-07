@@ -11,6 +11,7 @@ import {
   inventoryLibraryWithHops,
   LibraryAlphaxivImportPayload,
   LibraryBoxAcquireOptions,
+  LibraryCapture,
   LibraryCatalog,
   LibraryDerivation,
   LibraryDocument,
@@ -643,6 +644,56 @@ describe("research library routes", () => {
       };
     };
 
+    // A small gate catalog: routed hop-1 parents p1..p3, an unrouted parent u, and the given children.
+    const gateParents = [
+      ...A.map(["p1", "p2", "p3"], (id) => web(id, `https://parents.org/${id}`)),
+      web("u", "https://parents.org/u"),
+    ];
+    const gate = (
+      entries: ReadonlyArray<{ readonly source: LibrarySource; readonly parents: ReadonlyArray<string> }>,
+      policy: LibraryHopPolicy = LibraryHopPolicy.make({}),
+      capturedIds: ReadonlyArray<string> = []
+    ) =>
+      libraryHopGate(
+        LibraryCatalog.make({
+          schema: "beep.research.library/v2",
+          documents: [],
+          sources: [...gateParents, ...A.map(entries, (entry) => entry.source)],
+          occurrences: A.map(gateParents, occurrence),
+          derivations: [
+            ...A.map(gateParents, (parent) => edge(1, "doc", parent.id)),
+            ...A.flatMap(entries, (entry) => A.map(entry.parents, (parentId) => edge(2, parentId, entry.source.id))),
+          ],
+          findings: A.map(gateParents, (parent) =>
+            finding(parent, parent.id === "u" ? "goals/done-goal" : "goals/live-goal")
+          ),
+          captures: A.map(capturedIds, (sourceId) =>
+            LibraryCapture.make({
+              id: `capture-${sourceId}`,
+              sourceId,
+              status: "readable",
+              method: "firecrawl",
+              recordedAt: "2026-11-07",
+              capturedRevision: "",
+              requestedRevision: "",
+              complete: true,
+              artifacts: [],
+              reason: "",
+            })
+          ),
+          qualifications: [],
+        }),
+        LibraryHopGateInput.make({ concepts, policy })
+      );
+    // In-degree counts routed parents only: `a` has one routed and one unrouted parent.
+    const budgetCandidates = [
+      { source: web("a", "https://b.org/a"), parents: ["p1", "u"] },
+      { source: web("m", "https://d.org/m"), parents: ["p1", "p2"] },
+      { source: web("t2", "https://c.org/t2"), parents: ["p2", "p3"] },
+      { source: web("z", "https://z.org/z"), parents: ["p1", "p2", "p3"] },
+      { source: web("t1", "https://a.org/t1"), parents: ["p1", "p3"] },
+    ];
+
     layer(Layer.empty)((it) => {
       it.effect("admits a child of a parent routed to a live packet concept", () =>
         Effect.sync(() => expect(decide()("child-routed")).toEqual([true, "routed-parent"]))
@@ -682,6 +733,80 @@ describe("research library routes", () => {
               (decision) => decision.sourceId
             )
           ).toEqual(["cap-26", "cap-27", "cap-28", "cap-29", "cap-30"]);
+        })
+      );
+      it.effect("refuses reserved, IP-literal and static-asset hop-2 URLs as non-content", () =>
+        Effect.sync(() => {
+          const urls = [
+            "http://a.example/",
+            "https://www.example.com/page",
+            "https://docs.example.org/x",
+            "http://localhost:8888/",
+            "https://site.test/post",
+            "https://service.invalid/",
+            "http://0.0.0.0:8888/",
+            "http://[::1]:3000/api",
+            "https://api-rsrc.hyper.ai/figure-1.PNG",
+            "https://cdn.site.org/bundle.tar.gz?v=2",
+            "https://fonts.site.org/inter.woff2",
+          ];
+          const decisions = gate(
+            A.map(urls, (url, i) => ({ source: web(`junk-${i}`, url), parents: ["p1"] })),
+            LibraryHopPolicy.make({})
+          );
+          expect(A.map(decisions, (decision) => decision.reason)).toEqual(A.replicate("non-content", urls.length));
+          const kept = gate([{ source: web("article", "https://site.org/figures.html"), parents: ["p1"] }]);
+          expect(A.map(kept, (decision) => [decision.admitted, decision.reason])).toEqual([[true, "routed-parent"]]);
+        })
+      );
+      it.effect("spends the hop-2 budget by routed in-degree, ties by canonical URL", () =>
+        Effect.sync(() => {
+          const decisions = gate(budgetCandidates, LibraryHopPolicy.make({ hop2Limit: 3 }));
+          expect(
+            A.map(decisions, (decision) => [
+              decision.sourceId,
+              decision.routedInDegree,
+              decision.admitted,
+              decision.reason,
+            ])
+          ).toEqual([
+            ["z", 3, true, "routed-parent"],
+            ["t1", 2, true, "routed-parent"],
+            ["t2", 2, true, "routed-parent"],
+            ["m", 2, false, "budget"],
+            ["a", 1, false, "budget"],
+          ]);
+        })
+      );
+      it.effect("counts already-captured hop-2 sources against the budget", () =>
+        Effect.sync(() => {
+          const decisions = gate(budgetCandidates, LibraryHopPolicy.make({ hop2Limit: 3 }), ["a"]);
+          expect(A.map(decisions, (decision) => [decision.sourceId, decision.admitted, decision.reason])).toEqual([
+            ["z", true, "routed-parent"],
+            ["t1", true, "routed-parent"],
+            ["t2", false, "budget"],
+            ["m", false, "budget"],
+            ["a", true, "routed-parent"],
+          ]);
+        })
+      );
+      it.effect("applies the default hop-2 budget of 400", () =>
+        Effect.sync(() => {
+          expect(LibraryHopPolicy.make({}).hop2Limit).toBe(400);
+          const decisions = gate(
+            A.makeBy(401, (i) => ({
+              source: web(`d-${Str.padStart(3, "0")(`${i}`)}`, `https://d-${Str.padStart(3, "0")(`${i}`)}.org/`),
+              parents: ["p1"],
+            })),
+            LibraryHopPolicy.make({})
+          );
+          expect(A.filter(decisions, (decision) => decision.admitted)).toHaveLength(400);
+          expect(
+            A.map(
+              A.filter(decisions, (decision) => !decision.admitted),
+              (decision) => [decision.sourceId, decision.reason]
+            )
+          ).toEqual([["d-400", "budget"]]);
         })
       );
     });

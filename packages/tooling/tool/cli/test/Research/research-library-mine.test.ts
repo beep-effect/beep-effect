@@ -748,7 +748,7 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
           locators: [url],
         });
       const parent = source("parent", "https://parent.example/a");
-      const child = source("child", "https://child.example/b");
+      const child = source("child", "https://child.org/b");
       const edge = (hopDepth: number, from: string, to: string) =>
         LibraryDerivation.make({
           id: `d-${to}`,

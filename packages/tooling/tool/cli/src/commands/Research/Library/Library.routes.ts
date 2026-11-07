@@ -135,7 +135,12 @@ export const libraryHopReport = Effect.fn("Library.hopReport")(function* (
   for (const line of yield* libraryHopTotals(root, catalog, policy)) yield* Console.log(line);
   const concepts = yield* libraryLiveConcepts(policy);
   const decisions = libraryHopGate(catalog, LibraryHopGateInput.make({ concepts, policy }));
-  for (const decision of A.take(decisions, limit)) {
+  // Admitted decisions first, each group in the gate's admission priority order.
+  const ranked = [
+    ...A.filter(decisions, (decision) => decision.admitted),
+    ...A.filter(decisions, (decision) => !decision.admitted),
+  ];
+  for (const decision of A.take(ranked, limit)) {
     const url = O.getOrElse(
       O.map(
         A.findFirst(catalog.sources, (source) => source.id === decision.sourceId),
@@ -144,7 +149,7 @@ export const libraryHopReport = Effect.fn("Library.hopReport")(function* (
       () => ""
     );
     yield* Console.log(
-      `${decision.admitted ? "admit" : "refuse"} ${decision.reason} ${decision.domain} ${decision.sourceId} ${url}`
+      `${decision.admitted ? "admit" : "refuse"} ${decision.reason} in=${decision.routedInDegree} ${decision.domain} ${decision.sourceId} ${url}`
     );
   }
   return decisions;

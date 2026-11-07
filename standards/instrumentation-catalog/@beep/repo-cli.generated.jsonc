@@ -2928,6 +2928,7 @@
     {"name":"ResearchLibrary.collectDocumentOccurrences","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchLibrary.collectKnownPaperReferences","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchLibrary.hashBytes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"ResearchLibrary.hopPolicyOf","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchLibrary.hops","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchLibrary.hopsCommand","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchLibrary.importCommand","owner":"@beep/repo-cli","family":"tooling","conforms":true},
