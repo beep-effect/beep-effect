@@ -471,9 +471,10 @@ const printJson = (value: unknown, what: string) =>
  *
  * ```ts
  * import { FleetScanOptions, printFleetJoin } from "@beep/repo-cli/commands/Worktree"
+ * import { PrRepository } from "@beep/repo-cli/test/Session"
  * import * as Effect from "effect/Effect"
  *
- * const view = printFleetJoin(FleetScanOptions.make({}), { host: "github.com", owner: "o", name: "r" }, false)
+ * const view = printFleetJoin(FleetScanOptions.make({}), PrRepository.make({ host: "github.com", owner: "o", name: "r" }), false)
  * console.log(Effect.isEffect(view)) // true
  * ```
  *
@@ -545,11 +546,12 @@ const DEFAULT_DESCRIBE_LEDGER_ROWS = 5;
  *
  * ```ts
  * import { FleetScanOptions, printFleetCheckoutDescription } from "@beep/repo-cli/commands/Worktree"
+ * import { PrRepository } from "@beep/repo-cli/test/Session"
  * import * as Effect from "effect/Effect"
  *
  * const view = printFleetCheckoutDescription(
  *   FleetScanOptions.make({}),
- *   { host: "github.com", owner: "o", name: "r" },
+ *   PrRepository.make({ host: "github.com", owner: "o", name: "r" }),
  *   { checkout: "/p/beep-effect0", ledgerRows: 5, json: false }
  * )
  * console.log(Effect.isEffect(view)) // true
@@ -614,10 +616,11 @@ const derivedOwningSeat = Effect.fn("Fleet.derivedOwningSeat")(function* (checko
  *
  * ```ts
  * import { FleetScanOptions, registerFleetCheckout } from "@beep/repo-cli/commands/Worktree"
+ * import { PrRepository } from "@beep/repo-cli/test/Session"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
- * const register = registerFleetCheckout(FleetScanOptions.make({}), { host: "github.com", owner: "o", name: "r" }, {
+ * const register = registerFleetCheckout(FleetScanOptions.make({}), PrRepository.make({ host: "github.com", owner: "o", name: "r" }), {
  *   checkout: "/p/beep/seats/main",
  *   role: "main",
  *   owningSeat: O.none(),

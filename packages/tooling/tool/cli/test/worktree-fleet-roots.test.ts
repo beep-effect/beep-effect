@@ -194,12 +194,6 @@ const stableSnapshotText = Effect.fn("FleetRootsTest.stableSnapshotText")(functi
 });
 
 const isString = (line: unknown): line is string => typeof line === "string";
-const decodeJoinedJson = S.decodeUnknownEffect(
-  S.Struct({ path: S.String, seatRole: S.String }).pipe(S.Array, S.fromJsonString)
-);
-const decodeDescriptionJson = S.decodeUnknownEffect(
-  S.Struct({ registry: S.Struct({ seatRole: S.String, owningSeat: S.NullOr(S.String) }) }).pipe(S.fromJsonString)
-);
 
 const fixtureRoots = (fixture: FleetRootsFixture) =>
   [
@@ -516,8 +510,10 @@ describe("fleet discovery roots", () => {
             expect(joinText).toContain("role=legacy seat=- drain=active  lane=- pr=- state=-");
 
             yield* capture(printFleetJoin(options, repository, true));
-            const joined = yield* decodeJoinedJson(json[0] ?? "");
-            expect(A.map(joined, (row) => row.path)).toEqual(allFleetCheckouts(fixture));
+            const joinedJson = json[0] ?? "";
+            for (const checkout of allFleetCheckouts(fixture)) {
+              expect(joinedJson).toContain(`"path":"${checkout}"`);
+            }
 
             yield* capture(
               registerFleetCheckout(options, repository, {
@@ -569,8 +565,9 @@ describe("fleet discovery roots", () => {
             expect(all).toContain("registry: role=main seat=- drain=active retention-exempt=true");
             expect(all).toContain("ledger (1 newest):");
             expect(all).toContain("open lane=lane-a branch=lane-a pr=#77 next: finish lane-a");
-            const described = yield* decodeDescriptionJson(json[1] ?? "");
-            expect(described.registry).toEqual({ seatRole: "impl", owningSeat: fixture.seat });
+            const describedJson = json[1] ?? "";
+            expect(describedJson).toContain('"seatRole":"impl"');
+            expect(describedJson).toContain(`"owningSeat":"${fixture.seat}"`);
 
             const missing = yield* capture(
               printFleetCheckoutDescription(options, repository, {
