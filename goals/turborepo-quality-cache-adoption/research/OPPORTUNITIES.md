@@ -1,5 +1,15 @@
 # Friction and opportunities
 
+## GitHub check-list refusal despite positive quota observations, 2026-11-06
+
+The replacement readiness observers report `Failed to read the complete pull request check census`. The exact `gh pr checks --json ...` command, both branch-inferred and explicitly naming PR #2804, reports `GraphQL: API rate limit already exceeded`. Within the same approved credential lane, the REST quota response at 21:40 UTC reports 4,604 core and 4,831 GraphQL requests remaining; a direct GraphQL rate-limit query at 21:41 reports 4,559 remaining. This does not establish a token, provider or CLI root cause. Current-head REST workflow job inventories remain readable and show no failed jobs at 21:42; they do not establish complete PR merge readiness or replace the review-thread gate. Preserve the running observers, avoid blind restarts or credential changes, and retain the original refusals plus independent quota observations. A diagnostic that preserves the failed census command's safe cause would prevent the generic monitor message from obscuring this distinction.
+
+Resolution at 21:50 UTC: the installed GitHub CLI 2.102.1 [check command](https://github.com/cli/cli/blob/v2.102.1/pkg/cmd/pr/checks/checks.go) uses a 24-hour cached feature detector. Exactly two local response-cache entries contained HTTP 200 GraphQL `RATE_LIMIT` errors dated before the recovered quota reset. Their response headers contained neither authorization nor cookies. Preserve byte-exact rollback copies privately, then remove only those two entries after verifying their hashes. The same check-list command immediately returned a complete 44-row result without credential, limit or configuration changes. This establishes a stale error-cache cause for the reproduced refusal; no readiness gate was bypassed. Keep failed API responses distinguishable from fresh provider failures when diagnosing future quota incidents.
+
+
+## Types lint ignore-policy input gap, 2026-11-06
+
+While preparing the next reviewed pilot, source inspection found `biome check .` reads Git ignore files but inherited types lint inputs omit the root ignore policy. Twelve bounded stable/canary native `run lint --filter=@beep/types --dry=json` plans confirm that adding a types source exclusion to that policy leaves the original task hash unchanged, while the explicit candidate invalidates. Caching remains disabled, so this is a pre-adoption input gap, not evidence of a stale artifact served in production. The input-profile correction and source-bound reports are prepared in the local types pilot lane. Include ignore-policy perturbation in computation qualification before enabling reuse; metadata coverage alone does not establish semantic correctness.
 ## Hosted Integration interrupted by runner loss, 2026-11-06
 
 PR #2804 Integration job 128166148577 failed on head 0bdabf78490c3ee2e8ac86fb356bbaa837d481b3 after the self-hosted runner lost communication. GitHub's sole failure annotation identifies runner loss; the verification step remains in progress in the terminal job record and no step reports a test failure. The completed-job log endpoint returns provider `BlobNotFound` instead of a test log; preserve that response separately and never claim it as captured test output. After rechecking the unchanged open PR head and completed failed run, request one retry of only the interrupted job. Its request was accepted; replacement-job execution still needs verification. Do not patch tests or rerun the whole workflow from this evidence. A subsequent REST status read hit the account's real API quota, so further REST verification waits for reset without changing credentials. This operational interruption is separate from the scoped integration routing omission prepared in this lane.
@@ -1279,6 +1289,13 @@ No computation qualification or production-cache activation follows from this
 repair. Prevent recurrence by auditing the script's full executed suite rather
 than treating property tests or coverage as narrower without source evidence.
 
+## Replay formatting and pilot profile phase complexity, 2026-11-06
+
+Hosted #2824 Lint found expanded singleton arrays in types/turbo.json left by an unpublished replay resolution. Apply the exact formatter diff and keep the environment/input declarations unchanged. Fallow artifact13548435278 attributes one new cognitive/CRAP finding to runPilot. Group its selected-profile discovery, refusal and validation in one named phase, leaving executable pin checks reusable before every execution and preserving validation order. Retain the three failed logs and artifact digests privately. No baseline, threshold, suppression or local quality suite changes.
+
+## Hosted diagnostics reject sequential channel and Option wrappers, 2026-11-06
+
+#2824 Check, Build and Integration all fail on the same two introduced Effect diagnostics in Cache.pilot.ts: mapMapErrorToMapBoth and mapSomeToAsSome. Replace the sequential success/error mappings with mapBoth and the success wrapper with asSome, preserving failures and values. Three completed logs are retained once under their actual jobs. No signature, baseline, threshold, test expectation or local quality suite changes.
 
 ## 2026-11-06 — Reference links enter identity's broad metadata inputs
 
@@ -1300,3 +1317,15 @@ No inspection or protected trial was submitted. Independent adoption metadata
 work continued in an isolated source-bound checkout. Retaining immutable hosted
 source bindings and coordinating a short exact-source approval interval would
 avoid repeated static reads while preserving the final live-ref check.
+
+## Recipe fixture left an unused outer task constant, 2026-11-06
+
+Heavy / Check job 128224640320 on #2824 reported TS6133 at cache-pilot-orchestration.test.ts:114. The parameterized fixture owns its selected task locally, leaving the former identity-only constant unused. Remove only that superseded outer constant. Preserve all fixture branches and authored controls. The failing hosted log is retained against its exact revision; no local suite ran.
+
+### Types pilot prerequisite refusal coverage, 2026-11-07
+
+PR #2824 hosted coverage measured Cache.pilot.ts functions at 87.30 against the unchanged 87.95 floor. Inspecting all six provider-digest-verified unit coverage artifacts identified unexercised installed-dependency and runtime-linker absence refusals. Add process-boundary controls for both types prerequisites: exact typed cause, zero task invocations, no private sandbox or observation receipt. Tests are authored for hosted CI; no local quality suite ran. Coverage success remains unproven until the new head completes.
+
+### Separate Effect execution from assertion construction, 2026-11-07
+
+PR #2824 hosted Check rejected the new observation-absence assertion with TS377171: yield in call argument. Bind the filesystem result before asserting it. The negative control and coverage floor remain unchanged. Prevent this with the existing Effect test-authoring checklist; hosted CI remains authoritative and no local quality suite was run.
