@@ -161,12 +161,15 @@ export const scenarios = <E>({
           Effect.gen(function* () {
             const destinations = yield* V.SyncDestination;
             yield* destinations.send(destination, V.RecordDestinationPoll.make({ position: "p1", error: null }));
-            yield* destinations.send(destination, V.RecordDestinationPoll.make({ position: "p2", error: "offline" }));
+            yield* destinations.send(
+              destination,
+              V.RecordDestinationPoll.make({ position: "p2", error: "pollEvents" })
+            );
             yield* destinations.send(destination, V.PauseDestination.make({}));
             const actual2 = yield* destinations.state(destination);
             expect(actual2).toMatchObject({
               cursor: "p1",
-              cursorError: "offline",
+              cursorError: "pollEvents",
               paused: true,
             });
             yield* destinations.send(destination, V.ResolveDestinationRoot.make({ rootId: remote }));
@@ -296,7 +299,7 @@ export const scenarios = <E>({
                   retryable: n !== "terminal",
                   maxAttempts: n === "budget" ? 1 : 3,
                   backoffMillis: 60,
-                  reason: "vendor",
+                  reason: "uploadFile",
                 })
               );
             }
@@ -308,7 +311,7 @@ export const scenarios = <E>({
             expect(actual8).toMatchObject({ status: "failed" });
             yield* eventually(ops.state(opId("retry")), (s) => s?.status === "queued");
             yield* ops.send(opId("terminal"), V.ReviveOperation.make({}));
-            yield* ops.send(opId("terminal"), V.SupersedeOperation.make({ reason: "replacement" }));
+            yield* ops.send(opId("terminal"), V.SupersedeOperation.make({ reason: "kind-replaced" }));
             yield* ops.send(opId("terminal"), V.ReviveOperation.make({}));
             const actual9 = yield* ops.state(opId("terminal"));
             expect(actual9).toMatchObject({ status: "superseded" });
@@ -412,7 +415,7 @@ export const scenarios = <E>({
               retryable: false,
               maxAttempts: 3,
               backoffMillis: 10,
-              reason: "auth",
+              reason: "uploadFile",
             })
           );
           yield* eventually(items.state(itemId("recovery")), (s) => s?.status === "error");
@@ -653,7 +656,7 @@ export const scenarios = <E>({
               key: ref,
               source: ref,
               route: undefined,
-              event: V.OperationFailed.make({ reason: "late deleted snapshot" }),
+              event: V.OperationFailed.make({ reason: "uploadFile" }),
               state: null,
               envelope,
             });

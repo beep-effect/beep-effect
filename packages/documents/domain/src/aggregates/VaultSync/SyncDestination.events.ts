@@ -31,7 +31,7 @@ export const DestinationState = S.Union([
     provider: S.tag("box"),
     rootId: S.NullOr(V.RemoteItemId),
     cursor: S.NullOr(S.String),
-    cursorError: S.NullOr(S.String),
+    cursorError: S.NullOr(V.MirrorOperation),
     paused: S.Boolean,
     paths: S.HashMap(V.VaultRelPath, V.ItemId),
   }),
@@ -145,7 +145,7 @@ export class CursorAdvanced extends Domain.Event("CursorAdvanced", { position: S
  * @category aggregates
  * @since 0.0.0
  */
-export class CursorFailed extends Domain.Event("CursorFailed", { reason: S.String }) {
+export class CursorFailed extends Domain.Event("CursorFailed", { reason: V.MirrorOperation }) {
   static readonly schemaVersion = 1;
 }
 /**

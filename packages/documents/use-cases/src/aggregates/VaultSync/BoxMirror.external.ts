@@ -46,7 +46,7 @@ export type DisconnectReason = typeof DisconnectReason.Type;
  */
 export class BoxMirrorUnavailable extends S.TaggedError<BoxMirrorUnavailable, { readonly brand: unique symbol }>()(
   "BoxMirrorUnavailable",
-  { retryable: S.Boolean, disconnectReason: S.NullOr(DisconnectReason), operation: S.String },
+  { retryable: S.Boolean, disconnectReason: S.NullOr(DisconnectReason), operation: V.MirrorOperation },
   $I.annote("BoxMirrorUnavailable", { description: "A declared Box boundary failure." })
 ) {}
 const destination = { destinationId: V.DestinationId };

@@ -31,7 +31,7 @@ export class OperationInput extends S.Opaque<OperationInput, { readonly brand: u
     digest: S.NullOr(S.String),
     generation: S.Int,
     parentRequired: S.Boolean,
-    idempotencyKey: S.NonEmptyString,
+    idempotencyKey: V.OperationId,
   }).pipe($I.annoteSchema("OperationInput", { description: "OperationInput persisted vault sync value." }))
 ) {}
 
@@ -194,7 +194,7 @@ export class OperationRetryScheduled extends Domain.Event("OperationRetrySchedul
  * @category aggregates
  * @since 0.0.0
  */
-export class OperationFailed extends Domain.Event("OperationFailed", { reason: S.String }) {
+export class OperationFailed extends Domain.Event("OperationFailed", { reason: V.MirrorOperation }) {
   static readonly schemaVersion = 1;
 }
 /**
@@ -208,7 +208,7 @@ export class OperationFailed extends Domain.Event("OperationFailed", { reason: S
  * @category aggregates
  * @since 0.0.0
  */
-export class OperationSuperseded extends Domain.Event("OperationSuperseded", { reason: S.String }) {
+export class OperationSuperseded extends Domain.Event("OperationSuperseded", { reason: V.SupersedeReason }) {
   static readonly schemaVersion = 1;
 }
 /**

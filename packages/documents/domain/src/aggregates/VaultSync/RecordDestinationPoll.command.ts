@@ -23,7 +23,7 @@ import * as V from "./Values.ts";
  */
 export class RecordDestinationPoll extends Domain.Command("RecordDestinationPoll", {
   target: V.DestinationId,
-  input: { position: S.NullOr(S.String), error: S.NullOr(S.String) },
+  input: { position: S.NullOr(S.String), error: S.NullOr(V.MirrorOperation) },
   events: [E.CursorAdvanced, E.CursorFailed],
   rejects: [SyncRuleViolation],
 }) {}

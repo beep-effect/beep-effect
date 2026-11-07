@@ -88,7 +88,7 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
       yield* destinations.send(destination, V.PauseDestination.make({}));
       yield* destinations.send(destination, V.ResumeDestination.make({}));
       yield* destinations.send(destination, V.RecordDestinationPoll.make({ position: "p1", error: null }));
-      yield* destinations.send(destination, V.RecordDestinationPoll.make({ position: null, error: "offline" }));
+      yield* destinations.send(destination, V.RecordDestinationPoll.make({ position: null, error: "pollEvents" }));
       yield* destinations.send(destination, V.ClaimItemPath.make({ path, itemId: item }));
       yield* destinations.send(destination, V.ReleaseItemPath.make({ path, itemId: item }));
       yield* items.send(item, V.ObserveItem.make({ observation }));
@@ -139,7 +139,7 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
           retryable: true,
           maxAttempts: 3,
           backoffMillis: 1,
-          reason: "retry",
+          reason: "uploadFile",
         })
       );
       yield* Effect.sleep("5 millis");
@@ -156,7 +156,7 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
           retryable: false,
           maxAttempts: 3,
           backoffMillis: 1,
-          reason: "terminal",
+          reason: "uploadFileVersion",
         })
       );
       yield* ops.send(operation, V.ReviveOperation.make({}));
