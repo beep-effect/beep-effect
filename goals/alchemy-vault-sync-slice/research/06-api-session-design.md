@@ -182,9 +182,9 @@ The following new command names are proposed; PR 3a owns their final spelling.
 
 | Current RPC | HTTP/CLI replacement | Read result and compatibility |
 | --- | --- | --- |
-| TriggerVaultSync | RequestVaultSync command on destination; starts the PR 3b pass | Receipt immediately; then VaultSyncStatus, optionally atLeast the receipt |
+| TriggerVaultSync | RequestVaultSync command on destination; starts the PR 3b pass | **Semantics change, decided in PR 3c:** the compat handler answers when the request is accepted, not when the pass finishes (the old `syncOnce` returned after the pass). Callers are migrated rather than emulated: the desktop panel subscribes to the `WatchVaultSyncStatus` stream (gated `VaultSyncStatus.watch`) and shows counts as frames arrive. `atLeast` on the receipt only orders the read after the request, never after the saga |
 | GetVaultSyncStatus | VaultSyncStatus.get/snapshot | forceProbe=true becomes explicit RefreshDestinationConnection command, HTTP/CLI only; MCP reads cached status |
-| ListVaultSyncConflicts | OpenConflicts.get/list | Public conflict ids and safe DTOs; no raw entity dump |
+| ListVaultSyncConflicts | OpenConflicts.get (current state) | The current open-conflicts collection from the View's state, never `list`, which returns emitted-entry history that still contains reviewed conflicts. Public conflict ids and safe DTOs; no raw entity dump; paginate over the current state if needed |
 | MarkVaultSyncConflictReviewed | ReviewSyncConflict command on public conflict id | Receipt + OpenConflicts refresh; temporary numeric mapping verifies org/workspace before dispatch |
 
 Current definitions and wiring:
@@ -256,8 +256,8 @@ reader, raw event tool, watch tool or command tool.
 Reuse Effect MCP and the repo's sanitized tooling registration pattern:
 `packages/drivers/m365-mcp/src/Server.ts:8-15,70-96,123-130` uses
 `@beep/mcp-kit` and `effect/ai/McpServer`.
-Search included McpServer and effect/unstable/ai usages; the existing source
-uses the dedicated `effect/ai/*` leaves. Register read-only tool annotations
+Search included McpServer usages and the retired AI module path; the existing
+source uses the dedicated `effect/ai/*` leaves. Register read-only tool annotations
 and client-safe typed failures. HTTP MCP forwards the call's credentials;
 stdio, if added, uses an enrolled identity per process, never an anonymous
 System principal. Protocol registration follows the existing MCP kit.
