@@ -1,0 +1,15 @@
+{
+  "previous": "09d8fe9908401780e861c3578f456e41f9f342df312d3ff81e9653bc13449b6e",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/scripts-to-beep-cli PR 2)",
+    "reason": "Re-record the root lint:tracked-shell-allowlist script, its uncached //#lint:tracked-shell-allowlist Turbo task and the regenerated policy-fingerprint seals; no existing command, input, output, env or cache flag changes and no qualification is granted.",
+    "basis": {
+      "path": "goals/scripts-to-beep-cli/research/cache-baseline-review-pr2.md",
+      "sha256": "82f827ddce815561b503dcbc203e7229404aee457abc50a877900571eefcd8ea"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "subjects": ["//"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

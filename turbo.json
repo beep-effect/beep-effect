@@ -1821,6 +1821,8 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/SchemaTagIdioms.model.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/SchemaTagIdioms.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.model.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/internal/TrackedTextFiles.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/internal/TypeScriptFences.ts",
@@ -2696,10 +2698,14 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/LawsPackage.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.model.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/internal/TrackedTextFiles.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/LintLaws.command.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
         "$TURBO_ROOT$/tsdoc.json"
       ]
     },
@@ -6489,6 +6495,27 @@
       ]
     },
     "//#lint:retired-iri-authorities": {
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
+      "outputs": [],
+      "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
+      "inputs": [
+        "**/*",
+        "!.git/**",
+        "!**/.git/**",
+        "!.repos/**",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
+      ]
+    },
+    "//#lint:tracked-shell-allowlist": {
       "cache": false,
       "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],

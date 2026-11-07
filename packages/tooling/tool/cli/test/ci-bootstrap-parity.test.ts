@@ -12,15 +12,14 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// The pre-toolchain commands of the compiled CI binary against the shell
-// adapters they replace: `ci change-profile` vs scripts/ci-change-profile.sh,
-// `ci prune-apt` vs scripts/ci-prune-apt-sources.sh, and the runner-resources
-// fallback of scripts/ci-runner-resources.sh. The typed side runs the slim
-// entry (src/bin-ci.ts) that `beep ci compile-binary` compiles.
+// Golden outputs for the pre-toolchain commands of the compiled CI binary.
+// The expected strings were captured from the retired shell adapters
+// (ci-change-profile.sh, ci-prune-apt-sources.sh) on 2026-11-07, before they
+// were deleted, so the typed commands keep the bytes the workflows `eval`.
+// The typed side runs the slim entry (src/bin-ci.ts) that
+// `beep ci compile-binary` compiles.
 
 const CLI_ENTRY = "packages/tooling/tool/cli/src/bin-ci.ts";
-const PROFILE_SCRIPT = "scripts/ci-change-profile.sh";
-const PRUNE_SCRIPT = "scripts/ci-prune-apt-sources.sh";
 
 const gitIn =
   (cwd: string) =>
@@ -44,9 +43,9 @@ const run = (argv: ReadonlyArray<string>, cwd: string, env: Readonly<Record<stri
 const encodePatterns = S.encodeEffect(S.fromJsonString(CiOperationalPatterns));
 const UNAVAILABLE = "ci-change-profile: pinned PR diff unavailable; keeping every verification profile active";
 
-it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command parity", (it) => {
+it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command golden outputs", (it) => {
   it.effect(
-    "emits the shell adapter's change profile for every diff shape",
+    "emits the golden change profile for every diff shape",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -82,71 +81,50 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command p
         quoted: yield* branch("quoted", ["docs/café.md"]),
       };
 
-      // [label, event, positional args, pinned base, pinned head]
-      const cases: ReadonlyArray<readonly [string, string, ReadonlyArray<string>, string, string]> = [
-        ["goals-only", "pull_request", [base, heads.goals], "", ""],
-        ["docs-only", "pull_request", [base, heads.docs], "", ""],
-        ["desktop", "pull_request", [base, heads.desktop], "", ""],
-        ["mixed", "pull_request", [base, heads.mixed], "", ""],
-        ["package docs", "pull_request", [base, heads.packageDocs], "", ""],
-        ["quoted path", "pull_request", [base, heads.quoted], "", ""],
-        ["empty diff", "pull_request", [base, base], "", ""],
-        ["pins win over arguments", "pull_request", [base, heads.mixed], base, heads.goals],
-        ["pinned only", "pull_request", [], base, heads.docs],
-        ["missing head", "pull_request", [base], "", ""],
-        ["missing pins", "pull_request", [], "", ""],
-        ["failed diff", "pull_request", ["missing-base", heads.docs], "", ""],
-        ["push", "push", [base, heads.docs], "", ""],
-        ["local", "", [base, heads.docs], "", ""],
+      const profileLines = (goals: boolean, docs: boolean, desktop: boolean) =>
+        `goals_only=${goals}\ndocs_only=${docs}\ndesktop_rust_relevant=${desktop}\n`;
+      const full = profileLines(false, false, true);
+      const none = profileLines(false, false, false);
+      // [label, event, positional args, pinned base, pinned head, golden stdout, warns unavailable]
+      const cases: ReadonlyArray<readonly [string, string, ReadonlyArray<string>, string, string, string, boolean]> = [
+        ["goals-only", "pull_request", [base, heads.goals], "", "", profileLines(true, true, false), false],
+        ["docs-only", "pull_request", [base, heads.docs], "", "", profileLines(false, true, false), false],
+        ["desktop", "pull_request", [base, heads.desktop], "", "", profileLines(false, false, true), false],
+        ["mixed", "pull_request", [base, heads.mixed], "", "", none, false],
+        ["package docs", "pull_request", [base, heads.packageDocs], "", "", none, false],
+        ["quoted path", "pull_request", [base, heads.quoted], "", "", none, false],
+        ["empty diff", "pull_request", [base, base], "", "", none, false],
+        [
+          "pins win over arguments",
+          "pull_request",
+          [base, heads.mixed],
+          base,
+          heads.goals,
+          profileLines(true, true, false),
+          false,
+        ],
+        ["pinned only", "pull_request", [], base, heads.docs, profileLines(false, true, false), false],
+        ["missing head", "pull_request", [base], "", "", full, true],
+        ["missing pins", "pull_request", [], "", "", full, true],
+        ["failed diff", "pull_request", ["missing-base", heads.docs], "", "", full, true],
+        ["push", "push", [base, heads.docs], "", "", full, false],
+        ["local", "", [base, heads.docs], "", "", full, false],
       ];
-      for (const [label, event, positional, pinnedBase, pinnedHead] of cases) {
-        const shellOutput = path.join(tempRoot, ".git", "shell-output");
+      for (const [label, event, positional, pinnedBase, pinnedHead, golden, warns] of cases) {
         const typedOutput = path.join(tempRoot, ".git", "typed-output");
-        yield* fs.writeFileString(shellOutput, "prior=1\n");
         yield* fs.writeFileString(typedOutput, "prior=1\n");
-        const env = (output: string) => ({
+        const typed = run(["bun", path.join(repoRoot, CLI_ENTRY), "ci", "change-profile", ...positional], tempRoot, {
           GITHUB_EVENT_NAME: event,
-          GITHUB_OUTPUT: output,
+          GITHUB_OUTPUT: typedOutput,
           BEEP_CI_PR_BASE_SHA: pinnedBase,
           BEEP_CI_PR_HEAD_SHA: pinnedHead,
         });
-        const shell = run(["bash", path.join(repoRoot, PROFILE_SCRIPT), ...positional], tempRoot, env(shellOutput));
-        const typed = run(
-          ["bun", path.join(repoRoot, CLI_ENTRY), "ci", "change-profile", ...positional],
-          tempRoot,
-          env(typedOutput)
-        );
-        assert.strictEqual(shell.exitCode, 0, `${label}: ${shell.stderr}`);
         assert.strictEqual(typed.exitCode, 0, `${label}: ${typed.stderr}`);
-        assert.strictEqual(typed.stdout, shell.stdout, label);
-        assert.strictEqual(Str.includes(UNAVAILABLE)(typed.stderr), Str.includes(UNAVAILABLE)(shell.stderr), label);
-        const shellFile = yield* fs.readFileString(shellOutput);
+        assert.strictEqual(typed.stdout, golden, label);
+        assert.strictEqual(Str.includes(UNAVAILABLE)(typed.stderr), warns, label);
         const typedFile = yield* fs.readFileString(typedOutput);
-        assert.strictEqual(typedFile, shellFile, label);
+        assert.strictEqual(typedFile, `prior=1\n${golden}`, label);
       }
-
-      // Spot-check the shapes themselves, so a shared regression cannot pass as parity.
-      const profile = (positional: ReadonlyArray<string>) =>
-        run(["bun", path.join(repoRoot, CLI_ENTRY), "ci", "change-profile", ...positional], tempRoot, {
-          GITHUB_EVENT_NAME: "pull_request",
-          GITHUB_OUTPUT: "",
-          BEEP_CI_PR_BASE_SHA: "",
-          BEEP_CI_PR_HEAD_SHA: "",
-        }).stdout;
-      assert.strictEqual(
-        profile([base, heads.goals]),
-        "goals_only=true\ndocs_only=true\ndesktop_rust_relevant=false\n"
-      );
-      assert.strictEqual(
-        profile([base, heads.docs]),
-        "goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false\n"
-      );
-      assert.strictEqual(
-        profile([base, heads.desktop]),
-        "goals_only=false\ndocs_only=false\ndesktop_rust_relevant=true\n"
-      );
-      assert.strictEqual(profile([base, base]), "goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false\n");
-      assert.strictEqual(profile([base]), "goals_only=false\ndocs_only=false\ndesktop_rust_relevant=true\n");
     })
   );
 
@@ -198,7 +176,7 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command p
   );
 
   it.effect(
-    "prunes the same apt sources as the shell adapter without privilege",
+    "prunes the golden apt sources without privilege",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -225,26 +203,50 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command p
         }
         return directory;
       });
-      const shellDir = yield* fixture("shell");
       const typedDir = yield* fixture("typed");
-      const shell = run(["bash", path.join(repoRoot, PRUNE_SCRIPT), shellDir], tempRoot, {});
       const typed = run(["bun", path.join(repoRoot, CLI_ENTRY), "ci", "prune-apt", typedDir], tempRoot, {});
-      assert.strictEqual(shell.exitCode, 0, shell.stderr);
       assert.strictEqual(typed.exitCode, 0, typed.stderr);
-      const sections = (stdout: string, directory: string) => {
-        const lines = Str.split(Str.replaceAll(directory, "<dir>")(stdout), "\n");
+      // `ls -l` owner, mode and size columns vary by host; keep each entry's
+      // name (with its link target), the `total` line and the headings.
+      const entryName = /^[-dlbcps][-rwxsStT.+@]{9,}\s+\d+\s+\S+\s+\S+\s+\d+\s+\S+\s+\S+\s+\S+\s(.+)$/u;
+      const normalized = (stdout: string) => {
+        const lines = A.filter(Str.split(Str.replaceAll(typedDir, "<dir>")(stdout), "\n"), Str.isNonEmpty);
         const after = O.getOrThrow(A.findFirstIndex(lines, (line) => line === "apt sources after pruning:"));
-        const pruned = A.filter(A.take(lines, after), Str.startsWith("<dir>/"));
+        const shape = (line: string) =>
+          Str.startsWith("total ")(line)
+            ? "total"
+            : O.getOrElse(
+                O.flatMap(Str.match(entryName)(line), (match) => O.fromUndefinedOr(match[1])),
+                () => line
+              );
+        const before = A.map(A.take(lines, after), shape);
         return {
-          listings: A.filter(lines, (line) => !Str.startsWith("<dir>/")(line)),
-          pruned: A.sort(pruned, Str.Order),
+          before: A.filter(before, (line) => !Str.startsWith("<dir>/")(line)),
+          pruned: A.sort(A.filter(before, Str.startsWith("<dir>/")), Str.Order),
+          after: A.map(A.drop(lines, after), shape),
         };
       };
-      assert.deepStrictEqual(sections(typed.stdout, typedDir), sections(shell.stdout, shellDir));
-      assert.deepStrictEqual(sections(typed.stdout, typedDir).pruned, [
-        "<dir>/google-chrome.sources",
-        "<dir>/microsoft-prod.list",
-      ]);
+      assert.deepStrictEqual(normalized(typed.stdout), {
+        before: [
+          "apt sources before pruning:",
+          "total",
+          "google-chrome.sources",
+          "link.list -> ../outside.list",
+          "microsoft-prod.list",
+          "nested.list",
+          "notes.txt",
+          "ubuntu.sources",
+        ],
+        pruned: ["<dir>/google-chrome.sources", "<dir>/microsoft-prod.list"],
+        after: [
+          "apt sources after pruning:",
+          "total",
+          "link.list -> ../outside.list",
+          "nested.list",
+          "notes.txt",
+          "ubuntu.sources",
+        ],
+      });
       const remaining = yield* fs.readDirectory(typedDir);
       assert.deepStrictEqual(A.sort(remaining, Str.Order), ["link.list", "nested.list", "notes.txt", "ubuntu.sources"]);
     })

@@ -176,6 +176,9 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
@@ -205,7 +208,7 @@ jobs:
           fi
 
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$goals_only" == "true" ]]; then
             should_run=false
           fi
@@ -290,14 +293,9 @@ jobs:
           # session and reap the entire process group once the lane process
           # finishes, success and failure alike.
           run_lane() {
-            local -a lane_command=(bun run beep "$@")
-            # The reusable workflow runs from main, but older PR checkouts
-            # may not contain the optional measurement helper yet.
-            if [[ -f scripts/ci-runner-resources.sh ]]; then
-              lane_command=(bash scripts/ci-runner-resources.sh "${{ matrix.id }}" "${lane_command[@]}")
-            else
-              echo '::notice::Runner resource helper unavailable in this checkout; running the requested lane.'
-            fi
+            # The fetched CI binary measures host resources around the lane
+            # and preserves its exit status.
+            local -a lane_command=(beep ci runner-resources "${{ matrix.id }}" -- bun run beep "$@")
             setsid "${lane_command[@]}" < /dev/null &
             local pgid=$!
             local status=0
@@ -408,6 +406,9 @@ jobs:
           turbo-remote-cache: "false"
           r2-enabled: "false"
           app-secrets: "false"
+
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
 
       - name: Ensure native sandbox inspection dependency
         shell: bash
@@ -520,6 +521,9 @@ jobs:
           printf 'XDG_CACHE_HOME=%s/cache\n' "$build_root" >> "$GITHUB_ENV"
           printf 'CARGO_TARGET_DIR=%s/target\n' "$build_root" >> "$GITHUB_ENV"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Ensure native build and ELF inspection prerequisites
         shell: bash
         run: |
@@ -534,7 +538,7 @@ jobs:
             if command -v dnf >/dev/null 2>&1; then
               "${privilege[@]}" dnf install -y gcc binutils make perl-core
             elif command -v apt-get >/dev/null 2>&1; then
-              bash scripts/ci-prune-apt-sources.sh
+              beep ci prune-apt
               "${privilege[@]}" apt-get update
               "${privilege[@]}" apt-get install -y --no-install-recommends gcc binutils make perl
             else
@@ -746,6 +750,9 @@ jobs:
           turbo-remote-cache: "false"
           r2-enabled: "false"
           app-secrets: "false"
+
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
 
       - name: Ensure native sandbox trial dependency
         shell: bash

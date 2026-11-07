@@ -939,12 +939,16 @@ describe("runner bake planning and argv", () => {
         const repoRoot = yield* findRepoRoot();
         const caller = yield* fs.readFileString(path.join(repoRoot, ".cursor", "install.sh"));
         const script = yield* fs.readFileString(path.join(repoRoot, "scripts", "cloud", "bootstrap.sh"));
-        const worker = yield* fs.readFileString(path.join(repoRoot, "scripts", "cloud", "fetch.sh"));
+        // The download worker is bootstrap.sh's own `--fetch-worker` mode.
+        const worker = O.getOrElse(A.get(Str.split(script, "\nfetch_worker() {\n"), 1), constant(""));
 
         expect(caller).toContain('BEEP_CLOUD_VENDOR=cursor exec bash "${REPO_ROOT}/scripts/cloud/bootstrap.sh"');
         expect(script).not.toContain("https://bun.sh/install");
         expect(worker).not.toContain("https://bun.sh/install");
-        expect(script).toContain('bash "${REPO_ROOT}/scripts/cloud/fetch.sh" bun "${run_dir}" "${BUN_VERSION}"');
+        expect(worker).not.toBe("");
+        expect(script).toContain(
+          'bash "${REPO_ROOT}/scripts/cloud/bootstrap.sh" --fetch-worker bun "${run_dir}" "${BUN_VERSION}"'
+        );
         expect(worker).toContain(
           "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
         );

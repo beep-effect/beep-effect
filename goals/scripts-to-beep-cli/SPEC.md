@@ -37,9 +37,9 @@ Higher sources outrank lower sources when they conflict.
 
 | Today | Becomes |
 | --- | --- |
-| `scripts/ci-change-profile.sh` | `beep ci change-profile <base>` (prints the same `eval`-able assignments) |
-| `scripts/ci-runner-resources.sh` | `beep ci runner-resources <lane> -- <command>` |
-| `scripts/ci-prune-apt-sources.sh` | `beep ci prune-apt` |
+| `ci-change-profile.sh` (retired) | `beep ci change-profile <base>` (prints the same `eval`-able assignments) |
+| `ci-runner-resources.sh` (retired) | `beep ci runner-resources <lane> -- <command>` |
+| `ci-prune-apt-sources.sh` (retired) | `beep ci prune-apt` |
 | the two GitHub App `create-*.ts` registration scripts + manifests (retired) | `beep github app mint <app>` over `@beep/github`; manifests move to the command's policy data |
 | `prune-tsgo-backups.mjs` (retired) | `beep toolchain prune-tsgo-backups` in `packages/tooling/tool/cli/src/commands/Toolchain/` (root `prepare` calls it) |
 | `regenerate-merge-driver.sh` (retired) | `beep git merge-driver regenerate` (the `check.yml` assertion updates) |
@@ -47,7 +47,7 @@ Higher sources outrank lower sources when they conflict.
 | `test-gitleaks-observation-digest.py` (retired) | `packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts` (`python-free-repo` triage row) |
 | `knowledge-refs-rewrite.rules.json`, `references.json` (moved) | `packages/tooling/policy-pack/repo-configs/data/` |
 | the `agent-runs.slice` systemd units (retired) | `beep quality scheduler slice [--install]`, rendered from `packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts` |
-| `scripts/cloud/bootstrap.sh`, `scripts/cloud/fetch.sh` | `bootstrap.sh` stays as the one exception; `fetch.sh` folds into it or into the compiled binary fetch |
+| `scripts/cloud/bootstrap.sh`, `fetch.sh` (retired) | `bootstrap.sh` stays as the one exception; `fetch.sh` folded into it as its `--fetch-worker` mode |
 
 New: a `release`/`main` workflow step that runs `bun build --compile` on the beep CLI and
 publishes `beep-linux-x64` (and the runner image arch) as a release asset or cached action
@@ -90,7 +90,7 @@ in `beep lint laws`.
 | Whitespace | `git diff --check -- goals/scripts-to-beep-cli` | Passes |
 | Scripts gone | `git ls-files scripts \| grep -v '^scripts/cloud/bootstrap.sh$'` | empty |
 | Shell law | `bun run beep lint laws` | Passes |
-| Change-profile parity | `diff <(scripts/ci-change-profile.sh origin/main) <(beep ci change-profile origin/main)` before deletion | identical |
+| Change-profile parity | shell output captured before deletion; `packages/tooling/tool/cli/test/ci-bootstrap-parity.test.ts` holds it as golden strings | passes |
 
 ## Stop Conditions
 
@@ -121,7 +121,7 @@ Reverse: Compile src/bin-main.ts with native externals and fix its eager DuckDB 
 
 ### change-profile reads the checkout's pattern file and fails open like the shell, 2026-11-07
 
-Parity with scripts/ci-change-profile.sh: pinned `BEEP_CI_PR_BASE_SHA`/`BEEP_CI_PR_HEAD_SHA` win over positional base/head; a missing pin or failed diff on a pull_request warns and keeps every profile active; patterns come from the checkout's `CiOperational.patterns.json` when present (fail closed on an invalid file) because the binary is main's code but must classify the PR's tree.
+Parity with the retired ci-change-profile.sh: pinned `BEEP_CI_PR_BASE_SHA`/`BEEP_CI_PR_HEAD_SHA` win over positional base/head; a missing pin or failed diff on a pull_request warns and keeps every profile active; patterns come from the checkout's `CiOperational.patterns.json` when present (fail closed on an invalid file) because the binary is main's code but must classify the PR's tree.
 
 Lane `goals/scripts-to-beep-cli`
 
@@ -167,3 +167,7 @@ Reverse: Remove the extra roots from the law's allowlist once their owners delet
 | --- | --- | --- | --- | --- |
 | `scripts/cloud/bootstrap.sh` stays shell | one file | packet owner | installs the toolchain the binary needs; vendor dashboards call it by path | a vendor-side way to run a fetched binary before any toolchain |
 | `.claude/`, `.codex/`, `.cursor/` hook `.sh` files | hook dirs | harness owners | run inside the agent harness before any repo toolchain | harnesses accept TypeScript hooks without a runtime |
+| `goals/`, `explorations/` packet `.sh` files | packet roots | packet owners | packet evidence and ops replays, a SPEC non-goal | the operator extends `python-free-repo`'s triage rule to packet shell |
+| `infra/` `.sh` files | `infra/` root (10 files on 2026-11-07) | `infra-alchemy-rebuild` | Pulumi-era infra scripts the Alchemy rebuild replaces | `infra-alchemy-rebuild` retires `infra/` |
+| `packages/tooling/tool/cli/test/fixtures/models/locators.sh` | one test fixture | `@beep/repo-cli` | `models-check.test.ts` locates model pins inside a shell source | the models manifest stops listing shell locator fixtures |
+| `packages/tooling/tool/docgen/test/fixtures/section-example/tsc-wrapper.sh` | one test fixture | `@beep/docgen` | `Core.test.ts` proves docgen runs a configured compiler wrapper | docgen drops the wrapped-compiler configuration |

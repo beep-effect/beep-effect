@@ -1790,7 +1790,8 @@
         "//#lint:native-runtime:roots",
         "//#lint:retired-effect-paths",
         "//#lint:retired-iri-authorities",
-        "//#lint:schema-tag-idioms"
+        "//#lint:schema-tag-idioms",
+        "//#lint:tracked-shell-allowlist"
       ],
       "inputs": [
         "packages/foundation/capability/chalk/package.json",
@@ -2052,6 +2053,8 @@
         "packages/tooling/tool/cli/src/commands/Laws/SchemaTagIdioms.model.ts",
         "packages/tooling/tool/cli/src/commands/Laws/SchemaTagIdioms.ts",
         "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.model.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.ts",
         "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
         "packages/tooling/tool/cli/src/commands/Laws/internal/TrackedTextFiles.ts",
         "packages/tooling/tool/cli/src/commands/Laws/internal/TypeScriptFences.ts",
@@ -2945,10 +2948,14 @@
         "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.ts",
         "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
         "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.model.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.ts",
         "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/internal/TrackedTextFiles.ts",
         "packages/tooling/tool/cli/src/commands/Lint/LintLaws.command.ts",
         "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
         "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
+        "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
         "tsdoc.json"
       ]
     },

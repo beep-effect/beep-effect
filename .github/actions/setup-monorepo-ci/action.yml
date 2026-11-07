@@ -133,6 +133,10 @@ runs:
       run: |
         echo "BEEP_SETUP_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
 
+    - name: Fetch beep CI binary
+      if: inputs.native-pdf-tools == 'true'
+      uses: ./.github/actions/fetch-beep-ci
+
     - name: Ensure native PDF text extraction
       if: inputs.native-pdf-tools == 'true'
       shell: bash
@@ -144,7 +148,7 @@ runs:
             privilege=(sudo -n)
           fi
           if command -v apt-get >/dev/null 2>&1; then
-            bash scripts/ci-prune-apt-sources.sh
+            beep ci prune-apt
             # Run timeout inside sudo so its signals also reach privileged
             # package-manager children. Network retries alone do not bound
             # mirror stalls, lock waits, or the complete operation.

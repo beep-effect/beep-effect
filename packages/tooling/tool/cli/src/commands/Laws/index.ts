@@ -95,3 +95,17 @@ export * from "./SchemaTagIdioms.model.ts";
  * @since 0.0.0
  */
 export * from "./SchemaTagIdioms.ts";
+/**
+ * Tracked shell allowlist law schemas and the allowed roots and files.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./TrackedShellAllowlist.model.ts";
+/**
+ * Tracked shell allowlist law: path predicate and git index runner.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./TrackedShellAllowlist.ts";

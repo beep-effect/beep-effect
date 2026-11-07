@@ -292,6 +292,41 @@ export class SchemaTagIdiomsExecutionError extends S.TaggedError<
 }
 
 /**
+ * Failure raised when the tracked shell allowlist law cannot list the git index.
+ *
+ * **Example** (Read a tracked shell allowlist execution error)
+ *
+ * ```ts
+ * import { TrackedShellAllowlistExecutionError } from "@beep/repo-cli/commands/Laws/Laws.errors"
+ *
+ * const error = TrackedShellAllowlistExecutionError.new("Could not list tracked files.")
+ * console.log(error.message) // "Could not list tracked files."
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class TrackedShellAllowlistExecutionError extends S.TaggedError<
+  TrackedShellAllowlistExecutionError,
+  { readonly brand: unique symbol }
+>($I`TrackedShellAllowlistExecutionError`)(
+  "TrackedShellAllowlistExecutionError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<TrackedShellAllowlistExecutionError>("TrackedShellAllowlistExecutionError", {
+    description: "The tracked shell allowlist law could not locate the repository or list the git index.",
+  })
+) {
+  static readonly new = (message: string): TrackedShellAllowlistExecutionError =>
+    TrackedShellAllowlistExecutionError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<TrackedShellAllowlistExecutionError, [message: string]>(
+    (cause, message) => TrackedShellAllowlistExecutionError.new(messageWithCause(message, cause))
+  );
+}
+
+/**
  * Failure raised when the Markdown fence typecheck law cannot list, read, stage or compile the fences.
  *
  * **Example** (Read a Markdown fences execution error)
