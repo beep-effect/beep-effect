@@ -1508,7 +1508,7 @@
       "path": "packages/drivers/alchemy-postgres",
       "lines": 96.88,
       "statements": 96.04,
-      "branches": 86.95,
+      "branches": 90.21,
       "functions": 92.26,
       "uncovered": {
         "lines": 21,
@@ -1518,6 +1518,18 @@
       },
       "files": {
         "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/AlchemyPostgres.layer.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -1543,14 +1555,26 @@
         },
         "packages/drivers/alchemy-postgres/src/AlchemyPostgresPlatform.ts": {
           "lines": 97.87,
-          "statements": 97.44,
-          "branches": 86.95,
+          "statements": 97.91,
+          "branches": 100,
           "functions": 95,
           "uncovered": {
-            "lines": 4,
-            "statements": 6,
-            "branches": 3,
-            "functions": 5
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/AlchemyPostgresWorkflows.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/drivers/alchemy-postgres/src/index.ts": {
@@ -1563,6 +1587,66 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/internal/aggregate.ts": {
+          "lines": 98.79,
+          "statements": 98.36,
+          "branches": 95,
+          "functions": 97.4,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 1,
+            "functions": 2
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/internal/host.ts": {
+          "lines": 94.09,
+          "statements": 92.36,
+          "branches": 79.16,
+          "functions": 87.01,
+          "uncovered": {
+            "lines": 13,
+            "statements": 20,
+            "branches": 5,
+            "functions": 20
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/internal/projection.ts": {
+          "lines": 100,
+          "statements": 98.78,
+          "branches": 90.9,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/internal/stream.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/internal/view.ts": {
+          "lines": 95.78,
+          "statements": 96.19,
+          "branches": 93.75,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 1,
+            "functions": 4
           }
         }
       }

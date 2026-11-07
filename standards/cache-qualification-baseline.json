@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Restore the @beep/postgres dev-dependency edge record for @beep/alchemy-postgres on top of #2881's re-recorded baseline; re-stamp the root turbo.json source review row. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b-main.md",
+        "sha256": "54c4e0290bd5f7e9967b8a95f609040f65cdb19ba2fe63de416450c06701213d"
       }
     },
     "@beep/acp": {
@@ -80,11 +80,11 @@
       }
     },
     "@beep/alchemy-postgres": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Restore the @beep/postgres dev-dependency edge record for @beep/alchemy-postgres on top of #2881's re-recorded baseline; re-stamp the root turbo.json source review row. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b-main.md",
+        "sha256": "54c4e0290bd5f7e9967b8a95f609040f65cdb19ba2fe63de416450c06701213d"
       }
     },
     "@beep/anthropic": {
@@ -9510,6 +9510,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9567,6 +9568,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9610,6 +9612,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9737,6 +9740,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/utils#transit"
@@ -9946,6 +9950,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/utils#transit"
         ],
@@ -9992,6 +9997,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
@@ -10046,6 +10052,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -125534,7 +125541,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "eda92310905cd66b25153812438c2ce07d0a92dc6e9b5cf890036e73920e7562"
+        "sha256": "84e59b86aab508e0d650eb90beab0953c96600d84d703f5e5fea6a7111b459a6"
       }
     ]
   }
