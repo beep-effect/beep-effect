@@ -140,6 +140,36 @@ export const makeDestinationId = (id: Cuid): DestinationId => DestinationId.make
  */
 export const mintDestinationId = Effect.map(cuid, makeDestinationId);
 /**
+ * Bounded caller-supplied token: one to 64 ASCII letters, digits, `_` or `-`.
+ *
+ * **Details**
+ *
+ * Request ids and correlation ids reach saga keys, workflow execution ids, lease
+ * holders and command ids, which telemetry always records. Only this opaque
+ * token shape may take that path, so a caller cannot smuggle a path, a name or
+ * free text into a span attribute (D17 F5, F6).
+ *
+ * **Example** (Validate a request token)
+ * ```ts
+ * import { RequestToken } from "@beep/documents-domain/aggregates/VaultSync";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(RequestToken)("pass_01")); // true
+ * console.log(S.is(RequestToken)("clients/acme.docx")); // false
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const RequestToken = S.String.check(S.isPattern(/^[A-Za-z0-9_-]{1,64}$/)).pipe(
+  $I.annoteSchema("RequestToken", { description: "Bounded opaque caller-supplied request or correlation token." })
+);
+/**
+ * Runtime value accepted by {@link RequestToken}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export type RequestToken = typeof RequestToken.Type;
+/**
  * Org-qualified destination name reservation key.
  *
  * **Details**

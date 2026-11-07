@@ -119,11 +119,19 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const items = yield* V.SyncItem;
       return Effect.fn(function* ({ event, source, envelope }) {
         if (event.correction !== null) {
-          yield* operations.send(
-            event.correction.operationId,
-            V.QueueOperation.make({ input: event.correction.input }),
-            { commandId: `${envelope.stream}:${envelope.seq}:correct` }
-          );
+          // I14: the corrective move or rename is queued before the review closes.
+          const correction = event.correction;
+          yield* operations.send(correction.operationId, V.QueueOperation.make({ input: correction.input }), {
+            commandId: `${envelope.stream}:${envelope.seq}:correct`,
+          });
+          // A tracked item takes the correction as its slot so the next pass pumps it.
+          const tracked = yield* items.state(correction.input.itemId);
+          if (tracked !== null)
+            yield* items.send(
+              correction.input.itemId,
+              V.ReturnItemToPending.make({ operationId: correction.operationId, type: correction.input.type }),
+              { commandId: `${envelope.stream}:${envelope.seq}:correct-slot` }
+            );
         } else if (event.record.itemId !== null) {
           yield* items.send(event.record.itemId, V.ReturnItemToPending.make({ operationId: event.healOperationId }), {
             commandId: `${envelope.stream}:${envelope.seq}:heal`,

@@ -26,7 +26,7 @@ import * as V from "./Values.ts";
 export class DestinationList extends Domain.View("DestinationList", {
   middleware: [Session],
   rejects: [ScopeDenied],
-  validate: (request) => authorizeVaultSync("DestinationList." + request.mode, { key: request.key }),
+  validate: (request) => authorizeVaultSync(`DestinationList.${request.mode}`, { key: request.key }),
   from: [SyncDestinationSnapshot],
   key: V.WorkspaceKey,
   state: S.HashMap(V.DestinationId, DestinationState),

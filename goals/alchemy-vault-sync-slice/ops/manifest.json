@@ -53,6 +53,7 @@
     "research/cache-baseline-request-pr3a.json",
     "research/cache-baseline-request-pr3b1-domain.json",
     "research/cache-baseline-request-pr3b1.json",
+    "research/cache-baseline-request-pr3c-saga.json",
     "research/cache-baseline-request-pr3c.json",
     "research/cache-baseline-request.json",
     "research/cache-baseline-review-pr2a.md",
@@ -61,6 +62,7 @@
     "research/cache-baseline-review-pr3a.md",
     "research/cache-baseline-review-pr3b1-domain.md",
     "research/cache-baseline-review-pr3b1.md",
+    "research/cache-baseline-review-pr3c-saga.md",
     "research/cache-baseline-review-pr3c.md",
     "research/cache-baseline-review.md",
     "research/pr3c-scoped-lints.py"

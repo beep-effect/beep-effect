@@ -107,7 +107,9 @@ describe("BoxMirror durable intent receipts", () => {
             )
           )
         );
-        const result = yield* Context.get(context, BoxMirror).probe({ destinationId: V.DestinationId.make("documents_sync_destination_aadapter") });
+        const result = yield* Context.get(context, BoxMirror).probe({
+          destinationId: V.DestinationId.make("documents_sync_destination_aadapter"),
+        });
         expect(result).toEqual({ connected: true });
         const after = yield* fixture.counts;
         expect(after.uploadFile).toBe(before.uploadFile);

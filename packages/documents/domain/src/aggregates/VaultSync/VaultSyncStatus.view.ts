@@ -31,7 +31,7 @@ import * as V from "./Values.ts";
 export class VaultSyncStatus extends Domain.View("VaultSyncStatus", {
   middleware: [Session],
   rejects: [ScopeDenied],
-  validate: (request) => authorizeVaultSync("VaultSyncStatus." + request.mode, { key: request.key }),
+  validate: (request) => authorizeVaultSync(`VaultSyncStatus.${request.mode}`, { key: request.key }),
   from: [SyncDestinationSnapshot, SyncItemSnapshot, SyncOperationSnapshot],
   key: SyncDestination,
   state: S.Struct({

@@ -23,6 +23,7 @@ import * as AtomRpc from "effect/reactivity/AtomRpc";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import * as Stream from "effect/Stream";
 import * as Tuple from "effect/Tuple";
 import { failureMessageOr } from "@/lib/failureMessage";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
@@ -237,12 +238,15 @@ export const vaultSyncPanelStateAtoms = Atom.family((_workspaceId: WorkspaceIden
 );
 
 /**
- * Atom family that reads the workspace vault sync status over desktop RPC.
+ * Atom family that subscribes to the workspace vault sync status over desktop RPC.
  *
  * **Details**
  *
- * Refreshes whenever a sync trigger or conflict review invalidates the
- * workspace's status reactivity key.
+ * The `WatchVaultSyncStatus` stream pushes a new status whenever the status
+ * View changes, so the counts update when a pass finishes rather than at the
+ * moment the trigger is accepted. The sidecar authorizes every frame like the
+ * other View subscriptions. A trigger or review still invalidates the status
+ * reactivity key, which re-subscribes.
  *
  * **Example** (Workspace status atom access)
  *
@@ -258,9 +262,15 @@ export const vaultSyncPanelStateAtoms = Atom.family((_workspaceId: WorkspaceIden
  * @since 0.0.0
  */
 export const vaultSyncStatusAtom = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
-  DesktopSyncClient.query("GetVaultSyncStatus", GetVaultSyncStatusPayload.make({ workspaceId }), {
-    reactivityKeys: [vaultSyncStatusKey(workspaceId)],
-  })
+  DesktopSyncClient.runtime
+    .atom(
+      Stream.unwrap(
+        Effect.map(DesktopSyncClient, (client) =>
+          client("WatchVaultSyncStatus", VaultSyncWorkspacePayload.make({ workspaceId }))
+        )
+      )
+    )
+    .pipe(Atom.withReactivity([vaultSyncStatusKey(workspaceId)]))
 );
 
 const forceVaultSyncProbe = Effect.fn("documents.vault_sync.force_probe")(function* (

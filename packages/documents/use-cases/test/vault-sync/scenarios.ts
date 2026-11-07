@@ -392,6 +392,61 @@ export const scenarios = <E>({
           })
       );
 
+      it.effect("a reviewed remote rename of a tracked item takes the corrective slot (I14)", () =>
+        Effect.gen(function* () {
+          const items = yield* V.SyncItem;
+          const ops = yield* V.SyncOperation;
+          const conflicts = yield* V.SyncConflict;
+          const registry = yield* V.ConflictEventRegistry;
+          const renamed = itemId("renamed");
+          yield* items.send(
+            renamed,
+            V.ObserveItem.make({ observation: { ...observe("renamed"), parentRequired: false } })
+          );
+          yield* eventually(ops.state(opId("renamed")), (s) => s !== null);
+          yield* items.send(
+            renamed,
+            V.MarkItemPushed.make({
+              remoteId: V.RemoteItemId.make("remote-renamed"),
+              generation: 1,
+              operationId: opId("renamed"),
+            })
+          );
+          const record = V.ConflictRecord.make({
+            publicId: V.ConflictId.make("documents_sync_conflict_arenamed"),
+            destinationId: destination,
+            workspaceId: 1,
+            remoteEventId: "event-renamed",
+            itemId: renamed,
+            evidence: "remote rename",
+            kind: "remoteRename",
+            reviewed: false,
+          });
+          yield* registry.send(destination, V.RecordConflict.make({ record }));
+          yield* eventually(conflicts.state(record.publicId), (s) => s !== null);
+          const item = yield* eventually(items.state(renamed), (s) => s?.remoteId !== null);
+          const correction = yield* Effect.fromOption(V.reviewCorrection({ record, item }));
+          expect(correction.input.type).toBe("renameItem");
+          yield* conflicts.send(
+            record.publicId,
+            V.ReviewConflict.make({
+              remoteEventId: record.remoteEventId,
+              workspaceId: 1,
+              destinationId: destination,
+              healOperationId: opId("renamedheal"),
+              correction,
+            })
+          );
+          yield* eventually(conflicts.state(record.publicId), (s) => s?.reviewed === true);
+          const slotted = yield* eventually(items.state(renamed), (s) => H.has(s?.slots ?? H.empty(), "renameItem"));
+          expect(slotted === null ? null : O.getOrNull(H.get(slotted.slots, "renameItem"))).toBe(
+            correction.operationId
+          );
+          const queued = yield* ops.state(correction.operationId);
+          expect(queued).toMatchObject({ status: "queued", input: { type: "renameItem", generation: 2 } });
+        })
+      );
+
       it.effect("terminal failures mark the item error and reconnect revives only failed operations", () =>
         Effect.gen(function* () {
           const items = yield* V.SyncItem;

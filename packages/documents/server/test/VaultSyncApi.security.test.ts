@@ -33,6 +33,11 @@ import * as Stream from "effect/Stream";
 import type * as Aggregate from "@alchemy.run/domain/Aggregate";
 import type * as Platform from "@alchemy.run/domain/Platform";
 
+const ownKey = "documents_sync_destination_aown";
+const foreignKey = "documents_sync_destination_aforeign";
+// The foreign workspace partition keeps its plain spelling; destination keys are minted ids.
+const foreignKeys: ReadonlyArray<string> = [foreignKey, "foreign"];
+
 // The generated CLI requires these services even for a read command. No
 // filesystem or child-process operation is exercised by this suite.
 const cliPlatform = BunChildProcessSpawner.layer.pipe(
@@ -41,6 +46,7 @@ const cliPlatform = BunChildProcessSpawner.layer.pipe(
 
 const request = S.decodeEffect(V.VaultSyncRequest)({
   principal: { kind: "User", userId: 1 },
+  principalKey: "User:1",
   actorSourceKind: "User",
   sourceKind: "http",
   orgId: 1,
@@ -68,7 +74,7 @@ const fixture = Effect.gen(function* () {
           onFailure: () => V.ScopeDenied.make({}),
           onSuccess: ({ key }) =>
             V.VaultSyncScope.make({
-              orgId: (S.is(S.String)(key) ? key : key.id) === "foreign" ? 2 : 1,
+              orgId: A.contains(foreignKeys, S.is(S.String)(key) ? key : key.id) ? 2 : 1,
               workspaceId: 1,
             }),
         })
@@ -87,9 +93,9 @@ describe("Views as security boundaries", () => {
       const f = yield* fixture;
       const context = yield* Layer.build(f.host);
       const client = yield* VaultSyncApi.clientInProcess.pipe(Effect.provideContext(context));
-      const result = yield* Effect.flip(client.VaultSyncStatus.get(V.DestinationId.make("foreign")));
+      const result = yield* Effect.flip(client.VaultSyncStatus.get(V.DestinationId.make(foreignKey)));
       expect(result._tag).toBe("ScopeDenied");
-      const own = yield* client.VaultSyncStatus.get(V.DestinationId.make("own"));
+      const own = yield* client.VaultSyncStatus.get(V.DestinationId.make(ownKey));
       expect(own).toBeNull();
     })
   );
@@ -100,7 +106,7 @@ describe("Views as security boundaries", () => {
       const context = yield* Layer.build(f.host);
       const client = yield* VaultSyncApi.clientInProcess.pipe(Effect.provideContext(context));
       const seen = yield* Ref.make(0);
-      const result = yield* client.OpenConflicts.events(V.DestinationId.make("foreign")).pipe(
+      const result = yield* client.OpenConflicts.events(V.DestinationId.make(foreignKey)).pipe(
         Stream.runForEach(() => Ref.update(seen, (n) => n + 1)),
         Effect.flip
       );
@@ -117,7 +123,7 @@ describe("Views as security boundaries", () => {
       const result = yield* authorizeVaultSyncDelivery(
         Stream.fromIterable([1, 2, 3]).pipe(Stream.buffer({ capacity: 3 })),
         "VaultSyncStatus.watch",
-        "own",
+        ownKey,
         Headers.empty
       ).pipe(
         Stream.runForEach((frame) => Ref.update(seen, A.append(frame)).pipe(Effect.andThen(Ref.set(f.active, false)))),
@@ -142,7 +148,7 @@ describe("Views as security boundaries", () => {
         const session = VaultSyncSessionLive.pipe(Layer.provide(Layer.succeed(V.SessionResolver, resolver)));
         const context = yield* Layer.build(Layer.merge(f.host, session));
         const client = yield* VaultSyncApi.clientInProcess.pipe(Effect.provideContext(context));
-        const diagnostics = yield* Effect.flip(client.OperationQueue.get(V.DestinationId.make("own")));
+        const diagnostics = yield* Effect.flip(client.OperationQueue.get(V.DestinationId.make(ownKey)));
         expect(diagnostics._tag).toBe("ScopeDenied");
         const foreign = yield* Effect.flip(client.DestinationList.get(V.WorkspaceKey.make("foreign")));
         expect(foreign._tag).toBe("ScopeDenied");
@@ -165,7 +171,9 @@ describe("Views as security boundaries", () => {
         Effect.sync(() => HttpRouter.toWebHandler(appLayer, { disableLogger: true })),
         (app) => Effect.promise(() => app.dispose())
       );
-      const response = yield* Effect.promise(() => app.handler(new Request("http://test/VaultSyncStatus/foreign")));
+      const response = yield* Effect.promise(() =>
+        app.handler(new Request(`http://test/VaultSyncStatus/${foreignKey}`))
+      );
       expect(response.status).toBe(403);
       const body = yield* Effect.promise(() => response.json());
       expect(body).toEqual({ _tag: "ScopeDenied" });
@@ -186,7 +194,7 @@ describe("Views as security boundaries", () => {
         "vault-sync-status",
         "get",
         "--key",
-        "foreign",
+        foreignKey,
       ]).pipe(Effect.provideContext(context), Effect.flip);
       expect(failure._tag).toBe("CallRejected");
     })
@@ -200,13 +208,13 @@ describe("Views as security boundaries", () => {
         version: "0.0.0",
         instructions: "Read only",
         registrations: VaultSyncMcpLive.pipe(Layer.provide(f.host)),
-        tool: { name: "VaultSyncApi_VaultSyncStatus_get", arguments: { key: "own" }, invalidArguments: {} },
+        tool: { name: "VaultSyncApi_VaultSyncStatus_get", arguments: { key: ownKey }, invalidArguments: {} },
       });
       const context = yield* Layer.build(harness);
       const { rpc } = yield* connectHttp().pipe(Effect.provideContext(context));
       const result = yield* rpc["tools/call"]({
         name: "VaultSyncApi_VaultSyncStatus_get",
-        arguments: { key: "foreign" },
+        arguments: { key: foreignKey },
       });
       expect(result.isError).toBe(true);
     })
@@ -221,7 +229,7 @@ describe("Views as security boundaries", () => {
         revoked: Effect.fn("VaultSyncSecurity.revoked")(() => Deferred.await(revoked)),
       });
       yield* Deferred.fail(revoked, V.ScopeDenied.make({}));
-      const denial = yield* authorizeVaultSyncDelivery(Stream.never, "VaultSyncStatus.watch", "own", {}).pipe(
+      const denial = yield* authorizeVaultSyncDelivery(Stream.never, "VaultSyncStatus.watch", ownKey, {}).pipe(
         Stream.runDrain,
         Effect.provideService(V.SessionResolver, resolver),
         Effect.flip
@@ -268,11 +276,11 @@ describe("Views as security boundaries", () => {
       const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(recording));
       const context = yield* Layer.build(Layer.merge(session, hosted));
       const client = yield* VaultSyncApi.clientInProcess.pipe(Effect.provideContext(context));
-      yield* client.ClaimDestinationName(V.ReservationKey.make("1:test"), {
+      yield* client.ClaimDestinationName(V.reservationKey({ orgId: 1, name: "test" }), {
         claim: V.NameClaim.make({
           orgId: 1,
           workspaceId: 1,
-          destinationId: V.DestinationId.make("own"),
+          destinationId: V.DestinationId.make(ownKey),
           name: "test",
           previousName: null,
         }),
@@ -285,6 +293,7 @@ describe("Views as security boundaries", () => {
             context: {
               "documents/vault-sync/RequestContext/v1": expect.objectContaining({
                 principal: { kind: "User", userId: 1 },
+                principalKey: "User:1",
                 sourceKind: "http",
                 actorSourceKind: "User",
                 orgId: 1,

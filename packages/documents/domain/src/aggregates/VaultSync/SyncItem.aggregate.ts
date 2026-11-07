@@ -12,6 +12,10 @@ import * as C from "./SyncItem.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 
+const repushType = (s: C.ItemRecord): V.OperationType => {
+  if (s.observation.kind === "folder") return "ensureFolder";
+  return s.remoteId === null ? "uploadFile" : "uploadFileVersion";
+};
 const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "item state" });
 const observed = (s: C.ItemState, e: { readonly observation: C.ItemObservation }): C.ItemRecord =>
   C.ItemRecord.make({
@@ -84,12 +88,7 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
                 ...s.observation,
                 operationId: c.operationId,
                 generation: s.observation.generation + 1,
-                type:
-                  s.observation.kind === "folder"
-                    ? "ensureFolder"
-                    : s.remoteId === null
-                      ? "uploadFile"
-                      : "uploadFileVersion",
+                type: c.type ?? repushType(s),
               },
             }),
           ],

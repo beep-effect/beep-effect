@@ -6,6 +6,7 @@ import * as S from "effect/Schema";
 
 const request = S.decodeEffect(V.VaultSyncRequest)({
   principal: { kind: "User", userId: 1 },
+  principalKey: "User:1",
   actorSourceKind: "User",
   sourceKind: "http",
   orgId: 1,
@@ -66,7 +67,7 @@ it.effect("checks organization, workspace, membership and diagnostic permission 
 it.effect("public View validators share the live key policy", () =>
   Effect.gen(function* () {
     const identity = yield* request;
-    const destination = V.SyncDestination.ref(V.DestinationId.make("test"));
+    const destination = V.SyncDestination.ref(V.DestinationId.make("documents_sync_destination_atest"));
     const validateVaultSyncStatus = O.getOrThrow(O.fromNullishOr(V.VaultSyncStatus.definition.validate));
     yield* validateVaultSyncStatus({ mode: "get", key: destination }, null).pipe(
       Effect.provideService(V.VaultSyncRequestContext, identity),
