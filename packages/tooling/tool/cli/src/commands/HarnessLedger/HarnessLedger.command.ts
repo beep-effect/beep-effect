@@ -461,7 +461,8 @@ export const harnessLedgerPruneReportLines: {
       onSome: DateTime.formatIso,
     })}`,
     `sessions skipped: ${report.sessionsSkippedOutOfRegime} under another or mixed harness; ${report.sessionsSkippedUnstamped} without a SessionStart harness stamp`,
-    `shards read: ${report.shardsRead}; undecodable lines skipped: ${report.undecodableLines}`,
+    `sessions skipped: ${report.sessionsSkippedCorrupt} corrupt; ${report.sessionsSkippedRoleUnattributable} without a root/child signal`,
+    `shards read: ${report.shardsRead}; undecodable lines skipped: ${report.undecodableLines} in ${report.corruptShards} corrupt shards; non-production lines set aside: ${report.nonProductionLines}`,
     `candidates: ${report.candidates}; touched: ${report.touchedCandidates}; already proposed: ${report.alreadyProposed}; decided under this harness: ${report.decidedUnderHarness}`,
     ...A.match(report.proposals, {
       onEmpty: () => ["No pruning proposals."],

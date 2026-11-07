@@ -412,6 +412,64 @@ describe("HookPulseV1", () => {
     })
   );
 
+  it.effect("derives child roles from the native agent id and records Cursor as explicitly unknown", () =>
+    Effect.gen(function* () {
+      const claudeRoot = "/synthetic/12345678-1234-1234-1234-123456789abc.jsonl";
+      const codexRollout = "/synthetic/sessions/rollout-2026-11-06T12-00-00-12345678-1234-1234-1234-123456789abc.jsonl";
+      const cases = [
+        // Claude fires a subagent's hooks with the ROOT transcript path; only agent_id tells them apart.
+        { agentKind: "claude-code", path: claudeRoot, agentId: O.some("agent-1"), role: O.some("subagent") },
+        { agentKind: "claude-code", path: claudeRoot, agentId: O.none(), role: O.some("primary") },
+        { agentKind: "codex-cli", path: codexRollout, agentId: O.none(), role: O.some("primary") },
+        { agentKind: "codex-cli", path: codexRollout, agentId: O.some("thread-2"), role: O.some("subagent") },
+        { agentKind: "codex-cli", path: claudeRoot, agentId: O.none(), role: O.none() },
+        // An empty agent id is no signal, exactly as the shell writer reads it.
+        { agentKind: "codex-cli", path: codexRollout, agentId: O.some(""), role: O.some("primary") },
+        { agentKind: "cursor-cli", path: claudeRoot, agentId: O.none(), role: O.some("unknown") },
+      ] as const;
+      for (const { agentKind, path, agentId, role } of cases) {
+        const row = yield* withSaltEnv(
+          {},
+          decodeHookPulseFromRaw({
+            ...baseRawInputFixture,
+            agentKind,
+            ts: "2026-08-01T08:00:00.000Z",
+            event: {
+              ...baseRawEventFixture,
+              transcript_path: path,
+              hook_event_name: "PreToolUse",
+              ...O.getOrElse(
+                O.map(agentId, (agent_id) => ({ agent_id })),
+                () => ({})
+              ),
+            },
+          })
+        );
+        expect(row.sessionRole).toEqual(role);
+        const expectedAgentId = yield* Effect.transposeOption(
+          O.map(O.filter(agentId, Str.isNonEmpty), (value) => hashPrivateIdentifier(value, O.none()))
+        );
+        expect(row.agentId).toEqual(expectedAgentId);
+        const serialized = yield* encodeUnknownJsonEffect(row);
+        A.forEach(A.getSomes([O.filter(agentId, Str.isNonEmpty)]), (raw) => expect(serialized).not.toContain(raw));
+      }
+    })
+  );
+
+  it.effect("rejects a native agent id on a row that is not a subagent", () =>
+    Effect.gen(function* () {
+      const row = yield* withSaltEnv(
+        {},
+        decodeHookPulseFromRaw(rawInput("2026-08-01T08:00:00.000Z", { hook_event_name: HookPulseEvent.Enum.Stop }))
+      );
+      const encoded = yield* encodeHookPulse(row);
+      const agentId = Str.repeat(64)("a");
+      pipe(Result.isFailure(HookPulseV1.decodeResult({ ...encoded, sessionRole: "primary", agentId })), assertTrue);
+      pipe(Result.isFailure(HookPulseV1.decodeResult({ ...encoded, agentId })), assertTrue);
+      pipe(Result.isSuccess(HookPulseV1.decodeResult({ ...encoded, sessionRole: "subagent", agentId })), assertTrue);
+    })
+  );
+
   it.effect("migrates legacy v1 rows without retaining raw private identifiers", () =>
     Effect.gen(function* () {
       const legacy = {
@@ -460,9 +518,14 @@ describe("HookPulseV1", () => {
 
   {
     // The raw codec requires transcriptPath and intentionally clamps observed evidence to derived.
+    // A Cursor row written before roles existed has no role, which the codec cannot reproduce:
+    // it derives the explicit `unknown` for every Cursor event.
     const arbitrary = Arbitrary.filter(
-      Arbitrary.filter(HookPulseV1Arbitrary, (value) => O.isSome(value.transcriptPath)),
-      (value) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier))
+      Arbitrary.filter(
+        Arbitrary.filter(HookPulseV1Arbitrary, (value) => O.isSome(value.transcriptPath)),
+        (value) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier))
+      ),
+      (value) => value.agentKind !== "cursor-cli" || O.isSome(value.sessionRole)
     );
     it.prop(
       "round-trips arbitrary encodable canonical values through the raw-event codec",
