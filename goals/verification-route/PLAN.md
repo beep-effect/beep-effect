@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (P0, P1 and P2 complete 2026-11-07: slice 2 #2856, slice 3 #2879 and #2884, hosted proof #2885; closeout proposed on #2885). Graduated 2026-10-28 from `explorations/verification-route`
+Status: `completed-retained` (closed 2026-11-07; final PR #2885, completion verified). Graduated 2026-10-28 from `explorations/verification-route`
 (16 rulings). Each slice is one PR through Yeet; phase ids match
 `ops/manifest.json`.
 
@@ -13,8 +13,8 @@ Status: `in-progress` (P0, P1 and P2 complete 2026-11-07: slice 2 #2856, slice 3
 | P0 Slice 1: schemas, route, census | complete | `ChangeAtom`/`CheckFootprint`/`Propagation` schemas, the total record at `unknown`, `classify`, `route`, the corpus fetch, `beep ci route plan|census|replay`. | Slice-1 acceptance rows in `SPEC.md` green; the census printed with the `unknown` share; PR merged. |
 | P1 Slice 2: refinements, both layers, final-check | complete | Refine in census rank with fixtures and recall; compile file/field-grain footprints to turbo inputs and root `package.json` projections; sweep package-local `turbo.json`; final-check shadow then enforced; sentinel row. | At least one refinement enforced; layer-1 fixture green under pinned turbo; receipts carry the route section; PR merged. |
 | P2 Slice 3: hosted per lane | complete | Extend `HeavyAdmission` to per-lane `skip-satisfied` with the receipt in the job summary. | A real PR shows a routed-out lane completing `skip-satisfied`; required contexts unchanged; PR merged. |
-| P3 Yeet: PR to mergeable | in-progress | Each slice PR through `yeet publish`, `final-check`, `ready`, `monitor --until-ready`. | `merge-ready: yes`; zero unresolved review threads. |
-| P4 Close | in-progress | Closeout reflection, status flip, proposedCloseout on the final PR. | Reflection lints green; manifest, README and PLAN agree. |
+| P3 Yeet: PR to mergeable | complete | Each slice PR through `yeet publish`, `final-check`, `ready`, `monitor --until-ready`. | `merge-ready: yes`; zero unresolved review threads. |
+| P4 Close | complete | Closeout reflection, status flip, proposedCloseout on the final PR. | Reflection lints green; manifest, README and PLAN agree. |
 
 ## Sequencing
 
