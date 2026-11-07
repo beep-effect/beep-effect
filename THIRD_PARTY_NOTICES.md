@@ -314,7 +314,7 @@ SOFTWARE.
 Upstream: <https://github.com/beshkenadze/eyecite-js>
 
 Pinned commit: `53a49f2412da668aaf262e5f92584c2c3781043b`.
-Affected material: citation-engine donor baseline logs and the U.S. Reports Bluebook layout reference fixture and schema transformation in `packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts`. The three constructed layout observations come from `src/utils/bluebook.ts` at the pinned commit. No donor runtime dependency is introduced.
+Affected material: citation-engine donor baseline logs. No donor runtime dependency is introduced.
 
 BSD 2-Clause License
 
@@ -343,7 +343,16 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-## CPython 3.11.15 dictionary and candidate-set behavior
+## CPython 3.11.15 dictionary, candidate-set and builtin diff behavior
+
+The citation builtin diff also adapts `Lib/difflib.py` SequenceMatcher with
+`isjunk=None` and `autojunk=False`, plus eyecite's opcode projection, in
+`packages/law-practice/server/src/internal/Citation/BuiltinDiff.ts`. The pinned
+stdlib source SHA-256 is
+`0c6afc23568d55b3e9ac914f9c5361e3033e778aa5b58d3cc82835fc5c638679`.
+The PSF license below covers this adaptation; no Python runtime dependency is
+introduced.
+
 
 The private citation runtime table in
 `packages/law-practice/server/src/internal/Citation/RuntimeDictionary.ts`

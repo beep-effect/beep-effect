@@ -37,6 +37,10 @@ export class CitationDiffWorkerStartup extends S.Opaque<CitationDiffWorkerStartu
   S.Struct({
     version: S.tag("citation-diff-startup/v1"),
     ...CitationNativeWasmStartup.fields,
+    useDmp: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true))
+    ),
   }).pipe(
     $I.annoteSchema("CitationDiffWorkerStartup", {
       description: "Explicit trusted runtime asset path and complete message ceiling; no ambient configuration.",

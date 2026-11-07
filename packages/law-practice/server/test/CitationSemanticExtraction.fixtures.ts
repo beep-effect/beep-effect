@@ -45,12 +45,27 @@ const metadataNames = R.fromEntries<readonly [string, string]>([
   ["resolved_case_name", "caseName"],
   ["resolved_case_name_short", "shortCaseName"],
 ]);
+/** Project the semantic court representation to the original label comparison.
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const projectCitationSemanticMetadata = Effect.fn("SemanticExtractionTest.projectMetadata")(function* (
+  citation: Citation
+) {
+  const encoded = yield* encodeCitation(citation);
+  let actual: S.JsonObject = encoded.metadata;
+  if (citation.type === "case" || citation.type === "shortFormCase") {
+    const court = O.map(citation.metadata.court, (value) => (value.status === "known" ? value.id : value.value));
+    actual = R.set<string, S.Json, string, S.Json>(actual, "court", O.getOrNull(court));
+  }
+  return actual;
+});
 const assertSemanticMetadata = Effect.fn("SemanticExtractionTest.metadata")(function* (
   unicode: Unicode,
   citation: Citation,
   original: SourceRow
 ) {
-  const encoded = yield* encodeCitation(citation);
   const metadata = yield* Effect.forEach(
     A.filter(R.toEntries(original.metadata), ([key]) => !A.contains(["pin_cite_span_start", "pin_cite_span_end"], key)),
     Effect.fnUntraced(function* ([key, value]) {
@@ -63,11 +78,7 @@ const assertSemanticMetadata = Effect.fn("SemanticExtractionTest.metadata")(func
     }),
     { concurrency: 1 }
   );
-  let actual: S.JsonObject = encoded.metadata;
-  if (citation.type === "case" || citation.type === "shortFormCase") {
-    const court = O.map(citation.metadata.court, (value) => (value.status === "known" ? value.id : value.value));
-    actual = R.set<string, S.Json, string, S.Json>(actual, "court", O.getOrNull(court));
-  }
+  const actual = yield* projectCitationSemanticMetadata(citation);
   expect(actual, `${original.kind} original metadata`).toEqual(R.fromEntries(metadata));
 });
 const assertSemanticPublication = Effect.fn("SemanticExtractionTest.publication")(function* (

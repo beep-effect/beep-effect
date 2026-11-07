@@ -1,4 +1,4 @@
-/** One-job default-diff child. The parent owns timing and physical retirement.
+/** One-job DMP/builtin diff child. The parent owns timing and physical retirement.
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
@@ -8,6 +8,7 @@ import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { runCitationBuiltinDiff } from "./BuiltinDiff.ts";
 import { citationDiffKernelAsset, makeCitationDiffKernel } from "./DiffKernel.ts";
 import { packCitationDiffSteps } from "./DiffSteps.ts";
 import {
@@ -46,8 +47,11 @@ export const citationDiffWorkerProgram = Effect.gen(function* () {
   const maximum = startup.maximum;
   yield* preflightCitationDiffControlFrames(maximum);
   const maximumOutputBytes = yield* citationDiffOutputByteCapacity(maximum);
-  const asset = yield* loadCitationNativeWasmAsset(startup.assetPath, citationDiffKernelAsset, badRuntime);
-  const kernel = yield* makeCitationDiffKernel(asset);
+  const kernel = startup.useDmp
+    ? yield* loadCitationNativeWasmAsset(startup.assetPath, citationDiffKernelAsset, badRuntime).pipe(
+        Effect.flatMap(makeCitationDiffKernel)
+      )
+    : { run: runCitationBuiltinDiff };
   const send = Effect.fn("Citation.sendDiffWorkerReply")((reply: CitationDiffWorkerReply) =>
     encodeCitationDiffReply(reply, maximum).pipe(
       Effect.flatMap((bytes) => Stream.run(Stream.make(bytes), stdio.stdout({ endOnDone: false }))),

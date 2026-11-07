@@ -1,0 +1,1035 @@
+{
+  "schemaVersion": "citation-ledger-proof-plan/v1",
+  "bindings": [
+    {
+      "workflowState": "ready",
+      "cases": [
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::1",
+          "observationSha256": "c6dff8d7a9d66b376ecf0762902c765854f93ad32c44a04c2819e94aa4a52e1f"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::2",
+          "observationSha256": "b313048322570644e5d8479edb3be9f1aea8e0c15757402e17a5a1184e9fe8c4"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::3",
+          "observationSha256": "9bf10c2ed637ec18b999caacf3c65150ed1fc20f05f10d47ef446ef805b63c40"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::4",
+          "observationSha256": "3ea313c246ffafc4f59832720a823d71fd1670306fe268f457239cda9ca2c6b6"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::5",
+          "observationSha256": "3686748f4bc37d4df3586481d5892f30b44dc1a6f6d0bbc03cdab8185983ad33"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::6",
+          "observationSha256": "8498de28d5db2821c7bc524542300b800a7dc055894b5b67e85643cd122fe06c"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::7",
+          "observationSha256": "579183aeead234d86cac0731f4ecef2f0d599d1ae07516c87abe8d720bc8111c"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::8",
+          "observationSha256": "86f6bd021f51bd09a1e25be91e047a387865942b35fd7271715b9a543bc90505"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::9",
+          "observationSha256": "738ec3f68d4617c1869ab2763e5afd4a1f8d3ad6bda8e5a9c787c41a1cae6250"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::10",
+          "observationSha256": "4e6a3539d9dd2de67632bacc1cf7f7cb76da14ed873b762a81c1374636dec479"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::11",
+          "observationSha256": "e35ad3d5ff61138e9f71b4627fb854b50bde7528daa461efe7e4dd740e532af4"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::12",
+          "observationSha256": "a434791e870768275986ba6eb03becd36b5b932d68ae8bddd6d8a0f13da20999"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::13",
+          "observationSha256": "91c753a13b85c5a45ad9cd6adc8a398b9763aeb1e3d5df1577869395c685bdb9"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::14",
+          "observationSha256": "2a553682f613fca202c8e04aa228929655fd4972612f8c0357466e53560a4ca6"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::15",
+          "observationSha256": "ecc4b9384838dff87f34556ceb738ab39288cdb8bbfbf3329abb2e8f98d908ba"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::16",
+          "observationSha256": "04ddb157581aba7f26d2a6dc616824a4bcb8e5084241aef829475f9c79c85217"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::17",
+          "observationSha256": "5054906659d3a45301ab4914183fc5fda9e3294334b7e7d58f4eed0fc91f6fb9"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::18",
+          "observationSha256": "39be3e99eabc9da341309726db11878983c30431cbfdea89336f64918481849d"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::19",
+          "observationSha256": "553e720b567f36b0c7359b5bb80f14c1323cb7d44115cfe7a1d20590f4933cd9"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::20",
+          "observationSha256": "c5a017115ec4f8ee0efb912c873bb406636df9abea3cac14fafe8efb2e0ed61f"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::21",
+          "observationSha256": "ecd545411564b8de427a4f9f650652c457da46b070b951a193e7940a807e3a7c"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::22",
+          "observationSha256": "e94d8eaa960d7093b29686e33e10c3937d9497e4993c27a4e87cb817a41b93b4"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::23",
+          "observationSha256": "7848993cdd01e6eec27335f9db90b34803666cfa6a17596de2f28011bec2743e"
+        }
+      ],
+      "rationale": "Exact original annotation-stage outputs pass on Bun and Node; upstream cleaning/extraction remain separately unqualified, so these assertions are nonterminal.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalAnnotation.test.ts",
+        "result": "passed",
+        "scope": "stage",
+        "operation": "annotate",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-annotation-ledger.md",
+        "evidenceSha256": "bee7984de7eed37b95ba4e528f2c55b64372040fd41e4adb0c760dd31722cc0e",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.test.ts",
+            "name": "matches all canonical annotation assertions on",
+            "sha256": "fab662ceeb813f285530ed67e820cf644aeeefc89dc04d8b2720495fcff70298"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
+            "sha256": "cb5b76cb5ecfae64cc9ac2baefa9b053f56f8b7797936357d75216e944d000ae"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "4c4bfb5134e442ce720957d30dfd78b6ed9940d348e8f4d8f918d17bd2fd4775"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:76:20:caseDeclaration::4",
+          "observationSha256": "9b5d77aa6bda39f00991c5ae598eef4bfd7b83dfc1deac074c56bccbfd8e8cf2"
+        }
+      ],
+      "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
+        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "replays original basic and whitespace cases on",
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_law_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "e2e958509841740f070e990e14ce7c2894787c237fbb877d1d8b98acc33a70ec"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_journal_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "0e8a1aac8bcb255b1273d0de5d57058f569d7bc700d393906eb04f03f615a752"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_tc_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "9bbc94adc131368c0e2e419db7532f860896e29ec1f76ed7a9fec599d51ec9c8"
+        }
+      ],
+      "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
+        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "replays the original",
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:76:20:caseDeclaration::31",
+          "observationSha256": "3b456c4c2e72cac91ebc9bae7461506f831478619db932f0887d10327ae70f54"
+        }
+      ],
+      "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
+        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+            "name": "retains different primary full and pin-cite ranges on",
+            "sha256": "620288628ce88c8676755d1ac9ae7908ad9f5091ae4bd73454837db2fd8a9b8e"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:84:24:caseDeclaration::1",
+          "observationSha256": "6eb241a39cff76c8972410aaa697d5bb83818df275a6e7f4438eea6c8414edc0"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:84:24:caseDeclaration::4",
+          "observationSha256": "a678af02c8c7c3f6e3542db622a79933a891841c479b407be3bbb216e9fe3601"
+        }
+      ],
+      "rationale": "Complete local comparison of these exact original attribute operands using actual public extraction data and the existing source-derived correction/year operations. General model protocols and parent capabilities remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
+        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "replays original basic and whitespace cases on",
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_law_citations::tests/test_FindTest.py:84:24:caseDeclaration::1",
+          "observationSha256": "68b13f851c3b37f0e28b0eb3497d572a661696a9a7da211de9a92bec213f09e7"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_journal_citations::tests/test_FindTest.py:84:24:caseDeclaration::1",
+          "observationSha256": "6b89ba51d592216eca578403a9f7e28d5fc6685a0e7ca7798bb7d376163d2ede"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_tc_citations::tests/test_FindTest.py:84:24:caseDeclaration::1",
+          "observationSha256": "5099bf7e7443ff17571c5b5a5217bb86331a4a531a0434edf04837d5b1305b41"
+        }
+      ],
+      "rationale": "Complete local comparison of these exact original attribute operands using actual public extraction data and the existing source-derived correction/year operations. General model protocols and parent capabilities remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
+        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "replays the original",
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_find_citations::tests/test_FindTest.py:84:24:caseDeclaration::31",
+          "observationSha256": "47f38b0b54cfe5fd14bcc07155a187cb215fe8da03830d95dc2b4638593ad33c"
+        }
+      ],
+      "rationale": "Complete local comparison of these exact original attribute operands using actual public extraction data and the existing source-derived correction/year operations. General model protocols and parent capabilities remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
+        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+            "name": "retains different primary full and pin-cite ranges on",
+            "sha256": "620288628ce88c8676755d1ac9ae7908ad9f5091ae4bd73454837db2fd8a9b8e"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_disambiguate_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "7c2945d8fb4730b05a6ba92fdfda5bc35f5bdb3ca0099f5e44b1f002cfdb4626"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_markup_plaintiff_and_antecedent_guesses::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "a787d18d214ca2e2d7ebb61c54f4f440b1676e9beec1518bff784129cdf99392"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_disambiguate_citations::tests/test_FindTest.py:84:24:caseDeclaration::1",
+          "observationSha256": "ade99b5b1a7772096b3ed13bd5843f119c7dff474f265780f4e57ac35214cb22"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_markup_plaintiff_and_antecedent_guesses::tests/test_FindTest.py:84:24:caseDeclaration::1",
+          "observationSha256": "b588df2e17030f77e5d225725f42c8f078336ce9ab94ec5558b8a2e77ba37279"
+        }
+      ],
+      "rationale": "Complete local replay of these exact original default-tokenizer assertions, preserving original ambiguity and HTML cleaning arguments. All parent/general obligations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-markup-ambiguity.md",
+        "evidenceSha256": "822d38abbd4b15a958621d2f6ff095690d5880ecdaebc1dd45ba42923cf3a7c1",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "replays the original",
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_disambiguate_citations::tests/test_FindTest.py:76:20:caseDeclaration::31",
+          "observationSha256": "6e6c2391c403ea0df796c73fd3cd9f497fcad8e643d734a4453c89cbe04b6d89"
+        }
+      ],
+      "rationale": "Complete local replay of these exact original default-tokenizer assertions, preserving original ambiguity and HTML cleaning arguments. All parent/general obligations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-markup-ambiguity.md",
+        "evidenceSha256": "822d38abbd4b15a958621d2f6ff095690d5880ecdaebc1dd45ba42923cf3a7c1",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "removes the original unresolved Johnson ambiguity on",
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_reference_extraction_from_markup::tests/test_FindTest.py:1261:8:caseDeclaration::1",
+          "observationSha256": "bae5b5228188f1acf831330832c0ea495f90cef3a9c9239ae01189ea1c3f7a89"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_reference_filtering::tests/test_FindTest.py:1299:12:caseDeclaration::1",
+          "observationSha256": "69b75e3617f5e7dac4b6996205f91b1709866ce4b622bb19301393afd1e13e7d"
+        }
+      ],
+      "rationale": "Complete local public-engine replay of these exact original reference-order and overlap-filtering assertions on both runtimes. Other original inputs and parent capabilities remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/parser-replay-expanded-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-original-resolution-parser-fragments.md",
+        "evidenceSha256": "f3f442f98980b42a951c9aca20e65c6e612eaf8726e870e10124868fc7dc6b42",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalReferenceMarkup.test.ts",
+            "name": "replays the original",
+            "sha256": "cb0e0ec58d5a303c995566d5c9d5f43a6f087df21fad613b129492a6f9864e44"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalReferenceMarkup.fixtures.ts",
+            "sha256": "076b3635ef669fe6bd7fa7a3074b5e40d1000ba0af52424c00ef58c4c93e1bb1"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
+            "sha256": "39dcc7ba10285a36dda617542933c34ed10ce7910c8594021f52183f406261e3"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::1",
+          "observationSha256": "a02fffe2e3e894cf82fb532fc2357d6595c787ac5ab7132e7ae0655778df99da"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::2",
+          "observationSha256": "c8160843d7f449729795abdc1e1080c73f58a138f92ec7b31b2b9706f2e562b2"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::3",
+          "observationSha256": "13d3ce3350d46d462eba8e00ee7ac1daeb7d737001ac94546a5ec0b24b1bc225"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::4",
+          "observationSha256": "16a86ac05ab05cf0213e14e6e9300aa4d0c136bad3ac5d68c2ea961ea37902ec"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::5",
+          "observationSha256": "817e3e1e36d5c07096264fbc287311419399633658d86e49b9da99fbc29c6ad7"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::6",
+          "observationSha256": "e308ed81dea952ad5e3017c15271fdfda4e139ffe5381d41f6f2f99dd67d04af"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::7",
+          "observationSha256": "13cdc8e38ad5c3b98dbeaa8c27d73b73527e6bdbd04c2be25af236dec00b0f15"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::8",
+          "observationSha256": "98bbd779893a5ec01f99440faa0e32d8d91c964b89172bbbf3c3d1aefea973b5"
+        }
+      ],
+      "rationale": "Complete local replay of these exact original includes_year model-method assertions with authenticated edition payloads and the captured source calendar. This is the whole original assertion, not full document extraction or general model completion.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalEditionYears.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-edition-years.md",
+        "evidenceSha256": "0f712c3553246426dfddb2c23f174b917696707fc249732f2ec5dd7cb81f5f7b",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalEditionYears.test.ts",
+            "name": "replays all eight original includes-year comparisons with authenticated edition payloads",
+            "sha256": "7258fcac305c7a7bbeced9f4f3875a2717ca986e9aa3880f514db468cf8c7917"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationFrozenEditions.fixtures.ts",
+            "sha256": "d5f7903a33c9f5715592de35f66423b6cd87dcae9177d00d7e76f25eb2b74fea"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/EditionInference.ts",
+            "sha256": "99425deda040da1e6102c0a625a5030c71a8554102610dab488ac7a9bca14539"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/FrozenEditions.ts",
+            "sha256": "5a75fd7614cb807528b3b8c097cb9be8b010f0635a5c4c7430f163bb7c8a152f"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_ambigous_short_cite::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "fe6db8145b8867cae12d79e5d7f58d84e9e75ae1cc22c56a2d0faf14455fb6dd"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_complex_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "3cc8ad93ffc25fca3975ce56ebc1f4ee079f13eae10e87a490605378584a629d"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "08ebd1f5043799147c4fb0dfe3dc77040efd3a5a3a8b136ec73661e55d36c89d"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::2",
+          "observationSha256": "6aaf8728b3f7429466aa169a4a8b311f833e57124071efb500e7eef517600286"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::3",
+          "observationSha256": "74e28bb16f038d293eab10dcf7dfccb6c631449470d3678a3932aa6ee121ed78"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::4",
+          "observationSha256": "633aa4f322f65f4f28413ac9f3a3982b02b1d2c0f6b2a70b36cd5d5e48d25a3e"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::5",
+          "observationSha256": "866b21f79c1edd5d1a424acb660a2afcd9fa6406e7f57ade5f88c6b1dd5eea22"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "b8256c58f871e9ce651b5148885795dac8c06422dcc8f0ad07a9db8655260ea9"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::2",
+          "observationSha256": "e48eb262909485582c76ebafcbafe18e83b400b6c4e6499c162c6ddb82c1c716"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::3",
+          "observationSha256": "f31196b20c19300060945d7a1fd90800fcaf780687d1e73a2bc675c57ab2e8af"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::4",
+          "observationSha256": "cca12d7bdf3c000de6c066a7e94b03f8fd273a62d8e4a7779095d58bdc67feea"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::5",
+          "observationSha256": "de4e005903b2d09f784ee49871bb9f493c2c58db1a9278a43de0535e0cb9a545"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::6",
+          "observationSha256": "07053d88a15f056f170d2c72b615df479ef4d802c6630137e186885b49b6488b"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_issue_167::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "fc69cbc73603ad599aa5f31cbb72b8fd632db40862da3f7e894fadd79fc394d8"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_non_case_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "237b8070e23a95a76f12d6a655bf7929ccf83155125077e2d463c4b545b1bcee"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::1",
+          "observationSha256": "e7193e526bafcdd0722c088ce7437ebb7f28b6b5dcbf0897ef2123e5ef66efb3"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::2",
+          "observationSha256": "3d93e4dad1e4e4fa86e6dab6b3138146068d3a830a22b1ba09853ea7d95623b1"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::3",
+          "observationSha256": "2e513b1fc2990eae031c69afa310818ef3048db9dbec77036760c62727228d94"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::4",
+          "observationSha256": "92a12e9fbcb1c3ef72c9cd4c1f3329fbeb56deb26ea602356a8f44d578f88dd1"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::5",
+          "observationSha256": "47edd5edc57352addab8fcd61f92120836253e56495bc19b43c2983ae051019d"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::6",
+          "observationSha256": "ac3e97d16249920a4546703a194142e981b8dafb4962faad39fa81becc182b11"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::7",
+          "observationSha256": "d5d7068e180893811babf3a83383024f83410c4795241eca1d5e86b641c15732"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "547247e1c21824f1e1c96353215b5051d8e2f75d87e6c4d8cc85634791073162"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::2",
+          "observationSha256": "1495a48ae888cb380314f74e060d9a7a6a769f2696eb6d37353d33fdaa27cc9c"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::3",
+          "observationSha256": "a8b207141dc56684f88f1fc8c52ce16f4b3fa47c4913d71aa3f5c653568396e0"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::4",
+          "observationSha256": "ba7a7852831db69ab04eecd3c0293467622e538b6b3c5a2ae835fd6c7453ce66"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::5",
+          "observationSha256": "99ba7d91b738ba4afb01abea5ed778e83e9a657f5ba55ac6449474dd09bc6e4c"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::6",
+          "observationSha256": "c4928c735e76a7716682403bcb6fc63cdbf91ee76e43736354edfc332d32d9c4"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_supra_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "153be8fdf61f9a2876c8819edc4d2896a26b742cca4e7122a71af2a56d56a7ba"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_supra_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::2",
+          "observationSha256": "cbb99f1a67c3b743925e98865dc700c42fc2fbee193f852b21e8273cca9efe84"
+        }
+      ],
+      "rationale": "Complete resolver-boundary replay of 23 original formatted resource-map and seven reference-index equality assertions through the default public engine. Complete source inputs and finite label adaptation conditions are verified. Parser assertions, outer helper calls, native hash/identity and general model laws remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationEngineResolution.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "resolve",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-resolution-assertions.md",
+        "evidenceSha256": "93f0546f10b8b8d11bebb16462f5cc7e529180f81f64f818db803ed78b511e6f",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationEngineResolution.test.ts",
+            "name": "matches all 30 original resolution assertions using authenticated default configuration on",
+            "sha256": "146b73eecf0ded29474afe9e12a5cc9d9b604a9b95acf80abe8ec7b43fa80437"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalResolution.fixtures.ts",
+            "sha256": "613f7aeb4372df3763e579c60fa0e31619213b4653e3a251f136cb9ebd697d74"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationResolve.operations.ts",
+            "sha256": "90cd1d6bfd2e75bf31be17a702a552a9d9507cf50e229088a59def95e0f28e5f"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationResolve.fixtures.ts",
+            "sha256": "4e1eace98e3f3c7a008808fc9b92c2d2e227191e5e22d21bf932affeb31e68f2"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
+            "sha256": "31bd7ab57c8a45c8e0a9185c307608b9b51f04f60dbd25e7c7a77d4e3340ab24"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationXmlWorker.fixtures.ts",
+            "sha256": "7e597a184fb8404dc9c50690b8956f91ffd8675aa1125cca6d906bd5aa384e84"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_ambigous_short_cite::tests/test_ResolveTest.py:131:12:caseDeclaration::1",
+          "observationSha256": "7249adfb87e353271102dd61e700ac7dea1a5f84c0fcee713dad8ffb3549f112"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_ambigous_short_cite::tests/test_ResolveTest.py:131:12:caseDeclaration::3",
+          "observationSha256": "3a00aeceefd2e85ee43bfdffe922a5ddee0eb935dffd15b15bd0c1df249219b6"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_complex_resolution::tests/test_ResolveTest.py:131:12:caseDeclaration::4",
+          "observationSha256": "9ff620fe795df2f45a9df14047a9b1e1cb0764a62d5bdfa5d99b2e4bc9451972"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_complex_resolution::tests/test_ResolveTest.py:131:12:caseDeclaration::10",
+          "observationSha256": "2a87a137243dd17b3fb3cc37106d45dee2c75d7189ab4ceda69a3d5c7ceaba9c"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:131:12:caseDeclaration::8",
+          "observationSha256": "5a68f96e5c46c0d3011b4020d920540678cf0cfed95128f656742036b4f22801"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:131:12:caseDeclaration::17",
+          "observationSha256": "37c9dca38e627909eed605cdf96b91333a7d755f945f8374485d6864603d0421"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_issue_167::tests/test_ResolveTest.py:131:12:caseDeclaration::1",
+          "observationSha256": "40e4b51544adfe2e7f4270f40e564312ca9e7361e66887832f8ff9336be2c72c"
+        }
+      ],
+      "rationale": "Seven original single-citation assertions joined to exact independent raw parser observations and replayed through the default public engine on both runtimes. Full 77-fragment hosted replay, alternate tokenizer interfaces and general native model protocols remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/canonical-courts-final-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-court-extraction.md",
+        "evidenceSha256": "6d88ff4602111735e42fb51a3152dbc65aded6ce011db4f6c7126ed919ae5de2",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.test.ts",
+            "name": "replays the first original fragment of all seven citation kinds on",
+            "sha256": "6126642fdb091fbae072051e588f00099ea8bbfcd68631d987e5c91bdf535459"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
+            "sha256": "39dcc7ba10285a36dda617542933c34ed10ce7910c8594021f52183f406261e3"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.fixtures.ts",
+            "sha256": "a49547a84bed65ea4cb5a3ebb5752cf950e84e8c1687a89706eaa4e45db75890"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts",
+            "sha256": "bd65007a9fdcfcf5daf71a33dfd31ec749bea2bcd852f39c2c9ce2ceb89adbff"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::1",
+          "observationSha256": "e96c5eab6bc433bad42683e814b915b4143e0ff77c221b05ff0b1764d61fb1d1"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::12",
+          "observationSha256": "498e40d901a19e6bc930aa3c29c561ce76423e7887cdac132a48298ec149ae51"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::13",
+          "observationSha256": "d07d82775b4b9528a584568bc36055f90cf401fa9ac8f732ce34d4152a3ffba2"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::19",
+          "observationSha256": "a31b1532a8cb4d4058ba11aacabe4071689496ace57bd3e56666dfb4a822e928"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::29",
+          "observationSha256": "b6191980fe0a1eb9ff52e1be4073ba0ab28c3c58435df6c5719d5d7f4eb829a0"
+        }
+      ],
+      "rationale": "Five original court equality assertions replayed from their raw independently captured inputs through the default public engine on both native configurations. Full 29-court hosted replay, alternate tokenizers and general model protocols remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/canonical-courts-final-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-court-extraction.md",
+        "evidenceSha256": "6d88ff4602111735e42fb51a3152dbc65aded6ce011db4f6c7126ed919ae5de2",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCourts.test.ts",
+            "name": "replays original state bankruptcy panel and dated Westlaw court entries on",
+            "sha256": "f9fc04eff34cf0767cb11b47ea6905eef4a890fd8cd522bfdc4367e022bb7b04"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.fixtures.ts",
+            "sha256": "a49547a84bed65ea4cb5a3ebb5752cf950e84e8c1687a89706eaa4e45db75890"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
+            "sha256": "39dcc7ba10285a36dda617542933c34ed10ce7910c8594021f52183f406261e3"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts",
+            "sha256": "bd65007a9fdcfcf5daf71a33dfd31ec749bea2bcd852f39c2c9ce2ceb89adbff"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          }
+        ]
+      }
+    }
+  ]
+}
