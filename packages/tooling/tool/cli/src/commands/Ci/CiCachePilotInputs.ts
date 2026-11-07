@@ -38,7 +38,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { Parser } from "tar";
 import { CiCachePilotComputation, CiCachePilotMode } from "./CiCachePilot.schemas.ts";
-import { readStepVariable } from "./CiCachePilotHost.ts";
+import { findOnPath, readStepVariable } from "./CiCachePilotHost.ts";
 
 const COMMAND = "ci cache-pilot-inputs";
 const MiB = 1024 * 1024;
@@ -205,6 +205,19 @@ const tarMembers = (archive: Uint8Array) =>
     catch: () => "unreadable",
   });
 
+// More members or unpacked bytes than the reviewed extraction bounds allow.
+const exceedsArchiveBounds = (members: ReadonlyArray<ArchiveMember>) =>
+  A.length(members) > 32 || A.reduce(members, 0, (total, member) => total + member.size) > 128 * MiB;
+
+// The single regular-file member named `name`, within the reviewed executable size.
+const canaryExecutableMember = (members: ReadonlyArray<ArchiveMember>, name: string | undefined) => {
+  const matches = A.filter(members, (member) => member.name === name);
+  return F.pipe(
+    A.get(matches, 0),
+    O.filter((member) => A.length(matches) === 1 && member.file && member.size > 0 && member.size <= 64 * MiB)
+  );
+};
+
 const fetchCanary = Effect.fn("Ci.fetchCachePilotCanary")(function* (
   pin: typeof CachePilotClientPin.Type,
   privateRoot: string
@@ -234,18 +247,9 @@ const fetchCanary = Effect.fn("Ci.fetchCachePilotCanary")(function* (
   const members = yield* tarMembers(unpacked).pipe(
     Effect.catch(() => refuse("Native canary archive is not a readable gzip tar archive."))
   );
-  if (A.length(members) > 32 || A.reduce(members, 0, (total, member) => total + member.size) > 128 * MiB)
-    return yield* refuse(bounds);
-  const matches = A.filter(members, (member) => member.name === pin.archiveMember);
-  const member = A.get(matches, 0);
-  if (
-    A.length(matches) !== 1 ||
-    O.isNone(member) ||
-    !member.value.file ||
-    member.value.size <= 0 ||
-    member.value.size > 64 * MiB
-  )
-    return yield* refuse("Native canary executable member is invalid.");
+  if (exceedsArchiveBounds(members)) return yield* refuse(bounds);
+  const member = canaryExecutableMember(members, pin.archiveMember);
+  if (O.isNone(member)) return yield* refuse("Native canary executable member is invalid.");
   const executable = path.join(privateRoot, "turbo-canary");
   yield* fs.writeFile(executable, NodeBuffer.Buffer.concat(member.value.data), { flag: "wx" });
   yield* fs.chmod(executable, 0o500);
@@ -259,6 +263,34 @@ const fileReference = Effect.fn("Ci.cachePilotReference")(function* (folder: str
   const bytes = yield* fs.readFile(path.join(folder, name));
   const sha256 = yield* hashBytes(bytes);
   return { path: `${relative}/${name}`, sha256 };
+});
+
+// The reviewed native Turbo client of the step's channel, verified against its binary pin.
+const verifiedNativeClient = Effect.fn("Ci.cachePilotNativeClient")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const privateRoot = yield* variable("BEEP_CACHE_PRODUCER_PRIVATE_ROOT");
+  const channel = yield* variable("BEEP_CACHE_PRODUCER_CHANNEL");
+  if (channel !== "stable" && channel !== "canary")
+    return yield* refuse("Only the two reviewed native channels are supported.");
+  const pins = yield* fs.readFileString(path.join(root, PINS_FILE)).pipe(Effect.flatMap(decodePins));
+  const pin = pins[channel];
+  const executable = channel === "canary" ? yield* fetchCanary(pin, privateRoot) : path.join(root, STABLE_EXECUTABLE);
+  const executableBytes = yield* fs.readFile(executable);
+  const executableDigest = yield* hashBytes(executableBytes);
+  if (executableDigest !== pin.sha256) return yield* refuse("Native client differs from its reviewed binary pin.");
+  return { pin, executable };
+});
+
+// The profile's `tasks.lint` object, refused unless it exists and still disables caching.
+const reviewedLintProfile = Effect.fn("Ci.cachePilotLintProfile")(function* (profile: string, before: Uint8Array) {
+  const source = yield* decodeJson(decoder.decode(before));
+  const tasks = isJsonRecord(source) ? source.tasks : undefined;
+  const lint = isJsonRecord(tasks) ? tasks.lint : undefined;
+  if (!isJsonRecord(source) || !isJsonRecord(tasks) || !isJsonRecord(lint))
+    return yield* refuse(`${COMMAND}: ${profile} has no tasks.lint object`);
+  if (lint.cache !== false) return yield* refuse("The selected lint pilot source profile changed; renew its review.");
+  return { source, tasks, lint };
 });
 
 /**
@@ -295,28 +327,14 @@ export const prepareCachePilotSources = Effect.fn("Ci.prepareCachePilotSources")
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const privateRoot = yield* variable("BEEP_CACHE_PRODUCER_PRIVATE_ROOT");
-  const channel = yield* variable("BEEP_CACHE_PRODUCER_CHANNEL");
-  if (channel !== "stable" && channel !== "canary")
-    return yield* refuse("Only the two reviewed native channels are supported.");
-  const pins = yield* fs.readFileString(path.join(root, PINS_FILE)).pipe(Effect.flatMap(decodePins));
-  const pin = pins[channel];
-  const executable = channel === "canary" ? yield* fetchCanary(pin, privateRoot) : path.join(root, STABLE_EXECUTABLE);
-  const executableBytes = yield* fs.readFile(executable);
-  const executableDigest = yield* hashBytes(executableBytes);
-  if (executableDigest !== pin.sha256) return yield* refuse("Native client differs from its reviewed binary pin.");
+  const { pin, executable } = yield* verifiedNativeClient(root);
   const relative = cachePilotInputDirectory[mode];
   const folder = path.join(root, relative);
   yield* fs.makeDirectory(path.dirname(folder), { recursive: true, mode: 0o700 });
   yield* fs.makeDirectory(folder, { mode: 0o700 });
   const profile = lintProfiles[computation];
   const before = yield* fs.readFile(path.join(root, profile));
-  const source = yield* decodeJson(decoder.decode(before));
-  const tasks = isJsonRecord(source) ? source.tasks : undefined;
-  const lint = isJsonRecord(tasks) ? tasks.lint : undefined;
-  if (!isJsonRecord(source) || !isJsonRecord(tasks) || !isJsonRecord(lint))
-    return yield* refuse(`${COMMAND}: ${profile} has no tasks.lint object`);
-  if (lint.cache !== false) return yield* refuse("The selected lint pilot source profile changed; renew its review.");
+  const { source, tasks, lint } = yield* reviewedLintProfile(profile, before);
   // Spreading keeps every key in place, so only `cache` changes in the output.
   const after = { ...source, tasks: { ...tasks, lint: { ...lint, cache: true } } };
   yield* fs.writeFile(path.join(folder, "before.json"), before);
@@ -351,18 +369,10 @@ export const prepareCachePilotSources = Effect.fn("Ci.prepareCachePilotSources")
   });
 });
 
-// `shutil.which`: the first executable regular file named `name` on `PATH`.
+// `shutil.which`: the first executable regular file named `name` on the step's `PATH`.
 const which = Effect.fn("Ci.cachePilotWhich")(function* (name: string) {
-  const fs = yield* FileSystem.FileSystem;
   const searchPath = yield* variable("PATH");
-  return yield* Effect.findFirst(
-    A.map(Str.split(searchPath, ":"), (directory) => `${Str.isEmpty(directory) ? "." : directory}/${name}`),
-    (file) =>
-      fs.stat(file).pipe(
-        Effect.map((info) => info.type === "File" && (info.mode & 0o111) !== 0),
-        Effect.orElseSucceed(() => false)
-      )
-  );
+  return yield* findOnPath(searchPath, name);
 });
 
 /**

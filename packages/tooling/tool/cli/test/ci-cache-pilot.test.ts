@@ -22,6 +22,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -608,68 +609,81 @@ it.layer(stageLayer, { timeout: "60 seconds" })("cache pilot input stages", (it)
     canary: { reportedVersion: "x", sha256: "x" },
   };
 
-  it.effect(
-    "writes both request layouts with the adapter's JSON framing, modes and output lines",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      for (const [mode, computation, profilePath, profile] of [
-        ["signed", "@beep/identity#lint", "packages/foundation/modeling/identity/turbo.json", SIMPLE_PROFILE],
-        ["local", "@beep/types#lint", "packages/foundation/primitive/types/turbo.json", RICH_PROFILE],
-      ] as const) {
-        const { base, root, revision, output } = yield* makeRoot(profilePath, profile, stablePins);
-        const relative = cachePilotInputDirectory[mode];
-        const folder = `${root}/${relative}`;
-        const provide = Effect.provideService(CiStepEnvironment, environment(base, root, revision, "stable"));
-        yield* prepareCachePilotSources(root, mode, computation).pipe(provide, registry(new Uint8Array()));
-        const trees = [`${base}/root-worktrees/cache-producer-11-1-a`, `${base}/root-worktrees/cache-producer-11-1-b`];
-        const observed4 = yield* fs.readFileString(output);
-        expect(observed4).toBe(`source_inputs=${folder}\nworktree_a=${trees[0]}\nworktree_b=${trees[1]}\n`);
-        const observed5 = yield* fs.readFileString(`${folder}/before.json`);
-        expect(observed5).toBe(profile);
-        const after = yield* fs.readFile(`${folder}/after.json`);
-        if (mode === "signed") expect(new TextDecoder().decode(after)).toBe(SIMPLE_AFTER);
-        const beforeSha =
-          mode === "signed"
-            ? "a84f22afdb695ee3a25c45dd54c92f49ca49f0b35528fca6a267f91efefa488b"
-            : "c38769189f38a25fd91fda87117beef0f24bd964254447a75f55a9031c899cfb";
-        const afterSha =
-          mode === "signed"
-            ? "426bee72da937b636c96d7645f9e89f90d44f2c3d071ecc2a6bb95c7aebf7099"
-            : "4cebffecd981e0075b26d0e6172c4514cc114b917e0388eff1b71c697b2df6bf";
-        const observed6 = yield* sha256Hex(after);
-        expect(observed6).toBe(afterSha);
-        const observed7 = yield* fs.readFileString(`${folder}/activation-request.json`);
-        expect(observed7).toBe(
-          `{"computation": "${computation}", "path": "${profilePath}", "before": {"path": "${relative}/before.json", "sha256": "${beforeSha}"}, "after": {"path": "${relative}/after.json", "sha256": "${afterSha}"}}\n`
-        );
-        const namespace = mode === "signed" ? "team_beep_signed_canary_v1" : "team_beep_local_observation_v1";
-        const client = `{"version": "2.11.10", "sha256": "${NATIVE_SHA256}", "namespace": "${namespace}"}`;
-        const worktrees = `["${trees[0]}", "${trees[1]}"]`;
-        const observed8 = yield* fs.readFileString(`${folder}/tools.json`);
-        expect(observed8).toBe(
-          `{"executable": "${root}/node_modules/@turbo/linux-64/bin/turbo", "client": ${client}, "worktrees": ${worktrees}}\n`
-        );
-        expect((yield* fs.stat(folder)).mode & 0o777).toBe(0o700);
-        expect((yield* fs.stat(`${root}/.beep/cache`)).mode & 0o777).toBe(0o700);
-        // An existing input directory is never reused.
-        const reused = yield* prepareCachePilotSources(root, mode, computation).pipe(
-          provide,
-          registry(new Uint8Array()),
-          Effect.isFailure
-        );
-        assert.isTrue(reused);
+  // Per-mode expectations of the two pilot layouts; `afterText` is checked byte for byte when present.
+  const layouts = [
+    {
+      mode: "signed",
+      computation: "@beep/identity#lint",
+      profilePath: "packages/foundation/modeling/identity/turbo.json",
+      profile: SIMPLE_PROFILE,
+      afterText: O.some(SIMPLE_AFTER),
+      beforeSha: "a84f22afdb695ee3a25c45dd54c92f49ca49f0b35528fca6a267f91efefa488b",
+      afterSha: "426bee72da937b636c96d7645f9e89f90d44f2c3d071ecc2a6bb95c7aebf7099",
+      namespace: "team_beep_signed_canary_v1",
+      request: (root: string, pilot: string) => `{"sourceRoot": "${root}", "pilot": ${pilot}}\n`,
+    },
+    {
+      mode: "local",
+      computation: "@beep/types#lint",
+      profilePath: "packages/foundation/primitive/types/turbo.json",
+      profile: RICH_PROFILE,
+      afterText: O.none<string>(),
+      beforeSha: "c38769189f38a25fd91fda87117beef0f24bd964254447a75f55a9031c899cfb",
+      afterSha: "4cebffecd981e0075b26d0e6172c4514cc114b917e0388eff1b71c697b2df6bf",
+      namespace: "team_beep_local_observation_v1",
+      request: (_root: string, pilot: string) => `${pilot}\n`,
+    },
+  ] as const;
 
-        for (const name of ["dependencies.json", "activation.json"])
-          yield* fs.writeFileString(`${folder}/${name}`, "{}\n");
-        yield* prepareCachePilotRequest(root, mode).pipe(provide);
-        const receipt = (name: string) => `{"path": "${relative}/${name}", "sha256": "${EMPTY_RECEIPT_SHA256}"}`;
-        const pilot = `{"channel": "stable", "client": ${client}, "executable": "${root}/node_modules/@turbo/linux-64/bin/turbo", "biomeExecutable": "${root}/node_modules/@biomejs/cli-linux-x64/biome", "nodeExecutable": "${root}/fixture-bin/node", "dependencies": ${receipt("dependencies.json")}, "worktrees": ${worktrees}, "activation": ${receipt("activation.json")}, "selection": "full"}`;
-        const observed9 = yield* fs.readFileString(`${folder}/request.json`);
-        expect(observed9).toBe(mode === "signed" ? `{"sourceRoot": "${root}", "pilot": ${pilot}}\n` : `${pilot}\n`);
-        for (const tree of trees) expect(gitIn(tree)(["rev-parse", "HEAD"])).toBe(revision);
-        expect((yield* fs.stat(`${base}/root-worktrees`)).mode & 0o777).toBe(0o700);
-      }
-    })
+  const checkLayout = Effect.fnUntraced(function* (layout: (typeof layouts)[number]) {
+    const fs = yield* FileSystem.FileSystem;
+    const { mode, computation, profilePath, profile } = layout;
+    const { base, root, revision, output } = yield* makeRoot(profilePath, profile, stablePins);
+    const relative = cachePilotInputDirectory[mode];
+    const folder = `${root}/${relative}`;
+    const provide = Effect.provideService(CiStepEnvironment, environment(base, root, revision, "stable"));
+    yield* prepareCachePilotSources(root, mode, computation).pipe(provide, registry(new Uint8Array()));
+    const trees = [`${base}/root-worktrees/cache-producer-11-1-a`, `${base}/root-worktrees/cache-producer-11-1-b`];
+    const observed4 = yield* fs.readFileString(output);
+    expect(observed4).toBe(`source_inputs=${folder}\nworktree_a=${trees[0]}\nworktree_b=${trees[1]}\n`);
+    const observed5 = yield* fs.readFileString(`${folder}/before.json`);
+    expect(observed5).toBe(profile);
+    const after = yield* fs.readFile(`${folder}/after.json`);
+    expect(O.map(layout.afterText, () => new TextDecoder().decode(after))).toEqual(layout.afterText);
+    const observed6 = yield* sha256Hex(after);
+    expect(observed6).toBe(layout.afterSha);
+    const observed7 = yield* fs.readFileString(`${folder}/activation-request.json`);
+    expect(observed7).toBe(
+      `{"computation": "${computation}", "path": "${profilePath}", "before": {"path": "${relative}/before.json", "sha256": "${layout.beforeSha}"}, "after": {"path": "${relative}/after.json", "sha256": "${layout.afterSha}"}}\n`
+    );
+    const client = `{"version": "2.11.10", "sha256": "${NATIVE_SHA256}", "namespace": "${layout.namespace}"}`;
+    const worktrees = `["${trees[0]}", "${trees[1]}"]`;
+    const observed8 = yield* fs.readFileString(`${folder}/tools.json`);
+    expect(observed8).toBe(
+      `{"executable": "${root}/node_modules/@turbo/linux-64/bin/turbo", "client": ${client}, "worktrees": ${worktrees}}\n`
+    );
+    expect((yield* fs.stat(folder)).mode & 0o777).toBe(0o700);
+    expect((yield* fs.stat(`${root}/.beep/cache`)).mode & 0o777).toBe(0o700);
+    // An existing input directory is never reused.
+    const reused = yield* prepareCachePilotSources(root, mode, computation).pipe(
+      provide,
+      registry(new Uint8Array()),
+      Effect.isFailure
+    );
+    assert.isTrue(reused);
+
+    for (const name of ["dependencies.json", "activation.json"]) yield* fs.writeFileString(`${folder}/${name}`, "{}\n");
+    yield* prepareCachePilotRequest(root, mode).pipe(provide);
+    const receipt = (name: string) => `{"path": "${relative}/${name}", "sha256": "${EMPTY_RECEIPT_SHA256}"}`;
+    const pilot = `{"channel": "stable", "client": ${client}, "executable": "${root}/node_modules/@turbo/linux-64/bin/turbo", "biomeExecutable": "${root}/node_modules/@biomejs/cli-linux-x64/biome", "nodeExecutable": "${root}/fixture-bin/node", "dependencies": ${receipt("dependencies.json")}, "worktrees": ${worktrees}, "activation": ${receipt("activation.json")}, "selection": "full"}`;
+    const observed9 = yield* fs.readFileString(`${folder}/request.json`);
+    expect(observed9).toBe(layout.request(root, pilot));
+    for (const tree of trees) expect(gitIn(tree)(["rev-parse", "HEAD"])).toBe(revision);
+    expect((yield* fs.stat(`${base}/root-worktrees`)).mode & 0o777).toBe(0o700);
+  });
+
+  it.effect("writes both request layouts with the adapter's JSON framing, modes and output lines", () =>
+    Effect.forEach(layouts, checkLayout, { discard: true })
   );
 
   it.effect(

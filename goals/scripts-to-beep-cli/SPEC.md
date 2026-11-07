@@ -70,7 +70,7 @@ in `beep lint laws`.
 
 ## Acceptance Criteria
 
-- [x] `ls scripts` shows only `cloud/bootstrap.sh` (and `cloud/` itself).
+- [ ] `ls scripts` shows only `cloud/bootstrap.sh` (and `cloud/` itself).
 - [ ] `check.yml`, `heavy.yml`, `storybook.yml`, `release-desktop.yml` and
       `setup-monorepo-ci/action.yml` call `beep ci ...` through the fetched binary; a hosted run
       is green on each.
@@ -143,6 +143,14 @@ Lane `goals/scripts-to-beep-cli`
 
 Reverse: Delete the publish workflow and restore the shell steps from git history
 
+### Delete the scripts heavy.yml@main still calls in a third PR, 2026-11-07
+
+check.yml calls heavy.yml as a reusable workflow pinned to @main, so a PR's own heavy.yml edits take effect only after merge. #2906 deleted the scripts that main's heavy.yml calls and every Heavy lane failed at its first step (`scripts/ci-change-profile.sh: No such file`, then `goals_only: unbound variable`; run 42418724321). #2906 therefore keeps the seven scripts that heavy.yml@main references (`ci-change-profile.sh`, `ci-runner-resources.sh`, `ci-prune-apt-sources.sh`, `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh`, `ci-cache-local-summary.py`) while it switches every workflow to the pinned binary. The tracked-shell law allowlists those exact files, with the removal condition 'deleted by PR 3'. PR 3, opened after #2906 makes the binary-calling heavy.yml the @main copy, deletes them and their allowlist entries and is the goal's final PR carrying proposedCloseout.
+
+Lane `goals/scripts-to-beep-cli-p2` · PR #2906
+
+Reverse: Delete the seven scripts in #2906 and accept red Heavy lanes until it merges
+
 ### New command groups toolchain, git and github in @beep/repo-cli, 2026-11-07
 
 No existing group fits the tsgo backup prune, the merge driver or GitHub App registration. Until goals/beep-cli-composition moves groups into beep-<group> tools, every group stays in @beep/repo-cli (07-non-slice-families Repo CLI Command Topology).
@@ -179,3 +187,4 @@ Reverse: Remove the extra roots from the law's allowlist once their owners delet
 | `infra/` `.sh` files | `infra/` root (10 files on 2026-11-07) | `infra-alchemy-rebuild` | Pulumi-era infra scripts the Alchemy rebuild replaces | `infra-alchemy-rebuild` retires `infra/` |
 | `packages/tooling/tool/cli/test/fixtures/models/locators.sh` | one test fixture | `@beep/repo-cli` | `models-check.test.ts` locates model pins inside a shell source | the models manifest stops listing shell locator fixtures |
 | `packages/tooling/tool/docgen/test/fixtures/section-example/tsc-wrapper.sh` | one test fixture | `@beep/docgen` | `Core.test.ts` proves docgen runs a configured compiler wrapper | docgen drops the wrapped-compiler configuration |
+| Transitional `scripts/ci-change-profile.sh`, `ci-runner-resources.sh`, `ci-prune-apt-sources.sh`, `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh` (plus `ci-cache-local-summary.py`) | six exact `.sh` files and one `.py` | packet owner | `check.yml` calls `heavy.yml@main`, which still runs them until #2906's binary-calling `heavy.yml` is the `@main` copy; nothing else calls them (decision 2026-11-07-heavy-at-main-three-prs) | deleted by PR 3 after #2906's heavy.yml is heavy.yml@main |

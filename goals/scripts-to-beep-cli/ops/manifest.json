@@ -35,14 +35,7 @@
       },
       {
         "number": 2906,
-        "role": "final"
-      }
-    ],
-    "acceptanceEvidence": [
-      {
-        "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/goals_scripts-to-beep-cli-p2-aaf7c5eaee9a/verdict.json",
-        "gating": true
+        "role": "supporting"
       }
     ]
   },
@@ -99,7 +92,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "complete"
+      "status": "pending"
     }
   ],
   "verificationCommands": [
@@ -113,9 +106,5 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ],
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 2906
-  }
+  ]
 }

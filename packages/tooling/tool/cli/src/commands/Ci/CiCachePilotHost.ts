@@ -21,6 +21,7 @@ import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -43,9 +44,32 @@ const isExecutable = (fs: FileSystem.FileSystem, file: string) =>
     Effect.orElseSucceed(() => false)
   );
 
-// `command -v`: an executable regular file named `name` in some `PATH` entry.
-const isOnPath = Effect.fn("Ci.isOnPath")(function* (fs: FileSystem.FileSystem, name: string) {
-  const searchPath = yield* Config.String("PATH").pipe(Config.withDefault(""));
+/**
+ * Find the first executable regular file named `name` in a `PATH` string.
+ *
+ * **Details**
+ *
+ * The `command -v` and `shutil.which` lookup the retired adapters used: each
+ * `:`-separated entry is tried in order, an empty entry means the current
+ * directory, and a candidate must be a regular file with some execute bit set.
+ *
+ * **Example** (Look up node on a fixture path)
+ *
+ * ```ts
+ * import { findOnPath } from "@beep/repo-cli/commands/Ci/CiCachePilotHost"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(findOnPath("/usr/bin:/bin", "node"))) // true
+ * ```
+ *
+ * @param searchPath - The `PATH` value to search.
+ * @param name - The executable name.
+ * @returns Effect with the first matching path, if any.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const findOnPath = Effect.fn("Ci.findOnPath")(function* (searchPath: string, name: string) {
+  const fs = yield* FileSystem.FileSystem;
   const candidates = A.map(
     Str.split(searchPath, ":"),
     (directory) => `${Str.isEmpty(directory) ? "." : directory}/${name}`
@@ -55,7 +79,14 @@ const isOnPath = Effect.fn("Ci.isOnPath")(function* (fs: FileSystem.FileSystem, 
       Effect.map((info) => info.type === "File" && (info.mode & 0o111) !== 0),
       Effect.orElseSucceed(() => false)
     )
-  ).pipe(Effect.map(O.isSome));
+  );
+});
+
+// `command -v`: an executable regular file named `name` in some `PATH` entry.
+const isOnPath = Effect.fn("Ci.isOnPath")(function* (name: string) {
+  const searchPath = yield* Config.String("PATH").pipe(Config.withDefault(""));
+  const found = yield* findOnPath(searchPath, name);
+  return O.isSome(found);
 });
 
 // Run a command with the job's stdio and return its exit status.
@@ -129,9 +160,9 @@ export const ensureCacheNativeSandbox = Effect.fn("Ci.ensureCacheNativeSandbox")
 }) {
   const fs = yield* FileSystem.FileSystem;
   if (!(yield* isExecutable(fs, paths.bwrap))) {
-    if (yield* isOnPath(fs, "dnf")) {
+    if (yield* isOnPath("dnf")) {
       yield* runStep(...withPrivilege("dnf", ["install", "-y", "bubblewrap"]));
-    } else if (yield* isOnPath(fs, "apt-get")) {
+    } else if (yield* isOnPath("apt-get")) {
       yield* CiOperational.use((service) => service.pruneAptSources(paths.aptSources)).pipe(
         Effect.catchTag("CiCommandError", (error) =>
           Console.error(error.message).pipe(Effect.andThen(failWithReportedExit(error.message)))
@@ -216,6 +247,61 @@ export const readStepVariable = Effect.fn("Ci.readStepVariable")(function* (comm
 });
 const variable = (name: string) => readStepVariable("ci cache-pilot-cleanup", name);
 
+// A refused path stays in place: log the workflow error and mark the cleanup failed.
+const refusePath = (message: string) => Console.log(`::error::${message}`).pipe(Effect.as(true));
+
+const removeOwned = Effect.fn("Ci.cleanupRemove")(function* (target: string) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs
+    .remove(target, { recursive: true, force: true })
+    .pipe(
+      Effect.catch(() =>
+        Console.error(`ci cache-pilot-cleanup: cannot remove ${target}`).pipe(
+          Effect.andThen(failWithReportedExit(`cannot remove ${target}`))
+        )
+      )
+    );
+});
+
+// One `TRIAL_WORKTREE_*` entry; `true` when it was refused or `git worktree remove` failed.
+const cleanupWorktree = Effect.fn("Ci.cleanupWorktree")(function* (workspace: string, tree: string) {
+  const fs = yield* FileSystem.FileSystem;
+  if (Str.isEmpty(tree) || !(yield* fs.exists(tree).pipe(Effect.orElseSucceed(() => false)))) return false;
+  const owned = `${workspace}-worktrees/cache-producer-${yield* variable("GITHUB_RUN_ID")}-${yield* variable("GITHUB_RUN_ATTEMPT")}-`;
+  if (tree !== `${owned}a` && tree !== `${owned}b`) return yield* refusePath("Refusing unexpected producer worktree.");
+  return (yield* runInherited("git", ["worktree", "remove", "--", tree])) !== 0;
+});
+
+// `TRIAL_INPUTS`; `true` when it was refused.
+const cleanupInputs = Effect.fn("Ci.cleanupInputs")(function* (inputs: string, expected: string) {
+  if (Str.isEmpty(inputs)) return false;
+  if (inputs !== expected) return yield* refusePath("Refusing unexpected producer input directory.");
+  yield* removeOwned(inputs);
+  return false;
+});
+
+// Whether `TRIAL_ROOT` is the one private directory the mode owns.
+const isOwnedPrivateRoot = Effect.fn("Ci.isOwnedPrivateRoot")(function* (mode: CiCachePilotMode, trialRoot: string) {
+  if (mode === "signed") return trialRoot === `${yield* variable("HOME")}/.cache/beep/cache-producer-trial-v1`;
+  // `${TRIAL_ROOT##*/beep-cache-local-observation.}`: drop through the last marker.
+  const suffix = O.match(Str.lastIndexOf(LOCAL_OBSERVATION_PREFIX)(trialRoot), {
+    onNone: () => trialRoot,
+    onSome: (index) => Str.slice(index + LOCAL_OBSERVATION_PREFIX.length)(trialRoot),
+  });
+  return (
+    isLocalObservationSuffix(suffix) &&
+    trialRoot === `${yield* variable("RUNNER_TEMP")}/beep-cache-local-observation.${suffix}`
+  );
+});
+
+// `TRIAL_ROOT`; `true` when it was refused.
+const cleanupPrivateRoot = Effect.fn("Ci.cleanupPrivateRoot")(function* (mode: CiCachePilotMode, trialRoot: string) {
+  if (!(yield* isOwnedPrivateRoot(mode, trialRoot)))
+    return yield* refusePath("Refusing unexpected private pilot directory.");
+  yield* removeOwned(trialRoot);
+  return false;
+});
+
 /**
  * Remove only the current job's pilot worktrees, inputs and private directory.
  *
@@ -249,58 +335,14 @@ export const cleanupCachePilot = Effect.fn("Ci.cleanupCachePilot")(function* (mo
     yield* Console.error("Unsupported cleanup mode.");
     return yield* failWithReportedExit("Unsupported cleanup mode.", 64);
   }
-  const fs = yield* FileSystem.FileSystem;
   const workspace = yield* variable("GITHUB_WORKSPACE");
   const expectedInputs = `${workspace}/.beep/cache/${mode === "signed" ? "protected-producer-trial" : "local-pilot-observation"}`;
-  let failed = false;
   const trees = [yield* variable("TRIAL_WORKTREE_A"), yield* variable("TRIAL_WORKTREE_B")];
-  for (const tree of trees) {
-    if (Str.isNonEmpty(tree) && (yield* fs.exists(tree).pipe(Effect.orElseSucceed(() => false)))) {
-      const owned = `${workspace}-worktrees/cache-producer-${yield* variable("GITHUB_RUN_ID")}-${yield* variable("GITHUB_RUN_ATTEMPT")}-`;
-      if (tree === `${owned}a` || tree === `${owned}b`) {
-        if ((yield* runInherited("git", ["worktree", "remove", "--", tree])) !== 0) failed = true;
-      } else {
-        yield* Console.log("::error::Refusing unexpected producer worktree.");
-        failed = true;
-      }
-    }
-  }
-  const remove = Effect.fn("Ci.cleanupRemove")(function* (target: string) {
-    yield* fs
-      .remove(target, { recursive: true, force: true })
-      .pipe(
-        Effect.catch(() =>
-          Console.error(`ci cache-pilot-cleanup: cannot remove ${target}`).pipe(
-            Effect.andThen(failWithReportedExit(`cannot remove ${target}`))
-          )
-        )
-      );
-  });
+  const treeFailures = yield* Effect.forEach(trees, (tree) => cleanupWorktree(workspace, tree));
   const inputs = yield* variable("TRIAL_INPUTS");
-  if (Str.isNonEmpty(inputs)) {
-    if (inputs === expectedInputs) {
-      yield* remove(inputs);
-    } else {
-      yield* Console.log("::error::Refusing unexpected producer input directory.");
-      failed = true;
-    }
-  }
+  const inputsFailed = yield* cleanupInputs(inputs, expectedInputs);
   const trialRoot = yield* variable("TRIAL_ROOT");
-  // `${TRIAL_ROOT##*/beep-cache-local-observation.}`: drop through the last marker.
-  const suffix = O.match(Str.lastIndexOf(LOCAL_OBSERVATION_PREFIX)(trialRoot), {
-    onNone: () => trialRoot,
-    onSome: (index) => Str.slice(index + LOCAL_OBSERVATION_PREFIX.length)(trialRoot),
-  });
-  const privateAllowed =
-    mode === "signed"
-      ? trialRoot === `${yield* variable("HOME")}/.cache/beep/cache-producer-trial-v1`
-      : isLocalObservationSuffix(suffix) &&
-        trialRoot === `${yield* variable("RUNNER_TEMP")}/beep-cache-local-observation.${suffix}`;
-  if (privateAllowed) {
-    yield* remove(trialRoot);
-  } else {
-    yield* Console.log("::error::Refusing unexpected private pilot directory.");
-    failed = true;
-  }
-  if (failed) return yield* failWithReportedExit("Cache pilot cleanup refused or failed a path.");
+  const privateFailed = yield* cleanupPrivateRoot(mode, trialRoot);
+  if (A.some([...treeFailures, inputsFailed, privateFailed], F.identity))
+    return yield* failWithReportedExit("Cache pilot cleanup refused or failed a path.");
 });

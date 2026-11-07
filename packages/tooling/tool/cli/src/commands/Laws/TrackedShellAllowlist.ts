@@ -24,6 +24,7 @@ import {
   TrackedShellAllowedRoot,
   TrackedShellAllowlistSummary,
   TrackedShellFinding,
+  TrackedShellTransitionalFile,
 } from "./TrackedShellAllowlist.model.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -35,6 +36,7 @@ import type { TrackedShellAllowlistOptions } from "./TrackedShellAllowlist.model
 const GITLINK_MODE = "160000";
 
 const isAllowedFile = S.is(TrackedShellAllowedFile);
+const isTransitionalFile = S.is(TrackedShellTransitionalFile);
 
 /**
  * Whether a repository-relative shell script path is allowed.
@@ -42,7 +44,7 @@ const isAllowedFile = S.is(TrackedShellAllowedFile);
  * **Details**
  *
  * A path is allowed when it starts with one of the allowed roots or equals one
- * of the allowed files. Roots and files are exact strings; nothing is matched
+ * of the allowed or transitional files. Roots and files are exact strings; nothing is matched
  * as a glob.
  *
  * **Example** (Classify shell script paths)
@@ -61,7 +63,9 @@ const isAllowedFile = S.is(TrackedShellAllowedFile);
  * @since 0.0.0
  */
 export const isTrackedShellAllowed = (file: string): boolean =>
-  isAllowedFile(file) || A.some(TrackedShellAllowedRoot.literals, (root) => Str.startsWith(root)(file));
+  isAllowedFile(file) ||
+  isTransitionalFile(file) ||
+  A.some(TrackedShellAllowedRoot.literals, (root) => Str.startsWith(root)(file));
 
 /**
  * Render one finding as a report line.
