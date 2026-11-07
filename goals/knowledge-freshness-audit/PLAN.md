@@ -248,6 +248,10 @@ Lane `codex/audit-timer-guidance`
 
 Reverse: Revert this checkpoint and its two coverage example corrections if class-based coverage is no longer the intended metric.
 
+### Isolate each model-refusal test scenario, 2026-11-07
+
+Reverse: Restore grouped cases only after they fit the unchanged timeout under package verification
+
 ### Qualify the retired-module guide's deliberate exceptions, 2026-11-07
 
 Parent review revalidated T52 kfa-t52-001 against its frozen file, blob and line hashes. Reject a contradiction inferred solely from the historical fingerprint exemption: the current fingerprint file has no literal retired prefix. Confirm the narrower omission against the actual retirement law: its implementation, model and regression fixtures deliberately retain retired strings and are explicitly allowlisted. Describe the guide as the canonical mapping and include those existing exceptions. Preserve the allowlist, vendor patches, historical fingerprints and dated migration facts. Twenty open PRs had no target overlap. This is bounded documentation reconciliation, not full T52/P4 acceptance or runtime proof; PM and ADHD remain separately held, and no spending is admitted.
@@ -267,6 +271,10 @@ Reverse: Revert this citation repair and checkpoint together if the pinned upstr
 ### P4 clarifies config package naming without inventing a directory migration, 2026-11-07
 
 Reverse: Revert the wording clarification; retain the original source and parent qualification in the private archive.
+
+### Partition independent CI profile scenarios, 2026-11-07
+
+Reverse: Restore the combined scenario only after package verification fits its unchanged deadline
 
 ### Protect class coverage examples with real query regressions, 2026-11-07
 

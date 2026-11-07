@@ -32,6 +32,7 @@ const {
   planPackageReferenceSync,
   planRootAliasSync,
   planRootFallowBoundarySync,
+  planRootPackageProjectionSync,
   planRootReferenceSync,
   planRootSyncpackSync,
   planRootVitestAliasSync,
@@ -129,6 +130,7 @@ export const syncTsconfigAtRoot: {
       rootDir,
       O.map(rootAliasChange, (change) => change.content)
     );
+    const rootPackageProjectionChange = yield* planRootPackageProjectionSync(rootDir);
     const rootFallowBoundaryChange = yield* planRootFallowBoundarySync(rootDir);
     A.appendAllInPlace(
       plannedChanges,
@@ -138,6 +140,7 @@ export const syncTsconfigAtRoot: {
         rootSyncpackChange,
         rootVitestAliasChange,
         rootFallowBoundaryChange,
+        rootPackageProjectionChange,
       ])
     );
 

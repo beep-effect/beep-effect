@@ -17,6 +17,18 @@ on:
         type: boolean
         default: true
 
+      route_skips:
+        description: Comma-separated heavy lane ids satisfied by the enforced verification route.
+        required: false
+        type: string
+        default: ""
+
+      route_receipt:
+        description: Compact verification route receipt with footprint, atom counts and skip reasons.
+        required: false
+        type: string
+        default: ""
+
       producer_inspection:
         description: >-
           Run only the credential-free protected source inspection for the
@@ -158,11 +170,25 @@ jobs:
         env:
           ADMITTED: ${{ inputs.admitted }}
           LANE_NAME: ${{ matrix.name }}
+          LANE_ID: ${{ matrix.id }}
+          ROUTE_SKIPS: ${{ inputs.route_skips }}
+          ROUTE_RECEIPT: ${{ inputs.route_receipt }}
         run: |
           set -euo pipefail
           if [[ "${ADMITTED}" != "true" ]]; then
             echo "heavy admission: not admitted; ${LANE_NAME} passes without work"
             echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && ",${ROUTE_SKIPS}," == *",${LANE_ID},"* ]]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Verification route: skip-satisfied"
+              echo
+              printf 'Lane: `%s`\n\n' "$LANE_ID"
+              printf '%s\n' "$ROUTE_RECEIPT"
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 

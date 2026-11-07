@@ -41,6 +41,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -1052,6 +1053,46 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics scope", (layerIt
       expect(A.map(alone, (entry) => entry.checkout)).toEqual(["beep-effect7-worktrees/lane-b"]);
       const skipped = yield* Effect.flip(readScope(checkout("beep-effect9")));
       expect(skipped.message).toContain(".beep/yeet/runs");
+    })
+  );
+
+  layerIt.effect("reads the configured fleet roots list, the same one worktree fleet reads", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const projects = yield* fs.makeTempDirectoryScoped({ prefix: "economics-roots-" });
+      const checkout = (relative: string) => path.join(projects, relative);
+      const green53 = [started(id("53")), finished(id("53"), verdict(O.some(id("53"))))];
+      yield* writeJournal(checkout("beep-effect7"), "run-clone", green53);
+      yield* writeJournal(checkout("other-repo"), "run-other", green53);
+      yield* writeJournal(checkout("beep/seats/main"), "run-seat", green53);
+      yield* writeJournal(checkout("beep/lanes/x"), "run-lane", green53);
+      // A foreign repository under an unfiltered root is skipped by origin, as the fleet mirror skips it.
+      yield* writeJournal(checkout("beep/seats/other"), "run-foreign", green53);
+      const writeOrigin = Effect.fn("writeOrigin")(function* (relative: string, url: string) {
+        yield* fs.makeDirectory(path.join(checkout(relative), ".git"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(checkout(relative), ".git", "config"),
+          `[core]\n\tbare = false\n[remote "origin"]\n\turl = ${url}\n`
+        );
+      });
+      for (const relative of ["beep-effect7", "beep/seats/main", "beep/lanes/x"]) {
+        yield* writeOrigin(relative, "git@github.com:beep-effect/beep-effect.git");
+      }
+      yield* writeOrigin("beep/seats/other", "git@github.com:acme/other.git");
+      const roots = A.join([`${projects}/beep-effect*`, checkout("beep/seats"), checkout("beep/lanes")], ":");
+
+      const configured = yield* readScope(checkout("beep-effect7"), { fleet: true }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { BEEP_FLEET_ROOTS: roots } })
+        )
+      );
+      expect(A.map(configured, (entry) => entry.checkout)).toEqual(["beep-effect7", "beep/lanes/x", "beep/seats/main"]);
+      const derived = yield* readScope(checkout("beep-effect7"), { fleet: true }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: {} }))
+      );
+      expect(A.map(derived, (entry) => entry.checkout)).toEqual(["beep-effect7"]);
     })
   );
 

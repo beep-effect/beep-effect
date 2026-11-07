@@ -597,6 +597,60 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
   );
 });
 
+/**
+ * Plan the root manifest projection used by Turbo task inputs.
+ *
+ * **Details**
+ * Every top-level field except catalog is retained, including scripts and unknown
+ * future fields. Missing output is planned as drift so deletion cannot silently
+ * remove the dependency from task hashes. Keys are sorted before rendering.
+ *
+ * **Example** (Plan the root projection)
+ *
+ * ```ts
+ * import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * const program = TsconfigSyncPlan.planRootPackageProjectionSync("/repo")
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+const planRootPackageProjectionSync = Effect.fn("TsconfigSync.planRootPackageProjectionSync")(function* (
+  rootDir: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // Minimal fixture repositories without standards do not own this projection.
+  if (!(yield* fs.exists(path.join(rootDir, "standards")))) {
+    return O.none<PlannedFileChange>();
+  }
+  const filePath = path.join(rootDir, "standards/root-package.projection.generated.json");
+  const manifestPath = path.join(rootDir, "package.json");
+  const manifestContent = yield* readFileString(manifestPath);
+  const manifest = yield* parseJsonObject(manifestContent, manifestPath);
+  const projection = pipe(
+    R.keys(manifest),
+    A.filter((key) => key !== "catalog"),
+    A.sort(byStringAscending),
+    A.map((key) => [key, manifest[key]] as const),
+    R.fromEntries
+  );
+  const content = yield* renderBiomeJson(filePath, projection);
+  if (yield* fs.exists(filePath)) {
+    const currentContent = yield* readFileString(filePath);
+    if (Str.equivalence(currentContent, content)) {
+      return O.none<PlannedFileChange>();
+    }
+  }
+  return O.some(
+    PlannedFileChange.cases["root-package-projection"].make({
+      filePath,
+      summary: "projection: root package fields excluding catalog",
+      content,
+    })
+  );
+});
+
 const VITEST_ALIASES_FILENAME = "vitest.aliases.generated.json";
 
 const aliasPathEntriesEqual = (
@@ -1255,6 +1309,8 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
       TsconfigSyncChange.cases["package-docgen"].make({ filePath, summary }),
     "root-vitest-aliases": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["root-vitest-aliases"].make({ filePath, summary }),
+    "root-package-projection": ({ filePath, summary }): TsconfigSyncChange =>
+      TsconfigSyncChange.cases["root-package-projection"].make({ filePath, summary }),
     "root-fallow-boundaries": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["root-fallow-boundaries"].make({ filePath, summary }),
   });
@@ -1280,6 +1336,7 @@ export const TsconfigSyncPlan = {
   planPackageReferenceSync,
   planRootAliasSync,
   planRootFallowBoundarySync,
+  planRootPackageProjectionSync,
   planRootReferenceSync,
   planRootSyncpackSync,
   planRootVitestAliasSync,

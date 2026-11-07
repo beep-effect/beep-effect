@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,11 +31,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+Closed — `completed-retained`. Implementation PR
+[#2868](https://github.com/beep-effect/beep-effect/pull/2868) merged as `821f4287e2`
+over attributed S11 reds. The closeout was re-finaled through the goals-only
+[#2882](https://github.com/beep-effect/beep-effect/pull/2882) (merged `e1c960da1e`
+at `merge-ready: yes`), whose completion receipt verified, and adopted in this
+packet-state PR. The routes now serve `goals/research-intake-2026-11`.
 
 ## Latest Evidence
 
-Not started.
+- `@beep/firecrawl` driver plus native web, Box, VidBee, alphaXiv routes, hop
+  extraction and the hop-2 gate; research-library tests 196/196 green.
+- Live probes (2026-11-06): Firecrawl qualification verified on a real page; Box
+  qualification verified on one user-owned file with `DMS_BOX_USER_ID`.
+- Intake surface: [`history/intake-handoff.md`](./history/intake-handoff.md).
 
 ## Notes
 
