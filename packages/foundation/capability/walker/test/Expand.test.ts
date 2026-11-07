@@ -261,7 +261,8 @@ layer(
       }
     ),
     Path.layer
-  )
+  ),
+  { timeout: "10 seconds" }
 )("compileAndExpand strict stat forwarding", (it) => {
   it.effect("inherits the option schema and keeps the original filesystem failure", () =>
     Effect.gen(function* () {

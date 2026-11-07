@@ -142,12 +142,33 @@ this is not a dedicated guard timer, and overlap hides later guard work. Review
 identified repeated per-workspace lstat/checkIgnore calls followed by another
 combined check. The distinct revision batches source identity validation once per
 eligibility epoch while retaining initial and per-skip revalidation. It also
-anchors source globs at literal configured directories. The canonical walk stays:
-a real entry-stat refusal propagates there while glob expansion alone can omit
-the refused file. Tests cover bracket-containing roots, explicitly configured
+anchors source globs at literal configured directories. That revision kept the canonical walk because an entry-stat refusal propagated
+there while ordinary glob expansion could omit the refused file. Tests cover bracket-containing roots, explicitly configured
 node_modules roots, known missing roots, linked roots, and PermissionDenied.
-The replacement revision requires its own single artifact-present comparison
-with the unchanged performance floors; this rejected result is not acceptance.
+The batched canonical-walk revision was also rejected: **246.557 → 194.671
+seconds**, saving **51.886 seconds (21.044%)**. Its three alternating warm pairs
+were worse: baseline median **30.384 seconds**, candidate **44.999 seconds**,
+a **14.616-second (48.104%) regression**. Baseline selected tasks were genuine
+local cache hits. The warm guardrail, declared before those measurements, allows
+at most the larger of five seconds and five percent of baseline median. Cold
+and warm requirements both apply; warm diagnostics cannot rescue failed cold
+qualification.
+
+The final bounded attempt adds an optional strict stat-error policy to the
+existing walker and FsUtils glob API. Default callers retain skip behavior.
+Opting into `onStatError: "fail"` propagates non-NotFound filesystem errors with
+the original typed cause, including errors for listed nonmatching and pruned
+entries. The selector uses this policy and removes its duplicate canonical walk;
+literal source-directory anchoring, source roots, lexical ancestor checks,
+metadata ordering and initial/per-skip identity fences remain. Independent review
+found no observed blocker. This distinct source still requires its own cold and
+warm qualification before any performance claim or readiness declaration.
+
+Its first baseline was invalidated by four introduced EV014 findings in the new
+shared-package tests: test layers lacked explicit hook timeouts. The run was
+stopped, its owned process tree terminated, and the four declarations were fixed
+without changing production code, scanner inventories or policy floors. That
+partial run is excluded from performance evidence.
 
 A separate representative attempt was invalidated by introduced EV006 in a new
 test's Option matcher. It was corrected to the canonical assertion on the

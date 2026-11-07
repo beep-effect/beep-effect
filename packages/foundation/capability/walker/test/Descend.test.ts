@@ -851,7 +851,7 @@ for (const reason of ["PermissionDenied", "Unknown", "NotFound"] as const) {
       ),
       Path.layer
     );
-    layer(faultLayer)(`descend stat policy: ${label}, ${reason}`, (it) => {
+    layer(faultLayer, { timeout: "10 seconds" })(`descend stat policy: ${label}, ${reason}`, (it) => {
       it.effect("keeps omission equivalent to skip and makes strict stat independent of unreadable mode", () =>
         Effect.gen(function* () {
           const pattern = yield* GlobPattern.compile(source);
@@ -888,7 +888,8 @@ layer(
   platformWith(
     { "/proj/src/lib/util.ts": "" },
     { symlinks: { "/proj/src/back": "/proj/src", "/proj/src/gone.ts": "/missing" } }
-  )
+  ),
+  { timeout: "10 seconds" }
 )("descend strict stat policy: symlinks and depth", (it) => {
   it.effect("keeps cycle safety, dangling links and depth failures intact", () =>
     Effect.gen(function* () {

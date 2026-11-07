@@ -216,7 +216,7 @@ for (const reason of ["PermissionDenied", "Unknown", "NotFound"] as const) {
       )
     )
   );
-  rootIt.layer(faultLayer)(`FsUtils strict stat propagation: ${reason}`, (it) => {
+  rootIt.layer(faultLayer, { timeout: "10 seconds" })(`FsUtils strict stat propagation: ${reason}`, (it) => {
     it.effect("preserves default skipping and forwards the strict option through expansion", () =>
       Effect.gen(function* () {
         const utils = yield* FsUtils;
