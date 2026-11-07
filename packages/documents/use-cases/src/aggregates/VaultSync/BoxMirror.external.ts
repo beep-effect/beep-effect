@@ -43,7 +43,9 @@ export class BoxMirrorUnavailable extends S.TaggedError<BoxMirrorUnavailable, { 
 ) {}
 const destination = { destinationId: V.DestinationId };
 const remote = { remoteId: V.RemoteItemId };
-const upload = { ...destination, path: V.VaultRelPath, digest: S.String, parentRemoteId: V.RemoteItemId };
+const mutation = { ...destination, operationId: V.OperationId, passId: S.NonEmptyString, generation: S.Int };
+const receipt = { ...remote, name: S.String, parentRemoteId: S.NullOr(V.RemoteItemId) };
+const upload = { ...mutation, path: V.VaultRelPath, digest: S.String, parentRemoteId: V.RemoteItemId };
 const error = BoxMirrorUnavailable;
 /**
  * Calls to Box accept path/digest references; adapters read bytes at invocation time.
@@ -59,18 +61,26 @@ const error = BoxMirrorUnavailable;
 export class BoxMirror extends Domain.ExternalSystem("BoxMirror", {
   resolveRoot: { args: { ...destination, name: S.NonEmptyString }, success: remote, error },
   ensureFolder: {
-    args: { ...destination, path: V.VaultRelPath, parentRemoteId: V.RemoteItemId },
-    success: remote,
+    args: { ...mutation, path: V.VaultRelPath, parentRemoteId: V.RemoteItemId },
+    success: receipt,
     error,
   },
-  uploadFile: { args: upload, success: remote, error },
+  uploadFile: { args: upload, success: receipt, error },
   uploadFileVersion: {
-    args: { ...destination, ...remote, path: V.VaultRelPath, digest: S.String },
-    success: remote,
+    args: { ...mutation, ...remote, path: V.VaultRelPath, digest: S.String },
+    success: receipt,
     error,
   },
-  moveItem: { args: { ...destination, ...remote, parentRemoteId: V.RemoteItemId }, success: remote, error },
-  renameItem: { args: { ...destination, ...remote, name: S.NonEmptyString }, success: remote, error },
+  moveItem: {
+    args: { ...mutation, ...remote, itemKind: V.SyncItemKind, parentRemoteId: V.RemoteItemId },
+    success: receipt,
+    error,
+  },
+  renameItem: {
+    args: { ...mutation, ...remote, itemKind: V.SyncItemKind, name: S.NonEmptyString },
+    success: receipt,
+    error,
+  },
   pollEvents: {
     args: { ...destination, position: S.NullOr(S.String) },
     success: {
@@ -78,7 +88,9 @@ export class BoxMirror extends Domain.ExternalSystem("BoxMirror", {
       events: S.Array(
         S.Struct({
           remoteEventId: S.String,
-          remoteId: V.RemoteItemId,
+          remoteId: S.NullOr(V.RemoteItemId),
+          name: S.NullOr(S.String),
+          parentRemoteId: S.NullOr(V.RemoteItemId),
           kind: S.String,
           evidence: V.RemoteEvidence,
         })

@@ -40,6 +40,8 @@
     "research/03-current-vault-sync-flows.md",
     "research/04-vault-sync-domain-design.md",
     "research/05-pr3a-handoff.md",
+    "research/06-api-session-design.md",
+    "research/07-cutover-design.md",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/cache-baseline-request-pr2a.json",

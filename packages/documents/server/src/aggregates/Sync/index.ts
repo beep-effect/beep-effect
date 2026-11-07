@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+export * from "./BoxMirror.ts";
 /**
  * Box-backed DMS mirror adapter exports.
  *
@@ -33,3 +34,4 @@ export * from "./VaultSync.config.ts";
  * @since 0.0.0
  */
 export * from "./VaultSyncEngine.service.ts";
+export * from "./VaultSyncPass.saga-handlers.ts";
