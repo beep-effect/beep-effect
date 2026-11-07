@@ -315,7 +315,11 @@
     "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
     "packages/law-practice/server/test/CitationCanonicalAnnotation.test.ts",
     "packages/law-practice/use-cases/src/internal/citationOracleLedgers.ts",
-    "goals/citation-extraction-engine/history/evidence/2026-11-07-default-engine-corpus.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-default-engine-corpus.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-extraction-corpus.md",
+    "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+    "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+    "packages/law-practice/server/test/integration/CitationCanonicalExtraction.test.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

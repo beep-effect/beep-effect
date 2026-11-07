@@ -1661,6 +1661,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert only the documentation tag/lead normalization; this reopens the observed hosted since/blank findings and does not change runtime semantics.
 
+### Replay every original builtin find-citations input through the default engine, 2026-11-07
+
+Add all 130 original builtin Tokenizer inputs from the canonical assertion capture to the default public engine replay. Thirteen ten-document shards per runtime cover the full set in hosted integration; focused tests run the first two cases. Compare independent expected citation kinds/components/metadata and original observed primary spans. Alternate tokenizers and unrepresented methods remain separate obligations; no case is promoted on scheduled tests. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the new replay only if its projection is unsound; preserve original cases and report any failing source outcome without changing its expectation.
+
 ### Replay public resolution groups and require explicit identity ownership, 2026-11-07
 
 The public resolver replays all thirty original default operation groups across ninety-four mentions. This exposed omitted short-case selected editions, now authenticated as case editions, and an absent missing-page identity owner. The Layer now explicitly requires the existing identity factory at installation. Test identity values are controlled; production allocation and exact native hash proof remain open. Fourteen public/private regression tests pass; no source expectation or semantic waiver changes. See history/evidence/2026-11-07-public-resolution-groups.md.

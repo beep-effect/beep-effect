@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "d1cd5dc68cd16cbb9bb2b9920fd32af7aa249b6e8dac5bc81535a548884053af",
+  "planSha256": "02f00400408ed196ad429e969372746482c63831b063b239eaecae182e6ff2de",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1084,7 +1084,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
-          "sha256": "180a466cf976f92b250860aa8e984b02a488e73c2de1ecd4217d74d5653f5799"
+          "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticExtraction.test.ts",
@@ -1769,6 +1769,22 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-default-engine-corpus.md",
           "sha256": "003d69451ef60a33c549e75527a883c53b89e0f38de2d884e4c01a2868971076"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-extraction-corpus.md",
+          "sha256": "d979d5ed3dfdca9321448e3424e51b244e05bef8e6e95c53523e04618498fc18"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+          "sha256": "3fba3493506733c586a21a81aa5a6f6982a59d5d5d6d4067a1dedab454a0d0dc"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+          "sha256": "2debe66d2197bc54a98b3388fcf6e53296e0b9620e5f26e11911520d75648d51"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationCanonicalExtraction.test.ts",
+          "sha256": "a0f6d5cb1dc0024c534fc604b0cbe5767fa0a8cfde5bca40cdcc6ee3c151f434"
         }
       ],
       "workflowState": "audit",
