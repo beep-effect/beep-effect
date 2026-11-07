@@ -192,6 +192,22 @@ Lane `feat/research-intake-2026-11`
 
 Reverse: Exclude the 2026-11-06 nightly from the snapshot by re-inventorying with a date filter; objects and receipts are additive
 
+### Unfetchable hop-1 identities get rule-classified reviewed dispositions, one rule per evidence class, 2026-11-07
+
+891 November hop-1 identities were not fetchable: 449 internal and 423 unresolved kinds (mostly paths and tokens inside the private archive's repo snapshot) and 19 X posts. Each got a reviewed disposition whose evidence binds every inventoried occurrence (document snapshot hash, position, context hash). Rules: relative and repository paths, Effect/@beep module specifiers and in-bundle document anchors are internal when the source is internally owned and non-reference otherwise (the importer admits internal only for internal ownership); slash tokens with no scheme or host and truncated URLs are non-reference; X posts are incomplete (SPEC non-goal); two Hugging Face dataset ids cited without a host are tool-blocked because reference resolution admits only GitHub proofs. 90 owner/name-shaped tokens were read individually before the rule applied. Rejected: leaving them missing (fails the readable-or-disposed criterion) and resolving them through web search (no authentic proof object).
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Delete the 891 reviewed-disposition captures by their review ids and re-run the generator with different rules; the sources and occurrences are untouched
+
+### The legal-ontology pile is its own private intake; off-topic strays are dispositioned by reviewed T1 skips, 2026-11-07
+
+The 449 IP_LAW_ONTOLOGY_RESEARCH PDFs were downloaded by explicit Box file id (449 readable, 0 byte-identical duplicates, 337.6 MB), staged under the library and inventoried as a separate intake from a private root, so they stay out of rendered views and Junie or Cursor lanes. T1 on gpt-6-luna: 379 select, 69 skip, 1 unreadable PDF (no text). The 69 skips are off-topic strays (pharmacology, hardware design, energy economics); the orchestrator reviewed the skip reasons. The library's non-reference disposition admits only unresolved or internal sources and these are captured docs sources, so the reviewed T1 skip record is the disposition and nothing is deleted. No T2 reads (SPEC non-goal; re-entry is the exploration's legal-ontology-pile-deep-read candidate).
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Re-inventory the staged PDFs with --input to make the intake public, or import explicit dispositions if the validator later admits captured docs sources
+
 ### Restore the library from the pre-intake backup after the hop-scope defect, then re-run hop 0, 2026-11-07
 
 The first hop-0 inventory wrote hop-1 and hop-2 derivations against the four October intake ids (0 before, about 90k each after), which the SPEC forbids as an edit to October accounting. A reflink backup of the library was taken before the intake's first write, and only this goal's Box acquisition and inventory had written since, so the library was restored from that backup rather than pruned edge by edge. Box acquisition, staging and inventory were then re-run on code that derives hops only for the recorded intake. Rejected: deleting the October-keyed edges in place (no tested prune path, and the catalog history would still carry them).
@@ -215,6 +231,14 @@ The acceptance check named a git grep on the archive's message ids and participa
 Lane `feat/research-intake-2026-11`
 
 Reverse: Return to a literal whole-tree git grep on the handle after removing the pre-existing public references, or widen the guard's diff base
+
+### T2 runs Junie on public artifacts and Codex gpt-6.1-sol on private ones; Claude children are rate limited, 2026-11-07
+
+T1 selected 1187 of 1434 November artifacts (241 skip, 6 defer). The pool doctrine puts T2 on Junie claude-opus-5-5 while JetBrains credits remain, then claude-opus-5-5 children. Private artifacts may not go to Junie (enforced by the runner), and two Claude Opus children failed on 2026-11-07 with a confirmed API rate limit, so the private 400 run on the Claude chain's next step, Codex gpt-6.1-sol medium, through a new codex-sol profile. --only-private and --exclude-private keep the two runs disjoint, and the writer lock now serializes their catalog writes. Both routes were qualified by one live read each before the batch (Junie 6 findings, codex-sol 12).
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Re-run the private partition with --profile claude once the Claude limit resets; records are keyed per artifact so a re-read replaces nothing silently
 
 ### verify acceptance counts this intake's sources; the October missing=5 baseline is reported, not repaired, 2026-11-07
 
