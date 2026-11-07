@@ -1,171 +1,160 @@
-# PR 3b part 2 local implementation handoff
+# PR 3b part 2 handoff: single-writer cutover
 
-Branch: `goals/alchemy-vault-sync-cutover`.
-Publication owner: the orchestrator. Local commits only; no push or PR creation.
+Branch: `goals/vault-sync-cutover`, created from `goals/alchemy-vault-sync-cutover`
+at `70e5e374dcb` (the earlier lane's partial work). The Opus 5.5 fallback lane
+(Codex hit its usage limit) finished it. Publication owner: the orchestrator.
+Local commits only; no push, PR, Yeet, readiness or monitor ran.
 
-**Status: partial implementation. This is not completed PR 3b2 and must not be
-published as the completed single-writer cutover.** Offline backup, genesis,
-replay/diff and the OS process-kill proof landed. Production activation, writer
-epoch enforcement, writer deletion and post-admission reversal remain unfinished.
-No actual application database, client content or Box account was accessed.
+**Status: content-final.** All five required items are closed in code and tests,
+and the PR 3c seam (mount, membership, semantics note) is integrated. The
+earlier lane's offline backup, genesis, replay/diff, redelivery and SIGKILL
+receipts are unchanged and still pass. What stays open is listed at the end with
+its owner; none of it blocks publication of this change.
 
-## Stack and commit ordering
+## Commits on top of `70e5e374dcb`
 
-Created from `goals/alchemy-vault-sync-saga` at `68763f20fe2`, then merged
-`origin/main` at `0729e466e20` before source changes. The requested final merge
-of the local saga branch reported already up to date at that same saga head.
+| Commit | Content |
+| --- | --- |
+| `7011ed83609` | Writer-epoch fence, startup admission and tested post-admission reversal. Lands before any deletion. |
+| `2f563df6cdd` | D7 change: delete the drizzle writer, make the Model the writer in the server and desktop Layers, read-only query service for every legacy reader. |
+| `aa1767718cd` | Merge `origin/main` (#2863 PR 2b). Driver files taken from main; boundaries and cache subjects re-recorded. |
+| `802a6e68c48` | Merge `goals/vault-sync-api` (PR 3c, `a6eee3aafb9`) and complete its seam: Api-served RPCs and transport on the sidecar, `shared_membership` migration, owner seed, BoxMirror claim fix. |
+| `1466498fbda` | Model rows projected into their own workspace; coverage restored with direct tests; inventories. |
+| (this commit and the final main merge) | Handoff marked content-final; merge of `origin/main` at `7b9cd215f63` (#2885, docs only). |
 
-The recovery primitive was committed first as `e194bf2c768`, before the genesis
-implementation commit `5f78fd309a1`. Neither commit activates a new writer.
-Subsequent commits strengthen provenance, cursor replay and OS crash acceptance.
-All normal commit hooks ran after installing the fresh checkout's dependencies.
+## The five items
 
-## What landed
+1. **Writer epoch.** `SyncWriterEpoch.service.ts` persists `documents_sync_writer_epoch`
+   (legacy, migrating or model; reversal generation; admitted import id) and
+   arms a statement-level trigger on the four tables. Under `migrating`/`model`
+   any transaction without the `beep.documents_sync_writer = model` marker is
+   refused; under `legacy` the marker is refused. Only the projections set it,
+   inside their checkpoint transactions; cutover procedures use `cutover`. An
+   older sidecar build is refused by the database, not by a check it lacks:
+   `SyncCutoverAdmission.pglite.test.ts` boots the real drizzle migrations,
+   admits, then shows raw SQL, ORM-generated SQL and a re-run of the old
+   migrations all fail while the Model keeps writing. New entry points use
+   `requireSyncWriterEpoch`, failing with the typed `SyncWriterEpochRejected`.
+2. **Post-admission reversal.** `reverseSyncCutover` takes the projection-to-legacy
+   route from research/07 section 7 (decision file
+   `2026-11-07-reverse-an-admitted-store-from-the-current-projection-not-the-pre-cutover-backup.md`).
+   It refuses while a Box intent is unsettled or a projection is behind,
+   snapshots the four tables to `*_reversal_backup`, verifies a zero diff,
+   requeues orphaned leases (recording their ids), advances each sequence past
+   every table and D14 allocator id, and records the legacy epoch with the next
+   generation. The same test admits, writes and leases through the Model,
+   proves the uncertain-intent refusal, reverses, and shows the tables equal
+   the projected state except exactly the three recorded lease columns, the
+   legacy writer inserts and updates again above every Model id, and the Model
+   can neither resume nor write.
+3. **Legacy writer deleted.** Gone: `VaultSyncEngine.service.ts`, the reconcile,
+   push, drift and review modules, `VaultSync.config.ts`, the four server
+   repository implementations (drizzle and in-memory) and `RepoSupport.ts`, the
+   four use-cases repository ports, the `VaultSyncEngine` port and its inputs,
+   the desktop `VaultSyncOrchestrator`, and their tests. A source search for
+   repository mutators, `toSync*Insert` and `insert`/`update` on the four tables
+   finds only the fence test's deliberate old-build emulation and db-admin's
+   DDL proof. Entity-kit freeze baseline shrank 64 → 55 importers (zero findings);
+   coverage rows of deleted files were dropped; dead push-record and scan-state
+   schemas were removed.
+4. **Server and sidecar Layers.** `DocumentsVaultSyncLive` hosts `VaultSyncPassModel`
+   (policies including PR 3c's `VaultSyncRequests`, the pass saga, BoxMirror,
+   SQL projections) on `AlchemyPostgres.layer()` with `LegacySyncAuditLive`, the
+   no-evidence BoxMirror resolver and `VaultSyncRootFromWorkspaceLive`. The
+   layer finishes building only after `ensureSyncCutover` runs genesis and
+   admission (a no-op on an admitted store, idempotent after a crash in
+   `migrating`, refusing a reversed store). The desktop's `PgliteDrizzleLive`
+   now also outputs `SqlClient`, so the Model shares the sidecar PGlite.
+   `VaultSyncRuntime.pglite.test.ts` proves startup admission, a restart with no
+   second genesis, and the fence against legacy writes on the real composition.
+5. **Consumers.** Research/03 section 6 readers: the desktop RPCs, now served by
+   PR 3c's `VaultSyncRpcsApiLive`, read conflicts through `LegacySyncReadModel`
+   (the legacy row decoders, unchanged entities and D14 ids); the db-admin target
+   and desktop bundle keep the four table contracts unchanged (D15); the
+   schema-parity test passes. The runtime test drives the four RPCs end to end:
+   numeric conflict id 88 and item id 57 survive genesis, review by numeric id
+   reaches the projected row, a pass's new item and operation join through D14
+   ids above the legacy maximum, and a foreign workspace is refused.
 
-- `SyncCutover.service.ts`: transactional offline backup of every column in all
-  four legacy tables, plus serial sequence `last_value` and `is_called`.
-  The first backup is immutable per import id. A different import is refused;
-  repeated backup and repeated restoration are harmless. The tested reversal is
-  **pre-admission only**. It does not claim to restore accepted post-cutover work.
-- `LegacySync.schema.ts`: four complete physical SQL row schemas, including
-  deletion audit columns from the later audit migration. SQL nulls, JSON values,
-  arbitrary stored idempotency keys, timestamps and numeric identities are retained.
-- `SyncGenesis.command.ts`: restricted import commands and v1 genesis events on
-  the existing destination, item, operation and conflict aggregates. Cursor
-  genesis events belong to the destination. Genesis tags are excluded from live
-  queue/revive/review policies; imports hydrate the aggregate snapshots and Views.
-- `SyncGenesis.service.ts`: reads the immutable backup, hashes the validated
-  snapshot plus configured mirror-root name, seeds all D14 numeric mappings
-  before dependent sends, and uses deterministic per-row command ids. It creates
-  one destination per legacy workspace/Box pair and retains the actual remote root
-  separately from the unique display name. Workspace authority and request
-  provenance come from `LegacySyncAudit`, not an interactive current-user service.
-- Duplicate cursors and duplicate paths/dangling item references pause imported
-  destinations. Every duplicate cursor is a separate v1 fact and projected row.
-  A single cursor is selected without regenerating its public or numeric id.
-  Leased imports retain their old status and attempt count, with expired aggregate
-  lease metadata. They are not requeued before baseline comparison.
-- `LegacySync.projection.ts`: full historical row restoration and identity seeding
-  during replay; allocator advancement beyond seeded ids; selected cursor identity
-  retention; duplicate-cursor polling refusal; compatibility rowVersion increments
-  from the imported value rather than resetting to aggregate sequence numbers.
-- `VaultSyncPass.saga-handlers.ts`: root resolution honors the independently
-  retained legacy remote-root name.
-- `VaultSyncProcessCrash.test.ts` and `fixtures/VaultSyncCrash.child.ts`: the real
-  child runs the saga and BoxMirror receipt adapter over file-backed PGlite.
-  It signals only after an item acknowledgement and a database CHECKPOINT, then
-  waits. The parent sends SIGKILL, waits for termination, and launches a new child
-  over the same data directory. A separate file records synthetic remote calls.
+## PR 3c seam (integrated here)
 
-## Zero-diff acceptance evidence
+- **Mount.** `RuntimeLive` and `RuntimeTest` serve `VaultSyncRpcsApiLive` over
+  `VaultSyncSessionLive`, the sidecar channel adapter, the desktop binding and
+  live membership. `server/main.ts` mounts `makeVaultSyncTransportLayer` beside
+  the ontology MCP when a launch token is set; both use the one exported
+  `VaultSyncDesktopHostLive`, so memoization hosts a single Model. If admission
+  refuses, the RPCs answer "Vault sync is in maintenance." and the transport is
+  not mounted; the rest of the sidecar serves. The launch-token config moved to
+  `src/runtime/SessionToken.ts` and the desktop binding to
+  `src/sync/VaultSyncSession.ts` so `src` keeps not importing `server`.
+- **Membership.** `shared_membership` is added through db-admin's drizzle tooling
+  (`20261107120500_shared_membership`; `@beep/shared-tables` dependency), the
+  desktop bundle was regenerated with `codegen`, and `migrations:check` is clean.
+  drizzle-kit is forward-only, so the folder carries `down.sql`;
+  `SharedMembershipMigration.pglite.test.ts` proves up, down, up. The owner seed
+  is not in the shared migration (server Postgres replays it): the desktop
+  bootstrap calls `ensureVaultSyncOwnerMembership(1, 1)` with a deterministic
+  public id, so restarts add nothing and a revoked row stays revoked. The
+  bootstrap also registers workspace 1's destination, which the Api needs to map
+  a fresh workspace.
+- **Semantics.** TriggerVaultSync and the forced probe now answer at acceptance.
+  The panel (`Sync.atoms.ts`) invalidates its status and conflict reactivity
+  keys when the RPC returns, so it does re-read, but at acceptance: counts
+  reflect the finished pass only on the next read (another action or a
+  remount). No polling or completion signal exists yet.
 
-`SyncGenesis.pglite.test.ts` uses the actual baseline SQL and subsequent audit
-soft-delete migration for the four tables. The fixture contains **39 legacy rows**:
-4 items, 20 operations, 12 conflicts, and 3 cursors across two workspaces.
-It emits **41 v1 genesis events**, including two synthetic destinations.
+## Defects found and fixed in this change
 
-Covered data includes every item state, both item kinds, every operation type
-crossed with queued/leased/succeeded/failed, all six conflict kinds crossed with
-open/reviewed, linked/unlinked conflicts, active/error cursors, duplicate cursor
-rows, null/populated audit columns, soft deletions, arbitrary stored keys,
-non-default rowVersion, historical attempt counts, mismatched current/last-pushed
-watermarks, and numeric ids unrelated to public-id suffixes. Legacy org 1 remains
-in SQL while authoritative destination ownership uses the audit resolver's org 17.
+- Projected rows written by the Model got `workspace_id = 0`, invisible to
+  every legacy reader. Handlers now write the workspace from their event state.
+- Projected rows carried the table name as `entity_type`; legacy decoders
+  require the identity entity type (`DocumentsSyncItem`). Fixed in the
+  projection.
+- BoxMirror turned a local read failure (stale input, missing root) into an
+  unsettled "uncertain" intent, holding the operation forever and blocking
+  reversal. The claim is now released and the local error surfaced; only
+  failures that may have reached Box stay held.
+- `syncOnce` (before the swap) returned status before projections caught up.
+  Superseded by the swap; the projection catch-up helper remains.
 
-The test interrupts a half-completed import, resumes it, runs it again, and checks
-stable event counts and provenance (`principal`, `source_kind`, `schema_version`).
-It then removes all projected rows and identity mappings and rebuilds with the real
-Postgres Platform and projection host. **The all-column comparison returns zero
-differences.** No Box service or live policy is present during import/replay.
+## Verification
 
-`LegacySyncReplay.harness.ts` is reusable. It checks each table's physical column
-set against its row contract and uses a full outer join plus every JSONB row key
-to report table/id/column/expected/actual differences. JSON object key order is
-normalized by PostgreSQL; string whitespace and payload values remain significant.
-A negative perturbation of rowVersion and lastPushedGeneration produces exactly
-those two differences. Post-genesis cursor updates retain id/publicId/createdAt,
-increment the historical rowVersion, and update only the selected cursor.
-Forced redelivery of accepted projection inputs retains the same rows and diff.
+| Gate | Result |
+| --- | --- |
+| documents-server tests | 102 passed, 18 files |
+| documents-use-cases tests | 54 passed, 7 files |
+| documents-domain tests | 49 passed, 11 files |
+| professional-desktop unit tests (coverage run) | 287 passed, 55 files; sidecar smoke integration passed |
+| db-admin tests (coverage run) | 23 passed, 11 files, including the membership up/down proof |
+| Coverage write, five packages, `--add-missing-files-only` | ok, all committed floors retained |
+| Coverage regression gate | documents-server ok after the restoring tests; the five-package run flagged only server rows, now fixed |
+| Entity-kit freeze `--check` | 0 findings, 55 importers |
+| effect-vitest full scan | introduced 0; branch-file exceptions carry owner and exit reasons |
+| Cache policy audit | 0 blocking; requests `cache-baseline-request-pr3b2-main.json`, `cache-baseline-request-pr3b2-api.json` |
+| db-admin `migrations:check`, desktop `codegen` | clean, bundle refreshed |
+| `quality package-verify` (full: lint, audit, docgen) | pass: documents-server, documents-use-cases, documents-domain, db-admin, professional-desktop |
 
-This is synthetic local PGlite proof. It is not a migration of a real user's store,
-a full every-live-handler compatibility matrix, or production admission proof.
+No repository-wide gate, hosted CI, real Postgres, live Box, packaged desktop
+build or browser QA ran.
 
-## Process-kill acceptance evidence
+## Still open (none blocks this change)
 
-The process test passes with sequential ownership of one file-backed PGlite store;
-no DB_PG_URL fallback was necessary. The first Bun process is killed mid-pump
-with SIGKILL. The second completes the same pass with two successful uploads.
-The independent synthetic remote ledger contains exactly `a.txt` then `b.txt`,
-with one call each. This strengthens the existing runtime-scope teardown tests.
-
-It proves this specified checkpoint/restart boundary. It does not claim arbitrary
-Box network requests become transactional with SQL. The existing uncertain-outcome
-hold and evidence-settlement requirements from part 1 remain in force.
-
-## Verification and repository metadata
-
-- Full package verification passed for documents-domain, documents-use-cases and
-  documents-server: lint, audit/build/type checks and docgen.
-- The domain suite has 45 passing tests in 9 files; use-cases has 73 in 10 files;
-  server has 173 in 21 files, including the three new acceptance tests.
-- Domain coverage regression gate passed: lines 96.34, statements 94.26,
-  branches 67.50, functions 95.80. Use-cases retains 100 in all four metrics.
-- New source coverage identities were generated with add-missing-files-only.
-  A recursive comparison against the saga baseline found zero lowered existing
-  package or file floors. Earlier projection statement regressions were repaired
-  by testing forced redelivery rather than lowering its floor.
-- Entity-kit freeze check passed: 64 importers, zero findings. No old importer was
-  deleted because writer deletion is unfinished, so the freeze baseline did not shrink.
-- No new dependency was added in part 2. `bun install` repaired fresh-checkout
-  dependencies; part 1's manifests and tsconfig-sync output were retained.
-- Main's repaired cache baseline was retained, then only the twelve remaining
-  stack dependency subjects were re-recorded through the reviewed request in
-  `cache-baseline-request-pr3b2.json`. Cache policy reports zero blocking findings.
-- Decisions and research manifest were regenerated through the goal tooling.
-  `git diff --check` passed.
-- Mandatory harness inbox acknowledgement commands were used for repaired local
-  verifier failures despite the no-Yeet task instruction. No Yeet repair, publish,
-  ready, monitor, open or other publication workflow ran.
-
-No repository-wide build/check/lint battery, hosted CI, independent review panel,
-real Postgres, live Box or desktop runtime acceptance ran. The canonical scoped
-schema-first/effect-vitest adapter was not rerun in this lane; package verification
-is the recorded lint/type/docgen proof.
-
-## Remaining required implementation
-
-1. Implement the persistent writer-epoch state machine and startup compatibility
-   refusal. An old executable has no knowledge of a newly added check; prove the
-   actual older executable cannot resume its writer against a migrated store.
-   Add the database stale-writer refusal boundary as well as new-startup checks.
-2. Land and test post-admission reversal using a current high-water projection
-   and retained event/workflow state. The current restore helper restores only
-   the pre-import backup and must not be used after new commands are admitted.
-3. Add the real offline host: enforce stopped workers/admission, resume receipts,
-   bounded/keyset batches, complete up-front validation, destination name
-   reservations, active duplicate-cursor selection/repair, migration tooling and
-   desktop bundle generation. The current importer documents offline hosting
-   requirements; it does not establish an application maintenance state itself.
-4. Delete every old CRUD mutation implementation/port/test now owned by the Model,
-   switch the server and desktop Layers in that same change, and update desktop
-   dispatch/read consumers. No legacy writer or app Layer was removed here.
-5. Complete the compatibility matrix for every post-genesis reducer, invalid
-   snapshots, near-limit JSON payloads, duplicate paths, dangling references,
-   explicit replay-generation bumps and injected projection transaction failures.
-   Do not interpret the current broad fixture as all of those separate proofs.
-6. Reconcile the saga's destination/pass admission fence and legacy recovery
-   behavior with the cutover design before enabling production workers.
-
-The external table readers identified in research/03 section 6 still see their
-existing contracts because this change retains all four tables. Desktop wiring,
-migration-bundle refresh and writer retirement are still required; no consumer
-cutover acceptance is claimed. The epoch hold decision is an explicit incomplete
-implementation receipt, not approval to omit these requirements.
-
-## Findings outside changed files
-
-No unrelated product file was changed. The global cache repair was already on
-main; the twelve stack-local remaining subjects were repaired in this branch.
-Fresh-checkout hook resolution and proof-tool friction are recorded in the
-packet's OPPORTUNITIES ledger. Production authority, migration host and application
-wiring remain with the unfinished cutover work described above.
+- **Panel completion signal.** After the swap the panel re-reads at acceptance
+  only. Owner: PR 3c / UI follow-on; the natural fix is subscribing to the
+  status View stream the Api already serves.
+- **Review corrections.** The compat review sends `correction: null`; the legacy
+  engine requeued a corrective operation for remote move/rename conflicts. The
+  ConflictReviews/ItemHealing policies return the item to pending instead.
+  Owner: PR 3c (Api review semantics).
+- **Real stores.** Genesis runs in-process at startup over the whole snapshot
+  (no keyset batching or separate offline host). Acceptance is on synthetic
+  PGlite stores; no real user store, packaged desktop upgrade or real Postgres
+  multi-host lease test ran. The JSDoc documentation inventory was not
+  regenerated: a full run rewrites 127k lines of unrelated drift; it is a
+  final-check refresh file.
+- **Provider evidence.** `BoxMirrorNoEvidenceLive` still answers no evidence, so a
+  genuinely interrupted upload stays held until Box offers verified lookup
+  (unchanged decision `2026-11-07-uncertain-box-mutation.md`).
+- **IPC mode.** An IPC sidecar mounts no HTTP, so the remote CLI cannot reach it
+  (PR 3c note); the desktop binding in that mode uses a placeholder token no
+  transport accepts.
