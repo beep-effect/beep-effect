@@ -1344,6 +1344,17 @@ PR #2826 unit/property failures exposed stale cache/env assertions, a staged Git
 ### Avoid positional cross-plan expectations, 2026-11-07
 
 PR #2826 hosted repo-cli-2 left one introduced failure: the full-plan assertion borrowed seventeen entries from the changed-scope plan, accidentally including five documentation tasks after discovery routing changed. Replace the borrowed prefix with an explicit full-scope sequence, retaining all five held discovery tasks and the separate unfiltered-selection assertions. Hosted logs report 1,993 passed and one failed test in this shard; no complete-suite success is claimed. No local quality suite was run.
+## Storybook mixed source and declaration contexts, 2026-11-07
+
+Heavy / Check job 128225577677 on #2826 executed merge 5541cb724 with accepted base b0c9bab1. Fresh md and editor checks completed, while Storybook rejected TaskItem/TaskList constructors and an unknown Effect context in the unchanged editor-viewer story. Storybook maps Markdown and Lexical models to source but leaves their shared schema helpers outside that source mapping; editor stories inherit the root schema source mapping. Align Storybook's schema root and leaf aliases with that source context. This is a source-based repair candidate; hosted CI must establish whether it resolves the failures. No constructor, story, diagnostic, threshold or test expectation is suppressed, and no local quality suite ran. No matching open fix or unblocks-main PR was found at the initial inventory.
+
+### Controlled Storybook resolution comparison, 2026-11-07
+
+The earlier cached-failure/fresh-success jobs differed in two declared configuration inputs across the reviewed 693-path build dependency set. They are not a matched experiment. On draft PR #2827, temporarily remove only the candidate schema source aliases and request plain compiler diagnostics; retain all prerequisite source, dependency, workflow and cache permissions. The original resolution configuration otherwise matches accepted main. Use existing hosted CI, retain the candidate successful Check log, and join actual prerequisite hashes/origins and runtime/source identities before attributing the result. Restore the candidate after this bounded comparison; a non-reproduction remains unresolved. No local compiler or quality suite, new job, capacity or credential is introduced.
+
+### Prefer executed merge identity over the event base field, 2026-11-07
+
+The original-resolution control passed, but its actual checkout merged into d8f335ca while the event still carried b0c9bab1. The saved candidate ran on b0c9bab1. Their manifests, lockfiles and prerequisite hashes differ, so branch-only matched native plans do not establish a matched hosted experiment. Withdraw the unproven aliases, retain source-bound observations, and require an executed-merge/workflow/profile join for full qualification. This does not resolve the historical cause or grant reuse.
 ## Recipe fixture left an unused outer task constant, 2026-11-06
 
 Heavy / Check job 128224640320 on #2824 reported TS6133 at cache-pilot-orchestration.test.ts:114. The parameterized fixture owns its selected task locally, leaving the former identity-only constant unused. Remove only that superseded outer constant. Preserve all fixture branches and authored controls. The failing hosted log is retained against its exact revision; no local suite ran.

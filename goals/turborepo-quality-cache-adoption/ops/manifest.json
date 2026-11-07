@@ -212,6 +212,8 @@
     "research/source-capture-permission-mode-2026-11-03.json",
     "research/source-capture-prefix-controls-2026-11-03.json",
     "research/source-capture-shared-availability-2026-11-03.json",
+    "research/storybook-declaration-context-observations-2026-11-07.json",
+    "research/storybook-declaration-context-observations-2026-11-07.md",
     "research/task-descriptions-feature-review.json",
     "research/test_cargo_review_integrity.py",
     "research/test_selection_invoke_compatibility.py",

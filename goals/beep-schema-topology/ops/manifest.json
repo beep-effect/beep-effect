@@ -202,5 +202,13 @@
     "grandfatheredNote": "The topology migration completed on 2026-05-22 in commit 0ceefb484f, before the 2026-06-30 completion gate; the 2026-07-11 packet edit was administrative closeout only."
   },
   "lifecycle": "completed-retained",
-  "packetPath": "goals/beep-schema-topology"
+  "packetPath": "goals/beep-schema-topology",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/beep-schema-topology",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "2569ce4b09a0c3e0d9667c237ef25b8f1e99f964",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

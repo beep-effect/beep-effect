@@ -53,7 +53,7 @@ Higher sources outrank lower sources when they conflict.
 ## Blocking Dependency
 
 P0 research may begin immediately. P1 is blocked until
-[`citation-verified-span-substrate`](../citation-verified-span-substrate/PLAN.md)
+[`citation-verified-span-substrate`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/citation-verified-span-substrate/PLAN.md)
 P0/P1 freezes, implements, and proves the shared verified-anchor contract.
 This packet consumes that contract; it does not independently redefine it.
 

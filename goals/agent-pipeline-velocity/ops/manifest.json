@@ -49,7 +49,6 @@
     "goals/agent-pipeline-velocity/GOAL.md",
     "goals/agent-pipeline-velocity/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -113,5 +112,13 @@
     "explorations/agent-pipeline-velocity/research/baseline-pipeline.md",
     "explorations/agent-pipeline-velocity/research/baseline-review-merge.md",
     "explorations/agent-pipeline-velocity/research/deep-research-report.json"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/agent-pipeline-velocity",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "83c2d1ec2013949fba7798b198691ee4c797df4e",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }
