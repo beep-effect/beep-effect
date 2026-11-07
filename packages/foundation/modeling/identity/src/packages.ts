@@ -174,7 +174,6 @@ const generatedComposers = $I.compose(
   "tailscale",
   "agents-tables",
   "graph-3d",
-  "epistemic-config",
   "law-practice-tables",
   "practice-kg-mcp",
   "openclaw",
@@ -2386,23 +2385,6 @@ export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = compos
  * @since 0.0.0
  */
 export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = composers.$AgentsTablesId;
-
-/**
- * Identity composer for `@beep/epistemic-config`.
- *
- * **Example** (Make epistemic config package ID)
- *
- * ```ts import.meta.vitest name="Make epistemic config package ID"
- * import { $EpistemicConfigId } from "@beep/identity/packages"
- *
- * const id = $EpistemicConfigId.make("EpistemicConfig")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $EpistemicConfigId: Identity.IdentityComposer<"@beep/epistemic-config"> = composers.$EpistemicConfigId;
 
 /**
  * Identity composer for `@beep/law-practice-tables`.
