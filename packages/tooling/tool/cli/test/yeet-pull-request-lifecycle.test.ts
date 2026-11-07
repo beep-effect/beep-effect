@@ -147,6 +147,36 @@ describe("Yeet pull request lifecycle boundaries", () => {
       { name: "network failure", output: "network unreachable", exit: 1, spawn: false },
       { name: "ambiguous 404", output: "HTTP 404: Not Found", exit: 1, spawn: false },
       { name: "ambiguous absence", output: "no PR", exit: 1, spawn: false },
+      {
+        name: "another owner's absence",
+        output: `no pull requests found for branch "other:${context.branch}"`,
+        exit: 1,
+        spawn: false,
+      },
+      {
+        name: "another branch's absence",
+        output: `no pull requests found for branch "beep-effect:other"`,
+        exit: 1,
+        spawn: false,
+      },
+      {
+        name: "empty owner's absence",
+        output: `no pull requests found for branch ":${context.branch}"`,
+        exit: 1,
+        spawn: false,
+      },
+      {
+        name: "prefixed absence",
+        output: `warning: no pull requests found for branch "beep-effect:${context.branch}"`,
+        exit: 1,
+        spawn: false,
+      },
+      {
+        name: "suffixed absence",
+        output: `no pull requests found for branch "beep-effect:${context.branch}" (unknown)`,
+        exit: 1,
+        spawn: false,
+      },
       { name: "spawn failure", output: "", exit: 1, spawn: true },
       { name: "truncated output", output: Str.repeat(512 * 1024 + 1)("x"), exit: 0, spawn: false },
     ]) {
@@ -179,6 +209,23 @@ describe("Yeet pull request lifecycle boundaries", () => {
         }).pipe(provideGitOver(runner));
       });
     }
+
+    it.effect("recognizes exact fork-owner absence while a required lookup still reports no open PR", () => {
+      const runner = ScriptedSpawner.make((command, args) =>
+        command === "git"
+          ? { stdout: "git@github.com:fork-owner/beep-effect.git" }
+          : args[0] === "api"
+            ? { stdout: "HTTP 403: API rate limit exceeded", exit: 1 }
+            : { stdout: `no pull requests found for branch "fork-owner:${context.branch}"`, exit: 1 }
+      );
+      return Effect.gen(function* () {
+        const optional = yield* findOpenPullRequest(context);
+        assertNone(optional);
+        const required = yield* runGhPullRequestView(context).pipe(Effect.flip);
+        expect(required.message).toContain("requires an open pull request");
+        expect(required.command).toBe("gh pr view --json number,headRefName,state,url,title");
+      }).pipe(provideGitOver(runner));
+    });
 
     for (const scenario of [
       { name: "spawn", output: "", exit: 1, spawn: true, message: "Failed to inspect current branch" },
