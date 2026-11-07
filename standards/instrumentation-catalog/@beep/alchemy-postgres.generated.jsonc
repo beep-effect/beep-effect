@@ -6,9 +6,14 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"AlchemyPostgres.backfill.schedule","owner":"@beep/alchemy-postgres","family":"driver","conforms":false},
     {"name":"AlchemyPostgres.migrate","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
+    {"name":"AlchemyPostgres.projection.receive","owner":"@beep/alchemy-postgres","family":"driver","conforms":false},
+    {"name":"AlchemyPostgres.view.markLive","owner":"@beep/alchemy-postgres","family":"driver","conforms":false},
+    {"name":"AlchemyPostgres.view.receive","owner":"@beep/alchemy-postgres","family":"driver","conforms":false},
     {"name":"AlchemyPostgresPlatform.make","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
     {"name":"AlchemyPostgresPlatform.model","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
-    {"name":"AlchemyPostgresPlatform.send","owner":"@beep/alchemy-postgres","family":"driver","conforms":true}
+    {"name":"AlchemyPostgresPlatform.send","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
+    {"name":"AlchemyPostgresPlatform.start","owner":"@beep/alchemy-postgres","family":"driver","conforms":true}
   ]
 }

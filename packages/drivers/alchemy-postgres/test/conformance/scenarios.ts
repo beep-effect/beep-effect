@@ -138,6 +138,11 @@ export interface ConformanceTarget<R, E, PE> {
   readonly auditEvents?: (aggregate: string, id: string) => Effect.Effect<ReadonlyArray<EventAudit>, never, R>;
   /** Provides the platform's requirements (for example an in-process PGlite database). */
   readonly base: Layer.Layer<R, E>;
+  /**
+   * The platform's clock, for platforms that run on an explicit one: scheduled commands become due only
+   * when a scenario advances it, so timing cannot race the asserts. Without it, scenarios wait in real time.
+   */
+  readonly clock?: ScenarioClock;
   /** Whether a second build sees what the first committed, and two builds share one store. */
   readonly durable: boolean;
   readonly name: string;
@@ -147,6 +152,14 @@ export interface ConformanceTarget<R, E, PE> {
   readonly redelivers: boolean;
   /** Reads a scheduled command's stored status, for platforms that expose their storage. */
   readonly scheduleStatus?: (aggregate: string, id: string, commandId: string) => Effect.Effect<string, never, R>;
+}
+
+/** An explicit platform clock a scenario reads and advances. */
+export interface ScenarioClock {
+  /** Moves the clock forward and runs every scheduled command that became due. */
+  readonly advance: (millis: number) => Effect.Effect<void>;
+  /** The clock's current time. */
+  readonly now: Effect.Effect<DateTime.Utc>;
 }
 
 /** The built model's store of one aggregate. */
@@ -164,11 +177,11 @@ const eventsOf = (store: DomainPlatform.AggregateStore, id: string) =>
 const user = { principal: "user_1", sourceKind: "user" } as const;
 const asUser = Effect.provideService(CurrentActor, user);
 
-/** Poll until `predicate` holds, failing after `limit`. */
+/** Poll until `predicate` holds; the 15 s ceiling only matters on a slow runner. */
 const eventually = <A, E, R>(effect: Effect.Effect<A, E, R>, predicate: (value: A) => boolean) =>
   effect.pipe(
     Effect.repeat({ until: predicate, schedule: Schedule.spaced(Duration.millis(20)) }),
-    Effect.timeout(Duration.seconds(3))
+    Effect.timeout(Duration.seconds(15))
   );
 
 /** Command ids that the wrapped kit rejects, standing in for a decide that refuses at fire time. */
@@ -206,6 +219,10 @@ const refusing = <E, R>(platform: Layer.Layer<Domain.Platform, E, R>) =>
   ).pipe(Layer.provide(platform));
 
 const isOpen = (state: typeof AccountState.Type) => state._tag === "Open";
+
+/** Lets `millis` pass on the target's clock: advanced and drained when explicit, slept otherwise. */
+const elapse = (clock: ScenarioClock | undefined, millis: number) =>
+  clock === undefined ? Effect.sleep(Duration.millis(millis)) : clock.advance(millis);
 
 /** Register every conformance scenario for one platform. */
 export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
@@ -307,8 +324,9 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
             commandId: "remind-1",
           });
           strictEqual(scheduled.commandId, "remind-1");
+          yield* elapse(target.clock, 150);
           yield* eventually(accounts.state(id), (state) => state._tag === "Open" && state.reminders >= 1);
-          yield* Effect.sleep(Duration.millis(300));
+          yield* elapse(target.clock, 300);
           const state5 = yield* accounts.state(id);
           deepStrictEqual(state5, { _tag: "Open", owner: "fay", balance: 0, reminders: 1 });
 
@@ -327,14 +345,16 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           strictEqual(never._tag, "NotScheduled");
 
           // Due at a point in time rather than after a delay: it fires the same way.
-          const now = yield* DateTime.now;
+          const now = yield* target.clock?.now ?? DateTime.now;
           const soon = DateTime.add(now, { milliseconds: 100 });
           yield* accounts.schedule(id, Remind.make({}), { at: soon, commandId: "remind-at" });
+          yield* elapse(target.clock, 100);
           yield* eventually(accounts.state(id), (state) => state._tag === "Open" && state.reminders >= 2);
 
-          yield* accounts.schedule(id, Remind.make({}), { after: "100 millis", commandId: "remind-3" });
+          // A wide delay: on a wall clock a loaded runner must still unschedule before the due time.
+          yield* accounts.schedule(id, Remind.make({}), { after: "1 second", commandId: "remind-3" });
           yield* accounts.unschedule(id, "remind-3");
-          yield* Effect.sleep(Duration.millis(400));
+          yield* elapse(target.clock, 1300);
           const state6 = yield* accounts.state(id);
           deepStrictEqual(state6, { _tag: "Open", owner: "fay", balance: 0, reminders: 2 });
         })
@@ -385,7 +405,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           yield* accounts.send(id, OpenAccount.make({ owner: "jay" })).pipe(asUser);
           yield* accounts.schedule(id, Remind.make({}), { after: "100 millis", commandId: "early" });
           yield* accounts.send(id, Remind.make({}), { commandId: "early" }).pipe(asUser);
-          yield* Effect.sleep(Duration.millis(400));
+          yield* elapse(target.clock, 400);
           const state = yield* accounts.state(id);
           deepStrictEqual(state, { _tag: "Open", owner: "jay", balance: 0, reminders: 1 });
           const executed = yield* accounts.unschedule(id, "early").pipe(Effect.flip);
@@ -400,13 +420,17 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const commandId = `${refusedPrefix}remind`;
           yield* accounts.send(id, OpenAccount.make({ owner: "kim" })).pipe(asUser);
           yield* accounts.schedule(id, Remind.make({}), { after: "50 millis", commandId });
-          yield* Effect.sleep(Duration.millis(400));
+          yield* elapse(target.clock, 50);
+          // Wait for the fire itself where the target can report it, so a loaded runner cannot race the asserts.
+          if (target.scheduleStatus !== undefined) {
+            const scheduleStatus = target.scheduleStatus;
+            const status = yield* eventually(scheduleStatus("Account", id, commandId), (value) => value === "rejected");
+            strictEqual(status, "rejected");
+          } else {
+            yield* elapse(target.clock, 1000);
+          }
           const state = yield* accounts.state(id);
           deepStrictEqual(state, { _tag: "Open", owner: "kim", balance: 0, reminders: 0 });
-          if (target.scheduleStatus !== undefined) {
-            const status = yield* target.scheduleStatus("Account", id, commandId);
-            strictEqual(status, "rejected");
-          }
           // No receipt was written: nothing to cancel, and the id can be scheduled again.
           const nothing = yield* accounts.unschedule(id, commandId).pipe(Effect.flip);
           strictEqual(nothing._tag, "NotScheduled");
