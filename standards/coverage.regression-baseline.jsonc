@@ -7,8 +7,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T09:52:59.601Z",
-  "git_sha": "d7607b65b363315ed10019d48013e87be2259a4a",
+  "generated_at": "2026-11-07T10:10:04.301Z",
+  "git_sha": "2a6ec0f14c165cb3f626f09e23e646d56f7617c8",
   "command": "bun run coverage -- --filter=@beep/documents-domain --filter=@beep/documents-use-cases --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {

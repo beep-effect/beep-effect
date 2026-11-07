@@ -1,12 +1,23 @@
 import * as Domain from "@alchemy.run/domain";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
-import { VaultSyncModel, VaultSyncPolicies } from "@beep/documents-use-cases/aggregates/VaultSync";
+import {
+  DestinationNames,
+  DestinationRecovery,
+  OperationDeadlines,
+  OperationFailures,
+  VaultSyncModel,
+  VaultSyncPolicies,
+} from "@beep/documents-use-cases/aggregates/VaultSync";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as H from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type * as Platform from "@alchemy.run/domain/Platform";
 
@@ -15,27 +26,29 @@ const itemId = (n: string) => V.ItemId.make(`documents_sync_item_a${n}`);
 const opId = (n: string) => V.OperationId.make(`documents_sync_operation_a${Str.toLowerCase(n)}`);
 const path = V.VaultRelPath.make("folder/file.txt");
 const remote = V.RemoteItemId.make("box-1");
-const input = (n: string, type: V.OperationType = "uploadFile"): V.OperationInput => ({
-  destinationId: destination,
-  itemId: itemId(n),
-  type,
-  path,
-  digest: "sha256:a",
-  generation: 1,
-  parentRequired: true,
-  idempotencyKey: opId(n),
-});
-const observe = (n: string): V.ItemObservation => ({
-  destinationId: destination,
-  workspaceId: 1,
-  path: V.VaultRelPath.make(`folder/${n}.txt`),
-  kind: "file",
-  digest: "sha256:a",
-  generation: 1,
-  operationId: opId(n),
-  type: "uploadFile",
-  parentRequired: true,
-});
+const input = (n: string, type: V.OperationType = "uploadFile"): V.OperationInput =>
+  V.OperationInput.make({
+    destinationId: destination,
+    itemId: itemId(n),
+    type,
+    path,
+    digest: "sha256:a",
+    generation: 1,
+    parentRequired: true,
+    idempotencyKey: opId(n),
+  });
+const observe = (n: string): V.ItemObservation =>
+  V.ItemObservation.make({
+    destinationId: destination,
+    workspaceId: 1,
+    path: V.VaultRelPath.make(`folder/${n}.txt`),
+    kind: "file",
+    digest: "sha256:a",
+    generation: 1,
+    operationId: opId(n),
+    type: "uploadFile",
+    parentRequired: true,
+  });
 const eventually = <A, E, R>(effect: Effect.Effect<A, E, R>, predicate: (a: A) => boolean) =>
   effect.pipe(Effect.repeat({ until: predicate, schedule: Schedule.spaced("10 millis") }), Effect.timeout("5 seconds"));
 
@@ -49,7 +62,11 @@ export const scenarios = <E>({
   const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(platform));
   describe(name, () => {
     it("declarations are valid", () => expect(Domain.verify(VaultSyncModel)).toEqual([]));
-    layer(hosted, { excludeTestServices: true, concurrent: false, timeout: "20 seconds" })("vault sync", (it) => {
+    layer(VaultSyncPolicies.pipe(Layer.provideMerge(hosted)), {
+      excludeTestServices: true,
+      concurrent: false,
+      timeout: "20 seconds",
+    })("vault sync", (it) => {
       it.effect("name reservation serializes competing claims and releases the old name after rename", () =>
         Effect.gen(function* () {
           const names = yield* V.DestinationNameReservation;
@@ -327,7 +344,7 @@ export const scenarios = <E>({
             const conflicts = yield* V.SyncConflict;
             const registry = yield* V.ConflictEventRegistry;
             const ops = yield* V.SyncOperation;
-            const record: V.ConflictRecord = {
+            const record = V.ConflictRecord.make({
               publicId: V.ConflictId.make("documents_sync_conflict_a1"),
               destinationId: destination,
               workspaceId: 1,
@@ -335,7 +352,7 @@ export const scenarios = <E>({
               itemId: itemId("review"),
               evidence: "remote moved",
               reviewed: false,
-            };
+            });
             yield* registry.send(destination, V.RecordConflict.make({ record }));
             yield* registry.send(
               destination,
@@ -454,6 +471,195 @@ export const scenarios = <E>({
           const healed = yield* items.state(itemId("healed"));
           expect(healed).toMatchObject({ status: "pending", observation: { operationId: opId("healfresh") } });
         })
+      );
+
+      it.effect("rejected first registration and rename-before-registration release their new claims", () =>
+        Effect.gen(function* () {
+          const names = yield* V.DestinationNameReservation;
+          const destinations = yield* V.SyncDestination;
+          const existing = V.DestinationId.make("vault-race");
+          const duplicate = V.ReservationKey.make("1:duplicate");
+          yield* names.send(
+            duplicate,
+            V.ClaimDestinationName.make({
+              claim: { destinationId: existing, orgId: 1, workspaceId: 1, name: "duplicate", previousName: null },
+            })
+          );
+          yield* eventually(names.state(duplicate), (s) => s === null);
+          const absent = V.DestinationId.make("vault-absent");
+          const missing = V.ReservationKey.make("1:missing");
+          yield* names.send(
+            missing,
+            V.ClaimDestinationName.make({
+              claim: {
+                destinationId: absent,
+                orgId: 1,
+                workspaceId: 1,
+                name: "missing",
+                previousName: "never-registered",
+              },
+            })
+          );
+          yield* eventually(names.state(missing), (s) => s === null);
+          const unchanged = yield* destinations.state(absent);
+          expect(unchanged).toEqual({ _tag: "Unregistered" });
+          const old = V.ReservationKey.make("1:raceold");
+          const claim = V.NameClaim.make({
+            destinationId: existing,
+            orgId: 1,
+            workspaceId: 2,
+            name: "RaceOld",
+            previousName: "RACEOLD",
+          });
+          const receipt = yield* names.send(old, V.ClaimDestinationName.make({ claim }));
+          const handler = yield* DestinationNames;
+          const ref = V.DestinationNameReservation.ref(old);
+          // At-least-once replay must finish the rejected rename and retain the current name's claim.
+          yield* handler({
+            key: ref,
+            source: ref,
+            route: undefined,
+            event: V.DestinationNameClaimed.make({ claim }),
+            state: undefined,
+            envelope: {
+              id: old,
+              stream: receipt.stream,
+              seq: receipt.version,
+              at: DateTime.makeUnsafe(1000),
+              commandId: "claim-replay",
+              correlationId: "claim-replay",
+            },
+          });
+          const retained = yield* names.state(old);
+          expect(retained).not.toBe(null);
+        })
+      );
+      it.effect("connection recovery with an empty operation queue is an idempotent no-op", () =>
+        Effect.gen(function* () {
+          const destinations = yield* V.SyncDestination;
+          const queue = yield* V.OperationQueue;
+          const id = V.DestinationId.make("empty-recovery");
+          const ref = V.SyncDestination.ref(id);
+          yield* destinations.send(id, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "empty" }));
+          const receipt = yield* destinations.send(id, V.ResumeDestination.make({}));
+          const handler = yield* DestinationRecovery;
+          const trigger = {
+            key: ref,
+            source: ref,
+            route: undefined,
+            event: V.DestinationConnected.make({}),
+            state: undefined,
+            envelope: {
+              id,
+              stream: receipt.stream,
+              seq: receipt.version,
+              at: DateTime.makeUnsafe(1000),
+              commandId: "empty-replay",
+              correlationId: "empty-replay",
+            },
+          };
+          yield* handler(trigger);
+          yield* handler(trigger);
+          const rows = yield* queue.query(ref);
+          assertNone(rows);
+        })
+      );
+      it.effect("reviewing an untracked remote item closes the conflict without a local item command", () =>
+        Effect.gen(function* () {
+          const registry = yield* V.ConflictEventRegistry;
+          const conflicts = yield* V.SyncConflict;
+          const id = V.ConflictId.make("documents_sync_conflict_aorphan");
+          yield* registry.send(
+            destination,
+            V.RecordConflict.make({
+              record: {
+                publicId: id,
+                destinationId: destination,
+                workspaceId: 1,
+                remoteEventId: "orphan",
+                itemId: null,
+                evidence: "untracked remote item",
+                reviewed: false,
+              },
+            })
+          );
+          yield* eventually(conflicts.state(id), (s) => s !== null);
+          yield* conflicts.send(
+            id,
+            V.ReviewConflict.make({
+              remoteEventId: "orphan",
+              destinationId: destination,
+              workspaceId: 1,
+              correction: null,
+              healOperationId: opId("unused"),
+            })
+          );
+          yield* eventually(conflicts.state(id), (s) => s?.reviewed === true);
+        })
+      );
+      it.effect("healing an already queued operation retargets it without superseding its stable id", () =>
+        Effect.gen(function* () {
+          const items = yield* V.SyncItem;
+          const ops = yield* V.SyncOperation;
+          const id = itemId("queuedheal");
+          const operation = opId("queuedheal");
+          yield* items.send(id, V.ObserveItem.make({ observation: observe("queuedheal") }));
+          yield* eventually(ops.state(operation), (s) => s?.status === "queued");
+          yield* items.send(id, V.ReturnItemToPending.make({ operationId: operation }));
+          yield* eventually(ops.state(operation), (s) => s?.input.generation === 2);
+          const state = yield* ops.state(operation);
+          expect(state).toMatchObject({ status: "queued", attempts: 0 });
+        })
+      );
+      it.effect(
+        "redelivering an executed stale deadline after success is idempotent and absent failure snapshots do nothing",
+        () =>
+          Effect.gen(function* () {
+            const ops = yield* V.SyncOperation;
+            const deadline = yield* OperationDeadlines;
+            const failures = yield* OperationFailures;
+            const id = opId("deadlinereplay");
+            const ref = V.SyncOperation.ref(id);
+            yield* ops.send(id, V.QueueOperation.make({ input: { ...input("deadlinereplay"), idempotencyKey: id } }));
+            const receipt = yield* ops.send(
+              id,
+              V.LeaseOperation.make({
+                holder: "worker",
+                leaseMillis: 60000,
+                parentRemoteId: remote,
+                itemRemoteId: null,
+              })
+            );
+            const event = yield* Effect.fromOption(A.findFirst(receipt.events, S.is(V.OperationLeased)));
+            const envelope = {
+              id,
+              stream: receipt.stream,
+              seq: receipt.version,
+              at: DateTime.makeUnsafe(event.expiresAt - 60000),
+              commandId: "lease-replay",
+              correlationId: "lease-replay",
+            };
+            yield* ops.send(id, V.CompleteOperation.make({ holder: "worker", attempt: event.attempt }));
+            // A late timer is already irrelevant after success. Execute its real command id,
+            // then redeliver the original lease event through the policy.
+            const expired = yield* ops.send(id, V.ExpireLease.make({ attempt: event.attempt }), {
+              commandId: `${receipt.stream}:${receipt.version}:deadline`,
+            });
+            expect(expired.events).toEqual([]);
+            yield* deadline({ key: ref, source: ref, route: undefined, event, state: undefined, envelope });
+            const state = yield* ops.state(id);
+            expect(state).toMatchObject({ status: "succeeded", attempts: 1 });
+            yield* failures({
+              key: ref,
+              source: ref,
+              route: undefined,
+              event: V.OperationFailed.make({ reason: "late deleted snapshot" }),
+              state: null,
+              envelope,
+            });
+            const retained = yield* ops.state(id);
+            expect(retained).toEqual(state);
+          })
       );
       it.effect("read contracts route org/destination state without exposing a transport", () =>
         Effect.gen(function* () {

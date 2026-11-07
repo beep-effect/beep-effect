@@ -1,6 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
-import { expect, layer } from "@effect/vitest";
+import { layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as H from "effect/HashMap";
 import * as Layer from "effect/Layer";
@@ -33,7 +34,7 @@ const operation = V.OperationId.make("documents_sync_operation_a1");
 const conflict = V.ConflictId.make("documents_sync_conflict_a1");
 const path = V.VaultRelPath.make("file.txt");
 const remote = V.RemoteItemId.make("box1");
-const observation: V.ItemObservation = {
+const observation = V.ItemObservation.make({
   destinationId: destination,
   workspaceId: 1,
   path,
@@ -43,8 +44,8 @@ const observation: V.ItemObservation = {
   operationId: operation,
   type: "uploadFile",
   parentRequired: false,
-};
-const input: V.OperationInput = {
+});
+const input = V.OperationInput.make({
   destinationId: destination,
   itemId: item,
   type: "uploadFile",
@@ -53,11 +54,11 @@ const input: V.OperationInput = {
   generation: 1,
   parentRequired: false,
   idempotencyKey: operation,
-};
+});
 const eventually = <A, E, R>(effect: Effect.Effect<A, E, R>, predicate: (a: A) => boolean) =>
   effect.pipe(Effect.repeat({ until: predicate, schedule: Schedule.spaced("5 millis") }), Effect.timeout("5 seconds"));
 
-layer(hosted, { excludeTestServices: true })("pure read contracts", (it) => {
+layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read contracts", (it) => {
   it.effect("aggregate events reach all read contracts without orchestration or I/O", () =>
     Effect.gen(function* () {
       const destinations = yield* V.SyncDestination;
@@ -167,7 +168,7 @@ layer(hosted, { excludeTestServices: true })("pure read contracts", (it) => {
       const superseded = V.OperationId.make("documents_sync_operation_asuperseded");
       yield* ops.send(superseded, V.QueueOperation.make({ input: { ...input, idempotencyKey: superseded } }));
       yield* ops.send(superseded, V.SupersedeOperation.make({ reason: "kind-replaced" }));
-      const record: V.ConflictRecord = {
+      const record = V.ConflictRecord.make({
         publicId: conflict,
         destinationId: destination,
         workspaceId: 1,
@@ -175,7 +176,7 @@ layer(hosted, { excludeTestServices: true })("pure read contracts", (it) => {
         itemId: item,
         evidence: "remote rename",
         reviewed: false,
-      };
+      });
       yield* registry.send(destination, V.RecordConflict.make({ record }));
       yield* conflicts.send(conflict, V.ConfirmConflict.make({ record }));
       yield* eventually(open.query(V.SyncDestination.ref(destination)), (s) => O.isSome(s) && H.size(s.value) === 1);
@@ -203,7 +204,8 @@ layer(hosted, { excludeTestServices: true })("pure read contracts", (it) => {
         status.query(V.SyncDestination.ref(destination)),
         (s) => O.isSome(s) && H.size(s.value.items) === 1 && H.size(s.value.operations) === 2
       );
-      expect(O.isSome(summary)).toBe(true);
+      const present = O.isSome(summary);
+      assertTrue(present);
     })
   );
 });

@@ -21,20 +21,16 @@ const $I = $DocumentsDomainId.create("aggregates/VaultSync/DestinationNameReserv
  * @category aggregates
  * @since 0.0.0
  */
-export const NameClaim = S.Struct({
-  destinationId: V.DestinationId,
-  orgId: S.Int,
-  workspaceId: S.Int,
-  name: S.NonEmptyString,
-  previousName: S.NullOr(S.String),
-}).pipe($I.annoteSchema("NameClaim", { description: "NameClaim persisted vault sync value." }));
-/**
- * Runtime value accepted by {@link NameClaim}.
- *
- * @category aggregates
- * @since 0.0.0
- */
-export type NameClaim = typeof NameClaim.Type;
+export class NameClaim extends S.Opaque<NameClaim, { readonly brand: unique symbol }>()(
+  S.Struct({
+    destinationId: V.DestinationId,
+    orgId: S.Int,
+    workspaceId: S.Int,
+    name: S.NonEmptyString,
+    previousName: S.NullOr(S.String),
+  }).pipe($I.annoteSchema("NameClaim", { description: "NameClaim persisted vault sync value." }))
+) {}
+
 /**
  * DestinationNameClaimed vault sync contract.
  *

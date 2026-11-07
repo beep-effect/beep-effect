@@ -40,6 +40,7 @@
     "research/03-current-vault-sync-flows.md",
     "research/04-vault-sync-domain-design.md",
     "research/05-pr3a-handoff.md",
+    "research/06-pr3a-scoped-lints.py",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/cache-baseline-request-pr2a.json",
