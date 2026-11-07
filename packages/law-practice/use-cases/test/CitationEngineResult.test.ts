@@ -16,7 +16,10 @@ import {
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -163,4 +166,23 @@ it.effect("compares native token data by width and exact bytes", () =>
     expect(equivalent(seed([0x61]), seed([0x61]))).toBe(true);
     expect(equivalent(seed([0x61]), seed([0x62]))).toBe(false);
   })
+);
+
+const SeedType = S.toType(CitationTokenSeed);
+const seedEquivalent = S.toEquivalence(SeedType);
+it.effect.prop(
+  "treats every native token seed as equivalent to its own exact-byte copy",
+  { value: Arbitrary.schema(SeedType) },
+  ({ value }) =>
+    Effect.sync(() => {
+      const copy = CitationTokenSeed.make({
+        ...value,
+        data:
+          value.data === null
+            ? null
+            : CitationPythonUnicodeStorage.make({ ...value.data, bytes: value.data.bytes.slice() }),
+      });
+      assertTrue(seedEquivalent(value, copy));
+    }),
+  { arbitrary: fcRuns(50) }
 );

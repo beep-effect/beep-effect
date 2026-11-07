@@ -11,9 +11,11 @@ import {
 } from "@beep/law-practice-server/internal/Citation/CallbackSession";
 import { prepareCitationResolution } from "@beep/law-practice-server/internal/Citation/ResolutionInput";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -167,3 +169,18 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback session
     })
   );
 });
+
+const CitationType = S.toType(Citation);
+const CitationJson = Citation.pipe(S.toCodecJson, S.fromJsonString);
+const citationEquivalent = S.toEquivalence(CitationType);
+it.effect.prop(
+  "preserves detached citation values through their JSON wire form",
+  { value: Arbitrary.schema(CitationType) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(CitationJson)(value);
+      const decoded = yield* S.decodeEffect(CitationJson)(encoded);
+      assertTrue(citationEquivalent(value, decoded));
+    }),
+  { arbitrary: fcRuns(50) }
+);
