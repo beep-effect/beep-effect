@@ -26,6 +26,7 @@ export const SyncRule = LiteralKit([
   "conflict-id",
   "conflict-not-found",
   "conflict-scope",
+  "correction-key",
   "correction-scope",
   "destination-scope",
   "item-remote-id",

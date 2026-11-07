@@ -1,7 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as H from "effect/HashMap";
 import * as Layer from "effect/Layer";
@@ -180,6 +180,20 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
       yield* registry.send(destination, V.RecordConflict.make({ record }));
       yield* conflicts.send(conflict, V.ConfirmConflict.make({ record }));
       yield* eventually(open.query(V.SyncDestination.ref(destination)), (s) => O.isSome(s) && H.size(s.value) === 1);
+      // A correction keyed off its own operation id could never queue; review refuses it up front.
+      const unreachable = yield* conflicts
+        .send(
+          conflict,
+          V.ReviewConflict.make({
+            remoteEventId: "event1",
+            workspaceId: 1,
+            destinationId: destination,
+            correction: { operationId: V.OperationId.make("documents_sync_operation_acorrection"), input },
+            healOperationId: V.OperationId.make("documents_sync_operation_aheal2"),
+          })
+        )
+        .pipe(Effect.flip);
+      strictEqual(unreachable.rule, "correction-key");
       yield* conflicts.send(
         conflict,
         V.ReviewConflict.make({
