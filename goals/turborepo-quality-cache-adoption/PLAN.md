@@ -21,7 +21,7 @@ is treated as complete by this launch.
 | P3 Hosted cohorts and warming | pending | Consume production trust readiness; roll named hosted cohorts, archive transport fixes and demand-based warming. | Required jobs emit fresh statuses; resolved workflow identity, useful hits and bounded warm receipts are proven. |
 | P4 Broader observation and final census | pending | Expand supported profiles, complete representative observation and reconcile every computation. | Eligible work is qualified/adopted, exclusions are justified, no unexplained or silently deferred entries remain. |
 | P5 Yeet: PR to mergeable | pending | Publish through Yeet, verify exact-head hosted proof and resolve reviews. | Yeet monitor reports merge-ready: yes; no cache result substitutes for hosted acceptance. |
-| P6 Close | pending | Land final value/disposition report, reflection and lifecycle in final implementation PR. | Whole-program acceptance and same-PR closeout evidence are complete. |
+| P6 Close | pending | Land final value/disposition report, reflection and proposal with implementation; verify and adopt after merge. | Whole-program acceptance and merged lifecycle adoption are complete. |
 
 ## First action
 
@@ -77,17 +77,22 @@ admission/worktree workflows for heavy experiments.
 
 ## P6 closeout checklist
 
-P6 preparation can occur during P5 so final reflection/lifecycle land with the
-final implementation. Acceptance still requires final Yeet proof. Do not defer
-closeout to an unrelated state-only PR.
+P6 preparation can occur during P5. Land final evidence, reflection and
+proposedCloseout with the final implementation while the goal stays active or
+paused. After that PR merges, verify and adopt its proposal through the
+required separate packet-state PR. Acceptance still requires final Yeet proof
+and the merged adoption; a proposal alone is not completion.
 
 1. Confirm every SPEC criterion and applicable representative observation.
 2. Use the reflect skill and copied reflection template to record tooling
    friction, implementation opportunities and prompt critique.
 3. Run `bun run beep lint reflection-artifacts`.
-4. Update phase evidence and use
-   `bun run beep goals set-status turborepo-quality-cache-adoption completed-retained` only once
-   completion conditions hold, in the final implementation PR.
+4. After the final implementation PR merges, run
+   `bun run beep goals completion refresh --slug turborepo-quality-cache-adoption`.
+   Only after verification succeeds, use
+   `bun run beep goals set-status turborepo-quality-cache-adoption completed-retained`
+   in a separate packet-state PR, updating README and statusNote prose too.
+   Merge it and confirm origin/main has matching closeout and initiative statuses.
 5. Regenerate/check the goal index and preserve exploration links. Completion
    of this goal alone does not establish the whole cache program's completion.
 

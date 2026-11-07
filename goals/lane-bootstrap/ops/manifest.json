@@ -5,7 +5,7 @@
     "title": "Lane Bootstrap",
     "status": "active",
     "created": "2026-10-05",
-    "updated": "2026-10-05",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lane-bootstrap",
@@ -38,6 +38,7 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
+    "research/p0-live-source-scope.md",
     "research/worktrunk-evaluation.md"
   ],
   "agentLaunchers": [
@@ -53,7 +54,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
