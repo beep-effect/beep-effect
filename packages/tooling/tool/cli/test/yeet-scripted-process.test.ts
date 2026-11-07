@@ -455,8 +455,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         assertNone(otherBranchPr);
         const missingPr = yield* found([["gh pr view", 1, "no pull requests found"]]);
         assertNone(missingPr);
-        const oversizedPr = yield* found([["gh pr view", 0, pipe("x", Str.repeat(600 * 1024))]]);
-        assertNone(oversizedPr);
+        const oversizedPr = yield* found([["gh pr view", 0, pipe("x", Str.repeat(600 * 1024))]]).pipe(Effect.flip);
+        expect(oversizedPr.message).toBe("gh pr view output exceeded the repo-run capture limit.");
 
         const unspawnable = yield* Effect.flip(found([["gh pr view", -1, "gh is not installed"]]));
         expect(unspawnable.message).toBe("Failed to inspect current branch pull request.");
