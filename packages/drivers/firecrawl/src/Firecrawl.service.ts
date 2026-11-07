@@ -6,6 +6,7 @@
  */
 
 import { $FirecrawlId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -14,7 +15,6 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -80,29 +80,26 @@ const readBoundedBody = Effect.fn("Firecrawl.readBoundedBody")(function* (
       "response-bound",
       `Firecrawl response declared ${declared.value} bytes above the ${limit}-byte bound.`
     );
-  let bytes = new Uint8Array(0);
-  let total = 0;
-  yield* response.stream.pipe(
+  const tooLarge = FirecrawlError.fromReason(
+    "response-bound",
+    `Firecrawl response exceeded the ${limit}-byte observed stream bound.`
+  );
+  const collected = yield* response.stream.pipe(
     Stream.mapError(() => FirecrawlError.fromReason("transport", "Firecrawl response stream failed.")),
-    Stream.runForEach(
-      Effect.fnUntraced(function* (chunk: Uint8Array) {
-        if (chunk.byteLength > limit - total)
-          return yield* FirecrawlError.fromReason(
-            "response-bound",
-            `Firecrawl response exceeded the ${limit}-byte observed stream bound.`
-          );
-        const required = total + chunk.byteLength;
-        if (required > bytes.byteLength) {
-          const grown = new Uint8Array(Num.min(limit, Num.max(required, Num.max(4096, bytes.byteLength * 2))));
-          grown.set(bytes);
-          bytes = grown;
-        }
-        bytes.set(chunk, total);
-        total = required;
-      })
+    Stream.runFoldEffect(
+      () => ({ chunks: A.empty<Uint8Array>(), total: 0 }),
+      (acc, chunk) =>
+        acc.total + chunk.byteLength > limit
+          ? Effect.fail(tooLarge)
+          : Effect.succeed({ chunks: A.append(acc.chunks, chunk), total: acc.total + chunk.byteLength })
     )
   );
-  return bytes.slice(0, total);
+  const bytes = new Uint8Array(collected.total);
+  A.reduce(collected.chunks, 0, (offset, chunk) => {
+    bytes.set(chunk, offset);
+    return offset + chunk.byteLength;
+  });
+  return bytes;
 });
 
 const makeService = (

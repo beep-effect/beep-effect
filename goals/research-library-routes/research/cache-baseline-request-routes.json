@@ -1,0 +1,21 @@
+{
+  "previous": "ef9473f7712075e3adcf824b7633165ca509287a60727331f81bed129b096e0b",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (research-library-routes lane, feat/research-library-routes)",
+    "reason": "Record manifest and configuration drift from adding the @beep/firecrawl drivers package (root registration, identity composer) and the Box, Firecrawl and 1Password dependencies of @beep/repo-cli; no qualification is granted.",
+    "basis": {
+      "path": "goals/research-library-routes/research/cache-baseline-review-routes.md",
+      "sha256": "336f41610de8f411f5d8f0084bc3b1cae4bcd06e9d9930da8e7c988957d51c2d"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": [
+    "//",
+    "@beep/firecrawl",
+    "@beep/identity",
+    "@beep/repo-cli",
+    "@beep/types"
+  ]
+}

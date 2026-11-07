@@ -4,13 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { libraryEffectiveCaptures, libraryEffectiveCategory } from "./Library.evidence.ts";
 import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
-import { libraryHopGate, libraryHopTwoOnly, libraryPacketConcepts } from "./Library.hops.ts";
+import { LibraryHopGateInput, libraryHopGate, libraryHopTwoOnly, libraryLiveConcepts } from "./Library.hops.ts";
 import type { LibraryCatalog } from "./Library.schemas.ts";
 
 /**
@@ -65,11 +64,8 @@ export const libraryHopTotals = Effect.fn("Library.hopTotals")(function* (
     hopTwo,
     (id) => libraryHopTwoOnly(catalog, id) && !A.some(catalog.captures, (capture) => capture.sourceId === id)
   );
-  const repoRoot = yield* findRepoRoot().pipe(Effect.option);
-  const concepts = O.isSome(repoRoot)
-    ? yield* libraryPacketConcepts(repoRoot.value, policy).pipe(Effect.orElseSucceed(A.empty))
-    : [];
-  const decisions = libraryHopGate(catalog, { concepts, policy });
+  const concepts = yield* libraryLiveConcepts(policy);
+  const decisions = libraryHopGate(catalog, LibraryHopGateInput.make({ concepts, policy }));
   const refused = A.filter(decisions, (decision) => !decision.admitted);
   const reasons = A.join(
     A.map(

@@ -31,7 +31,6 @@ import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -252,33 +251,28 @@ export class LibraryBox extends Context.Service<
 const boxFailure = (operation: string) => (error: { readonly message: string }) =>
   LibraryError.make({ message: `Box ${operation} failed: ${Str.slice(0, 500)(error.message)}`, cause: "box" });
 
-const readBounded = Effect.fn("LibraryBox.readBounded")(function* (
-  stream: Stream.Stream<Uint8Array, LibraryError>,
-  maxBytes: number
-) {
-  let bytes = new Uint8Array(0);
-  let total = 0;
-  yield* stream.pipe(
-    Stream.runForEach(
-      Effect.fnUntraced(function* (chunk: Uint8Array) {
-        if (chunk.byteLength > maxBytes - total)
-          return yield* LibraryError.make({
-            message: `Box download exceeded the ${maxBytes}-byte bound.`,
-            cause: "body-bound",
-          });
-        const required = total + chunk.byteLength;
-        if (required > bytes.byteLength) {
-          const grown = new Uint8Array(Num.min(maxBytes, Num.max(required, Num.max(65_536, bytes.byteLength * 2))));
-          grown.set(bytes);
-          bytes = grown;
-        }
-        bytes.set(chunk, total);
-        total = required;
-      })
-    )
+// Fold chunks while the running total stays within the bound; the fold fails on the first
+// chunk that would exceed it, which also cancels the download stream.
+const readBounded = (stream: Stream.Stream<Uint8Array, LibraryError>, maxBytes: number) =>
+  stream.pipe(
+    Stream.runFoldEffect(
+      () => ({ chunks: A.empty<Uint8Array>(), total: 0 }),
+      (acc, chunk) =>
+        acc.total + chunk.byteLength > maxBytes
+          ? Effect.fail(
+              LibraryError.make({ message: `Box download exceeded the ${maxBytes}-byte bound.`, cause: "body-bound" })
+            )
+          : Effect.succeed({ chunks: A.append(acc.chunks, chunk), total: acc.total + chunk.byteLength })
+    ),
+    Effect.map(({ chunks, total }) => {
+      const bytes = new Uint8Array(total);
+      A.reduce(chunks, 0, (offset, chunk) => {
+        bytes.set(chunk, offset);
+        return offset + chunk.byteLength;
+      });
+      return bytes;
+    })
   );
-  return bytes.slice(0, total);
-});
 
 const boxCredential = Effect.fn("LibraryBox.credential")(function* (op: OnePasswordCli["Service"], name: string) {
   const configured = yield* Config.Redacted(name).pipe(Config.option, Effect.orElseSucceed(O.none));
@@ -369,34 +363,45 @@ export const LibraryBoxLive = Layer.effect(
       const entry = yield* S.decodeEffect(BoxEntry)(file).pipe(Effect.mapError(boxFailure("file decoding")));
       return toBoxFile(entry);
     });
-    const listFolder = Effect.fn("LibraryBox.listFolder")(function* (folderId: string) {
+    const listPage = Effect.fn("LibraryBox.listPage")(function* (folderId: string, marker: O.Option<string>) {
       const client = yield* box;
+      const items = yield* client.folders
+        .getFolderItems(
+          FoldersGetFolderItemsPayload.make({
+            folderId,
+            optionalsInput: GetFolderItemsOptionalsInput.make({
+              queryParams: GetFolderItemsQueryParams.make({
+                fields: BOX_FIELDS,
+                usemarker: true,
+                limit: 1000,
+                ...getSomesStruct({ marker }),
+              }),
+            }),
+          })
+        )
+        .pipe(Effect.mapError(boxFailure("folder listing")));
+      const entries = A.getSomes(A.map(items.entries ?? [], (entry) => S.decodeOption(BoxEntry)(entry)));
+      return {
+        files: A.map(
+          A.filter(entries, (entry) => entry.type === "file"),
+          toBoxFile
+        ),
+        folders: A.map(
+          A.filter(entries, (entry) => entry.type === "folder"),
+          (entry) => entry.id
+        ),
+        next: O.filter(O.fromNullishOr(items.nextMarker), Str.isNonEmpty),
+      };
+    });
+    const listFolder = Effect.fn("LibraryBox.listFolder")(function* (folderId: string) {
       const files: Array<LibraryBoxFile> = [];
       const folders: Array<string> = [];
       let marker = O.none<string>();
       for (let page = 0; page < 100; page++) {
-        const items = yield* client.folders
-          .getFolderItems(
-            FoldersGetFolderItemsPayload.make({
-              folderId,
-              optionalsInput: GetFolderItemsOptionalsInput.make({
-                queryParams: GetFolderItemsQueryParams.make({
-                  fields: BOX_FIELDS,
-                  usemarker: true,
-                  limit: 1000,
-                  ...getSomesStruct({ marker }),
-                }),
-              }),
-            })
-          )
-          .pipe(Effect.mapError(boxFailure("folder listing")));
-        for (const raw of items.entries ?? []) {
-          const entry = S.decodeOption(BoxEntry)(raw);
-          if (O.isNone(entry)) continue;
-          if (entry.value.type === "folder") folders.push(entry.value.id);
-          if (entry.value.type === "file") files.push(toBoxFile(entry.value));
-        }
-        marker = O.filter(O.fromNullishOr(items.nextMarker), Str.isNonEmpty);
+        const listed = yield* listPage(folderId, marker);
+        files.push(...listed.files);
+        folders.push(...listed.folders);
+        marker = listed.next;
         if (O.isNone(marker)) return { files, folders };
       }
       return yield* LibraryError.make({ message: `Box folder ${folderId} exceeded 100 listing pages.`, cause: "box" });
@@ -426,20 +431,6 @@ export const LibraryBoxLive = Layer.effect(
 ).pipe(Layer.provide(OnePasswordCli.makeLayer()));
 
 /**
- * Fixture served by {@link makeLibraryBoxTest}.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface LibraryBoxFixture {
-  readonly bytes: Readonly<Record<string, Uint8Array>>;
-  readonly downloads?: Array<string>;
-  readonly folders: Readonly<Record<string, ReadonlyArray<LibraryBoxFile>>>;
-  readonly subfolders?: Readonly<Record<string, ReadonlyArray<string>>>;
-}
-
-/**
  * Deterministic in-memory Box port for tests.
  *
  * **Example** (Build a test port)
@@ -456,7 +447,12 @@ export interface LibraryBoxFixture {
  * @category layers
  * @since 0.0.0
  */
-export const makeLibraryBoxTest = (fixture: LibraryBoxFixture) => {
+export const makeLibraryBoxTest = (fixture: {
+  readonly bytes: Readonly<Record<string, Uint8Array>>;
+  readonly downloads?: Array<string>;
+  readonly folders: Readonly<Record<string, ReadonlyArray<LibraryBoxFile>>>;
+  readonly subfolders?: Readonly<Record<string, ReadonlyArray<string>>>;
+}) => {
   const all = A.flatten(R.values(fixture.folders));
   const missing = (id: string) => LibraryError.make({ message: `Box item ${id} not found.`, cause: "box" });
   const listFolder = Effect.fn("LibraryBoxTest.listFolder")(function* (folderId: string) {

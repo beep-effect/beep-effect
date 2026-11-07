@@ -13,6 +13,7 @@ import {
   LibraryDerivation,
   LibraryDocument,
   LibraryFinding,
+  LibraryHopGateInput,
   LibraryHopPolicy,
   LibraryImportOriginal,
   LibraryInventoryOptions,
@@ -47,6 +48,8 @@ import * as Str from "effect/String";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const bytesOf = (text: string) => new TextEncoder().encode(text);
+const encodeVidbee = S.encodeEffect(S.fromJsonString(LibraryVidbeeImportPayload));
+const encodeAlphaxiv = S.encodeEffect(S.fromJsonString(LibraryAlphaxivImportPayload));
 
 // A page that links onward, so a readable hop-1 capture yields a hop-2 identity.
 const firecrawl = Firecrawl.makeTestLayer((request) =>
@@ -209,7 +212,7 @@ describe("research library routes", () => {
         });
         const write = Effect.fn("test.writeVidbee")(function* (value: LibraryVidbeeImportPayload, name: string) {
           const manifest = path.join(temporary, name);
-          const text = yield* S.encodeEffect(S.fromJsonString(LibraryVidbeeImportPayload))(value);
+          const text = yield* encodeVidbee(value);
           yield* fs.writeFileString(manifest, text);
           return manifest;
         });
@@ -268,7 +271,7 @@ describe("research library routes", () => {
         const fullText = yield* original(temporary, "paper.txt", Str.repeat(80)("Full paper sentence. "), "text/plain");
         const write = Effect.fn("test.writeAlpha")(function* (value: LibraryAlphaxivImportPayload, name: string) {
           const manifest = path.join(temporary, name);
-          const text = yield* S.encodeEffect(S.fromJsonString(LibraryAlphaxivImportPayload))(value);
+          const text = yield* encodeAlphaxiv(value);
           yield* fs.writeFileString(manifest, text);
           return manifest;
         });
@@ -479,7 +482,10 @@ describe("research library routes", () => {
       }),
     ];
     const decide = (explicit: ReadonlyArray<string> = []) => {
-      const decisions = libraryHopGate(catalog, { concepts, policy: LibraryHopPolicy.make({}), explicit });
+      const decisions = libraryHopGate(
+        catalog,
+        LibraryHopGateInput.make({ concepts, policy: LibraryHopPolicy.make({}), explicit })
+      );
       return (id: string) => {
         const decision = O.getOrThrow(A.findFirst(decisions, (item) => item.sourceId === id));
         return [decision.admitted, decision.reason];
@@ -507,7 +513,10 @@ describe("research library routes", () => {
       );
       it.effect("holds the per-domain cap at 25 per intake", () =>
         Effect.sync(() => {
-          const decisions = libraryHopGate(catalog, { concepts, policy: LibraryHopPolicy.make({}) });
+          const decisions = libraryHopGate(
+            catalog,
+            LibraryHopGateInput.make({ concepts, policy: LibraryHopPolicy.make({}) })
+          );
           const capped = A.filter(decisions, (decision) => decision.domain === "cap.org");
           expect(A.filter(capped, (decision) => decision.admitted)).toHaveLength(25);
           expect(

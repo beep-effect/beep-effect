@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -16,7 +15,7 @@ import { libraryBoxAdapter, registerLibraryBoxSources } from "./Library.box.ts";
 import { libraryQualificationValid } from "./Library.evidence.ts";
 import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
 import { libraryHopTotals } from "./Library.hopStatus.ts";
-import { libraryHopGate, libraryPacketConcepts, recordLibraryHops } from "./Library.hops.ts";
+import { LibraryHopGateInput, libraryHopGate, libraryLiveConcepts, recordLibraryHops } from "./Library.hops.ts";
 import { inventoryLibrary } from "./Library.inventory.ts";
 import { LibraryQualifyOptions, qualifyLibrary } from "./Library.qualify.ts";
 import { LibraryAcquireOptions } from "./Library.schemas.ts";
@@ -111,11 +110,8 @@ export const libraryHopReport = Effect.fn("Library.hopReport")(function* (
 ) {
   const catalog = yield* loadCatalog(root);
   for (const line of yield* libraryHopTotals(root, catalog, policy)) yield* Console.log(line);
-  const repoRoot = yield* findRepoRoot().pipe(Effect.option);
-  const concepts = O.isSome(repoRoot)
-    ? yield* libraryPacketConcepts(repoRoot.value, policy).pipe(Effect.orElseSucceed(A.empty))
-    : [];
-  const decisions = libraryHopGate(catalog, { concepts, policy });
+  const concepts = yield* libraryLiveConcepts(policy);
+  const decisions = libraryHopGate(catalog, LibraryHopGateInput.make({ concepts, policy }));
   for (const decision of A.take(decisions, limit)) {
     const url = O.getOrElse(
       O.map(

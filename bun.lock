@@ -1337,7 +1337,6 @@
         "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",

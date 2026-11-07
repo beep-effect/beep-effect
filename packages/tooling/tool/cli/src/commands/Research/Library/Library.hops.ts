@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -18,11 +19,12 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { libraryEffectiveCaptures } from "./Library.evidence.ts";
+import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
 import { classifyLibraryReference, extractLibraryReferences } from "./Library.inventory.ts";
 import { LibraryCatalog, LibraryDerivation } from "./Library.schemas.ts";
 import { hashBytes } from "./Library.store.ts";
-import type { LibraryHopPolicy } from "./Library.hopPolicy.ts";
-import type { LibrarySource } from "./Library.schemas.ts";
+import type { LibraryEffectiveCapture } from "./Library.evidence.ts";
+import type { LibraryArtifact, LibrarySource } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.hops");
 
@@ -115,6 +117,91 @@ const MAX_SCANNED_BYTES = 5_000_000;
 const scannedRoles = ["extracted-full-text", "raw-full-text", "transcript-full-text"];
 const scannedMediaTypes = ["text/markdown", "text/plain", "text/vtt"];
 
+const scannedArtifacts = (claims: ReadonlyArray<LibraryEffectiveCapture>) =>
+  A.dedupeWith(
+    A.flatMap(claims, (claim) =>
+      claim.category === "readable" && claim.capture !== null
+        ? A.filter(
+            claim.capture.artifacts,
+            (artifact) =>
+              A.contains(scannedRoles, artifact.role) &&
+              A.contains(scannedMediaTypes, artifact.mediaType) &&
+              artifact.bytes <= MAX_SCANNED_BYTES
+          )
+        : []
+    ),
+    (a: LibraryArtifact, b: LibraryArtifact) => a.sha256 === b.sha256
+  );
+
+const admissibleChild = (parent: LibrarySource, child: LibrarySource) =>
+  child.id !== parent.id && A.contains(["external", "project"], child.ownership);
+
+// Every external URL in the readable text of a parent's current captures.
+const scanChildren = Effect.fnUntraced(function* (
+  root: string,
+  catalog: LibraryCatalog,
+  parent: LibrarySource,
+  known: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const claims = yield* libraryEffectiveCaptures(root, catalog, parent).pipe(Effect.orElseSucceed(A.empty));
+  const found: Array<LibrarySource> = [];
+  for (const artifact of scannedArtifacts(claims)) {
+    const text = yield* fs.readFileString(path.resolve(root, artifact.path)).pipe(Effect.orElseSucceed(() => ""));
+    for (const reference of extractLibraryReferences(text, known)) {
+      const child = yield* classifyLibraryReference(reference.locator, parent.id);
+      if (admissibleChild(parent, child)) found.push(child);
+    }
+  }
+  return A.dedupeWith(found, (a, b) => a.id === b.id);
+});
+
+const intakeOccurrences = (catalog: LibraryCatalog, intake: LibraryCatalog["intakes"][number]) => {
+  const snapshots = HashSet.fromIterable(A.map(intake.files, (file) => file.snapshotPath));
+  const documents = HashSet.fromIterable(
+    A.map(
+      A.filter(catalog.documents, (document) => HashSet.has(snapshots, document.snapshotPath)),
+      (document) => document.id
+    )
+  );
+  return A.filter(catalog.occurrences, (occurrence) => HashSet.has(documents, occurrence.documentId));
+};
+
+interface HopEdge {
+  readonly derivedId: string;
+  readonly hopDepth: number;
+  readonly intakeId: string;
+  readonly parentId: string;
+  readonly rootId: string;
+}
+
+const mergeDerivations = Effect.fnUntraced(function* (
+  existing: ReadonlyArray<LibraryDerivation>,
+  edges: ReadonlyArray<HopEdge>,
+  recordedAt: string
+) {
+  let byId = HashMap.fromIterable(A.map(existing, (item) => [item.id, item] as const));
+  for (const edge of edges) {
+    const id = yield* derivationId(edge.intakeId, edge.hopDepth, edge.parentId, edge.derivedId);
+    if (!HashMap.has(byId, id))
+      byId = HashMap.set(
+        byId,
+        id,
+        LibraryDerivation.make({
+          id,
+          derivedId: edge.derivedId,
+          sourceId: edge.parentId,
+          intakeId: edge.intakeId,
+          rootId: edge.rootId,
+          hopDepth: edge.hopDepth,
+          recordedAt,
+        })
+      );
+  }
+  return byId.pipe(HashMap.values, A.fromIterable, A.sort(Order.mapInput(Str.Order, (d: LibraryDerivation) => d.id)));
+});
+
 /**
  * Record hop-1 derivations for every intake and hop-2 identities from readable hop-1 captures.
  *
@@ -142,90 +229,62 @@ export const recordLibraryHops = Effect.fn("Library.recordHops")(function* (
   catalog: LibraryCatalog,
   recordedAt: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  let derivations = HashMap.fromIterable(A.map(catalog.derivations, (item) => [item.id, item] as const));
   let sources = A.fromIterable(catalog.sources);
-  let childrenByParent = HashMap.empty<string, ReadonlyArray<LibrarySource>>();
+  let childrenByParent = HashMap.empty<string, ReadonlyArray<string>>();
   const known = A.flatMap(catalog.sources, (source) => [source.repository, source.identity]);
-  const addDerivation = Effect.fnUntraced(function* (
-    intakeId: string,
-    hopDepth: number,
-    parentId: string,
-    derivedId: string,
-    rootId: string
-  ) {
-    const id = yield* derivationId(intakeId, hopDepth, parentId, derivedId);
-    if (HashMap.has(derivations, id)) return;
-    derivations = HashMap.set(
-      derivations,
-      id,
-      LibraryDerivation.make({ id, derivedId, sourceId: parentId, intakeId, rootId, hopDepth, recordedAt })
-    );
-  });
-  const childrenOf = Effect.fnUntraced(function* (parent: LibrarySource) {
+  const childIds = Effect.fnUntraced(function* (parent: LibrarySource) {
     const cached = HashMap.get(childrenByParent, parent.id);
     if (O.isSome(cached)) return cached.value;
-    const current = yield* libraryEffectiveCaptures(root, catalog, parent).pipe(Effect.orElseSucceed(A.empty));
-    const readable = A.flatMap(current, (claim) =>
-      claim.category === "readable" && claim.capture !== null ? [claim.capture] : []
+    const found = yield* scanChildren(root, catalog, parent, known);
+    const present = (child: LibrarySource) =>
+      A.some(sources, (source) => source.id === child.id || A.contains(source.aliasIds, child.id));
+    sources = A.appendAll(
+      sources,
+      A.filter(found, (child) => !present(child))
     );
-    const texts = A.flatMap(readable, (capture) =>
-      A.filter(
-        capture.artifacts,
-        (artifact) =>
-          A.contains(scannedRoles, artifact.role) &&
-          A.contains(scannedMediaTypes, artifact.mediaType) &&
-          artifact.bytes <= MAX_SCANNED_BYTES
-      )
-    );
-    const children: Array<LibrarySource> = [];
-    for (const artifact of A.dedupeWith(texts, (a, b) => a.sha256 === b.sha256)) {
-      const text = yield* fs.readFileString(path.resolve(root, artifact.path)).pipe(Effect.orElseSucceed(() => ""));
-      for (const reference of extractLibraryReferences(text, known)) {
-        const child = yield* classifyLibraryReference(reference.locator, parent.id);
-        if (child.id === parent.id || !A.contains(["external", "project"], child.ownership)) continue;
-        if (!A.some(sources, (source) => source.id === child.id || A.contains(source.aliasIds, child.id)))
-          sources = A.append(sources, child);
-        children.push(
-          O.getOrElse(
+    const ids = A.dedupe(
+      A.map(found, (child) =>
+        O.getOrElse(
+          O.map(
             A.findFirst(sources, (source) => A.contains(source.aliasIds, child.id)),
-            () => child
-          )
-        );
-      }
-    }
-    const unique = A.dedupeWith(children, (a, b) => a.id === b.id);
-    childrenByParent = HashMap.set(childrenByParent, parent.id, unique);
-    return unique;
-  });
-  for (const intake of catalog.intakes) {
-    const snapshots = HashSet.fromIterable(A.map(intake.files, (file) => file.snapshotPath));
-    const intakeDocuments = HashSet.fromIterable(
-      A.map(
-        A.filter(catalog.documents, (document) => HashSet.has(snapshots, document.snapshotPath)),
-        (document) => document.id
+            (source) => source.id
+          ),
+          () => child.id
+        )
       )
     );
-    const hopOne = A.filter(catalog.occurrences, (occurrence) => HashSet.has(intakeDocuments, occurrence.documentId));
-    for (const occurrence of hopOne)
-      yield* addDerivation(intake.id, 1, occurrence.documentId, occurrence.sourceId, occurrence.documentId);
-    for (const occurrence of A.dedupeWith(hopOne, (a, b) => a.sourceId === b.sourceId)) {
+    childrenByParent = HashMap.set(childrenByParent, parent.id, ids);
+    return ids;
+  });
+  const edges: Array<HopEdge> = [];
+  for (const intake of catalog.intakes) {
+    const hopOne = intakeOccurrences(catalog, intake);
+    edges.push(
+      ...A.map(hopOne, (occurrence) => ({
+        intakeId: intake.id,
+        hopDepth: 1,
+        parentId: occurrence.documentId,
+        derivedId: occurrence.sourceId,
+        rootId: occurrence.documentId,
+      }))
+    );
+    const parents = A.dedupeWith(hopOne, (a, b) => a.sourceId === b.sourceId);
+    for (const occurrence of parents) {
       const parent = A.findFirst(catalog.sources, (source) => source.id === occurrence.sourceId);
-      if (O.isNone(parent)) continue;
-      for (const child of yield* childrenOf(parent.value))
-        yield* addDerivation(intake.id, 2, parent.value.id, child.id, occurrence.documentId);
+      const children = O.isSome(parent) ? yield* childIds(parent.value) : [];
+      edges.push(
+        ...A.map(children, (derivedId) => ({
+          intakeId: intake.id,
+          hopDepth: 2,
+          parentId: occurrence.sourceId,
+          derivedId,
+          rootId: occurrence.documentId,
+        }))
+      );
     }
   }
-  return LibraryCatalog.make({
-    ...catalog,
-    sources,
-    derivations: derivations.pipe(
-      HashMap.values,
-      A.fromIterable,
-      A.sort(Order.mapInput(Str.Order, (d: LibraryDerivation) => d.id))
-    ),
-  });
+  const derivations = yield* mergeDerivations(catalog.derivations, edges, recordedAt);
+  return LibraryCatalog.make({ ...catalog, sources, derivations });
 });
 
 /**
@@ -376,14 +435,50 @@ const isArxiv = (source: LibrarySource) => Str.startsWith("arxiv:")(source.ident
 /**
  * Inputs of {@link libraryHopGate}: packet concepts, policy and explicit on-demand selections.
  *
+ * **Example** (Build gate inputs)
+ *
+ * ```ts
+ * import { LibraryHopGateInput, LibraryHopPolicy } from "@beep/repo-cli/commands/Research"
+ *
+ * console.log(LibraryHopGateInput.make({ concepts: [], policy: LibraryHopPolicy.make({}) }).explicit) // []
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface LibraryHopGateInput {
-  readonly concepts: ReadonlyArray<LibraryPacketConcept>;
-  readonly explicit?: ReadonlyArray<string>;
-  readonly policy: LibraryHopPolicy;
-}
+export class LibraryHopGateInput extends S.Opaque<LibraryHopGateInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    concepts: S.Array(LibraryPacketConcept),
+    policy: LibraryHopPolicy,
+    explicit: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultKey(Effect.succeed([]))
+    ),
+  }).pipe(
+    $I.annoteSchema("LibraryHopGateInput", {
+      description: "Packet concepts, hop policy and explicit on-demand source ids for one gate evaluation.",
+    })
+  )
+) {}
+
+type GateOutcome = readonly [admitted: boolean, reason: LibraryHopGateReason];
+
+// Refusals and admissions that never depend on the per-domain cap.
+const policyOutcome = (
+  source: LibrarySource,
+  parents: ReadonlyArray<LibrarySource>,
+  input: LibraryHopGateInput,
+  routed: (parent: LibrarySource) => boolean
+): O.Option<GateOutcome> => {
+  if (!input.policy.githubTransitive && (isGithub(source) || A.some(parents, isGithub)))
+    return O.some([false, "github-not-transitive"]);
+  if (isArxiv(source))
+    return O.some(A.contains(input.explicit, source.id) ? [true, "arxiv-on-demand"] : [false, "arxiv-catalogue-only"]);
+  return A.some(parents, routed) ? O.none() : O.some([false, "unrouted-parent"]);
+};
+
+const hopTwoEdges = (catalog: LibraryCatalog, source: LibrarySource) =>
+  A.filter(catalog.derivations, (d) => d.derivedId === source.id && d.hopDepth === 2);
 
 /**
  * Decide which hop-2 sources the next acquisition may fetch.
@@ -413,11 +508,9 @@ export const libraryHopGate: {
   (input: LibraryHopGateInput): (catalog: LibraryCatalog) => ReadonlyArray<LibraryHopDecision>;
   (catalog: LibraryCatalog, input: LibraryHopGateInput): ReadonlyArray<LibraryHopDecision>;
 } = dual(2, (catalog: LibraryCatalog, input: LibraryHopGateInput): ReadonlyArray<LibraryHopDecision> => {
-  const { concepts, policy } = input;
-  const explicit = input.explicit ?? [];
   const live = HashSet.fromIterable(
     A.flatMap(
-      A.filter(concepts, (concept: LibraryPacketConcept) => concept.live),
+      A.filter(input.concepts, (concept: LibraryPacketConcept) => concept.live),
       (concept: LibraryPacketConcept) => [concept.id, concept.initiativeId]
     )
   );
@@ -432,15 +525,11 @@ export const libraryHopGate: {
     A.filter(catalog.sources, (source) => libraryHopTwoOnly(catalog, source.id)),
     Order.mapInput(Str.Order, (source: LibrarySource) => `${source.canonicalUrl}\n${source.id}`)
   );
-  let acquired = HashMap.empty<string, number>();
   const intakeOf = (source: LibrarySource) =>
     O.getOrElse(
       A.head(
         A.sort(
-          A.map(
-            A.filter(catalog.derivations, (d) => d.derivedId === source.id && d.hopDepth === 2),
-            (d) => d.intakeId
-          ),
+          A.map(hopTwoEdges(catalog, source), (d) => d.intakeId),
           Str.Order
         )
       ),
@@ -448,33 +537,80 @@ export const libraryHopGate: {
     );
   const captured = (source: LibrarySource) =>
     A.some(catalog.captures, (capture) => capture.sourceId === source.id && capture.status !== "blocked");
-  for (const source of candidates) {
-    if (!captured(source) || isGithub(source) || isArxiv(source)) continue;
-    const key = `${intakeOf(source)}\n${librarySourceDomain(source.canonicalUrl)}`;
-    acquired = HashMap.set(acquired, key, O.getOrElse(HashMap.get(acquired, key), () => 0) + 1);
-  }
+  const capKey = (source: LibrarySource) => `${intakeOf(source)}\n${librarySourceDomain(source.canonicalUrl)}`;
+  let acquired = HashMap.empty<string, number>();
+  const count = (key: string) => O.getOrElse(HashMap.get(acquired, key), () => 0);
+  for (const source of A.filter(candidates, (item) => captured(item) && !isGithub(item) && !isArxiv(item)))
+    acquired = HashMap.set(acquired, capKey(source), count(capKey(source)) + 1);
+  const capOutcome = (source: LibrarySource): GateOutcome => {
+    if (captured(source)) return [true, "routed-parent"];
+    const key = capKey(source);
+    if (count(key) >= input.policy.domainCap) return [false, "domain-cap"];
+    acquired = HashMap.set(acquired, key, count(key) + 1);
+    return [true, "routed-parent"];
+  };
   return A.map(candidates, (source) => {
-    const parentIds = A.dedupe(
-      A.map(
-        A.filter(catalog.derivations, (d) => d.derivedId === source.id && d.hopDepth === 2),
-        (d) => d.sourceId
-      )
-    );
+    const parentIds = A.dedupe(A.map(hopTwoEdges(catalog, source), (d) => d.sourceId));
     const parents = A.filter(catalog.sources, (candidate) => A.contains(parentIds, candidate.id));
-    const intakeId = intakeOf(source);
-    const domain = librarySourceDomain(source.canonicalUrl);
-    const decide = (admitted: boolean, reason: LibraryHopGateReason) =>
-      LibraryHopDecision.make({ sourceId: source.id, intakeId, domain, parentIds, admitted, reason });
-    if (!policy.githubTransitive && (isGithub(source) || A.some(parents, isGithub)))
-      return decide(false, "github-not-transitive");
-    if (isArxiv(source))
-      return A.contains(explicit, source.id) ? decide(true, "arxiv-on-demand") : decide(false, "arxiv-catalogue-only");
-    if (!A.some(parents, routed)) return decide(false, "unrouted-parent");
-    if (captured(source)) return decide(true, "routed-parent");
-    const key = `${intakeId}\n${domain}`;
-    const count = O.getOrElse(HashMap.get(acquired, key), () => 0);
-    if (count >= policy.domainCap) return decide(false, "domain-cap");
-    acquired = HashMap.set(acquired, key, count + 1);
-    return decide(true, "routed-parent");
+    const [admitted, reason] = O.getOrElse(policyOutcome(source, parents, input, routed), () => capOutcome(source));
+    return LibraryHopDecision.make({
+      sourceId: source.id,
+      intakeId: intakeOf(source),
+      domain: librarySourceDomain(source.canonicalUrl),
+      parentIds,
+      admitted,
+      reason,
+    });
   });
+});
+
+/**
+ * Packet concepts of the enclosing repository, or none when the library runs outside one.
+ *
+ * **Example** (Prepare concept discovery)
+ *
+ * ```ts
+ * import { libraryLiveConcepts, LibraryHopPolicy } from "@beep/repo-cli/commands/Research"
+ *
+ * console.log(libraryLiveConcepts(LibraryHopPolicy.make({})).pipe !== undefined)
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const libraryLiveConcepts = Effect.fn("Library.liveConcepts")(function* (policy: LibraryHopPolicy) {
+  const repoRoot = yield* findRepoRoot().pipe(Effect.option);
+  if (O.isNone(repoRoot)) return A.empty<LibraryPacketConcept>();
+  return yield* libraryPacketConcepts(repoRoot.value, policy).pipe(Effect.orElseSucceed(A.empty<LibraryPacketConcept>));
+});
+
+/**
+ * Ids of hop-2 sources the gate refuses for the next acquisition.
+ *
+ * **Example** (Prepare refusals)
+ *
+ * ```ts
+ * import { libraryRefusedHopTwo, LibraryCatalog, LibraryHopPolicy } from "@beep/repo-cli/commands/Research"
+ *
+ * const catalog = LibraryCatalog.make({ schema: "beep.research.library/v2", documents: [], sources: [], occurrences: [], captures: [], qualifications: [] })
+ * console.log(libraryRefusedHopTwo(catalog, LibraryHopPolicy.make({}), []).pipe !== undefined)
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const libraryRefusedHopTwo = Effect.fn("Library.refusedHopTwo")(function* (
+  catalog: LibraryCatalog,
+  policy: LibraryHopPolicy,
+  explicit: ReadonlyArray<string>
+) {
+  if (!A.some(catalog.sources, (source) => libraryHopTwoOnly(catalog, source.id))) return HashSet.empty<string>();
+  const concepts = yield* libraryLiveConcepts(policy);
+  const decisions = libraryHopGate(catalog, LibraryHopGateInput.make({ concepts, policy, explicit }));
+  return HashSet.fromIterable(
+    A.map(
+      A.filter(decisions, (decision) => !decision.admitted),
+      (decision) => decision.sourceId
+    )
+  );
 });

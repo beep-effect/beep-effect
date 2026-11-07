@@ -69,7 +69,6 @@
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:",
-    "@beep/test-runner": "workspace:^"
+    "bun-types": "catalog:"
   }
 }

@@ -240,6 +240,34 @@ const appendCapture = (root: string, capture: LibraryCapture, extra: (catalog: L
     )
   );
 
+// The FAQ frontmatter must bind the referenced media file and source, and names the model run.
+const vidbeeModelRun = Effect.fn("Library.importMethods.vidbeeModelRun")(function* (
+  faq: string,
+  payload: LibraryVidbeeImportPayload,
+  source: LibrarySource
+) {
+  const path = yield* Path.Path;
+  const frontmatter = libraryFrontmatter(faq);
+  const media = O.getOrElse(frontmatterValue(frontmatter, "media"), () => "");
+  if (Str.isEmpty(media) || path.basename(media) !== path.basename(payload.media.path))
+    return yield* identity("VidBee FAQ frontmatter does not bind the referenced media file.");
+  const sourceUrl = O.getOrElse(frontmatterValue(frontmatter, "source_url"), () => payload.canonicalUrl);
+  if (sourceUrl !== payload.canonicalUrl && !A.contains(source.locators, sourceUrl))
+    return yield* identity("VidBee FAQ frontmatter names a different source URL.");
+  const pinned = O.getOrElse(frontmatterValue(frontmatter, "model"), () => "");
+  if (Str.isEmpty(pinned)) return yield* identity("VidBee FAQ frontmatter omits the generating model.");
+  const pin = O.getOrElse(
+    O.map(Str.match(/^(.+?)\(([^)]+)\)$/)(pinned), (match) => [match[1] ?? pinned, match[2] ?? ""] as const),
+    () => [pinned, ""] as const
+  );
+  const explicit = O.getOrElse(frontmatterValue(frontmatter, "effort"), () => pin[1]);
+  return {
+    model: pin[0],
+    effort: Str.isEmpty(explicit) ? "unrecorded" : explicit,
+    generatedAt: O.getOrElse(frontmatterValue(frontmatter, "generated_at"), () => ""),
+  };
+});
+
 /**
  * Import a VidBee bundle for a cited video.
  *
@@ -267,28 +295,12 @@ export const importLibraryVidbee = Effect.fn("Library.importVidbee")(function* (
   raw: string,
   payload: LibraryVidbeeImportPayload
 ) {
-  const path = yield* Path.Path;
   const catalog = yield* loadCatalog(root);
   const source = yield* findSource(catalog, payload.sourceId, payload.canonicalUrl);
   yield* readOriginal(resultPath, payload.media, "VidBee media");
   const transcriptBytes = yield* readOriginal(resultPath, payload.transcript, "VidBee transcript");
   const faqBytes = yield* readOriginal(resultPath, payload.faq, "VidBee FAQ");
-  const faq = new TextDecoder().decode(faqBytes);
-  const frontmatter = libraryFrontmatter(faq);
-  const media = frontmatterValue(frontmatter, "media");
-  if (O.isNone(media) || path.basename(media.value) !== path.basename(payload.media.path))
-    return yield* identity("VidBee FAQ frontmatter does not bind the referenced media file.");
-  const sourceUrl = frontmatterValue(frontmatter, "source_url");
-  if (O.isSome(sourceUrl) && sourceUrl.value !== payload.canonicalUrl && !A.contains(source.locators, sourceUrl.value))
-    return yield* identity("VidBee FAQ frontmatter names a different source URL.");
-  const pinned = O.getOrElse(frontmatterValue(frontmatter, "model"), () => "");
-  if (Str.isEmpty(pinned)) return yield* identity("VidBee FAQ frontmatter omits the generating model.");
-  const pin = Str.match(/^(.+?)\(([^)]+)\)$/)(pinned);
-  const model = O.isSome(pin) ? (pin.value[1] ?? pinned) : pinned;
-  const effort = O.getOrElse(frontmatterValue(frontmatter, "effort"), () =>
-    O.isSome(pin) ? (pin.value[2] ?? "unrecorded") : "unrecorded"
-  );
-  const generatedAt = O.getOrElse(frontmatterValue(frontmatter, "generated_at"), () => "");
+  const { model, effort, generatedAt } = yield* vidbeeModelRun(new TextDecoder().decode(faqBytes), payload, source);
   if (Str.isEmpty(Str.trim(new TextDecoder().decode(transcriptBytes))))
     return yield* integrity("VidBee transcript is empty.");
   const id = yield* hashBytes(new TextEncoder().encode(raw));
@@ -357,6 +369,67 @@ export const importLibraryVidbee = Effect.fn("Library.importVidbee")(function* (
   );
 });
 
+// The import must target the inventoried arxiv:<id> paper at its cited version.
+const alphaxivTarget = Effect.fn("Library.importMethods.alphaxivTarget")(function* (
+  catalog: LibraryCatalog,
+  payload: LibraryAlphaxivImportPayload
+) {
+  const source = yield* findSource(catalog, payload.sourceId, payload.canonicalUrl);
+  if (source.identity !== `arxiv:${payload.arxivId}`)
+    return yield* identity(`alphaXiv arXiv id ${payload.arxivId} does not match source ${source.identity}.`);
+  const requested = O.getOrElse(
+    A.findFirst(source.versions, (version) => version.canonicalUrl === payload.canonicalUrl),
+    () => source
+  ).revision;
+  if (Str.isNonEmpty(requested) && requested !== payload.version)
+    return yield* identity(`alphaXiv version ${payload.version} differs from the cited version ${requested}.`);
+  return { source, requested };
+});
+
+const referenceLocator = (reference: LibraryAlphaxivReference) =>
+  Str.isNonEmpty(reference.arxivId) ? `https://arxiv.org/abs/${reference.arxivId}` : reference.url;
+
+// References become catalogued children one hop below the paper; hop 3 is never catalogued.
+const alphaxivReferences = Effect.fn("Library.importMethods.alphaxivReferences")(function* (
+  catalog: LibraryCatalog,
+  source: LibrarySource,
+  payload: LibraryAlphaxivImportPayload,
+  recordedAt: string
+) {
+  const parentDepth = O.getOrElse(librarySourceHopDepth(catalog, source.id), () => 1);
+  const locators = parentDepth < 2 ? A.filter(A.map(payload.references, referenceLocator), Str.isNonEmpty) : [];
+  const classified = yield* Effect.forEach(locators, (locator) => classifyLibraryReference(locator, source.id));
+  const unique = A.dedupeWith(
+    A.filter(classified, (child) => child.ownership === "external" && child.id !== source.id),
+    (a: LibrarySource, b: LibrarySource) => a.id === b.id
+  );
+  const parentEdge = A.findFirst(catalog.derivations, (edge) => edge.derivedId === source.id);
+  const intakeId = O.getOrElse(
+    O.map(parentEdge, (edge) => edge.intakeId),
+    () => ""
+  );
+  const rootId = O.getOrElse(
+    O.map(parentEdge, (edge) => edge.rootId),
+    () => ""
+  );
+  const edges = yield* Effect.forEach(unique, (child) =>
+    hashBytes(new TextEncoder().encode(`${intakeId}\n${parentDepth + 1}\n${source.id}\n${child.id}`)).pipe(
+      Effect.map((id) =>
+        LibraryDerivation.make({
+          id,
+          derivedId: child.id,
+          sourceId: source.id,
+          intakeId,
+          rootId,
+          hopDepth: parentDepth + 1,
+          recordedAt,
+        })
+      )
+    )
+  );
+  return { parentDepth, unique, edges };
+});
+
 /**
  * Import alphaXiv full text for one arXiv version and catalogue its references at hop 2.
  *
@@ -385,15 +458,7 @@ export const importLibraryAlphaxiv = Effect.fn("Library.importAlphaxiv")(functio
   payload: LibraryAlphaxivImportPayload
 ) {
   const catalog = yield* loadCatalog(root);
-  const source = yield* findSource(catalog, payload.sourceId, payload.canonicalUrl);
-  if (source.identity !== `arxiv:${payload.arxivId}`)
-    return yield* identity(`alphaXiv arXiv id ${payload.arxivId} does not match source ${source.identity}.`);
-  const requested = O.getOrElse(
-    A.findFirst(source.versions, (version) => version.canonicalUrl === payload.canonicalUrl),
-    () => source
-  ).revision;
-  if (Str.isNonEmpty(requested) && requested !== payload.version)
-    return yield* identity(`alphaXiv version ${payload.version} differs from the cited version ${requested}.`);
+  const { source, requested } = yield* alphaxivTarget(catalog, payload);
   const bytes = yield* readOriginal(resultPath, payload.fullText, "alphaXiv full text");
   if (Str.length(Str.trim(new TextDecoder().decode(bytes))) < 1000)
     return yield* integrity("alphaXiv full text is shorter than 1000 characters; abstracts are not full text.");
@@ -424,37 +489,7 @@ export const importLibraryAlphaxiv = Effect.fn("Library.importAlphaxiv")(functio
     "import-manifest"
   );
   const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const parentDepth = O.getOrElse(librarySourceHopDepth(catalog, source.id), () => 1);
-  const parentEdge = A.findFirst(catalog.derivations, (edge) => edge.derivedId === source.id);
-  const children: Array<LibrarySource> = [];
-  if (parentDepth < 2)
-    for (const reference of payload.references) {
-      const locator = Str.isNonEmpty(reference.arxivId) ? `https://arxiv.org/abs/${reference.arxivId}` : reference.url;
-      if (Str.isEmpty(locator)) continue;
-      const child = yield* classifyLibraryReference(locator, source.id);
-      if (child.ownership === "external" && child.id !== source.id) children.push(child);
-    }
-  const unique = A.dedupeWith(children, (a, b) => a.id === b.id);
-  const edges = yield* Effect.forEach(unique, (child) =>
-    Effect.gen(function* () {
-      const intakeId = O.getOrElse(
-        O.map(parentEdge, (edge) => edge.intakeId),
-        () => ""
-      );
-      return LibraryDerivation.make({
-        id: yield* hashBytes(new TextEncoder().encode(`${intakeId}\n${parentDepth + 1}\n${source.id}\n${child.id}`)),
-        derivedId: child.id,
-        sourceId: source.id,
-        intakeId,
-        rootId: O.getOrElse(
-          O.map(parentEdge, (edge) => edge.rootId),
-          () => ""
-        ),
-        hopDepth: parentDepth + 1,
-        recordedAt,
-      });
-    })
-  );
+  const { parentDepth, unique, edges } = yield* alphaxivReferences(catalog, source, payload, recordedAt);
   const capture = LibraryCapture.make({
     id,
     sourceId: source.id,

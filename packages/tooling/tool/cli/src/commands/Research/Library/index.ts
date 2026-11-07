@@ -14,11 +14,14 @@ export { LibraryHopPolicy } from "./Library.hopPolicy.ts";
 export { libraryHopTotals } from "./Library.hopStatus.ts";
 export {
   LibraryHopDecision,
+  LibraryHopGateInput,
   LibraryHopGateReason,
   LibraryPacketConcept,
   libraryHopGate,
   libraryHopTwoOnly,
+  libraryLiveConcepts,
   libraryPacketConcepts,
+  libraryRefusedHopTwo,
   librarySourceDomain,
   librarySourceHopDepth,
   recordLibraryHops,

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -26,13 +25,12 @@ import { LibraryError } from "./Library.errors.ts";
 import { libraryEffectiveCaptures, libraryQualificationValid, librarySourceEvidenceValid } from "./Library.evidence.ts";
 import { acquireLibraryWeb, libraryWebAdapter } from "./Library.firecrawl.ts";
 import { acquireLibraryGithub } from "./Library.github.ts";
-import { libraryHopGate, libraryHopTwoOnly, libraryPacketConcepts } from "./Library.hops.ts";
+import { libraryRefusedHopTwo } from "./Library.hops.ts";
 import { libraryDispositionValid } from "./Library.import.ts";
 import { LibraryCapture, LibraryCatalog, LibrarySource } from "./Library.schemas.ts";
 import { hashBytes, loadCatalog, withCatalog } from "./Library.store.ts";
 import { acquireLibraryPaper } from "./Library.web.ts";
 import { acquireLibraryYoutube } from "./Library.youtube.ts";
-import type { LibraryPacketConcept } from "./Library.hops.ts";
 import type { LibraryAcquireOptions } from "./Library.schemas.ts";
 
 /**
@@ -332,26 +330,9 @@ export const acquireLibrary = Effect.fn("Library.acquire")(function* (root: stri
         if (O.isNone(latest) || latest.value.status === "interrupted" || (options.retryFailed && !reusable))
           targets.push(source);
       });
-      const hopTwo = A.filter(catalog.sources, (source) => libraryHopTwoOnly(catalog, source.id));
-      let refused = HashSet.empty<string>();
-      if (A.isReadonlyArrayNonEmpty(hopTwo)) {
-        const repoRoot = yield* findRepoRoot().pipe(Effect.option);
-        const concepts = O.isSome(repoRoot)
-          ? yield* libraryPacketConcepts(repoRoot.value, options.hopPolicy)
-          : A.empty<LibraryPacketConcept>();
-        const decisions = libraryHopGate(catalog, {
-          concepts,
-          policy: options.hopPolicy,
-          explicit: options.sourceIds,
-        });
-        refused = HashSet.fromIterable(
-          A.map(
-            A.filter(decisions, (decision) => !decision.admitted),
-            (decision) => decision.sourceId
-          )
-        );
-      }
-      for (const source of versions) if (!HashSet.has(refused, source.id)) yield* selectTarget(source);
+      const refused = yield* libraryRefusedHopTwo(catalog, options.hopPolicy, options.sourceIds);
+      const eligible = A.filter(versions, (source) => !HashSet.has(refused, source.id));
+      for (const source of eligible) yield* selectTarget(source);
       const admitted: Array<LibrarySource> = [];
       let qualificationValidity = Record.empty<string, boolean>();
       for (const method of A.dedupe(A.map(targets, libraryAdapterFor))) {

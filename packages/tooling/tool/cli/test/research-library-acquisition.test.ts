@@ -37,6 +37,7 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -922,7 +923,10 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         LibraryQualifyOptions.make({ adapters: ["firecrawl"], sourceIds: [], maxProbes: 1 })
       );
       const qualification = A.findLast(catalog.qualifications, (item) => item.adapter === "firecrawl");
-      expect(O.map(qualification, (item) => item.status)).toEqual(O.some("verified"));
+      assertSome(
+        O.map(qualification, (item) => item.status),
+        "verified"
+      );
       const observed7 = yield* libraryQualificationValid(fixture.root, catalog, O.getOrThrow(qualification));
       expect(observed7).toBe(true);
     })

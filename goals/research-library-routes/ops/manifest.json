@@ -34,7 +34,13 @@
     "goals/research-library-routes/GOAL.md",
     "goals/research-library-routes/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/cache-baseline-request-routes-firecrawl.json",
+    "research/cache-baseline-request-routes.json",
+    "research/cache-baseline-review-routes-firecrawl.md",
+    "research/cache-baseline-review-routes.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

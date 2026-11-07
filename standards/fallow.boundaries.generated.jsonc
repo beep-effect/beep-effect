@@ -2526,14 +2526,12 @@
         "allow": [
           "@beep/firecrawl",
           "@beep/identity",
-          "@beep/schema",
-          "@beep/test-runner"
+          "@beep/schema"
         ],
         "allowTypeOnly": [
           "@beep/firecrawl",
           "@beep/identity",
-          "@beep/schema",
-          "@beep/test-runner"
+          "@beep/schema"
         ]
       },
       {

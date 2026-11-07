@@ -25,12 +25,7 @@ import { readLibraryProviderEvents } from "./Library.events.ts";
 import { LibraryDispositionImportPayload, LibraryImportPayload, libraryDispositionValid } from "./Library.import.ts";
 import { libraryArtifactIntegrity } from "./Library.integrity.ts";
 import { AlphaFullText, validateProviderQualification } from "./Library.provenance.ts";
-import {
-  libraryBoxRevisionValid,
-  validateLibraryAlphaxivEvidence,
-  validateLibraryBoxEvidence,
-  validateLibraryVidbeeEvidence,
-} from "./Library.routeEvidence.ts";
+import { libraryBoxRevisionValid, validateLibraryRouteEvidence } from "./Library.routeEvidence.ts";
 import { LibraryArtifact, LibraryCapture } from "./Library.schemas.ts";
 import { hashBytes } from "./Library.store.ts";
 import { libraryCitedRevisions } from "./Library.versions.ts";
@@ -1378,6 +1373,17 @@ const sourceCapturedRevisionValid = (source: LibrarySource, capture: LibraryCapt
   if (source.kind === "paper" && Str.startsWith("arxiv:")(source.identity)) return arxivCapturedRevisionValid(capture);
   return capture.capturedRevision === capture.requestedRevision;
 };
+// Imported, paper and web evidence share the document-capture contracts.
+const validateDocumentEvidence = Effect.fn("Library.validateDocumentEvidence")(function* (context: EvidenceContext) {
+  const imported = yield* validateImportedEvidence(context);
+  if (imported !== undefined) return imported;
+  if (
+    context.source.kind === "paper" &&
+    A.some(context.role("raw-full-text"), (artifact) => artifact.mediaType === "application/pdf")
+  )
+    return yield* validatePaperEvidence(context);
+  return yield* context.webResponseValid();
+});
 /**
  * Revalidate source-specific target and content provenance.
  * **Example** (Checking a retained source)
@@ -1400,21 +1406,12 @@ export const librarySourceEvidenceValid = Effect.fn("Research.Library.verifySour
   const revisions = A.dedupe([source.revision, ...A.map(source.versions, (version) => version.revision)]);
   if (!A.contains(revisions, capture.requestedRevision) || !sourceCapturedRevisionValid(source, capture)) return false;
   if (!(yield* libraryArtifactsValid(root, capture.artifacts))) return false;
-  if (capture.method === "box") return yield* validateLibraryBoxEvidence(root, source, capture);
-  if (capture.method === "alphaxiv" && A.some(capture.artifacts, (artifact) => artifact.role === "alphaxiv-binding"))
-    return yield* validateLibraryAlphaxivEvidence(root, source, capture);
+  const routed = yield* validateLibraryRouteEvidence(root, source, capture);
+  if (O.isSome(routed)) return routed.value;
   const context = yield* makeEvidenceContext(root, source, capture);
-  if (capture.method === "vidbee") return yield* validateLibraryVidbeeEvidence(root, context.url, capture);
   if (Str.startsWith("github-")(source.kind)) return yield* validateGithubEvidence(context);
   if (source.kind === "youtube") return yield* validateYoutubeEvidence(context);
-  const imported = yield* validateImportedEvidence(context);
-  if (imported !== undefined) return imported;
-  if (
-    source.kind === "paper" &&
-    A.some(context.role("raw-full-text"), (artifact) => artifact.mediaType === "application/pdf")
-  )
-    return yield* validatePaperEvidence(context);
-  return yield* context.webResponseValid();
+  return yield* validateDocumentEvidence(context);
 });
 
 const currentCaptureClaim = Effect.fn("Library.currentCaptureClaim")(function* (

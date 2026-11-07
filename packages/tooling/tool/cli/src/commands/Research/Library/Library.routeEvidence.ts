@@ -221,3 +221,46 @@ export const validateLibraryAlphaxivEvidence = Effect.fn("Library.validateAlphax
     bound(capture.artifacts, "extracted-full-text", binding.value.fullTextSha256)
   );
 });
+
+const capturedUrl = (source: LibrarySource, capture: LibraryCapture) =>
+  O.getOrElse(
+    O.map(
+      A.findFirst(source.versions, (version) => version.revision === capture.requestedRevision),
+      (version) => version.canonicalUrl
+    ),
+    () => source.canonicalUrl
+  );
+
+/**
+ * Revalidate a capture taken by the Box route or a VidBee or alphaXiv import.
+ *
+ * **Details**
+ *
+ * Returns none for every other capture so the caller applies its own source-kind contract.
+ *
+ * **Example** (Reference the route dispatcher)
+ *
+ * ```ts
+ * import { validateLibraryRouteEvidence } from "@beep/repo-cli/test/ResearchLibrary"
+ *
+ * console.log(typeof validateLibraryRouteEvidence)
+ * ```
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const validateLibraryRouteEvidence = Effect.fn("Library.validateRouteEvidence")(function* (
+  root: string,
+  source: LibrarySource,
+  capture: LibraryCapture
+) {
+  if (capture.method === "box") return yield* validateLibraryBoxEvidence(root, source, capture).pipe(Effect.asSome);
+  if (capture.method === "vidbee")
+    return yield* validateLibraryVidbeeEvidence(root, capturedUrl(source, capture), capture).pipe(Effect.asSome);
+  const alphaxiv =
+    capture.method === "alphaxiv" && A.some(capture.artifacts, (artifact) => artifact.role === "alphaxiv-binding");
+  return alphaxiv
+    ? yield* validateLibraryAlphaxivEvidence(root, source, capture).pipe(Effect.asSome)
+    : O.none<boolean>();
+});

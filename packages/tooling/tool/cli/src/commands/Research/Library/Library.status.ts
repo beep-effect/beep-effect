@@ -93,5 +93,5 @@ export const libraryStatus = Effect.fn("Research.Library.status")(function* (roo
     `private partition: documents=${privateCount("Report")} sources=${privateCount("Source")} artifacts=${privateCount("Artifact")} occurrences=${privateCount("Occurrence")}`
   );
   const hops = yield* libraryHopTotals(root, catalog);
-  for (const line of hops) yield* Console.log(line);
+  yield* Effect.forEach(hops, (line) => Console.log(line), { discard: true });
 });

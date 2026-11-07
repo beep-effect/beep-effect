@@ -48,6 +48,37 @@ const inventory = Command.make(
     "Snapshot input documents, record hop-1 citations and hop-2 identities from readable hop-1 captures, without fetching"
   )
 );
+const validateAcquireFlags = Effect.fn("ResearchLibrary.validateAcquireFlags")(function* (
+  concurrency: number,
+  hop2DomainCap: number
+) {
+  if (concurrency < 1 || concurrency > 8)
+    return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: concurrency });
+  if (hop2DomainCap < 0)
+    return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+});
+const acquireBoxSelection = Effect.fn("ResearchLibrary.acquireBoxSelection")(function* (
+  root: string,
+  flags: {
+    readonly boxFolder: ReadonlyArray<string>;
+    readonly boxFile: ReadonlyArray<string>;
+    readonly boxPublic: boolean;
+    readonly retryFailed: boolean;
+  }
+) {
+  if (A.isReadonlyArrayEmpty(flags.boxFolder) && A.isReadonlyArrayEmpty(flags.boxFile))
+    return yield* LibraryError.make({ message: "--route box needs --box-folder or --box-file.", cause: "options" });
+  const research = yield* ResearchLibrary;
+  return yield* research.acquireBox(
+    root,
+    LibraryBoxAcquireOptions.make({
+      folderIds: flags.boxFolder,
+      fileIds: flags.boxFile,
+      accessClass: flags.boxPublic ? "public" : "private",
+      retryFailed: flags.retryFailed,
+    })
+  );
+});
 const acquire = Command.make(
   "acquire",
   {
@@ -88,33 +119,19 @@ const acquire = Command.make(
     retryFailed,
   }) {
     const research = yield* ResearchLibrary;
-    if (concurrency < 1 || concurrency > 8)
-      return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: concurrency });
-    if (hop2DomainCap < 0)
-      return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+    yield* validateAcquireFlags(concurrency, hop2DomainCap);
     const root = yield* resolveLibraryRoot(library);
-    if (route === "box") {
-      if (A.isReadonlyArrayEmpty(boxFolder) && A.isReadonlyArrayEmpty(boxFile))
-        return yield* LibraryError.make({ message: "--route box needs --box-folder or --box-file.", cause: "options" });
-      yield* research.acquireBox(
-        root,
-        LibraryBoxAcquireOptions.make({
-          folderIds: boxFolder,
-          fileIds: boxFile,
-          accessClass: boxPublic ? "public" : "private",
-          retryFailed,
-        })
-      );
-    } else
-      yield* research.acquire(
-        root,
-        LibraryAcquireOptions.make({
-          sourceIds: source,
-          concurrency,
-          retryFailed,
-          hopPolicy: LibraryHopPolicy.make({ domainCap: hop2DomainCap }),
-        })
-      );
+    yield* route === "box"
+      ? acquireBoxSelection(root, { boxFolder, boxFile, boxPublic, retryFailed })
+      : research.acquire(
+          root,
+          LibraryAcquireOptions.make({
+            sourceIds: source,
+            concurrency,
+            retryFailed,
+            hopPolicy: LibraryHopPolicy.make({ domainCap: hop2DomainCap }),
+          })
+        );
     yield* Console.log(`Acquisition receipts recorded in ${root}; run verify for coverage.`);
   })
 ).pipe(
