@@ -66,7 +66,6 @@ Locator strategy is per format; every rewrite is line-anchored and idempotent.
 | `docs/runbooks/agent-pools.md` seat table | md generated block | `cursor.volume/review/mechanical/never` |
 | the graft local-recovery runbook (retired 2026-10-28) | md generated block | `graft.deep` |
 | `.claude/skills/browser-qa-loop/SKILL.md`, `resources/judge-prompt.md` | md generated block | `qa.judge` |
-| `.claude/skills/oracle/SKILL.md` | md generated block | `codex.heavy` |
 | `.claude/skills/impeccable/agents/*.toml` | toml top-level key (`model`, `model_reasoning_effort`) | `codex.heavy` x `codex-plugin` |
 | `.../Quality/internal/JSDocMigrateTitles.ts:108` | ts-literal | `jsdoc.migrate-titles` |
 | `.../Qa/JudgePack.ts` command template | line-value (`task --model\x20` / `\x20--effort\x20` / `\x20--prompt-file\x20` delimiters; `\x20` = space) | `qa.judge` |

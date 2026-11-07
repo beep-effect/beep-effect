@@ -16,7 +16,8 @@
     "exec.ts",
     "effect-ontology/**",
     "beep/**",
-    "party/**"
+    "party/**",
+    "turbo-cache-r2/**"
   ],
   "enforceDescriptions": true,
   "enforceExamples": true,

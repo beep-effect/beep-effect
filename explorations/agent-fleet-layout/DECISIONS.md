@@ -178,3 +178,43 @@ recommendation on every question except where noted.
 **Answer:** Five. (1) The drainable predicate gains three conditions: liveness must be confirmed not-live (`unknown` blocks), no local-only branches, tags or stashes unless bundled first, and a clone drains only after every worktree registered to it. (2) `legacy-drain` also depends on `lane-bootstrap`. (3) `ai-metrics-raw-retention` depends on `ops-seat-timers` and must keep the restore drill working on compacted data. (4) `lane-bootstrap` seeds graft from the ops seat when present and from the owning seat otherwise, so it does not depend on the ops seat. (5) The ops-seat acceptance check covers the named timer-backed units and excludes transient `beep-proof-*` units.
 
 **Rationale:** The census itself shows 205 of 223 checkouts with `unknown` liveness and 11 ad hoc worktrees, so "not reported live" and "clean tree" are not safe proxies for "nothing to lose". Rejected: keeping retention independent (its timer needs the ops seat), making `lane-bootstrap` wait on the ops seat (would serialize the two parallel goals).
+
+## 2026-11-06 — fleet-root-path — AMENDED
+
+**Question:** Can discovery see `projects/beep/seats/main` with the projects directory as the single root?
+
+**Answer:** No. The fleet root becomes a per-repository ordered list of discovery roots (`<projects>` legacy prefix-matched, `<projects>/beep/seats`, `<projects>/beep/lanes`); discovery stays one level deep and origin-matched.
+
+**Rationale:** Live `Fleet.service.ts discoverClones` reads one level and origin-matches; Economics `fleetCandidates` prefix-matches `beep-effect*`, so a `beep` namespace two levels deep was invisible as specified. Rejected: recursion (discovery learns a layout shape), seats-only root (desktop-app and Codex lanes invisible). Record: `goals/fleet-root-registry/decisions/2026-11-06-discovery-roots-list.md`.
+
+## 2026-11-06 — registry-implementation — AMENDED
+
+**Question:** Does the registry still author lane slug, packet and PR?
+
+**Answer:** No. The session ledger (`~/.local/state/beep/sessions/<repo-key>.jsonl`) already records clone, lane, branch, PR and state per checkout. The registry is a thin overlay beside it (`fleet/<repo-key>/registry.json`) authoring only seat role, owning seat, drain status and retention exemption; the joined view reads the rest from the ledger.
+
+**Rationale:** Two sources of truth for PR and lane were already rejected on 2026-10-05; the ledger shipped after this packet graduated. Record: `goals/fleet-root-registry/decisions/2026-11-06-registry-overlay-beside-ledger.md`.
+
+## 2026-11-06 — seats — AMENDED
+
+**Question:** Do chat seats stay `a`, `b`, `c`?
+
+**Answer:** No. Seat roles are workload-named: `main`, `ops`, `review`, `research`, `impl`, plus `legacy` and `adopted` written by the scan. One `LiteralKit`, no separate workload field.
+
+**Rationale:** The operator wants kinds of work scoped to specific clones so sessions and the orchestrator can route by seat. Rejected: `a/b/c` plus a workload tag (drift), no scoping yet. Record: `goals/fleet-root-registry/decisions/2026-11-06-workload-named-seat-roles.md`.
+
+## 2026-11-06 — lane-home — OWNER ASSIGNED
+
+**Question:** Live doctrine (AGENTS.md Quality Operator bullet, `Worktree.service.ts:1540`, `Worktree.command.ts:462`) still derives the managed root from `<clone>-worktrees`. Who resolves the conflict with flat `lanes/`?
+
+**Answer:** Flat `lanes/` stands. `fleet-root-registry` carries `owningSeat` in the registry and `lanes/` in the roots list; `lane-bootstrap` owns the `worktree add` managed-root rewrite and the AGENTS.md bullet edit.
+
+**Rationale:** Keeps the first PR small without reversing a grilled decision. Record: `goals/fleet-root-registry/decisions/2026-11-06-lane-home-conflict-owner.md`.
+
+## 2026-11-06 — views — NEW
+
+**Question:** What does the joined view look like, given LCM (Ehrlich & Blackman, arXiv 2605.04050) arrived after graduation?
+
+**Answer:** Summary, pointer, expand: `beep worktree fleet --join` prints one compact row per checkout; `fleet describe <checkout>` expands mirror, registry and latest ledger rows on demand. A summary DAG over the session ledger is parked in `explorations/INBOX.md`.
+
+**Rationale:** The compact view is what a session reads; detail is pulled, never printed by default. Record: `goals/fleet-root-registry/decisions/2026-11-06-lcm-summary-describe-views.md`.
