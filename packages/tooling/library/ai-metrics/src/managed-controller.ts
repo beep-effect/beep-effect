@@ -50,9 +50,9 @@ export class ManagedControllerObservation extends S.Opaque<
     .check(
       S.makeFilter(
         (value) =>
-          BigInt(value.endTimeUnixNano) <= 18_446_744_073_709_551_615n &&
+          BigInt(value.endTimeUnixNano) <= BigInt("18446744073709551615") &&
           BigInt(value.endTimeUnixNano) >= BigInt(value.startTimeUnixNano) &&
-          BigInt(value.elapsedNanos) <= 120_000_000_000n,
+          BigInt(value.elapsedNanos) <= BigInt("120000000000"),
         {
           identifier: "ManagedControllerInterval",
           title: "Bounded measured controller interval",
