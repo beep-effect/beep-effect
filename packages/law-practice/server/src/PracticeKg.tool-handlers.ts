@@ -1,4 +1,3 @@
-import type { WinkIntrinsicNounActivationError } from "@beep/wink";
 /**
  * Injected read handlers for the practice knowledge-graph MCP toolkit.
  *
@@ -71,6 +70,7 @@ import type {
   PracticeKgToolFailureReason,
 } from "@beep/law-practice-use-cases/server";
 import type { FieldTierSet } from "@beep/mcp-kit";
+import type { WinkIntrinsicNounActivationError } from "@beep/wink";
 import type * as Tool from "effect/ai/Tool";
 import type * as SqlClient from "effect/sql/SqlClient";
 

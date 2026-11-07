@@ -97,6 +97,21 @@ const bridgedQuery = (identity: ClaimLexicalProviderIdentity, capability: WinkIn
   });
 /**
  * Bridge one already-owned fixed engine; no second engine or model layer is provided here.
+ *
+ * **Example** (Build the bridge for the fixed provider identity)
+ *
+ * ```ts
+ * import { ClaimLexicalProviderIdentity } from "@beep/law-practice-domain/values/ClaimElement"
+ * import { claimLexicalMembershipWinkLayer } from "../../src/ClaimInspection/ClaimInspection.intrinsic.ts"
+ * import * as Layer from "effect/Layer"
+ *
+ * const identity = ClaimLexicalProviderIdentity.make({
+ *   provider: "wink-nlp@2.4.0/wink-eng-lite-web-model@1.8.1",
+ *   assetDigest: "6aef503a580a23a6d12d0f781125c4ffd2a0b475faad91e8c420e858cbd42fd0"
+ * })
+ * console.log(Layer.isLayer(claimLexicalMembershipWinkLayer(identity))) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */

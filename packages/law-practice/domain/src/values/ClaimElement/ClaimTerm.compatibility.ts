@@ -116,6 +116,14 @@ export const pluralityReferenceContent = (head: string): O.Option<string> =>
 /**
  * Match an explicitly written acronym expansion while retaining a source prefix.
  *
+ * **Example** (Retain the source prefix when matching an explicit acronym)
+ *
+ * ```ts
+ * import { isSourcePrefixAbbreviatedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
+ *
+ * console.log(isSourcePrefixAbbreviatedHead("spatial mvl")("spatial motion vector list (mvl)")) // true
+ * ```
+ *
  * @category predicates
  * @since 0.0.0
  */

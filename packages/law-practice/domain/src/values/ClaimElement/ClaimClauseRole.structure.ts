@@ -2989,6 +2989,22 @@ class SourcePlanner {
 /**
  * Compile complete enhanced topology before committing any source role facts.
  *
+ * **Example** (Keep topology unavailable when no role plan was proved)
+ *
+ * ```ts
+ * import { compileClaimSourceElements } from "../../src/values/ClaimElement/ClaimClauseRole.structure.ts"
+ * import type { ClaimClauseRolePlan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import * as O from "effect/Option"
+ * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
+ *
+ * const claim = PatentClaim.cases.independent.make({ claimNumber: 1, claimText: "A system comprising a sensor.", preamble: "A system", transition: "comprising", body: "a sensor." })
+ * const preamble = TextAnchor.make({ startChar: 0, endChar: 8, quote: "A system" })
+ * const body = TextAnchor.make({ startChar: 20, endChar: 29, quote: "a sensor." })
+ * const topology = O.flatMap(O.none<ClaimClauseRolePlan>(), roles => compileClaimSourceElements(claim, roles, [], preamble, body))
+ * console.log(O.isNone(topology)) // true: missing evidence stays missing
+ * ```
+ *
  * @category parsing
  * @since 0.0.0
  */

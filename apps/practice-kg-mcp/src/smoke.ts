@@ -262,6 +262,16 @@ const compiledHostEnv = (): Record<string, string | undefined> => {
 /**
  * Verify the actual encoded inspection response from the fixed compiled-host smoke source.
  *
+ * **Example** (Compose validation of a compiled host response)
+ *
+ * ```ts
+ * import { verifyCompiledClaimInspection } from "../../src/smoke.ts"
+ * import * as Effect from "effect/Effect"
+ *
+ * const verification = verifyCompiledClaimInspection("{}")
+ * console.log(Effect.isEffect(verification)) // true
+ * ```
+ *
  * @category testing
  * @since 0.0.0
  */

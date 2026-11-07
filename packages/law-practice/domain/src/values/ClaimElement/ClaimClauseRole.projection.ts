@@ -2501,6 +2501,18 @@ const projectTerms = (
 /**
  * Project all owned terms atomically; no per-term legacy fallback is permitted.
  *
+ * **Example** (Propagate an absent planned element)
+ *
+ * ```ts
+ * import { projectClaimRoleTerms } from "@beep/law-practice-domain/test"
+ * import type { ClaimPlannedElement } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as O from "effect/Option"
+ *
+ * const project = projectClaimRoleTerms(() => false)
+ * const terms = O.flatMap(O.none<ClaimPlannedElement>(), project)
+ * console.log(O.isNone(terms)) // true: no element or terms are fabricated
+ * ```
+ *
  * @category parsing
  * @since 0.0.0
  */
@@ -2516,6 +2528,18 @@ export const projectClaimRoleTerms: {
 
 /**
  * Validate the complete immutable source ownership plan.
+ *
+ * **Example** (Propagate an absent planned element)
+ *
+ * ```ts
+ * import { validateClaimSourceOwnership } from "@beep/law-practice-domain/test"
+ * import type { ClaimSourceElementPlan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as O from "effect/Option"
+ *
+ * const validate = validateClaimSourceOwnership(() => false)
+ * console.log(O.isNone(O.map(O.none<ClaimSourceElementPlan>(), validate))) // true
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -2526,6 +2550,20 @@ export const validateClaimSourceOwnership: {
 
 /**
  * Derive a lossless lexical presentation from actual committed same-frame operator proofs.
+ *
+ * **Example** (Leave the view absent when no source frame exists)
+ *
+ * ```ts
+ * import { projectClaimFrameLexicalView } from "@beep/law-practice-domain/test"
+ * import type { ClaimSourceElementPlan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ *
+ * const plan = O.none<ClaimSourceElementPlan>()
+ * const view = O.flatMap(plan, source => O.flatMap(A.head(source.frames), frame => projectClaimFrameLexicalView(frame, () => false)(source)))
+ * console.log(O.isNone(view)) // true: a missing plan cannot donate a header or lexical view
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -2543,6 +2581,20 @@ export const projectClaimFrameLexicalView: {
 
 /**
  * Certify the exact qualified header placeholder without deleting its raw uncertainty.
+ *
+ * **Example** (Leave the view absent when no source frame exists)
+ *
+ * ```ts
+ * import { deriveClaimQualifiedHeaderMembership } from "../../src/values/ClaimElement/ClaimClauseRole.projection.ts"
+ * import type { ClaimSourceElementPlan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ *
+ * const plan = O.none<ClaimSourceElementPlan>()
+ * const view = O.flatMap(plan, source => O.flatMap(A.head(source.frames), frame => deriveClaimQualifiedHeaderMembership(frame, () => false)(source)))
+ * console.log(O.isNone(view)) // true: a missing plan cannot donate a header or lexical view
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -2560,6 +2612,18 @@ export const deriveClaimQualifiedHeaderMembership: {
 
 /**
  * Construct an exclusive token ledger from existing source/frame certificates.
+ *
+ * **Example** (Propagate an absent planned element)
+ *
+ * ```ts
+ * import { deriveClaimSourceTokenOwnership } from "../../src/values/ClaimElement/ClaimClauseRole.projection.ts"
+ * import type { ClaimSourceElementPlan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as O from "effect/Option"
+ *
+ * const derive = deriveClaimSourceTokenOwnership(() => false)
+ * console.log(O.isNone(O.flatMap(O.none<ClaimSourceElementPlan>(), derive))) // true
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */

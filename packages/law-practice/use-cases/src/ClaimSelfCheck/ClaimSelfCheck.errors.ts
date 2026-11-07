@@ -191,6 +191,21 @@ export class ClaimSelfCheckError extends S.TaggedError<ClaimSelfCheckError, { re
 
 /**
  * Expected local query failure retains its paid portion of the original source allowance.
+ *
+ * **Example** (Retain an exhausted query allowance)
+ *
+ * ```ts
+ * import { ClaimLexicalMembershipQueryError } from "@beep/law-practice-use-cases/ClaimSelfCheck"
+ *
+ * const failure = ClaimLexicalMembershipQueryError.make({
+ *   reason: "invalid-response",
+ *   cause: "Membership response did not preserve the paid debit.",
+ *   workDebit: 0,
+ *   remainingWork: 0
+ * })
+ * console.log(failure.remainingWork) // 0
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */

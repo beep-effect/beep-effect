@@ -128,7 +128,7 @@ export type WinkIntrinsicNounResult = typeof WinkIntrinsicNounResult.Type;
  * console.log(winkIntrinsicNounQueryCost("joint")) // 316
  * ```
  *
- * @category resource-accounting
+ * @category utilities
  * @since 0.0.0
  */
 export const winkIntrinsicNounQueryCost = (rawForm: string): number => 256 + rawForm.length * 12;

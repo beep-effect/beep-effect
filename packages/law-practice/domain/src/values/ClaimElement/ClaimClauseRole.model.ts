@@ -18,6 +18,16 @@ import { ClaimLexicalEvidence, ClaimLexicalSourceIdentity, ClaimLexicalToken } f
 const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimClauseRole");
 /**
  * Original aligned token data ordinal; it never indexes the proof registry.
+ *
+ * **Example** (Check an untrusted original lexical token ordinal value)
+ *
+ * ```ts
+ * import { OriginalLexicalTokenOrdinal } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(OriginalLexicalTokenOrdinal)(1)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -35,6 +45,16 @@ export const OriginalLexicalTokenOrdinal = PosInt.pipe(
 export type OriginalLexicalTokenOrdinal = typeof OriginalLexicalTokenOrdinal.Type;
 /**
  * Proof-registry ordinal, distinct from original lexical data positions.
+ *
+ * **Example** (Check an untrusted claim source proof ordinal value)
+ *
+ * ```ts
+ * import { ClaimSourceProofOrdinal } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceProofOrdinal)(1)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -52,6 +72,15 @@ export const ClaimSourceProofOrdinal = PosInt.pipe(
 export type ClaimSourceProofOrdinal = typeof ClaimSourceProofOrdinal.Type;
 /**
  * Source-proven nominal policy roles, with explicit unknown/legacy cases.
+ *
+ * **Example** (Check an untrusted claim nominal policy role value)
+ *
+ * ```ts
+ * import { ClaimNominalPolicyRole } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimNominalPolicyRole)("unknown")) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -80,6 +109,15 @@ export type ClaimNominalPolicyRole = typeof ClaimNominalPolicyRole.Type;
 /**
  * Nominal source ownership; emitted text is never invented.
  *
+ * **Example** (Check an untrusted claim nominal span value)
+ *
+ * ```ts
+ * import { ClaimNominalSpan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimNominalSpan)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -97,6 +135,15 @@ export class ClaimNominalSpan extends S.Opaque<ClaimNominalSpan, { readonly bran
 ) {}
 /**
  * Functional predicate span proven by grammar plus lexical evidence.
+ *
+ * **Example** (Check an untrusted claim predicate span value)
+ *
+ * ```ts
+ * import { ClaimPredicateSpan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimPredicateSpan)({})) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -123,6 +170,15 @@ export class ClaimPredicateSpan extends S.Opaque<ClaimPredicateSpan, { readonly 
 /**
  * Source-owned grammatical clause with explicit predicate and nominal proof links.
  *
+ * **Example** (Check an untrusted claim clause span value)
+ *
+ * ```ts
+ * import { ClaimClauseSpan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimClauseSpan)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -141,6 +197,16 @@ export class ClaimClauseSpan extends S.Opaque<ClaimClauseSpan, { readonly brand:
 ) {}
 /**
  * Source certificates distinguish grammatical roles without lexical guessing.
+ *
+ * **Example** (Check an untrusted claim source proof value)
+ *
+ * ```ts
+ * import { ClaimSourceProof } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceProof)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -220,6 +286,16 @@ export type ClaimSourceProof = typeof ClaimSourceProof.Type;
 
 /**
  * Finite membership slots of one source-local proof registry.
+ *
+ * **Example** (Check an untrusted claim source proof slot value)
+ *
+ * ```ts
+ * import { ClaimSourceProofSlot } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceProofSlot)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -248,6 +324,16 @@ export const ClaimSourceProofSlot = LiteralKit([
 export type ClaimSourceProofSlot = typeof ClaimSourceProofSlot.Type;
 /**
  * Actual typed edge; registry ordinals never identify another source.
+ *
+ * **Example** (Check an untrusted claim source proof ref value)
+ *
+ * ```ts
+ * import { ClaimSourceProofRef } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceProofRef)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -260,6 +346,16 @@ export class ClaimSourceProofRef extends S.Opaque<ClaimSourceProofRef, { readonl
 ) {}
 /**
  * Positive independent nominal opening variants.
+ *
+ * **Example** (Check an untrusted claim head opening value)
+ *
+ * ```ts
+ * import { ClaimHeadOpening } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimHeadOpening)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -285,6 +381,16 @@ export const ClaimHeadOpening = LiteralKit([
 export type ClaimHeadOpening = typeof ClaimHeadOpening.Type;
 /**
  * Independent raw closing boundaries, preceding nominal certification.
+ *
+ * **Example** (Check an untrusted claim head boundary value)
+ *
+ * ```ts
+ * import { ClaimHeadBoundary } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimHeadBoundary)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -314,6 +420,16 @@ export const ClaimHeadBoundary = LiteralKit([
 export type ClaimHeadBoundary = typeof ClaimHeadBoundary.Type;
 /**
  * Finite operator licenses corroborated by source context and lexical facts.
+ *
+ * **Example** (Check an untrusted claim operator license value)
+ *
+ * ```ts
+ * import { ClaimOperatorLicense } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimOperatorLicense)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -340,6 +456,16 @@ export const ClaimOperatorLicense = LiteralKit([
 export type ClaimOperatorLicense = typeof ClaimOperatorLicense.Type;
 /**
  * Complete ordered argument segment; whitespace has explicit source coverage.
+ *
+ * **Example** (Check an untrusted claim argument coverage value)
+ *
+ * ```ts
+ * import { ClaimArgumentCoverage } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimArgumentCoverage)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -366,6 +492,16 @@ export const ClaimArgumentCoverage = LiteralKit(["token", "gap"])
 export type ClaimArgumentCoverage = typeof ClaimArgumentCoverage.Type;
 /**
  * Positive lexical-head witness from an actual singleton or existing source proof.
+ *
+ * **Example** (Check an untrusted claim operator head witness value)
+ *
+ * ```ts
+ * import { ClaimOperatorHeadWitness } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimOperatorHeadWitness)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -390,6 +526,16 @@ export const ClaimOperatorHeadWitness = LiteralKit(["singleton", "finite-pp", "s
 export type ClaimOperatorHeadWitness = typeof ClaimOperatorHeadWitness.Type;
 /**
  * Complete existing dependency-citation proof bound to its original qualification.
+ *
+ * **Example** (Check an untrusted claim citation witness value)
+ *
+ * ```ts
+ * import { ClaimCitationWitness } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimCitationWitness)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -408,6 +554,16 @@ export class ClaimCitationWitness extends S.Opaque<ClaimCitationWitness, { reado
  */
 /**
  * Authoritative qualified source extents, derived directly from the original claim rather than proof records.
+ *
+ * **Example** (Check an untrusted claim original qualified scopes value)
+ *
+ * ```ts
+ * import { ClaimOriginalQualifiedScopes } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimOriginalQualifiedScopes)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -423,6 +579,16 @@ export class ClaimOriginalQualifiedScopes extends S.Opaque<
 ) {}
 /**
  * Head0 consumes only earlier raw/position facts; no equal-rank terminal join exists.
+ *
+ * **Example** (Check an untrusted claim head terminal evidence value)
+ *
+ * ```ts
+ * import { ClaimHeadTerminalEvidence } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimHeadTerminalEvidence)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -450,6 +616,16 @@ export const ClaimHeadTerminalEvidence = LiteralKit(["lexical-terminal", "intrin
 export type ClaimHeadTerminalEvidence = typeof ClaimHeadTerminalEvidence.Type;
 /**
  * Finite typed source certificates with explicit ranked references.
+ *
+ * **Example** (Check an untrusted claim finite source proof value)
+ *
+ * ```ts
+ * import { ClaimFiniteSourceProof } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimFiniteSourceProof)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -620,6 +796,16 @@ export const ClaimFiniteSourceProof = LiteralKit([
 export type ClaimFiniteSourceProof = typeof ClaimFiniteSourceProof.Type;
 /**
  * Internal uncertain candidate; never a public term or introduction.
+ *
+ * **Example** (Check an untrusted claim private basis candidate value)
+ *
+ * ```ts
+ * import { ClaimPrivateBasisCandidate } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimPrivateBasisCandidate)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -643,6 +829,16 @@ export class ClaimPrivateBasisCandidate extends S.Opaque<
 ) {}
 /**
  * One opaque public group with ordered private analyses and no alias donors.
+ *
+ * **Example** (Check an untrusted claim opaque selection value)
+ *
+ * ```ts
+ * import { ClaimOpaqueSelection } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimOpaqueSelection)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -664,6 +860,16 @@ export class ClaimOpaqueSelection extends S.Opaque<ClaimOpaqueSelection, { reado
 
 /**
  * One-way source candidate lifecycle; an unproved candidate cannot donate roles.
+ *
+ * **Example** (Check an untrusted claim nominal candidate state value)
+ *
+ * ```ts
+ * import { ClaimNominalCandidateState } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimNominalCandidateState)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -690,6 +896,15 @@ export const ClaimNominalCandidateState = LiteralKit(["unproved", "proved"])
 export type ClaimNominalCandidateState = typeof ClaimNominalCandidateState.Type;
 /**
  * Atomic plan, accepted only after source/work/coherence validation.
+ *
+ * **Example** (Check an untrusted claim clause role plan value)
+ *
+ * ```ts
+ * import { ClaimClauseRolePlan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimClauseRolePlan)({})) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -719,6 +934,15 @@ export class ClaimClauseRolePlan extends S.Opaque<ClaimClauseRolePlan, { readonl
 /**
  * Source attachment proof, independent of structural or physical ownership.
  *
+ * **Example** (Check an untrusted claim frame attachment value)
+ *
+ * ```ts
+ * import { ClaimFrameAttachment } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimFrameAttachment)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -746,6 +970,15 @@ export type ClaimFrameAttachment = typeof ClaimFrameAttachment.Type;
 /**
  * Anchored grammatical argument, separate from physical or antecedent ownership.
  *
+ * **Example** (Check an untrusted claim frame argument value)
+ *
+ * ```ts
+ * import { ClaimFrameArgument } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimFrameArgument)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -771,6 +1004,16 @@ export class ClaimFrameArgument extends S.Opaque<ClaimFrameArgument, { readonly 
 ) {}
 /**
  * Nonowning complete private argument of an existing proved grammatical frame.
+ *
+ * **Example** (Check an untrusted claim private frame argument value)
+ *
+ * ```ts
+ * import { ClaimPrivateFrameArgument } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimPrivateFrameArgument)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -807,6 +1050,16 @@ export const ClaimPrivateFrameArgument = LiteralKit(["predicate", "selection"])
 export type ClaimPrivateFrameArgument = typeof ClaimPrivateFrameArgument.Type;
 /**
  * Actual complete lexical slot of a committed operator span.
+ *
+ * **Example** (Check an untrusted claim operator lexical slot value)
+ *
+ * ```ts
+ * import { ClaimOperatorLexicalSlot } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimOperatorLexicalSlot)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -830,6 +1083,16 @@ export const ClaimOperatorLexicalSlot = LiteralKit(["lexical", "adjunct", "gap"]
 export type ClaimOperatorLexicalSlot = typeof ClaimOperatorLexicalSlot.Type;
 /**
  * Lossless same-frame operator binding with a uniquely proved argument head.
+ *
+ * **Example** (Check an untrusted claim source operator binding value)
+ *
+ * ```ts
+ * import { ClaimSourceOperatorBinding } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceOperatorBinding)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -857,6 +1120,16 @@ export class ClaimSourceOperatorBinding extends S.Opaque<
 ) {}
 /**
  * Positive same-source parent-frame subject use; never a new public core donor.
+ *
+ * **Example** (Check an untrusted claim frame subject inheritance value)
+ *
+ * ```ts
+ * import { ClaimFrameSubjectInheritance } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimFrameSubjectInheritance)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -873,6 +1146,15 @@ export class ClaimFrameSubjectInheritance extends S.Opaque<
 ) {}
 /**
  * One enclosing frame with explicit attached-parent and argument provenance.
+ *
+ * **Example** (Check an untrusted claim source frame value)
+ *
+ * ```ts
+ * import { ClaimSourceFrame } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceFrame)({})) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -905,6 +1187,15 @@ export class ClaimSourceFrame extends S.Opaque<ClaimSourceFrame, { readonly bran
 /**
  * Separate nominal core, lexical head and attached outer extent.
  *
+ * **Example** (Check an untrusted claim attached nominal value)
+ *
+ * ```ts
+ * import { ClaimAttachedNominal } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimAttachedNominal)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -917,6 +1208,15 @@ export class ClaimAttachedNominal extends S.Opaque<ClaimAttachedNominal, { reado
 ) {}
 /**
  * Source-backed element grouping production.
+ *
+ * **Example** (Check an untrusted claim element grouping value)
+ *
+ * ```ts
+ * import { ClaimElementGrouping } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimElementGrouping)({})) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -947,6 +1247,16 @@ export const ClaimElementGrouping = LiteralKit([
 export type ClaimElementGrouping = typeof ClaimElementGrouping.Type;
 /**
  * Existing positive source membership licensing one public nominal owner.
+ *
+ * **Example** (Check an untrusted claim term owner certificate value)
+ *
+ * ```ts
+ * import { ClaimTermOwnerCertificate } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimTermOwnerCertificate)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -980,6 +1290,16 @@ export const ClaimTermOwnerCertificate = LiteralKit(["existing-element-nominal",
 export type ClaimTermOwnerCertificate = typeof ClaimTermOwnerCertificate.Type;
 /**
  * Exact construction-origin qualified header membership, preserving the raw record.
+ *
+ * **Example** (Check an untrusted claim qualified header membership value)
+ *
+ * ```ts
+ * import { ClaimQualifiedHeaderMembership } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimQualifiedHeaderMembership)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1009,6 +1329,16 @@ export class ClaimQualifiedHeaderMembership extends S.Opaque<
 ) {}
 /**
  * Generic lossless lexical view of one committed grammatical frame.
+ *
+ * **Example** (Check an untrusted claim frame lexical view value)
+ *
+ * ```ts
+ * import { ClaimFrameLexicalView } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimFrameLexicalView)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1029,6 +1359,16 @@ export class ClaimFrameLexicalView extends S.Opaque<ClaimFrameLexicalView, { rea
 ) {}
 /**
  * Exclusive complete core region, independently bounded from the grammatical header.
+ *
+ * **Example** (Check an untrusted claim owned term region value)
+ *
+ * ```ts
+ * import { ClaimOwnedTermRegion } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimOwnedTermRegion)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1047,6 +1387,16 @@ export class ClaimOwnedTermRegion extends S.Opaque<ClaimOwnedTermRegion, { reado
 ) {}
 /**
  * Finite source barriers; a protected quote may still be contained by a complete named core.
+ *
+ * **Example** (Check an untrusted claim source exclusion value)
+ *
+ * ```ts
+ * import { ClaimSourceExclusion } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceExclusion)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1080,6 +1430,16 @@ export const ClaimSourceExclusion = LiteralKit([
 export type ClaimSourceExclusion = typeof ClaimSourceExclusion.Type;
 /**
  * Canonical source declaration; unlabelled items never fabricate label anchors.
+ *
+ * **Example** (Check an untrusted claim source declaration value)
+ *
+ * ```ts
+ * import { ClaimSourceDeclaration } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceDeclaration)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1120,6 +1480,15 @@ export type ClaimSourceDeclaration = typeof ClaimSourceDeclaration.Type;
 /**
  * Complete local element identity before source-ordered path assignment.
  *
+ * **Example** (Check an untrusted claim planned element value)
+ *
+ * ```ts
+ * import { ClaimPlannedElement } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimPlannedElement)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1143,6 +1512,15 @@ export class ClaimPlannedElement extends S.Opaque<ClaimPlannedElement, { readonl
 /**
  * Accepted complete structural plan; failed candidates donate no source facts.
  *
+ * **Example** (Check an untrusted claim list declaration value)
+ *
+ * ```ts
+ * import { ClaimListDeclaration } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimListDeclaration)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1156,6 +1534,16 @@ export class ClaimListDeclaration extends S.Opaque<ClaimListDeclaration, { reado
 ) {}
 /**
  * Finite existing-source evidence for a structural token disposition.
+ *
+ * **Example** (Check an untrusted claim source control evidence value)
+ *
+ * ```ts
+ * import { ClaimSourceControlEvidence } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceControlEvidence)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1209,6 +1597,16 @@ export const ClaimSourceControlEvidence = LiteralKit([
 export type ClaimSourceControlEvidence = typeof ClaimSourceControlEvidence.Type;
 /**
  * Exclusive whole-source token disposition, retaining private descriptive values.
+ *
+ * **Example** (Check an untrusted claim source token ownership value)
+ *
+ * ```ts
+ * import { ClaimSourceTokenOwnership } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceTokenOwnership)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1245,6 +1643,15 @@ export type ClaimSourceTokenOwnership = typeof ClaimSourceTokenOwnership.Type;
 /**
  * Accepted complete structural plan with source declarations and role proofs.
  *
+ * **Example** (Check an untrusted claim source element plan value)
+ *
+ * ```ts
+ * import { ClaimSourceElementPlan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimSourceElementPlan)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1274,6 +1681,15 @@ export class ClaimSourceElementPlan extends S.Opaque<ClaimSourceElementPlan, { r
 /**
  * Accepted whole-source plan keyed by its prepared claim identity.
  *
+ * **Example** (Check an untrusted claim bound role plan value)
+ *
+ * ```ts
+ * import { ClaimBoundRolePlan } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimBoundRolePlan)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1284,6 +1700,15 @@ export class ClaimBoundRolePlan extends S.Opaque<ClaimBoundRolePlan, { readonly 
 ) {}
 /**
  * Decompositions with only successfully projected atomic plans.
+ *
+ * **Example** (Check an untrusted claim role decomposition value)
+ *
+ * ```ts
+ * import { ClaimRoleDecomposition } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimRoleDecomposition)({})) // false
+ * ```
  *
  * @category models
  * @since 0.0.0

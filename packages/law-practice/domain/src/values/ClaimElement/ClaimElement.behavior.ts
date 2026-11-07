@@ -2381,6 +2381,23 @@ const boundedSourceEvidence = (
 /**
  * Decompose prepared records with atomic source roles, preserving unavailable records.
  *
+ * **Example** (Retain decomposition while enhanced evidence is absent)
+ *
+ * ```ts
+ * import { ClaimInputCollection, ClaimInputRecord, prepareClaimInspection, decomposePreparedClaimRoles } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const text = "A system comprising a sensor."
+ * const input = ClaimInputCollection.make({ sourceKey: "example", records: [ClaimInputRecord.cases.text.make({ sourceOrdinal: 1, numberText: O.some("1"), sourceText: text, canonicalText: text })] })
+ * const program = Effect.gen(function* () {
+ *   const prepared = yield* prepareClaimInspection(input)
+ *   const result = yield* decomposePreparedClaimRoles(prepared, [])
+ *   return { records: result.decompositions.length, enhancedPlans: result.plans.length }
+ * })
+ * Effect.runPromise(program).then(console.log) // { records: 1, enhancedPlans: 0 }
+ * ```
+ *
  * @category parsing
  * @since 0.0.0
  */

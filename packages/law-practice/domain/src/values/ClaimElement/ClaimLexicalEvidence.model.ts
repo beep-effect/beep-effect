@@ -16,6 +16,15 @@ const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimLexicalEvidence
 /**
  * Prepared preserved ledger; qualification is not checking.
  *
+ * **Example** (Check an untrusted prepared claim inspection value)
+ *
+ * ```ts
+ * import { PreparedClaimInspection } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PreparedClaimInspection)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -28,6 +37,16 @@ export class PreparedClaimInspection extends S.Opaque<PreparedClaimInspection, {
 ) {}
 /**
  * Exact raw-form membership supplied independently of contextual POS.
+ *
+ * **Example** (Check an untrusted claim intrinsic noun witness value)
+ *
+ * ```ts
+ * import { ClaimIntrinsicNounWitness } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimIntrinsicNounWitness)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -49,6 +68,16 @@ export const ClaimIntrinsicNounWitness = LiteralKit(["unavailable", "known"])
 export type ClaimIntrinsicNounWitness = typeof ClaimIntrinsicNounWitness.Type;
 /**
  * The unchanged source allowance, including work already paid by lexical queries.
+ *
+ * **Example** (Check an untrusted claim lexical source work value)
+ *
+ * ```ts
+ * import { ClaimLexicalSourceWork } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimLexicalSourceWork)(0)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -65,6 +94,15 @@ export const ClaimLexicalSourceWork = S.Int.check(S.isBetween({ minimum: 0, maxi
 export type ClaimLexicalSourceWork = typeof ClaimLexicalSourceWork.Type;
 /**
  * One exact lexical token; POS and lemma do not assert semantic roles.
+ *
+ * **Example** (Check an untrusted claim lexical token value)
+ *
+ * ```ts
+ * import { ClaimLexicalToken } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimLexicalToken)({})) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -91,6 +129,15 @@ const evidenceStatus = LiteralKit(["aligned", "unavailable"]).pipe(
 );
 /**
  * Neutral lexical facts, bound to a normalized source record.
+ *
+ * **Example** (Check an untrusted claim lexical evidence value)
+ *
+ * ```ts
+ * import { ClaimLexicalEvidence } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimLexicalEvidence)({})) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -132,6 +179,15 @@ export type ClaimLexicalEvidence = typeof ClaimLexicalEvidence.Type;
 /**
  * Fixed lexical provider/model byte identity supplied by the host.
  *
+ * **Example** (Check an untrusted claim lexical provider identity value)
+ *
+ * ```ts
+ * import { ClaimLexicalProviderIdentity } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimLexicalProviderIdentity)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -148,6 +204,16 @@ export class ClaimLexicalProviderIdentity extends S.Opaque<
 
 /**
  * Original aligned source identity, separate from proof ordinals.
+ *
+ * **Example** (Check an untrusted claim lexical source identity value)
+ *
+ * ```ts
+ * import { ClaimLexicalSourceIdentity } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimLexicalSourceIdentity)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -168,6 +234,16 @@ export class ClaimLexicalSourceIdentity extends S.Opaque<
 ) {}
 /**
  * Application-local query request with a before-query work carrier.
+ *
+ * **Example** (Check an untrusted claim lexical membership request value)
+ *
+ * ```ts
+ * import { ClaimLexicalMembershipRequest } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimLexicalMembershipRequest)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -188,6 +264,16 @@ export class ClaimLexicalMembershipRequest extends S.Opaque<
 ) {}
 /**
  * Application-local paid membership response.
+ *
+ * **Example** (Check an untrusted claim lexical membership result value)
+ *
+ * ```ts
+ * import { ClaimLexicalMembershipResult } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimLexicalMembershipResult)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

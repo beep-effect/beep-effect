@@ -46,7 +46,17 @@ import type { ClaimLexicalToken } from "./ClaimLexicalEvidence.model.ts";
 
 /**
  * Closed existing dependency introducers shared by construction and validation.
- * @category grammar
+ *
+ * **Example** (Find a complete source citation introducer)
+ *
+ * ```ts
+ * import { claimCitationIntroducers } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.some(claimCitationIntroducers, (words) => A.join(words, " ") === "according to")) // true
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const claimCitationIntroducers: ReadonlyArray<ReadonlyArray<string>> = [
@@ -863,6 +873,20 @@ const completeClaimCitationWitness = (
 };
 /**
  * Check a source-aligned complete raw citation independently of derived roles.
+ *
+ * **Example** (Keep an undecodable citation witness unavailable)
+ *
+ * ```ts
+ * import { ClaimCitationWitness, validateClaimCitationWitness } from "@beep/law-practice-domain/values/ClaimElement"
+ * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(ClaimCitationWitness)({})
+ * const checked = O.map(decoded, witness => validateClaimCitationWitness([], TextAnchor.make({ startChar: 0, endChar: 6, quote: "sensor" }), [], witness, () => true)("sensor"))
+ * console.log(O.isNone(checked)) // true: no witness is invented from incomplete raw input
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -4537,12 +4561,42 @@ const compileRoles = (claim: PatentClaim, evidence: ClaimLexicalEvidence): O.Opt
 /**
  * Normalize an anchored nominal's lexical head without inventing source.
  *
+ * **Example** (Normalize the supplied anchored head)
+ *
+ * ```ts
+ * import { ClaimNominalSpan, clauseNominalHead } from "@beep/law-practice-domain/values/ClaimElement"
+ * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ *
+ * const nominal = ClaimNominalSpan.make({
+ *   anchor: TextAnchor.make({ startChar: 0, endChar: 8, quote: "a SENSOR" }),
+ *   head: TextAnchor.make({ startChar: 2, endChar: 8, quote: "SENSOR" }),
+ *   determiner: "a",
+ *   role: "legacy"
+ * })
+ * console.log(clauseNominalHead(nominal)) // sensor
+ * ```
+ *
  * @category parsing
  * @since 0.0.0
  */
 export const clauseNominalHead = (nominal: ClaimNominalSpan): string => normalized(nominal.head.quote);
 /**
  * Validate exact provider spans.
+ *
+ * **Example** (Check an exact provider span without asserting a semantic role)
+ *
+ * ```ts
+ * import { ClaimLexicalToken, validClaimLexicalTokens } from "@beep/law-practice-domain/values/ClaimElement"
+ * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import * as O from "effect/Option"
+ *
+ * const token = ClaimLexicalToken.make({
+ *   anchor: TextAnchor.make({ startChar: 0, endChar: 6, quote: "sensor" }),
+ *   pos: "NOUN",
+ *   lemma: O.some("sensor")
+ * })
+ * console.log(validClaimLexicalTokens("sensor", [token])) // true
+ * ```
  *
  * @category validation
  * @since 0.0.0
@@ -4554,6 +4608,18 @@ export const validClaimLexicalTokens: {
 /**
  * Compile an atomic source role plan.
  *
+ * **Example** (Decline when the provider supplied no lexical evidence)
+ *
+ * ```ts
+ * import { ClaimLexicalEvidence, compileClaimClauseRoles } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as O from "effect/Option"
+ * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
+ *
+ * const claim = PatentClaim.cases.independent.make({ claimNumber: 1, claimText: "A system comprising a sensor.", preamble: "A system", transition: "comprising", body: "a sensor." })
+ * const unavailable = ClaimLexicalEvidence.cases.unavailable.make({ sourceKey: "example", sourceOrdinal: 1, qualifiedText: claim.claimText, reason: "tokenization-failed" })
+ * console.log(O.isNone(compileClaimClauseRoles(claim, unavailable))) // true
+ * ```
+ *
  * @category parsing
  * @since 0.0.0
  */
@@ -4564,6 +4630,17 @@ export const compileClaimClauseRoles: {
 
 /**
  * Validate actual finite proof fields and source scope before atomic projection.
+ *
+ * **Example** (Reject proof validation when no work is available)
+ *
+ * ```ts
+ * import { validateClaimFiniteSourceProofs } from "@beep/law-practice-domain/values/ClaimElement"
+ * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
+ *
+ * const claim = PatentClaim.cases.independent.make({ claimNumber: 1, claimText: "A system comprising a sensor.", preamble: "A system", transition: "comprising", body: "a sensor." })
+ * console.log(validateClaimFiniteSourceProofs(claim, [], [], [], () => false)) // false
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -4585,6 +4662,18 @@ export const validateClaimFiniteSourceProofs: {
 
 /**
  * Validate against the immutable original aligned input; raw intrinsic facts cannot use reconstructed tokens.
+ *
+ * **Example** (Reject unavailable original lexical input)
+ *
+ * ```ts
+ * import { ClaimLexicalEvidence, validateClaimFiniteSourceProofsFromOriginalInput } from "@beep/law-practice-domain/values/ClaimElement"
+ * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
+ *
+ * const claim = PatentClaim.cases.independent.make({ claimNumber: 1, claimText: "A system comprising a sensor.", preamble: "A system", transition: "comprising", body: "a sensor." })
+ * const unavailable = ClaimLexicalEvidence.cases.unavailable.make({ sourceKey: "example", sourceOrdinal: 1, qualifiedText: claim.claimText, reason: "alignment-failed" })
+ * console.log(validateClaimFiniteSourceProofsFromOriginalInput(claim, unavailable, [], [], () => true)) // false
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -4618,6 +4707,19 @@ export const validateClaimFiniteSourceProofsFromOriginalInput: {
 
 /**
  * Resolve the finite role intrinsic to one source certificate variant.
+ *
+ * **Example** (Read the slot of a decoded raw scope variant)
+ *
+ * ```ts
+ * import { ClaimFiniteSourceProof, claimFiniteSourceProofSlot } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(ClaimFiniteSourceProof)({ kind: "scope", ordinal: 1, rank: -3, role: "body", extent: { startChar: 0, endChar: 6, quote: "sensor" } })
+ * console.log(O.getOrElse(O.map(decoded, claimFiniteSourceProofSlot), () => "unavailable")) // scope
+ * // Slot inspection does not validate this record against a qualified claim.
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */

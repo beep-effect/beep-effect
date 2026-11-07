@@ -116,6 +116,18 @@ export interface ClaimLexicalMembershipShape {
 }
 /**
  * Optional local lexical input; absence supplies no affirmative noun fact.
+ *
+ * **Example** (Check whether the optional membership port is provided)
+ *
+ * ```ts
+ * import { ClaimLexicalMembership } from "@beep/law-practice-use-cases/ClaimSelfCheck"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const available = Effect.map(Effect.serviceOption(ClaimLexicalMembership), O.isSome)
+ * console.log(Effect.isEffect(available)) // true
+ * ```
+ *
  * @category ports
  * @since 0.0.0
  */

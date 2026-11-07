@@ -1206,6 +1206,23 @@ const privateOriginCoverage = (
 /**
  * Inspect prepared source roles through the same coverage/report policy.
  *
+ * **Example** (Inspect supplied input without lexical evidence)
+ *
+ * ```ts
+ * import { ClaimInputCollection, ClaimInputRecord, prepareClaimInspection, inspectPreparedClaimRoles } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const text = "A system comprising a sensor."
+ * const input = ClaimInputCollection.make({ sourceKey: "example", records: [ClaimInputRecord.cases.text.make({ sourceOrdinal: 1, numberText: O.some("1"), sourceText: text, canonicalText: text })] })
+ * const program = Effect.gen(function* () {
+ *   const prepared = yield* prepareClaimInspection(input)
+ *   const report = yield* inspectPreparedClaimRoles(prepared, [])
+ *   return report.records[0]?.status
+ * })
+ * Effect.runPromise(program).then(console.log) // partial: no lexical evidence was supplied
+ * ```
+ *
  * @category domain-logic
  * @since 0.0.0
  */
