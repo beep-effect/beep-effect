@@ -365,45 +365,48 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         let released = 0;
         const guarded = FileSystem.FileSystem.of({
           ...fs,
-          realPath: (path) =>
+          realPath: Effect.fn("CursorLifecycleTest.interpreterRealPath")((path) =>
             path === f.policy.pythonExecutable && fault === "canonical"
               ? Effect.succeed(`${path}-different-canonical-target`)
-              : fs.realPath(path),
-          open: (path, options) =>
+              : fs.realPath(path)
+          ),
+          open: Effect.fn("CursorLifecycleTest.interpreterOpen")((path, options) =>
             fs.open(path, options).pipe(
-              Effect.flatMap((file) => {
-                if (path !== f.policy.pythonExecutable) return Effect.succeed(file);
-                return Effect.acquireRelease(
-                  Effect.sync(() => {
-                    opened++;
-                    return file;
-                  }),
-                  () =>
+              Effect.filterOrElse(
+                () => path !== f.policy.pythonExecutable,
+                (file) =>
+                  Effect.acquireRelease(
                     Effect.sync(() => {
-                      released++;
+                      opened++;
+                      return file;
+                    }),
+                    () =>
+                      Effect.sync(() => {
+                        released++;
+                      })
+                  ).pipe(
+                    Effect.map((handle) => {
+                      let stats = 0;
+                      return {
+                        ...handle,
+                        stat: handle.stat.pipe(
+                          Effect.map((stat) => {
+                            stats++;
+                            if (fault === "owner") return { ...stat, uid: O.some(123456) };
+                            if (fault === "writable") return { ...stat, mode: stat.mode | 0o020 };
+                            if (fault === "size") return { ...stat, size: ByteSize.bytes(33554433) };
+                            if (fault === "changed" && stats > 1) return { ...stat, ino: O.none() };
+                            return stat;
+                          })
+                        ),
+                        readAlloc:
+                          fault === "growth" ? () => Effect.succeedSome(new Uint8Array(65536)) : handle.readAlloc,
+                      };
                     })
-                ).pipe(
-                  Effect.map((handle) => {
-                    let stats = 0;
-                    return {
-                      ...handle,
-                      stat: handle.stat.pipe(
-                        Effect.map((stat) => {
-                          stats++;
-                          if (fault === "owner") return { ...stat, uid: O.some(123456) };
-                          if (fault === "writable") return { ...stat, mode: stat.mode | 0o020 };
-                          if (fault === "size") return { ...stat, size: ByteSize.bytes(33554433) };
-                          if (fault === "changed" && stats > 1) return { ...stat, ino: O.none() };
-                          return stat;
-                        })
-                      ),
-                      readAlloc:
-                        fault === "growth" ? () => Effect.succeed(O.some(new Uint8Array(65536))) : handle.readAlloc,
-                    };
-                  })
-                );
-              })
-            ),
+                  )
+              )
+            )
+          ),
         });
         const policy = fault === "digest" ? CursorLifecyclePolicy.make({ ...f.policy, pythonSha256: id }) : f.policy;
         const result = yield* f.deliver(start, policy).pipe(
@@ -435,7 +438,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         let policyFrames = 0;
         const policyObserved = yield* Deferred.make<void>();
         const output = yield* syntheticHelperOutput(fault, f.policy);
-        const gatedOutput = Stream.concat(Stream.fromEffect(Deferred.await(policyObserved)).pipe(Stream.drain), output);
+        const gatedOutput = policyObserved.pipe(Deferred.await, Stream.fromEffect, Stream.drain, Stream.concat(output));
         const synthetic = ChildProcessSpawner.make((command) =>
           Effect.gen(function* () {
             const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
@@ -502,7 +505,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         is_background_agent: false,
       };
       const first = yield* f.deliver(callback);
-      if (Result.isFailure(first.result)) return yield* Effect.fail(first.result.failure);
+      if (Result.isFailure(first.result)) return yield* first.result.failure;
       const events = yield* f.journal.readNewEvents(first.result.success.page.receiptId);
       if (O.isNone(events) || events.value[0] === undefined) return yield* Effect.die("missing lifecycle observation");
       const lifecycle = yield* Effect.fromOption(events.value[0].nativeLifecycle);
@@ -515,7 +518,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(events.value[0].eventId).toBe(expectedId);
       yield* TestClock.adjust("1 second");
       const replay = yield* f.deliver(callback);
-      if (Result.isFailure(replay.result)) return yield* Effect.fail(replay.result.failure);
+      if (Result.isFailure(replay.result)) return yield* replay.result.failure;
       expect(replay.result.success).toEqual(first.result.success);
       const retained = yield* f.journal.readNewEvents(first.result.success.page.receiptId);
       expect(retained).toEqual(events);
@@ -692,15 +695,16 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
         let dispatches = 0;
         const guarded = FileSystem.FileSystem.of({
           ...fs,
-          makeTempDirectoryScoped: (options) =>
+          makeTempDirectoryScoped: Effect.fn("CursorLifecycleTest.runtimeTempDirectory")((options) =>
             fs.makeTempDirectoryScoped(options).pipe(
               Effect.tap((path) =>
                 Effect.sync(() => {
                   owned = path;
                 })
               )
-            ),
-          stat: (path) =>
+            )
+          ),
+          stat: Effect.fn("CursorLifecycleTest.runtimeStat")((path) =>
             fs.stat(path).pipe(
               Effect.map((stat) => {
                 if (path === source) {
@@ -709,11 +713,13 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
                 }
                 return projectCopiedRuntimeStat(stat, fault);
               })
-            ),
-          readFile: (path) =>
+            )
+          ),
+          readFile: Effect.fn("CursorLifecycleTest.runtimeReadFile")((path) =>
             fault === "different-copy-bytes" && path !== source
               ? Effect.succeed(new Uint8Array([0]))
-              : fs.readFile(path),
+              : fs.readFile(path)
+          ),
         });
         const result = yield* makeSealedRuntimeFixture().pipe(
           Effect.result,
@@ -727,6 +733,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
           })
         );
         if (Result.isSuccess(result)) return yield* Effect.die("unsafe synthetic runtime admitted");
+        if (result.failure._tag !== "RuntimeFixtureError")
+          return yield* Effect.die("unexpected runtime boundary failure");
         expect(result.failure.reason).toBe("runtime");
         expect(dispatches).toBe(0);
         if (owned !== "") {
@@ -743,10 +751,10 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
     Effect.gen(function* () {
       const runtime = yield* makeSealedRuntimeFixture();
       const server = yield* ackServer("{}", false);
-      for (const [path, body] of [
-        [`${server.path}\nforged`, "{}"],
-        [server.path, "{}\nforged"],
-        [server.path, Str.repeat(4097)("é")],
+      for (const { path, body } of [
+        { path: `${server.path}\nforged`, body: "{}" },
+        { path: server.path, body: "{}\nforged" },
+        { path: server.path, body: Str.repeat(4097)("é") },
       ]) {
         const result = yield* runtime.send(path, body, false).pipe(Effect.result);
         if (Result.isSuccess(result)) return yield* Effect.die("invalid peer input admitted");
