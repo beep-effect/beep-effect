@@ -16,6 +16,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Activity from "effect/workflow/Activity";
 import { VaultSyncRoot } from "./BoxMirror.ts";
@@ -58,7 +59,7 @@ export const VaultSyncCheckpoint = Context.Reference<(phase: string) => Effect.E
  * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(VaultSyncPassLive));
  * ```
- * @category sagas
+ * @category workflows
  * @since 0.0.0
  */
 export const VaultSyncPassLive = VaultSyncPass.toLayer<
@@ -118,8 +119,18 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
           const root = yield* fs.realPath(configured);
           const scan = yield* files.scan(root);
           const observed = [
-            ...A.map(scan.folders, (folder) => ({ path: folder.relPath, kind: "folder" as const, digest: null })),
-            ...A.map(scan.files, (file) => ({ path: file.relPath, kind: "file" as const, digest: file.digest })),
+            ...A.map(scan.folders, (folder) => ({
+              path: folder.relPath,
+              kind: V.SyncItemKind.Enum.folder,
+              digest: null,
+              contentSizeBytes: 0,
+            })),
+            ...A.map(scan.files, (file) => ({
+              path: file.relPath,
+              kind: V.SyncItemKind.Enum.file,
+              digest: file.digest,
+              contentSizeBytes: file.sizeBytes,
+            })),
           ];
           for (const entry of observed) {
             const itemId = O.getOrElse(H.get(destination.paths, entry.path), () =>
@@ -154,29 +165,13 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
               path: entry.path,
               kind: entry.kind,
               digest: entry.digest,
+              ...(entry.kind === "file" ? { contentSizeBytes: entry.contentSizeBytes } : {}),
               generation,
               operationId,
               type,
               parentRequired: path.dirname(entry.path) !== ".",
             };
             yield* items.send(itemId, V.ObserveItem.make({ observation }), options(`observe/${itemId}`));
-            // Explicitly queue as well as the policy: receipt-safe and avoids waiting on a View.
-            yield* operations.send(
-              operationId,
-              V.QueueOperation.make({
-                input: {
-                  destinationId,
-                  itemId,
-                  path: entry.path,
-                  type,
-                  digest: entry.digest,
-                  generation,
-                  parentRequired: observation.parentRequired,
-                  idempotencyKey: operationId,
-                },
-              }),
-              options(`queue/${operationId}`)
-            );
           }
         }).pipe(Effect.orDie),
       });
@@ -207,7 +202,13 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
             const destination = yield* destinations.state(destinationId);
             if (destination._tag !== "Registered" || destination.paused || destination.rootId === null) return null;
             const item = yield* items.state(itemId);
-            const operation = yield* operations.state(operationId);
+            const operation = yield* operations
+              .state(operationId)
+              .pipe(
+                Effect.repeat({ until: (state) => state !== null, schedule: Schedule.spaced("10 millis") }),
+                Effect.timeout("10 seconds"),
+                Effect.orDie
+              );
             if (item === null || operation === null) return null;
             if (operation.status !== "queued" && !(operation.status === "leased" && operation.holder === key))
               return null;
@@ -283,6 +284,8 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
               itemId,
               V.MarkItemPushed.make({
                 remoteId: receipt.remoteId,
+                remoteName: receipt.name,
+                remoteParentId: receipt.parentRemoteId,
                 generation: input.generation,
                 operationId,
               }),
@@ -314,6 +317,13 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         if (echo !== null) echoes.push(echo);
       }
       yield* checkpoint("before-poll");
+      const initialCursor = yield* Activity.make({
+        name: "poll-start",
+        success: S.NullOr(S.String),
+        execute: Effect.map(destinations.state(destinationId), (state) =>
+          state._tag === "Registered" ? state.cursor : null
+        ),
+      });
       const conflicts = yield* Activity.make({
         name: "poll",
         success: S.Int,
@@ -321,7 +331,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
           const initialDestination = yield* destinations.state(destinationId);
           let destination: Extract<V.DestinationState, { readonly _tag: "Registered" }>;
           if (initialDestination._tag !== "Registered" || initialDestination.paused) return 0;
-          destination = initialDestination;
+          destination = { ...initialDestination, cursor: initialCursor };
           let count = 0;
           let tokens = echoes;
           for (let pageIndex = 0; pageIndex < 100; pageIndex++) {
@@ -369,6 +379,19 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
                     remoteEventId: event.remoteEventId,
                     itemId: tracked,
                     evidence: event.evidence,
+                    kind:
+                      event.kind === "created"
+                        ? "remoteCreate"
+                        : event.kind === "edited"
+                          ? "remoteEdit"
+                          : event.kind === "moved"
+                            ? "remoteMove"
+                            : event.kind === "renamed"
+                              ? "remoteRename"
+                              : event.kind === "deleted"
+                                ? "remoteDelete"
+                                : "remoteUnknown",
+                    remoteId: event.remoteId,
                     reviewed: false,
                   },
                 }),
@@ -383,6 +406,10 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
               destinationId,
               V.RecordDestinationPoll.make({
                 position: page.position,
+                ...O.getOrElse(
+                  O.map(A.last(page.events), (event) => ({ lastEventId: event.remoteEventId })),
+                  () => ({})
+                ),
                 error: null,
               }),
               options(`cursor/${pageIndex}`)

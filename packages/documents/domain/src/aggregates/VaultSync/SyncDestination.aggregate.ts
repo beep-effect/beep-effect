@@ -67,7 +67,12 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
         : c.error !== null
           ? [C.CursorFailed.make({ reason: c.error })]
           : c.position !== null
-            ? [C.CursorAdvanced.make({ position: c.position })]
+            ? [
+                C.CursorAdvanced.make({
+                  position: c.position,
+                  ...(c.lastEventId === undefined ? {} : { lastEventId: c.lastEventId }),
+                }),
+              ]
             : refused("poll-result"),
     ClaimItemPath: (s, c) => {
       if (s._tag !== "Registered") return refused("not-registered");

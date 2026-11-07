@@ -17,6 +17,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as SqlClient from "effect/sql/SqlClient";
 import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
 
@@ -110,22 +111,24 @@ export const BoxMirrorLive = BoxMirror.toLayer(
     });
     const mutation = Effect.fnUntraced(function* (
       operationId: V.OperationId,
+      generation: number,
       fingerprint: string,
       call: Effect.Effect<D.DmsRemoteItem, D.DmsMirrorUnavailable | BoxMirrorUnavailable>
     ) {
+      const receiptId = `${operationId}/${generation}`;
       // Claim is committed before calling Box. A second caller can only inspect evidence.
       const claimed = yield* sql`INSERT INTO documents_sync_box_receipt (operation_id, fingerprint)
-      VALUES (${operationId}, ${fingerprint}) ON CONFLICT DO NOTHING RETURNING operation_id`.pipe(Effect.orDie);
+      VALUES (${receiptId}, ${fingerprint}) ON CONFLICT DO NOTHING RETURNING operation_id`.pipe(Effect.orDie);
       if (A.isReadonlyArrayEmpty(claimed)) {
         const rows = yield* sql`SELECT fingerprint, result FROM documents_sync_box_receipt
-        WHERE operation_id = ${operationId}`.pipe(Effect.flatMap(S.decodeUnknownEffect(Stored)), Effect.orDie);
+        WHERE operation_id = ${receiptId}`.pipe(Effect.flatMap(S.decodeUnknownEffect(Stored)), Effect.orDie);
         const stored = yield* Effect.fromOption(A.head(rows)).pipe(Effect.orDie);
         if (stored.fingerprint !== fingerprint) return yield* unavailable("intent-mismatch");
         if (stored.result !== null) return yield* decode(stored.result).pipe(Effect.orDie);
         const found = yield* evidence.lookup({ operationId, fingerprint });
         if (O.isNone(found)) return yield* unavailable("uncertain-outcome-held");
         const result = yield* encode(found.value).pipe(Effect.orDie);
-        yield* sql`UPDATE documents_sync_box_receipt SET result = ${result} WHERE operation_id = ${operationId}`.pipe(
+        yield* sql`UPDATE documents_sync_box_receipt SET result = ${result} WHERE operation_id = ${receiptId}`.pipe(
           Effect.orDie
         );
         return found.value;
@@ -133,7 +136,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       const item = yield* call.pipe(Effect.mapError(() => unavailable("uncertain-outcome-held")));
       const receipt = { remoteId: item.remoteId, name: item.name, parentRemoteId: O.getOrNull(item.parentRemoteId) };
       const result = yield* encode(receipt).pipe(Effect.orDie);
-      yield* sql`UPDATE documents_sync_box_receipt SET result = ${result} WHERE operation_id = ${operationId}`.pipe(
+      yield* sql`UPDATE documents_sync_box_receipt SET result = ${result} WHERE operation_id = ${receiptId}`.pipe(
         Effect.orDie
       );
       return receipt;
@@ -142,11 +145,11 @@ export const BoxMirrorLive = BoxMirror.toLayer(
     const fingerprint = S.encodeEffect(S.fromJsonString(S.Unknown));
     const run = Effect.fnUntraced(function* (
       verb: string,
-      args: { readonly operationId: V.OperationId },
+      args: { readonly operationId: V.OperationId; readonly passId: string; readonly generation: number },
       call: Effect.Effect<D.DmsRemoteItem, D.DmsMirrorUnavailable | BoxMirrorUnavailable>
     ) {
-      const encoded = yield* fingerprint({ verb, args }).pipe(Effect.orDie);
-      return yield* mutation(args.operationId, encoded, call);
+      const encoded = yield* fingerprint({ verb, args: Struct.omit(args, ["passId"]) }).pipe(Effect.orDie);
+      return yield* mutation(args.operationId, args.generation, encoded, call);
     });
     const implementation: Context.Service.Shape<typeof BoxMirror> = {
       resolveRoot: () => Effect.map(rootId, (remoteId) => ({ remoteId })),

@@ -139,11 +139,17 @@ export const LegacySyncProjections = Layer.mergeAll(
           const pushed = event._tag === "ItemPushed";
           yield* write("item", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
             content_digest: o.digest,
+            content_size_bytes: o.contentSizeBytes ?? null,
             item_kind: o.kind,
             local_generation: o.generation,
             local_rel_path: o.path,
             remote_id: state.remoteId,
-            remote_name: state.remoteId === null ? null : path.basename(o.path),
+            ...(pushed
+              ? {
+                  remote_name: event.remoteName ?? path.basename(o.path),
+                  remote_parent_id: event.remoteParentId ?? null,
+                }
+              : {}),
             sync_state: state.status === "synced" ? "current" : state.status === "drifted" ? "conflict" : state.status,
             ...(pushed ? { last_pushed_digest: o.digest, last_pushed_generation: event.generation } : {}),
           });
@@ -188,8 +194,10 @@ export const LegacySyncProjections = Layer.mergeAll(
           yield* write("conflict", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
             sync_item_id: item,
             remote_event_id: record.remoteEventId,
-            remote_payload: record.evidence,
-            conflict_kind: "remoteUnknown",
+            remote_payload: yield* S.encodeEffect(S.fromJsonString(S.String))(record.evidence).pipe(Effect.orDie),
+            remote_id: record.remoteId ?? null,
+            local_rel_path: record.path ?? null,
+            conflict_kind: record.kind ?? "remoteUnknown",
             resolution_status: record.reviewed ? "reviewed" : "open",
           });
         }
@@ -200,10 +208,13 @@ export const LegacySyncProjections = Layer.mergeAll(
     Effect.gen(function* () {
       const { write } = yield* store;
       return Effect.fnUntraced(function* (batch) {
-        for (const { source, state, envelope } of batch) {
+        for (const { source, state, envelope, event } of batch) {
           if (state === null || state._tag !== "Registered" || state.cursor === null) continue;
           yield* write("cursor", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
             stream_position: state.cursor,
+            ...(event._tag === "CursorAdvanced" && event.lastEventId !== undefined
+              ? { last_event_id: event.lastEventId }
+              : {}),
             last_error: state.cursorError,
             status: state.cursorError === null ? "active" : "error",
           });

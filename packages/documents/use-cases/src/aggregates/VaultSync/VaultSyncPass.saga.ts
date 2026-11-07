@@ -19,7 +19,7 @@ import * as S from "effect/Schema";
  * import { VaultSyncPass } from "@beep/documents-use-cases/aggregates/VaultSync";
  * console.log(VaultSyncPass.sagaName);
  * ```
- * @category sagas
+ * @category workflows
  * @since 0.0.0
  */
 export class VaultSyncPass extends Domain.Saga("VaultSyncPass", {
