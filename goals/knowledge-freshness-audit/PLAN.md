@@ -244,6 +244,10 @@ Lane `codex/audit-error-boundary`
 
 Reverse: Revert this checkpoint, the narrow example change and its fence regression if the recovery branch intentionally stops logging.
 
+### Isolate each model-refusal test scenario, 2026-11-07
+
+Reverse: Restore grouped cases only after they fit the unchanged timeout under package verification
+
 ### Pin the notification sender citation to the verified source, 2026-11-07
 
 Read the current 99-line notification guide and checked bounded hook, worker and upstream source context. The URI override is forwarded before its environment name is removed, and desktop markup is escaped before delivery; those suspected discrepancies were rejected. The cited Ghostty v1.3.1 line 1578 handles environment setup, while the notification sender begins at line 1718. Pin that link to verified commit 332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28 and the actual sender. This is a source-citation repair, not proof of installed desktop behavior, focus, receipt visibility or clicks. No hooks, services or billing changed. P4 remains partial; PM and ADHD holds remain separate. Raw source and parent review receipts stay in the private archive.
@@ -255,6 +259,10 @@ Reverse: Revert this citation repair and checkpoint together if the pinned upstr
 ### P4 clarifies config package naming without inventing a directory migration, 2026-11-07
 
 Reverse: Revert the wording clarification; retain the original source and parent qualification in the private archive.
+
+### Partition independent CI profile scenarios, 2026-11-07
+
+Reverse: Restore the combined scenario only after package verification fits its unchanged deadline
 
 ### Require a closed error channel in the protocol example, 2026-11-07
 
