@@ -2459,13 +2459,28 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(workflow, ["jobs", "windows-pipe", "steps", 1, "shell"])).toBe("powershell");
     })
   );
-  it.effect("adds optional hosted route inputs without passing them to heavy at main yet", () =>
+  it.effect("passes the admission route outputs to the optional hosted route inputs", () =>
     Effect.gen(function* () {
       const policy = yield* readCredentialPolicySources();
       for (const name of ["route_skips", "route_receipt"]) {
         expect(yamlAt(policy.heavyWorkflow, ["on", "workflow_call", "inputs", name, "type"])).toBe("string");
         expect(yamlAt(policy.heavyWorkflow, ["on", "workflow_call", "inputs", name, "default"])).toBe("");
-        expect(yamlAt(policy.workflow, ["jobs", "heavy", "with", name])).toBeUndefined();
+        expect(yamlAt(policy.workflow, ["jobs", "heavy", "with", name])).toBe(
+          `\${{ needs.admission.outputs.${name} }}`
+        );
+        expect(yamlAt(policy.workflow, ["jobs", "admission", "outputs", name])).toBe(
+          `\${{ steps.decide.outputs.${name} }}`
+        );
+      }
+      // The label-triggered caller is usually a pull request's first admission, so it forwards the
+      // same route outputs as check.yml.
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const admitText = yield* fs.readFileString(`${root}/.github/workflows/heavy-admit.yml`);
+      const admit = parseWorkflowYaml(admitText);
+      for (const name of ["route_skips", "route_receipt"]) {
+        expect(yamlAt(admit, ["jobs", "heavy", "with", name])).toBe(`\${{ needs.admission.outputs.${name} }}`);
+        expect(yamlAt(admit, ["jobs", "admission", "outputs", name])).toBe(`\${{ steps.decide.outputs.${name} }}`);
       }
       const jobs = yield* workflowJobs(policy.heavyWorkflow);
       const gate = stepByName(jobSteps(jobs, "verify"), "Determine lane execution");

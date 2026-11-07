@@ -67,6 +67,8 @@ jobs:
       verdict: ${{ steps.decide.outputs.verdict }}
       admitted: ${{ steps.decide.outputs.admitted }}
       docs_only: ${{ steps.decide.outputs.docs_only }}
+      route_skips: ${{ steps.decide.outputs.route_skips }}
+      route_receipt: ${{ steps.decide.outputs.route_receipt }}
       legacy_coverage: ${{ steps.coverage-rollout.outputs.legacy_coverage }}
     steps:
       - name: Checkout repository
@@ -157,6 +159,10 @@ jobs:
     secrets: inherit
     with:
       admitted: ${{ needs.admission.outputs.verdict == 'run' }}
+      # Verification route (goals/verification-route slice 3): heavy lanes the enforced route
+      # excludes start, then complete skip-satisfied with this receipt in their job summary.
+      route_skips: ${{ needs.admission.outputs.route_skips }}
+      route_receipt: ${{ needs.admission.outputs.route_receipt }}
   verify:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
