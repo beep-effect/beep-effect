@@ -180,5 +180,5 @@ not Tailscale Serve.
   sit at "Pending approval", and a headless T3 turn has no one to answer.
   `claude mcp list` in the checkout shows them. Record each one under that
   project's `disabledMcpjsonServers` (or `enabledMcpjsonServers`) in the host's
-  `~/.claude.json`. A bare one-commit project passing on the same host confirms
-  the diagnosis.
+  Claude user config (`.claude.json` in the account's home). A bare one-commit
+  project passing on the same host confirms the diagnosis.
