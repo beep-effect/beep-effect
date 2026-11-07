@@ -28,7 +28,8 @@ export class SyncCutoverRejected extends S.TaggedError<SyncCutoverRejected, { re
   "SyncCutoverRejected",
   {
     reason: S.String,
-  }
+  },
+  $I.annote("SyncCutoverRejected", { description: "An offline sync backup or reversal precondition was not met." })
 ) {}
 
 /**

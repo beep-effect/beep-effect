@@ -3,16 +3,26 @@
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3",
   "scope": [
-    "@beep/identity#lint",
-    "@beep/types#lint"
+    "@beep/alchemy-postgres#build",
+    "@beep/alchemy-postgres#check",
+    "@beep/alchemy-postgres#lint:deprecated-apis",
+    "@beep/alchemy-postgres#test",
+    "@beep/documents-server#build",
+    "@beep/documents-server#check",
+    "@beep/documents-server#lint:deprecated-apis",
+    "@beep/documents-server#test",
+    "@beep/documents-use-cases#build",
+    "@beep/documents-use-cases#check",
+    "@beep/documents-use-cases#lint:deprecated-apis",
+    "@beep/documents-use-cases#test"
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
+      "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
+        "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
       }
     },
     "@beep/acp": {
@@ -80,11 +90,11 @@
       }
     },
     "@beep/alchemy-postgres": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
+      "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
+        "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
       }
     },
     "@beep/anthropic": {
@@ -336,11 +346,11 @@
       }
     },
     "@beep/documents-server": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
+      "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
+        "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
       }
     },
     "@beep/documents-tables": {
@@ -352,11 +362,11 @@
       }
     },
     "@beep/documents-use-cases": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
+      "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
+        "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
       }
     },
     "@beep/drizzle": {
@@ -9510,6 +9520,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9567,6 +9578,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9610,6 +9622,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9737,6 +9750,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/utils#transit"
@@ -9946,6 +9960,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/utils#transit"
         ],
@@ -9992,6 +10007,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
@@ -10046,6 +10062,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -29100,12 +29117,14 @@
         "command": "bun run beep:build",
         "commandDigest": "1fa0a7ca2cbe3df4762a88278812622181cf1d0a9c8c3b1072a655a2a9844ad8",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/box#build",
           "@beep/documents-domain#build",
           "@beep/documents-tables#build",
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -29165,12 +29184,14 @@
         "command": "bun run beep:check",
         "commandDigest": "1fa0a7ca2cbe3df4762a88278812622181cf1d0a9c8c3b1072a655a2a9844ad8",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/box#build",
           "@beep/documents-domain#build",
           "@beep/documents-tables#build",
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -29216,12 +29237,14 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "1fa0a7ca2cbe3df4762a88278812622181cf1d0a9c8c3b1072a655a2a9844ad8",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/box#build",
           "@beep/documents-domain#build",
           "@beep/documents-tables#build",
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -29351,12 +29374,14 @@
         "command": "beep-cli lint deprecated-apis --package .",
         "commandDigest": "1fa0a7ca2cbe3df4762a88278812622181cf1d0a9c8c3b1072a655a2a9844ad8",
         "dependencies": [
+          "@beep/alchemy-postgres#transit",
           "@beep/box#transit",
           "@beep/documents-domain#transit",
           "@beep/documents-tables#transit",
           "@beep/documents-use-cases#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -29568,12 +29593,14 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "1fa0a7ca2cbe3df4762a88278812622181cf1d0a9c8c3b1072a655a2a9844ad8",
         "dependencies": [
+          "@beep/alchemy-postgres#transit",
           "@beep/box#transit",
           "@beep/documents-domain#transit",
           "@beep/documents-tables#transit",
           "@beep/documents-use-cases#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -29622,12 +29649,14 @@
         "command": "bun run beep:test",
         "commandDigest": "1fa0a7ca2cbe3df4762a88278812622181cf1d0a9c8c3b1072a655a2a9844ad8",
         "dependencies": [
+          "@beep/alchemy-postgres#transit",
           "@beep/box#transit",
           "@beep/documents-domain#transit",
           "@beep/documents-tables#transit",
           "@beep/documents-use-cases#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -29684,12 +29713,14 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "1fa0a7ca2cbe3df4762a88278812622181cf1d0a9c8c3b1072a655a2a9844ad8",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/box#build",
           "@beep/documents-domain#build",
           "@beep/documents-tables#build",
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -29735,12 +29766,14 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "1fa0a7ca2cbe3df4762a88278812622181cf1d0a9c8c3b1072a655a2a9844ad8",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/box#build",
           "@beep/documents-domain#build",
           "@beep/documents-tables#build",
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -30430,8 +30463,10 @@
         "command": "bun run beep:build",
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/documents-domain#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/test-runner#build",
@@ -30489,8 +30524,10 @@
         "command": "bun run beep:check",
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/documents-domain#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/test-runner#build",
@@ -30534,8 +30571,10 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/documents-domain#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/test-runner#build",
@@ -30663,8 +30702,10 @@
         "command": "beep-cli lint deprecated-apis --package .",
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
+          "@beep/alchemy-postgres#transit",
           "@beep/documents-domain#transit",
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -30874,8 +30915,10 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
+          "@beep/alchemy-postgres#transit",
           "@beep/documents-domain#transit",
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/test-runner#transit",
@@ -30922,8 +30965,10 @@
         "command": "bun run beep:test",
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
+          "@beep/alchemy-postgres#transit",
           "@beep/documents-domain#transit",
           "@beep/identity#transit",
+          "@beep/pglite#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/test-runner#transit",
@@ -30978,8 +31023,10 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
+          "@beep/alchemy-postgres#build",
           "@beep/documents-domain#build",
           "@beep/identity#build",
+          "@beep/pglite#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/test-runner#build",
@@ -125534,7 +125581,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "eda92310905cd66b25153812438c2ce07d0a92dc6e9b5cf890036e73920e7562"
+        "sha256": "84e59b86aab508e0d650eb90beab0953c96600d84d703f5e5fea6a7111b459a6"
       }
     ]
   }

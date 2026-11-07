@@ -170,6 +170,12 @@ Lane `alchemy-postgres-views worktree`
 
 Reverse: Add fault-injection seams for the listed host/view/aggregate/projection fallbacks and raise the floor back in a baseline-only PR
 
+### Keep activation fenced until writer epoch and both reversal cases are proven, 2026-11-07
+
+The offline importer and pre-admission backup are implementation prerequisites. They do not activate a writer epoch. The existing executable predates any epoch-aware startup check, so adding only a new startup condition cannot prove that an older executable refuses the migrated store. Production cutover must include a database-level stale-writer refusal and the startup compatibility boundary, plus a tested post-admission reversal that retains accepted events. Until these exist, keep legacy application composition and do not claim D7 cutover acceptance.
+
+Reverse: Replace this hold only after the epoch guard, legacy writer deletion, and pre/post-admission reversal tests pass in the same cutover change.
+
 ### Fold the remote cursor into the destination aggregate, 2026-11-07
 
 The current cursor scope is one workspace plus provider, so its position and poll failure state belong to SyncDestination. A failed poll preserves the last durable position.

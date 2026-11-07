@@ -1,7 +1,12 @@
 import * as Domain from "@alchemy.run/domain";
-import { AlchemyPostgresPlatform } from "@beep/alchemy-postgres";
+import { AlchemyPostgresConfig, AlchemyPostgresPlatform, ProvenanceMapping } from "@beep/alchemy-postgres";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
-import { importSyncGenesis, LegacySyncAudit, LegacySyncProjections } from "@beep/documents-server/aggregates/Sync";
+import {
+  importSyncGenesis,
+  LegacySyncAudit,
+  LegacySyncProjections,
+  SyncCutoverRejected,
+} from "@beep/documents-server/aggregates/Sync";
 import {
   LegacySyncConflict,
   LegacySyncCursor,
@@ -17,7 +22,10 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as SqlClient from "effect/sql/SqlClient";
 import {
@@ -145,15 +153,61 @@ describe("lossless offline genesis", () => {
             status,
             last_error: status === "error" ? "poll failed" : null,
           })}`;
+        yield* sql`INSERT INTO documents_sync_cursor ${sql.insert({
+          ...common("cursor", 719),
+          workspace_id: 10,
+          stream_position: "selected-old",
+          last_event_id: null,
+          status: "active",
+          last_error: null,
+        })}`;
         const scope = yield* Scope.make();
         const runtime = yield* Layer.buildWithScope(
-          ImportModel.layer(Layer.empty).pipe(Layer.provide(AlchemyPostgresPlatform.layer())),
+          ImportModel.layer(Layer.empty).pipe(
+            Layer.provide(
+              AlchemyPostgresPlatform.layer(
+                AlchemyPostgresConfig.make({
+                  provenance: O.some(
+                    ProvenanceMapping.make({
+                      contextKey: V.GenesisProvenance.key,
+                      principalField: "principal",
+                      sourceKindField: "source",
+                    })
+                  ),
+                })
+              )
+            )
+          ),
           scope
         );
+        const provenance = yield* LegacySyncAudit;
+        const calls = yield* Ref.make(0);
+        const partial = yield* importSyncGenesis("synthetic-backup", "beep-vault").pipe(
+          Effect.provide(runtime),
+          Effect.provideService(LegacySyncAudit, {
+            resolve: Effect.fn("test.interruptedAudit")(function* (stream, seq) {
+              const n = yield* Ref.updateAndGet(calls, (n) => n + 1);
+              if (n === 15)
+                return yield* Effect.die(SyncCutoverRejected.make({ reason: "synthetic-half-import-crash" }));
+              return yield* provenance.resolve(stream, seq);
+            }),
+          }),
+          Effect.exit
+        );
+        expect(partial._tag).toBe("Failure");
         const first = yield* importSyncGenesis("synthetic-backup", "beep-vault").pipe(Effect.provide(runtime));
         const second = yield* importSyncGenesis("synthetic-backup", "beep-vault").pipe(Effect.provide(runtime));
         expect(second).toEqual(first);
-        expect(first).toMatchObject({ items: 4, operations: 20, conflicts: 12, cursors: 2 });
+        const events =
+          yield* sql`SELECT tag,principal,source_kind,schema_version FROM alchemy_aggregate_event WHERE model='GenesisAcceptance'`;
+        expect(events).toHaveLength(41);
+        for (const event of events)
+          expect(event).toMatchObject({
+            principal: '{"_tag":"System","id":"legacy-importer"}',
+            source_kind: "Migration",
+            schema_version: 1,
+          });
+        expect(first).toMatchObject({ items: 4, operations: 20, conflicts: 12, cursors: 3 });
         const state = yield* Context.get(runtime, V.SyncDestination)
           .state(V.DestinationId.make("legacy-box-workspace-9"))
           .pipe(Effect.provide(runtime));
@@ -162,8 +216,24 @@ describe("lossless offline genesis", () => {
         for (const entity of ["conflict", "operation", "item", "cursor"])
           yield* sql`DELETE FROM ${sql(`documents_sync_${entity}`)}`;
         yield* sql`DELETE FROM documents_sync_legacy_identity`;
-        const replay = yield* Layer.build(
-          ReplayModel.layer(LegacySyncProjections).pipe(Layer.provide(AlchemyPostgresPlatform.layer()))
+        const replayScope = yield* Scope.make();
+        const replay = yield* Layer.buildWithScope(
+          ReplayModel.layer(LegacySyncProjections).pipe(
+            Layer.provide(
+              AlchemyPostgresPlatform.layer(
+                AlchemyPostgresConfig.make({
+                  provenance: O.some(
+                    ProvenanceMapping.make({
+                      contextKey: V.GenesisProvenance.key,
+                      principalField: "principal",
+                      sourceKindField: "source",
+                    })
+                  ),
+                })
+              )
+            )
+          ),
+          replayScope
         );
         void replay;
         const diffs = yield* diffLegacySyncTables().pipe(
@@ -174,6 +244,62 @@ describe("lossless offline genesis", () => {
         yield* sql`UPDATE documents_sync_item SET row_version=row_version+1,last_pushed_generation=999 WHERE id=26`;
         const negative = yield* diffLegacySyncTables();
         expect(A.map(negative, (d) => d.column)).toEqual(["last_pushed_generation", "row_version"]);
+        const replayDestinations = Context.get(replay, V.SyncDestination);
+        const selected = yield* replayDestinations.send(
+          V.DestinationId.make("legacy-box-workspace-10"),
+          V.RecordDestinationPoll.make({ position: "selected-new", lastEventId: "selected-event", error: null })
+        );
+        yield* LegacySyncCursor.caughtUp(selected).pipe(Effect.provide(replay));
+        const cursor =
+          yield* sql`SELECT id,public_id,row_version,created_at,stream_position,last_event_id FROM documents_sync_cursor WHERE workspace_id=10`.pipe(
+            Effect.repeat({
+              until: (rows) => rows[0]?.stream_position === "selected-new",
+              schedule: Schedule.spaced("10 millis"),
+            }),
+            Effect.timeout("5 seconds")
+          );
+        expect(cursor).toEqual([
+          {
+            id: 719,
+            public_id: common("cursor", 719).public_id,
+            row_version: 747,
+            created_at: 1700000000842,
+            stream_position: "selected-new",
+            last_event_id: "selected-event",
+          },
+        ]);
+        const beforeDuplicates = yield* sql`SELECT * FROM documents_sync_cursor WHERE workspace_id=9 ORDER BY id`;
+        const paused = yield* replayDestinations.send(
+          V.DestinationId.make("legacy-box-workspace-9"),
+          V.RecordDestinationPoll.make({ position: "not-selected", error: null })
+        );
+        yield* LegacySyncCursor.caughtUp(paused).pipe(Effect.provide(replay));
+        yield* sql`SELECT processed FROM alchemy_projection_partition WHERE model='GenesisAcceptance' AND projection='LegacySyncCursor'`.pipe(
+          Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ processed: S.Int })))),
+          Effect.repeat({
+            until: (rows) => A.some(rows, (r) => r.processed >= 3),
+            schedule: Schedule.spaced("10 millis"),
+          }),
+          Effect.timeout("5 seconds")
+        );
+        const afterDuplicates = yield* sql`SELECT * FROM documents_sync_cursor WHERE workspace_id=9 ORDER BY id`;
+        expect(afterDuplicates).toEqual(beforeDuplicates);
+        const beforeRedelivery = yield* diffLegacySyncTables();
+        yield* Scope.close(replayScope, Exit.void);
+        yield* sql`UPDATE alchemy_projection_partition SET processed=0,checkpoints='{}'::jsonb WHERE model='GenesisAcceptance'`;
+        yield* Layer.build(
+          ReplayModel.layer(LegacySyncProjections).pipe(Layer.provide(AlchemyPostgresPlatform.layer()))
+        );
+        yield* sql`SELECT processed FROM alchemy_projection_partition WHERE model='GenesisAcceptance' AND projection='LegacySyncCursor'`.pipe(
+          Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ processed: S.Int })))),
+          Effect.repeat({
+            until: (rows) => A.some(rows, (r) => r.processed >= 3),
+            schedule: Schedule.spaced("10 millis"),
+          }),
+          Effect.timeout("5 seconds")
+        );
+        const afterRedelivery = yield* diffLegacySyncTables();
+        expect(afterRedelivery).toEqual(beforeRedelivery);
       })
     );
   });

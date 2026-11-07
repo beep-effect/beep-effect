@@ -18,12 +18,18 @@ import { LegacySyncAudit } from "./LegacySync.projection.ts";
 import { backupSyncTables } from "./SyncCutover.service.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/SyncGenesis.service");
-const Snapshot = S.Struct({
-  items: S.Array(V.LegacyItemRow),
-  operations: S.Array(V.LegacyOperationRow),
-  conflicts: S.Array(V.LegacyConflictRow),
-  cursors: S.Array(V.LegacyCursorRow),
-});
+class SyncGenesisSnapshot extends S.Opaque<SyncGenesisSnapshot, { readonly brand: unique symbol }>()(
+  S.Struct({
+    items: S.Array(V.LegacyItemRow),
+    operations: S.Array(V.LegacyOperationRow),
+    conflicts: S.Array(V.LegacyConflictRow),
+    cursors: S.Array(V.LegacyCursorRow),
+  }).pipe(
+    $I.annoteSchema("SyncGenesisSnapshot", {
+      description: "Complete validated offline legacy sync snapshot in numeric identity order.",
+    })
+  )
+) {}
 
 /**
  * Imports the immutable offline backup, including every audit field and numeric identity.
@@ -52,20 +58,20 @@ export const importSyncGenesis = Effect.fn($I`importSyncGenesis`)(function* (bac
   const conflicts = yield* V.SyncConflict;
   const destinations = yield* V.SyncDestination;
   yield* backupSyncTables(backupId);
-  const snapshot = yield* S.decodeUnknownEffect(Snapshot)({
+  const snapshot = yield* S.decodeUnknownEffect(SyncGenesisSnapshot)({
     items: yield* sql`SELECT * FROM documents_sync_item_cutover_backup ORDER BY id`,
     operations: yield* sql`SELECT * FROM documents_sync_operation_cutover_backup ORDER BY id`,
     conflicts: yield* sql`SELECT * FROM documents_sync_conflict_cutover_backup ORDER BY id`,
     cursors: yield* sql`SELECT * FROM documents_sync_cursor_cutover_backup ORDER BY id`,
   });
-  const encoded = yield* S.encodeEffect(S.fromJsonString(Snapshot))(snapshot);
-  const importId = `v1-${bytesToHex(sha256(new TextEncoder().encode(encoded)))}`;
+  const encoded = yield* S.encodeEffect(S.fromJsonString(SyncGenesisSnapshot))(snapshot);
+  const importId = `v1-${bytesToHex(sha256(new TextEncoder().encode(`${mirrorRootName}\n${encoded}`)))}`;
   const meta = Effect.fnUntraced(function* (table: string, publicId: string) {
     const provenance = yield* audit.resolve(`genesis/${table}/${publicId}`, 0);
     return {
       commandId: `genesis/${importId}/${table}/${publicId}`,
       correlationId: importId,
-      context: { [V.GenesisProvenance.key]: { principal: provenance.principal, source: provenance.source } },
+      provenance: { principal: provenance.principal, source: provenance.source },
     };
   });
   // The global allocator must be beyond every seeded numeric id, even with gaps.
@@ -117,6 +123,7 @@ export const importSyncGenesis = Effect.fn($I`importSyncGenesis`)(function* (bac
       orgId: ownership.orgId,
       workspaceId,
       name: `${mirrorRootName} (${workspaceId})`,
+      remoteRootName: mirrorRootName,
       provider: "box",
       rootId: null,
       cursor: null,
@@ -126,20 +133,20 @@ export const importSyncGenesis = Effect.fn($I`importSyncGenesis`)(function* (bac
     };
     const state = yield* S.decodeUnknownEffect(V.DestinationState)(record);
     const options = yield* meta("destination", row.public_id);
-    yield* destinations.send(
-      destinationId(workspaceId),
-      V.ImportDestinationGenesis.make({ importId, record: state }),
-      options
-    );
+    yield* destinations
+      .send(destinationId(workspaceId), V.ImportDestinationGenesis.make({ importId, record: state }), options)
+      .pipe(Effect.provideService(V.GenesisProvenance, options.provenance));
   }
   for (const row of snapshot.cursors) {
     const peers = A.filter(snapshot.cursors, (c) => c.workspace_id === row.workspace_id);
     const options = yield* meta("cursor", row.public_id);
-    yield* destinations.send(
-      destinationId(row.workspace_id),
-      V.ImportCursorGenesis.make({ importId, row, selected: peers.length === 1, paused: peers.length > 1 }),
-      options
-    );
+    yield* destinations
+      .send(
+        destinationId(row.workspace_id),
+        V.ImportCursorGenesis.make({ importId, row, selected: peers.length === 1, paused: peers.length > 1 }),
+        options
+      )
+      .pipe(Effect.provideService(V.GenesisProvenance, options.provenance));
   }
   for (const row of snapshot.items) {
     const operation = A.findFirst(
@@ -180,7 +187,9 @@ export const importSyncGenesis = Effect.fn($I`importSyncGenesis`)(function* (bac
       slots,
     });
     const options = yield* meta("item", row.public_id);
-    yield* items.send(V.ItemId.make(row.public_id), V.ImportItemGenesis.make({ importId, row, record }), options);
+    yield* items
+      .send(V.ItemId.make(row.public_id), V.ImportItemGenesis.make({ importId, row, record }), options)
+      .pipe(Effect.provideService(V.GenesisProvenance, options.provenance));
   }
   for (const row of snapshot.operations) {
     const record = yield* S.decodeUnknownEffect(V.OperationRecord)({
@@ -202,11 +211,9 @@ export const importSyncGenesis = Effect.fn($I`importSyncGenesis`)(function* (bac
       retryAt: 0,
     });
     const options = yield* meta("operation", row.public_id);
-    yield* operations.send(
-      V.OperationId.make(row.public_id),
-      V.ImportOperationGenesis.make({ importId, row, record }),
-      options
-    );
+    yield* operations
+      .send(V.OperationId.make(row.public_id), V.ImportOperationGenesis.make({ importId, row, record }), options)
+      .pipe(Effect.provideService(V.GenesisProvenance, options.provenance));
   }
   for (const row of snapshot.conflicts) {
     const record = yield* S.decodeUnknownEffect(V.ConflictRecord)({
@@ -222,11 +229,9 @@ export const importSyncGenesis = Effect.fn($I`importSyncGenesis`)(function* (bac
       reviewed: row.resolution_status === "reviewed",
     });
     const options = yield* meta("conflict", row.public_id);
-    yield* conflicts.send(
-      V.ConflictId.make(row.public_id),
-      V.ImportConflictGenesis.make({ importId, row, record }),
-      options
-    );
+    yield* conflicts
+      .send(V.ConflictId.make(row.public_id), V.ImportConflictGenesis.make({ importId, row, record }), options)
+      .pipe(Effect.provideService(V.GenesisProvenance, options.provenance));
   }
 
   return {

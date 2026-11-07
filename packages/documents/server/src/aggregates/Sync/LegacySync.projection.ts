@@ -63,6 +63,9 @@ const store = Effect.gen(function* () {
    projection text NOT NULL, stream text NOT NULL, seq integer NOT NULL,
    PRIMARY KEY(projection, stream)
  )`.pipe(Effect.orDie);
+  yield* sql`CREATE TABLE IF NOT EXISTS documents_sync_cursor_selection (
+    destination_id text PRIMARY KEY, public_id text, paused boolean NOT NULL
+  )`.pipe(Effect.orDie);
   const identity = Effect.fnUntraced(function* (entity: string, publicId: string) {
     const rows = yield* sql`INSERT INTO documents_sync_legacy_identity (entity, public_id)
      VALUES (${entity}, ${publicId}) ON CONFLICT(entity, public_id)
@@ -91,7 +94,12 @@ const store = Effect.gen(function* () {
           const id = yield* identity(entity, publicId);
           const meta = yield* audit.resolve(stream, seq);
           const table = `documents_sync_${entity}`;
-          // The envelope sequence is a replay-stable row version, never an increment on delivery.
+          const existing = yield* sql`SELECT row_version FROM ${sql(table)} WHERE id=${id}`.pipe(
+            Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ row_version: S.Int }))))
+          );
+          // The source checkpoint makes a single increment safe on redelivery; imported
+          // row versions are compatibility state and must never reset to source seq.
+          const rowVersion = A.isReadonlyArrayNonEmpty(existing) ? existing[0].row_version + 1 : 1;
           const row = {
             id,
             public_id: publicId,
@@ -99,7 +107,7 @@ const store = Effect.gen(function* () {
             org_id: meta.orgId,
             workspace_id: meta.workspaceId,
             provider: "box",
-            row_version: seq,
+            row_version: rowVersion,
             schema_version: "0.1.0",
             source: meta.source,
             created_at: at,
@@ -110,7 +118,7 @@ const store = Effect.gen(function* () {
           };
           yield* sql`INSERT INTO ${sql(table)} ${sql.insert(row)}
        ON CONFLICT(id) DO UPDATE SET ${sql.update({
-         row_version: seq,
+         row_version: rowVersion,
          updated_at: at,
          updated_by_principal: meta.principal,
          ...columns,
@@ -144,6 +152,9 @@ const store = Effect.gen(function* () {
               ? { remote_payload: yield* S.encodeEffect(S.fromJsonString(S.Unknown))(row.remote_payload) }
               : {}),
           };
+          yield* sql`SELECT setval(pg_get_serial_sequence('documents_sync_legacy_identity','id'),
+        GREATEST((SELECT COALESCE(MAX(id),1) FROM documents_sync_legacy_identity),
+          (SELECT last_value FROM documents_sync_legacy_identity_id_seq)),true)`;
           yield* sql`INSERT INTO ${sql(`documents_sync_${entity}`)} ${sql.insert(stored)}
         ON CONFLICT(id) DO UPDATE SET ${sql.update(stored)}`;
         })
@@ -266,29 +277,40 @@ export const LegacySyncProjections = Layer.mergeAll(
   ),
   LegacySyncCursor.toLayer(
     Effect.gen(function* () {
-      const { genesis, write } = yield* store;
+      const { genesis, write, sql } = yield* store;
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
           if (event._tag === "CursorGenesisImported") {
             yield* genesis("cursor", event.row, envelope.stream, envelope.seq);
+            yield* sql`INSERT INTO documents_sync_cursor_selection (destination_id,public_id,paused)
+              VALUES (${source.id},${event.selected ? event.row.public_id : null},${event.paused})
+              ON CONFLICT(destination_id) DO UPDATE SET public_id=EXCLUDED.public_id,paused=EXCLUDED.paused`.pipe(
+              Effect.orDie
+            );
             continue;
           }
+          if (event._tag !== "CursorAdvanced" && event._tag !== "CursorFailed") continue;
           if (state === null || state._tag !== "Registered" || state.cursor === null) continue;
-          yield* write(
-            "cursor",
-            `documents_sync_cursor_a${bytesToHex(sha256(new TextEncoder().encode(source.id)))}`,
-            envelope.stream,
-            envelope.seq,
-            DateTime.toEpochMillis(envelope.at),
-            {
-              stream_position: state.cursor,
-              ...(event._tag === "CursorAdvanced" && event.lastEventId !== undefined
-                ? { last_event_id: event.lastEventId }
-                : {}),
-              last_error: state.cursorError,
-              status: state.cursorError === null ? "active" : "error",
-            }
-          );
+          const selected =
+            yield* sql`SELECT public_id,paused FROM documents_sync_cursor_selection WHERE destination_id=${source.id}`.pipe(
+              Effect.flatMap(
+                S.decodeUnknownEffect(S.Array(S.Struct({ public_id: S.NullOr(S.String), paused: S.Boolean })))
+              ),
+              Effect.orDie
+            );
+          if (A.isReadonlyArrayNonEmpty(selected) && (selected[0].paused || selected[0].public_id === null)) continue;
+          const publicId =
+            A.isReadonlyArrayNonEmpty(selected) && selected[0].public_id !== null
+              ? selected[0].public_id
+              : `documents_sync_cursor_a${bytesToHex(sha256(new TextEncoder().encode(source.id)))}`;
+          yield* write("cursor", publicId, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
+            stream_position: state.cursor,
+            ...(event._tag === "CursorAdvanced" && event.lastEventId !== undefined
+              ? { last_event_id: event.lastEventId }
+              : {}),
+            last_error: state.cursorError,
+            status: state.cursorError === null ? "active" : "error",
+          });
         }
       });
     })

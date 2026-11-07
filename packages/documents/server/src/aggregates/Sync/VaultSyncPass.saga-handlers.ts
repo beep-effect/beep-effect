@@ -107,7 +107,10 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         execute: Effect.gen(function* () {
           const destination = yield* destinations.state(destinationId);
           if (destination._tag !== "Registered" || destination.paused) return;
-          const root = yield* mirror.resolveRoot({ destinationId, name: destination.name });
+          const root = yield* mirror.resolveRoot({
+            destinationId,
+            name: destination.remoteRootName ?? destination.name,
+          });
           yield* destinations.send(
             destinationId,
             V.ResolveDestinationRoot.make({ rootId: root.remoteId }),

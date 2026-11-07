@@ -29,6 +29,7 @@ export const DestinationState = S.Union([
     name: S.NonEmptyString,
     provider: S.tag("box"),
     rootId: S.NullOr(V.RemoteItemId),
+    remoteRootName: S.optionalKey(S.NonEmptyString),
     cursor: S.NullOr(S.String),
     cursorError: S.NullOr(S.String),
     paused: S.Boolean,

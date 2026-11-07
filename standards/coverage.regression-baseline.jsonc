@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T10:26:58.299Z",
-  "git_sha": "a51bcae641934d2cabccd548d6e81a36d587e0aa",
-  "command": "bun run coverage -- --filter=@beep/documents-use-cases --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-07T11:04:13.365Z",
+  "git_sha": "5f78fd309a16505b5ed9dc9c28ff29ff3dff81bd",
+  "command": "bun run coverage -- --filter=@beep/documents-domain --filter=@beep/documents-server --filter=@beep/documents-use-cases --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -7177,6 +7177,30 @@
             "branches": 0,
             "functions": 0
           }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/LegacySync.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/SyncGenesis.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
         }
       }
     },
@@ -7623,6 +7647,30 @@
             "statements": 41,
             "branches": 74,
             "functions": 2
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncCutover.service.ts": {
+          "lines": 97.36,
+          "statements": 95.23,
+          "branches": 85.71,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncGenesis.service.ts": {
+          "lines": 100,
+          "statements": 97.56,
+          "branches": 88.09,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 5,
+            "functions": 1
           }
         }
       }
