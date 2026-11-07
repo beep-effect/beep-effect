@@ -1597,6 +1597,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the per-report Schema policy snapshot and its mutation controls together; doing so reopens the demonstrated nested deadline alias and must not be described as captured-authority proof.
 
+### Implement source-derived builtin annotation diff in the existing worker, 2026-11-07
+
+Explicit useDmp=false selects CPython 3.11.15 SequenceMatcher semantics in the existing admitted Effect RPC diff child. All 4231 independent step observations, source bounds controls, 22 acknowledged Bun/Node child exits and public annotation outcomes pass. Nineteen canonical builtin SpanUpdater maps match all 328 queries. The lone-surrogate public source case remains a prerequisite refusal with native exact-string coverage; no fidelity waiver. Compact source rows, exact replay and eight corruption controls are retained. Focused package/type/declaration/law/Fallow gates pass without new findings or suppression. See history/evidence/2026-11-07-builtin-annotation-diff.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Revert the builtin selector, algorithm and source corpus together; preserve DMP behavior, source prerequisite refusals and every unfinished goal acceptance obligation.
+
 ### Own annotation contracts and reported source operation, 2026-11-07
 
 Server use cases own annotation mode/replacement/input/result schemas; native stages reuse them without aliases. Reported annotation preserves genuine proofs, exact native output and measured admitted work. Twelve final annotation/resolver tests, eleven regressions and four contract tests pass; lint/types/declarations/laws/Fallow pass with zero introduced findings. Shared Schema policy capture removes duplicated installer code. Final service/Layer and all goal acceptance remain open. See history/evidence/2026-11-07-public-annotation-operation.md.

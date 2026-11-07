@@ -52,8 +52,12 @@ const UnicodeValue = S.toType(CitationPythonUnicodeStorage).pipe(
  */
 export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(function* (
   policy: unknown,
-  runtimeInput: unknown
+  runtimeInput: unknown,
+  useDmp = true
 ) {
+  const algorithm = yield* S.decodeUnknownEffect(S.Boolean)(useDmp).pipe(
+    Effect.mapError(() => failure("invalid-runtime"))
+  );
   const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, () =>
     failure("invalid-runtime")
   );
@@ -83,7 +87,7 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
     .fromFileUrl(new URL("../../../assets/citation-diff/kernel.wasm", import.meta.url))
     .pipe(Effect.mapError(() => failure("invalid-runtime")));
   const argument = yield* encodeCitationDiffStartup(
-    CitationDiffWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath })
+    CitationDiffWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath, useDmp: algorithm })
   );
   yield* preflightCitationDiffControlFrames(limits.processMessageBytes);
   const nativeError = (error: CitationPythonUnicodeFailure) =>

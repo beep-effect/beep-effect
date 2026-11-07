@@ -432,7 +432,12 @@
         "packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts",
         "packages/law-practice/domain/test/CitationBluebook.test.ts",
         "packages/law-practice/domain/test/dtslint/CitationBluebook.test-d.ts",
-        "packages/law-practice/domain/test/fixtures/bluebook-layout.json"
+        "packages/law-practice/domain/test/fixtures/bluebook-layout.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-builtin-annotation-diff.md",
+        "packages/law-practice/server/src/internal/Citation/BuiltinDiff.ts",
+        "packages/law-practice/server/test/CitationBuiltinDiff.test.ts",
+        "packages/law-practice/server/test/CitationBuiltinDiff.fixtures.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/builtin-diff.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

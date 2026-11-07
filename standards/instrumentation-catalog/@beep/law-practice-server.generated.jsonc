@@ -764,6 +764,7 @@
     {"name":"Citation.runAdmittedCleaner","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.runAdmittedOwnedCleaner","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.runAdmittedTokenizer","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.runBuiltinDiff","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.runCallbackSession","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.runCaseNameScan","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.runCleanerPipeline","owner":"@beep/law-practice-server","family":"slice","conforms":true},
