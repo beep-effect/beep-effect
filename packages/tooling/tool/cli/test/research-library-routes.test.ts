@@ -40,6 +40,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
@@ -48,6 +49,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const bytesOf = (text: string) => new TextEncoder().encode(text);
@@ -366,6 +368,88 @@ describe("research library routes", () => {
           `hop 1: identities=${A.dedupe(A.map(second.occurrences, (o) => o.sourceId)).length} readable=1`,
           "hop 2: identities=1 readable=0 cataloguedOnly=1 gateAdmitted=0 gateRefused=1 (unrouted-parent=1)",
         ]);
+      })
+    );
+
+    it.effect("derives hops only for the intake the current inventory recorded", () =>
+      Effect.gen(function* () {
+        const { root, temporary, fs, path } = yield* tempLibrary();
+        const october = path.join(temporary, "october");
+        const november = path.join(temporary, "november");
+        yield* fs.makeDirectory(october, { recursive: true });
+        yield* fs.makeDirectory(november, { recursive: true });
+        yield* fs.writeFileString(path.join(october, "old.md"), "# Old 2026-10-06\n\nSee https://example.com/old.\n");
+        yield* fs.writeFileString(path.join(november, "new.md"), "# New 2026-11-06\n\nSee https://example.com/new.\n");
+        const first = yield* inventoryLibraryWithHops(
+          LibraryInventoryOptions.make({ libraryRoot: root, inputRoots: [october] })
+        );
+        const octoberIntake = O.getOrThrow(A.last(first.intakes));
+        const octoberEdges = A.filter(first.derivations, (edge) => edge.intakeId === octoberIntake.id);
+        expect(octoberEdges.length).toBeGreaterThan(0);
+        const second = yield* inventoryLibraryWithHops(
+          LibraryInventoryOptions.make({ libraryRoot: root, inputRoots: [november] })
+        );
+        // The earlier intake keeps exactly its own edges; the new run adds edges only for its intake.
+        expect(A.filter(second.derivations, (edge) => edge.intakeId === octoberIntake.id)).toEqual(octoberEdges);
+        const novemberIds = A.map(
+          A.filter(second.intakes, (intake) => intake.id !== octoberIntake.id),
+          (intake) => intake.id
+        );
+        const added = A.filter(second.derivations, (edge) => edge.intakeId !== octoberIntake.id);
+        expect(added.length).toBeGreaterThan(0);
+        expect(A.every(added, (edge) => A.contains(novemberIds, edge.intakeId))).toBe(true);
+      })
+    );
+
+    it.effect("computes hop totals over tens of thousands of hop-2 identities in linear time", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        const count = 20_000;
+        const parent = LibrarySource.make({
+          id: "parent",
+          kind: "web",
+          canonicalUrl: "https://example.com/parent",
+          identity: "https://example.com/parent",
+          revision: "",
+          repository: "",
+          ownership: "external",
+          locators: [],
+        });
+        const children = A.makeBy(count, (i) =>
+          LibrarySource.make({
+            id: `child-${i}`,
+            kind: "web",
+            canonicalUrl: `https://example.com/child-${i}`,
+            identity: `https://example.com/child-${i}`,
+            revision: "",
+            repository: "",
+            ownership: "external",
+            locators: [],
+          })
+        );
+        const derivations = A.makeBy(count, (i) =>
+          LibraryDerivation.make({
+            id: `edge-${i}`,
+            derivedId: `child-${i}`,
+            sourceId: "parent",
+            intakeId: "intake",
+            rootId: "report",
+            hopDepth: 2,
+            recordedAt: "2026-11-07T00:00:00.000Z",
+          })
+        );
+        const catalog = LibraryCatalog.make({
+          schema: "beep.research.library/v2",
+          documents: [],
+          sources: [parent, ...children],
+          occurrences: [],
+          captures: [],
+          qualifications: [],
+          derivations,
+        });
+        const [elapsed, totals] = yield* libraryHopTotals(root, catalog).pipe(Effect.timed, TestClock.withLive);
+        expect(Duration.toMillis(elapsed)).toBeLessThan(10_000);
+        expect(totals[2]).toContain(`hop 2: identities=${count} readable=0 cataloguedOnly=${count}`);
       })
     );
 

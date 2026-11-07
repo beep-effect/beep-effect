@@ -24,9 +24,115 @@ import { classifyLibraryReference, extractLibraryReferences } from "./Library.in
 import { LibraryCatalog, LibraryDerivation } from "./Library.schemas.ts";
 import { hashBytes } from "./Library.store.ts";
 import type { LibraryEffectiveCapture } from "./Library.evidence.ts";
-import type { LibraryArtifact, LibrarySource } from "./Library.schemas.ts";
+import type { LibraryArtifact, LibraryFinding, LibrarySource } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.hops");
+
+interface HopIndex {
+  readonly captured: HashSet.HashSet<string>;
+  readonly findingsBySource: HashMap.HashMap<string, ReadonlyArray<LibraryFinding>>;
+  readonly hopTwoBySource: HashMap.HashMap<string, ReadonlyArray<LibraryDerivation>>;
+  readonly liveCaptured: HashSet.HashSet<string>;
+  readonly minDepth: HashMap.HashMap<string, number>;
+  readonly occurrenceSources: HashSet.HashSet<string>;
+  readonly sourcesById: HashMap.HashMap<string, LibrarySource>;
+}
+
+const groupBy = <A>(items: ReadonlyArray<A>, key: (item: A) => string) => {
+  let grouped = HashMap.empty<string, Array<A>>();
+  for (const item of items) {
+    const existing = HashMap.get(grouped, key(item));
+    if (O.isSome(existing)) existing.value.push(item);
+    else grouped = HashMap.set(grouped, key(item), [item]);
+  }
+  return grouped as HashMap.HashMap<string, ReadonlyArray<A>>;
+};
+
+// Catalogs are immutable values, so one index per catalog reference serves every per-source lookup.
+let lastHopIndex: O.Option<readonly [LibraryCatalog, HopIndex]> = O.none();
+
+const hopIndex = (catalog: LibraryCatalog): HopIndex => {
+  if (O.isSome(lastHopIndex) && lastHopIndex.value[0] === catalog) return lastHopIndex.value[1];
+  let minDepth = HashMap.empty<string, number>();
+  for (const derivation of catalog.derivations) {
+    const current = HashMap.get(minDepth, derivation.derivedId);
+    if (O.isNone(current) || derivation.hopDepth < current.value)
+      minDepth = HashMap.set(minDepth, derivation.derivedId, derivation.hopDepth);
+  }
+  const index: HopIndex = {
+    sourcesById: HashMap.fromIterable(A.map(catalog.sources, (source) => [source.id, source] as const)),
+    occurrenceSources: HashSet.fromIterable(A.map(catalog.occurrences, (occurrence) => occurrence.sourceId)),
+    minDepth,
+    hopTwoBySource: groupBy(
+      A.filter(catalog.derivations, (d) => d.hopDepth === 2),
+      (d) => d.derivedId
+    ),
+    captured: HashSet.fromIterable(A.map(catalog.captures, (capture) => capture.sourceId)),
+    liveCaptured: HashSet.fromIterable(
+      A.map(
+        A.filter(catalog.captures, (capture) => capture.status !== "blocked"),
+        (capture) => capture.sourceId
+      )
+    ),
+    findingsBySource: groupBy(catalog.findings, (finding) => finding.sourceId),
+  };
+  lastHopIndex = O.some([catalog, index] as const);
+  return index;
+};
+
+/**
+ * Whether any capture, of any status, is recorded for a source.
+ *
+ * **Example** (Check for a capture)
+ *
+ * ```ts
+ * import { LibraryCatalog } from "@beep/repo-cli/commands/Research"
+ * import { librarySourceHasCapture } from "@beep/repo-cli/commands/Research/Library/Library.hops"
+ *
+ * const catalog = LibraryCatalog.make({ schema: "beep.research.library/v2", documents: [], sources: [], occurrences: [], captures: [], qualifications: [] })
+ * console.log(librarySourceHasCapture(catalog, "missing")) // false
+ * ```
+ *
+ * @internal
+ * @param catalog - Catalog with captures.
+ * @param sourceId - Source identifier to look up.
+ * @returns True when a capture names the source.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const librarySourceHasCapture: {
+  (sourceId: string): (catalog: LibraryCatalog) => boolean;
+  (catalog: LibraryCatalog, sourceId: string): boolean;
+} = dual(2, (catalog: LibraryCatalog, sourceId: string): boolean => HashSet.has(hopIndex(catalog).captured, sourceId));
+
+/**
+ * Look up a catalog source by its primary id.
+ *
+ * **Example** (Find a source)
+ *
+ * ```ts
+ * import { LibraryCatalog } from "@beep/repo-cli/commands/Research"
+ * import { librarySourceById } from "@beep/repo-cli/commands/Research/Library/Library.hops"
+ *
+ * const catalog = LibraryCatalog.make({ schema: "beep.research.library/v2", documents: [], sources: [], occurrences: [], captures: [], qualifications: [] })
+ * console.log(librarySourceById(catalog, "missing")) // { _tag: "None" }
+ * ```
+ *
+ * @internal
+ * @param catalog - Catalog with sources.
+ * @param sourceId - Primary source identifier.
+ * @returns The source, when catalogued.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const librarySourceById: {
+  (sourceId: string): (catalog: LibraryCatalog) => O.Option<LibrarySource>;
+  (catalog: LibraryCatalog, sourceId: string): O.Option<LibrarySource>;
+} = dual(
+  2,
+  (catalog: LibraryCatalog, sourceId: string): O.Option<LibrarySource> =>
+    HashMap.get(hopIndex(catalog).sourcesById, sourceId)
+);
 
 /**
  * Packet concept a finding can route to, with its liveness under a policy.
@@ -203,7 +309,7 @@ const mergeDerivations = Effect.fnUntraced(function* (
 });
 
 /**
- * Record hop-1 derivations for every intake and hop-2 identities from readable hop-1 captures.
+ * Record hop-1 derivations for the named intakes (every intake when omitted) and hop-2 identities from readable hop-1 captures.
  *
  * **Details**
  *
@@ -227,37 +333,39 @@ const mergeDerivations = Effect.fnUntraced(function* (
 export const recordLibraryHops = Effect.fn("Library.recordHops")(function* (
   root: string,
   catalog: LibraryCatalog,
-  recordedAt: string
+  recordedAt: string,
+  intakeIds?: ReadonlyArray<string>
 ) {
-  let sources = A.fromIterable(catalog.sources);
+  const sources = A.fromIterable(catalog.sources);
   let childrenByParent = HashMap.empty<string, ReadonlyArray<string>>();
+  // Primary ids map to themselves and aliases to their primary, so membership and resolution are lookups.
+  let primaryOf = HashMap.fromIterable(
+    A.flatMap(catalog.sources, (source) => [
+      [source.id, source.id] as const,
+      ...A.map(source.aliasIds, (alias) => [alias, source.id] as const),
+    ])
+  );
   const known = A.flatMap(catalog.sources, (source) => [source.repository, source.identity]);
   const childIds = Effect.fnUntraced(function* (parent: LibrarySource) {
     const cached = HashMap.get(childrenByParent, parent.id);
     if (O.isSome(cached)) return cached.value;
     const found = yield* scanChildren(root, catalog, parent, known);
-    const present = (child: LibrarySource) =>
-      A.some(sources, (source) => source.id === child.id || A.contains(source.aliasIds, child.id));
-    sources = A.appendAll(
-      sources,
-      A.filter(found, (child) => !present(child))
-    );
-    const ids = A.dedupe(
-      A.map(found, (child) =>
-        O.getOrElse(
-          O.map(
-            A.findFirst(sources, (source) => A.contains(source.aliasIds, child.id)),
-            (source) => source.id
-          ),
-          () => child.id
-        )
-      )
-    );
+    for (const child of found)
+      if (!HashMap.has(primaryOf, child.id)) {
+        sources.push(child);
+        primaryOf = HashMap.set(primaryOf, child.id, child.id);
+      }
+    const ids = A.dedupe(A.map(found, (child) => O.getOrElse(HashMap.get(primaryOf, child.id), () => child.id)));
     childrenByParent = HashMap.set(childrenByParent, parent.id, ids);
     return ids;
   });
+  const sourcesById = HashMap.fromIterable(A.map(catalog.sources, (source) => [source.id, source] as const));
+  // Only the named intakes are derived: re-deriving historical intakes would rewrite their accounting.
+  const wanted = intakeIds === undefined ? O.none() : O.some(HashSet.fromIterable(intakeIds));
   const edges: Array<HopEdge> = [];
-  for (const intake of catalog.intakes) {
+  for (const intake of A.filter(catalog.intakes, (item) =>
+    O.match(wanted, { onNone: () => true, onSome: HashSet.has(item.id) })
+  )) {
     const hopOne = intakeOccurrences(catalog, intake);
     edges.push(
       ...A.map(hopOne, (occurrence) => ({
@@ -270,7 +378,7 @@ export const recordLibraryHops = Effect.fn("Library.recordHops")(function* (
     );
     const parents = A.dedupeWith(hopOne, (a, b) => a.sourceId === b.sourceId);
     for (const occurrence of parents) {
-      const parent = A.findFirst(catalog.sources, (source) => source.id === occurrence.sourceId);
+      const parent = HashMap.get(sourcesById, occurrence.sourceId);
       const children = O.isSome(parent) ? yield* childIds(parent.value) : [];
       edges.push(
         ...A.map(children, (derivedId) => ({
@@ -310,14 +418,7 @@ export const librarySourceHopDepth: {
   (catalog: LibraryCatalog, sourceId: string): O.Option<number>;
 } = dual(
   2,
-  (catalog: LibraryCatalog, sourceId: string): O.Option<number> =>
-    A.match(
-      A.map(
-        A.filter(catalog.derivations, (derivation) => derivation.derivedId === sourceId),
-        (derivation) => derivation.hopDepth
-      ),
-      { onEmpty: O.none, onNonEmpty: (depths) => O.some(A.min(depths, Order.Number)) }
-    )
+  (catalog: LibraryCatalog, sourceId: string): O.Option<number> => HashMap.get(hopIndex(catalog).minDepth, sourceId)
 );
 
 /**
@@ -344,7 +445,7 @@ export const libraryHopTwoOnly: {
 } = dual(
   2,
   (catalog: LibraryCatalog, sourceId: string): boolean =>
-    !A.some(catalog.occurrences, (occurrence) => occurrence.sourceId === sourceId) &&
+    !HashSet.has(hopIndex(catalog).occurrenceSources, sourceId) &&
     O.match(librarySourceHopDepth(catalog, sourceId), { onNone: () => false, onSome: (depth) => depth >= 2 })
 );
 
@@ -477,8 +578,8 @@ const policyOutcome = (
   return A.some(parents, routed) ? O.none() : O.some([false, "unrouted-parent"]);
 };
 
-const hopTwoEdges = (catalog: LibraryCatalog, source: LibrarySource) =>
-  A.filter(catalog.derivations, (d) => d.derivedId === source.id && d.hopDepth === 2);
+const hopTwoEdges = (catalog: LibraryCatalog, source: LibrarySource): ReadonlyArray<LibraryDerivation> =>
+  O.getOrElse(HashMap.get(hopIndex(catalog).hopTwoBySource, source.id), A.empty<LibraryDerivation>);
 
 /**
  * Decide which hop-2 sources the next acquisition may fetch.
@@ -514,12 +615,12 @@ export const libraryHopGate: {
       (concept: LibraryPacketConcept) => [concept.id, concept.initiativeId]
     )
   );
+  const index = hopIndex(catalog);
   const routed = (parent: LibrarySource) =>
-    A.some(
-      catalog.findings,
-      (finding) =>
-        (finding.sourceId === parent.id || A.contains(parent.aliasIds, finding.sourceId)) &&
+    A.some([parent.id, ...parent.aliasIds], (id) =>
+      A.some(O.getOrElse(HashMap.get(index.findingsBySource, id), A.empty<LibraryFinding>), (finding) =>
         A.some(finding.topicIds, (topic) => HashSet.has(live, topic))
+      )
     );
   const candidates = A.sort(
     A.filter(catalog.sources, (source) => libraryHopTwoOnly(catalog, source.id)),
@@ -535,8 +636,7 @@ export const libraryHopGate: {
       ),
       () => ""
     );
-  const captured = (source: LibrarySource) =>
-    A.some(catalog.captures, (capture) => capture.sourceId === source.id && capture.status !== "blocked");
+  const captured = (source: LibrarySource) => HashSet.has(index.liveCaptured, source.id);
   const capKey = (source: LibrarySource) => `${intakeOf(source)}\n${librarySourceDomain(source.canonicalUrl)}`;
   let acquired = HashMap.empty<string, number>();
   const count = (key: string) => O.getOrElse(HashMap.get(acquired, key), () => 0);
@@ -551,7 +651,7 @@ export const libraryHopGate: {
   };
   return A.map(candidates, (source) => {
     const parentIds = A.dedupe(A.map(hopTwoEdges(catalog, source), (d) => d.sourceId));
-    const parents = A.filter(catalog.sources, (candidate) => A.contains(parentIds, candidate.id));
+    const parents = A.flatMap(parentIds, (id) => A.fromOption(HashMap.get(index.sourcesById, id)));
     const [admitted, reason] = O.getOrElse(policyOutcome(source, parents, input, routed), () => capOutcome(source));
     return LibraryHopDecision.make({
       sourceId: source.id,
