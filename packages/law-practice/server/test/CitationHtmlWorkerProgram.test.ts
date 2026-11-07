@@ -1,9 +1,11 @@
+import * as NodeURL from "node:url";
 import { citationHtmlWorkerProgram } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProgram";
 import {
   CitationHtmlWorkerJob,
   decodeCitationHtmlReply,
   encodeCitationHtmlJob,
 } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+import { CitationHtmlWorkerStartup } from "@beep/law-practice-server/internal/Citation/HtmlWorkerRpc";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -14,15 +16,24 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Predicate from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import type { CitationHtmlWorkerReply } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
 
+const startup = S.encodeEffect(S.fromJsonString(CitationHtmlWorkerStartup))(
+  CitationHtmlWorkerStartup.make({
+    maximum: 4096,
+    assetPath: NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)),
+  })
+);
+
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program boundary", (it) => {
   it.effect("emits ready, started and exactly one complete result for a bounded request", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;
+      const argument = yield* startup;
       for (const outputUtf16 of [100, 1]) {
         const job = CitationHtmlWorkerJob.make({
           encoding: "UTF-8",
@@ -35,7 +46,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
         yield* citationHtmlWorkerProgram.pipe(
           Effect.provideService(Stdio.Stdio, {
             ...stdio,
-            args: Effect.succeed(["4096"]),
+            args: Effect.succeed([argument]),
             stdin: Stream.make(frame),
             stdout: () =>
               Sink.forEach((chunk: string | Uint8Array) =>
@@ -74,10 +85,11 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
   it.effect("rejects an empty request stream after startup without emitting a result", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;
+      const argument = yield* startup;
       const error = yield* citationHtmlWorkerProgram.pipe(
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: Effect.succeed(["4096"]),
+          args: Effect.succeed([argument]),
           stdin: Stream.empty,
           stdout: () => Sink.drain,
         }),
@@ -90,10 +102,11 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
   it.effect("sanitizes a broken reply channel", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;
+      const argument = yield* startup;
       const error = yield* citationHtmlWorkerProgram.pipe(
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: Effect.succeed(["4096"]),
+          args: Effect.succeed([argument]),
           stdout: () => Sink.fail(PlatformError.systemError({ module: "Stdio", method: "stdout", _tag: "Unknown" })),
         }),
         Effect.flip
@@ -105,17 +118,26 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
   it.effect("rejects a truncated filesystem asset read before announcing worker readiness", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;
+      const argument = yield* startup;
       const fs = yield* FileSystem.FileSystem;
+      let assetRead = false;
       const failure = yield* citationHtmlWorkerProgram.pipe(
-        Effect.provideService(FileSystem.FileSystem, { ...fs, stream: () => Stream.make(new Uint8Array(0)) }),
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          stream: () => {
+            assetRead = true;
+            return Stream.make(new Uint8Array(0));
+          },
+        }),
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: Effect.succeed(["4096"]),
+          args: Effect.succeed([argument]),
           stdout: () => Sink.die("truncated asset reached worker readiness"),
         }),
         Effect.flip
       );
       expect(failure).toMatchObject({ _tag: "CitationHtmlWorkerFailure", reason: "invalid-runtime" });
+      expect(assetRead).toBe(true);
     })
   );
 });

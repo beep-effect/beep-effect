@@ -11,6 +11,9 @@
   },
   "references": [
     {
+      "path": "../../../../drivers/box/tsconfig.json"
+    },
+    {
       "path": "../../../../drivers/commands/tsconfig.json"
     },
     {
@@ -21,6 +24,9 @@
     },
     {
       "path": "../../../../drivers/ffmpeg/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/firecrawl/tsconfig.json"
     },
     {
       "path": "../../../../drivers/git/tsconfig.json"
@@ -45,6 +51,9 @@
     },
     {
       "path": "../../../../drivers/occt/tsconfig.json"
+    },
+    {
+      "path": "../../../../drivers/onepassword-cli/tsconfig.json"
     },
     {
       "path": "../../../../drivers/oxigraph/tsconfig.json"

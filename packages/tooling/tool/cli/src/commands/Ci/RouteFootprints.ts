@@ -14,7 +14,7 @@
  * @since 0.0.0
  */
 import * as A from "effect/Array";
-import { identity, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -22,11 +22,68 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CI_LANE_ID_VALUES } from "./CiLane.ts";
-import { CHANGE_ATOM_KIND_VALUES, CheckFootprint } from "./Route.schemas.ts";
+import {
+  CHANGE_ATOM_KIND_VALUES,
+  CheckFootprint,
+  RouteLaneDecision,
+  RouteRefinement,
+  RouteRefinementMode,
+} from "./Route.schemas.ts";
 import type { CiLaneId } from "./CiLane.ts";
 import type { ChangeAtom, ChangeAtomKind, FootprintPropagation } from "./Route.schemas.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
+
+/**
+ * The admitted footprint refinements, in admission order.
+ *
+ * **Details**
+ *
+ * Each refinement removes atom kinds from lanes; {@link ROUTE_FOOTPRINTS}
+ * derives every row's kinds from this list, so a refinement and its footprint
+ * effect cannot drift apart. `shadow` refinements are measured by the replay
+ * and reported by the route, but only `enforced` ones that the revocation
+ * sentinel has not revoked skip a lane ({@link routeLaneDecision}).
+ *
+ * **Example** (The first refinement takes packet markdown out of build and check)
+ *
+ * ```ts import.meta.vitest name="The first refinement takes packet markdown out of build and check"
+ * import { ROUTE_REFINEMENTS } from "@beep/repo-cli/commands/Ci"
+ *
+ * ROUTE_REFINEMENTS[0]?.id // => "packet-markdown-out-of-build-check"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const ROUTE_REFINEMENTS: ReadonlyArray<RouteRefinement> = [
+  // Packet markdown sits under goals/, explorations/, research/ and docs/_internal/, outside every
+  // workspace glob, so it is root-owned; turbo registers no //#build or //#check, and no non-test
+  // source imports a .md/.mdx file (?raw, import.meta.glob or a module import). Packet data
+  // (goals/*/ops/**/*.ts, goals/tsconfig.ops.json) stays in both footprints. Both lanes read the
+  // tree only, never commit messages, so the commits atom every head carries is removed too;
+  // without it every packet-only head would still select them.
+  RouteRefinement.make({
+    id: "packet-markdown-out-of-build-check",
+    lanes: ["build", "check"],
+    removedKinds: ["packet", "commits"],
+    mode: "enforced",
+    fixtures: [
+      "packet markdown edit skips build and check",
+      "commits-only head skips build and check",
+      "packet data edit selects build and check",
+      "docs markdown edit selects build and check",
+      "packet markdown with a source edit selects build and check",
+    ],
+    evidence: "goals/verification-route/research/slice-2-replay.md",
+  }),
+];
+
+const refinementsOf = (lane: CiLaneId): ReadonlyArray<RouteRefinement> =>
+  A.filter(ROUTE_REFINEMENTS, (refinement) => A.contains(refinement.lanes, lane));
+
+const removedKindsOf = (lane: CiLaneId): ReadonlyArray<ChangeAtomKind> =>
+  A.flatMap(refinementsOf(lane), (refinement) => refinement.removedKinds);
 
 const unrefined = (
   lane: CiLaneId,
@@ -36,12 +93,19 @@ const unrefined = (
 ): CheckFootprint =>
   CheckFootprint.make({
     lane,
-    kinds: CHANGE_ATOM_KIND_VALUES,
+    kinds: A.filter(CHANGE_ATOM_KIND_VALUES, (kind) => !A.contains(removedKindsOf(lane), kind)),
     propagation,
     transformer: false,
     external,
-    fixtures: [],
-    basis,
+    fixtures: A.flatMap(refinementsOf(lane), (refinement) => refinement.fixtures),
+    basis: A.match(refinementsOf(lane), {
+      onEmpty: () => basis,
+      onNonEmpty: (refinements) =>
+        `${basis}; refined by ${A.join(
+          A.map(refinements, (r) => r.id),
+          ", "
+        )}`,
+    }),
   });
 
 const BUILD_CLASS = "unrefined; propagation by lane class: the lane reads its package's dependency closure";
@@ -259,3 +323,80 @@ export const routeFootprintRecord = (): Record<CiLaneId, CheckFootprint> =>
     CiLaneId,
     CheckFootprint
   >;
+
+/**
+ * The route decision for one lane, given a change and the revoked refinement
+ * ids from the sentinel.
+ *
+ * **Details**
+ *
+ * A lane the refined record requires is `selected`. A lane it does not
+ * require is `skipped` only when every refinement whose removed kinds the
+ * change contains is `enforced` and not revoked; otherwise it is
+ * `shadow-skipped` and still runs. A lane no atom reaches even before any
+ * refinement (an empty change) is `skipped` with no refinement ids.
+ *
+ * **Example** (A packet markdown edit skips check)
+ *
+ * ```ts import.meta.vitest name="A packet markdown edit skips check"
+ * import { ChangeAtom, routeLaneDecision } from "@beep/repo-cli/commands/Ci"
+ *
+ * const atom = ChangeAtom.make({ kind: "packet", path: "goals/x/SPEC.md", digest: "00" })
+ * routeLaneDecision([atom], "check", []).decision // => "skipped"
+ * ```
+ *
+ * @param atoms - The classified change.
+ * @param lane - The lane to decide.
+ * @param revoked - Refinement ids the sentinel revoked.
+ * @returns The decision with the responsible refinement ids.
+ * @category queries
+ * @since 0.0.0
+ */
+export const routeLaneDecision: {
+  (lane: CiLaneId, revoked: ReadonlyArray<string>): (atoms: ReadonlyArray<ChangeAtom>) => RouteLaneDecision;
+  (atoms: ReadonlyArray<ChangeAtom>, lane: CiLaneId, revoked: ReadonlyArray<string>): RouteLaneDecision;
+} = dual(3, (atoms: ReadonlyArray<ChangeAtom>, lane: CiLaneId, revoked: ReadonlyArray<string>): RouteLaneDecision => {
+  if (HashMap.has(requiredLanes(atoms), lane)) {
+    return RouteLaneDecision.make({ lane, decision: "selected", refinements: [] });
+  }
+  const responsible = A.filter(refinementsOf(lane), (refinement) =>
+    A.some(atoms, (atom) => A.contains(refinement.removedKinds, atom.kind))
+  );
+  const acting = A.every(
+    responsible,
+    (refinement) => RouteRefinementMode.is.enforced(refinement.mode) && !A.contains(revoked, refinement.id)
+  );
+  return RouteLaneDecision.make({
+    lane,
+    decision: acting ? "skipped" : "shadow-skipped",
+    refinements: A.map(responsible, (refinement) => refinement.id),
+  });
+});
+
+/**
+ * The route decision for every lane, in lane-id declaration order.
+ *
+ * **Example** (Unknown selects every lane)
+ *
+ * ```ts import.meta.vitest name="Unknown selects every lane"
+ * import { ChangeAtom, routeLaneDecisions } from "@beep/repo-cli/commands/Ci"
+ * import * as A from "effect/Array"
+ *
+ * const atom = ChangeAtom.make({ kind: "unknown", path: "x", digest: "00" })
+ * A.every(routeLaneDecisions([atom], []), (row) => row.decision === "selected") // => true
+ * ```
+ *
+ * @param atoms - The classified change.
+ * @param revoked - Refinement ids the sentinel revoked.
+ * @returns One decision per lane.
+ * @category queries
+ * @since 0.0.0
+ */
+export const routeLaneDecisions: {
+  (revoked: ReadonlyArray<string>): (atoms: ReadonlyArray<ChangeAtom>) => ReadonlyArray<RouteLaneDecision>;
+  (atoms: ReadonlyArray<ChangeAtom>, revoked: ReadonlyArray<string>): ReadonlyArray<RouteLaneDecision>;
+} = dual(
+  2,
+  (atoms: ReadonlyArray<ChangeAtom>, revoked: ReadonlyArray<string>): ReadonlyArray<RouteLaneDecision> =>
+    A.map(CI_LANE_ID_VALUES, (lane) => routeLaneDecision(atoms, lane, revoked))
+);

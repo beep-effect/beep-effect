@@ -14,13 +14,16 @@ export {
   sanitizeLibraryDiagnostic,
   saveLibraryText,
 } from "../commands/Research/Library/Library.adapter.ts";
+export * from "../commands/Research/Library/Library.box.ts";
 export { runLibraryVerificationCommand } from "../commands/Research/Library/Library.command.ts";
 export * from "../commands/Research/Library/Library.corrections.ts";
 export * from "../commands/Research/Library/Library.events.ts";
 export * from "../commands/Research/Library/Library.evidence.ts";
+export { acquireLibraryWeb, LibraryFirecrawlLive } from "../commands/Research/Library/Library.firecrawl.ts";
 export { acquireLibraryGithub } from "../commands/Research/Library/Library.github.ts";
 export * from "../commands/Research/Library/Library.integrity.ts";
 export * from "../commands/Research/Library/Library.provenance.ts";
+export * from "../commands/Research/Library/Library.routeEvidence.ts";
 export { mergeLibraryVersions } from "../commands/Research/Library/Library.store.ts";
 export * from "../commands/Research/Library/Library.versions.ts";
 export { acquireLibraryPaper } from "../commands/Research/Library/Library.web.ts";

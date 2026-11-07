@@ -29,10 +29,6 @@
       "rationale": "Unused private driver removed 2026-10-21 on branch chore/remove-unused-drivers at the operator's request. Name-reuse guard; recover the source from commit 426d494b34."
     },
     {
-      "name": "@beep/firecrawl",
-      "rationale": "Unused private driver removed 2026-10-21 on branch chore/remove-unused-drivers at the operator's request. Name-reuse guard; recover the source from commit 426d494b34."
-    },
-    {
       "name": "@beep/face-detection",
       "rationale": "Unused private driver removed 2026-10-21 on branch chore/remove-unused-drivers at the operator's request. Name-reuse guard; recover the source from commit 426d494b34."
     }
