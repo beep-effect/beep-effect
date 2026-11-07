@@ -164,3 +164,41 @@ Review this local branch and its evidence, integrate the inherited cache repair,
 then publish through the orchestrator's normal workflow. Preserve the part 1
 hosting and uncertainty boundaries when starting part 2; this handoff does not
 authorize production cutover.
+
+## Stack fixes on `goals/vs-saga` (2026-11-07)
+
+Branch `goals/vs-saga` was cut from `68763f20fe2` and carries these fixes.
+
+- Merged `origin/goals/vault-sync-domain` (#2886, `444083d954c`): opaque minted
+  `DestinationId` (`documents_sync_destination_<cuid>`) and hashed reservation keys.
+  Every server fixture now uses a valid minted id.
+- D17 F1: the scan claim command id is `claim/${itemId}`, no longer the vault path.
+  An audit of every other command id, Activity name and saga key in 3b1 code found
+  only opaque ids (item, operation and conflict ids, page indexes, Box event ids).
+  The restart test now asserts that no stored `command_id` contains a fixture path.
+  With the fix reverted it fails on `before-poll/claim/folder/file.txt`.
+- Effect Vitest: the six EV002 rows in `LegacySync.projection.pglite.test.ts` were
+  real. The test provided a built Context through `Effect.provide`, and now uses
+  `Effect.provideContext`. BoxMirror EV005/EV006 rows now use `Effect.exit` and
+  `assertTrue`, and the 3a `layer(CuidLayer)` EV014 row has a hook timeout. The
+  three EV010 `BunServices` rows are reasoned exceptions, because native realPath
+  reads and the checked-in DDL are the subject of those tests. Nothing else was
+  re-keyed and no full `--write` ran.
+- Fallow complexity: three passes reported eight introduced findings: saga
+  `execute` bodies up to cyclomatic 37 and cognitive 66, three projection handlers,
+  and `RecordDestinationPoll`. Pump, poll, scan and plan were split into named
+  helpers, the projection handlers now use per-table column mappers, and the poll
+  decision is its own function. Behaviour is unchanged.
+- Coverage: the saga-handler functions row fell to 89.09 against its floor of 90.
+  It was restored with a new test covering a push failure, a poll failure and a
+  paused destination making no Box calls.
+- Cache policy: four `configuration-drift` rows on `@beep/documents-server` were
+  recorded through `cache-baseline-request-pr3b1-domain.json`. The review is in
+  `cache-baseline-review-pr3b1-domain.md`. Policy now reports 0 blocking findings.
+
+Verification: package-verify (lint, audit, docgen) passed for documents-server and
+documents-domain. Server ran 171 tests in 18 files under coverage, and the coverage
+gate was ok. Domain ran 49 tests and use-cases ran 73. Entity-kit freeze reported 0
+findings, tsconfig-sync reported no drift, and the three fallow checks exited 0.
+Effect Vitest showed introduced=0. The scoped schema-first scan reported zero
+introduced findings.

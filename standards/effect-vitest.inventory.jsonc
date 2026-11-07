@@ -4828,6 +4828,28 @@
       "reason": "The filing-decision cases share the documents-server native fixture: materialized bytes and atomic updates in scoped temporary directories. Owner: @beep/documents-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
+      "id": "EV010:packages/documents/server/test/LegacySync.projection.pglite.test.ts:14:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/LegacySync.projection.pglite.test.ts",
+      "line": 14,
+      "endLine": 14,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The committed legacy documents_sync_* migration DDL is the subject: the test reads it from the checkout so the projections write the real legacy tables, and seeding MemoryFileSystem with a copy would fabricate that provenance. Owner: @beep/documents-server. Exit: retire when db-admin exports the baseline DDL as a module the test can import."
+    },
+    {
       "id": "EV010:packages/documents/server/test/VaultSyncDrift.test.ts:33:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -4892,6 +4914,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native filesystem identity, path containment, descriptor failures and real file preservation are the tested contract. Tests use it.layer with explicit acquisition budgets. Owner: @beep/documents-server. Exit: retire when an in-memory filesystem faithfully models inode/device identity and descriptor-to-path races."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/VaultSyncPass.pglite.test.ts:17:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/VaultSyncPass.pglite.test.ts",
+      "line": 17,
+      "endLine": 17,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native temporary vault directories are the subject: the saga scan resolves the canonical root with realPath and the adapter re-reads bytes through the symlink/inode-bound file store across a runtime teardown, which MemoryFileSystem does not model. Owner: @beep/documents-server. Exit: retire when the vault file store reads through an injected filesystem that models realPath and inode identity."
     },
     {
       "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:34:@effect/platform-bun/BunFileSystem@0#1",

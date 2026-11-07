@@ -14,7 +14,7 @@ import * as V from "./Values.ts";
  * **Example** (Build a command for dispatch)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
- * const command=V.ReleaseDestinationName.make({destinationId:V.DestinationId.make("vault")});
+ * const command=V.ReleaseDestinationName.make({destinationId:V.DestinationId.make("documents_sync_destination_avault")});
  * console.log(command._tag);
  * ```
  * @category aggregates

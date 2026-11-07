@@ -59,7 +59,7 @@ describe("legacy sync SQL projections", () => {
             )
           ).pipe(Layer.provide(AlchemyPostgresPlatform.layer()))
         );
-        const destinationId = V.DestinationId.make("projection-destination");
+        const destinationId = V.DestinationId.make("documents_sync_destination_aprojection");
         const itemId = V.ItemId.make("documents_sync_item_a999");
         const operationId = V.OperationId.make("documents_sync_operation_a888");
         const conflictId = V.ConflictId.make("documents_sync_conflict_a777");
@@ -139,10 +139,10 @@ describe("legacy sync SQL projections", () => {
           destinationId,
           V.RecordDestinationPoll.make({ position: "opaque-2", error: null, lastEventId: "remote-event" })
         );
-        yield* LegacySyncItem.caughtUp(itemReceipt).pipe(Effect.provide(runtime));
-        yield* LegacySyncOperation.caughtUp(opReceipt).pipe(Effect.provide(runtime));
-        yield* LegacySyncConflict.caughtUp(conflictReceipt).pipe(Effect.provide(runtime));
-        yield* LegacySyncCursor.caughtUp(cursorReceipt).pipe(Effect.provide(runtime));
+        yield* LegacySyncItem.caughtUp(itemReceipt).pipe(Effect.provideContext(runtime));
+        yield* LegacySyncOperation.caughtUp(opReceipt).pipe(Effect.provideContext(runtime));
+        yield* LegacySyncConflict.caughtUp(conflictReceipt).pipe(Effect.provideContext(runtime));
+        yield* LegacySyncCursor.caughtUp(cursorReceipt).pipe(Effect.provideContext(runtime));
         const itemRows = yield* sql`SELECT id, public_id, org_id, workspace_id, content_size_bytes,
         remote_id, remote_name, sync_state, last_pushed_digest, last_pushed_generation FROM documents_sync_item`.pipe(
           Effect.repeat({ until: (rows) => rows[0]?.sync_state === "current", schedule: Schedule.spaced("10 millis") }),
@@ -204,7 +204,7 @@ describe("legacy sync SQL projections", () => {
             destinationId,
           })
         );
-        yield* LegacySyncConflict.caughtUp(reviewedReceipt).pipe(Effect.provide(runtime));
+        yield* LegacySyncConflict.caughtUp(reviewedReceipt).pipe(Effect.provideContext(runtime));
         const reviewedRows = yield* sql`SELECT resolution_status, sync_item_id FROM documents_sync_conflict`;
         expect(reviewedRows).toEqual([{ resolution_status: "reviewed", sync_item_id: 1 }]);
         yield* destinations.send(destinationId, V.RecordDestinationPoll.make({ position: null, error: "offline" }));
@@ -275,7 +275,7 @@ describe("legacy sync SQL projections", () => {
             reason: "synthetic-failure",
           })
         );
-        yield* LegacySyncOperation.caughtUp(failed).pipe(Effect.provide(runtime));
+        yield* LegacySyncOperation.caughtUp(failed).pipe(Effect.provideContext(runtime));
         const failedRows = yield* sql`SELECT status, last_error, operation_type FROM documents_sync_operation
           WHERE public_id = ${replacementId}`.pipe(
           Effect.repeat({ until: (rows) => rows[0]?.status === "failed", schedule: Schedule.spaced("10 millis") }),

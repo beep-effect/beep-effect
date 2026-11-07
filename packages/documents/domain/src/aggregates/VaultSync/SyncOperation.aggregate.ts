@@ -47,16 +47,12 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
     C.ReviveOperation,
   ],
   decide: {
-    QueueOperation: (s, c, { id }) =>
-      c.input.idempotencyKey !== id
-        ? refused("operation-key")
-        : s === null
-          ? [C.OperationQueued.make(Struct.omit(c, ["_tag"]))]
-          : retarget(s, c.input)
-            ? c.input.generation <= s.input.generation
-              ? []
-              : [C.OperationRetargeted.make(Struct.omit(c, ["_tag"]))]
-            : refused("not-retargetable"),
+    QueueOperation: (s, c, { id }) => {
+      if (c.input.idempotencyKey !== id) return refused("operation-key");
+      if (s === null) return [C.OperationQueued.make(Struct.omit(c, ["_tag"]))];
+      if (!retarget(s, c.input)) return refused("not-retargetable");
+      return c.input.generation <= s.input.generation ? [] : [C.OperationRetargeted.make(Struct.omit(c, ["_tag"]))];
+    },
     SquashOperation: (s, c) =>
       retarget(s, c.input)
         ? s !== null && c.input.generation < s.input.generation

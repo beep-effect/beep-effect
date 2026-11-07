@@ -1,14 +1,23 @@
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
-import { describe, expect, it } from "@effect/vitest";
+import { CuidState } from "@beep/schema/Cuid";
+import { describe, expect, it, layer } from "@effect/vitest";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as H from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const decodeEvidence = S.decodeEffect(V.RemoteEvidence);
+const decodeDestinationId = S.decodeUnknownEffect(V.DestinationId);
+const decodeReservationKey = S.decodeUnknownEffect(V.ReservationKey);
+const CuidLayer = CuidState.Default.pipe(
+  Layer.provideMerge(Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto))
+);
 const encodeQueued = S.encodeEffect(V.OperationQueued);
-const destination = V.DestinationId.make("vault-unit");
+const destination = V.DestinationId.make("documents_sync_destination_avaultunit");
 const id = V.OperationId.make("documents_sync_operation_a1");
 const itemId = V.ItemId.make("documents_sync_item_a1");
 const input = V.OperationInput.make({
@@ -108,7 +117,7 @@ describe("vault sync pure transitions", () => {
       V.ClaimDestinationName.make({
         claim: { destinationId: destination, orgId: 1, workspaceId: 1, name: " Vault ", previousName: null },
       }),
-      { ...ctx, id: V.ReservationKey.make("vault") }
+      { ...ctx, id: V.reservationKey({ orgId: 1, name: "other" }) }
     );
     expect(result).toMatchObject({ rule: "wrong-key" });
   });
@@ -165,6 +174,49 @@ describe("vault sync pure transitions", () => {
     );
     expect(events).toEqual([]);
   });
+  it("name reservations reject another destination and ignore a repeated claim", () => {
+    const key = { ...ctx, id: V.reservationKey({ orgId: 1, name: "vault" }) };
+    const claim = V.NameClaim.make({
+      destinationId: destination,
+      orgId: 1,
+      workspaceId: 1,
+      name: "vault",
+      previousName: null,
+    });
+    const claimFor = (name: string, destinationId: V.DestinationId) =>
+      V.ClaimDestinationName.make({ claim: { ...claim, name, destinationId } });
+    const decide = V.DestinationNameReservation.definition.decide.ClaimDestinationName;
+    expect(
+      decide(claim, claimFor("vault", V.DestinationId.make("documents_sync_destination_avaultother")), key)
+    ).toMatchObject({
+      rule: "name-held",
+    });
+    expect(decide(claim, claimFor("vault", destination), key)).toEqual([]);
+    expect(decide(claim, claimFor("Vault", destination), key)).toMatchObject([{ _tag: "DestinationNameClaimed" }]);
+  });
+  it("rename checks registration, scope, and the previous name in order", () => {
+    const registered: V.DestinationState = {
+      _tag: "Registered",
+      orgId: 1,
+      workspaceId: 1,
+      name: "vault",
+      provider: "box",
+      rootId: null,
+      cursor: null,
+      cursorError: null,
+      paused: false,
+      paths: H.empty(),
+    };
+    const rename = (orgId: number, name: string, previousName: string) =>
+      V.RenameDestination.make({ orgId, workspaceId: 1, name, previousName });
+    const decide = (state: V.DestinationState, command: V.RenameDestination) =>
+      V.SyncDestination.definition.decide.RenameDestination(state, command, { ...ctx, id: destination });
+    expect(decide({ _tag: "Unregistered" }, rename(1, "renamed", "vault"))).toMatchObject({ rule: "not-registered" });
+    expect(decide(registered, rename(2, "renamed", "vault"))).toMatchObject({ rule: "destination-scope" });
+    expect(decide(registered, rename(1, "vault", "stale"))).toEqual([]);
+    expect(decide(registered, rename(1, "renamed", "stale"))).toMatchObject({ rule: "stale-name" });
+    expect(decide(registered, rename(1, "renamed", "vault"))).toMatchObject([{ _tag: "DestinationRenamed" }]);
+  });
   it.effect("remote evidence is capped by UTF-8 bytes, not character count (I20)", () =>
     Effect.gen(function* () {
       const accepted = yield* decodeEvidence(Str.repeat(8192)("a"));
@@ -186,6 +238,57 @@ describe("vault sync pure transitions", () => {
       const encoded = yield* encodeQueued(event);
       expect(encoded).toEqual({ _tag: "OperationQueued", input });
       expect(V.OperationQueued.schemaVersion).toBe(1);
+    })
+  );
+  it.prop(
+    "reservation keys for generated org ids and names decode as opaque keys (F2)",
+    [S.Int.check(S.isBetween({ minimum: 0, maximum: 1000000 })), S.NonEmptyString],
+    ([orgId, name]) => S.is(V.ReservationKey)(V.reservationKey({ orgId, name })),
+    { arbitrary: { runs: 100, seed: "vault-sync-reservation-keys" } }
+  );
+  it.prop(
+    "generated destination ids keep the opaque prefix (F3)",
+    [V.DestinationId],
+    ([id]) => Str.startsWith("documents_sync_destination_")(id),
+    { arbitrary: { runs: 100, seed: "vault-sync-destination-ids" } }
+  );
+  it.effect("reservation keys hash the normalized name and never carry it (F2)", () =>
+    Effect.gen(function* () {
+      const key = V.reservationKey({ orgId: 7, name: " Client Matter " });
+      expect(key).toBe(V.reservationKey({ orgId: 7, name: "client matter" }));
+      expect(key).not.toBe(V.reservationKey({ orgId: 8, name: "client matter" }));
+      expect(key).toMatch(/^7:[0-9a-f]{64}$/);
+      expect(Str.toLowerCase(key)).not.toContain("client");
+      const rejected = yield* decodeReservationKey("7:client matter").pipe(Effect.flip);
+      expect(rejected._tag).toBe("SchemaError");
+      const claim = V.NameClaim.make({
+        destinationId: destination,
+        orgId: 7,
+        workspaceId: 1,
+        name: "Client Matter",
+        previousName: null,
+      });
+      const decide = V.DestinationNameReservation.definition.decide.ClaimDestinationName;
+      const violation = decide(
+        V.NameClaim.make({ ...claim, destinationId: V.DestinationId.make("documents_sync_destination_other1") }),
+        V.ClaimDestinationName.make({ claim }),
+        { ...ctx, id: key }
+      );
+      expect(violation).toMatchObject({ rule: "name-held", evidence: key });
+    })
+  );
+});
+layer(CuidLayer, { timeout: "10 seconds" })("vault sync destination ids", (it) => {
+  it.effect("destination ids are opaque minted tokens and decode strictly (F3)", () =>
+    Effect.gen(function* () {
+      const minted = yield* V.mintDestinationId;
+      expect(S.is(V.DestinationId)(minted)).toBe(true);
+      expect(Str.startsWith("documents_sync_destination_")(minted)).toBe(true);
+      const decoded = yield* decodeDestinationId(minted);
+      expect(decoded).toBe(minted);
+      const rejected = yield* decodeDestinationId("vault").pipe(Effect.flip);
+      expect(rejected._tag).toBe("SchemaError");
+      expect(S.is(V.DestinationId)("documents_sync_destination_Vault Name")).toBe(false);
     })
   );
 });

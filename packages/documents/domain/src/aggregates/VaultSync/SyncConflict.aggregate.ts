@@ -10,6 +10,26 @@ import * as S from "effect/Schema";
 import * as C from "./SyncConflict.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
+
+const sameConflict =
+  (scope: Pick<C.ConflictRecord, "workspaceId" | "destinationId" | "remoteEventId">) =>
+  (record: C.ConflictRecord): boolean =>
+    record.workspaceId === scope.workspaceId &&
+    record.destinationId === scope.destinationId &&
+    record.remoteEventId === scope.remoteEventId;
+const escapesConflictScope =
+  (record: C.ConflictRecord) =>
+  (correction: { readonly input: Pick<C.ConflictRecord, "destinationId" | "itemId"> }): boolean =>
+    correction.input.destinationId !== record.destinationId || correction.input.itemId !== record.itemId;
+const decideOpenConflict = <A>(
+  s: C.ConflictRecord | null,
+  scope: Pick<C.ConflictRecord, "workspaceId" | "destinationId" | "remoteEventId">,
+  onOpen: (record: C.ConflictRecord) => A
+): A | SyncRuleViolation | [] =>
+  O.match(O.filter(O.fromNullOr(s), sameConflict(scope)), {
+    onNone: () => SyncRuleViolation.make({ rule: "conflict-not-found", evidence: scope.remoteEventId }),
+    onSome: (record): A | [] => (record.reviewed ? [] : onOpen(record)),
+  });
 /**
  * SyncConflict vault sync contract.
  *
@@ -35,39 +55,19 @@ export class SyncConflict extends Domain.Aggregate("SyncConflict", {
           ? [C.ConflictRecorded.make({ record: { ...c.record, reviewed: false } })]
           : [],
     ReviewConflict: (s, c) =>
-      O.match(O.fromNullOr(s), {
-        onNone: () => SyncRuleViolation.make({ rule: "conflict-not-found", evidence: c.remoteEventId }),
-        onSome: (record) =>
-          record.workspaceId !== c.workspaceId ||
-          record.destinationId !== c.destinationId ||
-          record.remoteEventId !== c.remoteEventId
-            ? SyncRuleViolation.make({ rule: "conflict-not-found", evidence: c.remoteEventId })
-            : record.reviewed
-              ? []
-              : c.correction !== null &&
-                  (c.correction.input.destinationId !== record.destinationId ||
-                    c.correction.input.itemId !== record.itemId)
-                ? SyncRuleViolation.make({ rule: "correction-scope", evidence: c.remoteEventId })
-                : [
-                    C.ConflictReviewRequested.make({
-                      record,
-                      correction: c.correction,
-                      healOperationId: c.healOperationId,
-                    }),
-                  ],
-      }),
+      decideOpenConflict(s, c, (record) =>
+        O.exists(O.fromNullOr(c.correction), escapesConflictScope(record))
+          ? SyncRuleViolation.make({ rule: "correction-scope", evidence: c.remoteEventId })
+          : [
+              C.ConflictReviewRequested.make({
+                record,
+                correction: c.correction,
+                healOperationId: c.healOperationId,
+              }),
+            ]
+      ),
     ConfirmConflictReview: (s, c) =>
-      O.match(O.fromNullOr(s), {
-        onNone: () => SyncRuleViolation.make({ rule: "conflict-not-found", evidence: c.remoteEventId }),
-        onSome: (record) =>
-          record.workspaceId !== c.workspaceId ||
-          record.destinationId !== c.destinationId ||
-          record.remoteEventId !== c.remoteEventId
-            ? SyncRuleViolation.make({ rule: "conflict-not-found", evidence: c.remoteEventId })
-            : record.reviewed
-              ? []
-              : [C.ConflictReviewed.make({ record: { ...record, reviewed: true } })],
-      }),
+      decideOpenConflict(s, c, (record) => [C.ConflictReviewed.make({ record: { ...record, reviewed: true } })]),
   },
   evolve: {
     ConflictReviewRequested: (s) => s,

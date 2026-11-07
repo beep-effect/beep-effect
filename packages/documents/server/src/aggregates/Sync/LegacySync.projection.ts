@@ -3,6 +3,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   LegacySyncConflict,
   LegacySyncCursor,
@@ -119,6 +121,81 @@ const store = Effect.gen(function* () {
   });
   return { sql, path, identity, write };
 });
+const remoteCleared = {
+  remote_name: null,
+  remote_parent_id: null,
+  last_pushed_digest: null,
+  last_pushed_generation: null,
+  last_error: null,
+};
+const itemSyncStates: Readonly<Record<string, string>> = { synced: "current", drifted: "conflict" };
+const operationStatuses: Readonly<Record<string, string>> = { retrying: "queued", superseded: "failed" };
+const encodeEvidence = S.encodeEffect(S.fromJsonString(S.Struct({ evidence: S.String })));
+const cursorPublicId = (destinationId: string) =>
+  `documents_sync_cursor_a${bytesToHex(sha256(new TextEncoder().encode(destinationId)))}`;
+const pushedColumns = (event: V.ItemPushed, digest: string | null, basename: string) => ({
+  remote_name: event.remoteName ?? basename,
+  remote_parent_id: event.remoteParentId ?? null,
+  last_pushed_digest: digest,
+  last_pushed_generation: event.generation,
+  last_error: null,
+});
+const itemEventColumns = (event: { readonly _tag: string }, digest: string | null, basename: string) => {
+  if (S.is(V.ItemPushed)(event)) return pushedColumns(event, digest, basename);
+  return event._tag === "ItemKindReplaced" ? remoteCleared : {};
+};
+const itemColumns = (state: V.ItemRecord, event: { readonly _tag: string }, basename: string) => {
+  const o = state.observation;
+  return {
+    content_digest: o.digest,
+    content_size_bytes: o.contentSizeBytes ?? null,
+    item_kind: o.kind,
+    local_generation: o.generation,
+    local_rel_path: o.path,
+    remote_id: state.remoteId,
+    sync_state: itemSyncStates[state.status] ?? state.status,
+    ...itemEventColumns(event, o.digest, basename),
+  };
+};
+const operationErrorColumns = (event: { readonly _tag: string }) =>
+  S.is(V.OperationFailed)(event) || S.is(V.OperationSuperseded)(event) ? { last_error: event.reason } : {};
+const operationColumns = (
+  state: V.OperationRecord,
+  event: { readonly _tag: string },
+  item: number,
+  path: Path.Path
+) => {
+  const input = state.input;
+  const parent = path.dirname(input.path);
+  return {
+    sync_item_id: item,
+    operation_type: input.type === "ensureFolder" ? "createFolder" : input.type,
+    status: operationStatuses[state.status] ?? state.status,
+    attempt_count: state.attempts,
+    idempotency_key: input.idempotencyKey,
+    input_content_digest: input.digest,
+    input_generation: input.generation,
+    target_rel_path: input.path,
+    target_parent_rel_path: parent === "." ? null : parent,
+    target_name: path.basename(input.path),
+    ...operationErrorColumns(event),
+  };
+};
+const conflictColumns = (record: V.ConflictRecord, item: number | null, payload: string) => ({
+  sync_item_id: item,
+  remote_event_id: record.remoteEventId,
+  remote_payload: payload,
+  remote_id: record.remoteId ?? null,
+  local_rel_path: record.path ?? null,
+  conflict_kind: record.kind ?? "remoteUnknown",
+  resolution_status: record.reviewed ? "reviewed" : "open",
+});
+const cursorColumns = (cursor: string, cursorError: string | null, event: { readonly _tag: string }) => ({
+  stream_position: cursor,
+  ...(S.is(V.CursorAdvanced)(event) && event.lastEventId !== undefined ? { last_event_id: event.lastEventId } : {}),
+  last_error: cursorError,
+  status: cursorError === null ? "active" : "error",
+});
 /**
  * Writes derived rows with D14 numeric references and transactional delivery checkpoints.
  *
@@ -137,35 +214,8 @@ export const LegacySyncProjections = Layer.mergeAll(
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, event, envelope } of batch) {
           if (state === null) continue;
-          const o = state.observation;
-          const pushed = event._tag === "ItemPushed";
-          yield* write("item", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
-            content_digest: o.digest,
-            content_size_bytes: o.contentSizeBytes ?? null,
-            item_kind: o.kind,
-            local_generation: o.generation,
-            local_rel_path: o.path,
-            remote_id: state.remoteId,
-            ...(event._tag === "ItemKindReplaced"
-              ? {
-                  remote_name: null,
-                  remote_parent_id: null,
-                  last_pushed_digest: null,
-                  last_pushed_generation: null,
-                  last_error: null,
-                }
-              : {}),
-            ...(pushed
-              ? {
-                  remote_name: event.remoteName ?? path.basename(o.path),
-                  remote_parent_id: event.remoteParentId ?? null,
-                }
-              : {}),
-            sync_state: state.status === "synced" ? "current" : state.status === "drifted" ? "conflict" : state.status,
-            ...(pushed
-              ? { last_pushed_digest: o.digest, last_pushed_generation: event.generation, last_error: null }
-              : {}),
-          });
+          const columns = itemColumns(state, event, path.basename(state.observation.path));
+          yield* write("item", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), columns);
         }
       });
     })
@@ -176,23 +226,16 @@ export const LegacySyncProjections = Layer.mergeAll(
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
           if (state === null) continue;
-          const input = state.input;
-          const item = yield* identity("item", input.itemId);
-          yield* write("operation", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
-            sync_item_id: item,
-            operation_type: input.type === "ensureFolder" ? "createFolder" : input.type,
-            status: state.status === "retrying" ? "queued" : state.status === "superseded" ? "failed" : state.status,
-            attempt_count: state.attempts,
-            idempotency_key: input.idempotencyKey,
-            input_content_digest: input.digest,
-            input_generation: input.generation,
-            target_rel_path: input.path,
-            target_parent_rel_path: path.dirname(input.path) === "." ? null : path.dirname(input.path),
-            target_name: path.basename(input.path),
-            ...(event._tag === "OperationFailed" || event._tag === "OperationSuperseded"
-              ? { last_error: event.reason }
-              : {}),
-          });
+          const item = yield* identity("item", state.input.itemId);
+          const columns = operationColumns(state, event, item, path);
+          yield* write(
+            "operation",
+            source.id,
+            envelope.stream,
+            envelope.seq,
+            DateTime.toEpochMillis(envelope.at),
+            columns
+          );
         }
       });
     })
@@ -204,17 +247,16 @@ export const LegacySyncProjections = Layer.mergeAll(
         for (const { source, event, envelope } of batch) {
           const record = event.record;
           const item = record.itemId === null ? null : yield* identity("item", record.itemId);
-          yield* write("conflict", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
-            sync_item_id: item,
-            remote_event_id: record.remoteEventId,
-            remote_payload: yield* S.encodeEffect(S.fromJsonString(S.Struct({ evidence: S.String })))({
-              evidence: record.evidence,
-            }).pipe(Effect.orDie),
-            remote_id: record.remoteId ?? null,
-            local_rel_path: record.path ?? null,
-            conflict_kind: record.kind ?? "remoteUnknown",
-            resolution_status: record.reviewed ? "reviewed" : "open",
-          });
+          const payload = yield* encodeEvidence({ evidence: record.evidence }).pipe(Effect.orDie);
+          const columns = conflictColumns(record, item, payload);
+          yield* write(
+            "conflict",
+            source.id,
+            envelope.stream,
+            envelope.seq,
+            DateTime.toEpochMillis(envelope.at),
+            columns
+          );
         }
       });
     })
@@ -224,22 +266,10 @@ export const LegacySyncProjections = Layer.mergeAll(
       const { write } = yield* store;
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
-          if (state === null || state._tag !== "Registered" || state.cursor === null) continue;
-          yield* write(
-            "cursor",
-            `documents_sync_cursor_a${bytesToHex(sha256(new TextEncoder().encode(source.id)))}`,
-            envelope.stream,
-            envelope.seq,
-            DateTime.toEpochMillis(envelope.at),
-            {
-              stream_position: state.cursor,
-              ...(event._tag === "CursorAdvanced" && event.lastEventId !== undefined
-                ? { last_event_id: event.lastEventId }
-                : {}),
-              last_error: state.cursorError,
-              status: state.cursorError === null ? "active" : "error",
-            }
-          );
+          if (state?._tag !== "Registered" || state.cursor === null) continue;
+          const at = DateTime.toEpochMillis(envelope.at);
+          const columns = cursorColumns(state.cursor, state.cursorError, event);
+          yield* write("cursor", cursorPublicId(source.id), envelope.stream, envelope.seq, at, columns);
         }
       });
     })

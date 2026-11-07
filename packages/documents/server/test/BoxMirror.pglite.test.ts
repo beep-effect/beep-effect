@@ -32,7 +32,7 @@ describe("BoxMirror durable intent receipts", () => {
           const fixture = yield* DmsMirrorFixtureHandle;
           const before = yield* fixture.counts;
           const args = {
-            destinationId: V.DestinationId.make("adapter"),
+            destinationId: V.DestinationId.make("documents_sync_destination_aadapter"),
             operationId: V.OperationId.make(`documents_sync_operation_a${outcome}`),
             passId: "first",
             generation: 1,
@@ -107,7 +107,7 @@ describe("BoxMirror durable intent receipts", () => {
             )
           )
         );
-        const result = yield* Context.get(context, BoxMirror).probe({ destinationId: V.DestinationId.make("adapter") });
+        const result = yield* Context.get(context, BoxMirror).probe({ destinationId: V.DestinationId.make("documents_sync_destination_aadapter") });
         expect(result).toEqual({ connected: true });
         const after = yield* fixture.counts;
         expect(after.uploadFile).toBe(before.uploadFile);

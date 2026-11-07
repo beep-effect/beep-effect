@@ -14,7 +14,7 @@ import * as V from "./Values.ts";
  * **Example** (Build a command for dispatch)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
- * const command=V.SquashOperation.make({input:{destinationId:V.DestinationId.make("vault"),itemId:V.ItemId.make("documents_sync_item_a1"),type:"uploadFile",path:V.VaultRelPath.make("file.txt"),digest:"sha256:a",generation:1,parentRequired:false,idempotencyKey:V.OperationId.make("documents_sync_operation_a1")}});
+ * const command=V.SquashOperation.make({input:{destinationId:V.DestinationId.make("documents_sync_destination_avault"),itemId:V.ItemId.make("documents_sync_item_a1"),type:"uploadFile",path:V.VaultRelPath.make("file.txt"),digest:"sha256:a",generation:1,parentRequired:false,idempotencyKey:V.OperationId.make("documents_sync_operation_a1")}});
  * console.log(command._tag);
  * ```
  * @category aggregates
