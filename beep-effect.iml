@@ -291,6 +291,7 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/public-origin-beep-effect-com" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/t3code-fleet-driver" />
       <excludeFolder url="file://$MODULE_DIR$/goals/agent-observability-foundation" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/party-slice" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />
