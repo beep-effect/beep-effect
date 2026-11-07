@@ -232,6 +232,14 @@ Lane `feat/research-intake-2026-11`
 
 Reverse: Return to a literal whole-tree git grep on the handle after removing the pre-existing public references, or widen the guard's diff base
 
+### Junie ran out of quota mid-T2; the public partition moves to Codex gpt-6.1-sol as well, 2026-11-07
+
+Junie's JetBrains quota returned 477 Out of quota on 2026-11-07 after a handful of reads (the runner recorded 239 failed launches before the batch stopped making progress; the quota signal appeared only in Junie's log file, now detected and treated as a pause). The next pool is claude-opus-5-5 children, which recovered from this morning's rate limit, but 784 Opus reads would draw the scarce Anthropic weekly pool that also runs the orchestrating session, and that pool already tripped a rate limit today. The public partition therefore runs on the chain's step 2, Codex gpt-6.1-sol medium (codex-sol profile), beside the private partition. Every reading records its ModelRun, so pool provenance stays per finding. Rejected: buying JetBrains credits (operator-only spend).
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Re-run remaining public jobs with --profile claude or junie once quota returns; per-artifact records keep completed reads
+
 ### T2 runs Junie on public artifacts and Codex gpt-6.1-sol on private ones; Claude children are rate limited, 2026-11-07
 
 T1 selected 1187 of 1434 November artifacts (241 skip, 6 defer). The pool doctrine puts T2 on Junie claude-opus-5-5 while JetBrains credits remain, then claude-opus-5-5 children. Private artifacts may not go to Junie (enforced by the runner), and two Claude Opus children failed on 2026-11-07 with a confirmed API rate limit, so the private 400 run on the Claude chain's next step, Codex gpt-6.1-sol medium, through a new codex-sol profile. --only-private and --exclude-private keep the two runs disjoint, and the writer lock now serializes their catalog writes. Both routes were qualified by one live read each before the batch (Junie 6 findings, codex-sol 12).
