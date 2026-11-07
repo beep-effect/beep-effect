@@ -5,6 +5,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -14,6 +15,8 @@ const loadAsset = Effect.fn("DiffKernelTest.loadAsset")(function* () {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readFile(NodeURL.fileURLToPath(new URL("../assets/citation-diff/kernel.wasm", import.meta.url)));
 });
+const corpusRows = 1005;
+const sliceRows = 100;
 const request = (before: { readonly width: 1; readonly bytes: Uint8Array }, maximumInputUtf16 = 8) => ({
   before,
   after: { width: 1, bytes: new Uint8Array() },
@@ -22,28 +25,35 @@ const request = (before: { readonly width: 1; readonly bytes: Uint8Array }, maxi
   maximumOutputBytes: 80,
 });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private pinned default diff host", (it) => {
-  it.effect(
-    "preserves every exact source edit sequence through fresh scoped native instances",
-    () =>
-      Effect.gen(function* () {
-        const corpus = yield* readCitationDiffCorpus();
-        const kernel = yield* loadAsset().pipe(Effect.flatMap(makeCitationDiffKernel));
-        let steps = 0;
-        for (const row of corpus.maps) {
-          const actual = yield* kernel.run({
-            before: row.before,
-            after: row.after,
-            maximumSteps: 2000000,
-            maximumInputUtf16: 4000000,
-            maximumOutputBytes: 16000000,
-          });
-          expect(actual).toEqual(row.steps);
-          steps += actual.length;
-        }
-        expect(steps).toBe(9775);
-      }),
-    30000
+  // 1005 corpus rows run in bounded slices so one slow runner cannot push a single case past its budget.
+  it.effect("pins the exact source edit corpus size and total step count", () =>
+    Effect.gen(function* () {
+      const corpus = yield* readCitationDiffCorpus();
+      expect(corpus.maps.length).toBe(corpusRows);
+      expect(A.reduce(corpus.maps, 0, (total, row) => total + row.steps.length)).toBe(9775);
+    })
   );
+  for (const slice of A.range(0, Math.ceil(corpusRows / sliceRows) - 1)) {
+    const from = slice * sliceRows;
+    it.effect(
+      `preserves exact source edit sequences ${from}-${Math.min(from + sliceRows, corpusRows) - 1} through fresh scoped native instances`,
+      () =>
+        Effect.gen(function* () {
+          const corpus = yield* readCitationDiffCorpus();
+          const kernel = yield* loadAsset().pipe(Effect.flatMap(makeCitationDiffKernel));
+          for (const row of A.take(A.drop(corpus.maps, from), sliceRows)) {
+            const actual = yield* kernel.run({
+              before: row.before,
+              after: row.after,
+              maximumSteps: 2000000,
+              maximumInputUtf16: 4000000,
+              maximumOutputBytes: 16000000,
+            });
+            expect(actual).toEqual(row.steps);
+          }
+        })
+    );
+  }
   it.effect("authenticates the copied asset and refuses malformed native input and effective ceilings", () =>
     Effect.gen(function* () {
       const asset = yield* loadAsset();
