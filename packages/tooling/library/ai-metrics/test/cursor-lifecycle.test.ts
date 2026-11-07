@@ -491,7 +491,8 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       const replay = yield* f.deliver(callback);
       if (Result.isFailure(replay.result)) return yield* Effect.fail(replay.result.failure);
       expect(replay.result.success).toEqual(first.result.success);
-      expect(yield* f.journal.readNewEvents(first.result.success.page.receiptId)).toEqual(events);
+      const retained = yield* f.journal.readNewEvents(first.result.success.page.receiptId);
+      expect(retained).toEqual(events);
     })
   );
 });
@@ -696,9 +697,13 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
         if (Result.isSuccess(result)) return yield* Effect.die("unsafe synthetic runtime admitted");
         expect(result.failure.reason).toBe("runtime");
         expect(dispatches).toBe(0);
-        if (owned !== "") expect(yield* fs.exists(owned)).toBe(false);
+        if (owned !== "") {
+          const remains = yield* fs.exists(owned);
+          expect(remains).toBe(false);
+        }
         expect((yield* fs.stat(source)).mode).toBe(original.mode);
-        expect(yield* sha(source)).toBe(sourceHash);
+        const unchangedHash = yield* sha(source);
+        expect(unchangedHash).toBe(sourceHash);
       })
     );
   }
@@ -715,7 +720,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
         if (Result.isSuccess(result)) return yield* Effect.die("invalid peer input admitted");
         expect(result.failure.reason).toBe("transport");
       }
-      expect(yield* server.received).toBe("");
+      const received = yield* server.received;
+      expect(received).toBe("");
       const missing = yield* runtime.send(`${server.path}-absent`, "{}", false);
       expect(missing).toBe("\n");
       yield* runtime.close;
