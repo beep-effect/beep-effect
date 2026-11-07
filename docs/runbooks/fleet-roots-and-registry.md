@@ -74,6 +74,10 @@ checkout path and authors only what git cannot derive:
 | `drainStatus` | `active`, `draining`, `retired` (default `active`) | `legacy-drain` |
 | `retentionExempt` | boolean (default `false`) | `register --retention-exempt` |
 
+Every write (adoption and `register`) holds `registry.json.lock` across its
+re-read, change and atomic publish, so a concurrent `register` and `--join`
+never drop each other's rows. The file is rewritten only when it changed.
+
 Lane, branch, PR and session state are never stored here; the views read them
 from the newest session-ledger row for the checkout
 (`~/.local/state/beep/sessions/<repo-key>.jsonl`).

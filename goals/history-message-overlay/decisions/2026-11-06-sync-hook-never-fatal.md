@@ -1,7 +1,7 @@
 ---
 title: "worktree new and cloud bootstrap run sync, and never fail on it"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 pullRequest: 2785
 reversal: "Remove syncHistoryNotesConfig from runWorktreeNew and step 4 from scripts/cloud/bootstrap.sh"
 ---

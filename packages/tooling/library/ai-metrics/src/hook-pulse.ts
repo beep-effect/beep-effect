@@ -23,7 +23,6 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
-import { AiMetricsSourceRole } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
 import { EvidenceTier, InstrumentClass, WaitReason } from "./telemetry-v2.ts";
 
@@ -230,6 +229,53 @@ export const HookPulseAgentKind = LiteralKit(["claude-code", "codex-cli", "curso
  * @since 0.0.0
  */
 export type HookPulseAgentKind = typeof HookPulseAgentKind.Type;
+
+/**
+ * Root/child role of the agent that produced a hook-pulse row, as far as the harness payload shows it.
+ *
+ * **Details**
+ *
+ * `primary` is the root agent of a session and `subagent` a child agent
+ * running under it. Claude Code and Codex both put a native `agent_id` on hook
+ * payloads fired from inside a subagent, so its presence marks a child; a
+ * root is recognized by its transcript path (Claude `<uuid>.jsonl`, Codex
+ * `rollout-...-<uuid>.jsonl`). `unknown` is written when the harness sends no
+ * ancestry signal at all (Cursor today). It is an explicit "cannot tell", so
+ * readers report such sessions as unattributable instead of folding them into
+ * either role. An absent role is older or unclassified evidence.
+ *
+ * **Example** (Only an attributed root may fill a window)
+ *
+ * ```ts
+ * import { HookPulseSessionRole } from "@beep/repo-ai-metrics"
+ *
+ * const fillsWindow = HookPulseSessionRole.match({
+ *   primary: () => true,
+ *   subagent: () => false,
+ *   unknown: () => false
+ * })
+ *
+ * console.log(fillsWindow(HookPulseSessionRole.Enum.primary)) // true
+ * console.log(fillsWindow(HookPulseSessionRole.Enum.unknown)) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseSessionRole = LiteralKit(["primary", "subagent", "unknown"]).pipe(
+  $I.annoteSchema("HookPulseSessionRole", {
+    description: "Root, child, or explicitly unattributable agent role of a hook-pulse row.",
+  })
+);
+
+/**
+ * Decoded hook-pulse session role.
+ *
+ * @see {@link HookPulseSessionRole} for the runtime schema and its matcher.
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseSessionRole = typeof HookPulseSessionRole.Type;
 
 /**
  * Collection capability of one client; absence never establishes non-use.
@@ -855,6 +901,10 @@ export class HookPulseRawEvent extends S.Opaque<HookPulseRawEvent, { readonly br
     tool_use_id: S.OptionFromOptionalKey(S.String),
     prompt_id: S.OptionFromOptionalKey(S.String),
     transcript_path: S.String,
+    // Native subagent identifier. Claude Code and Codex send it only on hooks
+    // fired from inside a child agent, so its presence is the child signal. It
+    // is a private identifier: rows carry only its salted digest.
+    agent_id: S.OptionFromOptionalKey(S.String),
     source: S.OptionFromOptionalKey(S.String).pipe(
       S.catchDecoding(() => Effect.succeedSome(O.none())),
       S.withConstructorDefault(Effect.succeedNone)
@@ -900,7 +950,7 @@ class HookPulseRawEventInput extends S.Opaque<HookPulseRawEventInput, { readonly
     // codec has no repo root to walk, so decode passes the stamp through (owned by
     // SessionStart, dropped on every other event) and absence stays absence.
     harnessHash: S.OptionFromOptionalKey(Sha256Hex),
-    sessionRole: S.OptionFromOptionalKey(AiMetricsSourceRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sessionRole: S.OptionFromOptionalKey(HookPulseSessionRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("HookPulseRawEventInput", {
       description: "Raw hook payload paired with the ambient stamps supplied by its writer.",
@@ -910,21 +960,38 @@ class HookPulseRawEventInput extends S.Opaque<HookPulseRawEventInput, { readonly
 
 const ChildTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)(?:subagents|workflow)(?:\/|$)/));
 const PrimaryTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)[0-9a-f-]{36}\.jsonl$/));
+// Codex names a session's rollout `rollout-<timestamp>-<thread uuid>.jsonl`.
+const CodexRolloutTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)rollout-[^/]*[0-9a-f-]{36}\.jsonl$/));
 const isChildTranscriptPath = S.is(ChildTranscriptPath);
 const isPrimaryTranscriptPath = S.is(PrimaryTranscriptPath);
+const isCodexRolloutTranscriptPath = S.is(CodexRolloutTranscriptPath);
+// The shell writer mirrors this table in its `$sessionRole` jq expression, and
+// the writer conformance test compares both halves. A native `agent_id` wins:
+// Claude Code fires a subagent's hooks with the ROOT transcript path, so the
+// path alone would call the child a root. Cursor sends no ancestry signal, so
+// its rows say `unknown` rather than leaving the role silently absent.
 const deriveSessionRole = (
   agentKind: HookPulseAgentKind,
-  transcriptPath: O.Option<string>
-): O.Option<AiMetricsSourceRole> =>
-  agentKind !== "claude-code"
-    ? O.none()
-    : O.flatMap(transcriptPath, (file) =>
-        isChildTranscriptPath(file)
-          ? O.some(AiMetricsSourceRole.Enum.subagent)
-          : isPrimaryTranscriptPath(file)
-            ? O.some(AiMetricsSourceRole.Enum.primary)
-            : O.none()
-      );
+  transcriptPath: O.Option<string>,
+  agentId: O.Option<string>
+): O.Option<HookPulseSessionRole> =>
+  HookPulseAgentKind.match(agentKind, {
+    "claude-code": () =>
+      O.isSome(agentId)
+        ? O.some(HookPulseSessionRole.Enum.subagent)
+        : O.flatMap(transcriptPath, (file) =>
+            isChildTranscriptPath(file)
+              ? O.some(HookPulseSessionRole.Enum.subagent)
+              : isPrimaryTranscriptPath(file)
+                ? O.some(HookPulseSessionRole.Enum.primary)
+                : O.none()
+          ),
+    "codex-cli": () =>
+      O.isSome(agentId)
+        ? O.some(HookPulseSessionRole.Enum.subagent)
+        : O.as(O.filter(transcriptPath, isCodexRolloutTranscriptPath), HookPulseSessionRole.Enum.primary),
+    "cursor-cli": () => O.some(HookPulseSessionRole.Enum.unknown),
+  });
 
 // Canonical context-surface keys are `${kind}:${name}` with no trailing newline,
 // hashed UNSALTED: surfaces are public repo names, and the digest must join
@@ -1201,16 +1268,20 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
   readonly cwd: string;
   readonly sessionId: string;
   readonly transcriptPath: O.Option<string>;
+  readonly agentId: O.Option<string>;
 }) {
   const hashSalt = yield* hookPulseHashSalt;
+  const optionalReference = (value: O.Option<string>) =>
+    O.match(value, {
+      onNone: () => Effect.succeed(O.none<Sha256Hex>()),
+      onSome: (present) => privateReference(present, hashSalt).pipe(Effect.asSome),
+    });
 
   return yield* Effect.all({
     sessionId: privateReference(input.sessionId, hashSalt),
     cwd: privateReference(input.cwd, hashSalt),
-    transcriptPath: O.match(input.transcriptPath, {
-      onNone: () => Effect.succeed(O.none<Sha256Hex>()),
-      onSome: (value) => privateReference(value, hashSalt).pipe(Effect.asSome),
-    }),
+    transcriptPath: optionalReference(input.transcriptPath),
+    agentId: optionalReference(input.agentId),
   });
 });
 
@@ -1321,7 +1392,8 @@ const hookPulseSurfaceReference = (input: HookPulseRawEventInput) =>
  * `PostToolUse`, and `harnessHash` outside `SessionStart`. The wait-reason invariant
  * recomputes `waitReason` from `hookEvent`, `toolName`, and `notificationType`
  * and rejects a row that disagrees, which is what catches a jq derivation that
- * has drifted away from this contract.
+ * has drifted away from this contract. A third invariant admits `agentId`, the
+ * salted digest of a native subagent id, only on a `subagent` row.
  *
  * **Gotchas**
  *
@@ -1402,7 +1474,11 @@ export class HookPulseV1 extends S.Opaque<HookPulseV1, { readonly brand: unique 
     sessionStartSource: S.OptionFromOptionalKey(NativeSessionStartSource).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
-    sessionRole: S.OptionFromOptionalKey(AiMetricsSourceRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    sessionRole: S.OptionFromOptionalKey(HookPulseSessionRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    // Salted digest of the native subagent `agent_id`, present only on child
+    // rows. It keys each child apart from its root, which shares the root's
+    // session id and transcript path on Claude Code.
+    agentId: S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
   })
     .check(
       S.makeFilterGroup(
@@ -1444,11 +1520,21 @@ export class HookPulseV1 extends S.Opaque<HookPulseV1, { readonly brand: unique 
               message: "Expected waitReason to match the value derived from hookEvent, toolName, and notificationType",
             }
           ),
+          S.makeFilter(
+            (input) => O.isNone(input.agentId) || O.contains(input.sessionRole, HookPulseSessionRole.Enum.subagent),
+            {
+              identifier: "HookPulseAgentIdRoleInvariant",
+              title: "Hook-pulse agent-id role invariant",
+              description: "Requires a native subagent agentId to appear only on rows whose sessionRole is subagent.",
+              message: "Expected agentId only on a subagent row",
+            }
+          ),
         ],
         {
           identifier: "HookPulseV1Invariants",
           title: "Hook-pulse canonical record invariants",
-          description: "Checks event-owned fields and derived wait attribution for canonical hook-pulse records.",
+          description:
+            "Checks event-owned fields, derived wait attribution, and child attribution for canonical hook-pulse records.",
         }
       )
     )
@@ -1501,6 +1587,7 @@ export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields
         value.sessionStartSource
       ),
       waitReason: deriveWaitReason(value.hookEvent, value.toolName, notificationType),
+      sessionRole: O.isSome(value.agentId) ? O.some(HookPulseSessionRole.Enum.subagent) : value.sessionRole,
     });
   })
 );
@@ -1575,6 +1662,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
           cwd: input.cwd,
           sessionId: input.sessionId,
           transcriptPath: O.fromUndefinedOr(input.transcriptPath),
+          agentId: O.none(),
         }).pipe(
           Effect.mapBoth({
             onFailure: () =>
@@ -1680,6 +1768,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
             cwd: input.event.cwd,
             sessionId: input.event.session_id,
             transcriptPath: O.some(input.event.transcript_path),
+            agentId: O.filter(input.event.agent_id, Str.isNonEmpty),
           }).pipe(
             Effect.mapError(
               () =>
@@ -1739,8 +1828,9 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 O.flatMap(input.event.source, decodeSessionStartSource)
               ),
               sessionRole: O.orElse(input.sessionRole, () =>
-                deriveSessionRole(input.agentKind, O.some(input.event.transcript_path))
+                deriveSessionRole(input.agentKind, O.some(input.event.transcript_path), privateRefs.agentId)
               ),
+              agentId: privateRefs.agentId,
               harnessHash: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.harnessHash,
                 input.event.hook_event_name,
@@ -1768,6 +1858,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               tool_use_id: O.fromUndefinedOr(input.toolUseId),
               prompt_id: O.fromUndefinedOr(input.promptId),
               transcript_path: transcriptPath,
+              agent_id: O.fromUndefinedOr(input.agentId),
               source: O.fromUndefinedOr(input.sessionStartSource),
               permission_mode: O.fromUndefinedOr(input.permissionMode),
               notification_type: filterHookPulseEventOwnedField(

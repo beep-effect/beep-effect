@@ -336,14 +336,33 @@ const contestedLines = (
   );
 };
 
-const renderFleetSnapshot = Effect.fn("Fleet.renderFleetSnapshot")(function* (snapshot: FleetSnapshot) {
-  yield* Effect.forEach(snapshotHeaderLines(snapshot), Console.log);
+// `Effect.forEach` passes `(line, index)`; a point-free `Console.log` would print the index after every line.
+const printLine = (line: string) => Console.log(line);
+
+/**
+ * Print a fleet snapshot as the plain `beep worktree fleet` text report.
+ *
+ * **Example** (Build the render effect)
+ *
+ * ```ts
+ * import { renderFleetSnapshot } from "@beep/repo-cli/commands/Worktree"
+ *
+ * console.log(typeof renderFleetSnapshot) // "function"
+ * ```
+ *
+ * @param snapshot - The derived snapshot to print.
+ * @returns An effect that writes one console line per report line.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderFleetSnapshot = Effect.fn("Fleet.renderFleetSnapshot")(function* (snapshot: FleetSnapshot) {
+  yield* Effect.forEach(snapshotHeaderLines(snapshot), printLine);
   if (snapshot.checkouts.length === 0) {
     yield* Console.log("No checkouts sharing this origin were found under the fleet root.");
     return;
   }
-  yield* Effect.forEach(A.flatMap(snapshot.checkouts, fleetCheckoutLines), Console.log);
-  yield* Effect.forEach(contestedLines(snapshot.contestedPaths, snapshot.checkouts), Console.log);
+  yield* Effect.forEach(A.flatMap(snapshot.checkouts, fleetCheckoutLines), printLine);
+  yield* Effect.forEach(contestedLines(snapshot.contestedPaths, snapshot.checkouts), printLine);
 });
 
 const valueOrDash = (value: string | number | null): string => (value === null ? "-" : `${value}`);
@@ -548,26 +567,28 @@ const runWorktreeFleetRegister = Effect.fn("Fleet.runWorktreeFleetRegister")(fun
       path: target,
     });
   }
-  const current = yield* store.read(repository);
-  const existing = A.findFirst(current.rows, (row) => row.checkout === target);
   const explicitSeat = yield* O.match(options.owningSeat, {
     onNone: () => Effect.succeedNone,
     onSome: (seat) => Effect.asSome(absoluteCheckout(seat)),
   });
-  // Owning seat: the flag, else the row's current value, else the scan's git-common-dir derivation.
-  const knownSeat = O.orElse(explicitSeat, () => O.flatMap(existing, (row) => O.fromNullOr(row.owningSeat)));
-  const owningSeat = O.isSome(knownSeat) ? knownSeat.value : yield* derivedOwningSeat(target);
-  const row = FleetRegistryRow.make({
-    checkout: target,
-    seatRole: options.role,
-    owningSeat,
-    drainStatus: O.getOrElse(
-      O.map(existing, (entry) => entry.drainStatus),
-      () => "active" as const
-    ),
-    retentionExempt: options.retentionExempt || O.exists(existing, (entry) => entry.retentionExempt),
+  const derivedSeat = yield* derivedOwningSeat(target);
+  // The row is built from the registry as it is under the lock, so a concurrent scan's adoption is kept.
+  // Owning seat: the flag, else the row's current value, else the git-common-dir derivation.
+  const [, row] = yield* store.update(repository, (current) => {
+    const existing = A.findFirst(current.rows, (entry) => entry.checkout === target);
+    const knownSeat = O.orElse(explicitSeat, () => O.flatMap(existing, (entry) => O.fromNullOr(entry.owningSeat)));
+    const next = FleetRegistryRow.make({
+      checkout: target,
+      seatRole: options.role,
+      owningSeat: O.getOrElse(knownSeat, () => derivedSeat),
+      drainStatus: O.getOrElse(
+        O.map(existing, (entry) => entry.drainStatus),
+        () => "active" as const
+      ),
+      retentionExempt: options.retentionExempt || O.exists(existing, (entry) => entry.retentionExempt),
+    });
+    return [registerFleetRegistryRow(current, next), next] as const;
   });
-  yield* store.write(repository, registerFleetRegistryRow(current, row));
   yield* Console.log(`Registered ${target}: role=${row.seatRole} seat=${valueOrDash(row.owningSeat)}`);
 });
 

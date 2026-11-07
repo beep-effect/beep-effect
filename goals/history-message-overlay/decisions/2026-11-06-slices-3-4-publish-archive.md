@@ -2,7 +2,7 @@
 title: "Slices 3 and 4 in the lane: publication workflow, docs, folder archived"
 date: 2026-11-06
 kind: checkpoint
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 pullRequest: 2785
 reversal: "Delete .github/workflows/history-notes-publish.yml and restore the folder from the archive"
 ---

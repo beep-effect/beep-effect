@@ -36,6 +36,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import type { FleetSnapshot } from "@beep/repo-cli/commands/Worktree";
 
 const SCAN_TIMEOUT_MILLIS = 120_000;
@@ -308,94 +309,129 @@ describe("fleet discovery roots", () => {
 
     it.effect(
       "join adopts legacy clones and lanes, reads the ledger, and keeps a registered role across rescans",
-      Effect.fnUntraced(function* () {
-        const fixture = yield* acquireFleetRootsFixture;
-        const path = yield* Path.Path;
-        const ledger = yield* SessionLedger;
-        const store = yield* FleetRegistryStore;
-        const stateRoot = path.join(fixture.tmpDir, "fleet-state");
-        const withState = Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromEnv({ env: { BEEP_FLEET_STATE_ROOT: stateRoot } })
-        );
-        const options = FleetScanOptions.make({
-          startFrom: fixture.legacy0,
-          originUrl: fixture.originPath,
-          scannerDir: fixture.scannerDir,
-          homeDir: fixture.homeDir,
-          roots: fixtureRoots(fixture),
-        });
-        for (const [recordedAt, state] of [
-          [1, "open"],
-          [2, "blocked"],
-        ] as const) {
-          yield* ledger
-            .append(
-              SessionLedgerRow.make({
-                schemaVersion: "session-ledger/v1",
-                repository,
-                clone: fixture.legacy0,
+      () =>
+        TestClock.withLive(
+          Effect.gen(function* () {
+            const fixture = yield* acquireFleetRootsFixture;
+            const path = yield* Path.Path;
+            const ledger = yield* SessionLedger;
+            const store = yield* FleetRegistryStore;
+            const stateRoot = path.join(fixture.tmpDir, "fleet-state");
+            const withState = Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromEnv({ env: { BEEP_FLEET_STATE_ROOT: stateRoot } })
+            );
+            const options = FleetScanOptions.make({
+              startFrom: fixture.legacy0,
+              originUrl: fixture.originPath,
+              scannerDir: fixture.scannerDir,
+              homeDir: fixture.homeDir,
+              roots: fixtureRoots(fixture),
+            });
+            for (const [recordedAt, state] of [
+              [1, "open"],
+              [2, "blocked"],
+            ] as const) {
+              yield* ledger
+                .append(
+                  SessionLedgerRow.make({
+                    schemaVersion: "session-ledger/v1",
+                    repository,
+                    clone: fixture.legacy0,
+                    checkout: fixture.siblingLane,
+                    lane: "lane-a",
+                    branch: "lane-a",
+                    state,
+                    next: `step ${recordedAt}`,
+                    summary: O.none(),
+                    pr: O.some(PrNumber.make(4242)),
+                    harness: "claude-code",
+                    sessionId: O.none(),
+                    recordedAt: DateTime.makeUnsafe(recordedAt),
+                  })
+                )
+                .pipe(Effect.orDie);
+            }
+
+            const first = yield* loadFleetJoin(options, repository).pipe(withState);
+            expect(A.length(first.adopted)).toBe(6);
+            const rows = joinFleetRows({
+              checkouts: first.snapshot.checkouts,
+              registry: first.registry,
+              ledger: first.ledger,
+            });
+            const byPath = (checkout: string) => O.getOrThrow(A.findFirst(rows, (row) => row.path === checkout));
+            expect(A.map(rows, (row) => row.path)).toEqual(allFleetCheckouts(fixture));
+            expect(byPath(fixture.legacy0).seatRole).toBe("legacy");
+            expect(byPath(fixture.legacy1).seatRole).toBe("legacy");
+            expect(byPath(fixture.seat).seatRole).toBe("adopted");
+            expect(byPath(fixture.seatLane)).toMatchObject({ seatRole: "adopted", owningSeat: fixture.seat });
+            expect(byPath(fixture.nestedLane)).toMatchObject({ seatRole: "adopted", owningSeat: fixture.legacy1 });
+            expect(byPath(fixture.siblingLane)).toMatchObject({
+              owningSeat: fixture.legacy0,
+              drainStatus: "active",
+              lane: "lane-a",
+              pr: 4242,
+              state: "blocked",
+            });
+            expect(byPath(fixture.legacy0)).toMatchObject({ lane: null, pr: null, state: null });
+
+            const registered = registerFleetRegistryRow(
+              first.registry,
+              FleetRegistryRow.make({ checkout: fixture.seat, seatRole: "main", retentionExempt: true })
+            );
+            yield* store.update(repository, () => [registered, undefined] as const).pipe(withState);
+            const second = yield* loadFleetJoin(options, repository).pipe(withState);
+            expect(second.adopted).toEqual([]);
+            const seatRow = O.getOrThrow(A.findFirst(second.registry.rows, (row) => row.checkout === fixture.seat));
+            expect(seatRow).toMatchObject({ seatRole: "main", retentionExempt: true });
+
+            // Concurrent writers serialize on the registry lock: neither overwrites the other's row. The test runs on
+            // the live clock because the lock's retry pause is a real sleep the test clock would never wake.
+            yield* Effect.all(
+              [
+                store.update(repository, (current) => [
+                  registerFleetRegistryRow(
+                    current,
+                    FleetRegistryRow.make({ checkout: fixture.legacy0, seatRole: "review" })
+                  ),
+                  undefined,
+                ]),
+                store.update(repository, (current) => [
+                  registerFleetRegistryRow(
+                    current,
+                    FleetRegistryRow.make({ checkout: fixture.legacy1, seatRole: "impl" })
+                  ),
+                  undefined,
+                ]),
+              ],
+              { concurrency: "unbounded" }
+            ).pipe(withState);
+            const [afterRace] = yield* store
+              .update(repository, (current) => [current, undefined] as const)
+              .pipe(withState);
+            const roleOf = (checkout: string) =>
+              O.getOrThrow(A.findFirst(afterRace.rows, (row) => row.checkout === checkout)).seatRole;
+            expect([roleOf(fixture.legacy0), roleOf(fixture.legacy1), roleOf(fixture.seat)]).toEqual([
+              "review",
+              "impl",
+              "main",
+            ]);
+
+            const description = O.getOrThrow(
+              describeFleetCheckout({
+                checkouts: second.snapshot.checkouts,
+                registry: second.registry,
+                ledger: second.ledger,
                 checkout: fixture.siblingLane,
-                lane: "lane-a",
-                branch: "lane-a",
-                state,
-                next: `step ${recordedAt}`,
-                summary: O.none(),
-                pr: O.some(PrNumber.make(4242)),
-                harness: "claude-code",
-                sessionId: O.none(),
-                recordedAt: DateTime.makeUnsafe(recordedAt),
+                ledgerLimit: 1,
               })
-            )
-            .pipe(Effect.orDie);
-        }
-
-        const first = yield* loadFleetJoin(options, repository).pipe(withState);
-        expect(A.length(first.adopted)).toBe(6);
-        const rows = joinFleetRows({
-          checkouts: first.snapshot.checkouts,
-          registry: first.registry,
-          ledger: first.ledger,
-        });
-        const byPath = (checkout: string) => O.getOrThrow(A.findFirst(rows, (row) => row.path === checkout));
-        expect(A.map(rows, (row) => row.path)).toEqual(allFleetCheckouts(fixture));
-        expect(byPath(fixture.legacy0).seatRole).toBe("legacy");
-        expect(byPath(fixture.legacy1).seatRole).toBe("legacy");
-        expect(byPath(fixture.seat).seatRole).toBe("adopted");
-        expect(byPath(fixture.seatLane)).toMatchObject({ seatRole: "adopted", owningSeat: fixture.seat });
-        expect(byPath(fixture.nestedLane)).toMatchObject({ seatRole: "adopted", owningSeat: fixture.legacy1 });
-        expect(byPath(fixture.siblingLane)).toMatchObject({
-          owningSeat: fixture.legacy0,
-          drainStatus: "active",
-          lane: "lane-a",
-          pr: 4242,
-          state: "blocked",
-        });
-        expect(byPath(fixture.legacy0)).toMatchObject({ lane: null, pr: null, state: null });
-
-        const registered = registerFleetRegistryRow(
-          first.registry,
-          FleetRegistryRow.make({ checkout: fixture.seat, seatRole: "main", retentionExempt: true })
-        );
-        yield* store.write(repository, registered).pipe(withState);
-        const second = yield* loadFleetJoin(options, repository).pipe(withState);
-        expect(second.adopted).toEqual([]);
-        const seatRow = O.getOrThrow(A.findFirst(second.registry.rows, (row) => row.checkout === fixture.seat));
-        expect(seatRow).toMatchObject({ seatRole: "main", retentionExempt: true });
-
-        const description = O.getOrThrow(
-          describeFleetCheckout({
-            checkouts: second.snapshot.checkouts,
-            registry: second.registry,
-            ledger: second.ledger,
-            checkout: fixture.siblingLane,
-            ledgerLimit: 1,
+            );
+            expect(description.checkout.path).toBe(fixture.siblingLane);
+            expect(description.registry.owningSeat).toBe(fixture.legacy0);
+            expect(A.map(description.ledger, (row) => row.next)).toEqual(["step 2"]);
           })
-        );
-        expect(description.checkout.path).toBe(fixture.siblingLane);
-        expect(description.registry.owningSeat).toBe(fixture.legacy0);
-        expect(A.map(description.ledger, (row) => row.next)).toEqual(["step 2"]);
-      }),
+        ),
       SCAN_TIMEOUT_MILLIS
     );
   });

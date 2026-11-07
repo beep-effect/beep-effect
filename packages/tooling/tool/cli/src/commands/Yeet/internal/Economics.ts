@@ -704,9 +704,6 @@ const fleetCandidates = Effect.fnUntraced(function* (
   return A.flatten(nested);
 });
 
-// The checkout roots a scope reads: the checkout alone, or with `--fleet`
-// every sibling checkout and lane under the projects root (ruling 73). Both
-// sources resolve their files from these roots.
 // The fleet's candidates: the configured roots list shared with `worktree fleet`
 // (`BEEP_FLEET_ROOTS`, then `roots.json`) when set, else the derived projects root.
 const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, projectsRoot: string) {
@@ -734,6 +731,9 @@ const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, proj
   });
 });
 
+// The checkout roots a scope reads: the checkout alone, or with `--fleet`
+// every sibling checkout and lane under the projects root (ruling 73). Both
+// sources resolve their files from these roots.
 const resolveScopeRoots = Effect.fnUntraced(function* (request: EconomicsScopeRequest) {
   const path = yield* Path.Path;
   const repoRoot = path.resolve(request.repoRoot);

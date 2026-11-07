@@ -2,7 +2,7 @@
 title: "Slice 2 in the lane: --write, sync, bootstrap hooks"
 date: 2026-11-06
 kind: checkpoint
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 pullRequest: 2785
 reversal: "Revert the slice-2 commit on the branch"
 ---

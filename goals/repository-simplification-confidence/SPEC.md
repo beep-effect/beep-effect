@@ -880,6 +880,28 @@ Lane `fix/cache-warm-split-1858`
 
 Reverse: Supply the Tauri signing references through professional-desktop-release, run and approve a disposable signed professional-desktop-v* tag, verify signatures, updater endpoint and version behavior, then record E-09 as met by that run instead.
 
+### F-CURSOR native activation qualified on the composer-2.5 seat, 2026-11-07
+
+Refs #1862. The 2026-11-02 operator ruling parked F-CURSOR on the Cursor launcher sign-in; `cursor-agent status` reports logged in, so the gate is met. The ruling is read as the expanded owner scope the F-CURSOR row asked for: a native run writes Cursor session state under `~/.cursor` (chats, projects, statsig), and no CLI flag isolates that state.
+
+The F-CURSOR row names no model. The Opus seat (`claude-opus-5-5-medium`) answers `ActionRequiredError` (usage limit, resets 2026-11-11), and setting a spend limit would spend money, so it is not set. The qualification therefore ran on `composer-2.5`, the manifest's `cursor.volume` role. That is a named role, not a same-provider substitution for an Opus pin. Every run passed `--sandbox enabled`, ran in a disposable scratch workspace, and carried no corpus, client material or secrets (D11). The prompts forbade git, sudo and pkexec, and the copied D21 shell guard denied a probe command containing `git` (D21).
+
+Side effect found and reverted: `--model` on argv persists into `~/.cursor/cli-config.json` and replaces the operator's interactive default. The four model fields were restored from the pre-run copy, after a backup (location in the receipt). Lanes that pass `--model` must restore or tolerate this. Evidence: `history/receipts/2026-11-07-native-activation.md`.
+
+Lane `docs/rsc-1862-native-activation`
+
+Reverse: Stop F-CURSOR native runs; delete the scratch workspace's ~/.cursor/projects/<scratch-slug>/ entry; rerun the three fixed prompts on claude-opus-5-5-medium after the 2026-11-11 quota reset if an Opus witness is wanted.
+
+### F-DOCKER --tools allowlist apply waits for a quiet window, 2026-11-07
+
+Refs #1862. The launcher sign-in gate looks met: Docker Hub credentials are present and the catalog resolves. The gateway on 127.0.0.1:8811 is one shared service. Codex, Claude, Grok and Junie bind to it, and about twelve live agent sessions were using it when this was recorded. A restart or a profile or unit change would cut tools out from under every one of them at once.
+
+This lane did only the read-only half. The live MCP tool listing returned 47 tools and 128,947 compact bytes, identical to the baseline. From the observed Claude and Codex invocations and the repo's PR and issue workflows it derived a 19-tool allowlist, about 64.8 KB and 49.7% fewer schema bytes. It also wrote down the backup, apply, validation and rollback commands. The apply (unit drop-in + `daemon-reload` + restart) is deferred to a quiet window with no live gateway clients, chosen by the orchestrator. F-DOCKER therefore does not yet meet its SPEC acceptance, and #1862 stays open for it. Evidence and exact commands: `history/receipts/2026-11-07-native-activation.md`.
+
+Lane `docs/rsc-1862-native-activation`
+
+Reverse: Drop the deferral and apply in any window (accepting a shared-gateway restart under live sessions), or withdraw the proposed allowlist and keep the 47-tool legacy --servers gateway.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

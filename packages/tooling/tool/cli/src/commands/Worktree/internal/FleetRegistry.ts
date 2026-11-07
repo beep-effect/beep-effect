@@ -14,6 +14,7 @@ import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -25,7 +26,9 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
+import { acquireJournalFileLock, releaseJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
 import { publishJournalTextAtomically } from "../../../internal/repo-run/JournalFile.ts";
 import { SessionLedger } from "../../Session/SessionLedger.service.ts";
 import { FleetMirrorService } from "../Fleet.service.ts";
@@ -40,7 +43,7 @@ import {
   FleetSeatRole,
 } from "./FleetRegistry.schemas.ts";
 import { fleetStateDirectory, readOptionalFleetStateFile } from "./FleetRoots.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as Digest from "effect/crypto/Digest";
 import type { SessionLedgerRow } from "../../Session/Session.schemas.ts";
 import type { PrRepository } from "../../Yeet/internal/Provenance.ts";
 import type { FleetCheckout, FleetScanOptions } from "../Worktree.schemas.ts";
@@ -421,14 +424,21 @@ export interface FleetRegistryStoreShape {
    */
   readonly read: (repository: PrRepository) => Effect.Effect<FleetRegistryDocument, WorktreeCommandError>;
   /**
-   * Replace a repository's registry atomically.
+   * Read-modify-write a repository's registry under its lock file.
+   *
+   * **Details**
+   *
+   * The lock spans the re-read, `transform` and the atomic publish, so a
+   * concurrent `fleet register` and `fleet --join` never overwrite each other's
+   * rows. The file is rewritten only when the document changed. `transform`
+   * returns the next document and a value handed back to the caller.
    *
    * @since 0.0.0
    */
-  readonly write: (
+  readonly update: <A>(
     repository: PrRepository,
-    document: FleetRegistryDocument
-  ) => Effect.Effect<void, WorktreeCommandError>;
+    transform: (current: FleetRegistryDocument) => readonly [FleetRegistryDocument, A]
+  ) => Effect.Effect<readonly [FleetRegistryDocument, A], WorktreeCommandError>;
 }
 
 /**
@@ -474,20 +484,43 @@ const readRegistry = Effect.fn("FleetRegistryStore.read")(function* (repository:
   );
 });
 
-const writeRegistry = Effect.fn("FleetRegistryStore.write")(function* (
-  repository: PrRepository,
-  document: FleetRegistryDocument
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const { directory, file } = yield* registryFile(repository);
-  const text = yield* encodeRegistry(document).pipe(
+const encodeRegistryText = (document: FleetRegistryDocument, file: string) =>
+  encodeRegistry(document).pipe(
     Effect.mapError(WorktreeCommandError.new("Failed to encode the fleet registry.", { path: file }))
   );
+
+const updateRegistry = Effect.fn("FleetRegistryStore.update")(function* <A>(
+  repository: PrRepository,
+  transform: (current: FleetRegistryDocument) => readonly [FleetRegistryDocument, A]
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const random = yield* SecureRandom.SecureRandom;
+  const { directory, file } = yield* registryFile(repository);
   yield* fs
     .makeDirectory(directory, { recursive: true })
     .pipe(Effect.mapError(WorktreeCommandError.new(`Failed to create ${directory}.`, { path: directory })));
-  yield* publishJournalTextAtomically(file, `${text}\n`, "fleet registry").pipe(
-    Effect.mapError(WorktreeCommandError.new(`Failed to write ${file}.`, { path: file }))
+  const lockPath = `${file}.lock`;
+  const token = yield* random.uuidV4();
+  if (!(yield* acquireJournalFileLock(lockPath, token))) {
+    return yield* WorktreeCommandError.make({
+      message: `Timed out waiting for the fleet registry lock ${lockPath}.`,
+      path: lockPath,
+    });
+  }
+  return yield* Effect.ensuring(
+    Effect.gen(function* () {
+      const current = yield* readRegistry(repository);
+      const [next, value] = transform(current);
+      const before = yield* encodeRegistryText(current, file);
+      const after = yield* encodeRegistryText(next, file);
+      if (after !== before) {
+        yield* publishJournalTextAtomically(file, `${after}\n`, "fleet registry").pipe(
+          Effect.mapError(WorktreeCommandError.new(`Failed to write ${file}.`, { path: file }))
+        );
+      }
+      return [next, value] as const;
+    }),
+    releaseJournalFileLock(lockPath, token)
   );
 });
 
@@ -508,18 +541,26 @@ const writeRegistry = Effect.fn("FleetRegistryStore.write")(function* (
 export const FleetRegistryStoreLive: Layer.Layer<
   FleetRegistryStore,
   never,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
 > = Layer.effect(
   FleetRegistryStore,
   Effect.gen(function* () {
-    const context = yield* Effect.context<FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom>();
+    const context = yield* Effect.context<
+      FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+    >();
+    // The lock file serializes processes; this permit serializes fibers of one process, which a
+    // same-process lock-file contender would otherwise spin against.
+    const writer = yield* Semaphore.make(1);
     return FleetRegistryStore.of({
       read: Effect.fn("FleetRegistryStore.read")((repository) =>
         readRegistry(repository).pipe(Effect.provide(context))
       ),
-      write: Effect.fn("FleetRegistryStore.write")((repository, document) =>
-        writeRegistry(repository, document).pipe(Effect.provide(context))
-      ),
+      update: Effect.fn("FleetRegistryStore.update")(function* <A>(
+        repository: PrRepository,
+        transform: (current: FleetRegistryDocument) => readonly [FleetRegistryDocument, A]
+      ) {
+        return yield* updateRegistry(repository, transform).pipe(Effect.provide(context), writer.withPermits(1));
+      }),
     });
   })
 );
@@ -562,12 +603,12 @@ export const loadFleetJoin = Effect.fn("FleetRegistry.loadJoin")(function* (
   const ledgerStore = yield* SessionLedger;
   const roots = yield* mirror.roots(options);
   const snapshot = yield* mirror.scan(options);
-  const current = yield* store.read(repository);
   const candidates = yield* fleetAdoptionCandidates(roots, snapshot.checkouts);
-  const { document, adopted } = adoptFleetRegistryRows(current, candidates);
-  if (A.isReadonlyArrayNonEmpty(adopted)) {
-    yield* store.write(repository, document);
-  }
+  // Adoption runs on the registry as it is under the lock, so a concurrent register is never overwritten.
+  const [document, adopted] = yield* store.update(repository, (current) => {
+    const result = adoptFleetRegistryRows(current, candidates);
+    return [result.document, result.adopted] as const;
+  });
   const ledger = yield* ledgerStore
     .list(repository)
     .pipe(Effect.mapError(WorktreeCommandError.new("Failed to read the session ledger.")));
