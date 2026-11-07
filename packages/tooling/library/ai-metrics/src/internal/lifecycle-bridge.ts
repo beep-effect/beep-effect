@@ -97,7 +97,7 @@ export const makeLifecycleBridge = Effect.fn("AiMetrics.lifecycle.bridge")(funct
     const ready = yield* Deferred.make<void, CursorLifecycleError>();
     const work = Effect.scoped(
       Effect.gen(function* () {
-        const { child, next } = yield* Effect.gen(function* () {
+        const { child, next, input } = yield* Effect.gen(function* () {
           yield* qualifySource(policy, sourceContract, helperSource);
           yield* qualifyInterpreter(policy);
           const input = yield* Queue.unbounded<Uint8Array>();
@@ -127,7 +127,7 @@ export const makeLifecycleBridge = Effect.fn("AiMetrics.lifecycle.bridge")(funct
           );
           const readiness = yield* next;
           yield* decodeReady(readiness[0]).pipe(Effect.mapError(() => failure("kernel-binding")));
-          return { child, next };
+          return { child, next, input };
         }).pipe(Effect.timeoutOrElse({ duration: 10000, orElse: () => Effect.fail(failure("transport")) }));
         // Qualification and helper startup have their own bound. The full receive/commit
         // budget starts only after readiness, so hashing cannot shorten the listen window.
