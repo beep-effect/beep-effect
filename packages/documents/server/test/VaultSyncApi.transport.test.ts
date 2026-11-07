@@ -8,6 +8,7 @@ import {
   VaultSyncLocalOperatorLive,
   VaultSyncMcpLive,
   VaultSyncMembershipLive,
+  VaultSyncRevocationPause,
   VaultSyncRpcHttp,
   VaultSyncSessionBinding,
   VaultSyncSessionLive,
@@ -31,6 +32,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Etag from "effect/http/Etag";
@@ -127,11 +129,14 @@ const revoke = Effect.flatMap(
 );
 
 // One hosted model over PGlite membership; each entrypoint adds its own session adapter.
-const hosted = (kind: V.TransportKind) => {
+// Open subscriptions re-read grants only when `pause` completes: never, unless a test signals it.
+const hosted = (kind: V.TransportKind, pause: Effect.Effect<void> = Effect.never) => {
   const model = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(Domain.InMemory));
   return layerVaultSyncTransportSession(kind).pipe(
     Layer.provideMerge(model),
-    Layer.provideMerge(Layer.mergeAll(binding, VaultSyncMembershipLive)),
+    Layer.provideMerge(
+      Layer.mergeAll(binding, VaultSyncMembershipLive, Layer.succeed(VaultSyncRevocationPause, pause))
+    ),
     Layer.provideMerge(Layer.effectDiscard(schema)),
     Layer.provideMerge(Layer.fresh(PgliteTestLayer))
   );
@@ -162,8 +167,8 @@ const register = Effect.gen(function* () {
   return { stream: own1.stream, version: own1.version };
 });
 
-const webApp = Effect.fn("webApp")(function* (kind: V.TransportKind) {
-  const base = hosted(kind);
+const webApp = Effect.fn("webApp")(function* (kind: V.TransportKind, pause?: Effect.Effect<void>) {
+  const base = hosted(kind, pause);
   const context = yield* Layer.build(base);
   yield* register.pipe(Effect.provideContext(context));
   const routes = Layer.mergeAll(
@@ -369,7 +374,9 @@ describe("revocation barrier over real transports", () => {
 
   it.effect("HTTP SSE watch: an idle subscription closes with a typed denial after revocation", () =>
     Effect.gen(function* () {
-      const { app, context } = yield* webApp("http");
+      // The idle stream has no frame to check, so only the grant re-read can end it; signal it explicitly.
+      const membershipChanged = yield* Deferred.make<void>();
+      const { app, context } = yield* webApp("http", Deferred.await(membershipChanged));
       yield* grant("member").pipe(Effect.provideContext(context));
       const response = yield* Effect.promise(() =>
         app.handler(new Request(`http://test/OpenConflicts/${own}/watch`, { headers: bearer }))
@@ -377,6 +384,7 @@ describe("revocation barrier over real transports", () => {
       const sse = sseReader(response);
       yield* sse.next;
       yield* revoke.pipe(Effect.provideContext(context));
+      yield* Deferred.succeed(membershipChanged, undefined);
       const rest = yield* drain(sse.next);
       expect(A.join(rest, "\n")).toContain("ScopeDenied");
     }).pipe(TestClock.withLive)
