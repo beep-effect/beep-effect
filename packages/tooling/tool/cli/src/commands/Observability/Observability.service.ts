@@ -267,10 +267,11 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
       onNone: () => harvest,
       onSome: ({ includes }) => harvestFiles(includes),
     });
-    const files = yield* O.match(scoped, {
-      onNone: () => loadDeclarations,
-      onSome: ({ includes }) => loadDeclarationsFiles(includes),
-    });
+    // Declarations are repository-wide vocabulary: an in-scope instrument may
+    // reference an attribute declared in another package (the desktop metrics
+    // use `beep.outcome` from @beep/observability), so even a scoped run loads
+    // every declaration file and scopes only the harvested spans and shards.
+    const files = yield* loadDeclarations;
     const build = buildCatalog(
       harvested,
       A.flatMap(files, (file) => file.declarations)
