@@ -29,19 +29,20 @@ Resolution order, first match wins:
    (`github.com__beep-effect__beep-effect`), so `beep-effect-private` keeps its
    own fleet. `BEEP_FLEET_STATE_ROOT` relocates the `fleet/` directory.
 3. Unset: the single root derived from the invoking checkout (the git common
-   dir's grandparent, normally `~/YeeBois/projects`). In this mode
+   dir's grandparent, normally `$HOME/YeeBois/projects`). In this mode
    `beep worktree fleet --json` is byte-identical to its output before the list
    existed.
 
-The workstation's intended list:
+The workstation's intended list, with `<projects>` standing for the absolute
+projects directory:
 
 ```json
 {
   "schemaVersion": "fleet-roots/v1",
   "roots": [
-    { "path": "/home/<user>/YeeBois/projects", "namePrefix": "beep-effect" },
-    { "path": "/home/<user>/YeeBois/projects/beep/seats" },
-    { "path": "/home/<user>/YeeBois/projects/beep/lanes" }
+    { "path": "<projects>", "namePrefix": "beep-effect" },
+    { "path": "<projects>/beep/seats" },
+    { "path": "<projects>/beep/lanes" }
   ]
 }
 ```
