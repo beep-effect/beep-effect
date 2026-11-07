@@ -469,7 +469,11 @@ writer services absent proves deletion. No escape hatch should instantiate the o
 There are two reversal cases. Before admission, restore the verified pre-cutover backup, table
 names and sequences, retain the partial new store for diagnosis, and start the previous binary
 under a legacy writer epoch. After admission, a stale backup alone would discard accepted work.
-Stop admission and all new workers, settle or hold uncertain Box calls, capture an event
+Stop admission and all new workers. The legacy writer does not honour the new intent-receipt hold:
+it revives eligible failed operations and would re-upload a held one, creating another Box
+version. So reversal after admission refuses while any Box call outcome is unsettled (every
+held intent must be settled first), and it does not start the legacy writer until that holds.
+Then capture an event
 high-water vector and rebuild the four rows to that vector, then backup that current projection
 state and all alchemy tables. Verify the same exact diff/row counts, set legacy sequences beyond
 max ids, clear inherited leased statuses only through a recorded rollback procedure, and start
