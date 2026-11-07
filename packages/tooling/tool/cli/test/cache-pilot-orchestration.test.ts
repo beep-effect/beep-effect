@@ -951,6 +951,35 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
 afterEach(() => vi.restoreAllMocks());
 
 it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process boundary", (it) => {
+  it.effect("rejects ambient source dotenv files before local sandbox execution", () =>
+    Effect.gen(function* () {
+      const { fs, path, run, sourceRoots, calls } = yield* fixture();
+      for (const source of sourceRoots) {
+        for (const name of [".env", ".env.production.local", ".env.test.local"]) {
+          const file = path.join(source, name);
+          yield* fs.writeFileString(file, "PILOT_DOTENV_SENTINEL=fixture-only\n");
+          const failure = yield* run().pipe(Effect.flip);
+          expect(failure.message).toBe("Producer workflow must not contain ambient dotenv files.");
+          expect(failure.message).not.toContain("PILOT_DOTENV_SENTINEL");
+          expect(calls).toEqual([]);
+          yield* fs.remove(file);
+        }
+      }
+    })
+  );
+  it.effect("rejects dangling source dotenv aliases before signed sandbox execution", () =>
+    Effect.gen(function* () {
+      const { fs, path, runSigned, sourceRoots, calls } = yield* fixture("none", linker, true);
+      for (const source of sourceRoots) {
+        const file = path.join(source, ".env.local");
+        yield* fs.symlink("missing-env-target", file);
+        const failure = yield* runSigned().pipe(Effect.flip);
+        expect(failure.message).toBe("Producer workflow must not contain ambient dotenv files.");
+        expect(calls).toEqual([]);
+        yield* fs.remove(file);
+      }
+    })
+  );
   it.effect("observes types lint with its own empty closure and no fabricated dependency mutation", () =>
     Effect.gen(function* () {
       const { run } = yield* fixture("none", linker, false, true, "none", "@beep/types#lint");

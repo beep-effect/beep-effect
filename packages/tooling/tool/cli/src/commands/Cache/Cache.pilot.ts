@@ -110,6 +110,7 @@ import {
   CacheToolchainSnapshot,
 } from "./Cache.schemas.ts";
 import { CacheQualificationService } from "./Cache.service.ts";
+import { assertCacheProducerWorkflowProfile } from "./Cache.workflow.ts";
 import type { FsGuardError } from "@beep/repo-cli-kit/cli/FsGuards";
 import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
@@ -547,6 +548,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         if ((yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "") {
           return yield* CacheCommandError.new("Pilot source worktrees must be clean before read-only execution.");
         }
+        yield* assertCacheProducerWorkflowProfile(source);
       }),
       { concurrency: 1, discard: true }
     );
