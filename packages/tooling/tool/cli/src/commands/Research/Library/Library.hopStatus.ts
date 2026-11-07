@@ -6,10 +6,18 @@
  */
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import { libraryEffectiveCaptures, libraryEffectiveCategory } from "./Library.evidence.ts";
 import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
-import { LibraryHopGateInput, libraryHopGate, libraryHopTwoOnly, libraryLiveConcepts } from "./Library.hops.ts";
+import {
+  LibraryHopGateInput,
+  libraryHopGate,
+  libraryHopTwoOnly,
+  libraryLiveConcepts,
+  librarySourceById,
+  librarySourceHasCapture,
+} from "./Library.hops.ts";
 import type { LibraryCatalog } from "./Library.schemas.ts";
 
 /**
@@ -51,7 +59,9 @@ export const libraryHopTotals = Effect.fn("Library.hopTotals")(function* (
   const readable = Effect.fnUntraced(function* (ids: ReadonlyArray<string>) {
     let count = 0;
     for (const id of ids) {
-      const source = A.findFirst(catalog.sources, (item) => item.id === id);
+      // Only a captured source can be readable; skipping the rest keeps status linear in captures.
+      if (!librarySourceHasCapture(catalog, id)) continue;
+      const source = librarySourceById(catalog, id);
       if (O.isNone(source)) continue;
       const current = yield* libraryEffectiveCaptures(root, catalog, source.value).pipe(Effect.orElseSucceed(A.empty));
       if (libraryEffectiveCategory(A.map(current, (claim) => claim.category)) === "readable") count++;
@@ -62,15 +72,22 @@ export const libraryHopTotals = Effect.fn("Library.hopTotals")(function* (
   const hopTwo = at(2);
   const cataloguedOnly = A.filter(
     hopTwo,
-    (id) => libraryHopTwoOnly(catalog, id) && !A.some(catalog.captures, (capture) => capture.sourceId === id)
+    (id) => libraryHopTwoOnly(catalog, id) && !librarySourceHasCapture(catalog, id)
   );
   const concepts = yield* libraryLiveConcepts(policy);
   const decisions = libraryHopGate(catalog, LibraryHopGateInput.make({ concepts, policy }));
   const refused = A.filter(decisions, (decision) => !decision.admitted);
+  let reasonCounts = HashMap.empty<string, number>();
+  for (const decision of refused)
+    reasonCounts = HashMap.set(
+      reasonCounts,
+      decision.reason,
+      O.getOrElse(HashMap.get(reasonCounts, decision.reason), () => 0) + 1
+    );
   const reasons = A.join(
     A.map(
       A.dedupe(A.map(refused, (decision) => decision.reason)),
-      (reason) => `${reason}=${A.filter(refused, (decision) => decision.reason === reason).length}`
+      (reason) => `${reason}=${O.getOrElse(HashMap.get(reasonCounts, reason), () => 0)}`
     ),
     " "
   );

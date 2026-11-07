@@ -9,7 +9,11 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Str from "effect/String";
 import { acquireLibrary } from "./Library.acquire.ts";
 import { libraryBoxAdapter, registerLibraryBoxSources } from "./Library.box.ts";
 import { libraryQualificationValid } from "./Library.evidence.ts";
@@ -21,7 +25,7 @@ import { LibraryQualifyOptions, qualifyLibrary } from "./Library.qualify.ts";
 import { LibraryAcquireOptions } from "./Library.schemas.ts";
 import { loadCatalog, withCatalog } from "./Library.store.ts";
 import type { LibraryBoxAcquireOptions } from "./Library.box.ts";
-import type { LibraryInventoryOptions } from "./Library.schemas.ts";
+import type { LibraryIntake, LibraryInventoryOptions } from "./Library.schemas.ts";
 
 /**
  * Inventory the inputs, then record hop-1 derivations and hop-2 identities for every intake.
@@ -40,11 +44,30 @@ import type { LibraryInventoryOptions } from "./Library.schemas.ts";
 export const inventoryLibraryWithHops = Effect.fn("Library.inventoryWithHops")(function* (
   options: LibraryInventoryOptions
 ) {
+  const path = yield* Path.Path;
   yield* inventoryLibrary(options);
   const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  return yield* withCatalog(options.libraryRoot, (catalog) =>
-    recordLibraryHops(options.libraryRoot, catalog, recordedAt)
+  // Derive hops only for the intake this run recorded: its roots are exactly the requested roots.
+  const roots = HashSet.fromIterable(
+    A.map([...options.inputRoots, ...options.privateInputRoots], (root) => path.resolve(root))
   );
+  return yield* withCatalog(options.libraryRoot, (catalog) => {
+    const current = A.filter(
+      catalog.intakes,
+      (intake) =>
+        intake.inputRoots.length === HashSet.size(roots) &&
+        A.every(intake.inputRoots, (root) => HashSet.has(roots, path.resolve(root.path)))
+    );
+    const byCreation = Order.mapInput(Str.Order, (intake: LibraryIntake) => intake.createdAt);
+    // Default roots are resolved inside inventory; then the newest intake is the one just recorded.
+    const latest = A.last(A.sort(A.isReadonlyArrayNonEmpty(current) ? current : catalog.intakes, byCreation));
+    return recordLibraryHops(
+      options.libraryRoot,
+      catalog,
+      recordedAt,
+      A.map(A.fromOption(latest), (intake) => intake.id)
+    );
+  });
 });
 
 /**
