@@ -780,10 +780,13 @@ export class CacheToolchainSnapshot extends S.Opaque<CacheToolchainSnapshot, { r
     runtimeLinker: S.OptionFromOptionalKey(CacheRuntimeLinkerSnapshot).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
+    trackedTestMembership: S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    trackedSourceIndex: S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sources: S.Array(CacheCensusSource),
   }).pipe(
     $I.annoteSchema("CacheToolchainSnapshot", {
-      description: "Linux x64 glibc profile, exact binaries, launchers, lockfile and runtime declarations.",
+      description:
+        "Linux x64 glibc profile, exact binaries, launchers, lockfile, runtime declarations and optional tracked discovery identities.",
     })
   )
 ) {}
