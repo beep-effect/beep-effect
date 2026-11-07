@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-07T14:26:15.369Z",
+  "generatedAt": "2026-11-07T14:30:30.383Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3777,
-    "publicExports": 26956,
+    "publicExports": 26958,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -479497,7 +479497,7 @@
         "srcDir": "src",
         "sourceFileCount": 40,
         "publicModuleCount": 36,
-        "publicExportCount": 151
+        "publicExportCount": 153
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -479819,7 +479819,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -481860,8 +481860,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/BoxMirror.external.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/BoxMirror.external.ts",
-          "line": 25,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-25-disconnectreason",
+          "line": 26,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-26-disconnectreason",
           "currentTags": [
             "@category",
             "@since"
@@ -481882,8 +481882,52 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/BoxMirror.external.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/BoxMirror.external.ts",
-          "line": 35,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-35-disconnectreason",
+          "line": 36,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-36-disconnectreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MirrorFailureStage",
+          "exportKind": "const",
+          "filePath": "src/aggregates/VaultSync/BoxMirror.external.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/BoxMirror.external.ts",
+          "line": 48,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-48-mirrorfailurestage",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MirrorFailureStage",
+          "exportKind": "type",
+          "filePath": "src/aggregates/VaultSync/BoxMirror.external.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/BoxMirror.external.ts",
+          "line": 66,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-66-mirrorfailurestage",
           "currentTags": [
             "@category",
             "@since"
@@ -481904,8 +481948,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/BoxMirror.external.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/BoxMirror.external.ts",
-          "line": 47,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-47-boxmirrorunavailable",
+          "line": 78,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-78-boxmirrorunavailable",
           "currentTags": [
             "@category",
             "@since"
@@ -481926,8 +481970,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/BoxMirror.external.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/BoxMirror.external.ts",
-          "line": 67,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-67-boxmirror",
+          "line": 106,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-106-boxmirror",
           "currentTags": [
             "@category",
             "@since"
