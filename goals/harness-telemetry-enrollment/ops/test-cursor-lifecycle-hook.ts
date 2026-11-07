@@ -1,4 +1,4 @@
-import { execFile, execFileSync } from "node:child_process";
+import { execFile, execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import * as Fs from "node:fs/promises";
 import * as Os from "node:os";
@@ -11,6 +11,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -18,9 +19,49 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import * as TestClock from "effect/testing/TestClock";
 import { CursorCallbackEnrollment, cursorCallbackFixture } from "./cursor-lifecycle-hook.ts";
+import type { ChildProcess } from "node:child_process";
 
 const execFileAsync = promisify(execFile);
+const stopLeaseHolder = (child: ChildProcess) =>
+  Effect.callback<void>((resume) => {
+    if (child.exitCode !== null || child.signalCode !== null) return resume(Effect.void);
+    child.once("close", () => resume(Effect.void));
+    child.kill("SIGKILL");
+  });
+const leaseHolderSource = `
+const fs=await import("node:fs/promises");
+const {DatabaseSync}=await import("node:sqlite");
+const file=await fs.open(process.argv[1],"r+");
+const db=new DatabaseSync("/proc/self/fd/"+file.fd,{allowExtension:false});
+db.exec("PRAGMA busy_timeout=0;BEGIN IMMEDIATE");
+process.stdout.write("ready\\n");
+setInterval(()=>{},1000);
+`;
+const holdLease = Effect.fn("CursorCallbackTest.holdLease")(function* (root: string) {
+  const ready = yield* Deferred.make<void, "lease-holder">();
+  const child = yield* Effect.acquireRelease(
+    Effect.sync(() => {
+      const process = spawn(bun, ["--no-env-file", "--eval", leaseHolderSource, `${root}/callback.lock`], {
+        cwd: root,
+        env: { PATH: "/usr/bin:/bin", TMPDIR: root },
+        stdio: ["ignore", "pipe", "ignore"],
+      });
+      process.stdout.once("data", (bytes: Uint8Array) => {
+        Deferred.doneUnsafe(
+          ready,
+          new TextDecoder().decode(bytes) === "ready\n" ? Effect.void : Effect.fail("lease-holder")
+        );
+      });
+      process.once("error", () => Deferred.doneUnsafe(ready, Effect.fail("lease-holder")));
+      return process;
+    }),
+    stopLeaseHolder
+  );
+  yield* ready.pipe(Deferred.await, Effect.timeout("5 seconds"), TestClock.withLive);
+  return { crash: stopLeaseHolder(child) };
+});
 // Resolve only the public test runtime; enrollment still binds its exact executable and digest.
 const bun = process.versions.bun
   ? process.execPath
@@ -92,6 +133,8 @@ const fixture = Effect.fn("CursorCallbackTest.fixture")(function* () {
   const node = yield* io(() => Fs.realpath("/usr/bin/node"));
   const python = yield* io(() => Fs.realpath("/usr/bin/python3"));
   const callback = yield* io(() => Fs.realpath(bun));
+  yield* io(() => Fs.writeFile(`${root}/callback.lock`, "", { flag: "wx", mode: 0o600 }));
+  const leaseIdentity = yield* io(() => Fs.lstat(`${root}/callback.lock`, { bigint: true }));
   const sourcePins = [];
   for (const name of ["dispatcher.js", "payload.js"]) {
     const path = `${root}/${name}`;
@@ -127,6 +170,8 @@ const fixture = Effect.fn("CursorCallbackTest.fixture")(function* () {
     }),
     callbackExecutable: callback,
     callbackSha256: digest(yield* io(() => Fs.readFile(callback))),
+    leaseDevice: leaseIdentity.dev.toString(),
+    leaseInode: leaseIdentity.ino.toString(),
   });
   const write = Effect.fn("CursorCallbackTest.write")(function* (value = enrollment) {
     const text = yield* encodeEnrollment(value);
@@ -193,7 +238,7 @@ it.effect(
         expect(Str.includes("hashSalt")(enrollmentText)).toBe(false);
         expect(Str.includes(salt)(results[0].stdout + results[0].stderr + second.stdout + second.stderr)).toBe(false);
         const entries = yield* io(() => Fs.readdir(f.root));
-        expect(entries).not.toContain("callback.lock");
+        expect(entries).toContain("callback.lock");
         expect(entries.some((x) => x.startsWith("cursor-lifecycle-"))).toBe(false);
       })
     ).pipe(Effect.provide(NodeCrypto.layer)),
@@ -222,7 +267,7 @@ it.effect(
         yield* io(() => Fs.writeFile(`${f.root}/salt.credential`, Str.repeat(4097)("x"), { mode: 0o600 }));
         expect((yield* f.run())[0].code).toBe(1);
         expect((yield* io(() => Fs.stat(`${f.root}/journal.sqlite`))).size).toBe(0);
-        expect(yield* io(() => Fs.readdir(f.root))).not.toContain("callback.lock");
+        expect(yield* io(() => Fs.readdir(f.root))).toContain("callback.lock");
       })
     ).pipe(Effect.provide(NodeCrypto.layer)),
   30000
@@ -240,7 +285,7 @@ it.effect(
         expect((yield* io(() => Fs.stat(`${f.root}/journal.sqlite`))).size).toBe(0);
         const bad = yield* f.run({ ...body, cursor_version: "wrong" });
         expect(bad[0].code).toBe(1);
-        expect(yield* io(() => Fs.readdir(f.root))).not.toContain("callback.lock");
+        expect(yield* io(() => Fs.readdir(f.root))).toContain("callback.lock");
       })
     ).pipe(Effect.provide(NodeCrypto.layer)),
   30000
@@ -290,14 +335,55 @@ it.effect(
     Effect.scoped(
       Effect.gen(function* () {
         const f = yield* fixture();
-        yield* io(() => Fs.writeFile(`${f.root}/callback.lock`, "", { flag: "wx", mode: 0o600 }));
+        const holder = yield* holdLease(f.root);
+        const before = yield* io(() => Fs.lstat(`${f.root}/callback.lock`, { bigint: true }));
         const locked = yield* f.run();
         expect(locked[0].code).toBe(1);
+        expect(locked[0].stderr).toBe("busy");
         expect((yield* io(() => Fs.stat(`${f.root}/journal.sqlite`))).size).toBe(0);
         expect((yield* io(() => Fs.stat(`${f.root}/callback.lock`))).size).toBe(0);
+        yield* io(() => Fs.rename(`${f.root}/callback.lock`, `${f.root}/held.lock`));
+        yield* io(() => Fs.writeFile(`${f.root}/callback.lock`, "", { mode: 0o600, flag: "wx" }));
+        const replaced = yield* f.run();
+        expect(replaced[0]).toMatchObject({ code: 1, stderr: "enrollment" });
+        expect((yield* io(() => Fs.stat(`${f.root}/journal.sqlite`))).size).toBe(0);
         yield* io(() => Fs.unlink(`${f.root}/callback.lock`));
+        yield* io(() => Fs.rename(`${f.root}/held.lock`, `${f.root}/callback.lock`));
+        yield* holder.crash;
         const admitted = yield* f.run();
         expect(admitted[0]).toMatchObject({ code: 0, stderr: "" });
+        const after = yield* io(() => Fs.lstat(`${f.root}/callback.lock`, { bigint: true }));
+        expect(after.ino).toBe(before.ino);
+        expect(after.size).toBe(0n);
+        expect(after.mode & 0o777n).toBe(0o600n);
+      })
+    ).pipe(Effect.provide(NodeCrypto.layer)),
+  30000
+);
+
+it.effect(
+  "refuses malformed, writable, missing and symlinked persistent lease state without journal admission",
+  () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const path = `${f.root}/callback.lock`;
+        yield* io(() => Fs.chmod(path, 0o660));
+        expect((yield* f.run())[0]).toMatchObject({ code: 1, stderr: "enrollment" });
+        yield* io(() => Fs.chmod(path, 0o600));
+        yield* io(() => Fs.writeFile(path, "malformed"));
+        expect((yield* f.run())[0]).toMatchObject({ code: 1, stderr: "enrollment" });
+        yield* io(() => Fs.truncate(path, 0));
+        yield* io(() => Fs.rename(path, `${f.root}/owned-empty.lock`));
+        expect((yield* f.run())[0]).toMatchObject({ code: 1, stderr: "enrollment" });
+        const missing = yield* io(() => Fs.readdir(f.root));
+        expect(missing).not.toContain("callback.lock");
+        yield* io(() => Fs.symlink(`${f.root}/owned-empty.lock`, path));
+        expect((yield* f.run())[0]).toMatchObject({ code: 1, stderr: "enrollment" });
+        expect((yield* io(() => Fs.stat(`${f.root}/journal.sqlite`))).size).toBe(0);
+        yield* io(() => Fs.unlink(path));
+        yield* io(() => Fs.rename(`${f.root}/owned-empty.lock`, path));
+        expect((yield* f.run())[0]).toMatchObject({ code: 0, stderr: "" });
       })
     ).pipe(Effect.provide(NodeCrypto.layer)),
   30000
@@ -322,7 +408,7 @@ it.effect(
         expect((yield* f.run())[0].code).toBe(1);
         const entries = yield* io(() => Fs.readdir(f.root));
         expect(entries).not.toContain("owner-never-open");
-        expect(entries).not.toContain("callback.lock");
+        expect(entries).toContain("callback.lock");
       })
     ).pipe(Effect.provide(NodeCrypto.layer)),
   30000
