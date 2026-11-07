@@ -2,7 +2,7 @@
 
 Publication review superseded the original four-lane shortcut. Git cleanliness
 and a materialized tracked tree cannot establish the full inputs of the semantic
-Effect Vitest and schema-first scanners. Both now remain live. The current
+Effect Vitest and schema-first scanners. Both now remain live. The explicit opt-in
 candidate qualifies only regenerated JSDoc and source Effect imports, with an
 additional names-only filesystem guard for ignored files and linked ancestors.
 Its current-source performance qualification is recorded separately below; the
@@ -46,7 +46,10 @@ A skipped row has status `skipped`, its reason, `inputsCacheable: false`, and no
 fabricated pass, reuse, digest, timing, or exit code. It never enters the lane-proof
 success list or proof-shadow observations. First-red, precise/imprecise scheduling,
 and `not-run-early-stop` accounting retain their meaning. Set
-`BEEP_QUALITY_REPORT_ONLY_SKIP=0` to disable selection.
+`BEEP_QUALITY_REPORT_ONLY_SKIP=1` to opt into selection. The default, `0`, and
+all other values run the complete battery without the selector filesystem guard.
+The opt-in can help a cold report-only check but failed warm acceptance below;
+it is not recommended as a default performance improvement.
 
 Qualification locks the exact two IDs, selected Turbo task declarations,
 their complete dependency structure, and global/future configuration. Each task
@@ -202,8 +205,59 @@ uses only shared-root/tier/environment admission up front and retains all full
 per-skip checks. A generator may restore an initially dirty source to the pinned
 tree, but a skip then requires a fresh complete current-state proof. Controls
 cover that restoration, later source mutations, mutation between selected
-lanes, mixed checkouts, opt-out and failed base reads. This revision still needs
-its own unchanged cold and warm qualification.
+lanes, mixed checkouts, opt-out and failed base reads. Its unchanged cold and warm
+qualification is recorded in the following section.
+
+## Final admission-only scheduling qualification: rejected
+
+Source `6de11c811c555e264b51ec0ef5a60abea4f5cb9b`, tree
+`82135f19438047313d44c78c3b683dda19b71c25`, was measured with private
+report fixture `08459f550d11309730f56c5a995de0e4753aa3ac` (tree
+`9838505625893c0fc4378ce171cd5840feadd004`). Its cold pair observed
+**258.222 → 149.305 seconds**, saving **108.917 seconds (42.179%)**.
+All 27 baseline lanes passed; candidate retained 25 passes with exactly the two
+qualified skips. The 20 → 17 Turbo tasks were local misses with no remote cache.
+This observed pair passes both cold floors, but variable host load prevents a
+generalized speed guarantee.
+
+The first warm launch was interrupted before its first sample completed: no
+raw timing or completed outcome existed. Its startup log and ignored-output
+state were preserved, the original post-cold candidate state restored, and the
+unchanged six-sample harness resumed. No cold pair was repeated. Warm execution
+used the prescribed baseline/candidate/candidate/baseline/baseline/candidate
+order and preserved separate populated local caches and per-variant outputs.
+
+| Warm sample | Baseline seconds | Candidate seconds |
+| --- | ---: | ---: |
+| Pair 1 | 42.236 | 61.782 |
+| Pair 2, reversed order | 61.268 | 59.357 |
+| Pair 3 | 34.099 | 52.863 |
+| Median | **42.236** | **59.357** |
+
+The median regression is **17.120 seconds (40.534%)**, exceeding the unchanged
+five-second allowance. All retained outcomes passed, selected baseline tasks
+were genuine local cache hits in every baseline, and no remote cache was used.
+**Default-on performance qualification failed.** The threshold was not changed
+and no additional timing run was scheduled after this result.
+
+Wall time outside the union of timed lane spans was 1.172–1.477 seconds for
+baseline and 1.168–1.705 seconds for candidate. Thus the prior large scheduling
+edge was absent. Several retained lane medians also increased: Fallow audit
+17.005 → 19.389 seconds, retired-IRI checks 10.139 → 12.004 seconds, and
+retired-path checks 5.746 → 7.503 seconds. These overlapping spans cannot be
+summed or used as a dedicated guard timer: skipped receipts intentionally carry
+no timing. One-minute host load ranged from 44.02 to 103.25 on 64 logical CPUs;
+global admission reported other runs holding tokens. The measurements do not
+isolate causal guard overhead, and that uncertainty does not waive rejection.
+
+The published disposition keeps selection **disabled by default**. Only the exact
+`BEEP_QUALITY_REPORT_ONLY_SKIP=1` value enables the fully guarded two-lane path;
+unset, zero and unknown values execute every lane. This retains the tested
+strict-discovery API and an explicit experiment without claiming default gains.
+A subsequent main integration disabled caching for several retained discovery
+checks. Those changes were not part of source `6de11c811c`; the timing above is
+historical evidence for that source, not a performance claim for the integrated
+publication head. No additional benchmark was run to obtain a favorable result.
 
 ## Method lessons
 

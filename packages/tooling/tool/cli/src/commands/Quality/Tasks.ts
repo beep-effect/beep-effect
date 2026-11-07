@@ -2363,7 +2363,7 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
 // Every unknown axis fails closed. Git owns NUL parsing, including Unicode and
 // newline filenames. noRenames retains the source-side deletion of a move.
 const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(function* (repoRoot: string) {
-  if (configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "0")) return false;
+  if (!configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "1")) return false;
   const available = yield* Effect.serviceOption(Git);
   if (O.isNone(available)) return false;
   const git = available.value;
@@ -2421,7 +2421,7 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
 // Admission only schedules possible skips; each lane still proves its complete
 // current input identity before omitting its subprocess.
 const reportOnlyWavesCandidate = (lanes: ReadonlyArray<GithubCheckWaveLane>): boolean => {
-  if (configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "0")) return false;
+  if (!configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "1")) return false;
   const repoRoot = O.map(A.head(lanes), (lane) => lane.step.cwd);
   return (
     O.isSome(repoRoot) &&

@@ -3036,7 +3036,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const result = yield* withEnvVarEffect(
               "BEEP_YEET_PROOF_BASE",
               undefined,
-              withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
+              withEnvVarEffect(
+                "BEEP_YEET_LANE_PROOF_MODE",
+                "off",
+                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", "1", run)
+              )
             );
             expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual([
               accepted ? "skipped" : "failed",
@@ -3136,7 +3140,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             );
             const result = yield* withEnvVarEffect(
               "BEEP_QUALITY_REPORT_ONLY_SKIP",
-              control === "disabled" ? "0" : undefined,
+              control === "disabled" ? "0" : "1",
               withEnvVarEffect(
                 "BEEP_YEET_PROOF_BASE",
                 control === "pinned base mismatch" ? "0000000000000000000000000000000000000000" : undefined,
@@ -3275,7 +3279,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const result = yield* withEnvVarEffect(
               "BEEP_YEET_PROOF_BASE",
               undefined,
-              withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
+              withEnvVarEffect(
+                "BEEP_YEET_LANE_PROOF_MODE",
+                "off",
+                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", "1", run)
+              )
             );
             expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(
               A.replicate(
@@ -3377,7 +3385,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const result = yield* withEnvVarEffect(
               "BEEP_YEET_PROOF_BASE",
               undefined,
-              withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", checked)
+              withEnvVarEffect(
+                "BEEP_YEET_LANE_PROOF_MODE",
+                "off",
+                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", "1", checked)
+              )
             );
             expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(
               A.replicate(kind === "tracked" || kind === "missing" ? "skipped" : "failed", 2)
@@ -3405,6 +3417,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "between selected",
         "mixed checkouts",
         "opt-out",
+        "default disabled",
+        "unknown opt-in",
         "missing base",
       ] as const) {
         it.effect(`revalidates report-only selection for ${control}`, () =>
@@ -3449,7 +3463,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               withEnvVarEffect(
                 "BEEP_YEET_LANE_PROOF_MODE",
                 "off",
-                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", control === "opt-out" ? "0" : "1", run)
+                withEnvVarEffect(
+                  "BEEP_QUALITY_REPORT_ONLY_SKIP",
+                  Match.value(control).pipe(
+                    Match.when("opt-out", () => "0"),
+                    Match.when("default disabled", () => undefined),
+                    Match.when("unknown opt-in", () => "true"),
+                    Match.orElse(() => "1")
+                  ),
+                  run
+                )
               )
             );
             const opted = A.filter(result.laneReport.lanes, (lane) => S.is(ReportOnlyInertLaneId)(lane.id));
