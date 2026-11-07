@@ -21,9 +21,9 @@ Policy seal guard admits that pull request only when its author is `<slug>[bot]`
 
 ## Registration (human only)
 
-`scripts/github-app/beep-knowledge-mint.manifest.json` holds the manifest, and
-`bun scripts/github-app/create-beep-knowledge-mint.ts` serves it on
-`http://localhost:8787`, bound to loopback.
+`packages/tooling/policy-pack/repo-configs/data/github-apps/beep-knowledge-mint.manifest.json`
+holds the manifest, and `bun run beep github app mint beep-knowledge-mint` serves it on
+`http://localhost:8787`, bound to loopback. `--dry-run` prints the manifest unchanged.
 
 - The form POSTs the manifest to the organization's App registration page with a random
   `state`.

@@ -713,13 +713,13 @@
       "reason": "Owner: @beep/practice-kg-mcp. The test drops matters.client_name through a DuckDB connection built over the temp bundle it copied in the body, and must close that connection before runPracticeKgMcpSelfCheck reopens the same practice.duckdb (DuckDB locks the file). it.layer builds before the body and would hold the connection across the self-check. Exit: retire when the self-check accepts an injected DuckDb service, or when EV002 recognises a body-derived provision followed by a subject that reopens the same path (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts:112:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts:117:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts",
-      "line": 112,
-      "endLine": 112,
+      "line": 117,
+      "endLine": 117,
       "symbol": "provide",
       "occurrence": "v2:da12ec77f5a757d2b826e7933a94a9596070b977b6f883608441085e07b5e1c2",
       "class": "unresolved-layer-provide",
@@ -735,13 +735,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:274:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:277:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 274,
-      "endLine": 274,
+      "line": 277,
+      "endLine": 277,
       "symbol": "provide",
       "occurrence": "v2:d2e3886d55f705547645559a834e5a41d062b04a09307c7cd8649c78e494d96b",
       "class": "unresolved-layer-provide",
@@ -757,13 +757,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:412:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:415:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 412,
-      "endLine": 412,
+      "line": 415,
+      "endLine": 415,
       "symbol": "provide",
       "occurrence": "v2:d70146d769b56ee0dc0cab08e99951fd8d463572499637f2673e21f8befedc14",
       "class": "unresolved-layer-provide",
@@ -779,13 +779,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:520:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:523:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 520,
-      "endLine": 520,
+      "line": 523,
+      "endLine": 523,
       "symbol": "provide",
       "occurrence": "v2:8917e86eb503b527e007a367dd9ec750a82697729db1c5a7869455d89ac79573",
       "class": "unresolved-layer-provide",
@@ -801,13 +801,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:574:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:577:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 574,
-      "endLine": 574,
+      "line": 577,
+      "endLine": 577,
       "symbol": "provide",
       "occurrence": "v2:ecbe85535d9e397910a296749b979b544e1e4c4089ee92e1bc80a49a584ae1f2",
       "class": "unresolved-layer-provide",
@@ -823,13 +823,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:246:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:252:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 246,
-      "endLine": 246,
+      "line": 252,
+      "endLine": 252,
       "symbol": "provide",
       "occurrence": "v2:84ac3a206480ee786709573e121a24c5a9c02ff06d6c32259e50c224170f8152",
       "class": "unresolved-layer-provide",
@@ -845,13 +845,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:299:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:305:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 299,
-      "endLine": 299,
+      "line": 305,
+      "endLine": 305,
       "symbol": "provide",
       "occurrence": "v2:5d598043bf81aec9723ef84eee1f6bcd7909b88791274cc748690295aa75d3c3",
       "class": "unresolved-layer-provide",
@@ -867,13 +867,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:367:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:373:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 367,
-      "endLine": 367,
+      "line": 373,
+      "endLine": 373,
       "symbol": "provide",
       "occurrence": "v2:339cb09b3a24918605885dd84c71b5e9e404d61e296cba6463c402df5ab81906",
       "class": "unresolved-layer-provide",
@@ -889,13 +889,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:483:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:489:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 483,
-      "endLine": 483,
+      "line": 489,
+      "endLine": 489,
       "symbol": "provide",
       "occurrence": "v2:1b4fb265e1158abfea385eaf9998863439c8cf032164333deaea0ed4723692b8",
       "class": "unresolved-layer-provide",
@@ -911,13 +911,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1000:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1046:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 1000,
-      "endLine": 1000,
+      "line": 1046,
+      "endLine": 1046,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:6a58d2f1a9ba535793ed1e62132cb75697d6faee375e1451e43d4cd2e5145d3d",
       "class": "unresolved-layer-provide",
@@ -933,13 +933,13 @@
       "reason": "A body-owned malformed remote-root response exercises the real schema decoding path in an isolated scoped adapter. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1029:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1075:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 1029,
-      "endLine": 1029,
+      "line": 1075,
+      "endLine": 1075,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:c412ff022399f0f4e6f73fb7ca2d4a3bf46751c6fa0985b3a8fa302875ec3278",
       "class": "unresolved-layer-provide",
@@ -955,13 +955,13 @@
       "reason": "The callback owns a mutable invocation counter, and the three probe and refresh operations share one cache within this scoped program, keeping the identity and refresh-count assertions. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:459:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:463:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 459,
-      "endLine": 459,
+      "line": 463,
+      "endLine": 463,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:9df9783210f7c88da8e587a9855c204ef307c3c6e099423fb0ed1a25978a0ce8",
       "class": "unresolved-layer-provide",
@@ -977,13 +977,13 @@
       "reason": "The pagination callback captures the body-owned markers array and root identity, and the scoped adapter keeps the exact two-page order and zero writes. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:497:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:501:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 497,
-      "endLine": 497,
+      "line": 501,
+      "endLine": 501,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:d153297aa23c8f850bb1a37c1a79f8bf7b666e909fd21d2d4cc088163289a659",
       "class": "unresolved-layer-provide",
@@ -999,13 +999,13 @@
       "reason": "The callback captures rootVisible and the lookup and create counters to simulate a competing creator, and a fresh scoped adapter observes that invocation state. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:934:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:938:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 934,
-      "endLine": 934,
+      "line": 938,
+      "endLine": 938,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:c2c5525e8a601eed015768ed848158c6742eb1035d1f209243b2f06577b04219",
       "class": "unresolved-layer-provide",
@@ -1021,13 +1021,13 @@
       "reason": "The failing folders callback is built in this body, and its adapter yields an exact disconnected probe without a live provider. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:953:provideScopedLayer@10#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:999:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 953,
-      "endLine": 959,
+      "line": 999,
+      "endLine": 1005,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:ee5248bf0ecc53097f39013ab0f5605cc1340ca1d395552c8996fd5ab51dbf0c",
       "class": "unresolved-layer-provide",
@@ -1483,13 +1483,13 @@
       "reason": "The client is built and provided within an inner scope so close completes before the same dataDir is reopened or ordered results are read; suite sharing would remove the close/reopen durability witness. Owner: @beep/pglite. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/execution-authority/config/test/Config.test.ts:83:provideScopedLayer@70#1",
+      "id": "EV002:packages/execution-authority/config/test/Config.test.ts:91:provideScopedLayer@70#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/execution-authority-config",
       "file": "packages/execution-authority/config/test/Config.test.ts",
-      "line": 83,
-      "endLine": 83,
+      "line": 91,
+      "endLine": 91,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:1add42e36f574f0bd38af5acd40c03cc8bf1c8083f67c459ff79238dc16a5efe",
       "class": "unresolved-layer-provide",
@@ -2054,13 +2054,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:79:provide@55#1",
+      "id": "EV002:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:80:provide@55#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 79,
-      "endLine": 79,
+      "line": 80,
+      "endLine": 80,
       "symbol": "provide",
       "occurrence": "v2:e1d472e6a2ce089671ff0f2c8a539b15d9da5bc0e90f8efbb4922291a5020e91",
       "class": "unresolved-layer-provide",
@@ -2315,13 +2315,13 @@
       "reason": "Retain the deliberately SHORT PATH acquireUseRelease bracket: prepend only the disposable systemctl shim during fixture-owner reaping, restore the exact previous/unset PATH before later journal/export assertions. Root ownership is already per-test and outer native services runner-owned. Broadening PATH to the entire layer/test or deleting restoration changes global state/isolation. Sequential fixture scope and synchronous final restoration are required. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md. Owner: @beep/repo-cli. Exit: the fixture-owner reaper resolves systemctl through Config or an injected executable path. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:409:withEnvVarEffect@25#1",
+      "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:415:withEnvVarEffect@25#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
-      "line": 409,
-      "endLine": 433,
+      "line": 415,
+      "endLine": 439,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:7a4f71fe20382ddc1c39e6fb461768ddeb358a00ea78878e97d203874b0453bf",
       "class": "resource-wrapper",
@@ -3085,13 +3085,13 @@
       "reason": "runCliCommand closes the child-process scope after collecting output and awaiting exitCode, before returning to the test; the real BunRuntime entrypoint oracle and its exit-status mutant depend on that lifetime. Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:966:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:1089:scoped@4#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
-      "line": 966,
-      "endLine": 978,
+      "line": 1089,
+      "endLine": 1101,
       "symbol": "scoped",
       "occurrence": "v2:a11336cd16471f8e291fd6c25b63b9368eba6a54f378012abdd521931fefa881",
       "class": "inner-helper-scope-lifetime-review",
@@ -3129,13 +3129,13 @@
       "reason": "withScratchCheckout keeps its own shorter scope for native Git clone and worktree cleanup inside the shared it.layer block. Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:84:scoped@12#1",
+      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:85:scoped@12#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 84,
-      "endLine": 84,
+      "line": 85,
+      "endLine": 85,
       "symbol": "scoped",
       "occurrence": "v2:e1d472e6a2ce089671ff0f2c8a539b15d9da5bc0e90f8efbb4922291a5020e91",
       "class": "inner-helper-scope-lifetime-review",
@@ -3555,7 +3555,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -3599,7 +3599,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -4578,13 +4578,13 @@
       "reason": "RuntimeTest internally provides BunServices.layer to OntologyServerLive, so the fixture workspace must be visible to that runtime filesystem; replacing only the outer adapter would create a disconnected virtual workspace (goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md). Owner: @beep/professional-desktop. Exit: retire when RuntimeTest accepts the fixture's FileSystem instead of providing BunServices.layer itself."
     },
     {
-      "id": "EV010:apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts:11:@effect/platform-node@0#1",
+      "id": "EV010:apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts:14:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts",
-      "line": 11,
-      "endLine": 11,
+      "line": 14,
+      "endLine": 14,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -4622,13 +4622,13 @@
       "reason": "Real ontology workspace paths and optional loopback HTTP sockets are the integration subject, with native platform services owned by public it.layer fixtures and per-call workspace, handler and MCP session scopes. Owner: @beep/professional-desktop. Exit: retire when the execution-authority cases run over an injected workspace store with the socket mode split into its own block."
     },
     {
-      "id": "EV010:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:24:@effect/platform-node@0#1",
+      "id": "EV010:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:27:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 24,
-      "endLine": 24,
+      "line": 27,
+      "endLine": 27,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -4820,6 +4820,28 @@
       "reason": "The parity test traverses the actual packages/agents source; a seeded memory filesystem would replace the source subject and erase real checkout provenance and read failures. Owner: @beep/agents-domain. Exit: retire when the parity check runs as a lint over the committed sources."
     },
     {
+      "id": "EV010:packages/documents/server/test/BoxMirror.pglite.test.ts:11:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/BoxMirror.pglite.test.ts",
+      "line": 11,
+      "endLine": 11,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native temporary directories and canonical-root realPath reads are the subject: the adapter reads upload bytes through the symlink/inode-bound vault file store and checks the queued digest, which MemoryFileSystem does not model. Owner: @beep/documents-server. Exit: retire when the vault file store reads through an injected filesystem that models realPath and inode identity."
+    },
+    {
       "id": "EV010:packages/documents/server/test/DocumentIntake.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -4862,6 +4884,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The filing-decision cases share the documents-server native fixture: materialized bytes and atomic updates in scoped temporary directories. Owner: @beep/documents-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/LegacySync.projection.pglite.test.ts:14:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/LegacySync.projection.pglite.test.ts",
+      "line": 14,
+      "endLine": 14,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The committed legacy documents_sync_* migration DDL is the subject: the test reads it from the checkout so the projections write the real legacy tables, and seeding MemoryFileSystem with a copy would fabricate that provenance. Owner: @beep/documents-server. Exit: retire when db-admin exports the baseline DDL as a module the test can import."
     },
     {
       "id": "EV010:packages/documents/server/test/VaultSyncDrift.test.ts:33:@effect/platform-bun/BunFileSystem@0#1",
@@ -4928,6 +4972,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native filesystem identity, path containment, descriptor failures and real file preservation are the tested contract. Tests use it.layer with explicit acquisition budgets. Owner: @beep/documents-server. Exit: retire when an in-memory filesystem faithfully models inode/device identity and descriptor-to-path races."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/VaultSyncPass.pglite.test.ts:17:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/VaultSyncPass.pglite.test.ts",
+      "line": 17,
+      "endLine": 17,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native temporary vault directories are the subject: the saga scan resolves the canonical root with realPath and the adapter re-reads bytes through the symlink/inode-bound file store across a runtime teardown, which MemoryFileSystem does not model. Owner: @beep/documents-server. Exit: retire when the vault file store reads through an injected filesystem that models realPath and inode identity."
     },
     {
       "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:34:@effect/platform-bun/BunFileSystem@0#1",
@@ -5722,13 +5788,35 @@
       "reason": "The tracked golden assets are the subject: readPackageFile reads the checked-in asset and bridge files as the independent on-disk oracle for the exact five-path assertion. Owner: @beep/brand. Exit: retire when the asset check runs as a lint over the committed files."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationBuiltinCleaners.test.ts:20:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationAssetCoverage.test.ts:9:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationAssetCoverage.test.ts",
+      "line": 9,
+      "endLine": 9,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Asset refusal cases authenticate the committed citation kernel wasm bytes read from disk; a MemoryFileSystem has no committed asset to authenticate. Owner: @beep/law-practice-server. Exit: retire when assets load through an injected byte source."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationBuiltinCleaners.test.ts:16:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts",
-      "line": 20,
-      "endLine": 20,
+      "line": 16,
+      "endLine": 16,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -5808,6 +5896,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationCallbackSessionCoverage.test.ts:16:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationCallbackSessionCoverage.test.ts",
+      "line": 16,
+      "endLine": 16,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Callback-session ceiling cases reuse the committed oracle callback fixtures read from disk; a MemoryFileSystem would need the full fixture corpus copied in. Owner: @beep/law-practice-server. Exit: retire when the fixtures load through an injected corpus reader."
     },
     {
       "id": "EV010:packages/law-practice/server/test/CitationCaseResourceHash.test.ts:11:@effect/platform-bun/BunFileSystem@0#1",
@@ -5920,13 +6030,13 @@
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationCleanerValues.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationCleanerValues.test.ts:17:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
-      "line": 12,
-      "endLine": 12,
+      "line": 17,
+      "endLine": 17,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
@@ -6006,6 +6116,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Reads the committed authenticated WASM asset and sealed original-source diff corpus through the actual filesystem. Seeding MemoryFileSystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationDiffKernelCoverage.test.ts:5:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationDiffKernelCoverage.test.ts",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Diff kernel refusal cases load and authenticate the committed kernel wasm from disk; the asset bytes are the subject. Owner: @beep/law-practice-server. Exit: retire when the kernel asset loads through an injected byte source."
     },
     {
       "id": "EV010:packages/law-practice/server/test/CitationExtractorOrdering.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
@@ -6294,13 +6426,35 @@
       "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationHtmlWorkerProgram.test.ts:9:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationHtmlWorkerCoverage.test.ts:4:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationHtmlWorkerCoverage.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "HTML worker construction cases need the platform Path and ChildProcessSpawner services (Path is overridden per case to fail); no filesystem is touched. Owner: @beep/law-practice-server. Exit: retire when the worker constructor takes Path and the spawner as explicit layers."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationHtmlWorkerProgram.test.ts:11:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationHtmlWorkerProgram.test.ts",
-      "line": 9,
-      "endLine": 9,
+      "line": 11,
+      "endLine": 11,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -6359,13 +6513,13 @@
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts:13:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts:8:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts",
-      "line": 13,
-      "endLine": 13,
+      "line": 8,
+      "endLine": 8,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -6645,6 +6799,28 @@
       "reason": "Exercises real child process creation and independent OS PID exit acknowledgement; the regex worker also needs an OS-visible entrypoint and temporary working directory. MemoryFileSystem cannot preserve this subject. Owner: @beep/law-practice-server. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md."
     },
     {
+      "id": "EV010:packages/law-practice/server/test/CitationResolutionLimit.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationResolutionLimit.test.ts",
+      "line": 12,
+      "endLine": 12,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "These resolver integration tests load the authenticated committed frozen-edition bundle and source-bound callback fixtures from disk. A MemoryFileSystem without those independent assets changes the subject; the real filesystem is scoped by it.layer and performs no application writes."
+    },
+    {
       "id": "EV010:packages/law-practice/server/test/CitationResolve.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -6665,6 +6841,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationResolverBoundary.test.ts:19:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
+      "line": 19,
+      "endLine": 19,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "These resolver integration tests load the authenticated committed frozen-edition bundle and source-bound callback fixtures from disk. A MemoryFileSystem without those independent assets changes the subject; the real filesystem is scoped by it.layer and performs no application writes."
     },
     {
       "id": "EV010:packages/law-practice/server/test/CitationResourceObjects.test.ts:36:@effect/platform-bun/BunFileSystem@0#1",
@@ -7195,13 +7393,13 @@
       "reason": "Reads and authenticates committed oracle fixture bytes through the real repository filesystem, using the per-test BunServices layer. Replacing the fixture loader with an independently seeded memory filesystem would remove the repository-artifact proof. Owner: @beep/law-practice-server. Exit: retire when the artifact check is separated from pure vector replay."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts:19:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts:16:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
-      "line": 19,
-      "endLine": 19,
+      "line": 16,
+      "endLine": 16,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -7479,28 +7677,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The declared-root inventory producer probes real git repositories created by spawned git, so the git working-tree layout is the subject. Owner: @beep/repo-ai-metrics. Exit: retire when the root probe runs behind a scripted git double and the real-git cases move to an opt-in live suite."
-    },
-    {
-      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-worker.test.ts:31:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-ai-metrics",
-      "file": "packages/tooling/library/ai-metrics/test/observation-worker.test.ts",
-      "line": 31,
-      "endLine": 31,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "One harness runs real transcript discovery through the worker: helper processes scan a real directory tree, so native directory traversal and helper-process admission are the subject; the other harnesses use the SQL test layer only. Owner: @beep/repo-ai-metrics. Exit: retire when transcript discovery takes an injected scanner the worker test can script."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/retention.test.ts:14:@effect/platform-node@0#1",
@@ -8097,6 +8273,28 @@
       "reason": "The live poller suite reads a real temporary auth directory: directory listing, per-file reads and a missing-directory NotFound are the subject, with HttpClient stubbed per test. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/agent-runs-slice.test.ts:7:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/agent-runs-slice.test.ts",
+      "line": 7,
+      "endLine": 7,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The --install cases spawn the real CLI bin with a scoped temp HOME and assert the unit files it writes; a child process sees only the real filesystem, and the temp directory is scoped by it.layer."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/architecture-operation-plan.test.ts:18:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -8537,13 +8735,13 @@
       "reason": "The governance commands run through Command.runWith, which needs the platform environment (FileSystem, Path, Terminal); the suite reads and writes no files, GitHub is faked through GithubTransportFetch and the only spawn is a scripted gh auth token. Owner: @beep/repo-cli. Exit: retire when the CLI runner takes a narrower test platform layer."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:24:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:28:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-heavy-admission.test.ts",
-      "line": 24,
-      "endLine": 24,
+      "line": 28,
+      "endLine": 28,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -8955,6 +9153,50 @@
       "reason": "The committed fixtures/gate-order-handoff-knip-retired.json is read at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the handoff fixture is seeded into a MemoryFileSystem volume."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/github-app-mint.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/github-app-mint.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The handler spawns a real bash pipeline into a fake op and op-doctor on PATH through ChildProcessSpawner, and the dry run reads the committed repo-configs manifests; a live child process sees only the real filesystem."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts:10:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Each case runs the pinned gitleaks binary over a scoped temp directory with the repository's real .gitleaks.toml; an external scanner sees only the real filesystem."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts:3:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -9130,35 +9372,13 @@
       "reason": "The doctor spawns derived commands through ChildProcessSpawner over the checkout's packages/tooling/tool/cli. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the derived commands run behind a scripted spawner."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/knowledge-mint-bootstrap.test.ts:2:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/knowledge-mint-bootstrap.test.ts",
-      "line": 2,
-      "endLine": 2,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The bootstrap runs in a Bun child process (ChildProcess.make(\"bun\")) with a fake op on PATH. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the bootstrap accepts an injected op runner and runs in process."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts:7:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts:8:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts",
-      "line": 7,
-      "endLine": 7,
+      "line": 8,
+      "endLine": 8,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -9570,13 +9790,13 @@
       "reason": "Real scheduler lease publication, link behavior and queue state need the native filesystem; the two procfs cases already use MemoryFileSystem (research/cli-scheduler-drift-package-proof.json). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models link-based lease publication and the drift cases move to it."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/quality-tasks.test.ts:190:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/quality-tasks.test.ts:194:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
-      "line": 190,
-      "endLine": 190,
+      "line": 194,
+      "endLine": 194,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -9592,13 +9812,13 @@
       "reason": "runGit and NodeChildProcessSpawner run git and the quality task steps against real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the task runner takes a scripted spawner."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/research-library-acquisition.test.ts:37:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/research-library-acquisition.test.ts:39:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/research-library-acquisition.test.ts",
-      "line": 37,
-      "endLine": 37,
+      "line": 39,
+      "endLine": 39,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -9942,6 +10162,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The checkout's node_modules/.bin/turbo (findRepoRoot) dry-runs the real turbo.json to read test-tsgo inputs. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the task graph is read from a captured fixture."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/toolchain-prune-tsgo-backups.test.ts:3:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/toolchain-prune-tsgo-backups.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The CLI cases spawn the real bin with a scoped temp node_modules fixture as cwd, as root prepare does; a child process sees only the real filesystem, and the temp directory is scoped by it.layer."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:15:@effect/platform-node/NodeFileSystem@0#1",
@@ -10976,50 +11218,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Fixed-count independent race trials, not retries: every trial asserts its result and a single failure fails the test. TestClock and explicit lease completion govern ownership; no failed trial is retried. Owner: @beep/law-practice-server. Exit: detector distinguishes repeated independent cases from retry-until-success loops. Re-reviewed after expression-only Effect 4.1.2 adaptation; independent trials and shorter child Scope are unchanged."
-    },
-    {
-      "id": "EV010:packages/law-practice/server/test/CitationResolutionLimit.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/law-practice-server",
-      "file": "packages/law-practice/server/test/CitationResolutionLimit.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "@effect/platform-bun/BunFileSystem",
-      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "These resolver integration tests load the authenticated committed frozen-edition bundle and source-bound callback fixtures from disk. A MemoryFileSystem without those independent assets changes the subject; the real filesystem is scoped by it.layer and performs no application writes."
-    },
-    {
-      "id": "EV010:packages/law-practice/server/test/CitationResolverBoundary.test.ts:19:@effect/platform-bun/BunFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/law-practice-server",
-      "file": "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
-      "line": 19,
-      "endLine": 19,
-      "symbol": "@effect/platform-bun/BunFileSystem",
-      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "These resolver integration tests load the authenticated committed frozen-edition bundle and source-bound callback fixtures from disk. A MemoryFileSystem without those independent assets changes the subject; the real filesystem is scoped by it.layer and performs no application writes."
     }
   ]
 }

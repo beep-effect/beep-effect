@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T03:22:55.878Z
+Generated: 2026-11-07T19:46:44.010Z
 
 ## Scope
 
@@ -10,12 +10,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 
 | Metric | Count |
 |---|---:|
-| packages | 192 |
-| cleanPackages | 175 |
+| packages | 193 |
+| cleanPackages | 176 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3675 |
-| publicExports | 26459 |
+| publicModules | 3806 |
+| publicExports | 27048 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -60,19 +60,19 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 2 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 3 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 12 |
 | 4 | `@beep/test-runner` | `packages/tooling/test-kit/test-runner` | clean | 4 | 6 | 0 | 0 |
-| 5 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 289 | 0 | 0 |
+| 5 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 290 | 0 | 0 |
 | 6 | `@beep/github-commands` | `packages/foundation/modeling/github-commands` | clean | 3 | 6 | 0 | 0 |
 | 7 | `@beep/ontology-config` | `packages/ontology/config` | clean | 7 | 18 | 0 | 0 |
 | 8 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
 | 9 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 229 | 0 | 0 |
 | 10 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 11 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 168 | 969 | 0 | 0 |
-| 12 | `@beep/alchemy-postgres` | `packages/drivers/alchemy-postgres` | clean | 3 | 7 | 0 | 0 |
-| 13 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
-| 14 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
-| 15 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
+| 11 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 169 | 970 | 0 | 0 |
+| 12 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
+| 13 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
+| 14 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
+| 15 | `@beep/firecrawl` | `packages/drivers/firecrawl` | clean | 5 | 19 | 0 | 0 |
 | 16 | `@beep/freshbooks` | `packages/drivers/freshbooks` | clean | 6 | 49 | 0 | 0 |
-| 17 | `@beep/git` | `packages/drivers/git` | clean | 7 | 55 | 0 | 0 |
+| 17 | `@beep/git` | `packages/drivers/git` | clean | 7 | 59 | 0 | 0 |
 | 18 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
 | 19 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
 | 20 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
@@ -126,7 +126,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 68 | `@beep/pdf-tools` | `packages/drivers/pdf-tools` | clean | 4 | 38 | 0 | 0 |
 | 69 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 6 | 54 | 0 | 0 |
 | 70 | `@beep/provenance` | `packages/foundation/modeling/provenance` | clean | 4 | 28 | 0 | 0 |
-| 71 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
+| 71 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 202 | 0 | 1 |
 | 72 | `@beep/runpod` | `packages/drivers/runpod` | clean | 7 | 204 | 0 | 0 |
 | 73 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 15 | 0 | 0 |
 | 74 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 14 | 0 | 0 |
@@ -170,37 +170,37 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 112 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
 | 113 | `@beep/tika` | `packages/drivers/tika` | clean | 8 | 33 | 0 | 0 |
 | 114 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 7 | 31 | 0 | 0 |
-| 115 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 34 | 210 | 0 | 0 |
-| 116 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
-| 117 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 13 | 109 | 0 | 0 |
-| 118 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
-| 119 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
-| 120 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
-| 121 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
-| 122 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
-| 123 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 10 | 0 |
-| 124 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 64 | 809 | 0 | 0 |
-| 125 | `@beep/repo-cli-kit` | `packages/tooling/library/repo-cli-kit` | clean | 54 | 347 | 0 | 0 |
-| 126 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
-| 127 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
-| 128 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
-| 129 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
-| 130 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
-| 131 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
-| 132 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
-| 133 | `@beep/shared-domain` | `packages/shared/domain` | clean | 106 | 374 | 0 | 0 |
-| 134 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
-| 135 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
-| 136 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 137 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
-| 138 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 45 | 183 | 0 | 0 |
-| 139 | `@beep/execution-authority-domain` | `packages/execution-authority/domain` | clean | 12 | 81 | 0 | 0 |
-| 140 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 177 | 831 | 0 | 0 |
-| 141 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
-| 142 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
-| 143 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
-| 144 | `@beep/party-domain` | `packages/party/domain` | clean | 44 | 299 | 0 | 0 |
-| 145 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 519 | 4836 | 45 | 29 |
+| 115 | `@beep/alchemy-postgres` | `packages/drivers/alchemy-postgres` | clean | 8 | 46 | 0 | 0 |
+| 116 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 34 | 210 | 0 | 0 |
+| 117 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
+| 118 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 13 | 109 | 0 | 0 |
+| 119 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
+| 120 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
+| 121 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
+| 122 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
+| 123 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
+| 124 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 10 | 0 |
+| 125 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 71 | 837 | 0 | 0 |
+| 126 | `@beep/repo-cli-kit` | `packages/tooling/library/repo-cli-kit` | clean | 54 | 347 | 0 | 0 |
+| 127 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
+| 128 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
+| 129 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
+| 130 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
+| 131 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
+| 132 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
+| 133 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
+| 134 | `@beep/shared-domain` | `packages/shared/domain` | clean | 106 | 374 | 0 | 0 |
+| 135 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
+| 136 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
+| 137 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
+| 138 | `@beep/documents-domain` | `packages/documents/domain` | clean | 80 | 282 | 0 | 0 |
+| 139 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 45 | 183 | 0 | 0 |
+| 140 | `@beep/execution-authority-domain` | `packages/execution-authority/domain` | clean | 12 | 81 | 0 | 0 |
+| 141 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 178 | 838 | 0 | 0 |
+| 142 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
+| 143 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
+| 144 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
+| 145 | `@beep/party-domain` | `packages/party/domain` | clean | 44 | 299 | 0 | 0 |
 | 146 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 147 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 148 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
@@ -208,9 +208,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 150 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
 | 151 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
 | 152 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
-| 153 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 124 | 0 | 0 |
+| 153 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 38 | 161 | 0 | 0 |
 | 154 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 29 | 81 | 0 | 0 |
-| 155 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 38 | 147 | 0 | 0 |
+| 155 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 37 | 146 | 0 | 0 |
 | 156 | `@beep/execution-authority-config` | `packages/execution-authority/config` | clean | 7 | 20 | 0 | 0 |
 | 157 | `@beep/execution-authority-tables` | `packages/execution-authority/tables` | clean | 7 | 21 | 0 | 0 |
 | 158 | `@beep/execution-authority-use-cases` | `packages/execution-authority/use-cases` | clean | 5 | 12 | 0 | 0 |
@@ -218,36 +218,37 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 160 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
 | 161 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
 | 162 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 163 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
-| 164 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
-| 165 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
-| 166 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
-| 167 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
-| 168 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 169 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
-| 170 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
-| 171 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 19 | 43 | 0 | 0 |
-| 172 | `@beep/execution-authority-server` | `packages/execution-authority/server` | clean | 10 | 19 | 0 | 0 |
-| 173 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 111 | 698 | 0 | 0 |
-| 174 | `@beep/party-server` | `packages/party/server` | clean | 26 | 116 | 0 | 0 |
-| 175 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
-| 176 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
-| 177 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
-| 178 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
-| 179 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
-| 180 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 75 | 358 | 0 | 0 |
-| 181 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
-| 182 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
-| 183 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
-| 184 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
-| 185 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
-| 186 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 75 | 0 | 0 |
-| 187 | `@beep/practice-m365-contacts` | `apps/practice-m365-contacts` | clean | 8 | 28 | 0 | 0 |
-| 188 | `@beep/practice-mail-tagging` | `apps/practice-mail-tagging` | clean | 8 | 44 | 0 | 0 |
-| 189 | `@beep/practice-review-hub` | `apps/practice-review-hub` | clean | 3 | 12 | 0 | 0 |
-| 190 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 191 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
-| 192 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
+| 163 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 547 | 5008 | 45 | 29 |
+| 164 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
+| 165 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
+| 166 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
+| 167 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
+| 168 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
+| 169 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
+| 170 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 38 | 133 | 2 | 0 |
+| 171 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
+| 172 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 19 | 43 | 0 | 0 |
+| 173 | `@beep/execution-authority-server` | `packages/execution-authority/server` | clean | 10 | 19 | 0 | 0 |
+| 174 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 122 | 761 | 0 | 0 |
+| 175 | `@beep/party-server` | `packages/party/server` | clean | 26 | 116 | 0 | 0 |
+| 176 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
+| 177 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
+| 178 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
+| 179 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
+| 180 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
+| 181 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 76 | 361 | 0 | 0 |
+| 182 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
+| 183 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
+| 184 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
+| 185 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
+| 186 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
+| 187 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 75 | 0 | 0 |
+| 188 | `@beep/practice-m365-contacts` | `apps/practice-m365-contacts` | clean | 8 | 28 | 0 | 0 |
+| 189 | `@beep/practice-mail-tagging` | `apps/practice-mail-tagging` | clean | 8 | 44 | 0 | 0 |
+| 190 | `@beep/practice-review-hub` | `apps/practice-review-hub` | clean | 3 | 12 | 0 | 0 |
+| 191 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
+| 192 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
+| 193 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
 
 ## Open Findings
 
@@ -476,8 +477,8 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 2 documentation section/link violation(s)
 
 Export findings:
-- `src/commands/Cache/Cache.command.ts:359` `runCacheWarm` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:557` `buildCacheDashboard` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:376` `runCacheWarm` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:574` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:112` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiLane.ts:415` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1572` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
@@ -495,7 +496,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:606` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1127` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1130` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)
@@ -504,7 +505,7 @@ Export findings:
 - `src/commands/Skills/Skills.render.ts:218` `renderSkillsLockMigrationPlanJson` (const) - 1 example import violation(s)
 - `src/commands/Skills/Skills.render.ts:291` `renderSkillsLockMigrationPlanSummary` (const) - 1 example import violation(s)
 - `src/commands/Skills/Skills.render.ts:344` `renderSkillsLockWriteReceiptJson` (const) - 1 example import violation(s)
-- `src/commands/Worktree/Fleet.service.ts:259` `parseProcStatStartTime` (const) - 1 example import violation(s)
+- `src/commands/Worktree/Fleet.service.ts:262` `parseProcStatStartTime` (const) - 1 example import violation(s)
 
 ### @beep/db-admin
 

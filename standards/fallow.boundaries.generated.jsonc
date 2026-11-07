@@ -1402,14 +1402,18 @@
         "allow": [
           "@beep/alchemy-postgres",
           "@beep/identity",
+          "@beep/observability",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/alchemy-postgres",
           "@beep/identity",
+          "@beep/observability",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ]
@@ -2078,6 +2082,7 @@
       {
         "from": "@beep/documents-server",
         "allow": [
+          "@beep/alchemy-postgres",
           "@beep/box",
           "@beep/documents-domain",
           "@beep/documents-server",
@@ -2085,6 +2090,7 @@
           "@beep/documents-use-cases",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
@@ -2093,6 +2099,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/alchemy-postgres",
           "@beep/box",
           "@beep/documents-domain",
           "@beep/documents-server",
@@ -2100,6 +2107,7 @@
           "@beep/documents-use-cases",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
           "@beep/shared-domain",
@@ -2132,18 +2140,22 @@
       {
         "from": "@beep/documents-use-cases",
         "allow": [
+          "@beep/alchemy-postgres",
           "@beep/documents-domain",
           "@beep/documents-use-cases",
           "@beep/identity",
+          "@beep/pglite",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
+          "@beep/alchemy-postgres",
           "@beep/documents-domain",
           "@beep/documents-use-cases",
           "@beep/identity",
+          "@beep/pglite",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",

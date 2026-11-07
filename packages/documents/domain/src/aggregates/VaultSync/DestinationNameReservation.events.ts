@@ -1,0 +1,64 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+// fallow-ignore-file unused-class-member -- the @beep/alchemy-postgres driver reads the static `schemaVersion` reflectively to version stored events (D12). Owner: @beep/documents-domain. Exit: delete when alchemy ships a kernel event-version slot and the driver stops reading the static.
+import * as Domain from "@alchemy.run/domain";
+import { $DocumentsDomainId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+import * as V from "./Values.ts";
+
+const $I = $DocumentsDomainId.create("aggregates/VaultSync/DestinationNameReservation.command");
+/**
+ * NameClaim vault sync contract.
+ *
+ * **Example** (Inspect contract)
+ * ```ts
+ * import { NameClaim } from "@beep/documents-domain/aggregates/VaultSync";
+ * void NameClaim;
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export class NameClaim extends S.Opaque<NameClaim, { readonly brand: unique symbol }>()(
+  S.Struct({
+    destinationId: V.DestinationId,
+    orgId: S.Int,
+    workspaceId: S.Int,
+    name: S.NonEmptyString,
+    previousName: S.NullOr(S.String),
+  }).pipe($I.annoteSchema("NameClaim", { description: "NameClaim persisted vault sync value." }))
+) {}
+
+/**
+ * DestinationNameClaimed vault sync contract.
+ *
+ * **Example** (Inspect contract)
+ * ```ts
+ * import { DestinationNameClaimed } from "@beep/documents-domain/aggregates/VaultSync";
+ * void DestinationNameClaimed;
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export class DestinationNameClaimed extends Domain.Event("DestinationNameClaimed", { claim: NameClaim }) {
+  static readonly schemaVersion = 1;
+}
+/**
+ * DestinationNameReleased vault sync contract.
+ *
+ * **Example** (Inspect contract)
+ * ```ts
+ * import { DestinationNameReleased } from "@beep/documents-domain/aggregates/VaultSync";
+ * void DestinationNameReleased;
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export class DestinationNameReleased extends Domain.Event("DestinationNameReleased", {
+  destinationId: V.DestinationId,
+}) {
+  static readonly schemaVersion = 1;
+}

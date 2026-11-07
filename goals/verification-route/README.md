@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,10 +37,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Slice 2 implemented 2026-11-07 (lane `verification-route-s2`): taxonomy refinement, the first
-enforced refinement (packet markdown and commits out of build and check, recall 100%), the
-catalog-free root `package.json` projection in turbo's global inputs, and the final-check route
-section. Next: P2 Slice 3, hosted per-lane `skip-satisfied`.
+Closed `completed-retained` 2026-11-07. Final PR #2885 (completion verified with readiness job
+`2a2091a4`). Slice 1 #2414, slice 2 #2856, slice 3 #2879 and #2884; the hosted proof is on #2885,
+where Heavy / Build and Heavy / Check completed `skip-satisfied` with the route receipt. The packet
+is retained; the reflection is `history/reflections/2026-11-07-claude.md`.
 
 ## Latest Evidence
 

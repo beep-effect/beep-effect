@@ -21,6 +21,7 @@ import { $AlchemyPostgresId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as SqlClient from "effect/sql/SqlClient";
 import { AlchemyPostgresError } from "./AlchemyPostgres.errors.ts";
 import type { AlchemyPostgresConfig } from "./AlchemyPostgres.config.ts";
@@ -108,6 +109,15 @@ export class AlchemyPostgresTables extends S.Opaque<AlchemyPostgresTables, { rea
     aggregateReceipt: S.NonEmptyString,
     aggregateSchedule: S.NonEmptyString,
     delivery: S.NonEmptyString,
+    consumerGeneration: S.NonEmptyString,
+    consumerInput: S.NonEmptyString,
+    viewKey: S.NonEmptyString,
+    viewEntry: S.NonEmptyString,
+    projectionPartition: S.NonEmptyString,
+    streamKey: S.NonEmptyString,
+    streamEntry: S.NonEmptyString,
+    backfillKv: S.NonEmptyString,
+    backfillJob: S.NonEmptyString,
   }).pipe(
     $I.annoteSchema("AlchemyPostgresTables", {
       description: "Prefixed names of the driver's tables for one configuration.",
@@ -127,11 +137,33 @@ export class AlchemyPostgresTables extends S.Opaque<AlchemyPostgresTables, { rea
       aggregateReceipt: `${config.tablePrefix}aggregate_receipt`,
       aggregateSchedule: `${config.tablePrefix}aggregate_schedule`,
       delivery: `${config.tablePrefix}delivery`,
+      consumerGeneration: `${config.tablePrefix}consumer_generation`,
+      consumerInput: `${config.tablePrefix}consumer_input`,
+      viewKey: `${config.tablePrefix}view_key`,
+      viewEntry: `${config.tablePrefix}view_entry`,
+      projectionPartition: `${config.tablePrefix}projection_partition`,
+      streamKey: `${config.tablePrefix}stream_key`,
+      streamEntry: `${config.tablePrefix}stream_entry`,
+      backfillKv: `${config.tablePrefix}backfill_kv`,
+      backfillJob: `${config.tablePrefix}backfill_job`,
     });
 }
 
-/** `bigint` columns: PGlite returns numbers, postgres.js returns decimal strings. */
-const Int8 = S.Union([S.Int, S.NumberFromString.check(S.isInt())]);
+/**
+ * `bigint` columns: PGlite returns numbers, postgres.js returns decimal strings,
+ * and `@effect/sql-pg` returns native `bigint`. Values stay within the safe
+ * integer range (epoch milliseconds, positions, counters).
+ */
+const Int8FromBigInt = S.BigInt.pipe(
+  S.decodeTo(
+    S.Int,
+    SchemaTransformation.transform({
+      decode: (value: bigint) => Number(value),
+      encode: (value: number) => BigInt(value),
+    })
+  )
+);
+const Int8 = S.Union([S.Int, S.NumberFromString.check(S.isInt()), Int8FromBigInt]);
 
 /**
  * Row of the aggregate instance table: the stored state, version and catch-up
@@ -165,7 +197,7 @@ export class InstanceRow extends S.Opaque<InstanceRow, { readonly brand: unique 
 
 /**
  * Row of the aggregate event table as the platform reads it back: the event
- * JSON and its kernel envelope.
+ * tag, the schema version it was written at, its JSON and kernel envelope.
  *
  * **Example** (Decode an event row)
  *
@@ -175,6 +207,8 @@ export class InstanceRow extends S.Opaque<InstanceRow, { readonly brand: unique 
  * import { EventRow } from "@beep/alchemy-postgres/AlchemyPostgres.schema"
  *
  * const program = S.decodeUnknownEffect(EventRow)({
+ *   tag: "Opened",
+ *   schema_version: 1,
  *   event: { _tag: "Opened" },
  *   envelope: { id: "a-1", stream: "Account/a-1", seq: 1, at: 0, commandId: "c-1" },
  * })
@@ -186,6 +220,8 @@ export class InstanceRow extends S.Opaque<InstanceRow, { readonly brand: unique 
  */
 export class EventRow extends S.Opaque<EventRow, { readonly brand: unique symbol }>()(
   S.Struct({
+    tag: S.String,
+    schema_version: S.Int,
     event: S.Unknown,
     envelope: EnvelopeJson,
   }).pipe(
@@ -367,7 +403,7 @@ export class DeliveryJson extends S.Opaque<DeliveryJson, { readonly brand: uniqu
  *
  * const program = S.decodeUnknownEffect(DeliveryRow)({
  *   position: "7",
- *   aggregate: "Account",
+ *   producer: "Account",
  *   delivery: {
  *     target: { kind: "policy", name: "Provisioning" },
  *     key: "Account/a-1",
@@ -388,11 +424,216 @@ export class DeliveryJson extends S.Opaque<DeliveryJson, { readonly brand: uniqu
 export class DeliveryRow extends S.Opaque<DeliveryRow, { readonly brand: unique symbol }>()(
   S.Struct({
     position: Int8,
-    aggregate: S.String,
+    producer: S.String,
     delivery: DeliveryJson,
   }).pipe(
     $I.annoteSchema("DeliveryRow", {
-      description: "An outbox row: its position, the aggregate that produced it and the delivery.",
+      description: "An outbox row: its position, the aggregate or view that produced it and the delivery.",
+    })
+  )
+) {}
+
+const Checkpoints = S.Record(S.String, S.Finite);
+
+/**
+ * The stored snapshot of one view key, as the kernel's `ViewSnapshot`.
+ *
+ * **Example** (Decode an empty snapshot)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { ViewSnapshotJson } from "@beep/alchemy-postgres/AlchemyPostgres.schema"
+ *
+ * const program = S.decodeUnknownEffect(ViewSnapshotJson)({ state: null, version: 0, checkpoints: {}, seq: 0 })
+ * Effect.runPromise(program).then((snapshot) => console.log(snapshot.seq)) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ViewSnapshotJson extends S.Opaque<ViewSnapshotJson, { readonly brand: unique symbol }>()(
+  S.Struct({
+    state: S.Unknown,
+    version: S.Int,
+    checkpoints: Checkpoints,
+    seq: S.Int,
+    generation: S.Int.pipe(S.optionalKey),
+  }).pipe(
+    $I.annoteSchema("ViewSnapshotJson", {
+      description:
+        "A view key's encoded state, applied-delivery count, per-source checkpoints and emitted-event count.",
+    })
+  )
+) {}
+
+/**
+ * One entry a view key emitted, with the key's state after it.
+ *
+ * **Example** (Decode a view entry)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { ViewEntryJson } from "@beep/alchemy-postgres/AlchemyPostgres.schema"
+ *
+ * const program = S.decodeUnknownEffect(ViewEntryJson)({
+ *   seq: 1,
+ *   event: { _tag: "Line" },
+ *   envelope: { id: "a-1", stream: "Statement/a-1", seq: 1, at: 0, commandId: "c-1" },
+ *   state: { lines: 1 },
+ * })
+ * Effect.runPromise(program).then((entry) => console.log(entry.seq)) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ViewEntryJson extends S.Opaque<ViewEntryJson, { readonly brand: unique symbol }>()(
+  S.Struct({
+    seq: S.Int,
+    event: S.Unknown,
+    envelope: EnvelopeJson,
+    state: S.Unknown,
+  }).pipe(
+    $I.annoteSchema("ViewEntryJson", {
+      description: "An event a view key emitted, its envelope, and the key's encoded state after it.",
+    })
+  )
+) {}
+
+/**
+ * The stored progress of one stream key, as the kernel's `StreamMeta`.
+ *
+ * **Example** (Decode an empty stream meta)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { StreamMetaJson } from "@beep/alchemy-postgres/AlchemyPostgres.schema"
+ *
+ * const program = S.decodeUnknownEffect(StreamMetaJson)({ seq: 0, checkpoints: {}, origin: [0, 0] })
+ * Effect.runPromise(program).then((meta) => console.log(meta.origin)) // [0, 0]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class StreamMetaJson extends S.Opaque<StreamMetaJson, { readonly brand: unique symbol }>()(
+  S.Struct({
+    seq: S.Int,
+    checkpoints: Checkpoints,
+    origin: S.Tuple([S.Finite, S.Finite]),
+  }).pipe(
+    $I.annoteSchema("StreamMetaJson", {
+      description:
+        "A stream key's entry count, its writer's per-source checkpoints and the last applied write's origin.",
+    })
+  )
+) {}
+
+/**
+ * One entry appended to a stream key.
+ *
+ * **Example** (Decode a stream entry)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { StreamEntryJson } from "@beep/alchemy-postgres/AlchemyPostgres.schema"
+ *
+ * const program = S.decodeUnknownEffect(StreamEntryJson)({
+ *   seq: 1,
+ *   event: { _tag: "CardChanged" },
+ *   envelope: { id: "a-1", stream: "AccountCard/a-1", seq: 1, at: 0, commandId: "c-1" },
+ * })
+ * Effect.runPromise(program).then((entry) => console.log(entry.envelope.stream)) // "AccountCard/a-1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class StreamEntryJson extends S.Opaque<StreamEntryJson, { readonly brand: unique symbol }>()(
+  S.Struct({
+    seq: S.Int,
+    event: S.Unknown,
+    envelope: EnvelopeJson,
+  }).pipe(
+    $I.annoteSchema("StreamEntryJson", {
+      description: "An event appended to a stream key, with the envelope the platform stamped on it.",
+    })
+  )
+) {}
+
+/**
+ * One delivery a projection key accepted, in the key's immutable input log.
+ *
+ * **Example** (Decode an accepted delivery)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { AcceptedJson } from "@beep/alchemy-postgres/AlchemyPostgres.schema"
+ *
+ * const program = S.decodeUnknownEffect(AcceptedJson)({
+ *   position: 1,
+ *   at: 0,
+ *   delivery: {
+ *     target: { kind: "projection", name: "Ledger" },
+ *     key: "a-1",
+ *     source: "Account/a-1",
+ *     seq: 1,
+ *     origin: "Account",
+ *     tag: "Opened",
+ *     event: { _tag: "Opened" },
+ *     envelope: { id: "a-1", stream: "Account/a-1", seq: 1, at: 0, commandId: "c-1" },
+ *   },
+ * })
+ * Effect.runPromise(program).then((accepted) => console.log(accepted.position)) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AcceptedJson extends S.Opaque<AcceptedJson, { readonly brand: unique symbol }>()(
+  S.Struct({
+    position: S.Int,
+    delivery: DeliveryJson,
+    at: Int8,
+  }).pipe(
+    $I.annoteSchema("AcceptedJson", {
+      description:
+        "A delivery in a consumer key's input log: its position from 1, the delivery and when it was accepted.",
+    })
+  )
+) {}
+
+/**
+ * Row of the projection partition table: how far one key's input log has been
+ * processed, the last accepted and processed `seq` per source.
+ *
+ * **Example** (Decode a fresh partition)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { PartitionRow } from "@beep/alchemy-postgres/AlchemyPostgres.schema"
+ *
+ * const program = S.decodeUnknownEffect(PartitionRow)({ processed: 0, intake: {}, checkpoints: {} })
+ * Effect.runPromise(program).then((row) => console.log(row.processed)) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PartitionRow extends S.Opaque<PartitionRow, { readonly brand: unique symbol }>()(
+  S.Struct({
+    processed: S.Int,
+    intake: Checkpoints,
+    checkpoints: Checkpoints,
+  }).pipe(
+    $I.annoteSchema("PartitionRow", {
+      description: "A projection key's processed count and its per-source accepted and processed checkpoints.",
     })
   )
 ) {}
@@ -475,7 +716,7 @@ const ddl = (sql: SqlClient.SqlClient, tables: AlchemyPostgresTables, prefix: st
   sql`CREATE TABLE IF NOT EXISTS ${sql(tables.delivery)} (
     position bigserial PRIMARY KEY,
     model text NOT NULL,
-    aggregate text NOT NULL,
+    producer text NOT NULL,
     source text NOT NULL,
     source_seq integer NOT NULL,
     target_kind text NOT NULL,
@@ -489,8 +730,91 @@ const ddl = (sql: SqlClient.SqlClient, tables: AlchemyPostgresTables, prefix: st
     claimed_by text,
     at bigint NOT NULL
   )`,
+  // #2825 named the producer column `aggregate`; rename it in place on databases it migrated.
+  sql`DO $$ BEGIN
+    ALTER TABLE ${sql(tables.delivery)} RENAME COLUMN aggregate TO producer;
+  EXCEPTION WHEN undefined_column OR duplicate_column THEN NULL;
+  END $$`,
   sql`CREATE INDEX IF NOT EXISTS ${sql(`${prefix}delivery_pending_idx`)}
     ON ${sql(tables.delivery)} (model, status, position)`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.consumerGeneration)} (
+    model text NOT NULL,
+    consumer text NOT NULL,
+    generation integer NOT NULL,
+    PRIMARY KEY (model, consumer)
+  )`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.consumerInput)} (
+    model text NOT NULL,
+    consumer text NOT NULL,
+    key text NOT NULL,
+    position integer NOT NULL,
+    source text NOT NULL,
+    source_seq integer NOT NULL,
+    delivery jsonb NOT NULL,
+    at bigint NOT NULL,
+    PRIMARY KEY (model, consumer, key, position)
+  )`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.viewKey)} (
+    model text NOT NULL,
+    view text NOT NULL,
+    key text NOT NULL,
+    snapshot jsonb NOT NULL,
+    routed jsonb,
+    PRIMARY KEY (model, view, key)
+  )`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.viewEntry)} (
+    model text NOT NULL,
+    view text NOT NULL,
+    key text NOT NULL,
+    seq integer NOT NULL,
+    event jsonb NOT NULL,
+    envelope jsonb NOT NULL,
+    state jsonb,
+    PRIMARY KEY (model, view, key, seq)
+  )`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.projectionPartition)} (
+    model text NOT NULL,
+    projection text NOT NULL,
+    key text NOT NULL,
+    processed integer NOT NULL,
+    intake jsonb NOT NULL,
+    checkpoints jsonb NOT NULL,
+    PRIMARY KEY (model, projection, key)
+  )`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.streamKey)} (
+    model text NOT NULL,
+    stream text NOT NULL,
+    key text NOT NULL,
+    meta jsonb NOT NULL,
+    PRIMARY KEY (model, stream, key)
+  )`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.streamEntry)} (
+    model text NOT NULL,
+    stream text NOT NULL,
+    key text NOT NULL,
+    seq integer NOT NULL,
+    event jsonb NOT NULL,
+    envelope jsonb NOT NULL,
+    PRIMARY KEY (model, stream, key, seq)
+  )`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.backfillKv)} (
+    model text NOT NULL,
+    address text NOT NULL,
+    key text NOT NULL,
+    value jsonb NOT NULL,
+    PRIMARY KEY (model, address, key)
+  )`,
+  sql`CREATE TABLE IF NOT EXISTS ${sql(tables.backfillJob)} (
+    model text NOT NULL,
+    address text NOT NULL,
+    job_id text NOT NULL,
+    due_at bigint NOT NULL,
+    revision integer NOT NULL DEFAULT 0,
+    locked_until bigint NOT NULL DEFAULT 0,
+    PRIMARY KEY (model, address, job_id)
+  )`,
+  sql`CREATE INDEX IF NOT EXISTS ${sql(`${prefix}backfill_job_due_idx`)}
+    ON ${sql(tables.backfillJob)} (model, due_at)`,
 ];
 
 /**

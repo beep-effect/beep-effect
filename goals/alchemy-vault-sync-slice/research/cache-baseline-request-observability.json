@@ -1,0 +1,14 @@
+{
+  "previous": "2c1be6c679009496631354e7eb1e0c439f6308f72c9e5d88b3dba8c9b7ba8ce6",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (orchestrator, fix/alchemy-postgres-spans)",
+    "reason": "Record the @beep/observability dependency edge added to @beep/alchemy-postgres for its declared instruments; no command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-observability.md",
+      "sha256": "2de762fa10b67ec04867f4fcef42a15d0f32636f1bcbf5acb0a59dd398f2f1f2"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

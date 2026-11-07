@@ -965,11 +965,13 @@
       "name": "@beep/documents-domain",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/domain": "catalog:",
         "@beep/identity": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@noble/hashes": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -986,6 +988,8 @@
       "name": "@beep/documents-server",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/domain": "catalog:",
+        "@beep/alchemy-postgres": "workspace:^",
         "@beep/box": "workspace:^",
         "@beep/documents-domain": "workspace:^",
         "@beep/documents-tables": "workspace:^",
@@ -1001,6 +1005,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/pglite": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
@@ -1033,6 +1038,7 @@
       "name": "@beep/documents-use-cases",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/domain": "catalog:",
         "@beep/documents-domain": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
@@ -1040,6 +1046,8 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/alchemy-postgres": "workspace:^",
+        "@beep/pglite": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
@@ -1090,6 +1098,7 @@
       "dependencies": {
         "@alchemy.run/domain": "catalog:",
         "@beep/identity": "workspace:^",
+        "@beep/observability": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "alchemy": "catalog:",
@@ -1098,6 +1107,7 @@
       },
       "devDependencies": {
         "@beep/pglite": "workspace:^",
+        "@beep/postgres": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -4304,6 +4314,8 @@
         "@beep/fc-runs": "workspace:^",
         "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
+        "@changesets/changelog-github": "catalog:",
+        "@changesets/cli": "catalog:",
         "@changesets/parse": "catalog:",
         "@commitlint/is-ignored": "catalog:",
         "@effect/platform-node-shared": "catalog:",
