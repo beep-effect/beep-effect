@@ -64,7 +64,7 @@ import * as Semaphore from "effect/Semaphore";
 import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 import { defaultJSDocTotalsBaselinePath } from "./internal/JSDocRatchet.ts";
-import { listSourceFiles, readJsonc } from "./internal/QualityArtifactSupport.ts";
+import { readJsonc } from "./internal/QualityArtifactSupport.ts";
 import type { LsTreeEntry } from "@beep/git/Git";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
@@ -2298,7 +2298,7 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
     const options = GlobOptions.make({ cwd: root, absolute: true, ignore: ["**/node_modules/**"] });
     // JSDoc inventory follows source-directory links. Preserve lexical names
     // to refuse linked ancestors before reading any source or configuration.
-    const projectOptions = GlobOptions.make({ ...options, dot: true, followSymlinks: true });
+    const projectOptions = GlobOptions.make({ ...options, dot: true, followSymlinks: true, onStatError: "fail" });
     // Read only configuration locations the selected consumers actually use.
     // Local docs/build outputs may contain other ignored JSON files.
     const rootMetadata = yield* fs.globFiles(
@@ -2341,9 +2341,8 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
           "**/*.{ts,tsx}",
           GlobOptions.make({ ...projectOptions, cwd: source })
         );
-        // Keep this walk: unlike glob expansion, it propagates entry-stat errors.
-        const canonicalSources = yield* listSourceFiles(source, path);
-        return [source, ...lexicalSources, ...canonicalSources];
+        // Strict entry errors preserve the reference walk's fail-closed behavior.
+        return [source, ...lexicalSources];
       }),
       { concurrency: 4 }
     );

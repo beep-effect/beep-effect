@@ -11,6 +11,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -57,6 +58,7 @@ describe("FsUtils GlobOptions schema parity", () => {
       followSymlinks: true,
       ignore: ["dist/**"],
     });
+    expect(encode(GlobOptions.make({ onStatError: "fail" }))).toEqual({ onStatError: "fail" });
     expect(encode(GlobOptions.make({ ignore: "dist/**" }))).toEqual({ ignore: "dist/**" });
   });
 
@@ -192,3 +194,49 @@ rootIt.layer(TestLayer, { timeout: "10 seconds" })("FsUtils.globFiles, pattern n
     })
   );
 });
+
+for (const reason of ["PermissionDenied", "Unknown", "NotFound"] as const) {
+  const cause = PlatformError.systemError({
+    _tag: reason,
+    module: "FileSystem",
+    method: "stat",
+    description: "Injected stat failure (Unknown represents EIO)",
+    pathOrDescriptor: "/proj/src/hidden.md",
+  });
+  const faultLayer = FsUtilsLive.pipe(
+    Layer.provideMerge(
+      Layer.mergeAll(
+        MemoryFileSystem.layerWith(
+          { "/proj/src/index.ts": "", "/proj/src/hidden.md": "" },
+          {
+            faults: { stat: (path) => (path === "/proj/src/hidden.md" ? Effect.fail(cause) : undefined) },
+          }
+        ),
+        Path.layer
+      )
+    )
+  );
+  rootIt.layer(faultLayer)(`FsUtils strict stat propagation: ${reason}`, (it) => {
+    it.effect("preserves default skipping and forwards the strict option through expansion", () =>
+      Effect.gen(function* () {
+        const utils = yield* FsUtils;
+        const legacy = yield* utils.globFiles("**/*.{ts,tsx}", { cwd: "/proj/src", dot: true, followSymlinks: true });
+        expect(legacy).toEqual(["index.ts"]);
+        if (reason === "NotFound") {
+          const strict = yield* utils.globFiles("**/*.{ts,tsx}", { cwd: "/proj/src", onStatError: "fail" });
+          expect(strict).toEqual(legacy);
+        } else {
+          const error = yield* Effect.flip(
+            utils.globFiles("**/*.{ts,tsx}", { cwd: "/proj/src", onStatError: "fail", dot: true, followSymlinks: true })
+          );
+          expect(error._tag).toBe("DomainError");
+          expect(error.cause).toMatchObject({
+            _tag: "GlobExpansionError",
+            stage: "descend",
+            cause: { _tag: "DescendError", reason: "statFailed", path: "hidden.md", cause },
+          });
+        }
+      })
+    );
+  });
+}

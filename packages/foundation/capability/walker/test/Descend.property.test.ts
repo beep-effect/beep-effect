@@ -31,14 +31,19 @@ const directorySchema = UnreadableDirectory.mapFields((fields) => ({
       }),
   }),
 }));
+const errorSchema = DescendError.mapFields((fields) => ({
+  ...fields,
+  cause: S.optionalKey(directorySchema.fields.cause),
+}));
 const resultSchema = DescendResult.mapFields((fields) => ({ ...fields, unreadable: S.Array(directorySchema) }));
 
 describe("descent schemas", () => {
   it.effect.prop(
     "DescendError: decode(encode(x)) equals x and decoding never fails",
-    [Arbitrary.schema(DescendError)],
-    ([value]) =>
+    [Arbitrary.schema(errorSchema)],
+    ([sample]) =>
       Effect.gen(function* () {
+        const value = DescendError.make(sample);
         const encoded = yield* S.encodeEffect(DescendError)(value);
         const decoded = yield* S.decodeEffect(DescendError)(encoded);
         assertTrue(S.toEquivalence(DescendError)(decoded, value));

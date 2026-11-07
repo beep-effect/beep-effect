@@ -1,5 +1,6 @@
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { DescendError, DescendOptions, DescendRecordOptions, DescendResult, descend } from "@beep/walker/Descend";
 import { DepthCap } from "@beep/walker/Walker";
 import { assert, describe, it, layer } from "@effect/vitest";
@@ -10,7 +11,10 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { platform, platformWith } from "./support/fixtures.ts";
@@ -812,6 +816,90 @@ describe("descend — overload resolution", () => {
       assert.isFalse(_refused);
 
       assert.isFunction(descend);
+    })
+  );
+});
+
+// Faults target stat independently from directory reads at every descent entry point.
+for (const reason of ["PermissionDenied", "Unknown", "NotFound"] as const) {
+  for (const { label, source, target, relative } of [
+    { label: "pruned directory", source: "**/*.{ts,tsx}", target: "/proj/node_modules", relative: "node_modules" },
+    { label: "literal", source: "src/index.ts", target: "/proj/src/index.ts", relative: "src/index.ts" },
+    { label: "base", source: "src/**/*.ts", target: "/proj/src", relative: "src" },
+    { label: "recursive file", source: "src/**/*.ts", target: "/proj/src/index.ts", relative: "src/index.ts" },
+    { label: "recursive directory", source: "src/**/*.ts", target: "/proj/src/lib", relative: "src/lib" },
+    { label: "non-TS leaf", source: "**/*.{ts,tsx}", target: "/proj/notes.md", relative: "notes.md" },
+  ]) {
+    const cause = PlatformError.systemError({
+      _tag: reason,
+      module: "FileSystem",
+      method: "stat",
+      description: "Injected stat failure (Unknown represents EIO)",
+      pathOrDescriptor: target,
+    });
+    const faultLayer = Layer.mergeAll(
+      MemoryFileSystem.layerWith(
+        {
+          "/proj/src/index.ts": "",
+          "/proj/src/lib/util.ts": "",
+          "/proj/notes.md": "",
+          "/proj/node_modules/dep.ts": "",
+        },
+        {
+          faults: { stat: (path) => (path === target ? Effect.fail(cause) : undefined) },
+        }
+      ),
+      Path.layer
+    );
+    layer(faultLayer)(`descend stat policy: ${label}, ${reason}`, (it) => {
+      it.effect("keeps omission equivalent to skip and makes strict stat independent of unreadable mode", () =>
+        Effect.gen(function* () {
+          const pattern = yield* GlobPattern.compile(source);
+          const legacy = yield* descend(pattern, { cwd: "/proj" });
+          const skip = yield* descend(pattern, { cwd: "/proj", onStatError: "skip" });
+          assert.deepStrictEqual(skip, legacy);
+          if (reason === "NotFound") {
+            const strict = yield* descend(pattern, { cwd: "/proj", onStatError: "fail" });
+            assert.deepStrictEqual(strict, legacy);
+            assert.notInclude(strict, relative);
+            if (label === "literal" || label === "base") assert.deepStrictEqual(strict, []);
+          } else {
+            for (const onUnreadable of ["fail", "skip"] as const) {
+              const error = yield* Effect.flip(descend(pattern, { cwd: "/proj", onStatError: "fail", onUnreadable }));
+              assert.strictEqual(error.reason, "statFailed");
+              assert.strictEqual(error.path, relative);
+              assert.strictEqual(error.pattern, source);
+              assert.strictEqual(error.cause, cause);
+              assert.strictEqual(error.message, `glob descent for "${source}" could not stat "${relative}"`);
+            }
+            const recorded = yield* Effect.flip(
+              descend(pattern, { cwd: "/proj", onStatError: "fail", onUnreadable: "record" })
+            );
+            assert.strictEqual(recorded.reason, "statFailed");
+            assert.strictEqual(recorded.cause, cause);
+          }
+        })
+      );
+    });
+  }
+}
+
+layer(
+  platformWith(
+    { "/proj/src/lib/util.ts": "" },
+    { symlinks: { "/proj/src/back": "/proj/src", "/proj/src/gone.ts": "/missing" } }
+  )
+)("descend strict stat policy: symlinks and depth", (it) => {
+  it.effect("keeps cycle safety, dangling links and depth failures intact", () =>
+    Effect.gen(function* () {
+      const pattern = yield* GlobPattern.compile("src/**/*.ts");
+      const files = yield* descend(pattern, { cwd: "/proj", onStatError: "fail", followSymlinks: true });
+      assert.deepStrictEqual(files, ["src/lib/util.ts"]);
+      const shallow = yield* GlobPattern.compile("**/*.ts");
+      const error = yield* Effect.flip(
+        descend(shallow, { cwd: "/proj", onStatError: "fail", followSymlinks: true, maxDepth: 1 })
+      );
+      assert.strictEqual(error.reason, "depthExceeded");
     })
   );
 });
