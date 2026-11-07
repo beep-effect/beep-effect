@@ -366,10 +366,9 @@ export const qualityStepOutputBound = OutputBound.make({
  * @category folding
  * @since 0.0.0
  */
-export const boundedChunkReducer =
-  (bound: OutputBound) =>
-  (state: BoundedOutput, chunk: string): BoundedOutput => {
-    if (bound.retention === OutputRetention.Enum["head-tail"]) {
+export const boundedChunkReducer = (bound: OutputBound) => {
+  if (bound.retention === OutputRetention.Enum["head-tail"]) {
+    return (state: BoundedOutput, chunk: string): BoundedOutput => {
       if (Str.isEmpty(chunk)) return state;
       const combined = `${state.text}${chunk}`;
       if (!state.truncated && Str.length(combined) <= bound.maxChars) {
@@ -381,8 +380,10 @@ export const boundedChunkReducer =
         text: `${head}${bound.truncatedNotice}${tail}`,
         truncated: true,
       });
-    }
+    };
+  }
 
+  return (state: BoundedOutput, chunk: string): BoundedOutput => {
     if (state.truncated) {
       return state;
     }
@@ -407,6 +408,7 @@ export const boundedChunkReducer =
       truncated: true,
     });
   };
+};
 
 /**
  * Fold a byte stream into decoded text bounded by a character cap.

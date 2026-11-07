@@ -2620,3 +2620,15 @@ footer retention receive hosted controls. Do not rerun the unchanged failed
 source merely to obtain the same truncated prefix; accepted diagnostic changes
 are a prerequisite for the next observation. No test failure is waived by this
 logging repair and no local quality suite was run.
+
+### 2026-11-07 — Select bounded capture retention before folding chunks
+
+- Work: preserve bounded CI failure footers in PR #2871.
+- Evidence: hosted Fallow Advisory Envelopes job 128329601764 reported one introduced
+  cognitive-complexity finding in `boundedChunkReducer`; authenticated audit and
+  health artifacts identify the same callback at cognitive score 9.
+- Repair: choose the prefix or rolling head-tail fold once per bound rather than
+  branch on retention inside every chunk callback. Preserve both algorithms,
+  character budgets, defaults, notices and existing authored controls.
+- Prevention: keep independent retention policies outside the per-chunk state
+  transition. Hosted CI remains the proof; no local suite or baseline rewrite.
