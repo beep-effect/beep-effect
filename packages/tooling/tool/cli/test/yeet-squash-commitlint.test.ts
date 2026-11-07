@@ -376,7 +376,12 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
             Effect.gen(function* () {
               const report = yield* readSquashCommitlint(context, pullFacts);
               expect(report.verdict._tag).toBe(expected);
-              pipe(report.message.body, Str.split("\n"), A.every((line) => Str.length(line) < 100), assertTrue);
+              pipe(
+                report.message.body,
+                Str.split("\n"),
+                A.every((line) => Str.length(line) < 100),
+                assertTrue
+              );
               const predicted = predictSquashCommitMessage(source(["fix(x): one", subject]));
               expect(predicted.body).toContain(`* ${subject}`);
               expect(Str.replaceAll(report.message.body, "\n", " ")).toContain(subject);
@@ -386,14 +391,12 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
   );
 
   it.effect("an unbreakable invalid body still fails real commitlint", () =>
-    withScripted(
-      { commits: [commit("fix(x): one", Str.repeat(160)("x")), commit("fix(x): two")] },
-      (_calls, context) =>
-        Effect.gen(function* () {
-          const report = yield* readSquashCommitlint(context, pullFacts);
-          expect(report.verdict._tag).toBe("fail");
-          expect(report.message.body).toContain(Str.repeat(160)("x"));
-        })
+    withScripted({ commits: [commit("fix(x): one", Str.repeat(160)("x")), commit("fix(x): two")] }, (_calls, context) =>
+      Effect.gen(function* () {
+        const report = yield* readSquashCommitlint(context, pullFacts);
+        expect(report.verdict._tag).toBe("fail");
+        expect(report.message.body).toContain(Str.repeat(160)("x"));
+      })
     )
   );
 

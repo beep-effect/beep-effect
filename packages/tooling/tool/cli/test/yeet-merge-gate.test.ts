@@ -1706,7 +1706,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             const linted = read.squashCommitlint.message;
             expect(read.squashCommitlint.verdict._tag).toBe("pass");
             expect(linted.body).not.toContain(longBullet);
-            pipe(linted.body, Str.split("\n"), A.every((line) => Str.length(line) < 100), assertTrue);
+            pipe(
+              linted.body,
+              Str.split("\n"),
+              A.every((line) => Str.length(line) < 100),
+              assertTrue
+            );
             const decision = yield* runMergeGate(
               context,
               MergeGateRunOptions.make({
