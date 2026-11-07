@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P0–P2 complete 2026-11-06; P3 in progress)
+Status: `active` (P0–P2 complete 2026-11-06; P3 and P4 in progress in final PR #2859)
 
 ## Phases
 
@@ -12,7 +12,7 @@ Status: `active` (P0–P2 complete 2026-11-06; P3 in progress)
 | P1 Implement | complete | Make the smallest changes that satisfy `SPEC.md`: schemas, services, stores, discovery plumbing, views, runbook. | Acceptance criteria are met. |
 | P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P4 Close | in-progress | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 <!--
 Phase ids MUST match ops/manifest.json `phases[]` exactly. Until 2026-08-06 this

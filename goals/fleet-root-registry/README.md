@@ -34,8 +34,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement and P2 Verify complete (2026-11-06). P3 Yeet is next: one PR
-driven to mergeable, with the closeout reflection in the same PR.
+P1 Implement and P2 Verify complete (2026-11-06). P3 Yeet and P4 Close run
+in the final PR #2859 (supporting fix #2852), which carries the closeout
+reflection and proposes `completed-retained`; a packet-state PR adopts it
+after the merge.
 
 ## Latest Evidence
 
