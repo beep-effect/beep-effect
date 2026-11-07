@@ -19,6 +19,7 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer, DmsMirrorFixtureLayer);
@@ -61,8 +62,15 @@ describe("BoxMirror durable intent receipts", () => {
             pipe(first, Exit.isSuccess, assertTrue);
             expect(second).toEqual(first);
           } else {
-            pipe(first, Exit.isFailure, assertTrue);
-            pipe(second, Exit.isFailure, assertTrue);
+            // The call name stays in `operation`; the adapter stage says where it stopped.
+            const expected = O.some({
+              operation: "uploadFile",
+              stage: outcome === "stale" ? "stale-input" : "uncertain-outcome-held",
+            });
+            const named = (exit: typeof first) =>
+              O.map(Exit.findErrorOption(exit), (error) => ({ operation: error.operation, stage: error.stage }));
+            expect(named(first)).toEqual(expected);
+            expect(named(second)).toEqual(expected);
           }
           const counts = yield* fixture.counts;
           expect(counts.uploadFile - before.uploadFile).toBe(outcome === "stale" ? 0 : 1);
