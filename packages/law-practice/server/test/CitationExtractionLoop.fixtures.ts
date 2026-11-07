@@ -178,13 +178,17 @@ export const installCitationExtractionLoopFixture = Effect.fn("ExtractionLoopTes
   const geometry = yield* installCitationHtmlGeometryFixture(kind, setup);
   return { corpus, setup, configuration, stage, geometry };
 });
-/** Replay the real loop with a single operation permit and real native admission. */
+/** Original corpus size; replay slices must cover every case. */
+export const citationExtractionLoopCases = 36;
+/** Replay one bounded slice of the real loop with a single operation permit and real native admission. */
 export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay")(function* (
-  kind: CitationNativeRuntimeKind
+  kind: CitationNativeRuntimeKind,
+  from: number,
+  count: number
 ) {
   const { corpus, setup, configuration, stage, geometry } = yield* installCitationExtractionLoopFixture(kind);
   const { limits, operation } = setup;
-  for (const row of corpus.cases) {
+  for (const row of A.take(A.drop(corpus.cases, from), count)) {
     const maps = yield* prepareCitationOptionalHtmlGeometry(geometry, row, row.markup.bytes.length > 0);
     const invocation = stage.extract({ ...row, geometry: maps });
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
@@ -216,10 +220,23 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
       yield* assertCitationExtractionLoopModel(retained, A.getUnsafe(row.expected, index), id);
     }
   }
-  expect(corpus.cases).toHaveLength(36);
+  const counts = yield* setup.observed.snapshot;
+  expect(counts.spawned).toBeGreaterThan(count);
+  yield* assertCitationWorkerCompositionReleased(operation, setup.admission, setup.observed.snapshot, counts.spawned);
+});
+/** Pin the corpus size and the malformed-input refusal once per runtime. */
+export const assertCitationExtractionLoopBoundary = Effect.fn("ExtractionLoopTest.boundary")(function* (
+  kind: CitationNativeRuntimeKind
+) {
+  const { corpus, setup, stage } = yield* installCitationExtractionLoopFixture(kind);
+  expect(corpus.cases).toHaveLength(citationExtractionLoopCases);
   const malformed = yield* stage.extract(null).pipe(Effect.flip);
   expect(malformed).toMatchObject({ _tag: "CitationExtractionLoopFailure", reason: "invalid-input" });
   const counts = yield* setup.observed.snapshot;
-  expect(counts.spawned).toBeGreaterThan(100);
-  yield* assertCitationWorkerCompositionReleased(operation, setup.admission, setup.observed.snapshot, counts.spawned);
+  yield* assertCitationWorkerCompositionReleased(
+    setup.operation,
+    setup.admission,
+    setup.observed.snapshot,
+    counts.spawned
+  );
 });

@@ -12,9 +12,11 @@ import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { LibraryBoxAcquireOptions } from "./Library.box.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
+import { LibraryMineOptions } from "./Library.mine.schemas.ts";
 import { resolveLibraryInputRoots, resolveLibraryRoot } from "./Library.paths.ts";
 import { LibraryQualifyOptions } from "./Library.qualify.ts";
 import { LibraryAcquireOptions, LibraryInventoryOptions } from "./Library.schemas.ts";
@@ -32,14 +34,28 @@ const inventory = Command.make(
       Flag.atLeast(0),
       Flag.withDescription("Corpus directory; repeat to include every root")
     ),
+    privateInput: Flag.String("private-input").pipe(
+      Flag.atLeast(0),
+      Flag.withDescription(
+        "Corpus directory inventoried into the private partition; repeat for every root. A private root may sit inside an --input root and wins for that subtree"
+      )
+    ),
   },
-  Effect.fn("ResearchLibrary.inventoryCommand")(function* ({ library, input }) {
+  Effect.fn("ResearchLibrary.inventoryCommand")(function* ({ library, input, privateInput }) {
     const research = yield* ResearchLibrary;
     const libraryRoot = yield* resolveLibraryRoot(library);
-    const inputRoots = yield* resolveLibraryInputRoots(input);
-    const catalog = yield* research.inventory(libraryRoot, LibraryInventoryOptions.make({ libraryRoot, inputRoots }));
+    // Explicit private roots alone must not pull in the default public corpus roots.
+    const inputRoots =
+      A.isReadonlyArrayEmpty(input) && A.isReadonlyArrayNonEmpty(privateInput)
+        ? []
+        : yield* resolveLibraryInputRoots(input);
+    const catalog = yield* research.inventory(
+      libraryRoot,
+      LibraryInventoryOptions.make({ libraryRoot, inputRoots, privateInputRoots: privateInput })
+    );
+    const privateDocuments = A.filter(catalog.documents, (document) => document.accessClass === "private").length;
     yield* Console.log(
-      `Inventoried ${catalog.documents.length} documents, ${catalog.sources.length} source identities, ${catalog.occurrences.length} citations in ${libraryRoot}`
+      `Inventoried ${catalog.documents.length} documents (${privateDocuments} private), ${catalog.sources.length} source identities, ${catalog.occurrences.length} citations in ${libraryRoot}`
     );
   })
 ).pipe(
@@ -48,14 +64,25 @@ const inventory = Command.make(
     "Snapshot input documents, record hop-1 citations and hop-2 identities from readable hop-1 captures, without fetching"
   )
 );
+const hopPolicyOf = Effect.fn("ResearchLibrary.hopPolicyOf")(function* (hop2DomainCap: number, hop2Limit: number) {
+  if (hop2DomainCap < 0)
+    return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+  if (hop2Limit < 0)
+    return yield* LibraryError.make({ message: "--hop2-limit must be zero or more.", cause: hop2Limit });
+  return LibraryHopPolicy.make({ domainCap: hop2DomainCap, hop2Limit });
+});
+const hop2LimitFlag = Flag.Int("hop2-limit").pipe(
+  Flag.withDefault(400),
+  Flag.withDescription("Acquired hop-2 sources allowed in total, most routed hop-1 parents first")
+);
 const validateAcquireFlags = Effect.fn("ResearchLibrary.validateAcquireFlags")(function* (
   concurrency: number,
-  hop2DomainCap: number
+  hop2DomainCap: number,
+  hop2Limit: number
 ) {
   if (concurrency < 1 || concurrency > 8)
     return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: concurrency });
-  if (hop2DomainCap < 0)
-    return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+  return yield* hopPolicyOf(hop2DomainCap, hop2Limit);
 });
 const acquireBoxSelection = Effect.fn("ResearchLibrary.acquireBoxSelection")(function* (
   root: string,
@@ -104,6 +131,7 @@ const acquire = Command.make(
       Flag.withDefault(25),
       Flag.withDescription("Acquired hop-2 sources allowed per domain per intake")
     ),
+    hop2Limit: hop2LimitFlag,
     concurrency: Flag.Int("concurrency").pipe(Flag.withDefault(2)),
     retryFailed: Flag.Boolean("retry-failed").pipe(Flag.withDefault(false)),
   },
@@ -115,11 +143,12 @@ const acquire = Command.make(
     boxFile,
     boxPublic,
     hop2DomainCap,
+    hop2Limit,
     concurrency,
     retryFailed,
   }) {
     const research = yield* ResearchLibrary;
-    yield* validateAcquireFlags(concurrency, hop2DomainCap);
+    const hopPolicy = yield* validateAcquireFlags(concurrency, hop2DomainCap, hop2Limit);
     const root = yield* resolveLibraryRoot(library);
     yield* route === "box"
       ? acquireBoxSelection(root, { boxFolder, boxFile, boxPublic, retryFailed })
@@ -129,7 +158,7 @@ const acquire = Command.make(
             sourceIds: source,
             concurrency,
             retryFailed,
-            hopPolicy: LibraryHopPolicy.make({ domainCap: hop2DomainCap }),
+            hopPolicy,
           })
         );
     yield* Console.log(`Acquisition receipts recorded in ${root}; run verify for coverage.`);
@@ -146,13 +175,13 @@ const hops = Command.make(
     library,
     limit: Flag.Int("limit").pipe(Flag.withDefault(50), Flag.withDescription("Hop-2 gate decisions to print")),
     hop2DomainCap: Flag.Int("hop2-domain-cap").pipe(Flag.withDefault(25)),
+    hop2Limit: hop2LimitFlag,
   },
-  Effect.fn("ResearchLibrary.hopsCommand")(function* ({ library, limit, hop2DomainCap }) {
+  Effect.fn("ResearchLibrary.hopsCommand")(function* ({ library, limit, hop2DomainCap, hop2Limit }) {
     const research = yield* ResearchLibrary;
-    if (hop2DomainCap < 0)
-      return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+    const policy = yield* hopPolicyOf(hop2DomainCap, hop2Limit);
     const root = yield* resolveLibraryRoot(library);
-    yield* research.hops(root, limit, LibraryHopPolicy.make({ domainCap: hop2DomainCap }));
+    yield* research.hops(root, limit, policy);
   })
 ).pipe(
   Command.provide(ResearchLibraryLive),
@@ -180,13 +209,14 @@ const importResult = Command.make(
   "import-result",
   {
     library,
-    result: Argument.String("result-file"),
+    results: Argument.String("result-file").pipe(Argument.atLeast(1)),
   },
-  Effect.fn("ResearchLibrary.importCommand")(function* ({ library, result }) {
+  Effect.fn("ResearchLibrary.importCommand")(function* ({ library, results }) {
     const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* research.importResult(root, result);
-    yield* Console.log(`Imported source-bound result into ${root}.`);
+    // One process imports the batch so every catalog write after the first reuses the decoded catalog.
+    yield* Effect.forEach(results, (result) => research.importResult(root, result), { discard: true });
+    yield* Console.log(`Imported ${results.length} source-bound result(s) into ${root}.`);
   })
 ).pipe(
   Command.provide(ResearchLibraryLive),
@@ -274,13 +304,137 @@ const ontologyRender = Command.make(
 const ontology = Command.make("ontology").pipe(Command.withSubcommands([ontologyRender]));
 const status = Command.make(
   "status",
-  { library, includePrivate },
-  Effect.fn("ResearchLibrary.statusCommand")(function* ({ library, includePrivate }) {
+  {
+    library,
+    includePrivate,
+    summary: Flag.Boolean("summary").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print only the per-hop and private-partition lines, without the SPARQL views")
+    ),
+    intake: Flag.String("intake").pipe(
+      Flag.optional,
+      Flag.withDescription("Scope the summary's hop and partition counts to one intake id or unique date")
+    ),
+  },
+  Effect.fn("ResearchLibrary.statusCommand")(function* ({ library, includePrivate, summary, intake }) {
     const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* research.status(root, includePrivate);
+    yield* research.status(root, includePrivate, summary, intake);
   })
 ).pipe(Command.provide(ResearchLibraryLive), Command.withDescription("Report coverage and provider health separately"));
+
+const mineFlags = {
+  library,
+  intake: Flag.String("intake").pipe(Flag.withDescription("Intake id or unique intake date")),
+  limit: Flag.Int("limit").pipe(Flag.optional, Flag.withDescription("Run at most this many pending jobs")),
+  concurrency: Flag.Int("concurrency").pipe(Flag.withDefault(2), Flag.withDescription("Parallel runners, 1 to 8")),
+  dryRun: Flag.Boolean("dry-run").pipe(Flag.withDefault(false), Flag.withDescription("Print planned jobs only")),
+  excludePrivate: Flag.Boolean("exclude-private").pipe(
+    Flag.withDefault(false),
+    Flag.withDescription("Skip private-partition artifacts")
+  ),
+  onlyPrivate: Flag.Boolean("only-private").pipe(
+    Flag.withDefault(false),
+    Flag.withDescription("Run only private-partition artifacts, so a private-capable profile can share an intake")
+  ),
+  repo: Flag.String("repo").pipe(
+    Flag.optional,
+    Flag.withDescription("Repository whose goal and exploration packets supply topic ids; default: enclosing repo")
+  ),
+};
+const mineOptions = Effect.fn("ResearchLibrary.mineOptions")(function* (
+  profile: LibraryMineOptions["profile"],
+  flags: {
+    readonly intake: string;
+    readonly limit: O.Option<number>;
+    readonly concurrency: number;
+    readonly dryRun: boolean;
+    readonly excludePrivate: boolean;
+    readonly onlyPrivate: boolean;
+    readonly repo: O.Option<string>;
+  }
+) {
+  if (flags.concurrency < 1 || flags.concurrency > 8)
+    return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: flags.concurrency });
+  if (flags.excludePrivate && flags.onlyPrivate)
+    return yield* LibraryError.make({
+      message: "--exclude-private and --only-private exclude each other.",
+      cause: "flags",
+    });
+  if (O.isSome(flags.limit) && flags.limit.value < 1)
+    return yield* LibraryError.make({ message: "Limit must be at least 1.", cause: flags.limit.value });
+  return LibraryMineOptions.make({
+    intake: flags.intake,
+    profile,
+    limit: flags.limit,
+    concurrency: flags.concurrency,
+    dryRun: flags.dryRun,
+    excludePrivate: flags.excludePrivate,
+    onlyPrivate: flags.onlyPrivate,
+    repoRoot: flags.repo,
+  });
+});
+const mineTriage = Command.make(
+  "triage",
+  {
+    ...mineFlags,
+    profile: Flag.Literals("profile", ["codex-luna", "claude", "proxy-opus"]).pipe(
+      Flag.withDefault("codex-luna"),
+      Flag.withDescription(
+        "Runner profile: codex-luna (gpt-6-luna medium), claude (claude-opus-5-5 medium) or proxy-opus (claude-opus-5-5 via the local proxy)"
+      )
+    ),
+  },
+  Effect.fn("ResearchLibrary.mineTriageCommand")(function* (flags) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(flags.library);
+    const options = yield* mineOptions(flags.profile, flags);
+    yield* research.mineTriage(root, options);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("T1: triage every readable artifact of an intake that has no triage record")
+);
+const mineRead = Command.make(
+  "read",
+  {
+    ...mineFlags,
+    profile: Flag.Literals("profile", ["junie", "claude", "codex-sol", "proxy-sol", "proxy-opus", "cursor"]).pipe(
+      Flag.withDefault("junie"),
+      Flag.withDescription("Runner profile; junie and cursor never receive private-partition artifacts")
+    ),
+  },
+  Effect.fn("ResearchLibrary.mineReadCommand")(function* (flags) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(flags.library);
+    const options = yield* mineOptions(flags.profile, flags);
+    yield* research.mineRead(root, options);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("T2: deep-read every T1-selected artifact into span-checked CiTO findings")
+);
+const mineSynthesize = Command.make(
+  "synthesize",
+  {
+    library,
+    synthesis: Argument.String("synthesis-file"),
+    repo: mineFlags.repo,
+    dryRun: mineFlags.dryRun,
+  },
+  Effect.fn("ResearchLibrary.mineSynthesizeCommand")(function* ({ library, synthesis, repo, dryRun }) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(library);
+    yield* research.mineSynthesize(root, synthesis, repo, dryRun);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("T3: import a session-authored synthesis as findings with an orchestrator ModelRun")
+);
+const mine = Command.make("mine").pipe(
+  Command.withDescription("Mine intake artifacts into source-bound findings: triage, read, synthesize"),
+  Command.withSubcommands([mineTriage, mineRead, mineSynthesize])
+);
 
 /**
  * Source library command group, independent of the knowledge vault.
@@ -295,5 +449,17 @@ const status = Command.make(
  */
 export const libraryCommand = Command.make("library").pipe(
   Command.withDescription("Reusable, evidence-backed research source library"),
-  Command.withSubcommands([inventory, qualify, acquire, hops, importResult, verify, render, status, ontology, migrate])
+  Command.withSubcommands([
+    inventory,
+    qualify,
+    acquire,
+    hops,
+    importResult,
+    verify,
+    render,
+    status,
+    ontology,
+    migrate,
+    mine,
+  ])
 );

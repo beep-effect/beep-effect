@@ -11,7 +11,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
-import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
+import { LibraryHopPolicy, LibraryStringList } from "./Library.hopPolicy.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
 
@@ -224,12 +224,14 @@ export type LibraryCatalogSchemaVersion = typeof LibraryCatalogSchemaVersion.Typ
 export const LibraryCitoRelation = LiteralKit([
   "citesAsEvidence",
   "citesAsRelated",
+  "citesForInformation",
   "extends",
   "usesMethodIn",
   "usesDataFrom",
   "critiques",
   "supports",
   "disputes",
+  "disagreesWith",
   "discusses",
 ]).pipe($I.annoteSchema("LibraryCitoRelation", { description: "CiTO relation local names attached to a finding." }));
 /**
@@ -244,10 +246,7 @@ const topicFields = {
     S.withConstructorDefault(Effect.succeed("")),
     S.withDecodingDefaultKey(Effect.succeed(""))
   ),
-  topics: S.Array(S.String).pipe(
-    S.withConstructorDefault(Effect.succeed([])),
-    S.withDecodingDefaultKey(Effect.succeed([]))
-  ),
+  topics: LibraryStringList,
 };
 
 /**
@@ -408,10 +407,7 @@ export class LibrarySource extends S.Opaque<LibrarySource, { readonly brand: uni
     revision: S.String,
     repository: S.String,
     ownership: LibraryOwnership,
-    aliasIds: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    aliasIds: LibraryStringList,
     versions: S.Array(LibrarySourceVersion).pipe(
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultKey(Effect.succeed([]))
@@ -548,6 +544,35 @@ export class LibraryQualification extends S.Opaque<LibraryQualification, { reado
 ) {}
 
 /**
+ * How an intake census keeps an input's bytes.
+ *
+ * **Details**
+ *
+ * `snapshot` copies the bytes under `intakes/<date>/raw/`. `referenced` media
+ * (video and audio) are hashed in place and recorded by path, SHA-256 and size,
+ * never copied into the library.
+ *
+ * **Example** (Inspect members)
+ * ```ts
+ * import { LibraryIntakeRetention } from "@beep/repo-cli/commands/Research"
+ * console.log(LibraryIntakeRetention.literals) // ["snapshot", "referenced"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LibraryIntakeRetention = LiteralKit(["snapshot", "referenced"]).pipe(
+  $I.annoteSchema("LibraryIntakeRetention", { description: "How an intake census keeps an input's bytes." })
+);
+/**
+ * Runtime type of LibraryIntakeRetention.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryIntakeRetention = typeof LibraryIntakeRetention.Type;
+
+/**
  * An input file in an immutable dated intake census.
  * **Example** (Inspect file validation)
  * ```ts
@@ -561,11 +586,16 @@ export class LibraryQualification extends S.Opaque<LibraryQualification, { reado
  */
 export class LibraryIntakeFile extends S.Opaque<LibraryIntakeFile, { readonly brand: unique symbol }>()(
   S.Struct({
+    accessClass: LibraryAccessClassField,
     originalPath: S.String,
     snapshotPath: S.String,
     sha256: S.String.check(S.isPattern(/^[a-f0-9]{64}$/)),
     bytes: S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
     parseable: S.Boolean,
+    retention: LibraryIntakeRetention.pipe(
+      S.withConstructorDefault(Effect.succeed("snapshot" as const)),
+      S.withDecodingDefaultKey(Effect.succeed("snapshot" as const))
+    ),
   })
     .pipe(
       $I.annoteSchema("LibraryIntakeFile", { description: "Input file census entry including nonparseable files." })
@@ -585,7 +615,7 @@ export class LibraryIntakeFile extends S.Opaque<LibraryIntakeFile, { readonly br
  * @since 0.0.0
  */
 export class LibraryIntakeRoot extends S.Opaque<LibraryIntakeRoot, { readonly brand: unique symbol }>()(
-  S.Struct({ path: S.String, repoCommit: S.String })
+  S.Struct({ path: S.String, repoCommit: S.String, accessClass: LibraryAccessClassField })
     .pipe(
       $I.annoteSchema("LibraryIntakeRoot", {
         description: "Exact input root and source repository commit if available.",
@@ -652,7 +682,13 @@ export class LibraryManifest extends S.Opaque<LibraryManifest, { readonly brand:
 ) {}
 
 /**
- * A source-bound finding with citation semantics and model provenance.
+ * A finding bound to a source capture or a hop-0 intake document, with citation semantics and model provenance.
+ *
+ * **Details**
+ *
+ * Exactly one binding is present: a source finding carries `sourceId` (and its
+ * `captureId`), a hop-0 document finding carries `documentId` with an empty
+ * `sourceId`. Rows recorded before `documentId` existed decode with an empty one.
  *
  * **Example** (Inspect LibraryFinding)
  * ```ts
@@ -676,13 +712,14 @@ export class LibraryFinding extends S.Opaque<LibraryFinding, { readonly brand: u
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
     ),
+    documentId: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultKey(Effect.succeed(""))
+    ),
     citoRelation: LibraryCitoRelation,
     span: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultKey(Effect.succeed(""))),
     summary: S.String,
-    topicIds: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    topicIds: LibraryStringList,
     modelRunId: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
@@ -691,11 +728,13 @@ export class LibraryFinding extends S.Opaque<LibraryFinding, { readonly brand: u
   })
     .pipe(
       $I.annoteSchema("LibraryFinding", {
-        description: "A source-bound finding with citation semantics and model provenance.",
+        description: "A finding bound to a source capture or a hop-0 document, with citation semantics and provenance.",
       })
     )
     .annotate(
-      $I.class("Finding", { description: "A source-bound finding with citation semantics and model provenance." })
+      $I.class("Finding", {
+        description: "A finding bound to a source capture or a hop-0 document, with citation semantics and provenance.",
+      })
     )
 ) {}
 
@@ -737,6 +776,11 @@ export class LibraryDerivation extends S.Opaque<LibraryDerivation, { readonly br
 /**
  * Model execution provenance for recorded findings.
  *
+ * **Details**
+ *
+ * `argv` is the exact launch argv of the runner. Rows recorded before the field
+ * existed decode with an empty argv.
+ *
  * **Example** (Inspect LibraryModelRun)
  * ```ts
  * import { LibraryModelRun } from "@beep/repo-cli/commands/Research"
@@ -754,6 +798,7 @@ export class LibraryModelRun extends S.Opaque<LibraryModelRun, { readonly brand:
     effort: S.String,
     route: S.String,
     startedAt: S.String,
+    argv: LibraryStringList,
   })
     .pipe($I.annoteSchema("LibraryModelRun", { description: "Model execution provenance for recorded findings." }))
     .annotate($I.class("ModelRun", { description: "Model execution provenance for recorded findings." }))
@@ -807,6 +852,13 @@ export class LibraryCatalog extends S.Opaque<LibraryCatalog, { readonly brand: u
 
 /**
  * InventoryOptions record for persisted research provenance.
+ *
+ * **Details**
+ *
+ * `privateInputRoots` are inventoried like `inputRoots`, but their documents and intake
+ * census entries join the private partition. A private root may sit inside a public root;
+ * its files are then inventoried once, as private.
+ *
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryInventoryOptions } from "@beep/repo-cli/commands/Research"
@@ -821,6 +873,7 @@ export class LibraryInventoryOptions extends S.Opaque<LibraryInventoryOptions, {
   S.Struct({
     libraryRoot: S.String,
     inputRoots: S.Array(S.String),
+    privateInputRoots: LibraryStringList,
   })
     .pipe(
       $I.annoteSchema("LibraryInventoryOptions", {

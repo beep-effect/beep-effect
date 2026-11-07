@@ -1,5 +1,7 @@
 import { ResolvedSourceText, SourceTextResolver, SourceTextResolverError } from "@beep/file-processing/SourceText";
 import { captureCitationMentionReceiptData } from "@beep/law-practice-server/internal/Citation/Mention";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import { CitationEngineDefaultConfiguration } from "@beep/law-practice-server/layer";
 import {
   CitationAnnotationReplacement,
   CitationEngineAnnotationInput,
@@ -16,11 +18,13 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
-import { buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
+import { buildCitationDefaultEngineFixture, buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -29,27 +33,53 @@ const word = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, byt
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
   "four-operation engine Layer",
   (it) => {
-    for (const kind of ["bun", "node"] as const) {
+    for (const [kind, assembly] of [
+      ["bun", "captured"],
+      ["node", "captured"],
+      ["bun", "default"],
+      ["node", "default"],
+    ] as const) {
       it.effect(
-        `captures real server owners and executes all four operations on ${kind}`,
+        `captures ${assembly} owners and executes all four operations on ${kind}`,
         () =>
           Effect.gen(function* () {
             const installed = yield* installCitationDefaultConfigurationFixture(kind);
-            const { setup, adapter } = installed;
+            const { setup } = installed;
+            let operation = setup.operation;
             const proof = yield* citationFixtureSourceProof("Foo v. Bar, 1 U.S. 1 (2000). Id. at 2.");
             const slot = { source: proof.source, sourceText: proof.sourceText };
             let sourceCalls = 0;
             const resolver = SourceTextResolver.of({
               resolve: Effect.fn("EngineLayerTest.resolve")(function* () {
-                const state = yield* setup.operation.snapshot;
+                const state = yield* operation.snapshot;
                 expect(state).toMatchObject({ active: 1, queued: 0 });
                 sourceCalls++;
                 return ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText });
               }),
             });
             const originalDeadline = Duration.toMillis(setup.limits.cleanDeadline);
-            const { engine, configuration } = yield* buildCitationEngineFixture(installed, resolver);
+            const engineScope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
+            const built =
+              assembly === "default"
+                ? yield* buildCitationDefaultEngineFixture(installed, resolver).pipe(
+                    Effect.provideService(Scope.Scope, engineScope)
+                  )
+                : yield* buildCitationEngineFixture(installed, resolver).pipe(
+                    Effect.map((result) => ({
+                      ...result,
+                      operation: setup.operation,
+                      admission: setup.admission,
+                      adapter: installed.adapter,
+                    }))
+                  );
+            const { engine, configuration, adapter } = built;
+            operation = built.operation;
+            if (assembly === "default") {
+              expect(operation).not.toBe(setup.operation);
+              expect(built.admission).not.toBe(setup.admission);
+            }
             expect(Reflect.set(configuration.limits.cleanDeadline.value, "millis", 1)).toBe(true);
+            expect(Reflect.set(configuration.runtime, "workerFile", "changed-after-installation")).toBe(true);
             const late = SourceTextResolver.of({
               resolve: Effect.fn("EngineLayerTest.late")(() =>
                 Effect.fail(SourceTextResolverError.new("source-unavailable", "later resolver must be ignored"))
@@ -97,7 +127,36 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               A.map([cleaned.report, extracted.report, resolved.report, annotated.report], (report) => report.operation)
             ).toEqual(["clean", "extract", "resolve", "annotate"]);
             expect(sourceCalls).toBe(4);
-            yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
+            yield* assertCitationWorkerCompositionObserved(built.operation, built.admission, setup.observed.snapshot);
+            if ("build" in built) {
+              const before = yield* setup.observed.snapshot;
+              const mixed = CitationEngineDefaultConfiguration.make({
+                ...built.configuration,
+                runtime: CitationNativeProcessRuntime.make({
+                  ...built.configuration.runtime,
+                  kind: kind === "bun" ? "node" : "bun",
+                }),
+              });
+              const mixedFailure = yield* built.build(mixed).pipe(Effect.flip);
+              expect(mixedFailure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+              const missing = CitationEngineDefaultConfiguration.make({
+                ...built.configuration,
+                assets: { ...built.configuration.assets, parserCatalog: "missing-default-parser-catalog" },
+              });
+              const missingFailure = yield* built.build(missing).pipe(Effect.flip);
+              expect(missingFailure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+              const after = yield* setup.observed.snapshot;
+              expect(after).toEqual(before);
+              expect(sourceCalls).toBe(4);
+              yield* Scope.close(engineScope, Exit.void);
+              const closed = yield* engine.clean(cleanInput).pipe(Effect.flip);
+              expect(closed).toMatchObject({ _tag: "CitationInputError", operation: "clean" });
+              expect(sourceCalls).toBe(4);
+              const operationState = yield* built.operation.snapshot;
+              const nativeState = yield* built.admission.snapshot;
+              expect(operationState).toMatchObject({ active: 0, queued: 0, closed: true });
+              expect(nativeState).toMatchObject({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: true });
+            }
           }),
         { timeout: 180000 }
       );

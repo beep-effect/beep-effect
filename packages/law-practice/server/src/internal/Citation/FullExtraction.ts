@@ -17,7 +17,11 @@ import {
   CitationCaseMetadataResult,
   makeCitationCaseMetadata,
 } from "./CaseMetadata.ts";
-import { CitationTokenExtractionInput, validateCitationTokenWord } from "./ExtractionContext.ts";
+import {
+  CitationTokenExtractionInput,
+  normalizeCitationModelPage,
+  validateCitationTokenWord,
+} from "./ExtractionContext.ts";
 import { CitationJournalMetadataConfiguration, makeCitationJournalMetadata } from "./JournalMetadata.ts";
 import {
   CitationFullLawMetadataResult,
@@ -245,7 +249,7 @@ export const makeCitationFullExtraction = Effect.fn("Citation.makeFullExtraction
       fail("invalid-input")
     );
     yield* validateCitationTokenWord(request, () => fail("invalid-input"));
-    const token = CitationTokenSeed.make(request.token);
+    const token = yield* normalizeCitationModelPage(CitationTokenSeed.make(request.token));
     const selected = yield* dispatch.classify(token);
     const exact = yield* resolve(token.exact);
     const variation = yield* resolve(token.variation);

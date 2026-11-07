@@ -21,6 +21,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
+import * as Stream from "effect/Stream";
 import { VaultSyncOperationDuration, VaultSyncOperations } from "@/ProfessionalDesktop.instruments";
 
 const syncOperations = Metric.counter(VaultSyncOperations.name, { incremental: true });
@@ -83,6 +84,16 @@ export const VaultSyncHandlersLive = VaultSyncRpcs.toLayer(
           engine
             .status(VaultSyncStatusInput.make({ forceProbe, workspaceId }))
             .pipe(Effect.catch(toVaultSyncActionError("GetVaultSyncStatus")))
+        ),
+      // The legacy engine answers synchronously, so its status stream is one final frame.
+      WatchVaultSyncStatus: ({ workspaceId }) =>
+        Stream.fromEffect(
+          observeSyncOperation(
+            "watch_status",
+            engine
+              .status(VaultSyncStatusInput.make({ forceProbe: false, workspaceId }))
+              .pipe(Effect.catch(toVaultSyncActionError("WatchVaultSyncStatus")))
+          )
         ),
       ListVaultSyncConflicts: ({ workspaceId }) =>
         observeSyncOperation(

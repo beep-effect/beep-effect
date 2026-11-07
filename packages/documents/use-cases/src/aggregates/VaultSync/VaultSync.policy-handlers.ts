@@ -161,8 +161,10 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const items = yield* V.SyncItem;
       return Effect.fn(function* ({ event, source, envelope }) {
         if (event.correction !== null) {
+          // I14: the corrective move or rename is queued before the review closes.
+          const correction = event.correction;
           const queued = yield* operations
-            .send(event.correction.operationId, V.QueueOperation.make({ input: event.correction.input }), {
+            .send(correction.operationId, V.QueueOperation.make({ input: correction.input }), {
               commandId: `${envelope.stream}:${envelope.seq}:correct`,
             })
             .pipe(
@@ -177,6 +179,14 @@ export const VaultSyncPolicies = Layer.mergeAll(
           // A correction whose operation id is held elsewhere leaves the conflict open, and the recorded
           // review request, in `OpenConflicts` for another review instead of closing it unapplied.
           if (!queued) return;
+          // A tracked item takes the correction as its slot so the next pass pumps it.
+          const tracked = yield* items.state(correction.input.itemId);
+          if (tracked !== null)
+            yield* items.send(
+              correction.input.itemId,
+              V.ReturnItemToPending.make({ operationId: correction.operationId, type: correction.input.type }),
+              { commandId: `${envelope.stream}:${envelope.seq}:correct-slot` }
+            );
         } else if (event.record.itemId !== null) {
           // An item this slice never tracked has nothing to heal; the review closes, as for an untracked remote item.
           yield* items

@@ -1,4 +1,5 @@
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "@beep/repo-cli/commands/Refs";
+import { ReferencesManifestPath } from "@beep/repo-configs/PolicyData";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as Config from "effect/Config";
@@ -23,10 +24,10 @@ export const fixture = Effect.fn("RefsTest.fixture")(function* () {
   const root = path.join(temp, "references");
   const home = path.join(temp, "home");
   const bin = path.join(temp, "bin");
-  for (const directory of [path.join(owner, "scripts"), root, home, bin])
+  for (const directory of [path.dirname(path.join(owner, ReferencesManifestPath)), root, home, bin])
     yield* fs.makeDirectory(directory, { recursive: true });
   const manifestPath = yield* path.fromFileUrl(new URL("./fixtures/refs-manifest.json", import.meta.url));
-  yield* fs.copyFile(manifestPath, path.join(owner, "scripts", "references.json"));
+  yield* fs.copyFile(manifestPath, path.join(owner, ReferencesManifestPath));
   const ambientPath = yield* Config.String("PATH");
   const configValues = { HOME: home, PATH: `${bin}:${ambientPath}`, BEEP_REFERENCES_ROOT: root };
   const config = ConfigProvider.layer(ConfigProvider.fromUnknown(configValues));

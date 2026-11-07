@@ -3,6 +3,8 @@
 import argparse
 import copy
 import json
+import hashlib
+import runpy
 from pathlib import Path
 import subprocess
 import tempfile
@@ -57,8 +59,60 @@ def main():
             result = invoke(folder)
             if result.returncode != 1 or "Citation ledger validation failed;" not in result.stderr:
                 raise SystemExit(f"negative control did not fail: {name}")
-            print(f"PASS {name}")
-    print(f"audit baseline passed; unfinished completion rejected; {len(controls)} corruption controls passed")
+            print(f"PASS {name}", flush=True)
+
+    plan_path = root / "goals/citation-extraction-engine/ops/ledger-proof-plan.json"
+    baseline_plan = json.loads(plan_path.read_text())
+    if not baseline_plan["bindings"]:
+        raise SystemExit("proof controls need an actual qualified binding")
+    proof_controls = {
+        "stage-promoted-to-complete": lambda p: p["bindings"][0].update(workflowState="complete"),
+        "wrong-proof-evidence": lambda p: p["bindings"][0]["proof"].update(evidenceSha256="a" * 64),
+        "wrong-target-source": lambda p: p["bindings"][0]["proof"]["targetTests"][0].update(sha256="a" * 64),
+        "absent-target-label": lambda p: p["bindings"][0]["proof"]["targetTests"][0].update(name="missing-test-label"),
+        "unknown-bound-case": lambda p: p["bindings"][0]["cases"][0].update(id="unknown-case"),
+        "changed-bound-observation": lambda p: p["bindings"][0]["cases"][0].update(observationSha256="a" * 64),
+        "duplicate-bound-case": lambda p: p["bindings"][0]["cases"].append(copy.deepcopy(p["bindings"][0]["cases"][0])),
+        "escaping-proof-path": lambda p: p["bindings"][0]["proof"].update(evidencePath="../outside-proof.md"),
+    }
+    apply = runpy.run_path(str(root / "goals/citation-extraction-engine/ops/export-ledgers.py"))["apply_proof_plan"]
+    with tempfile.TemporaryDirectory(prefix="ledger-proof-controls-", dir=root / ".beep") as local:
+        local = Path(local)
+        (local / "outside-link.md").symlink_to((args.scratch_root / "outside-proof-control.md").resolve())
+        outside = args.scratch_root / "outside-proof-control.md"
+        outside.write_text("Public synthetic external proof control.\n")
+        try:
+            proof_controls["physical-proof-path-escape"] = lambda p: p["bindings"][0]["proof"].update(evidencePath=str((local / "outside-link.md").relative_to(root)), evidenceSha256=hashlib.sha256(outside.read_bytes()).hexdigest())
+            for name, mutate in proof_controls.items():
+                plan = copy.deepcopy(baseline_plan)
+                mutate(plan)
+                altered = local / "plan.json"
+                altered.write_text(json.dumps(plan))
+                records = copy.deepcopy(original)
+                records[1]["proofPlan"] = {"path": str(altered.relative_to(root)), "sha256": hashlib.sha256(altered.read_bytes()).hexdigest()}
+                index = {entry["id"]: binding for binding in plan["bindings"] for entry in binding["cases"]}
+                for row in records[1]["cases"]:
+                    if row["id"] in index:
+                        binding = index[row["id"]]
+                        row.update(workflowState=binding["workflowState"], proof=binding["proof"], targetTest=binding["proof"]["targetTests"][0])
+                for path, value in zip(names, records):
+                    (local / path).write_text(json.dumps(value, ensure_ascii=False))
+                result = invoke(local)
+                if result.returncode != 1:
+                    raise SystemExit(f"proof validator control did not fail: {name}")
+                fresh = copy.deepcopy(original[1])
+                for row in fresh["cases"]:
+                    row.update(workflowState="audit", proof=None, targetTest=None)
+                try:
+                    apply(root, fresh, altered)
+                except (RuntimeError, KeyError, ValueError):
+                    pass
+                else:
+                    raise SystemExit(f"proof exporter control did not fail: {name}")
+                print(f"PASS proof-validator-and-exporter {name}", flush=True)
+        finally:
+            outside.unlink(missing_ok=True)
+    print(f"audit baseline passed; unfinished completion rejected; {len(controls)} ledger and {len(proof_controls)} proof controls passed")
 
 
 if __name__ == "__main__":

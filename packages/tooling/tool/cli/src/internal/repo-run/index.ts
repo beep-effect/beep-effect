@@ -6,6 +6,7 @@
  */
 
 export * from "./AdmissionJournal.ts";
+export * from "./AgentRunsSlice.ts";
 export * from "./AttemptTerminationJournal.ts";
 export * from "./BeepCacheRoot.ts";
 export * from "./DirectoryHandle.ts";

@@ -15,7 +15,7 @@ completed goals) live once they leave `main`?
 
 **Answer:** A separate public repo, `beep-effect/beep-effect-goals-archive`,
 provisioned into the gitignored `.repos/goals-archive` through the existing
-`beep refs` manifest (`scripts/references.json`). A tag on `main` marks the
+`beep refs` manifest (`packages/tooling/policy-pack/repo-configs/data/references.json`). A tag on `main` marks the
 removing commit.
 
 **Rationale:** Git history already preserves every byte; the real need is

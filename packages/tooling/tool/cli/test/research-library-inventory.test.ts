@@ -18,6 +18,7 @@ import {
   saveImmutable,
   withCatalog,
 } from "@beep/repo-cli/commands/Research";
+import { LibraryWriterLockRetries } from "@beep/repo-cli/commands/Research/Library/Library.store";
 import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -25,6 +26,7 @@ import { expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
@@ -32,6 +34,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const LibraryCatalogJson = S.fromJsonString(LibraryCatalog);
 const LibraryArtifactJson = S.fromJsonString(LibraryArtifact);
@@ -362,9 +365,17 @@ it.layer(Layer.provideMerge(ResearchLibraryLive, LibraryPlatform), { timeout: "3
         expect(readFileString5).toBe("first");
         yield* withCatalog(root, Effect.succeed);
         yield* fs.makeDirectory(path.join(root, ".writer-lock"));
-        const locked = yield* withCatalog(root, Effect.succeed).pipe(Effect.flip);
+        // A held lock is retried (here twice, one second apart) before the writer reports an interrupted holder.
+        const patient = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+          effect.pipe(Effect.provideService(LibraryWriterLockRetries, 2), TestClock.withLive);
+        const locked = yield* patient(withCatalog(root, Effect.succeed)).pipe(Effect.flip);
         expect(locked.message).toContain("writer already active");
         expect((yield* loadCatalog(root)).schema).toBe("beep.research.library/v2");
+        // A writer waiting on a lock that its holder releases proceeds once the lock is gone.
+        const waiting = yield* patient(withCatalog(root, Effect.succeed)).pipe(Effect.forkChild);
+        yield* fs.remove(path.join(root, ".writer-lock"), { recursive: true });
+        const written = yield* Fiber.join(waiting);
+        expect(written.schema).toBe("beep.research.library/v2");
       })
     );
     it.effect("rejects artifact symlink escapes before creating outside directories", () =>

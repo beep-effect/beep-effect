@@ -42,6 +42,8 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
   initial: { _tag: "Unregistered" },
   commands: [
     C.RegisterDestination,
+    C.RequestVaultSync,
+    C.ProbeDestination,
     C.RenameDestination,
     C.ResolveDestinationRoot,
     C.PauseDestination,
@@ -51,6 +53,16 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
     C.ReleaseItemPath,
   ],
   decide: {
+    RequestVaultSync: (s, c) =>
+      s._tag === "Registered"
+        ? s.paused
+          ? refused("destination-paused")
+          : [C.VaultSyncRequested.make({ requestId: c.requestId })]
+        : refused("not-registered"),
+    ProbeDestination: (s, c) =>
+      s._tag === "Registered"
+        ? [C.DestinationProbeRequested.make({ requestId: c.requestId })]
+        : refused("not-registered"),
     RegisterDestination: (s, c) =>
       s._tag === "Unregistered"
         ? [C.DestinationRegistered.make(Struct.omit(c, ["_tag"]))]
@@ -84,6 +96,8 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
         : [],
   },
   evolve: {
+    VaultSyncRequested: (s) => s,
+    DestinationProbeRequested: (s) => s,
     DestinationRegistered: (_, e): C.DestinationState => ({
       _tag: "Registered",
       orgId: e.orgId,

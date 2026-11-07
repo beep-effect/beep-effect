@@ -1,6 +1,15 @@
 import { Git } from "@beep/git/Git";
-import { FleetMirrorService, FleetMirrorServiceLive, FleetScanOptions } from "@beep/repo-cli/commands/Worktree";
+import {
+  FleetCheckout,
+  FleetMirrorService,
+  FleetMirrorServiceLive,
+  FleetScanOptions,
+  printFleetCheckoutDescription,
+  printFleetJoin,
+  registerFleetCheckout,
+} from "@beep/repo-cli/commands/Worktree";
 import { repoRunOutputBound, runCaptured } from "@beep/repo-cli/test/Process";
+import { acquireJournalFileLock, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
 import {
   layerSessionLedgerMemory,
   PrNumber,
@@ -25,11 +34,13 @@ import {
   parseFleetRootsPathList,
   registerFleetRegistryRow,
 } from "@beep/repo-cli/test/Worktree";
+import { CommandJsonOutput } from "@beep/repo-cli-kit/cli/Json";
 import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -37,6 +48,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
 import type { FleetSnapshot } from "@beep/repo-cli/commands/Worktree";
 
 const SCAN_TIMEOUT_MILLIS = 120_000;
@@ -182,6 +194,8 @@ const stableSnapshotText = Effect.fn("FleetRootsTest.stableSnapshotText")(functi
   });
   return `${Str.replaceAll(tmpDir, "<tmp>")(text)}\n`;
 });
+
+const isString = (line: unknown): line is string => typeof line === "string";
 
 const fixtureRoots = (fixture: FleetRootsFixture) =>
   [
@@ -440,10 +454,212 @@ describe("fleet discovery roots", () => {
         ),
       SCAN_TIMEOUT_MILLIS
     );
+
+    it.effect(
+      "join, describe and register views print the joined fleet and author registry rows",
+      () =>
+        TestClock.withLive(
+          Effect.gen(function* () {
+            const fixture = yield* acquireFleetRootsFixture;
+            const path = yield* Path.Path;
+            const ledger = yield* SessionLedger;
+            const stateRoot = path.join(fixture.tmpDir, "fleet-state");
+            const json: Array<string> = [];
+            const capture = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+              effect.pipe(
+                Effect.provideService(
+                  ConfigProvider.ConfigProvider,
+                  ConfigProvider.fromEnv({ env: { BEEP_FLEET_STATE_ROOT: stateRoot } })
+                ),
+                Effect.provideService(CommandJsonOutput, (text: string) => Effect.sync(() => json.push(text)))
+              );
+            const options = FleetScanOptions.make({
+              startFrom: fixture.legacy0,
+              originUrl: fixture.originPath,
+              scannerDir: fixture.scannerDir,
+              homeDir: fixture.homeDir,
+              roots: fixtureRoots(fixture),
+            });
+            yield* ledger
+              .append(
+                SessionLedgerRow.make({
+                  schemaVersion: "session-ledger/v1",
+                  repository,
+                  clone: fixture.legacy0,
+                  checkout: fixture.siblingLane,
+                  lane: "lane-a",
+                  branch: "lane-a",
+                  state: "open",
+                  next: "finish lane-a",
+                  summary: O.none(),
+                  pr: O.some(PrNumber.make(77)),
+                  harness: "claude-code",
+                  sessionId: O.none(),
+                  recordedAt: DateTime.makeUnsafe(5),
+                })
+              )
+              .pipe(Effect.orDie);
+
+            yield* capture(printFleetJoin(options, repository, false));
+            const joinLines = yield* TestConsole.logLines;
+            const joinText = A.join(A.filter(joinLines, isString), "\n");
+            expect(joinText).toContain("Fleet roots: ");
+            expect(joinText).toContain("(option)");
+            expect(joinText).toContain("6 row(s); 6 adopted by this scan");
+            expect(joinText).toContain(`- ${fixture.siblingLane} [linked-worktree] lane-a`);
+            expect(joinText).toContain(`seat=${fixture.legacy0} drain=active  lane=lane-a pr=#77 state=open`);
+            expect(joinText).toContain(`- ${fixture.legacy0} [clone] main`);
+            expect(joinText).toContain("role=legacy seat=- drain=active  lane=- pr=- state=-");
+
+            yield* capture(printFleetJoin(options, repository, true));
+            const joinedJson = json[0] ?? "";
+            for (const checkout of allFleetCheckouts(fixture)) {
+              expect(joinedJson).toContain(`"path":"${checkout}"`);
+            }
+
+            yield* capture(
+              registerFleetCheckout(options, repository, {
+                checkout: fixture.seat,
+                role: "main",
+                owningSeat: O.none(),
+                retentionExempt: true,
+              })
+            );
+            yield* capture(
+              registerFleetCheckout(options, repository, {
+                checkout: `${fixture.seatLane}/`,
+                role: "impl",
+                owningSeat: O.some(fixture.seat),
+                retentionExempt: false,
+              })
+            );
+            const refused = yield* capture(
+              registerFleetCheckout(options, repository, {
+                checkout: fixture.unrelated,
+                role: "review",
+                owningSeat: O.none(),
+                retentionExempt: false,
+              })
+            ).pipe(Effect.flip);
+            expect(refused.message).toContain("register only a checkout the fleet discovers");
+
+            yield* capture(
+              printFleetCheckoutDescription(options, repository, { checkout: fixture.seat, ledgerRows: 5, json: false })
+            );
+            yield* capture(
+              printFleetCheckoutDescription(options, repository, {
+                checkout: fixture.siblingLane,
+                ledgerRows: 5,
+                json: false,
+              })
+            );
+            yield* capture(
+              printFleetCheckoutDescription(options, repository, {
+                checkout: fixture.seatLane,
+                ledgerRows: 1,
+                json: true,
+              })
+            );
+            const lines = yield* TestConsole.logLines;
+            const all = A.join(A.filter(lines, isString), "\n");
+            expect(all).toContain(`Registered ${fixture.seat}: role=main seat=-`);
+            expect(all).toContain(`Registered ${fixture.seatLane}: role=impl seat=${fixture.seat}`);
+            expect(all).toContain("registry: role=main seat=- drain=active retention-exempt=true");
+            expect(all).toContain("ledger (1 newest):");
+            expect(all).toContain("open lane=lane-a branch=lane-a pr=#77 next: finish lane-a");
+            const describedJson = json[1] ?? "";
+            expect(describedJson).toContain('"seatRole":"impl"');
+            expect(describedJson).toContain(`"owningSeat":"${fixture.seat}"`);
+
+            const missing = yield* capture(
+              printFleetCheckoutDescription(options, repository, {
+                checkout: fixture.unrelated,
+                ledgerRows: 5,
+                json: false,
+              })
+            ).pipe(Effect.flip);
+            expect(missing.message).toContain("No fleet checkout at");
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        ),
+      SCAN_TIMEOUT_MILLIS
+    );
+
+    it.effect(
+      "store reads the registry and refuses an update while another owner holds the registry lock",
+      () =>
+        TestClock.withLive(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const store = yield* FleetRegistryStore;
+            const stateRoot = yield* fs.makeTempDirectoryScoped();
+            const withState = Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromEnv({ env: { BEEP_FLEET_STATE_ROOT: stateRoot } })
+            );
+            // A registry that was never written reads as the empty document.
+            const empty = yield* store.read(repository).pipe(withState);
+            expect(empty.rows).toEqual([]);
+            yield* store
+              .update(repository, (current) => [
+                registerFleetRegistryRow(
+                  current,
+                  FleetRegistryRow.make({ checkout: "/p/beep/seats/main", seatRole: "main" })
+                ),
+                undefined,
+              ])
+              .pipe(withState);
+            const written = yield* store.read(repository).pipe(withState);
+            expect(A.map(written.rows, (row) => row.seatRole)).toEqual(["main"]);
+
+            const lockPath = path.join(stateRoot, "github.com__beep-effect__beep-effect", "registry.json.lock");
+            const held = yield* acquireJournalFileLock(lockPath, "other-owner");
+            expect(held).toBe(true);
+            const refused = yield* store
+              .update(repository, (current) => [current, undefined])
+              .pipe(withState, Effect.flip, Effect.ensuring(releaseJournalFileLock(lockPath, "other-owner")));
+            expect(refused.message).toContain("Timed out waiting for the fleet registry lock");
+          })
+        ),
+      SCAN_TIMEOUT_MILLIS
+    );
   });
 });
 
 describe("fleet roots and registry documents", () => {
+  it("falls back to an adopted row for a mirror checkout the registry does not know", () => {
+    const checkout = FleetCheckout.make({
+      path: "/p/beep/lanes/unregistered",
+      kind: "linked-worktree",
+      branch: null,
+      detached: true,
+      head: null,
+      dirtyCount: null,
+      mergeBase: null,
+      branchDiffCount: null,
+      liveness: "unknown",
+      livenessEvidence: [],
+      conflict: "unknown",
+      conflictReason: "head-unknown",
+      conflictPaths: [],
+      policyMovement: "unknown",
+      policyReason: "head-unknown",
+      policyPaths: [],
+    });
+    const [joined] = joinFleetRows({ checkouts: [checkout], registry: EMPTY_FLEET_REGISTRY, ledger: [] });
+    expect(joined).toMatchObject({ seatRole: "adopted", owningSeat: null, drainStatus: "active", lane: null });
+    const described = O.getOrThrow(
+      describeFleetCheckout({
+        checkouts: [checkout],
+        registry: EMPTY_FLEET_REGISTRY,
+        ledger: [],
+        checkout: checkout.path,
+        ledgerLimit: 5,
+      })
+    );
+    expect(described.registry).toMatchObject({ checkout: checkout.path, seatRole: "adopted" });
+    expect(described.ledger).toEqual([]);
+  });
   it("parses a BEEP_FLEET_ROOTS path list, prefix entries included", () => {
     const roots = O.getOrThrow(parseFleetRootsPathList(" /p/beep-effect* : /p/beep/seats ::/p/beep/lanes "));
     expect(roots).toEqual([

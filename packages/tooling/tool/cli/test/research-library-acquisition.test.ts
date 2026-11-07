@@ -54,6 +54,8 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const encodeCatalogJson = S.encodeEffect(S.fromJsonString(LibraryCatalog));
+
 const LibraryImportPayloadJson = S.fromJsonString(LibraryImportPayload);
 const UnknownJson = S.fromJsonString(S.Unknown);
 const LibraryCaptureCorrectionJson = S.fromJsonString(LibraryCaptureCorrection);
@@ -242,6 +244,27 @@ it.layer(
         expect(librarySourceEvidenceValid5).toBe(scenario === "unchanged");
       })
   );
+  it.effect("rereads the catalog after an outside writer replaces it between writes", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "library-writer-cache-" });
+      const root = path.join(temporary, "library");
+      yield* withCatalog(root, (catalog) => Effect.succeed(LibraryCatalog.make({ ...catalog, sources: [source] })));
+      const canonical = path.join(root, "catalog/library.json");
+      const other = LibraryCatalog.make({ ...(yield* loadCatalog(root)), sources: [] });
+      const encoded = yield* encodeCatalogJson(other);
+      yield* fs.writeFileString(canonical, `${encoded}\n`);
+      const seen = yield* withCatalog(root, Effect.succeed);
+      expect(seen.sources).toHaveLength(0);
+      const reused = yield* withCatalog(root, (catalog) =>
+        Effect.succeed(LibraryCatalog.make({ ...catalog, sources: [source] }))
+      );
+      expect(A.map(reused.sources, (item) => item.id)).toEqual([source.id]);
+      expect(A.map((yield* loadCatalog(root)).sources, (item) => item.id)).toEqual([source.id]);
+    })
+  );
+
   it.effect("decodes authentic plain alphaXiv envelopes before class-based qualification", () =>
     Effect.gen(function* () {
       const receipt = {

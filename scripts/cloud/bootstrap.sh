@@ -417,11 +417,11 @@ persist_path
 # Two stamps, because a cached VM can resume on a newer commit that changes one
 # without the other: the install stamp is keyed on bun.lock, the prepare stamp
 # on everything `bun run prepare` reads (the script text in package.json, the
-# prune helper, and the lockfile that pins the tsgo and TypeScript versions).
+# prune command source, and the lockfile that pins the tsgo and TypeScript versions).
 lock_stamp="node_modules/.beep-cloud-bootstrap.lock.sha256"
 prepare_stamp="node_modules/.beep-cloud-bootstrap.prepare.sha256"
 lock_hash="$(sha256sum bun.lock | cut -d' ' -f1)"
-prepare_hash="$(cat bun.lock package.json scripts/prune-tsgo-backups.mjs | sha256sum | cut -d' ' -f1)"
+prepare_hash="$(cat bun.lock package.json packages/tooling/tool/cli/src/commands/Toolchain/Toolchain.prune.ts | sha256sum | cut -d' ' -f1)"
 if [ -d node_modules ] && [ "$(cat "${lock_stamp}" 2>/dev/null || true)" = "${lock_hash}" ]; then
   log "dependencies already match bun.lock; skipping install"
 else

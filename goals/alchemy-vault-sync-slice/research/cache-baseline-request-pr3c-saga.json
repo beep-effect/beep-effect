@@ -1,0 +1,14 @@
+{
+  "previous": "5a0ad71e2d8bfb657a576daa2af4aa936c9fbfb93bd3ad77278b70ef628e2ccb",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/vs-api PR 3c)",
+    "reason": "Record the documents-server mcp-kit and shared-tables dependency edges on top of the PR 3b part 1 baseline. No command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3c-saga.md",
+      "sha256": "c50ae11d3cd92d5db2cce2b07bad3c054e8c631548592263819f0a2c44d59d74"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

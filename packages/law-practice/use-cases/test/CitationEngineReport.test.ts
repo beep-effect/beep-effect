@@ -63,6 +63,7 @@ it.effect("rejects impossible operation, policy usage and timing combinations", 
       { ...valid, producedTextUtf16: limits.producedTextUtf16 + 1 },
       { ...valid, workDuration: Duration.infinity },
       { ...valid, extraction: { ...empty, tokenizer: { patternsChecked: limits.patternEvaluations + 1, tokens: 0 } } },
+      { ...valid, extraction: { ...empty, tokenizer: { patternsChecked: 0, tokens: limits.tokens + 1 } } },
     ]) {
       const refused = yield* S.decodeUnknownEffect(Type)(invalid).pipe(Effect.flip);
       expect(refused._tag).toBe("SchemaError");

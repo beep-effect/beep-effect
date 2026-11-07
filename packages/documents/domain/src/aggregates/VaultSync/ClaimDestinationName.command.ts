@@ -6,6 +6,7 @@
  */
 import * as Domain from "@alchemy.run/domain";
 import * as E from "./DestinationNameReservation.events.ts";
+import { Session } from "./Session.middleware.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 /**
@@ -21,6 +22,7 @@ import * as V from "./Values.ts";
  * @since 0.0.0
  */
 export class ClaimDestinationName extends Domain.Command("ClaimDestinationName", {
+  middleware: [Session],
   target: V.ReservationKey,
   input: { claim: E.NameClaim },
   events: [E.DestinationNameClaimed],

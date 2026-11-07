@@ -42,7 +42,7 @@ class GenesisActor extends Domain.RequestContext<GenesisActor>()(
 /** The Session middleware's v1 request context: a string principal key and a source kind. */
 class SessionContext extends Domain.RequestContext<SessionContext>()(
   "Provenance/SessionContext",
-  S.Struct({ version: S.Literal(1), principalKey: S.String, sourceKind: S.String })
+  S.Struct({ version: S.tag(1), principalKey: S.String, sourceKind: S.String })
 ) {}
 
 /** An actor whose principal is not a string. */

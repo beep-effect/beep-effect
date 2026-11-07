@@ -69,9 +69,10 @@ export const prepareCitationAnnotationSourceMap = Effect.fn("Citation.prepareAnn
   runtime: CitationNativeProcessRuntime,
   config: CitationHtmlGeometryPreparationConfiguration,
   plain: CitationPythonUnicodeStorage,
-  markup: CitationPythonUnicodeStorage
+  markup: CitationPythonUnicodeStorage,
+  useDmp = true
 ) {
-  const forward = yield* prepareCitationForwardHtmlMap(limits, runtime, config, markup, Effect.succeed(plain));
+  const forward = yield* prepareCitationForwardHtmlMap(limits, runtime, config, markup, Effect.succeed(plain), useDmp);
   const updater = yield* makeCitationSpanOffsets(limits, forward.forward);
   return { source: forward.source.value, updater };
 });

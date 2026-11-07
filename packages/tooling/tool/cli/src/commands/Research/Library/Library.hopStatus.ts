@@ -7,6 +7,7 @@
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { libraryEffectiveCaptures, libraryEffectiveCategory } from "./Library.evidence.ts";
 import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
@@ -47,12 +48,27 @@ import type { LibraryCatalog } from "./Library.schemas.ts";
 export const libraryHopTotals = Effect.fn("Library.hopTotals")(function* (
   root: string,
   catalog: LibraryCatalog,
-  policy: LibraryHopPolicy = LibraryHopPolicy.make({})
+  policy: LibraryHopPolicy = LibraryHopPolicy.make({}),
+  intakeId: O.Option<string> = O.none()
 ) {
+  // An intake scope counts that intake's own documents and derivation edges; otherwise the whole library.
+  const inIntake = (id: string) => O.match(intakeId, { onNone: () => true, onSome: (wanted) => wanted === id });
+  const scopedIntake = O.flatMap(intakeId, (id) => A.findFirst(catalog.intakes, (intake) => intake.id === id));
+  const snapshots = O.map(scopedIntake, (intake) =>
+    HashSet.fromIterable(A.map(intake.files, (file) => file.snapshotPath))
+  );
+  const documents = O.match(snapshots, {
+    onNone: () => catalog.documents,
+    onSome: (paths) => A.filter(catalog.documents, (document) => HashSet.has(paths, document.snapshotPath)),
+  });
+  const documentIds = HashSet.fromIterable(A.map(documents, (document) => document.id));
+  const citations = O.isNone(snapshots)
+    ? catalog.occurrences
+    : A.filter(catalog.occurrences, (occurrence) => HashSet.has(documentIds, occurrence.documentId));
   const at = (depth: number) =>
     A.dedupe(
       A.map(
-        A.filter(catalog.derivations, (derivation) => derivation.hopDepth === depth),
+        A.filter(catalog.derivations, (derivation) => derivation.hopDepth === depth && inIntake(derivation.intakeId)),
         (derivation) => derivation.derivedId
       )
     );
@@ -75,7 +91,9 @@ export const libraryHopTotals = Effect.fn("Library.hopTotals")(function* (
     (id) => libraryHopTwoOnly(catalog, id) && !librarySourceHasCapture(catalog, id)
   );
   const concepts = yield* libraryLiveConcepts(policy);
-  const decisions = libraryHopGate(catalog, LibraryHopGateInput.make({ concepts, policy }));
+  const decisions = A.filter(libraryHopGate(catalog, LibraryHopGateInput.make({ concepts, policy })), (decision) =>
+    inIntake(decision.intakeId)
+  );
   const refused = A.filter(decisions, (decision) => !decision.admitted);
   let reasonCounts = HashMap.empty<string, number>();
   for (const decision of refused)
@@ -92,7 +110,7 @@ export const libraryHopTotals = Effect.fn("Library.hopTotals")(function* (
     " "
   );
   return [
-    `hop 0: documents=${catalog.documents.length} citations=${catalog.occurrences.length}`,
+    `hop 0: documents=${documents.length} citations=${citations.length}`,
     `hop 1: identities=${hopOne.length} readable=${yield* readable(hopOne)}`,
     `hop 2: identities=${hopTwo.length} readable=${yield* readable(hopTwo)} cataloguedOnly=${cataloguedOnly.length} gateAdmitted=${decisions.length - refused.length} gateRefused=${refused.length}${reasons === "" ? "" : ` (${reasons})`}`,
   ];

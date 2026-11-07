@@ -9,6 +9,7 @@ import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { LegacySyncConflict, LegacySyncCursor, LegacySyncItem, LegacySyncOperation } from "./LegacySync.projection.ts";
 import * as P from "./VaultSync.policy.ts";
 import { VaultSyncPass } from "./VaultSyncPass.saga.ts";
+import { VaultSyncRequests } from "./VaultSyncRequests.policy.ts";
 /**
  * VaultSyncModel vault sync orchestration.
  *
@@ -65,6 +66,7 @@ export class VaultSyncPassModel extends Domain.Model("VaultSync", {
   aggregates: VaultSyncModel.aggregates,
   views: VaultSyncModel.views,
   policies: [
+    VaultSyncRequests,
     P.ConflictRegistration,
     P.DestinationNames,
     P.ItemOperations,

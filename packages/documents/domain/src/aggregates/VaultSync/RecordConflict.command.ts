@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import * as Domain from "@alchemy.run/domain";
+import { Session } from "./Session.middleware.ts";
 import * as E from "./SyncConflict.events.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
@@ -21,6 +22,7 @@ import * as V from "./Values.ts";
  * @since 0.0.0
  */
 export class RecordConflict extends Domain.Command("RecordConflict", {
+  middleware: [Session],
   target: V.DestinationId,
   input: { record: E.ConflictRecord },
   events: [E.ConflictEventReserved],

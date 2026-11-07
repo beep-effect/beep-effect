@@ -20,6 +20,7 @@ import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
@@ -47,8 +48,10 @@ import {
   admissionProtocolStatus,
   admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
+  installAgentRunsSlice,
   reapAdmissionState,
   reconcileAttemptJournalsForCheckout,
+  renderAgentRunsSliceListing,
   setAdmissionEvictionProtocol,
 } from "../../internal/repo-run/index.ts";
 import { cachePolicyCommand } from "../Cache/CachePolicy.command.ts";
@@ -3996,6 +3999,34 @@ const schedulerReconcileAttemptsCommand = Command.make(
   })
 ).pipe(Command.withDescription("Close unfinished attempt starts whose PID/start-time owner is dead"));
 
+const schedulerSliceCommand = Command.make(
+  "slice",
+  {
+    install: Flag.Boolean("install").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Write the units into ~/.config/systemd/user instead of printing them")
+    ),
+  },
+  Effect.fn(function* ({ install }) {
+    if (!install) {
+      yield* Console.log(Str.trimEnd(renderAgentRunsSliceListing()));
+      return;
+    }
+    const home = yield* Config.String("HOME").pipe(
+      QualityScriptCommandError.mapError("HOME is not set; cannot locate the systemd user unit directory.")
+    );
+    const written = yield* installAgentRunsSlice(home).pipe(
+      QualityScriptCommandError.mapError("Failed to write the agent-runs.slice units.")
+    );
+    // Installing never reloads the user manager; the operator applies it deliberately.
+    yield* printLines([...A.map(written, (target) => `wrote ${target}`), "Apply with: systemctl --user daemon-reload"]);
+  })
+).pipe(
+  Command.withDescription(
+    "Print (default) or --install the agent-runs.slice units that admitted run scopes join; never reloads systemd"
+  )
+);
+
 const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
   printLines([
     "Quality scheduler commands:",
@@ -4007,6 +4038,8 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
     "- bun run beep quality scheduler protocol --enable-evictions",
     "- bun run beep quality scheduler protocol --disable-evictions",
     "- bun run beep quality scheduler reconcile-attempts",
+    "- bun run beep quality scheduler slice",
+    "- bun run beep quality scheduler slice --install",
     "Eviction rows default off; enable only after every live checkout runs the preservation release.",
   ])
 ).pipe(
@@ -4016,6 +4049,7 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
     schedulerReapCommand,
     schedulerProtocolCommand,
     schedulerReconcileAttemptsCommand,
+    schedulerSliceCommand,
   ])
 );
 

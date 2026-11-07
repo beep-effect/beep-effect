@@ -470,8 +470,9 @@ const handleSpecificErrors = (input: string) =>
   complexOperation(input).pipe(
     Effect.catchTag("ValidationError", (error) => {
       // Handle validation errors specifically
-      Console.log(`Validation failed for field: ${error.field}`)
-      return Effect.succeed("default value")
+      return Console.log(`Validation failed for field: ${error.field}`).pipe(
+        Effect.as("default value")
+      )
     }),
     Effect.catchTag("NetworkError", (error) => {
       // Handle network errors with retry
