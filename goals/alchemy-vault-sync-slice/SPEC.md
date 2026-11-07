@@ -162,6 +162,36 @@ Lane `goals/alchemy-vault-sync-slice`
 
 Reverse: Re-point the spikes and driver at the reference checkout once the trio is bumped to a release that matches it (a named goal task per D11)
 
+### Hold desktop API cutover until verified identity hosting exists, 2026-11-07
+
+Live source search found no signed-in principal or bearer/session verifier in the desktop host; RpcSessionAuth verifies only the per-launch token. The new SessionResolver remains a required host service, with no anonymous, uid or launch-token identity fallback. Existing desktop callers have not been switched. PR 3c is not content-final: destination-scoped pass/probe initiators and compatibility mapping also remain. This records an implementation hold, not acceptance or permission to publish a partial cutover.
+
+Reverse: Supply host credential verification, enrollment and live membership adapters, then migrate callers
+
+### Reauthorize every delivered frame and terminate on revocation, 2026-11-07
+
+Check live grants before each frame leaves the authorized delivery stream. No downstream buffering is permitted across this barrier. Revocation closes the subscription with a typed denial; restored RequestContext supplies identity only, never a grant.
+
+Reverse: Disable subscription routes until an equivalent delivery barrier is proven
+
+### One SessionResolver owns transport identity and live grants, 2026-11-07
+
+Every transport resolves a verified principal through one SessionResolver. HTTP uses host session or bearer verification; sidecar enrollment binds the launch token to the signed-in principal; CLI uses the enrolled local operator; MCP uses the configured client identity. Grants are read live on every command and View delivery, never captured as authority.
+
+Reverse: Replace the resolver adapters while retaining the persisted v1 request codec
+
+### Member Views and operator diagnostics share one key policy, 2026-11-07
+
+VaultSyncStatus, OpenConflicts and DestinationList require current workspace membership. OperationQueue requires admin or operator grants. History is authorized per key under the same policy; aggregate and raw stream history are not exposed.
+
+Reverse: Introduce a separately named View for any changed audience
+
+### DestinationList is workspace keyed at the public boundary, 2026-11-07
+
+The PR 3a organization-keyed DestinationList can contain destinations from workspaces beyond the caller grant. Change its key to an explicit org:workspace value before any Api publication. Session still resolves and checks ownership independently of key shape. This is a pre-publication View key break; no existing desktop caller uses the alchemy View yet.
+
+Reverse: Introduce a separately authorized organization-wide View and migrate its callers
+
 ### Driver coverage floor follows measured totals; InMemory fallbacks stay, 2026-11-07
 
 PR 2b measures @beep/alchemy-postgres at L/S/B/F 96.88/96.04/90.21/92.26 against the floor 98.36/97.72/86.95/95.53 set by #2831. The remaining units are fallbacks copied from Domain.InMemory and upstream Backfill (source or consumer gone from the model, scanner kick, relay fan-out, stored-job rebuilds, generation and duplicate guards, a schedule cancelled between due query and fire) that only run under faults, races or very large histories. Deleting faithful fallbacks to satisfy a number would make the driver diverge from the reference, so the floor for lines, statements and functions moves to the measured totals in a baseline-only PR first; branches stay at 86.95.

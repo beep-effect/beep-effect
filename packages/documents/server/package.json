@@ -72,6 +72,7 @@
     "@beep/documents-use-cases": "workspace:^",
     "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",

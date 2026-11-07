@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+export * from "./Api.ts";
 export * from "./BoxMirror.external.ts";
 export * from "./LegacySync.projection.ts";
 export * from "./Model.ts";

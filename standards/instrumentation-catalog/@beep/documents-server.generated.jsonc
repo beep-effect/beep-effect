@@ -57,6 +57,7 @@
     {"name":"Documents.SyncOperationRepository.makeInMemory","owner":"@beep/documents-server","family":"slice","conforms":true},
     {"name":"Documents.SyncOperationRepository.requeueLeased","owner":"@beep/documents-server","family":"slice","conforms":true},
     {"name":"Documents.SyncOperationRepository.update","owner":"@beep/documents-server","family":"slice","conforms":true},
-    {"name":"Documents.VaultSyncPass","owner":"@beep/documents-server","family":"slice","conforms":false}
+    {"name":"Documents.VaultSyncPass","owner":"@beep/documents-server","family":"slice","conforms":false},
+    {"name":"VaultSync.deliveryCheck","owner":"@beep/documents-server","family":"slice","conforms":true}
   ]
 }

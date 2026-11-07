@@ -36,6 +36,8 @@ export * from "./RetryOperation.command.ts";
 export * from "./ReturnItemToPending.command.ts";
 export * from "./ReviewConflict.command.ts";
 export * from "./ReviveOperation.command.ts";
+export * from "./Session.context.ts";
+export * from "./Session.middleware.ts";
 export * from "./SquashOperation.command.ts";
 export * from "./SupersedeOperation.command.ts";
 export * from "./SyncConflict.aggregate.ts";

@@ -28,6 +28,7 @@ export * from "./LegacySync.projection.ts";
  * @since 0.0.0
  */
 export * from "./VaultSync.config.ts";
+export * from "./VaultSyncApi.ts";
 /**
  * Vault sync engine service exports.
  *
@@ -35,4 +36,5 @@ export * from "./VaultSync.config.ts";
  * @since 0.0.0
  */
 export * from "./VaultSyncEngine.service.ts";
+export * from "./VaultSyncMcp.ts";
 export * from "./VaultSyncPass.saga-handlers.ts";

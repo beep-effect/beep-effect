@@ -234,3 +234,25 @@ export const RemoteEvidence = S.String.check(
  * @since 0.0.0
  */
 export type RemoteEvidence = typeof RemoteEvidence.Type;
+
+/**
+ * Workspace destination-list partition; identity still requires authoritative authorization.
+ *
+ * **Example** (Select partition)
+ * ```ts
+ * import { WorkspaceKey } from "@beep/documents-domain/aggregates/VaultSync";
+ * console.log(WorkspaceKey.make("1:2"));
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const WorkspaceKey = S.NonEmptyString.pipe(
+  S.brand("VaultSyncWorkspaceKey"),
+  $I.annoteSchema("WorkspaceKey", { description: "Organization and workspace destination-list partition." })
+);
+/**
+ * Workspace partition value.
+ * @category aggregates
+ * @since 0.0.0
+ */
+export type WorkspaceKey = typeof WorkspaceKey.Type;
