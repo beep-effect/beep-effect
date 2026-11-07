@@ -8,3 +8,5 @@
 
 export * from "./AlchemyPostgres.config.ts";
 export * from "./AlchemyPostgres.errors.ts";
+export * from "./AlchemyPostgres.schema.ts";
+export * as AlchemyPostgresPlatform from "./AlchemyPostgresPlatform.ts";
