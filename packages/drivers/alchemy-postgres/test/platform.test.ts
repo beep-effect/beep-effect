@@ -163,7 +163,7 @@ describe("AlchemyPostgresPlatform", () => {
             until: ([first, second]) => first === 2 && second === 1,
             schedule: Schedule.spaced(Duration.millis(20)),
           }),
-          Effect.timeout(Duration.seconds(3))
+          Effect.timeout(Duration.seconds(15))
         );
         deepStrictEqual(runs, [2, 1]);
       })

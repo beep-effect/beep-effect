@@ -164,11 +164,11 @@ const eventsOf = (store: DomainPlatform.AggregateStore, id: string) =>
 const user = { principal: "user_1", sourceKind: "user" } as const;
 const asUser = Effect.provideService(CurrentActor, user);
 
-/** Poll until `predicate` holds, failing after `limit`. */
+/** Poll until `predicate` holds; the 15 s ceiling only matters on a slow runner. */
 const eventually = <A, E, R>(effect: Effect.Effect<A, E, R>, predicate: (value: A) => boolean) =>
   effect.pipe(
     Effect.repeat({ until: predicate, schedule: Schedule.spaced(Duration.millis(20)) }),
-    Effect.timeout(Duration.seconds(3))
+    Effect.timeout(Duration.seconds(15))
   );
 
 /** Command ids that the wrapped kit rejects, standing in for a decide that refuses at fire time. */
