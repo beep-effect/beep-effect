@@ -29,7 +29,7 @@ const HOST_OPERATIONS: ReadonlyArray<readonly [path: string, operation: string]>
   ["packages/foundation/capability/observability/src/server/ErrorReporting.ts", "process.stderr.write"],
   ["packages/tooling/tool/cli/src/bin-main.ts", "process.stdout.write"],
   ["packages/tooling/tool/cli/src/bin-main.ts", "process.exit"],
-  ["packages/tooling/tool/cli/src/bin-ci.ts", "process.exit"],
+  ["packages/tooling/tool/cli/src/commands/Ci/CiBinary.ts", "process.exit"],
   ["packages/tooling/tool/docgen/src/bin.ts", "process.exit"],
 ];
 

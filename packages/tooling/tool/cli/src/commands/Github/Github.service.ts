@@ -22,7 +22,7 @@ import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { constant, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpServer from "effect/http/HttpServer";
@@ -111,7 +111,8 @@ const reviewerProfile: AppProfile = {
 };
 
 const mintTitle = "beep-knowledge-mint GitHub App";
-const slugOf = (slug: O.Option<string>) => O.getOrElse(slug, () => "");
+const constEmpty = constant(Str.empty);
+const slugOf = (slug: O.Option<string>) => O.getOrElse(slug, constEmpty);
 
 const knowledgeMintProfile: AppProfile = {
   itemTitle: mintTitle,
@@ -343,12 +344,8 @@ const makeGitHubAppMint = Effect.fn("GitHubAppMint.make")(function* (owner: stri
 
   const serve: GitHubAppMintShape["serve"] = Effect.fn("GitHubAppMint.serve")(function* (app) {
     const text = yield* manifestText(app);
-    const manifestJson = yield* decodeJson(text).pipe(
-      Effect.flatMap(encodeJson),
-      Effect.mapError((cause) =>
-        GithubCommandError.make({ path: app, message: "Cannot encode the App manifest.", cause })
-      )
-    );
+    // manifestText already decoded this text as a manifest, so re-encoding it cannot fail; a failure is a defect.
+    const manifestJson = yield* decodeJson(text).pipe(Effect.flatMap(encodeJson), Effect.orDie);
     const nonce = yield* SecureRandom.SecureRandom.use((random) => random.uuidV4()).pipe(Effect.provide(context));
     const handler = yield* makeGitHubAppMintHandler({ app, nonce, manifestJson });
     const server = HttpServer.serve(Effect.provide(handler, context)).pipe(
