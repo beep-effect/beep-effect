@@ -28,7 +28,7 @@ class PureVault extends Domain.Model("PureVault", {
   ],
 }) {}
 const hosted = PureVault.layer(Layer.empty).pipe(Layer.provide(Domain.InMemory));
-const destination = V.DestinationId.make("vault-domain-model");
+const destination = V.DestinationId.make("documents_sync_destination_avaultdomainmodel");
 const item = V.ItemId.make("documents_sync_item_a1");
 const operation = V.OperationId.make("documents_sync_operation_a1");
 const conflict = V.ConflictId.make("documents_sync_conflict_a1");
@@ -71,7 +71,7 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
       const status = yield* V.VaultSyncStatus;
       const open = yield* V.OpenConflicts;
       const list = yield* V.DestinationList;
-      const key = V.ReservationKey.make("1:vault");
+      const key = V.reservationKey({ orgId: 1, name: "vault" });
       yield* names.send(
         key,
         V.ClaimDestinationName.make({

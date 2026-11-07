@@ -16,7 +16,7 @@ import * as V from "./Values.ts";
  * **Example** (Address one aggregate stream)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
- * const ref=V.ConflictEventRegistry.ref(V.DestinationId.make("vault"));
+ * const ref=V.ConflictEventRegistry.ref(V.DestinationId.make("documents_sync_destination_avault"));
  * console.log(ref.id);
  * ```
  * @category aggregates

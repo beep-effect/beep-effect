@@ -11,9 +11,9 @@ These changes alter dependency-edge fingerprints for the touched workspaces and
 their dependents. No task script, cache flag, input/output glob, environment setting,
 root Turbo configuration or qualification tuple was edited. No qualification is granted.
 
-The attached request is prepared, not applied. The current checkout has inherited
-global root configuration drift (the orchestrator assigned PR #2881). A baseline
-re-record here would also need to review unrelated root subjects. Refresh the request's
-previous digest and basis hash after integrating that fix; re-run cache-policy and
-review the resulting local subjects before applying it. This lane does not approve
-or re-stamp the unrelated global configuration drift.
+Applied 2026-11-07 by the orchestrator session (Claude Opus 5.5) after merging main,
+which carries #2881's re-recorded root baseline. On the merged tree
+`bun run beep quality cache-policy` reports exactly four blocking findings, all
+`configuration-drift` on `@beep/documents-use-cases#build`, `#check`,
+`#lint:deprecated-apis` and `#test`. This record stamps only those. No global or
+unrelated root subject is re-stamped.

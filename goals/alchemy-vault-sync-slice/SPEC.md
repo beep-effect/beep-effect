@@ -182,6 +182,22 @@ Use the configured mirror root name, default beep-vault, and orgId from legacy r
 
 Reverse: Change genesis mapping before import; no data is imported in PR 3a
 
+### Hash destination names in reservation keys, 2026-11-07
+
+PII audit F2: the kernel always records aggregate ids and streams on spans, so an orgId:name key leaked destination names into domain.id, domain.stream, driver spans and SyncRuleViolation evidence. ReservationKey is now orgId:sha256hex(trimmed, lowercased name), built only by reservationKey in aggregates/VaultSync/Values.ts with a synchronous @noble/hashes SHA-256 (the PartyKey precedent), so pure decide and policy code hash in place. The schema admits only an integer, a colon and a 64-character lowercase hex digest. The name stays in reservation state and event payloads, which the kernel never puts on spans.
+
+Lane `goals/vault-sync-domain` · PR #2886
+
+Reverse: Restore the orgId:normalizedName key in Values.ts reservationKey and widen the ReservationKey schema back to NonEmptyString; replay any stored reservation streams under the old ids
+
+### Mint opaque destination ids, 2026-11-07
+
+PII audit F3: DestinationId is the SyncDestination aggregate id, View key, URL segment and saga key, and accepted any non-empty string such as a destination name. It is now the fixed prefix documents_sync_destination_ plus a CUID (the PublicEntityId format), checked by a template-literal pattern, so decode rejects names. mintDestinationId draws a fresh CUID; makeDestinationId wraps an existing one. The id lives in Values.ts without the frozen entity kit, since a destination has no SQL row id. The cutover genesis in PR 3b2 must mint one id per destination and never derive it from a name or path.
+
+Lane `goals/vault-sync-domain` · PR #2886
+
+Reverse: Widen DestinationId in Values.ts back to a branded NonEmptyString and drop mintDestinationId and makeDestinationId
+
 ### Offline intents target renderer to sidecar in a later PR, 2026-11-07
 
 D8 applies to renderer to sidecar. PR 3a includes no offline queue or frontend work.

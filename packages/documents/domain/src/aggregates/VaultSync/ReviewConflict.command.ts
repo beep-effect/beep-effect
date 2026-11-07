@@ -16,7 +16,7 @@ import * as V from "./Values.ts";
  * **Example** (Build a command for dispatch)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
- * const command=V.ReviewConflict.make({remoteEventId:"event1",workspaceId:1,destinationId:V.DestinationId.make("vault"),correction:null,healOperationId:V.OperationId.make("documents_sync_operation_a1")});
+ * const command=V.ReviewConflict.make({remoteEventId:"event1",workspaceId:1,destinationId:V.DestinationId.make("documents_sync_destination_avault"),correction:null,healOperationId:V.OperationId.make("documents_sync_operation_a1")});
  * console.log(command._tag);
  * ```
  * @category aggregates

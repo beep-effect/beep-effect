@@ -275,6 +275,129 @@ const sortedKinds = (findings: ReadonlyArray<KnowledgeFinding>): ReadonlyArray<K
     Order.String
   );
 
+describe("knowledge semantic-delta proven package exports", () => {
+  const manifest =
+    '{"name":"@beep/demo","exports":{"./Sub":"./src/Sub.ts","./feature/*":"./src/*.ts","./feature/Hidden":null}}';
+  const files = {
+    "package.json": '{"name":"@beep/root","workspaces":["packages/*"]}',
+    "packages/demo/package.json": manifest,
+    "packages/demo/src/Sub.ts": "export const Sub = 1;",
+  };
+  const named = "The owner is `@beep/demo`.\n";
+  const claim = "`./Sub` is a concept subpath export.\n";
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("proves local package-root and uniquely document-named owners from exports", () =>
+      Effect.gen(function* () {
+        for (const doc of [
+          "`packages/demo/src/Sub.ts` (+ `./Sub` package export)\n",
+          `${named}${claim}`,
+          `${named}The \`./Sub\` is a concept subpath export; the port is also on \`/server\`.\n`,
+          `${named}The \`./feature/Sub\` package export.\n`,
+        ]) {
+          const report = yield* scan(fixture(files, { ...files, "docs/guide.md": doc }));
+          expect(report.introduced).toEqual([]);
+        }
+      })
+    );
+    it.effect("keeps unproven, negative, ambiguous and ordinary file claims governed", () =>
+      Effect.gen(function* () {
+        const other = {
+          "packages/other/package.json": '{"name":"@beep/other","exports":{"./Sub":"./src/Sub.ts"}}',
+          "packages/other/src/Sub.ts": "export const Sub = 2;",
+          "packages/noexport/package.json": '{"name":"@beep/noexport","exports":{}}',
+          "docs/other.md": named,
+        };
+        for (const doc of [
+          claim,
+          `Not \`@beep/demo\`.\n${claim}`,
+          `${named}Use \`./Sub\`.\n`,
+          `${named}Not \`./Sub\` package export.\n`,
+          `${named}The \`./Sub\` package export is not available.\n`,
+          `${named}The \`./Sub\` package export does not exist.\n`,
+          `${named}The \`./Sub\` package export is removed.\n`,
+          `${named}The \`./Sub\` package export is planned.\n`,
+          `${named}The \`./Sub\` package export might be added.\n`,
+          `${named}The \`./Sub\` package export?\n`,
+          `${named}The \`./Sub\` package export, if added later.\n`,
+          `${named}The \`./Sub\` package export, like its siblings?\n`,
+          `${named}If \`./Sub\` package export.\n`,
+          `${named}Proposed \`./Sub\` package export.\n`,
+          `${named}The \`./Missing\` package export.\n`,
+          `${named}The \`./feature/Absent\` package export.\n`,
+          `${named}The \`./feature/Hidden\` package export.\n`,
+          `${named}Also \`@beep/other\`.\n${claim}`,
+          `${named}The package \`@beep/noexport\` exposes \`./Sub\` package export.\n`,
+          `The owner is \`@beep/wrong\`.\n${claim}`,
+          `\`\`\`\n@beep/demo\n\`\`\`\n${claim}`,
+          `[owner](@beep/demo)\n${claim}`,
+        ]) {
+          const report = yield* scan(fixture(files, { ...files, ...other, "docs/guide.md": doc }));
+          assert.isTrue(A.some(report.introduced, (finding) => finding.kind === "broken-tracked-path"));
+        }
+      })
+    );
+    it.effect("fails closed on missing exports, targets and non-regular manifests or targets", () =>
+      Effect.gen(function* () {
+        const doc = `${named}${claim}`;
+        for (const candidate of [
+          { files: R.remove(files, "packages/demo/src/Sub.ts"), modes: {} },
+          { files: R.set(files, "packages/demo/package.json", '{"name":"@beep/demo","exports":{}}'), modes: {} },
+          {
+            files: R.set(files, "packages/demo/package.json", '{"name":"@beep/demo","exports":{"./Sub":null}}'),
+            modes: {},
+          },
+          { files: R.set(files, "packages/demo/package.json", "not JSON"), modes: {} },
+          {
+            files: R.set(
+              files,
+              "packages/demo/package.json",
+              '{"name":"@beep/demo","exports":{"./Sub":"../demo/src/Sub.ts"}}'
+            ),
+            modes: {},
+          },
+          { files, modes: { "packages/demo/package.json": "120000" } },
+          { files, modes: { "packages/demo/src/Sub.ts": "120000" } },
+          { files, modes: { "packages/demo/src/Sub.ts": "160000" } },
+          { files: R.set(files, "packages/demo/src", "symlink"), modes: { "packages/demo/src": "120000" } },
+        ]) {
+          const report = yield* scan(
+            fixture(files, { ...candidate.files, "docs/guide.md": doc }, { head: { modes: candidate.modes } })
+          );
+          assert.isTrue(A.some(report.introduced, (finding) => finding.kind === "broken-tracked-path"));
+        }
+      })
+    );
+    it.effect("preserves explicit path assertions and adjacent missing files beside a proven export", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(files, {
+            ...files,
+            "docs/guide.md": `${named}${claim}Use \`./Missing.ts\`.\n<!-- beep:assert path-exists ./Sub -->\n`,
+          })
+        );
+        assert.isTrue(A.some(report.introduced, (finding) => finding.kind === "broken-tracked-path"));
+        assert.isTrue(A.some(report.introduced, (finding) => finding.kind === "failed-assertion"));
+      })
+    );
+    it.effect("uses each archive side's manifest when an export is removed", () =>
+      Effect.gen(function* () {
+        const base = { ...files, "docs/guide.md": `${named}${claim}` };
+        const head = R.set(base, "packages/demo/package.json", '{"name":"@beep/demo","exports":{}}');
+        const report = yield* scan(fixture(base, head));
+        assert.strictEqual(
+          A.countBy(report.introduced, (finding) => finding.kind === "broken-tracked-path"),
+          1
+        );
+        const restored = yield* scan(fixture(head, base));
+        assert.strictEqual(
+          A.countBy(restored.resolved, (finding) => finding.kind === "broken-tracked-path"),
+          1
+        );
+      })
+    );
+  });
+});
+
 describe("knowledge semantic-delta golden paired fixtures", () => {
   it("parses local, remote-tracking, and tag ref spellings without accepting other namespaces", () => {
     expect(gitRefSpanNamesForTesting("refs/heads/goals/local-branch")).toEqual(["goals/local-branch"]);
