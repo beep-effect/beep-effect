@@ -304,36 +304,46 @@ const assertWarmIdentityUnchanged = Effect.fn("Cache.assertWarmIdentityUnchanged
 const turboCacheFlagPrefix = "--cache=";
 const turboWriteOnlyCacheFlag = `${turboCacheFlagPrefix}local:w,remote:w`;
 
+// Timing-sensitive suites (glob, jsonc, repo-docgen) starved when tests shared one Turbo pass with
+// every lint/check/build task at default concurrency (#1858). Hosted CI never runs that shape: it
+// shards the test lanes. The warm therefore runs the CPU-heavy static tasks first and the tests in a
+// second, bounded pass. `test` depends only on the `transit` topology task, so the split re-executes
+// nothing twice.
+const turboWarmStaticTasks = ["build", "check", "lint"] as const;
+const turboWarmTestTasks = ["test"] as const;
+const turboWarmTestConcurrencyArg = "--concurrency=4";
+
+const turboWarmCommand = (
+  tasks: ReadonlyArray<string>,
+  extraArgs: ReadonlyArray<string> = A.empty()
+): ReadonlyArray<string> => [
+  "bun",
+  "x",
+  "turbo",
+  "run",
+  ...tasks,
+  // Turbo rejects `--cache` together with `--force`; write-only access is Turbo's own
+  // definition of `--force`, so this alone re-executes every task and writes both caches.
+  turboWriteOnlyCacheFlag,
+  ...extraArgs,
+  "--summarize",
+];
+
 const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
   repoRoot: string,
   output: O.Option<string>,
   runWarmLane: CacheWarmRunner
 ) {
   const preconditions = yield* assertWarmPreconditions(repoRoot);
-  const lane = yield* runWarmLane(
-    [
-      "bun",
-      "x",
-      "turbo",
-      "run",
-      "build",
-      "check",
-      "lint",
-      "test",
-      // Turbo rejects `--cache` together with `--force`; write-only access is Turbo's own
-      // definition of `--force`, so this alone re-executes every task and writes both caches.
-      turboWriteOnlyCacheFlag,
-      "--summarize",
-    ],
-    repoRoot
-  );
+  const staticLane = yield* runWarmLane(turboWarmCommand(turboWarmStaticTasks), repoRoot);
+  const testLane = yield* runWarmLane(turboWarmCommand(turboWarmTestTasks, [turboWarmTestConcurrencyArg]), repoRoot);
   yield* assertWarmIdentityUnchanged(repoRoot, preconditions);
   const now1 = yield* DateTime.now;
   const receipt = CacheWarmReceipt.make({
     generatedAt: DateTime.formatIso(now1),
     revision: preconditions.head,
     bunVersion: preconditions.actualBun,
-    lanes: [lane],
+    lanes: [staticLane, testLane],
   });
   yield* writeEncoded(receipt, CacheWarmReceiptJson, output);
   return receipt;
@@ -341,6 +351,13 @@ const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
 
 /**
  * Run exact-main Turbo warming and emit a versioned receipt.
+ *
+ * **Details**
+ *
+ * The warm runs two write-only Turbo passes: `build check lint` at Turbo's default concurrency,
+ * then `test` at a bounded concurrency so timing-sensitive suites are not starved by static work.
+ * The receipt records one lane per pass, in that order; a failing pass stops the warm before any
+ * receipt is written.
  *
  * **Example** (Build the warm program)
  *
