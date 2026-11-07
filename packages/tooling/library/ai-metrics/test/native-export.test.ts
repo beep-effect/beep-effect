@@ -1,4 +1,5 @@
 import { encodeNativeTraceBatch, NativeExportError, NativeExportInput } from "@beep/repo-ai-metrics/native-export";
+import { NativeLifecycleMetadata } from "@beep/repo-ai-metrics/native-lifecycle";
 import { NativeTraceMetadata, NativeTraceRequest, projectNativeTraceRequest } from "@beep/repo-ai-metrics/native-trace";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -111,6 +112,68 @@ const fixture = Effect.fn("NativeExportTest.fixture")(function* () {
     encodeNativeTraceBatch(NativeExportInput.make({ ...input, spans: [span] }));
   return { input, span, encode };
 });
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
+  it.effect("exports reported lifecycle end annotations without inventing a native interval or usage", () =>
+    Effect.gen(function* () {
+      const { input, span } = yield* fixture();
+      const event = NativeLifecycleMetadata.make({
+        kind: "sessionEnd",
+        sessionHash: O.getOrThrow(span.sessionHash),
+        runtimeInstanceId: id("c"),
+        rootId: id("d"),
+        hostId: input.hostId,
+        reportedDurationMillis: O.some(1234),
+        reportedReason: O.some("completed"),
+        reportedStatus: O.some("completed"),
+      });
+      const lifecycle = NativeTraceMetadata.make({
+        ...span,
+        kind: "CHAIN",
+        status: "unset",
+        parentSpanId: O.none(),
+        nameHash: O.none(),
+        startTimeUnixNano: O.none(),
+        endTimeUnixNano: O.none(),
+        durationKnown: false,
+        modelHash: O.none(),
+        modelName: O.none(),
+        managedController: O.none(),
+        nativeLifecycle: O.some(event),
+        usage: { convention: "unknown", input: O.none(), output: O.none(), cacheRead: O.none(), cacheWrite: O.none() },
+      });
+      const encoded = yield* encodeNativeTraceBatch(NativeExportInput.make({ ...input, spans: [lifecycle] }));
+      const decoded = yield* read(encoded.body);
+      const row = O.getOrThrow(A.head(decoded.resourceSpans[0].scopeSpans[0].spans));
+      expect(row.name).toBe("cursor.sessionEnd");
+      expect(row.startTimeUnixNano).toBe("1793100000000000000");
+      expect(row.endTimeUnixNano).toBe(row.startTimeUnixNano);
+      assertSome(attribute(row.attributes, "ai_metrics.lifecycle.native_reported_duration_ms"), { intValue: "1234" });
+      assertSome(attribute(row.attributes, "ai_metrics.lifecycle.native_reported_reason"), {
+        stringValue: "completed",
+      });
+      assertSome(attribute(row.attributes, "ai_metrics.lifecycle.native_reported_status"), {
+        stringValue: "completed",
+      });
+      assertSome(attribute(row.attributes, "ai_metrics.lifecycle.source_timestamp"), { stringValue: "Unknown" });
+      assertSome(attribute(row.attributes, "ai_metrics.duration_known"), { boolValue: false });
+      assertSome(attribute(row.attributes, "ai_metrics.time_basis"), { stringValue: "intake_observation" });
+      for (const key of [
+        "ai_metrics.source_start_time_unix_nano",
+        "ai_metrics.source_end_time_unix_nano",
+        "llm.token_count.prompt",
+        "llm.token_count.completion",
+        "llm.token_count.total",
+        "llm.model_name",
+      ])
+        assertNone(attribute(row.attributes, key));
+      const text = new TextDecoder().decode(encoded.body);
+      for (const marker of ["private-session", "private-prompt", "private-email", "synthetic-export-salt"])
+        expect(text).not.toContain(marker);
+      expect(encoded.eventIds).toEqual([lifecycle.eventId]);
+    })
+  )
+);
+
 it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
   it.effect("returns a safe encoding error when the protobuf writer fails", () =>
     Effect.gen(function* () {
