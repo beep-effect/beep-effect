@@ -18,6 +18,7 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { LibraryCatalog } from "@beep/repo-cli/commands/Research";
 
@@ -84,6 +85,33 @@ it.layer(LibraryPlatform, { timeout: "60 seconds" })("research library private i
       expect(manifest.accessClass).toBe("private");
       expect(sourceAccess(catalog, "https://example.com/public-paper")).toEqual(O.some("public"));
       expect(sourceAccess(catalog, "https://example.com/private-paper")).toEqual(O.some("private"));
+    })
+  );
+
+  it.effect("hashes video in place as referenced media and never snapshots its bytes", () =>
+    Effect.gen(function* () {
+      const { fs, path, aggregation, root, options } = yield* nestedFixture();
+      const video = path.join(aggregation, "Videos", "channel", "talk.mkv");
+      yield* fs.makeDirectory(path.dirname(video), { recursive: true });
+      yield* fs.writeFileString(video, "not really matroska");
+      const catalog = yield* inventoryLibrary(options);
+      const intake = O.getOrThrow(A.last(catalog.intakes));
+      const entry = O.getOrThrow(A.findFirst(intake.files, (file) => file.originalPath === video));
+      expect([entry.retention, entry.snapshotPath, entry.bytes, entry.parseable]).toEqual([
+        "referenced",
+        "",
+        19,
+        false,
+      ]);
+      expect(entry.sha256).toMatch(/^[a-f0-9]{64}$/);
+      const raw = yield* fs.readDirectory(path.join(root, "intakes", intake.date, "raw"));
+      expect(A.some(raw, Str.endsWith(".mkv"))).toBe(false);
+      expect(
+        A.every(
+          A.filter(intake.files, (file) => file.originalPath !== video),
+          (file) => file.retention === "snapshot"
+        )
+      ).toBe(true);
     })
   );
 

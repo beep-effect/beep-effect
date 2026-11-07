@@ -6,6 +6,7 @@
  */
 
 import { Git } from "@beep/git/Git";
+import { hashFileSha256 } from "@beep/repo-cli-kit/cli/FsGuards";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -543,6 +544,8 @@ const listInputs = Effect.fn("ResearchLibrary.listInputs")(function* (root: stri
   return A.sort(files, Order.String);
 });
 
+const REFERENCED_MEDIA = /\.(?:mkv|mp4|webm|mov|m4v|avi|mp3|m4a|wav|flac|ogg|opus)$/i;
+
 const isWithin = (path: Path.Path, parent: string, child: string) => {
   const relative = path.relative(parent, child);
   return (
@@ -708,6 +711,26 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
           if (HashSet.has(inventoried, originalPath)) continue;
           inventoried = HashSet.add(inventoried, originalPath);
           const accessClass = accessFor(originalPath);
+          if (REFERENCED_MEDIA.test(originalPath)) {
+            // Media is hashed in place and referenced; its bytes never enter the library.
+            const stat = yield* fs.stat(originalPath).pipe(failure("Cannot inspect corpus input."));
+            const mediaSha256 = yield* hashFileSha256(originalPath, (cause) =>
+              LibraryError.make({ message: `Cannot hash referenced media: ${originalPath}`, cause })
+            );
+            intakeFiles = A.append(
+              intakeFiles,
+              LibraryIntakeFile.make({
+                accessClass,
+                originalPath,
+                snapshotPath: "",
+                sha256: mediaSha256,
+                bytes: Number(stat.size),
+                parseable: false,
+                retention: "referenced",
+              })
+            );
+            continue;
+          }
           const bytes = yield* fs.readFile(originalPath).pipe(failure("Cannot read corpus input."));
           const sha256 = yield* hashBytes(bytes);
           const id = yield* hashText(`${originalPath}\n${sha256}`);

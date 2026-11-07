@@ -113,6 +113,7 @@ export {
   LibraryFinding,
   LibraryIntake,
   LibraryIntakeFile,
+  LibraryIntakeRetention,
   LibraryIntakeRoot,
   LibraryInventoryOptions,
   LibraryManifest,

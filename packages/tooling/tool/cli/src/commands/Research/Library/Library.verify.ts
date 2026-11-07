@@ -205,6 +205,13 @@ type VerificationContext = Effect.Success<ReturnType<typeof makeVerificationCont
 const verifyIntakeCensus = Effect.fn("Library.verifyIntakeCensus")(function* (context: VerificationContext) {
   const { root, fs, path, catalog, issue, artifactValid } = context;
   const verifyIntakeFile = Effect.fn("Library.verifyIntakeFile")(function* (file: LibraryIntakeFile) {
+    if (file.retention === "referenced") {
+      // Referenced media is never snapshotted; an original still on disk must keep its recorded size.
+      const stat = yield* fs.stat(file.originalPath).pipe(Effect.option);
+      if (O.isSome(stat) && Number(stat.value.size) !== file.bytes)
+        issue(`${file.originalPath}: referenced media size changed since the intake census`);
+      return;
+    }
     yield* artifactValid(
       LibraryArtifact.make({
         path: file.snapshotPath,

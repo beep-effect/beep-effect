@@ -548,6 +548,35 @@ export class LibraryQualification extends S.Opaque<LibraryQualification, { reado
 ) {}
 
 /**
+ * How an intake census keeps an input's bytes.
+ *
+ * **Details**
+ *
+ * `snapshot` copies the bytes under `intakes/<date>/raw/`. `referenced` media
+ * (video and audio) are hashed in place and recorded by path, SHA-256 and size,
+ * never copied into the library.
+ *
+ * **Example** (Inspect members)
+ * ```ts
+ * import { LibraryIntakeRetention } from "@beep/repo-cli/commands/Research"
+ * console.log(LibraryIntakeRetention.literals) // ["snapshot", "referenced"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LibraryIntakeRetention = LiteralKit(["snapshot", "referenced"]).pipe(
+  $I.annoteSchema("LibraryIntakeRetention", { description: "How an intake census keeps an input's bytes." })
+);
+/**
+ * Runtime type of LibraryIntakeRetention.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryIntakeRetention = typeof LibraryIntakeRetention.Type;
+
+/**
  * An input file in an immutable dated intake census.
  * **Example** (Inspect file validation)
  * ```ts
@@ -567,6 +596,10 @@ export class LibraryIntakeFile extends S.Opaque<LibraryIntakeFile, { readonly br
     sha256: S.String.check(S.isPattern(/^[a-f0-9]{64}$/)),
     bytes: S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
     parseable: S.Boolean,
+    retention: LibraryIntakeRetention.pipe(
+      S.withConstructorDefault(Effect.succeed("snapshot" as const)),
+      S.withDecodingDefaultKey(Effect.succeed("snapshot" as const))
+    ),
   })
     .pipe(
       $I.annoteSchema("LibraryIntakeFile", { description: "Input file census entry including nonparseable files." })
