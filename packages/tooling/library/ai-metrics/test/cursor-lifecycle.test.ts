@@ -400,6 +400,8 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         let released = 0;
         let dispatches = 0;
         let acknowledgements = 0;
+        let policyFrames = 0;
+        const policyObserved = yield* Deferred.make<void>();
         const ready = yield* encode({ ready: fault === "ready" ? false : true });
         const observed = yield* encode({
           peer: {
@@ -419,25 +421,34 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
           fault === "timeout"
             ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
             : Stream.make(new TextEncoder().encode(lines));
-        const synthetic = ChildProcessSpawner.make(() =>
-          Effect.acquireRelease(
-            Effect.sync(() => {
-              dispatches++;
-              return syntheticHandle(
-                output,
-                Sink.forEach((chunk: Uint8Array) =>
-                  Effect.sync(() => {
-                    if (Str.includes("receiptId")(new TextDecoder().decode(chunk))) acknowledgements++;
-                  })
-                ),
-                false
-              );
-            }).pipe(Effect.tap(() => Deferred.succeed(started, undefined))),
-            () =>
-              Effect.sync(() => {
-                released++;
+        const gatedOutput = Stream.concat(Stream.fromEffect(Deferred.await(policyObserved)).pipe(Stream.drain), output);
+        const synthetic = ChildProcessSpawner.make((command) =>
+          Effect.gen(function* () {
+            const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
+            if (!Stream.isStream(input)) return yield* Effect.die("synthetic helper input stream missing");
+            yield* Effect.forkScoped(
+              Stream.runForEach(input, (chunk) => {
+                if (!(chunk instanceof Uint8Array)) return Effect.die("synthetic helper input chunk invalid");
+                if (Str.includes("receiptId")(new TextDecoder().decode(chunk)))
+                  return Effect.sync(() => {
+                    acknowledgements++;
+                  });
+                return Effect.sync(() => {
+                  policyFrames++;
+                }).pipe(Effect.andThen(Deferred.succeed(policyObserved, undefined)));
               })
-          )
+            );
+            return yield* Effect.acquireRelease(
+              Effect.sync(() => {
+                dispatches++;
+                return syntheticHandle(gatedOutput, Sink.drain, false);
+              }).pipe(Effect.tap(() => Deferred.succeed(started, undefined))),
+              () =>
+                Effect.sync(() => {
+                  released++;
+                })
+            );
+          })
         );
         const receiver = yield* makeCursorLifecycleFixtureReceiver(f.policy).pipe(
           Effect.provideService(CursorLifecycleRuntime, { journal: f.journal, control: f.control })
@@ -460,6 +471,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         );
         expect(dispatches).toBe(1);
         expect(released).toBe(1);
+        expect(policyFrames).toBe(1);
         expect(acknowledgements).toBe(0);
         expect((yield* f.journal.stats).pages).toBe(0);
       })
