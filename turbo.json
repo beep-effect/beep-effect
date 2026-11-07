@@ -993,6 +993,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.errors.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.packages.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",

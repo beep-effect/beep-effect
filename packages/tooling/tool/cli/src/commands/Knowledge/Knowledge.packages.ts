@@ -54,6 +54,25 @@ const joinRepoPath = (base: string, relative: string): O.Option<string> =>
     O.map(A.join("/"))
   );
 
+/**
+ * Internal archive reads and repository-path operations shared by package and doctor facts.
+ *
+ * **Example** (Resolve a path without reading the working tree)
+ *
+ * ```ts
+ * import { knowledgeTreeFacts } from "@beep/repo-cli/commands/Knowledge/Knowledge.packages"
+ * import * as O from "effect/Option"
+ *
+ * const target = knowledgeTreeFacts.joinRepoPath("packages/demo", "./src/index.ts")
+ * console.log(O.getOrNull(target)) // "packages/demo/src/index.ts"
+ * ```
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const knowledgeTreeFacts = { readText, readTextIfTracked, dirname, joinRepoPath };
+
 class PackageManifestJson extends S.Opaque<PackageManifestJson, { readonly brand: unique symbol }>()(
   S.Struct({
     name: S.optionalKey(S.String),
@@ -195,12 +214,28 @@ const isWorkspaceManifest = (globs: O.Option<ReadonlyArray<string>>, manifestPat
  * Shared by semantic delta and doctor; callers provide only regular tracked paths.
  * Invalid manifests cannot prove ownership or an export. No runtime or alias resolution runs.
  *
+ * **Example** (Prepare an archive-side package query)
+ *
+ * ```ts
+ * import { deriveKnowledgePackages } from "@beep/repo-cli/commands/Knowledge/Knowledge.packages"
+ * import * as Effect from "effect/Effect"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const packages = deriveKnowledgePackages({
+ *   commit: "HEAD",
+ *   treeish: "HEAD",
+ *   trackedEntries: [],
+ *   readBytes: () => Effect.succeed(new Uint8Array())
+ * }, HashSet.empty<string>())
+ * Effect.runPromise(packages).then(entries => console.log(entries.length)) // 0
+ * ```
+ *
  * @param oracle - Archive-side tracked bytes and entries.
  * @param paths - Regular tracked paths eligible for manifest reads.
  * @returns Workspace package identities and their export entry points.
+ * @internal
  * @category queries
  * @since 0.0.0
- * @internal
  */
 export const deriveKnowledgePackages = Effect.fn("KnowledgeDoctorDomain.packages")(function* (
   oracle: KnowledgeTreeOracle,
