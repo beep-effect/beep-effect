@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "3f3945e34b68c9904f369c4a072adb6db45e4662bcf8b48fe30248d6f878ffd9",
+  "planSha256": "4cb408c73b570919b7c89ee96e022ee966ab6c00bd640157f61aecb4b5e46377",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1560,7 +1560,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
-          "sha256": "03b8732f4f2452b0dac1a775ac0edf6966e9ff1a5796f9c29caa20dbfcf4bcae"
+          "sha256": "b03e567fa60bc688a7b91dd2ea6de8aaa99f858bc0df3e646af8896480c5bee2"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-extraction-method-boundary.md",
@@ -1577,6 +1577,14 @@
         {
           "path": "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
           "sha256": "20313aa2441c9f2fdff2edb5c50b9e9242432dcf6c037b11a72d717fb0c8232a"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-admitted-resolver-operation.md",
+          "sha256": "625d5fd449d08d62f99448fae3a6cfcc2de92df0d53ccda3aed463634e49be2e"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/ResolverOperation.ts",
+          "sha256": "7dbd4c9a718aa6704198c8bb2e556b745d6bc61fdfa0bc9c61d6e203889fac4b"
         }
       ],
       "workflowState": "audit",

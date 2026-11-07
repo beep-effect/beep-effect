@@ -395,7 +395,9 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-07-extraction-method-boundary.md",
         "packages/law-practice/server/src/internal/Citation/EngineFailure.ts",
         "packages/law-practice/server/test/CitationEngineFailure.test.ts",
-        "packages/law-practice/server/test/CitationPythonUnicode.test.ts"
+        "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-admitted-resolver-operation.md",
+        "packages/law-practice/server/src/internal/Citation/ResolverOperation.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

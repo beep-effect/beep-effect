@@ -1517,6 +1517,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional table budget bindings and owner mappings together while retaining source table histories, capture controls and all acceptance duties.
 
+### Capture resolver admission policy and implementation identity, 2026-11-07
+
+Standalone registered resolution now captures normalized policy/artifact, Clock and shared admission. Four focused tests and twenty-seven regressions pass, with package lint/types/build/blocking laws and zero introduced Fallow findings. Queue time consumes the resolve deadline and cancellation returns capacity. Public raw-source service/Layer and all open acceptance duties remain. See history/evidence/2026-11-07-admitted-resolver-operation.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert ResolverOperation and its callers/tests together; retain the raw registered resolver used inside the admitted extraction parent.
+
 ### Close cleaner and resolver method failure surfaces, 2026-11-07
 
 Admitted cleaner methods and a captured registered-resolver boundary now expose CitationEngineFailure with R=never. Known resource/evidence categories and interruption are preserved; incidental private payloads are removed. Seven focused tests pass in 2.36s and twenty-two resolver/cleaner regressions in 4.64s; lint/types, declarations, blocking laws and scoped Fallow pass. Complete extraction translation, admitted public resolver/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-cleaner-resolver-boundaries.md.
