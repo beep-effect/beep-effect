@@ -1,0 +1,92 @@
+{
+  "fleetRoot": "<tmp>/projects",
+  "originUrl": "<tmp>/origin.git",
+  "scannedAt": "1970-01-01T00:00:00.000Z",
+  "target": {
+    "ref": "main",
+    "sha": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+    "materialized": true
+  },
+  "coverage": {
+    "clonesDiscovered": 2,
+    "checkoutsDiscovered": 4,
+    "checkoutsDegraded": 0,
+    "processesScanned": 0,
+    "processesUnreadable": 0
+  },
+  "checkouts": [
+    {
+      "path": "<tmp>/projects/beep-effect0",
+      "kind": "clone",
+      "branch": "main",
+      "detached": false,
+      "head": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+      "dirtyCount": 0,
+      "mergeBase": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+      "branchDiffCount": 0,
+      "liveness": "live",
+      "livenessEvidence": ["worktree-mtime"],
+      "conflict": "clean",
+      "conflictReason": null,
+      "conflictPaths": [],
+      "policyMovement": "unmoved",
+      "policyReason": null,
+      "policyPaths": []
+    },
+    {
+      "path": "<tmp>/projects/beep-effect0-worktrees/lane-a",
+      "kind": "linked-worktree",
+      "branch": "lane-a",
+      "detached": false,
+      "head": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+      "dirtyCount": 1,
+      "mergeBase": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+      "branchDiffCount": 0,
+      "liveness": "live",
+      "livenessEvidence": ["worktree-mtime"],
+      "conflict": "clean",
+      "conflictReason": null,
+      "conflictPaths": [],
+      "policyMovement": "unmoved",
+      "policyReason": null,
+      "policyPaths": []
+    },
+    {
+      "path": "<tmp>/projects/beep-effect1",
+      "kind": "clone",
+      "branch": "main",
+      "detached": false,
+      "head": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+      "dirtyCount": 0,
+      "mergeBase": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+      "branchDiffCount": 0,
+      "liveness": "live",
+      "livenessEvidence": ["worktree-mtime"],
+      "conflict": "clean",
+      "conflictReason": null,
+      "conflictPaths": [],
+      "policyMovement": "unmoved",
+      "policyReason": null,
+      "policyPaths": []
+    },
+    {
+      "path": "<tmp>/projects/beep-effect1/.claude/worktrees/lane-b",
+      "kind": "linked-worktree",
+      "branch": "lane-b",
+      "detached": false,
+      "head": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+      "dirtyCount": 0,
+      "mergeBase": "05ef07bcba5ed634cf5e48aa15516c4e28fbbc0d",
+      "branchDiffCount": 0,
+      "liveness": "live",
+      "livenessEvidence": ["worktree-mtime"],
+      "conflict": "clean",
+      "conflictReason": null,
+      "conflictPaths": [],
+      "policyMovement": "unmoved",
+      "policyReason": null,
+      "policyPaths": []
+    }
+  ],
+  "contestedPaths": []
+}
