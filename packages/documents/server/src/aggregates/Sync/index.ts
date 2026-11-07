@@ -38,3 +38,5 @@ export * from "./VaultSyncApi.ts";
 export * from "./VaultSyncEngine.service.ts";
 export * from "./VaultSyncMcp.ts";
 export * from "./VaultSyncPass.saga-handlers.ts";
+export * from "./VaultSyncSession.repository.ts";
+export * from "./VaultSyncSession.ts";

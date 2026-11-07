@@ -993,6 +993,7 @@
         "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
+        "@beep/shared-tables": "workspace:^",
         "@beep/utils": "workspace:^",
         "@noble/hashes": "catalog:",
         "drizzle-orm": "catalog:",

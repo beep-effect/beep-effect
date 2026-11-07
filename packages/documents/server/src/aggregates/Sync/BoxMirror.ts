@@ -156,6 +156,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       return yield* mutation(args.operationId, args.generation, encoded, call);
     });
     const implementation: Context.Service.Shape<typeof BoxMirror> = {
+      probe: () => Effect.map(availability.refresh, (result) => ({ connected: result.connected })),
       resolveRoot: () => Effect.map(rootId, (remoteId) => ({ remoteId })),
       ensureFolder: Effect.fnUntraced(function* (args) {
         const parentRemoteId = yield* parent(args.parentRemoteId);

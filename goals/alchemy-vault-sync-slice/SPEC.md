@@ -236,6 +236,12 @@ ConflictEventRegistry is keyed by destination and atomically reserves remoteEven
 
 Reverse: Replace the registry with a native uniqueness primitive while retaining conflict stream ids
 
+### Sidecar launch token binds the slice principal, 2026-11-07
+
+Operator decision: no login-session or bearer-verification service exists here or elsewhere. The local sidecar launch token is the authenticated HTTP/RPC channel and binds the desktop principal; in-process CLI uses the local operator, remote CLI presents the launch token from the existing handoff, and MCP uses the configured sidecar identity following OntologyMcpTransport. SessionResolver remains the port. A narrow documents-server repository reads active shared membership on each command and View emission. Hosted multi-user bearer/OIDC is a future adapter, not this slice.
+
+Reverse: Add a bearer adapter behind the same port; no caller changes
+
 ### Hold uncertain Box mutations behind durable intent receipts, 2026-11-07
 
 Commit an operation intent before calling Box and the acknowledgement before returning. An interrupted intent is looked up through BoxMirrorEvidence; insufficient evidence holds the operation without another Box mutation. The existing DmsMirrorBox port has no authoritative version or digest lookup, so the safe production lookup result is absent until that capability is provided. No fixture proves provider idempotency. Runtime composition must scope the existing Box mirror and root configuration to one destination.

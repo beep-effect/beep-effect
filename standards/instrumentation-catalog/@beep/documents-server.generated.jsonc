@@ -58,6 +58,12 @@
     {"name":"Documents.SyncOperationRepository.requeueLeased","owner":"@beep/documents-server","family":"slice","conforms":true},
     {"name":"Documents.SyncOperationRepository.update","owner":"@beep/documents-server","family":"slice","conforms":true},
     {"name":"Documents.VaultSyncPass","owner":"@beep/documents-server","family":"slice","conforms":false},
-    {"name":"VaultSync.deliveryCheck","owner":"@beep/documents-server","family":"slice","conforms":true}
+    {"name":"VaultSync.deliveryCheck","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncMembership.read","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.grants","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.localOperator","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.resolve","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.revoked","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.scope","owner":"@beep/documents-server","family":"slice","conforms":true}
   ]
 }

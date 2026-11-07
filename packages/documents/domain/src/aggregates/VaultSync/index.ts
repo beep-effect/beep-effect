@@ -53,4 +53,5 @@ export * from "./SyncOperation.events.ts";
 export * from "./SyncOperationSnapshot.view.ts";
 export * from "./SyncRuleViolation.rejection.ts";
 export * from "./Values.ts";
+export * from "./VaultSyncRequest.command.ts";
 export * from "./VaultSyncStatus.view.ts";

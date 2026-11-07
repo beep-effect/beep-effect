@@ -12,3 +12,4 @@ export * from "./Model.ts";
 export * from "./VaultSync.policy.ts";
 export * from "./VaultSync.policy-handlers.ts";
 export * from "./VaultSyncPass.saga.ts";
+export * from "./VaultSyncRequests.policy.ts";

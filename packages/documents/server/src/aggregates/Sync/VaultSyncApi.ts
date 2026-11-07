@@ -11,6 +11,7 @@ import { VaultSyncApi } from "@beep/documents-use-cases/aggregates/VaultSync";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Headers from "effect/http/Headers";
+import * as HttpRouter from "effect/http/HttpRouter";
 import * as OpenApi from "effect/http-api/OpenApi";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
@@ -236,3 +237,23 @@ export const VaultSyncHttp = Http.toHttpApi({
  * @since 0.0.0
  */
 export const vaultSyncOpenApi = OpenApi.fromApi(VaultSyncHttp.api);
+
+/**
+ * HTTP RPC endpoint for generated remote CLI clients using the launch token.
+ *
+ * **Example** (Inspect RPC hosting)
+ * ```ts
+ * import { VaultSyncRpcHttp } from "@beep/documents-server/aggregates/Sync";
+ * void VaultSyncRpcHttp;
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export const VaultSyncRpcHttp = HttpRouter.add(
+  "POST",
+  "/vault-sync/rpc",
+  Effect.gen(function* () {
+    const api = yield* VaultSyncApi;
+    return yield* api.fetch;
+  })
+);
