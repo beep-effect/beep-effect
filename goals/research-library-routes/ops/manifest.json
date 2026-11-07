@@ -33,7 +33,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_research-library-routes-65a0ed0e3e4e/verdict.json",
+        "ref": ".beep/yeet/runs/docs_research-library-routes-adopt-ad677b8ed14a/verdict.json",
         "gating": true
       }
     ]
