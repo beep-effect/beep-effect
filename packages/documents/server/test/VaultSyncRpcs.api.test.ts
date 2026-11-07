@@ -21,14 +21,17 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as RpcTest from "effect/rpc/RpcTest";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
+import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 
 const TOKEN = "compat-launch-token";
 const own = V.DestinationId.make("documents_sync_destination_acompat");
@@ -81,6 +84,7 @@ const binding = Layer.effect(
 );
 
 const probe = DmsMirrorProbe.make({ connected: true, provider: "box" });
+const authFailed = DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("auth-failed"), provider: "box" });
 
 const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: ReadonlyArray<SyncConflict> = []) {
   const [legacyRow] = yield* decodeLegacyRows;
@@ -91,16 +95,18 @@ const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: Readonl
     publicId: "documents_sync_conflict_zz" as never,
   });
   const refreshed = yield* Ref.make(0);
-  const availability = Layer.succeed(
-    DmsMirrorAvailability,
-    DmsMirrorAvailability.of({
-      probe: Effect.succeed(probe),
-      refresh: Effect.as(
-        Ref.update(refreshed, (n) => n + 1),
-        probe
-      ),
-    })
-  );
+  // `answer` is what the provider would say now; `current` is the sidecar's last resolution.
+  const answer = yield* Ref.make(probe);
+  const current = yield* SubscriptionRef.make(probe);
+  const mirrorAvailability = DmsMirrorAvailability.of({
+    changes: SubscriptionRef.changes(current),
+    probe: SubscriptionRef.get(current),
+    refresh: Ref.update(refreshed, (n) => n + 1).pipe(
+      Effect.andThen(Ref.get(answer)),
+      Effect.tap((next) => SubscriptionRef.set(current, next))
+    ),
+  });
+  const availability = Layer.succeed(DmsMirrorAvailability, mirrorAvailability);
   const legacy = Layer.succeed(
     SyncConflictRepository,
     SyncConflictRepository.of({
@@ -144,7 +150,7 @@ const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: Readonl
     })
   );
   const client = yield* RpcTest.makeClient(VaultSyncRpcs).pipe(Effect.provideContext(context));
-  return { client, context, refreshed, sql };
+  return { answer, availability: mirrorAvailability, client, context, refreshed, sql };
 });
 
 const workspaceId = 1 as never;
@@ -306,6 +312,63 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       const seen = yield* Ref.get(frames);
       expect(seen[0]).toBe(0);
       assertSome(A.last(seen), 1);
+    }).pipe(TestClock.withLive)
+  );
+  it.effect("pushes a status frame when a probe moves only the sidecar availability", () =>
+    Effect.gen(function* () {
+      const { answer, availability, client, sql } = yield* setup();
+      yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
+      const frames = yield* Ref.make<ReadonlyArray<VaultSyncStatus>>([]);
+      const watching = yield* client.WatchVaultSyncStatus({ workspaceId }, headers).pipe(
+        Stream.tap((frame) => Ref.update(frames, A.append(frame))),
+        Stream.takeUntil((frame) => !frame.connected),
+        Stream.runDrain,
+        Effect.retry({ schedule: Schedule.spaced("10 millis"), times: 300 }),
+        Effect.forkChild
+      );
+      yield* Ref.get(frames).pipe(
+        Effect.repeat({ until: A.isReadonlyArrayNonEmpty, schedule: Schedule.spaced("10 millis") }),
+        Effect.timeout("10 seconds")
+      );
+      // The probe changes only availability: no command reaches any View.
+      yield* Ref.set(answer, authFailed);
+      yield* availability.refresh;
+      yield* Fiber.join(watching).pipe(Effect.timeout("10 seconds"));
+      const seen = yield* Ref.get(frames);
+      expect(A.map(seen, (frame) => frame.connected)).toEqual([true, false]);
+      const last = A.last(seen);
+      assertSome(
+        O.flatMap(last, (frame) => frame.disconnectReason),
+        "auth-failed"
+      );
+    }).pipe(TestClock.withLive)
+  );
+
+  it.effect("delivers no availability frame to a subscriber revoked before the probe", () =>
+    Effect.gen(function* () {
+      const { answer, availability, client, sql } = yield* setup();
+      yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
+      const frames = yield* Ref.make<ReadonlyArray<VaultSyncStatus>>([]);
+      // Wait for the destination to project, so the subscription itself needs no retry
+      // and the post-revocation failure ends the fiber.
+      yield* client
+        .GetVaultSyncStatus({ workspaceId, forceProbe: false }, headers)
+        .pipe(Effect.retry({ schedule: Schedule.spaced("10 millis"), times: 300 }));
+      const watching = yield* client.WatchVaultSyncStatus({ workspaceId }, headers).pipe(
+        Stream.runForEach((frame) => Ref.update(frames, A.append(frame))),
+        Effect.forkChild
+      );
+      yield* Ref.get(frames).pipe(
+        Effect.repeat({ until: A.isReadonlyArrayNonEmpty, schedule: Schedule.spaced("10 millis") }),
+        Effect.timeout("10 seconds")
+      );
+      yield* sql`UPDATE shared_membership SET deleted_at = 1`;
+      yield* Ref.set(answer, authFailed);
+      yield* availability.refresh;
+      const ended = yield* Fiber.join(watching).pipe(Effect.flip, Effect.timeout("10 seconds"));
+      expect(ended._tag).toBe("VaultSyncActionError");
+      const seen = yield* Ref.get(frames);
+      expect(A.every(seen, (frame) => frame.connected)).toBe(true);
     }).pipe(TestClock.withLive)
   );
 });

@@ -25,8 +25,9 @@ import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { VaultSyncDeliveryClient } from "./VaultSyncApi.ts";
+import { authorizeVaultSyncDelivery, VaultSyncDeliveryClient } from "./VaultSyncApi.ts";
 import type * as View from "@alchemy.run/domain/View";
+import type * as Equivalence from "effect/Equivalence";
 import type * as Headers from "effect/http/Headers";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncRpcs.api");
@@ -57,6 +58,7 @@ const keysOf = <K, A>(map: H.HashMap<K, A> | null): ReadonlyArray<K> =>
   map === null ? [] : map.pipe(H.keys, A.fromIterable);
 
 type StatusView = View.StateOf<typeof V.VaultSyncStatus>;
+const sameStatus: Equivalence.Equivalence<VaultSyncStatus> = S.toEquivalence(VaultSyncStatus);
 const counts = (status: {
   readonly items: H.HashMap<V.ItemId, V.ItemState>;
   readonly operations: H.HashMap<V.OperationId, V.OperationState>;
@@ -160,12 +162,18 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
       const view = yield* client.VaultSyncStatus.get(destinationId, { headers });
       return yield* statusOf(destinationId, headers, view, refresh);
     });
-    // Every frame passes the same live delivery gate as the other View subscriptions.
+    // View frames and availability changes both pass the same live delivery gate as the
+    // other View subscriptions, so a probe that only moves the connection state still
+    // pushes a frame and a revoked subscriber sees none of either.
     const watchStatus = (workspaceId: number, headers: Headers.Input) =>
       Stream.unwrap(
         Effect.map(destinationOf(workspaceId, headers), (destinationId) =>
-          client.VaultSyncStatus.watch(destinationId, { headers }).pipe(
-            Stream.mapEffect((frame) => statusOf(destinationId, headers, frame.state, false))
+          Stream.zipLatest(
+            client.VaultSyncStatus.watch(destinationId, { headers }),
+            availability.changes.pipe(authorizeVaultSyncDelivery("VaultSyncStatus.watch", destinationId, headers))
+          ).pipe(
+            Stream.mapEffect(([frame]) => statusOf(destinationId, headers, frame.state, false)),
+            Stream.changesWith(sameStatus)
           )
         )
       );
