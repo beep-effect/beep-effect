@@ -25,6 +25,14 @@ const $I = $DocumentsUseCasesId.create("aggregates/VaultSync/BoxMirror.external"
 export const DisconnectReason = LiteralKit(["credentials-missing", "auth-failed", "probe-failed", "unavailable"]).pipe(
   $I.annoteSchema("DisconnectReason", { description: "Why a Box mirror is disconnected." })
 );
+
+/**
+ * Why a Box mirror is disconnected.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DisconnectReason = typeof DisconnectReason.Type;
 /**
  * BoxMirrorUnavailable vault sync orchestration.
  *
