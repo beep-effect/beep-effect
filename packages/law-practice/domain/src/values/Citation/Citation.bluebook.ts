@@ -17,6 +17,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import { CourtId, CourtReporterArtifactVersion, ReporterId } from "../CourtReporterVocabulary/index.ts";
 import {
   CitationCaseEdition,
@@ -124,7 +125,7 @@ const unsupported = (actual: unknown) =>
 const fromFull = Effect.fn("Bluebook.fromFull")(function* (citation: FullCitation) {
   if (citation.type !== "case") return yield* Effect.fail(unsupported(citation));
   const components = yield* S.encodeEffect(CitationComponents)(citation.components).pipe(
-    Effect.mapError((error) => error.issue)
+    Effect.mapError(Struct.get("issue"))
   );
   const value = yield* S.decodeUnknownEffect(BluebookCitation)({
     form: "us-reports-case",
@@ -134,8 +135,8 @@ const fromFull = Effect.fn("Bluebook.fromFull")(function* (citation: FullCitatio
     page: components.page,
     year: O.getOrNull(citation.metadata.year),
     pinCite: O.getOrNull(citation.metadata.pinCite),
-  }).pipe(Effect.mapError((error) => error.issue));
-  const wire = yield* S.encodeEffect(BluebookCitation)(value).pipe(Effect.mapError((error) => error.issue));
+  }).pipe(Effect.mapError(Struct.get("issue")));
+  const wire = yield* S.encodeEffect(BluebookCitation)(value).pipe(Effect.mapError(Struct.get("issue")));
   if (!equivalent(citation, fullFrom(wire))) return yield* Effect.fail(unsupported(citation));
   return wire;
 });
