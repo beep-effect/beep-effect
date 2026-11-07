@@ -7,15 +7,17 @@
 
 "use client";
 
-import { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
+import { DmsMirrorDisconnectReason, VaultSyncActionError } from "@beep/documents-use-cases/public";
 import { Button } from "@beep/ui/components/button";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import { thunkNull } from "@beep/utils/thunk";
 import { useAtomMount, useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import { pipe } from "effect/Function";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as S from "effect/Schema";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import {
   VaultSyncCommand,
@@ -61,12 +63,16 @@ const statusCounts = (status: VaultSyncStatus, local: LocalWork) => [
   {
     key: "open-conflicts",
     label: "Open conflicts",
-    value: withLocal(status.openConflicts, local.pendingReviews, "pending review"),
+    // A pending review is of a conflict already counted: say so, never add it.
+    value:
+      local.pendingReviews > 0
+        ? `${status.openConflicts} (${local.pendingReviews} reviewed, waiting to sync)`
+        : `${status.openConflicts}`,
   },
 ];
 
 /** Box as the sidecar reports it, or the sidecar itself out of reach (queued work, or no status). */
-type Connection = "connected" | "disconnected" | "sidecar offline";
+type Connection = "connected" | "disconnected" | "checking…" | "sidecar offline";
 
 const ConnectionBadge = ({ connection }: { readonly connection: Connection }): JSX.Element => (
   <span
@@ -85,37 +91,41 @@ const VaultSyncStatusView = ({
   status,
   onRetry,
   local,
+  offline,
 }: {
   readonly local: LocalWork;
+  /** The sidecar is out of reach: the offline notice reports it once, with its own Retry. */
+  readonly offline: boolean;
   readonly onRetry: () => void;
   readonly status: AsyncResult.AsyncResult<VaultSyncStatus, unknown>;
-}): JSX.Element =>
+}): JSX.Element | null =>
   AsyncResult.match(status, {
     onInitial: () => (
       <p className="mt-2 text-xs text-muted-foreground" data-testid="vault-sync-status">
         Loading sync status
       </p>
     ),
-    onFailure: (failure) => (
-      // The status query had no retry and nothing invalidates it, so a sidecar that
-      // restarted -- or a single dropped request -- left this reading "unavailable"
-      // for the rest of the session, long after sync had come back. A dead end with
-      // no way out is not a state; it is an abandonment. The waiting flag makes the
-      // retry visibly do something even when the refresh fails again immediately.
-      <div className="mt-2 flex items-center gap-2" data-testid="vault-sync-status">
-        <p className="text-xs text-destructive">Sync status is unavailable.</p>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={onRetry}
-          disabled={failure.waiting}
-          data-testid="vault-sync-status-retry"
-        >
-          {failure.waiting ? "Retrying…" : "Retry"}
-        </Button>
-      </div>
-    ),
+    onFailure: (failure) =>
+      offline ? null : (
+        // The status query had no retry and nothing invalidates it, so a sidecar that
+        // restarted -- or a single dropped request -- left this reading "unavailable"
+        // for the rest of the session, long after sync had come back. A dead end with
+        // no way out is not a state; it is an abandonment. The waiting flag makes the
+        // retry visibly do something even when the refresh fails again immediately.
+        <div className="mt-2 flex items-center gap-2" data-testid="vault-sync-status">
+          <p className="text-xs text-destructive">Sync status is unavailable.</p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onRetry}
+            disabled={failure.waiting}
+            data-testid="vault-sync-status-retry"
+          >
+            {failure.waiting ? "Retrying…" : "Retry"}
+          </Button>
+        </div>
+      ),
     onSuccess: (success) => (
       <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1" data-testid="vault-sync-status">
         {A.map(statusCounts(success.value, local), (entry) => (
@@ -227,11 +237,8 @@ const VaultSyncActionStatus = ({ state }: { readonly state: VaultSyncPanelState 
     idle: thunkNull,
     syncing: thunkNull,
     reviewing: thunkNull,
-    queued: ({ message }) => (
-      <span className="text-xs text-warning-text" role="status" data-testid="vault-sync-queued">
-        {message}
-      </span>
-    ),
+    // The offline notice reports queued work once for the whole panel.
+    queued: thunkNull,
     succeeded: ({ message }) => (
       <span className="text-xs text-muted-foreground" role="status" data-testid="vault-sync-complete">
         {message}
@@ -267,12 +274,15 @@ const VaultSyncConflictsList = ({
   pendingReview,
   pendingReviews,
   rejection,
+  offline,
 }: {
   readonly busy: boolean;
   /** Queued reviews: their rows stay visible when the list itself cannot load. */
   readonly pendingReviews: ReadonlyArray<ReviewIntentRow>;
   /** The server's message for the conflict whose review it refused, if any. */
   readonly rejection: O.Option<{ readonly conflictId: SyncConflict["id"]; readonly message: string }>;
+  /** The sidecar is out of reach: an unloadable list is expected, not an error. */
+  readonly offline: boolean;
   /** Whether a review of the conflict is queued: shown as predicted, reviewed. */
   readonly pendingReview: (conflict: SyncConflict) => boolean;
   readonly conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown>;
@@ -282,6 +292,15 @@ const VaultSyncConflictsList = ({
   // A failed conflict query used to render as `null` — exactly like "no
   // conflicts" — so an operator could be told everything was clean while the
   // listing was actually unavailable.
+  if (AsyncResult.isFailure(conflicts) && offline) {
+    return A.isReadonlyArrayNonEmpty(pendingReviews) ? (
+      <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
+        {A.map(pendingReviews, (intent) => (
+          <PendingReviewRow key={intent.intentId} intent={intent} />
+        ))}
+      </ul>
+    ) : null;
+  }
   if (AsyncResult.isFailure(conflicts)) {
     return (
       <>
@@ -325,7 +344,7 @@ const VaultSyncConflictsList = ({
             ) : (
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => onReview(conflict)}
                 disabled={busy}
@@ -397,13 +416,6 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
 
   const connected = AsyncResult.isSuccess(status) && status.value.connected;
   const pendingReviews = A.filter(intentsOf(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID), VaultSyncIntent.guards.review);
-  // The sidecar is out of reach while work is queued against it or its status cannot be read.
-  const connection: Connection =
-    VaultSyncPanelState.guards.queued(panelState) || AsyncResult.isFailure(status)
-      ? "sidecar offline"
-      : connected
-        ? "connected"
-        : "disconnected";
   const rejection = VaultSyncPanelState.guards.failed(panelState)
     ? O.map(O.fromUndefinedOr(panelState.conflictId), (conflictId) => ({ conflictId, message: panelState.message }))
     : O.none();
@@ -412,15 +424,30 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
   const unconfigured = AsyncResult.isSuccess(status) && !status.value.connected;
   const queuedCount = intentsOf(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID).length;
   const passQueued = triggerQueued(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID);
+  // An intent in flight has no answer yet: the last known state is not claimed until it settles.
+  const inFlight = VaultSyncPanelState.guards.syncing(panelState) || VaultSyncPanelState.guards.reviewing(panelState);
+  // A status failure the sidecar answered (a typed refusal) means it is reachable; any other failure means it is not.
+  const statusUnreachable =
+    AsyncResult.isFailure(status) && !O.exists(Cause.findErrorOption(status.cause), S.is(VaultSyncActionError));
+  // Work waits beyond the one in flight only when an earlier delivery could not reach the sidecar.
+  const offline =
+    statusUnreachable || VaultSyncPanelState.guards.queued(panelState) || queuedCount > (inFlight ? 1 : 0);
+  const connection: Connection = offline
+    ? "sidecar offline"
+    : inFlight || AsyncResult.isInitial(status)
+      ? "checking…"
+      : connected
+        ? "connected"
+        : "disconnected";
   const syncing = VaultSyncPanelState.guards.syncing(panelState);
   const busy = syncing || VaultSyncPanelState.guards.reviewing(panelState);
 
-  return (
+  const card = (
     <section
       className={
         floating
           ? "fixed bottom-4 left-4 z-40 max-h-96 w-80 overflow-y-auto rounded-md border bg-card p-3 text-sm shadow-sm"
-          : "mx-auto mt-6 mb-16 max-h-viewport-inset w-sync-panel overflow-y-auto rounded-lg border bg-card p-5 text-sm shadow-sm"
+          : "mx-auto mt-6 w-sync-panel rounded-lg border bg-card p-5 text-sm shadow-sm"
       }
       data-testid="vault-sync-panel"
     >
@@ -436,8 +463,40 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       <VaultSyncStatusView
         status={status}
         onRetry={refreshStatus}
+        offline={offline}
         local={{ waiting: queuedCount, pendingReviews: pendingReviews.length }}
       />
+      {offline ? (
+        <div
+          className="mt-2 flex items-center justify-between gap-2 rounded-sm border border-warning/40 bg-warning/10 p-2 text-xs text-warning-text"
+          role="status"
+          data-testid="vault-sync-offline-notice"
+        >
+          <p>
+            Sidecar offline.{" "}
+            <span data-testid="vault-sync-intents">
+              {queuedCount === 0
+                ? "Status and conflicts refresh when it reconnects."
+                : queuedCount === 1
+                  ? "1 action waiting for the sidecar; it runs when the sidecar reconnects."
+                  : `${queuedCount} actions waiting for the sidecar; they run when the sidecar reconnects.`}
+            </span>
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant="warning"
+            onClick={() => {
+              refreshStatus();
+              refreshConflicts();
+            }}
+            disabled={AsyncResult.isFailure(status) && status.waiting}
+            data-testid="vault-sync-status-retry"
+          >
+            Retry
+          </Button>
+        </div>
+      ) : null}
       {AsyncResult.isSuccess(status) && !status.value.connected ? (
         <DisconnectedNote
           probedAt={status.value.probedAt}
@@ -447,27 +506,35 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
         />
       ) : null}
       <div className="mt-3 flex items-center gap-2">
-        <Button
-          type="button"
-          size="sm"
-          onClick={() => runCommand(VaultSyncCommand.cases.trigger.make({}))}
-          disabled={busy || unconfigured || passQueued}
-          data-testid="vault-sync-trigger"
-        >
-          {syncing ? "Requesting…" : passQueued ? "Sync queued" : "Sync now"}
-        </Button>
+        {passQueued ? (
+          // A queued pass is a status, not a faded button: a chip at readable contrast.
+          <span
+            className="rounded-md border border-warning/40 bg-warning/10 px-2.5 py-1 text-xs font-medium text-warning-text"
+            aria-disabled="true"
+            data-testid="vault-sync-trigger"
+          >
+            Sync queued
+          </span>
+        ) : (
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => runCommand(VaultSyncCommand.cases.trigger.make({}))}
+            disabled={busy || unconfigured}
+            data-testid="vault-sync-trigger"
+          >
+            {syncing ? "Requesting…" : "Sync now"}
+          </Button>
+        )}
         <VaultSyncActionStatus state={panelState} />
       </div>
-      {queuedCount > 0 ? (
-        <p className="mt-2 text-xs text-muted-foreground" data-testid="vault-sync-intents">
-          {queuedCount === 1 ? "1 action waiting for the sidecar" : `${queuedCount} actions waiting for the sidecar`}
-        </p>
-      ) : null}
+
       <VaultSyncConflictsList
         busy={busy}
         pendingReview={(conflict) => reviewQueued(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID, conflict.id)}
         pendingReviews={pendingReviews}
         rejection={rejection}
+        offline={offline}
         conflicts={conflicts}
         onRetry={refreshConflicts}
         onReview={(conflict) =>
@@ -485,4 +552,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       />
     </section>
   );
+  // Docked, the card scrolls inside its dock area rather than past it; the bottom padding keeps
+  // its last row clear of the floating composer control.
+  return floating ? card : <div className="h-full overflow-y-auto px-4 pb-20">{card}</div>;
 }
