@@ -2621,3 +2621,18 @@ file-level pass or relabel older evidence from a different dependency profile.
   retain the existing live conformance case, its timeout and all assertions.
 - Prevention: timer notification and due-time checks must share a rearm contract.
   No local test suite, timeout increase, baseline change or suppression is used.
+
+### 2026-11-07 — Reuse decoders in the pinned native diff replay
+
+- Work: resolve the additional unit-d failure observed while qualifying PR #2873.
+- Evidence: hosted job 128333717511 reports CitationDiffKernel's 1,005-case
+  exact-source replay exceeding the existing 29,750-ms instrumentation watchdog
+  under its unchanged 30-second test deadline. The other malformed-input/asset
+  control passes. The four inherited fixture failures remain owned by PR #2849.
+- Repair: reuse module-scoped request, edit-step and native-instance decoders
+  instead of constructing identical decoder functions for every request, native
+  instance and edit step. No native instance, result, key or source input is shared.
+- Prevention: construct immutable-schema decoders outside repeated native loops.
+  Hosted CI must establish whether this reduction suffices; no performance pass
+  is claimed from source inspection. Keep the corpus, exact assertions, source
+  identity, fresh native ownership, watchdog and every production ceiling intact.
