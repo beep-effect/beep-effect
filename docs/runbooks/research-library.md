@@ -317,6 +317,50 @@ To reverse, copy the receipt's `catalog/history/<beforeCatalogSha256>.json` over
 `catalog/library.json`. The reader continues to accept v1. Preserve the receipt
 and backup for audit and do not edit historical artifacts.
 
+## Mining (T1/T2/T3)
+
+`mine` turns an intake's readable sources into CiTO-typed findings. A mining unit
+is one bound text artifact (extracted full text, then transcript, then raw plain
+text) of an effective readable, complete capture of a source cited by the
+intake's documents or derived from the intake. Incomplete or unread sources yield
+no job and no finding.
+
+```sh
+bun run beep research library mine triage --intake <id-or-date> --dry-run
+bun run beep research library mine triage --intake <id-or-date> --concurrency 4
+bun run beep research library mine read --intake <id-or-date> --profile junie --exclude-private
+bun run beep research library mine read --intake <id-or-date> --profile claude
+bun run beep research library mine synthesize <t3.json>
+```
+
+- `triage` (T1) gives every unit without a record a `select`, `skip` or `defer`
+  decision. Default profile `codex-luna`: `codex exec -m gpt-6-luna -c
+  model_reasoning_effort="medium" --output-schema <schema> -s read-only`.
+- `read` (T2) deep-reads every T1-selected unit. Profiles: `junie`
+  (`claude-opus-5-5` medium, the default while JetBrains credits remain), `claude`
+  (`claude -p --model claude-opus-5-5 --effort medium --tools ""`) and `cursor`
+  (`claude-opus-5-5-medium`, fallback only). `junie` and `cursor` refuse any
+  private-partition unit with `LibraryMinePrivateRouteError` before launching; mine
+  the private partition with `--profile claude`.
+- `synthesize` (T3) imports a session-authored `LibrarySynthesisImport` file: an
+  `id`, the orchestrator `author` (`model`, `effort`, `route`, `argv`) and findings
+  that each name a `sourceId`, a readable `captureId`, a CiTO relation and a span.
+
+Every answer decodes against its tier schema. A finding whose span is not a
+verbatim substring of the bound capture text rejects the whole job
+(`LibraryMineSpanError`). Affirmative relations (`citesAsEvidence`, `supports`,
+`extends`, `usesMethodIn`, `usesDataFrom`) are dropped from `partial` or `unread`
+readings, and a prompt truncated at 200,000 characters is never `complete`. Topic
+ids outside the live goal and exploration packets are dropped and listed on the
+receipt. `--repo` names the repository whose packets supply topic ids.
+
+Runs write under the library's `ops/mine/<tier>/`: `records/` (one immutable
+record per unit; its presence marks the job done), `receipts/` (outcome, error tag,
+prompt and output hashes, and the `ModelRun` with model, effort, route and exact
+launch argv), `prompts/` and `outputs/`. One catalog write per run imports every
+record not yet in the catalog, so rerunning resumes and skips completed jobs. A
+quota or rate-limit exit pauses the batch; `--limit` caps pending jobs.
+
 ## Exploration boundary
 
 Finish intake reconciliation and the Phase 1 gate before substantive synthesis.

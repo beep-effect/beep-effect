@@ -11,7 +11,9 @@ import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { LibraryError } from "./Library.errors.ts";
+import { LibraryMineOptions } from "./Library.mine.schemas.ts";
 import { resolveLibraryInputRoots, resolveLibraryRoot } from "./Library.paths.ts";
 import { LibraryQualifyOptions } from "./Library.qualify.ts";
 import { LibraryAcquireOptions, LibraryInventoryOptions } from "./Library.schemas.ts";
@@ -106,6 +108,7 @@ const importResult = Command.make(
  * ```ts
  * import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary"
  * import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
  * console.log(Effect.isEffect(runLibraryVerificationCommand("/library")))
  * ```
  *
@@ -188,6 +191,106 @@ const status = Command.make(
   })
 ).pipe(Command.provide(ResearchLibraryLive), Command.withDescription("Report coverage and provider health separately"));
 
+const mineFlags = {
+  library,
+  intake: Flag.String("intake").pipe(Flag.withDescription("Intake id or unique intake date")),
+  limit: Flag.Int("limit").pipe(Flag.optional, Flag.withDescription("Run at most this many pending jobs")),
+  concurrency: Flag.Int("concurrency").pipe(Flag.withDefault(2), Flag.withDescription("Parallel runners, 1 to 8")),
+  dryRun: Flag.Boolean("dry-run").pipe(Flag.withDefault(false), Flag.withDescription("Print planned jobs only")),
+  excludePrivate: Flag.Boolean("exclude-private").pipe(
+    Flag.withDefault(false),
+    Flag.withDescription("Skip private-partition artifacts")
+  ),
+  repo: Flag.String("repo").pipe(
+    Flag.optional,
+    Flag.withDescription("Repository whose goal and exploration packets supply topic ids; default: enclosing repo")
+  ),
+};
+const mineOptions = Effect.fn("ResearchLibrary.mineOptions")(function* (
+  profile: LibraryMineOptions["profile"],
+  flags: {
+    readonly intake: string;
+    readonly limit: O.Option<number>;
+    readonly concurrency: number;
+    readonly dryRun: boolean;
+    readonly excludePrivate: boolean;
+    readonly repo: O.Option<string>;
+  }
+) {
+  if (flags.concurrency < 1 || flags.concurrency > 8)
+    return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: flags.concurrency });
+  if (O.isSome(flags.limit) && flags.limit.value < 1)
+    return yield* LibraryError.make({ message: "Limit must be at least 1.", cause: flags.limit.value });
+  return LibraryMineOptions.make({
+    intake: flags.intake,
+    profile,
+    limit: flags.limit,
+    concurrency: flags.concurrency,
+    dryRun: flags.dryRun,
+    excludePrivate: flags.excludePrivate,
+    repoRoot: flags.repo,
+  });
+});
+const mineTriage = Command.make(
+  "triage",
+  {
+    ...mineFlags,
+    profile: Flag.Literals("profile", ["codex-luna", "claude"]).pipe(
+      Flag.withDefault("codex-luna"),
+      Flag.withDescription("Runner profile: codex-luna (gpt-6-luna medium) or claude (claude-opus-5-5 medium)")
+    ),
+  },
+  Effect.fn("ResearchLibrary.mineTriageCommand")(function* (flags) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(flags.library);
+    const options = yield* mineOptions(flags.profile, flags);
+    yield* research.mineTriage(root, options);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("T1: triage every readable artifact of an intake that has no triage record")
+);
+const mineRead = Command.make(
+  "read",
+  {
+    ...mineFlags,
+    profile: Flag.Literals("profile", ["junie", "claude", "cursor"]).pipe(
+      Flag.withDefault("junie"),
+      Flag.withDescription("Runner profile; junie and cursor never receive private-partition artifacts")
+    ),
+  },
+  Effect.fn("ResearchLibrary.mineReadCommand")(function* (flags) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(flags.library);
+    const options = yield* mineOptions(flags.profile, flags);
+    yield* research.mineRead(root, options);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("T2: deep-read every T1-selected artifact into span-checked CiTO findings")
+);
+const mineSynthesize = Command.make(
+  "synthesize",
+  {
+    library,
+    synthesis: Argument.String("synthesis-file"),
+    repo: mineFlags.repo,
+    dryRun: mineFlags.dryRun,
+  },
+  Effect.fn("ResearchLibrary.mineSynthesizeCommand")(function* ({ library, synthesis, repo, dryRun }) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(library);
+    yield* research.mineSynthesize(root, synthesis, repo, dryRun);
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("T3: import a session-authored synthesis as findings with an orchestrator ModelRun")
+);
+const mine = Command.make("mine").pipe(
+  Command.withDescription("Mine intake artifacts into source-bound findings: triage, read, synthesize"),
+  Command.withSubcommands([mineTriage, mineRead, mineSynthesize])
+);
+
 /**
  * Source library command group, independent of the knowledge vault.
  * **Example** (Register library commands)
@@ -201,5 +304,5 @@ const status = Command.make(
  */
 export const libraryCommand = Command.make("library").pipe(
   Command.withDescription("Reusable, evidence-backed research source library"),
-  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status, ontology, migrate])
+  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status, ontology, migrate, mine])
 );

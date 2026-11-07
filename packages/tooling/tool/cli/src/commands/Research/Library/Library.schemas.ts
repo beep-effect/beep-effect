@@ -736,6 +736,11 @@ export class LibraryDerivation extends S.Opaque<LibraryDerivation, { readonly br
 /**
  * Model execution provenance for recorded findings.
  *
+ * **Details**
+ *
+ * `argv` is the exact launch argv of the runner. Rows recorded before the field
+ * existed decode with an empty argv.
+ *
  * **Example** (Inspect LibraryModelRun)
  * ```ts
  * import { LibraryModelRun } from "@beep/repo-cli/commands/Research"
@@ -753,6 +758,10 @@ export class LibraryModelRun extends S.Opaque<LibraryModelRun, { readonly brand:
     effort: S.String,
     route: S.String,
     startedAt: S.String,
+    argv: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultKey(Effect.succeed([]))
+    ),
   })
     .pipe($I.annoteSchema("LibraryModelRun", { description: "Model execution provenance for recorded findings." }))
     .annotate($I.class("ModelRun", { description: "Model execution provenance for recorded findings." }))

@@ -15,6 +15,8 @@ import { acquireLibrary } from "./Library.acquire.ts";
 import { importLibraryResult } from "./Library.import.ts";
 import { inventoryLibrary } from "./Library.inventory.ts";
 import { migrateLibrary } from "./Library.migrate.ts";
+import { LibraryMineRunnerLive } from "./Library.mine.runner.ts";
+import { mineLibraryRead, mineLibrarySynthesize, mineLibraryTriage } from "./Library.mine.ts";
 import { renderLibraryOntology } from "./Library.ontology.ts";
 import { qualifyLibrary } from "./Library.qualify.ts";
 import { renderLibrary } from "./Library.render.ts";
@@ -39,7 +41,10 @@ export type ResearchLibraryRequirements =
   | Effect.Services<ReturnType<typeof renderLibrary>>
   | Effect.Services<ReturnType<typeof renderLibraryOntology>>
   | Effect.Services<ReturnType<typeof libraryStatus>>
-  | Effect.Services<ReturnType<typeof migrateLibrary>>;
+  | Effect.Services<ReturnType<typeof migrateLibrary>>
+  | Effect.Services<ReturnType<typeof mineLibraryTriage>>
+  | Effect.Services<ReturnType<typeof mineLibraryRead>>
+  | Effect.Services<ReturnType<typeof mineLibrarySynthesize>>;
 
 /**
  * Service contract for maintained library operations.
@@ -74,6 +79,13 @@ export class ResearchLibrary extends Context.Service<
     ) => Provided<ReturnType<typeof renderLibraryOntology>>;
     readonly migrate: (...args: Parameters<typeof migrateLibrary>) => Provided<ReturnType<typeof migrateLibrary>>;
     readonly status: (...args: Parameters<typeof libraryStatus>) => Provided<ReturnType<typeof libraryStatus>>;
+    readonly mineTriage: (
+      ...args: Parameters<typeof mineLibraryTriage>
+    ) => Provided<ReturnType<typeof mineLibraryTriage>>;
+    readonly mineRead: (...args: Parameters<typeof mineLibraryRead>) => Provided<ReturnType<typeof mineLibraryRead>>;
+    readonly mineSynthesize: (
+      ...args: Parameters<typeof mineLibrarySynthesize>
+    ) => Provided<ReturnType<typeof mineLibrarySynthesize>>;
   }
 >()($I`ResearchLibrary`) {}
 
@@ -109,6 +121,15 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
     status: Effect.fn("ResearchLibrary.status")((...args) =>
       libraryStatus(...args).pipe(Effect.provide(runtimeContext))
     ),
+    mineTriage: Effect.fn("ResearchLibrary.mineTriage")((...args) =>
+      mineLibraryTriage(...args).pipe(Effect.provide(runtimeContext))
+    ),
+    mineRead: Effect.fn("ResearchLibrary.mineRead")((...args) =>
+      mineLibraryRead(...args).pipe(Effect.provide(runtimeContext))
+    ),
+    mineSynthesize: Effect.fn("ResearchLibrary.mineSynthesize")((...args) =>
+      mineLibrarySynthesize(...args).pipe(Effect.provide(runtimeContext))
+    ),
   });
 });
 
@@ -125,5 +146,5 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
  * @since 0.0.0
  */
 export const ResearchLibraryLive = Layer.effect(ResearchLibrary, makeResearchLibrary()).pipe(
-  Layer.provide([N3TurtleCodecLive, ShaclValidationServiceLive, OxigraphSparqlQueryServiceLive])
+  Layer.provide([N3TurtleCodecLive, ShaclValidationServiceLive, OxigraphSparqlQueryServiceLive, LibraryMineRunnerLive])
 );

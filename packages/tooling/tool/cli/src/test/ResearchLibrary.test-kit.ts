@@ -20,6 +20,12 @@ export * from "../commands/Research/Library/Library.events.ts";
 export * from "../commands/Research/Library/Library.evidence.ts";
 export { acquireLibraryGithub } from "../commands/Research/Library/Library.github.ts";
 export * from "../commands/Research/Library/Library.integrity.ts";
+export {
+  checkLibraryMineSpans,
+  importLibraryMineRecords,
+  libraryMineTextArtifact,
+  planLibraryMine,
+} from "../commands/Research/Library/Library.mine.ts";
 export * from "../commands/Research/Library/Library.provenance.ts";
 export { mergeLibraryVersions } from "../commands/Research/Library/Library.store.ts";
 export * from "../commands/Research/Library/Library.versions.ts";

@@ -24,6 +24,45 @@ export {
 } from "./Library.import.ts";
 export { classifyLibraryReference, extractLibraryReferences, inventoryLibrary } from "./Library.inventory.ts";
 export {
+  LibraryMineBatchError,
+  LibraryMinePrivateRouteError,
+  LibraryMineRunnerError,
+  LibraryMineSpanError,
+  LibraryMineUnreadError,
+} from "./Library.mine.errors.ts";
+export {
+  LibraryMineLaunchPaths,
+  LibraryMineProfile,
+  LibraryMinePromptTransport,
+  LibraryMineRunner,
+  LibraryMineRunnerLive,
+  LibraryMineRunRequest,
+  libraryMineAnswerJson,
+  libraryMineArgv,
+  libraryMineProfile,
+  libraryMineProfileServes,
+} from "./Library.mine.runner.ts";
+export {
+  LibraryAffirmativeCitoRelation,
+  LibraryMineJob,
+  LibraryMineOptions,
+  LibraryMineOutcome,
+  LibraryMineProfileId,
+  LibraryMineReceipt,
+  LibraryMineTier,
+  LibraryReadingCoverage,
+  LibraryReadingFindingOutput,
+  LibraryReadingOutput,
+  LibraryReadingRecord,
+  LibrarySynthesisAuthor,
+  LibrarySynthesisFinding,
+  LibrarySynthesisImport,
+  LibraryTriageDecision,
+  LibraryTriageOutput,
+  LibraryTriageRecord,
+} from "./Library.mine.schemas.ts";
+export { mineLibraryRead, mineLibrarySynthesize, mineLibraryTriage } from "./Library.mine.ts";
+export {
   LIBRARY_MIGRATIONS_DIR,
   LIBRARY_ONTOLOGY_DIR,
   LIBRARY_SHAPES_FILE,
