@@ -2459,6 +2459,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(workflow, ["jobs", "windows-pipe", "steps", 1, "shell"])).toBe("powershell");
     })
   );
+  it.effect("adds optional hosted route inputs without passing them to heavy at main yet", () =>
+    Effect.gen(function* () {
+      const policy = yield* readCredentialPolicySources();
+      for (const name of ["route_skips", "route_receipt"]) {
+        expect(yamlAt(policy.heavyWorkflow, ["on", "workflow_call", "inputs", name, "type"])).toBe("string");
+        expect(yamlAt(policy.heavyWorkflow, ["on", "workflow_call", "inputs", name, "default"])).toBe("");
+        expect(yamlAt(policy.workflow, ["jobs", "heavy", "with", name])).toBeUndefined();
+      }
+      const jobs = yield* workflowJobs(policy.heavyWorkflow);
+      const gate = stepByName(jobSteps(jobs, "verify"), "Determine lane execution");
+      expect(gate.env).toMatchObject({
+        ROUTE_SKIPS: "${{ inputs.route_skips }}",
+        ROUTE_RECEIPT: "${{ inputs.route_receipt }}",
+        LANE_ID: "${{ matrix.id }}",
+      });
+      expect(gate.run).toContain('"$GITHUB_EVENT_NAME" == "pull_request"');
+      expect(gate.run).toContain('",${ROUTE_SKIPS}," == *",${LANE_ID},"*');
+      expect(gate.run).toContain("### Verification route: skip-satisfied");
+      expect(gate.run).not.toContain("${{ inputs.route_");
+      const script = gate.run ?? "";
+      const admitted = pipe(script, Str.indexOf("ADMITTED"), O.getOrThrow);
+      const route = pipe(script, Str.indexOf("ROUTE_SKIPS"), O.getOrThrow);
+      const goals = pipe(script, Str.indexOf("goals_only"), O.getOrThrow);
+      expect(route).toBeLessThan(goals);
+      expect(admitted).toBeLessThan(route);
+    })
+  );
   it.effect("keeps coverage comparison separate from Heavy and validates same-run producer artifacts", () =>
     Effect.gen(function* () {
       const policy = yield* readCredentialPolicySources();
