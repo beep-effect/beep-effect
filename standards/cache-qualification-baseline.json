@@ -80,11 +80,11 @@
       }
     },
     "@beep/alchemy-postgres": {
-      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
-      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Record the @beep/postgres dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the real-Postgres integration project; re-stamp the inherited identity, types and root turbo.json source review rows from main. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
-        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b.md",
+        "sha256": "e954c8f42e51c51f419a98af06a4cfe6ac17485daacc32b27de9e04f99b0f874"
       }
     },
     "@beep/anthropic": {
@@ -9351,6 +9351,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9407,6 +9408,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9449,6 +9451,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9573,6 +9576,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/utils#transit"
@@ -9778,6 +9782,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/utils#transit"
         ],
@@ -9823,6 +9828,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
@@ -9876,6 +9882,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
