@@ -25,6 +25,8 @@ const Expected = S.Struct({
     "SupraCitation",
     "ReferenceCitation",
     "UnknownCitation",
+    "FullLawCitation",
+    "FullJournalCitation",
   ]),
   fields: S.Struct({
     groups: S.Record(S.String, S.NullOr(S.String)),
@@ -61,6 +63,8 @@ const kinds = R.fromEntries([
   ["SupraCitation", "supra"],
   ["ReferenceCitation", "reference"],
   ["UnknownCitation", "unknown"],
+  ["FullLawCitation", "law"],
+  ["FullJournalCitation", "journal"],
 ]);
 const names: Readonly<Record<string, string>> = {
   pin_cite: "pinCite",
@@ -90,18 +94,29 @@ const assertCitation = Effect.fn("CanonicalExtractionTest.compare")(function* (
   const actual = yield* projectCitationSemanticMetadata(citation);
   expect(actual, id).toEqual(metadata(original));
 });
+const families = {
+  case: { method: "test_find_citations", count: 130 },
+  law: { method: "test_find_law_citations", count: 10 },
+  journal: { method: "test_find_journal_citations", count: 6 },
+  tax: { method: "test_find_tc_citations", count: 4 },
+} as const;
 /** Select original builtin count assertions, retaining one row per invocation.
  * The parallel attribute assertions and other tokenizer implementations remain
  * separate obligations. No expected output is obtained from the target.
  * @internal @category testing @since 0.0.0
  */
-export const readCitationCanonicalExtractions = Effect.fn("CanonicalExtractionTest.read")(function* () {
+export const readCitationCanonicalExtractions = Effect.fn("CanonicalExtractionTest.read")(function* (
+  family: keyof typeof families = "case"
+) {
   const raw = yield* readCitationOracleFixture(
     "assertion-cases",
     "c7ea12ec5ba0d66257affc4c6e54e8b2fa2ffdd0d79f41c1b701000e0edaf33f"
   );
   const capture = yield* S.decodeEffect(Capture)(raw);
-  const selected = A.filter(capture.events, (row) => row.test === "tests.test_FindTest.FindTest.test_find_citations");
+  const selected = A.filter(
+    capture.events,
+    (row) => row.test === `tests.test_FindTest.FindTest.${families[family].method}`
+  );
   const rows = [];
   for (const row of selected) {
     const header = yield* S.decodeEffect(Header)(row.payload);
@@ -109,7 +124,7 @@ export const readCitationCanonicalExtractions = Effect.fn("CanonicalExtractionTe
     const input = yield* S.decodeEffect(Input)(header.context.values);
     rows.push({ id: row.id, input });
   }
-  expect(rows).toHaveLength(130);
+  expect(rows).toHaveLength(families[family].count);
   return rows;
 });
 /** Replay original raw text and cleaning selections through production assembly.
@@ -119,9 +134,10 @@ export const readCitationCanonicalExtractions = Effect.fn("CanonicalExtractionTe
 export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   shard: number,
-  size: number
+  size: number,
+  family: keyof typeof families = "case"
 ) {
-  const rows = yield* readCitationCanonicalExtractions();
+  const rows = yield* readCitationCanonicalExtractions(family);
   const selected = rows.slice(shard * size, (shard + 1) * size);
   expect(selected.length).toBeGreaterThan(0);
   const installed = yield* installCitationDefaultConfigurationFixture(kind);

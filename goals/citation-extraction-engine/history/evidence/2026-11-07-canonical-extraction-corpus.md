@@ -34,3 +34,22 @@ sharing the existing semantic court-label comparison, server lint/types and the
 Fallow new-only audit pass with zero introduced findings. The post-refactor
 focused replay is still running at this checkpoint. Full hosted results and
 all unrepresented source behaviors remain unqualified.
+
+## Law, journal and Tax Court coverage
+
+The same authenticated loader now selects every original builtin count assertion
+from `test_find_law_citations` (10 inputs), `test_find_journal_citations` (6 inputs)
+and `test_find_tc_citations` (4 inputs). Each family's exact source count is
+checked independently. The complete integration suite adds one bounded group
+per new family per runtime, bringing scheduled coverage to 150 original inputs
+on each runtime. The focused suite also checks the first original input from
+each new family on Bun and Node. No new fixture expectations are generated.
+
+The source projection accepts FullLawCitation and FullJournalCitation explicitly
+and compares their original components and metadata through the same public
+semantic codec. The distinction between source count assertions, parallel
+attribute assertions and alternate tokenizer duties remains unchanged. Server
+lint/types and the Fallow new-only audit pass with zero introduced findings.
+The expanded focused replay is pending at this checkpoint; all full hosted
+results remain unqualified. GitHub REST and GraphQL status reads are currently
+rate-limited, which prevents a fresh hosted-status claim.

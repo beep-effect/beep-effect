@@ -1613,6 +1613,14 @@ Lane `feat/citation-default-owners` · PR #2847
 
 Reverse: Revert the builtin selector, algorithm and source corpus together; preserve DMP behavior, source prerequisite refusals and every unfinished goal acceptance obligation.
 
+### Include every original law journal and Tax Court extraction input, 2026-11-07
+
+Extend the same authenticated canonical replay with all 10 builtin law inputs, 6 journal inputs and 4 Tax Court inputs. The complete hosted replay now covers 150 original inputs per runtime. Add focused first-input checks for each new family on both runtimes. Preserve every original ID and independent expected object; no ready/complete ledger promotion follows from scheduling coverage. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove a family replay only after recording why its source projection is unsound; retain original assertions and never change expected outputs to fit the target.
+
 ### Own annotation contracts and reported source operation, 2026-11-07
 
 Server use cases own annotation mode/replacement/input/result schemas; native stages reuse them without aliases. Reported annotation preserves genuine proofs, exact native output and measured admitted work. Twelve final annotation/resolver tests, eleven regressions and four contract tests pass; lint/types/declarations/laws/Fallow pass with zero introduced findings. Shared Schema policy capture removes duplicated installer code. Final service/Layer and all goal acceptance remain open. See history/evidence/2026-11-07-public-annotation-operation.md.

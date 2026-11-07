@@ -13,6 +13,13 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         () => replayCitationCanonicalExtraction(kind, 0, 2),
         { timeout: 180000 }
       );
+      for (const family of ["law", "journal", "tax"] as const) {
+        it.effect(
+          `replays the original ${family} entry on ${kind}`,
+          () => replayCitationCanonicalExtraction(kind, 0, 1, family),
+          { timeout: 180000 }
+        );
+      }
     }
   }
 );

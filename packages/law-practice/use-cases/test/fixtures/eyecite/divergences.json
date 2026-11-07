@@ -1772,19 +1772,19 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-extraction-corpus.md",
-          "sha256": "d979d5ed3dfdca9321448e3424e51b244e05bef8e6e95c53523e04618498fc18"
+          "sha256": "a82a9b8a6a4d3f1570227b82e0f42a7f4bcd427e16f4c1f7f1831ec99d0e1712"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-          "sha256": "3fba3493506733c586a21a81aa5a6f6982a59d5d5d6d4067a1dedab454a0d0dc"
+          "sha256": "f80c249fee54bac5a7ab9b0421f19ac10d87ebe52efb06a3c8b79cb00ab502b9"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
-          "sha256": "2debe66d2197bc54a98b3388fcf6e53296e0b9620e5f26e11911520d75648d51"
+          "sha256": "6cb4a75e1d28e7dc78366ed17484e86096f088a16f793e66eeb7016f36df94d7"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCanonicalExtraction.test.ts",
-          "sha256": "a0f6d5cb1dc0024c534fc604b0cbe5767fa0a8cfde5bca40cdcc6ee3c151f434"
+          "sha256": "33f6769370a42ef2804b98c17cf325bdabaab629baba8cbbb6616090d40cd8ac"
         }
       ],
       "workflowState": "audit",
