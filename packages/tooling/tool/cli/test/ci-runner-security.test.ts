@@ -2472,6 +2472,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           `\${{ steps.decide.outputs.${name} }}`
         );
       }
+      // The label-triggered caller is usually a pull request's first admission, so it forwards the
+      // same route outputs as check.yml.
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const admitText = yield* fs.readFileString(`${root}/.github/workflows/heavy-admit.yml`);
+      const admit = parseWorkflowYaml(admitText);
+      for (const name of ["route_skips", "route_receipt"]) {
+        expect(yamlAt(admit, ["jobs", "heavy", "with", name])).toBe(`\${{ needs.admission.outputs.${name} }}`);
+        expect(yamlAt(admit, ["jobs", "admission", "outputs", name])).toBe(`\${{ steps.decide.outputs.${name} }}`);
+      }
       const jobs = yield* workflowJobs(policy.heavyWorkflow);
       const gate = stepByName(jobSteps(jobs, "verify"), "Determine lane execution");
       expect(gate.env).toMatchObject({
