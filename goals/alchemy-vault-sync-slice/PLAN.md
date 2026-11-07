@@ -41,3 +41,18 @@ jq . goals/alchemy-vault-sync-slice/ops/manifest.json
 rg -n "alchemy-vault-sync-slice|GOAL.md|agentLaunchers|packetAnchorDocument" goals/alchemy-vault-sync-slice
 git diff --check -- goals/alchemy-vault-sync-slice
 ```
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug alchemy-vault-sync-slice`; add a `kind: checkpoint` file there, never edit this block._
+
+### PR 1 merged; PR 2a Postgres Platform for aggregates and policies, 2026-11-06
+
+Foundations PR #2810 merged 2026-11-06 (7f7cb719ba): beta.85 pin, driver scaffold, P0 spikes, doctrine, entity-kit freeze. PR 2a ships `AlchemyPostgresPlatform.layer`: driver tables with provenance and `schema_version`, single-writer commits (instance row lock in one transaction), commandId dedupe, outbox delivery to policies, durable schedule/unschedule. Views, projections and streams fail with `AlchemyPostgresUnsupported` until PR 2b (with the Cluster workflow engine, catch-up over `Backfill`, upcasting at read, real-Postgres integration project). Conformance suite green on `Domain.InMemory` and PGlite (27 tests).
+
+Lane `alchemy-postgres-driver worktree`
+
+Reverse: Revert the PR 2a squash commit; no stored data exists yet
+
+<!-- beep:decisions:end -->
