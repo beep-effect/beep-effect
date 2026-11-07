@@ -1629,6 +1629,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert SourceResolution and public resolution contracts together, restoring the former extraction-local edition selector and retaining all original restoration/parity corpora.
 
+### Retain active evidence consumers after main archives goal packets, 2026-11-07
+
+Hosted Labs and Fallow dead-code failed after main archived goal inputs still read by active packages. Retain the three claim JSON inputs, live replay evidence and KPI artifacts with their active consumers. Exact original hashes are retained; regenerated KPI outputs differ only in adoption-table path. All 106 lab and eleven claim tests pass. Four unresolved imports are gone; the unrelated existing foldkit unused dependency is still reported locally. See history/evidence/2026-11-07-archive-consumer-ci-repair.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Restore the original consumer paths only together with an executable retained source for those archived inputs; preserve source bytes and metrics.
+
 ### Verify pin-cite-inclusive source components, 2026-11-07
 
 Publish canonical spanWithPincite evidence using the pinned source algorithm and closed per-component diagnostics. The source-v2 corpus adds 157 direct ranges and sixteen actual-model endpoint overrides without changing any prior observation. Nine public/private regression tests pass; source replay and eight corruption controls pass. Component issue and text limits remain enforced. See history/evidence/2026-11-07-verified-pincite-components.md.

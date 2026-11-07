@@ -364,7 +364,7 @@ export const generateReplayEvidence = Effect.fn("Evidence.generateReplayEvidence
  *   goldenJournal: "explorations/beep-ci-operational-ontology/ontology/extraction/s6/snapshot/raw/journal.ndjson",
  *   journal: "pin/admission/canonical/journal.ndjson",
  *   manifest: "pin/MANIFEST.yaml",
- *   evidence: "goals/ciops-ontology-pipeline/research/s7-live-replay-evidence.md"
+ *   evidence: "apps/labs/ciops/fixtures/retained-evidence/s7-live-replay-evidence.md"
  * })
  * console.log(paths.repoRoot) // "../../.."
  * ```
@@ -604,7 +604,7 @@ export const run4FleetLiveEvidencePaths: LiveEvidencePaths = LiveEvidencePaths.m
   goldenJournal: "explorations/beep-ci-operational-ontology/ontology/extraction/s6/snapshot/raw/journal.ndjson",
   journal: `${run4FleetPin}/admission/canonical/journal.ndjson`,
   manifest: `${run4FleetPin}/MANIFEST.yaml`,
-  evidence: "goals/ciops-ontology-pipeline/research/s7-live-replay-evidence.md",
+  evidence: "apps/labs/ciops/fixtures/retained-evidence/s7-live-replay-evidence.md",
 });
 
 /**
