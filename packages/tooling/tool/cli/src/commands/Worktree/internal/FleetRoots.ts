@@ -310,6 +310,14 @@ export const canonicalFleetOrigin = (url: string): string => {
   return Str.endsWith(".git")(withoutSlash) ? Str.slice(0, -4)(withoutSlash) : withoutSlash;
 };
 
+// The raw `origin` URL from a clone's `.git/config`, read without spawning git; unreadable is `O.none()`.
+const readCloneOriginUrl = Effect.fnUntraced(function* (clone: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const config = yield* fs.readFileString(path.join(clone, ".git", "config")).pipe(Effect.option);
+  return O.flatMap(config, originUrlFromGitConfig);
+});
+
 /**
  * Read a clone's canonical origin from its `.git/config` without spawning git.
  *
@@ -328,10 +336,8 @@ export const canonicalFleetOrigin = (url: string): string => {
  * @since 0.0.0
  */
 export const readCloneFleetOrigin = Effect.fn("FleetRoots.readCloneOrigin")(function* (clone: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const config = yield* fs.readFileString(path.join(clone, ".git", "config")).pipe(Effect.option);
-  return pipe(config, O.flatMap(originUrlFromGitConfig), O.map(canonicalFleetOrigin));
+  const url = yield* readCloneOriginUrl(clone);
+  return O.map(url, canonicalFleetOrigin);
 });
 
 /**
@@ -358,10 +364,8 @@ export const readCloneFleetOrigin = Effect.fn("FleetRoots.readCloneOrigin")(func
  * @since 0.0.0
  */
 export const readCloneFleetRepository = Effect.fn("FleetRoots.readCloneRepository")(function* (clone: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const config = yield* fs.readFileString(path.join(clone, ".git", "config")).pipe(Effect.option);
-  return pipe(config, O.flatMap(originUrlFromGitConfig), O.flatMap(fleetRepositoryFromOriginUrl));
+  const url = yield* readCloneOriginUrl(clone);
+  return O.flatMap(url, fleetRepositoryFromOriginUrl);
 });
 
 /**

@@ -47,8 +47,8 @@ projects directory:
 }
 ```
 
-Every root must be an absolute path. A relative entry, such as an unexpanded
-`~/projects` in a timer unit's environment file, is refused instead of
+Every root must be an absolute path. A relative entry, such as a path starting with an unexpanded
+`~` in a timer unit's environment file, is refused instead of
 resolving against the working directory. With a configured list, a root that does not exist yet contributes nothing
 instead of failing. A linked worktree directly under a root (a `beep/lanes`
 lane) brings in the clone that owns its `.git`. `roots.json` that does not

@@ -732,13 +732,12 @@ const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, proj
   // Configured roots may hold other repositories: admit only candidates whose owning clone shares our origin,
   // the rule the fleet mirror applies. Without a readable origin of our own, nothing else is admitted.
   const ownOrigin = yield* readCloneFleetOrigin(O.getOrElse(clone, () => repoRoot));
-  return yield* Effect.filter(A.flatten(nested), (candidate) =>
-    Effect.gen(function* () {
-      const candidateClone = yield* cloneRootOf(candidate);
-      const origin = yield* readCloneFleetOrigin(O.getOrElse(candidateClone, () => candidate));
-      return O.isSome(ownOrigin) && O.contains(origin, ownOrigin.value);
-    })
-  );
+  const sharesOrigin = Effect.fnUntraced(function* (candidate: string) {
+    const candidateClone = yield* cloneRootOf(candidate);
+    const origin = yield* readCloneFleetOrigin(O.getOrElse(candidateClone, () => candidate));
+    return O.isSome(ownOrigin) && O.contains(origin, ownOrigin.value);
+  });
+  return yield* Effect.filter(A.flatten(nested), sharesOrigin);
 });
 
 // The checkout roots a scope reads: the checkout alone, or with `--fleet`
