@@ -22,8 +22,9 @@ import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
 const sameSource = S.toEquivalence(SourceTextIdentity);
 /** Full and focused modes install every production pattern/helper. Only the
- * replay document set differs. Compare source kinds/components, plain text and
- * canonical spans independently; document resolution is not claimed here as an
+ * replay document set differs. Compare source kinds/components, represented
+ * metadata, candidate/selected editions, plain text and canonical spans
+ * independently; document resolution is not claimed here as an
  * independent oracle comparison merely because it completes successfully.
  * @internal @category testing @since 0.0.0
  */
@@ -76,7 +77,7 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
       removeAmbiguous: row.removeAmbiguous,
     });
     const result = yield* engine.extract(input);
-    yield* assertCitationSemanticDocument(unicode, result.citations, row.expected);
+    yield* assertCitationSemanticDocument(unicode, result.citations, row.expected, corpus.bindings);
     expect(result.source.source.sourceText, `source case ${row.id}`).toBe(plain.text);
     expect(result.diagnostics.unverified, `source case ${row.id}`).toEqual([]);
     expect(result.diagnostics.unverifiedComponents, `source case ${row.id}`).toEqual([]);

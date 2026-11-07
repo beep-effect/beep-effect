@@ -34,6 +34,59 @@ type Unicode = Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>;
 type SourceRow = Effect.Success<
   ReturnType<typeof installCitationDefaultConfigurationFixture>
 >["corpus"]["cases"][number]["expected"][number];
+type SourceBindings = Effect.Success<
+  ReturnType<typeof installCitationDefaultConfigurationFixture>
+>["corpus"]["bindings"];
+const metadataNames = R.fromEntries<readonly [string, string]>([
+  ["pin_cite", "pinCite"],
+  ["antecedent_guess", "antecedentGuess"],
+  ["extra", "additionalText"],
+  ["resolved_case_name", "caseName"],
+  ["resolved_case_name_short", "shortCaseName"],
+]);
+const assertSemanticMetadata = Effect.fn("SemanticExtractionTest.metadata")(function* (
+  unicode: Unicode,
+  citation: Citation,
+  original: SourceRow
+) {
+  const encoded = yield* encodeCitation(citation);
+  const metadata = yield* Effect.forEach(
+    A.filter(R.toEntries(original.metadata), ([key]) => !A.contains(["pin_cite_span_start", "pin_cite_span_end"], key)),
+    Effect.fnUntraced(function* ([key, value]) {
+      if (typeof value === "number") return yield* Effect.die("unexpected numeric semantic metadata observation");
+      const text = value === null ? null : (yield* unicode.fromStorage(value)).text;
+      return Tuple.make(
+        O.getOrElse(R.get(metadataNames, key), () => key),
+        text
+      );
+    }),
+    { concurrency: 1 }
+  );
+  let actual: S.JsonObject = encoded.metadata;
+  if (citation.type === "case" || citation.type === "shortFormCase") {
+    const court = O.map(citation.metadata.court, (value) => (value.status === "known" ? value.id : value.value));
+    actual = R.set<string, S.Json, string, S.Json>(actual, "court", O.getOrNull(court));
+  }
+  expect(actual, `${original.kind} original metadata`).toEqual(R.fromEntries(metadata));
+});
+const assertSemanticPublication = Effect.fn("SemanticExtractionTest.publication")(function* (
+  citation: Citation,
+  original: SourceRow,
+  bindings: SourceBindings
+) {
+  const encoded = yield* encodeCitation(citation);
+  if (!("publication" in encoded)) return;
+  const expected = A.map(
+    A.appendAll(original.token.exact, original.token.variation),
+    (id) => A.getUnsafe(bindings, id).ref
+  );
+  const actual =
+    encoded.type === "case" || encoded.type === "shortFormCase"
+      ? A.map(encoded.publication.editions, (edition) => edition.edition)
+      : encoded.publication.editions;
+  expect(actual, `${original.kind} candidate editions`).toEqual(expected);
+  expect(encoded.publication.selectedEdition, `${original.kind} selected edition`).toBe(original.editionGuess);
+});
 const assertSemanticSource = Effect.fnUntraced(function* (unicode: Unicode, citation: Citation, original: SourceRow) {
   const encoded = yield* encodeCitation(citation);
   expect(encoded.type).toBe(O.getOrThrow(R.get(sourceTypes, original.kind)));
@@ -46,6 +99,7 @@ const assertSemanticSource = Effect.fnUntraced(function* (unicode: Unicode, cita
     { concurrency: 1 }
   );
   expect(encoded.components).toEqual(R.fromEntries(components));
+  yield* assertSemanticMetadata(unicode, citation, original);
 });
 const semanticTextUnits = Effect.fnUntraced(function* (unicode: Unicode, original: SourceRow) {
   let units = 0;
@@ -55,20 +109,25 @@ const semanticTextUnits = Effect.fnUntraced(function* (unicode: Unicode, origina
   }
   return units;
 });
-/** Compare public semantic kind/components with the original normalized source
- * observations; this does not independently prove every metadata field.
+/** Compare semantic kind, token components, every represented metadata field
+ * and selected edition with original observations. Court labels are compared
+ * through their known id or preserved unmapped text; coordinate metadata stays
+ * outside this semantic comparison. Candidate editions use original fixture
+ * references; public reporter/court vocabulary mapping needs separate proof.
  * @internal @category testing @since 0.0.0
  */
 export const assertCitationSemanticDocument = Effect.fn("SemanticExtractionTest.assertDocument")(function* (
   unicode: Unicode,
   citations: ReadonlyArray<Citation>,
-  expected: ReadonlyArray<SourceRow>
+  expected: ReadonlyArray<SourceRow>,
+  bindings: SourceBindings
 ) {
   expect(citations).toHaveLength(expected.length);
   const amounts = yield* Effect.forEach(
     A.zip(citations, expected),
     Effect.fnUntraced(function* ([citation, original]) {
       yield* assertSemanticSource(unicode, citation, original);
+      yield* assertSemanticPublication(citation, original, bindings);
       return yield* semanticTextUnits(unicode, original);
     }),
     { concurrency: 1 }
@@ -125,7 +184,12 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
     const result = yield* invokeCitationRawExtraction(stage.extract, unicode, row);
     if (result.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Document branch");
     yield* assertCitationTokenizedExtractionRow(result.raw.outcome.result.extraction, row, translated);
-    const projectedUnits = yield* assertCitationSemanticDocument(unicode, result.citations, row.expected);
+    const projectedUnits = yield* assertCitationSemanticDocument(
+      unicode,
+      result.citations,
+      row.expected,
+      corpus.bindings
+    );
     expect(result.reservedUnits).toBe(result.raw.reservedUnits + projectedUnits);
     yield* occurrences.verify(unicode, result, row);
   }

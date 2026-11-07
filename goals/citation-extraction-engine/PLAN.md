@@ -1541,6 +1541,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the extraction wrapper and typed translator together, preserving native corpora and every unfinished acceptance requirement.
 
+### Compare public semantic metadata and publication observations, 2026-11-07
+
+Strengthen the shared public/private semantic comparator with whole represented metadata-record equality, preserved court labels and original ordered candidate/selected edition references. The original source fixture is unchanged. Coordinate metadata, vocabulary classification/version mapping and exhaustive capability proof remain separate obligations. See history/evidence/2026-11-07-public-semantic-metadata.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Remove the stronger assertion while retaining original frozen metadata, edition observations and all unfinished proof duties.
+
 ### Compose the captured four-operation CitationEngine Layer, 2026-11-07
 
 CitationEngine Context.Service and CitationEngineLive compose real clean/extract/resolve/annotate operations with closed failures and R=never methods. Actual Bun and Node Layer paths execute all four operations, preserve outputs and confirm exits. Final eleven service/cleaner/resolver tests, twenty-two cleaner regressions and four contracts pass; lint/types/declarations/laws/Fallow pass. Ninety-four documentation export checks pass; prior-head hosted JSDoc/Fallow are green. Broader protocols, lawful transforms, deployment/lifecycle, safety/scaling and exhaustive accounting remain open. See history/evidence/2026-11-07-four-operation-engine-layer.md.

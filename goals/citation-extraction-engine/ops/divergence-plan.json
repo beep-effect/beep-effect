@@ -423,7 +423,8 @@
         "packages/law-practice/server/test/integration/CitationEngineCorpus.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-11-07-public-resolution-groups.md",
         "packages/law-practice/server/test/CitationEngineResolution.test.ts",
-        "packages/law-practice/server/test/CitationResolve.fixtures.ts"
+        "packages/law-practice/server/test/CitationResolve.fixtures.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-public-semantic-metadata.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
