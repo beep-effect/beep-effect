@@ -12,6 +12,7 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schedule from "effect/Schedule";
@@ -380,23 +381,26 @@ const migratedSource = Effect.fn("ResearchLibrary.migratedSource")(function* (so
   });
 });
 
-const mergeMigratedSource = (sources: ReadonlyArray<LibrarySource>, migrated: LibrarySource) => {
-  const existing = A.findFirst(sources, (item) => item.id === migrated.id);
-  if (O.isNone(existing)) return A.append(sources, migrated);
-  return A.map(sources, (item) =>
-    item.id === migrated.id
-      ? LibrarySource.make({
-          ...item,
-          locators: A.dedupe([...item.locators, ...migrated.locators]),
-          aliasIds: A.dedupe([...item.aliasIds, ...migrated.aliasIds]),
-          versions: mergeLibraryVersions([...item.versions, ...migrated.versions]),
-        })
-      : item
-  );
+const mergeMigratedSource = (item: LibrarySource, migrated: LibrarySource) =>
+  LibrarySource.make({
+    ...item,
+    locators: A.dedupe([...item.locators, ...migrated.locators]),
+    aliasIds: A.dedupe([...item.aliasIds, ...migrated.aliasIds]),
+    versions: mergeLibraryVersions([...item.versions, ...migrated.versions]),
+  });
+
+// First match wins, as with a linear scan in source order: ids and aliases share one lookup.
+const firstByKey = (sources: ReadonlyArray<LibrarySource>, keys: (source: LibrarySource) => ReadonlyArray<string>) => {
+  let index = HashMap.empty<string, LibrarySource>();
+  for (const source of sources)
+    for (const key of keys(source)) if (!HashMap.has(index, key)) index = HashMap.set(index, key, source);
+  return index;
 };
 
-const reboundSource = (sources: ReadonlyArray<LibrarySource>, oldId: string) =>
-  A.findFirst(sources, (source) => source.id === oldId || A.contains(source.aliasIds, oldId));
+interface SourceLookups {
+  readonly byIdOrAlias: HashMap.HashMap<string, LibrarySource>;
+  readonly oldById: HashMap.HashMap<string, LibrarySource>;
+}
 
 const migrationUsesSourceRevision = (oldSource: O.Option<LibrarySource>, source: LibrarySource) =>
   source.kind === "youtube" ||
@@ -420,13 +424,9 @@ const reboundOccurrenceRevision = (
     : occurrence.revision;
 };
 
-const reboundOccurrence = (
-  oldSources: ReadonlyArray<LibrarySource>,
-  sources: ReadonlyArray<LibrarySource>,
-  occurrence: LibraryOccurrence
-) => {
-  const oldSource = A.findFirst(oldSources, (source) => source.id === occurrence.sourceId);
-  const source = reboundSource(sources, occurrence.sourceId);
+const reboundOccurrence = (lookups: SourceLookups, occurrence: LibraryOccurrence) => {
+  const oldSource = HashMap.get(lookups.oldById, occurrence.sourceId);
+  const source = HashMap.get(lookups.byIdOrAlias, occurrence.sourceId);
   return O.isSome(source)
     ? LibraryOccurrence.make({
         ...occurrence,
@@ -436,13 +436,9 @@ const reboundOccurrence = (
     : occurrence;
 };
 
-const reboundCapture = (
-  oldSources: ReadonlyArray<LibrarySource>,
-  sources: ReadonlyArray<LibrarySource>,
-  capture: LibraryCapture
-) => {
-  const oldSource = A.findFirst(oldSources, (source) => source.id === capture.sourceId);
-  const source = reboundSource(sources, capture.sourceId);
+const reboundCapture = (lookups: SourceLookups, capture: LibraryCapture) => {
+  const oldSource = HashMap.get(lookups.oldById, capture.sourceId);
+  const source = HashMap.get(lookups.byIdOrAlias, capture.sourceId);
   return O.isSome(source)
     ? LibraryCapture.make({
         ...capture,
@@ -458,16 +454,25 @@ const reboundCapture = (
 const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdentities")(function* (
   catalog: LibraryCatalog
 ) {
-  let sources: ReadonlyArray<LibrarySource> = [];
+  // Indexed merge: identities that migrate to the same id fold into the first one, in source order.
+  const order: Array<string> = [];
+  let merged = HashMap.empty<string, LibrarySource>();
   for (const source of catalog.sources) {
-    const migratedSource1 = yield* migratedSource(source);
-    sources = mergeMigratedSource(sources, migratedSource1);
+    const next = yield* migratedSource(source);
+    const existing = HashMap.get(merged, next.id);
+    if (O.isNone(existing)) order.push(next.id);
+    merged = HashMap.set(merged, next.id, O.isNone(existing) ? next : mergeMigratedSource(existing.value, next));
   }
+  const sources = A.flatMap(order, (id) => A.fromOption(HashMap.get(merged, id)));
+  const lookups: SourceLookups = {
+    oldById: firstByKey(catalog.sources, (source) => [source.id]),
+    byIdOrAlias: firstByKey(sources, (source) => [source.id, ...source.aliasIds]),
+  };
   return LibraryCatalog.make({
     ...catalog,
     sources,
-    occurrences: A.map(catalog.occurrences, (occurrence) => reboundOccurrence(catalog.sources, sources, occurrence)),
-    captures: A.map(catalog.captures, (capture) => reboundCapture(catalog.sources, sources, capture)),
+    occurrences: A.map(catalog.occurrences, (occurrence) => reboundOccurrence(lookups, occurrence)),
+    captures: A.map(catalog.captures, (capture) => reboundCapture(lookups, capture)),
   });
 });
 
