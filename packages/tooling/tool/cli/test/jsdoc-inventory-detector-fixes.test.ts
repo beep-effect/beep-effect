@@ -173,6 +173,58 @@ const buildInventory = Effect.fnUntraced(function* (repoRoot: string) {
 
 it.layer(PlatformLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
   describe("JSDoc inventory detector fixes (P1-B)", () => {
+    it.effect("requires examples for runtime namespaces while keeping type-only namespaces optional", () =>
+      Effect.gen(function* () {
+        const repoRoot = yield* acquireFixtureRepo({
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/** Runtime namespace containing a public value.
+ * @category utilities
+ * @since 0.0.0
+ */
+export namespace RuntimeNs { export const value = 1 }
+/** Namespace containing only a public type.
+ * @category type-level
+ * @since 0.0.0
+ */
+export namespace TypeNs { export type Count = number }
+/** Ambient namespace describing a runtime value.
+ * @category utilities
+ * @since 0.0.0
+ */
+export declare namespace AmbientRuntimeNs { const value: number }
+/** Ambient namespace containing only a type.
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AmbientTypeNs { type Count = number }
+`,
+                ],
+              ],
+            },
+          ],
+        });
+        const inventory = yield* buildInventory(repoRoot);
+        const exports = O.getOrThrow(
+          A.findFirst(inventory.packages, (pkg) => pkg.packageName === "@beep/demo")
+        ).exports;
+        for (const name of ["RuntimeNs", "AmbientRuntimeNs"]) {
+          const finding = O.getOrThrow(A.findFirst(exports, (entry) => entry.symbolName === name));
+          expect(finding.missingRequiredTags).toContain("@example");
+        }
+        for (const name of ["TypeNs", "AmbientTypeNs"]) {
+          const finding = O.getOrThrow(A.findFirst(exports, (entry) => entry.symbolName === name));
+          expect(finding.missingRequiredTags).not.toContain("@example");
+        }
+      })
+    );
+
     it("ignores JSDoc-looking tags inside fenced example source", () => {
       expect(
         tagsFromComment(`/**
