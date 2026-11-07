@@ -2632,3 +2632,16 @@ logging repair and no local quality suite was run.
   character budgets, defaults, notices and existing authored controls.
 - Prevention: keep independent retention policies outside the per-chunk state
   transition. Hosted CI remains the proof; no local suite or baseline rewrite.
+
+### 2026-11-07 — Exercise the output-bound schema with derived inputs
+
+- Work: validate the bounded failure-footer capture on PR #2871.
+- Evidence: hosted Lint Policy job 128335882521 rejects the changed output-bound
+  test file under SFV4-arbitrary-tests: three codec assertions without derived
+  property coverage. Existing deterministic fold and stream controls remain.
+- Repair: generate OutputBound values from the schema and prove encoded round
+  trips preserve every field while legacy inputs without retention default to
+  head-only capture across arbitrary finite caps and notices. Keep codecs hoisted.
+- Prevention: accompany schema boundary changes with schema-derived property
+  coverage, not only fixed examples. Hosted CI is authoritative; no local suite,
+  baseline rewrite or suppression is used.

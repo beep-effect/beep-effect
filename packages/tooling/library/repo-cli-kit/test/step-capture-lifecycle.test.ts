@@ -799,8 +799,25 @@ BunRuntime.runMain(
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
 const decodeOutputBound = S.decodeEffect(OutputBound);
+const encodeOutputBound = S.encodeEffect(OutputBound);
 
 describe("StepExec bounded output fold", () => {
+  it.effect.prop(
+    "round trips schema-generated bounds and defaults legacy retention",
+    { bound: OutputBound },
+    ({ bound }) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeOutputBound(bound);
+        const decoded = yield* decodeOutputBound(encoded);
+        expect(decoded).toEqual(bound);
+        const legacy = yield* decodeOutputBound({ maxChars: bound.maxChars, truncatedNotice: bound.truncatedNotice });
+        expect(legacy.maxChars).toBe(bound.maxChars);
+        expect(legacy.truncatedNotice).toBe(bound.truncatedNotice);
+        expect(legacy.retention).toBe("head");
+      }),
+    { arbitrary: { runs: 100 } }
+  );
+
   const bound = OutputBound.make({ maxChars: 4, truncatedNotice: "!" });
   const reduce = boundedChunkReducer(bound);
 
