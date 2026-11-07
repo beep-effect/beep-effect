@@ -2068,18 +2068,13 @@ export class GithubCheckLaneWaveSpec extends S.Opaque<GithubCheckLaneWaveSpec, {
  * ```ts
  * import { ReportOnlyInertLaneId } from "@beep/repo-cli/commands/Quality"
  *
- * console.log(ReportOnlyInertLaneId.literals.length) // 4
+ * console.log(ReportOnlyInertLaneId.literals.length) // 2
  * ```
  *
  * @category policies
  * @since 0.0.0
  */
-export const ReportOnlyInertLaneId = LiteralKit([
-  "quality:jsdoc-ratchet:regenerated",
-  "lint:effect-vitest",
-  "lint:effect-imports",
-  "lint:schema-first",
-]).pipe(
+export const ReportOnlyInertLaneId = LiteralKit(["quality:jsdoc-ratchet:regenerated", "lint:effect-imports"]).pipe(
   $I.annoteSchema("ReportOnlyInertLaneId", {
     description: "Source-only cheap lanes qualified for clean report-only branch diffs.",
   })

@@ -35,6 +35,7 @@ import {
   turboCachePlanNeedsSecretSession,
 } from "@beep/repo-cli-kit/cli/TurboCache";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
+import { FsUtils, FsUtilsLive, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -49,6 +50,7 @@ import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, identity, pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
@@ -59,7 +61,9 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
+import { listSourceFiles, readJsonc } from "./internal/QualityArtifactSupport.ts";
 import type { LsTreeEntry } from "@beep/git/Git";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
@@ -157,6 +161,7 @@ import {
   ReportOnlyInertLaneId,
   RootAuditMode,
 } from "./Quality.schemas.ts";
+import type { GitShape } from "@beep/git/Git";
 import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type { CaptureCommandTimedOutError } from "@beep/repo-cli-kit/process/index";
@@ -2251,6 +2256,90 @@ const reportFilesAreOrdinary = Effect.fn("QualityTasks.reportFilesAreOrdinary")(
   );
 });
 
+// Query names only, never ignored contents. Metadata is checked before a
+// docgen configuration can redirect discovery, and symlink files are refused.
+const ordinaryTrackedScannerInputs = Effect.fn("QualityTasks.ordinaryTrackedScannerInputs")(function* (
+  root: string,
+  files: ReadonlyArray<string>,
+  git: GitShape
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = A.dedupe(A.map(files, (file) => path.resolve(root, file)));
+  // Preserve lexical ancestors: a regular leaf beneath a linked directory is
+  // still mutable independently of the committed tree. Never resolve targets.
+  if (
+    A.some(absolute, (file) => {
+      const relative = path.relative(root, file);
+      return path.isAbsolute(relative) || Str.startsWith("..")(relative);
+    })
+  )
+    return false;
+  const ancestors = A.dedupe(
+    A.flatMap(absolute, (file) => {
+      const relative = path.relative(root, file);
+      const segments = Str.split(relative, path.sep);
+      return A.map(segments, (_, index) => path.join(root, ...A.take(segments, index + 1)));
+    })
+  );
+  const info = yield* Effect.forEach(ancestors, fs.lstat, { concurrency: 16 });
+  const ignored = yield* git.checkIgnore(root, absolute);
+  return (
+    A.isReadonlyArrayEmpty(ignored) && A.every(info, (entry) => entry.type === "File" || entry.type === "Directory")
+  );
+});
+
+const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScannerInputsTracked")(
+  function* (root: string, git: GitShape) {
+    const fs = yield* FsUtils;
+    const path = yield* Path.Path;
+    const options = GlobOptions.make({ cwd: root, absolute: true, ignore: ["**/node_modules/**"] });
+    // JSDoc inventory follows source-directory links. Preserve lexical names
+    // to refuse linked ancestors before reading any source or configuration.
+    const projectOptions = GlobOptions.make({ ...options, followSymlinks: true });
+    const metadata = yield* fs.globFiles(
+      [
+        "*.{json,jsonc}",
+        "{apps,packages,infra,tools,scratchpad}/**/{package.json,docgen.json,tsconfig*.json,tsconfig*.jsonc,tsdoc.json}",
+        "standards/{effect-vitest*,schema-first*,schema-crispening*,jsdoc*}.{json,jsonc}",
+      ],
+      GlobOptions.make({ ...projectOptions, dot: true, ignore: ["**/node_modules/**", "**/.beep/**", "**/.turbo/**"] })
+    );
+    if (!(yield* ordinaryTrackedScannerInputs(root, metadata, git))) return false;
+    const customSources = yield* Effect.forEach(
+      A.filter(metadata, (file) => path.basename(file) === "docgen.json"),
+      Effect.fnUntraced(function* (file) {
+        const config = yield* readJsonc(file);
+        const source = path.resolve(path.dirname(file), P.isString(config.srcDir) ? config.srcDir : "src");
+        const lexicalSources = yield* fs.globFiles(path.join(source, "**/*.{ts,tsx}"), projectOptions);
+        if (!(yield* ordinaryTrackedScannerInputs(root, lexicalSources, git))) return lexicalSources;
+        return yield* listSourceFiles(source, path);
+      }),
+      { concurrency: 4 }
+    );
+    // Semantic scanners remain live: their transitive module inputs cannot be
+    // proven from this bounded names-only discovery. No AST/project is built.
+    const sources = yield* Effect.all(
+      [
+        discoverEffectImportSourceFiles(EffectImportRulesOptions.make({ excludePaths: [] }), root),
+        fs.globFiles(
+          ["{apps,packages,infra,tools,scratchpad}/**/src/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+          projectOptions
+        ),
+      ],
+      { concurrency: 1 }
+    );
+    return yield* ordinaryTrackedScannerInputs(root, [...A.flatten(sources), ...A.flatten(customSources)], git);
+  },
+  (effect) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const services = yield* Layer.build(FsUtilsLive);
+        return yield* effect.pipe(Effect.provide(services));
+      })
+    )
+);
+
 // Every unknown axis fails closed. Git owns NUL parsing, including Unicode and
 // newline filenames. noRenames retains the source-side deletion of a move.
 const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(function* (repoRoot: string) {
@@ -2292,11 +2381,18 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
     // and its flags are never copied, refreshed or cleared.
     const headTree = yield* git.revParse(repoRoot, `${head}^{tree}`);
     const materializedTree = yield* laneProofVirtualTreeSha(repoRoot);
+    const scannerInputsTracked = yield* reportOnlyScannerInputsTracked(repoRoot, git);
     const finalHead = yield* git.revParse(repoRoot, "HEAD", { peel: "commit" });
     const finalBase = yield* git.revParse(repoRoot, "origin/main", { peel: "commit" });
     const finalStatus = yield* git.status(repoRoot, { untrackedFiles: "all", noOptionalLocks: true });
     return A.every(
-      [materializedTree === headTree, finalHead === head, finalBase === base, A.isReadonlyArrayEmpty(finalStatus)],
+      [
+        scannerInputsTracked,
+        materializedTree === headTree,
+        finalHead === head,
+        finalBase === base,
+        A.isReadonlyArrayEmpty(finalStatus),
+      ],
       identity
     );
   }).pipe(Effect.orElseSucceed(thunkFalse));

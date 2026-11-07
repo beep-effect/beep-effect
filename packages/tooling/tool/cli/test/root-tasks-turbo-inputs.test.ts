@@ -24,6 +24,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { Project, SyntaxKind } from "ts-morph";
 
 const $I = $RepoCliId.create("test/root-tasks-turbo-inputs");
 const fingerprintId = "//#lint:policy-fingerprint";
@@ -384,25 +385,34 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
   );
 
   it.layer(PlatformLayer, { timeout: "30 seconds" })("report-only source input contract", (it) => {
-    it.effect("locks the four source tasks and every dependency against prose input expansion", () =>
+    it.effect("locks the selected source tasks and every dependency against prose input expansion", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repo = yield* findRepoRoot();
+        // The actual CLI forces the syntax-only Effect leaf-import mode. A
+        // handler rewrite must renew this qualification, even if Turbo's raw
+        // declarations remain identical.
+        const handlerText = yield* fs.readFileString(
+          path.join(repo, "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts")
+        );
+        const handler = new Project({ useInMemoryFileSystem: true }).createSourceFile("Laws.command.ts", handlerText);
+        const calls = A.filter(
+          handler.getDescendantsOfKind(SyntaxKind.CallExpression),
+          (call) => call.getExpression().getText() === "runEffectImportRules"
+        );
+        expect(A.length(calls)).toBe(1);
+        const options = O.getOrThrow(A.head(calls)).getArguments()[0];
+        expect(options?.getText()).toContain("EffectImportRulesOptions.make");
+        const effectOnly = A.filter(
+          options?.getDescendantsOfKind(SyntaxKind.PropertyAssignment) ?? [],
+          (property) => property.getName() === "effectOnly"
+        );
+        expect(A.map(effectOnly, (property) => property.getInitializer()?.getKind())).toEqual([SyntaxKind.TrueKeyword]);
         const text = yield* fs.readFileString(path.join(repo, "turbo.json"));
         const configuration = yield* decodeConfiguration(text);
-        expect(ReportOnlyInertLaneId.literals).toEqual([
-          "quality:jsdoc-ratchet:regenerated",
-          "lint:effect-vitest",
-          "lint:effect-imports",
-          "lint:schema-first",
-        ]);
-        let pending: ReadonlyArray<string> = [
-          "//#lint:effect-vitest",
-          "//#lint:effect-imports",
-          "//#lint:schema-first",
-          "//#jsdoc:ratchet:check",
-        ];
+        expect(ReportOnlyInertLaneId.literals).toEqual(["quality:jsdoc-ratchet:regenerated", "lint:effect-imports"]);
+        let pending: ReadonlyArray<string> = ["//#lint:effect-imports", "//#jsdoc:ratchet:check"];
         let closure = A.empty<readonly [string, unknown]>();
         while (A.isReadonlyArrayNonEmpty(pending)) {
           const id = pending[0];
@@ -418,7 +428,12 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         }
         // A declaration or dependency change requires renewed qualification,
         // including specific new report inputs a handful of probes cannot see.
+        const manifestText = yield* fs.readFileString(path.join(repo, "package.json"));
+        const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ workspaces: S.Array(S.String) })))(
+          manifestText
+        );
         const encoded = yield* jsonStringifyPretty({
+          workspaces: manifest.workspaces,
           global: configuration.global,
           futureFlags: configuration.futureFlags,
           agentGuidance: configuration.agentGuidance,
@@ -426,7 +441,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("840ede59214fe19c5a41a6cc6081c8eef410607c5b4d96cb7f1894e1e75f8df5");
+        expect(Hex.encode(bytes)).toBe("48672c1a0778dd8ffce08c4154a5ed750f694935b381a73b681043dff5e7e379");
       })
     );
   });
@@ -437,12 +452,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         const { root, binary } = yield* fixture();
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const ids = [
-          "//#lint:effect-vitest",
-          "//#lint:effect-imports",
-          "//#lint:schema-first",
-          "//#jsdoc:ratchet:check",
-        ];
+        const ids = ["//#lint:effect-imports", "//#jsdoc:ratchet:check"];
         const baseline = yield* dryRun(root, binary, ids, false);
         for (const file of [
           "docs/reports/probe.md",

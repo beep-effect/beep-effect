@@ -9,6 +9,7 @@ import {
   ciLaneStepsForTesting,
   ciLocalStepsForTesting,
 } from "@beep/repo-cli/commands/Ci";
+import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "@beep/repo-cli/commands/Laws/EffectImports";
 import {
   LintPolicySweeps,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
@@ -39,6 +40,7 @@ import {
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
+import { detectEffectVitestFindings } from "@beep/repo-cli/test/Lint";
 import { runCapturedStreams } from "@beep/repo-cli/test/Process";
 import {
   baselineEntriesLostByReplacement,
@@ -216,6 +218,7 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { Project } from "ts-morph";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
@@ -2998,9 +3001,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* runGit(root, ["add", "."]);
             yield* runGit(root, ["commit", "-m", "report fixture"]);
             const lanes = [
-              reportLane(root, "lint:effect-vitest"),
+              reportLane(root, "lint:effect-imports"),
               reportLane(root, "quality:cache-policy", "exit 23"),
               reportLane(root, "lint:effect-imports-markdown", "exit 24"),
+              reportLane(root, "lint:effect-vitest", "exit 25"),
+              reportLane(root, "lint:schema-first", "exit 26"),
             ];
             const run = collectGithubCheckLaneWavesForTesting(
               "reports",
@@ -3017,8 +3022,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               accepted ? "skipped" : "failed",
               "failed",
               "failed",
+              "failed",
+              "failed",
             ]);
-            assertSome(result.report.firstRed, accepted ? "quality:cache-policy" : "lint:effect-vitest");
+            assertSome(result.report.firstRed, accepted ? "quality:cache-policy" : "lint:effect-imports");
             expect(result.report.skippedAfterRed).toBe(0);
             const invoked = yield* fs.exists(path.join(root, ".beep/invoked"));
             expect(invoked).toBe(!accepted);
@@ -3097,7 +3104,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               Match.orElse(() => Effect.void)
             );
             const indexBefore = yield* fs.readFile(path.join(root, ".git/index"));
-            const lanes = [reportLane(root, "lint:effect-vitest"), reportLane(root, "lint:schema-first")];
+            const lanes = [
+              reportLane(root, "lint:effect-imports"),
+              reportLane(root, "quality:jsdoc-ratchet:regenerated"),
+            ];
             const run = collectGithubCheckLaneWavesForTesting(
               "reports",
               [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes })],
@@ -3114,14 +3124,120 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               )
             );
             expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(["failed", "not-run-early-stop"]);
-            assertSome(result.report.firstRed, "lint:effect-vitest");
+            assertSome(result.report.firstRed, "lint:effect-imports");
             expect(result.report.skippedAfterRed).toBe(1);
             const indexAfter = yield* fs.readFile(path.join(root, ".git/index"));
             expect(indexAfter).toEqual(indexBefore);
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
         );
       }
-      for (const control of ["all four", "retained generator", "mixed checkouts"] as const) {
+      const prepareScannerLinkFixture = Effect.fn("prepareScannerLinkFixture")(function* (
+        root: string,
+        control: string
+      ) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        if (control === "tracked source link") {
+          yield* fs.makeDirectory(path.join(root, "packages/example/src"), { recursive: true });
+          yield* fs.symlink("../../../.beep/targets/target.test.ts", path.join(root, "packages/example/src/linked.ts"));
+        }
+        if (control === "tracked directory link" || control === "benign directory link") {
+          if (control === "benign directory link") {
+            yield* fs.remove(path.join(root, ".beep/targets/target.test.ts"));
+            yield* fs.writeFileString(path.join(root, ".beep/targets/data.yaml"), "fixture: true\n");
+          }
+          yield* fs.symlink("../../.beep/targets", path.join(root, "packages/example/src"));
+        }
+      });
+
+      for (const control of [
+        "ignored test",
+        "ignored build test",
+        "ignored config",
+        "tracked source link",
+        "tracked directory link",
+        "ignored directory link",
+        "benign directory link",
+      ] as const) {
+        it.effect(`checks filesystem scanner inputs for ${control}`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-scanner-inputs-" });
+            yield* initializeLaneProofRepository(root);
+            yield* fs.makeDirectory(path.join(root, "packages/example/test"), { recursive: true });
+            yield* fs.makeDirectory(path.join(root, ".beep/targets"), { recursive: true });
+            const badSource =
+              'import * as Effect from "effect/Effect"; import { it } from "vitest"; it("probe", () => Effect.runSync(Effect.void));';
+            const project = new Project({ skipAddingFilesFromTsConfig: true });
+            const source = project.createSourceFile("packages/example/test/probe.test.ts", badSource);
+            const findings = yield* detectEffectVitestFindings(
+              source,
+              "packages/example/test/probe.test.ts",
+              "@beep/example"
+            );
+            expect(A.some(findings, (finding) => finding.ruleId === "EV001")).toBe(true);
+            yield* fs.writeFileString(
+              path.join(root, ".git/info/exclude"),
+              ".beep/\npackages/example/src/\npackages/example/build/\npackages/example/test/ignored.test.ts\npackages/example/docgen.json\n"
+            );
+            yield* fs.writeFileString(path.join(root, ".beep/targets/target.test.ts"), badSource);
+            yield* prepareScannerLinkFixture(root, control);
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "--allow-empty", "-m", "scanner base"]);
+            yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
+            yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "scanner report"]);
+            if (control === "ignored test")
+              yield* fs.writeFileString(path.join(root, "packages/example/test/ignored.test.ts"), badSource);
+            if (control === "ignored build test") {
+              yield* fs.makeDirectory(path.join(root, "packages/example/build/test"), { recursive: true });
+              yield* fs.writeFileString(path.join(root, "packages/example/build/test/probe.ts"), badSource);
+            }
+            if (control === "ignored config")
+              yield* fs.writeFileString(path.join(root, "packages/example/docgen.json"), "{}");
+            if (control === "ignored directory link") {
+              yield* fs.makeDirectory(path.join(root, "packages/example/src"), { recursive: true });
+              yield* fs.symlink("../../../.beep/targets", path.join(root, "packages/example/src/test"));
+            }
+            const run = collectGithubCheckLaneWavesForTesting(
+              "scanner-inputs",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [reportLane(root, "quality:jsdoc-ratchet:regenerated")],
+                }),
+              ],
+              "collect-all",
+              undefined
+            );
+            const result = yield* withEnvVarEffect(
+              "BEEP_YEET_PROOF_BASE",
+              undefined,
+              withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
+            );
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual([
+              control === "benign directory link" || control === "ignored build test" ? "skipped" : "failed",
+            ]);
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+
+      it.effect("preserves default import discovery with an explicit current root", () =>
+        Effect.gen(function* () {
+          const options = EffectImportRulesOptions.make({
+            includePaths: ["src/commands/Quality/Tasks.ts"],
+            excludePaths: [],
+          });
+          const explicit = yield* discoverEffectImportSourceFiles(options, process.cwd());
+          const implicit = yield* discoverEffectImportSourceFiles(options);
+          expect(explicit).toEqual(implicit);
+        })
+      );
+
+      for (const control of ["all selected", "retained generator", "mixed checkouts"] as const) {
         it.effect(`revalidates report-only selection for ${control}`, () =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
@@ -3156,7 +3272,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             );
             const opted = A.filter(result.laneReport.lanes, (lane) => S.is(ReportOnlyInertLaneId)(lane.id));
             expect(A.map(opted, (lane) => lane.status)).toEqual(
-              A.replicate(control === "all four" ? "skipped" : "failed", 4)
+              A.replicate(control === "all selected" ? "skipped" : "failed", 2)
             );
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
         );

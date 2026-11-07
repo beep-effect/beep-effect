@@ -1,22 +1,24 @@
 # Local report-only cheap-gate qualification
 
-The final bounded selector, including fresh working-tree verification, saved
-**218.376 seconds (73.075%)** in a separate matched cold-cache pair. The earlier
-three-pair comparison saved a median **162.140 seconds (74.098%)**. Both passed
-the prespecified performance gates. These measurements have different source
-commits and are not pooled or relabeled.
+Publication review superseded the original four-lane shortcut. Git cleanliness
+and a materialized tracked tree cannot establish the full inputs of the semantic
+Effect Vitest and schema-first scanners. Both now remain live. The current
+candidate qualifies only regenerated JSDoc and source Effect imports, with an
+additional names-only filesystem guard for ignored files and linked ancestors.
+Its current-source performance qualification is recorded separately below; the
+older four-lane measurements are historical receipts, not acceptance evidence
+for this implementation.
 
 ## Scope and safety
 
 Only ordinary additions/modifications of nonexecutable `.md` reports under
-`docs/reports/` qualify. The four static opt-ins are:
+`docs/reports/` qualify. The two static opt-ins are:
 
 - `quality:jsdoc-ratchet:regenerated`
-- `lint:effect-vitest`
 - `lint:effect-imports`
-- `lint:schema-first`
 
-Every other cheap lane stays live, including Markdown fences/imports, retired
+Every other cheap lane stays live, including Effect Vitest, schema-first,
+Markdown fences/imports, retired
 laws, schema catalog, observability/catalog checks, goals, changesets, committed
 JSDoc comparison, and cache policy. The implementation PR changes source and
 therefore takes the ordinary full path; the timing fixtures add only a report
@@ -46,14 +48,63 @@ success list or proof-shadow observations. First-red, precise/imprecise scheduli
 and `not-run-early-stop` accounting retain their meaning. Set
 `BEEP_QUALITY_REPORT_ONLY_SKIP=0` to disable selection.
 
-Qualification locks the exact four IDs, raw selected Turbo task declarations,
+Qualification locks the exact two IDs, raw selected Turbo task declarations,
 their complete dependency closures, and global/future configuration. Each task
 must exist, enable caching, and declare explicit nondefault inputs. Unknown edges
 or input expansion require renewed review. Five real Turbo report-edit probes
-also keep all four source-task hashes equal, including nested, Unicode, newline,
+also keep both selected source-task hashes equal, including nested, Unicode, newline,
 and fenced-code reports. Strict Markdown root-import failure remains covered.
 
-## Method and acceptance
+## Publication safety review
+
+Three adversarial controls invalidated the earlier Git-only identity claim:
+
+- A new test ignored through `.git/info/exclude` left Git status and the fresh
+  virtual tree unchanged, while actual Effect Vitest discovery read it and the
+  detector emitted major EV001.
+- A tracked source symlink into an ignored target, and a tracked source directory
+  symlink into an ignored directory, left Git identity unchanged while actual
+  scanners consumed the changed sources.
+- A tracked test importing an ignored helper outside the discovery roots changed
+  between major EV014 and no finding solely as that helper changed. The test
+  bytes and Git tree remained identical. Effect Vitest remains live; no parallel
+  module resolver was added. Schema-first also uses types and symbols, so its
+  execution remains live rather than claiming that source globs cover its inputs.
+
+The selected lanes have narrower observable input behavior. An actual complete
+JSDoc inventory control changed an ignored imported helper from missing to a
+class with another export; the entire fixed-time inventory stayed byte-identical.
+The inventory scores declarations from their own source file and analyzes
+re-export declarations syntactically. The actual Effect imports CLI handler
+forces `effectOnly: true`, bypassing semantic foundation export mapping. A
+qualification test binds that actual call-site option; default scanner options
+are not used as evidence for the CLI behavior.
+
+The additional guard queries names through existing discovery helpers and
+`Git.checkIgnore`, then inspects matched source/configuration paths and every
+lexical ancestor with `lstat`. An ignored input, linked ancestor, nonregular
+entry, out-of-root path, failed read, or malformed configuration restores full
+execution. Configuration metadata is checked before docgen source-directory
+redirection is read. Source names follow directory links where JSDoc does, then
+reject relevant links before reading source contents. Benign linked YAML
+fixtures remain eligible because they contain no matching source/configuration
+inputs. No ignored contents or external target file contents are printed or
+hashed, and dependency/tool cache trees are not globally inventoried.
+
+Focused controls include ordinary reports, unsafe paths/modes, hidden index
+flags, ignored source/configuration, relevant file and directory links, benign
+YAML links, retained failures, mixed checkouts, and generator changes. Workspace
+patterns are part of the frozen qualification contract, so future root expansion
+requires review alongside the selected Turbo input/dependency closure.
+
+## Current two-lane measurement
+
+Pending the matched cold-cache qualification on the reviewed two-lane source.
+Acceptance remains **at least 30% and at least 60 seconds**, with exactly two
+reasoned skips and **24 equivalent retained outcomes**. Earlier measurements
+below cannot satisfy this gate.
+
+## Historical four-lane method and acceptance
 
 The floor was declared before timing: **at least 30% and at least 60 seconds**
 saved, with 22 equivalent retained outcomes and exactly four reasoned skips.
@@ -87,7 +138,7 @@ For reproduction, clone locally, check out the named source, pin private
 after each sample, and time the whole command with a monotonic clock. Use fresh
 cache/output directories for every run. The fixture contains ordinary prose.
 
-## Original six-run comparison
+## Historical original six-run comparison
 
 Source: `25aea6ec4e61cd00cc901e5f35e985ab43713537`, tree
 `0bd2b59e87c49fcc47eb07f09e96d26a02d5ebf1`. Report-only HEAD:
@@ -111,17 +162,17 @@ source-task hashes across all three baselines. No sample invoked a secret sessio
 or enabled remote caching. Component counts were 26 → 22 lane subprocesses and
 19 → 14 root Turbo task executions; these are not total OS process counts.
 
-## Final materialized-source bridge
+## Historical materialized-source bridge
 
 Adversarial controls subsequently reproduced unsafe skips for hidden-directory
 newlines, terminal newlines, and source edits hidden by both Git index flags. The
-schema and fresh-tree checks above close those cases. The final source is
+schema and fresh-tree checks above close those cases. That measured source was
 `8fbf67772d7298312d9b677a9a9bb59dee90fb1d`, tree
 `d21ceb59abf57a5e3262b903cdc84eec738d7022`. Its report-only HEAD is
 `1cfcb96f48b31758d714a80816e05eaadec4a35f`, tree
 `ae4970f278f420687a9aa34759361a1d75ec07ec`.
 
-| Final-source sample | End-to-end seconds |
+| Historical-source sample | End-to-end seconds |
 | --- | ---: |
 | Selector disabled | 298.837 |
 | Selector enabled | 80.461 |
@@ -132,14 +183,14 @@ all 22 retained outcomes matched, and all four skips passed no-proof-field
 assertions. Root task executions again fell 19 → 14, all cold misses without local
 or remote hits. A separate actual-clone sanity check confirmed materialized-tree
 and HEAD-tree equality. That single sanity probe overlapped the baseline; shared
-host contention also varied. This pair corroborates the final guard's behavior
-and gain; it does not replace the earlier version's three-pair median.
+host contention also varied. The later publication controls invalidate its safety acceptance. This pair is
+retained as versioned performance history and does not qualify the two-lane guard.
 
-## Verification and limits
+## Historical verification and limits
 
 Thirty-five focused safety/input/consumer tests, the owning package check, and
-Fallow health with zero findings pass on the final runtime. Scoped `docgen:local`
-passed for its two selected packages; exports did not change afterward. An earlier full package verification passed lint/audit/docgen. On the final
+Fallow health with zero findings passed on that historical runtime. Scoped `docgen:local`
+passed for its two selected packages. An earlier full package verification passed lint/audit/docgen. On that historical
 runtime, package verification passed lint (2.3s), check, and docgen (50.0s), but
 the unit suite had 8,934 passes and one unchanged CI-profile integration case
 reported `Error: Test timed out in 30000ms.` The same-head isolated case passed
@@ -148,7 +199,7 @@ budget. The test and bootstrap script are unchanged from the base. A full
 same-population replay used the existing two-worker configuration via three-CPU
 affinity, without changing assertions/timeouts; it was stopped when polled past
 the ten-minute local-gate cap (682s), with no completed audit receipt. The timeout
-is recorded as environment-only, with failure/pass evidence retained. Final
+is recorded as environment-only, with failure/pass evidence retained. Current-head
 package-wide proof remains for hosted verification; these results are not called
 a green final full audit. No floor, test population, retained gate, review window, or proof identity
 was weakened. The evidence is local on one shared host, not hosted CI or production.
