@@ -104,7 +104,34 @@ const canonicalRepositoryOriginFromScp = (value: string): O.Option<CanonicalRepo
 const renderCanonicalRepositoryOrigin = (origin: CanonicalRepositoryOrigin): string =>
   `${origin.authority}/${origin.repositoryPath}`;
 
-const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
+/**
+ * Canonicalize a Git remote into `authority/owner/repository`.
+ *
+ * **Details**
+ *
+ * SCP-style (`git@host:owner/repo.git`) and URL-style (`https://`, `ssh://`,
+ * `git://`) spellings of one repository render the same string: the host is
+ * lowercased, a default port is dropped, and a trailing `.git` is removed. A
+ * value neither form parses (a local path) comes back trimmed and otherwise
+ * unchanged.
+ *
+ * **Example** (Two spellings of one origin)
+ *
+ * ```ts
+ * import { canonicalRepositoryIdentity } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(canonicalRepositoryIdentity("git@github.com:beep-effect/beep-effect.git"))
+ * // "github.com/beep-effect/beep-effect"
+ * console.log(canonicalRepositoryIdentity("https://github.com/beep-effect/beep-effect.git"))
+ * // "github.com/beep-effect/beep-effect"
+ * ```
+ *
+ * @param repositoryIdentity - A remote URL, SCP-style remote, or local path.
+ * @returns The canonical identity, or the trimmed input when it is not a recognized remote.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
   const trimmed = Str.trim(repositoryIdentity);
   return pipe(
     canonicalRepositoryOriginFromScp(trimmed),

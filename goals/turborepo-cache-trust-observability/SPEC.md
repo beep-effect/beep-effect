@@ -163,7 +163,10 @@ secret failure through desktop sign-in.
   introduced regression remains.
 - [ ] The final implementation PR reaches Yeet `merge-ready: yes`, with
   required checks and reviews handled.
-- [ ] Final evidence, reflection and lifecycle closeout land in that same PR.
+- [ ] Final evidence, reflection and proposedCloseout land in the final implementation
+  PR; after it merges, completion refresh verifies the proposal and a separate
+  packet-state PR adopts completed-retained. That PR is merged and origin/main
+  has matching closeout and initiative statuses.
 
 Packet creation satisfies no implementation criterion. A partial or blocked
 result remains active/paused with receipts, not completed-retained.
@@ -1467,6 +1470,14 @@ Add hosted controls for identical import output and preserved source bytes with 
 Lane `codex/cache-import-bytecode-20261106`
 
 Reverse: Remove the source-only job environment guard and its regression assertions; retain immutable observations, failed comparisons and the canonical digest policy.
+
+### Apply verified two-PR goal closeout without weakening acceptance, 2026-11-07
+
+The launcher, acceptance criterion and P6 checklist still prescribed lifecycle adoption in the final implementation PR, contradicting the current Agent Guide. Keep all behavioral, trust, observation-window and hosted-proof requirements. Land final evidence, reflection and proposedCloseout with implementation while status stays active or paused; after merge, completion refresh verifies it and a separate packet-state PR adopts completed-retained and updates README/statusNote. Completion requires that adoption PR merged and origin/main closeout.status equals initiative.status. This is navigation and lifecycle alignment, not a completion proposal, signing activation, qualification grant or observation-window waiver.
+
+Lane `codex/cache-current-dependency-evidence-20261107`
+
+Reverse: Restore the old packet prose only if the governing repository closeout law is deliberately changed; never mark completion from an unverified or unmerged proposal.
 
 ### Apply frozen producer source eligibility to pilot worktrees, 2026-11-07
 

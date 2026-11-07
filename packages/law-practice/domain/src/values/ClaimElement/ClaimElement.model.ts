@@ -219,16 +219,65 @@ export const ClaimTermHead = S.String.check(
  */
 export type ClaimTermHead = typeof ClaimTermHead.Type;
 
-// How each determiner opens a term's quote; a bare term opens with none of them.
-const determinerSurfaces: { readonly [K in ClaimTermDeterminer]: RegExp } = {
-  a: /^a\s+(?!plurality\s+of\s)/u,
-  an: /^an\s/u,
-  the: /^the\s/u,
-  said: /^said\s/u,
-  "at-least-one": /^(?:at least one|one or more)\s/u,
-  "plurality-of": /^(?:a\s+)?plurality of\s/u,
-  bare: /^(?!(?:a|an|the|said|at least one|one or more|(?:a\s+)?plurality of)\s)/u,
-};
+/**
+ * Lowercase surface words that open each claim term determiner, longest
+ * surface first.
+ *
+ * **Details**
+ *
+ * This is the single surface table shared by the claim decomposer and the
+ * {@link ClaimTerm} quote check. A surface counts only when whitespace
+ * separates each of its words and follows the last one, so `a+b` and
+ * `the+x` open no determiner. Possessive surfaces such as `its` stay `bare`.
+ *
+ * **Example** (Find the surface that opens a quote)
+ *
+ * ```ts
+ * import * as A from "effect/Array"
+ * import { claimTermDeterminerSurfaces } from "@beep/law-practice-domain/values/ClaimElement"
+ *
+ * const found = A.findFirst(claimTermDeterminerSurfaces, ([words]) => A.join(words, " ") === "at least one")
+ * console.log(found) // Option.some([["at", "least", "one"], "at-least-one"])
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const claimTermDeterminerSurfaces: ReadonlyArray<
+  readonly [words: A.NonEmptyReadonlyArray<string>, determiner: ClaimTermDeterminer]
+> = [
+  [["at", "least", "one"], "at-least-one"],
+  [["one", "or", "more"], "at-least-one"],
+  [["a", "plurality", "of"], "plurality-of"],
+  [["plurality", "of"], "plurality-of"],
+  [["an"], "an"],
+  [["a"], "a"],
+  [["the"], "the"],
+  [["said"], "said"],
+  // Preserve unsupported possessives as spans; the policy abstains explicitly.
+  [["each"], "bare"],
+  [["its"], "bare"],
+  [["their"], "bare"],
+];
+
+// Words of one surface may be separated by any whitespace run, matching the scanner.
+const determinerSurfacePatterns = A.map(
+  claimTermDeterminerSurfaces,
+  ([words, determiner]): readonly [RegExp, ClaimTermDeterminer] => [
+    new RegExp(`^${A.join(words, "\\s+")}\\s`, "u"),
+    determiner,
+  ]
+);
+
+// The determiner a lowercase quote opens with; a quote opening with no surface is bare.
+const quoteDeterminer = (quote: string): ClaimTermDeterminer =>
+  O.getOrElse(
+    O.map(
+      A.findFirst(determinerSurfacePatterns, ([pattern]) => O.isSome(Str.match(pattern)(quote))),
+      ([, determiner]) => determiner
+    ),
+    constant(ClaimTermDeterminer.Enum.bare)
+  );
 
 // The surface text each determiner recites, used to build schema-derived terms.
 const determinerSurfaceText: { readonly [K in ClaimTermDeterminer]: string } = {
@@ -248,7 +297,7 @@ const arbitraryHead = (head: string): string =>
 
 const ClaimTermDeterminerSurfaceCheck = S.makeFilter(
   ({ anchor, determiner }: { readonly anchor: TextAnchor; readonly determiner: ClaimTermDeterminer }): boolean =>
-    O.isSome(Str.match(determinerSurfaces[determiner])(Str.toLowerCase(anchor.quote))),
+    quoteDeterminer(Str.toLowerCase(anchor.quote)) === determiner,
   $I.annote("ClaimTermDeterminerSurfaceCheck", {
     title: "Determiner matches the quote",
     description: "The term's quote opens with its determiner's surface; a bare term opens with no determiner.",

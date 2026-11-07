@@ -309,14 +309,33 @@ const contestedLines = (
   );
 };
 
-const renderFleetSnapshot = Effect.fn("Fleet.renderFleetSnapshot")(function* (snapshot: FleetSnapshot) {
-  yield* Effect.forEach(snapshotHeaderLines(snapshot), Console.log);
+// `Effect.forEach` passes `(line, index)`; a point-free `Console.log` would print the index after every line.
+const printLine = (line: string) => Console.log(line);
+
+/**
+ * Print a fleet snapshot as the plain `beep worktree fleet` text report.
+ *
+ * **Example** (Build the render effect)
+ *
+ * ```ts
+ * import { renderFleetSnapshot } from "@beep/repo-cli/commands/Worktree"
+ *
+ * console.log(typeof renderFleetSnapshot) // "function"
+ * ```
+ *
+ * @param snapshot - The derived snapshot to print.
+ * @returns An effect that writes one console line per report line.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderFleetSnapshot = Effect.fn("Fleet.renderFleetSnapshot")(function* (snapshot: FleetSnapshot) {
+  yield* Effect.forEach(snapshotHeaderLines(snapshot), printLine);
   if (snapshot.checkouts.length === 0) {
     yield* Console.log("No checkouts sharing this origin were found under the fleet root.");
     return;
   }
-  yield* Effect.forEach(A.flatMap(snapshot.checkouts, fleetCheckoutLines), Console.log);
-  yield* Effect.forEach(contestedLines(snapshot.contestedPaths, snapshot.checkouts), Console.log);
+  yield* Effect.forEach(A.flatMap(snapshot.checkouts, fleetCheckoutLines), printLine);
+  yield* Effect.forEach(contestedLines(snapshot.contestedPaths, snapshot.checkouts), printLine);
 });
 
 const runWorktreeFleet = Effect.fn("Fleet.runWorktreeFleet")(function* (json: boolean) {
