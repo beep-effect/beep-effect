@@ -5,7 +5,7 @@
     "title": "Fleet Root Registry",
     "status": "active",
     "created": "2026-10-05",
-    "updated": "2026-10-05",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fleet-root-registry",
@@ -34,7 +34,8 @@
     "goals/fleet-root-registry/research/SOURCES.md",
     "explorations/agent-fleet-layout/BRIEF.md",
     "explorations/agent-fleet-layout/DECISIONS.md",
-    "explorations/agent-fleet-layout/MAP.md"
+    "explorations/agent-fleet-layout/MAP.md",
+    "goals/fleet-root-registry/decisions/"
   ],
   "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
@@ -50,7 +51,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",

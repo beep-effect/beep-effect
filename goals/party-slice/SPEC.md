@@ -296,6 +296,27 @@ them and record each in the Decision Log.
 
 | 2026-11-03 | Preserve all existing coverage floors, move the three law-practice Party file identities to LegalPartyReference, and add measured file rows for the new Contradiction, Projection and Resolution implementations | hosted run 41610786786 exposed stale renamed paths and missing behavioral tests; five added tests restore every package floor. The remaining new-file gaps are the opaque contradiction constructor and defensive empty-component, missing-survivor and empty-group fallbacks, reviewed against their callers; no existing threshold is lowered | remove the new rows when those defensive paths become directly testable; reverse the three identities only with the entity rename. Re-run the base-pinned ratchet and require hosted confirmation before merging |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug party-slice`; add a `kind: decision` file there, never edit this block._
+
+### Classify party-domain concepts by domain kind, 2026-11-07
+
+Party-domain was laid out with a single --domain-kind values run, so it is the only slice with nothing but values/. The glossary defines an Entity as identity-bearing and a Value Object as having no identity. Concepts with their own ids (Party: Person, Organization, CollectiveAgent; Communication: Voice, CommunicationEvent; Provenance: Activity, ArtifactOccurrence; Claim: SourceAssertion, ClaimVersion; Hierarchy: OperationalAssessment) move to entities/. Admission moves to policies/. Resolution and Projection move out of values/ to the home the architecture planner assigns to read-time views. Identifier, PartyKey, Proposition and the Ids schemas stay in values/. The root barrels keep every published @beep/party-domain subpath. Schema identifier paths change; party has no tables, and review digests must be proven to hash only encoded data before this lands. Immutability does not make a record a value: an append-only ClaimVersion referenced by id is still an entity.
+
+Lane `refactor/party-domain-kinds`
+
+Reverse: Move the concept folders back under values/ and restore the values/ schema identifier paths
+
+### Remove the seven unconsumed party factory bindings, 2026-11-07
+
+Party-domain bound seven @beep/epistemics factory families (ClaimEvidenceReview, EvidenceVerification, Contradiction, ContradictionDetection, EdgeEndpoint, LogicalEdgeIdentity, ClaimProjection) to party ids to satisfy the P1b acceptance criterion. None is imported outside party-domain's own barrels, README and Factories.test.ts. Party's actual review, party-server ReviewLoop, partitions the parties of a collision case under an evidence digest and does not use ClaimEvidenceReview. Law-practice's claim projection imports the epistemic slice's binding, not party's. Remove the bindings, their root barrels and test/Factories.test.ts, along with the six fallow code-duplication annotations they needed. The identifier-distinctness proof the party SPEC requires now rests on the kept Claim envelope (test/Claim.test.ts pins @beep/party-domain/entities/Claim/). The Claim envelope binding stays because party uses it. Epistemic ownership is unchanged: the 2026-10-21 architecture decision still has each slice bind the foundation factories for itself when it needs them. Rejected: rebuilding ReviewLoop on ClaimEvidenceReview (its partition verdict does not fit a single-assertion review), keeping them as ready-made vocabulary (dead code with a duplication waiver).
+
+Lane `refactor/party-domain-kinds`
+
+Reverse: Re-bind the factory in party-domain when a party use-case or server module consumes it
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

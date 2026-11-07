@@ -214,6 +214,12 @@ Lane `codex/knowledge-audit-p4-enforcement-context`
 
 Reverse: Remove only the added prefix mappings and prologue explanation; preserve query bodies and the private parent review.
 
+### Require Examples on runtime namespaces, 2026-11-06
+
+A current-source parent read of the JSDoc law found an inventory classification gap: every namespace was treated as pure type-level, including namespaces exporting runtime values. The real inventory scanner marks the runtime namespace resolved without an Example, while an equivalent direct value is flagged. Require an Example when the namespace symbol is a TypeScript value module; keep genuinely type-only namespaces optional. The regression covers runtime and type-only namespaces in ordinary and ambient declarations, fails against the old source, and passes with the repair. This is a bounded P4 repair, not complete export-kind coverage or audit closeout. Preserve PM and ADHD holds, original evidence and other owners; no paid or cloud work.
+
+Reverse: Revert the namespace classification and its focused regression; retained audit evidence remains historical.
+
 ### Protect both documented TopicName examples with source-bound tests, 2026-11-06
 
 Reuse the existing collectMarkdownFences API and scoped platform test pattern to execute the actual TopicName fence in each of the two public guidance files. Three valid forms and five empty-segment forms are asserted per copy; no second TopicName implementation or parser is introduced. A fresh main-only control fails the standards copy on true versus false while its already-repaired skill copy passes; the repaired branch passes both tests. Package lint/typecheck and the real file detector pass. This adds standing protection for the demonstrated duplicate-example omission; five other guidance facets still lack established dedicated protection in the bounded review, and broader acceptance remains unproven. The next PR2817 push includes a repo-cli test and must carry ready-for-heavy admission plus current code proof; the old docs-only coverage skip belongs only to its earlier published head. PM, ADHD, private evidence and source-owner holds remain separate. No paid work, lifecycle flip or S11.
@@ -229,5 +235,9 @@ Documentation repair PR #2817 and heading-domain PR #2818 are published as draft
 Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
 
 Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
+
+### P4 clarifies config package naming without inventing a directory migration, 2026-11-07
+
+Reverse: Revert the wording clarification; retain the original source and parent qualification in the private archive.
 
 <!-- beep:decisions:end -->

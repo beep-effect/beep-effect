@@ -2563,3 +2563,7 @@ that it does not enter issuer, execution or publication steps. Keep independent
 source/profile approval and actual protected execution as separate requirements.
 A paired policy assertion before the first producer-readiness review would have
 prevented this mismatch. No protected dispatch or credential change occurred.
+
+### Bind repeatability evidence to the measured revision, 2026-11-07
+
+The accepted dependency refresh changed the root manifest and lockfile after a real matching pair at b0c9bab1. Calling the old pair current would overstate its profile applicability. Publish the measured revision and artifact hashes, compare the thirteen controls, and require a fresh pair for the changed profile. Preserve the old successful and failed observations. The adapter candidate has four unchanged declared build inputs, so avoid a redundant build based only on commit movement.

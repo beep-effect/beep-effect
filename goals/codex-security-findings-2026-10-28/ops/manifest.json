@@ -65,21 +65,7 @@
     "goals/codex-security-findings-2026-10-28/research/SOURCES.md",
     "goals/codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md"
   ],
-  "researchReports": [
-    "research/2026-10-31-accepted-closeout.md",
-    "research/2026-10-31-cache-baseline-main-merge-request.json",
-    "research/2026-10-31-cache-baseline-main-merge-review.md",
-    "research/2026-10-31-cache-baseline-request.json",
-    "research/2026-10-31-cache-baseline-review.md",
-    "research/2026-10-31-closeout.md",
-    "research/2026-10-31-dependencies.md",
-    "research/2026-10-31-review.md",
-    "research/2026-10-31-scanning.md",
-    "research/2026-11-01-final-closeout.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/qualification.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -217,5 +203,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2488
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/codex-security-findings-2026-10-28",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "f51ea9a065b4a26566f821d93919cd8340d879c4",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
   }
 }

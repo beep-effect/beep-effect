@@ -66,7 +66,7 @@ export const createWriterHandler =
       }).pipe(Effect.orElseSucceed(() => false))
     );
     if (!verified) return forbidden();
-    return await delegate(event, ...args);
+    return delegate(event, ...args);
   };
 
 /**

@@ -104,10 +104,11 @@ export class PortfolioIndexRow extends S.Opaque<PortfolioIndexRow, { readonly br
     statusNote: S.optionalKey(S.String),
     phases: GoalPhase.pipe(S.Array, S.optionalKey),
     closeout: S.optionalKey(S.String),
+    archivedAt: S.optionalKey(S.String),
   }).pipe(
     $I.annoteSchema("PortfolioIndexRow", {
       description:
-        "One goals-index row (slug, title, committed status, phase progress, dates, mission, status note, phase entries, proposed or committed closeout).",
+        "One goals-index row (slug, title, committed status, phase progress, dates, mission, status note, phase entries, proposed or committed closeout, archive time).",
     })
   )
 ) {}
@@ -157,6 +158,9 @@ const truncateCell = (text: string): string =>
 
 const EMPTY_CELL = "—";
 
+// `archive.archivedAt` is an ISO date-time; the column shows its YYYY-MM-DD date.
+const ARCHIVED_DATE_CHARS = 10;
+
 const optionalCell = (value: string | undefined, render: (text: string) => string): string =>
   value === undefined ? EMPTY_CELL : render(value);
 
@@ -164,8 +168,9 @@ const renderIndexRow = (row: PortfolioIndexRow): string => {
   const phases = row.phasesTotal > 0 ? `${row.phasesComplete}/${row.phasesTotal}` : EMPTY_CELL;
   const updated = row.updated ?? EMPTY_CELL;
   const closeout = optionalCell(row.closeout, sanitizeCell);
+  const archived = optionalCell(row.archivedAt, Str.slice(0, ARCHIVED_DATE_CHARS));
   const mission = optionalCell(row.mission, flow(sanitizeCell, truncateCell));
-  return `| [${row.slug}](./${row.slug}/README.md) | ${sanitizeCell(row.title)} | ${phases} | ${updated} | ${closeout} | ${mission} |`;
+  return `| [${row.slug}](./${row.slug}/README.md) | ${sanitizeCell(row.title)} | ${phases} | ${updated} | ${closeout} | ${archived} | ${mission} |`;
 };
 
 const renderIndexGroup = (status: GoalStatus, groupRows: ReadonlyArray<PortfolioIndexRow>): ReadonlyArray<string> =>
@@ -175,8 +180,8 @@ const renderIndexGroup = (status: GoalStatus, groupRows: ReadonlyArray<Portfolio
         "",
         `## ${GROUP_TITLES[status]} (${A.length(groupRows)})`,
         "",
-        "| Packet | Title | Phases | Updated | Closeout | Mission |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Packet | Title | Phases | Updated | Closeout | Archived | Mission |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
         ...A.map(groupRows, renderIndexRow),
       ];
 
@@ -289,6 +294,10 @@ const collectPortfolioIndex = Effect.fn("Goals.collectPortfolioIndex")(function*
         ...optionalProp("updated", O.fromUndefinedOr(manifest.value.initiative.updated)),
         ...optionalProp("mission", mission),
         ...optionalProp("statusNote", O.fromUndefinedOr(manifest.value.statusNote)),
+        ...optionalProp(
+          "archivedAt",
+          O.map(O.fromUndefinedOr(manifest.value.archive), (archive) => archive.archivedAt)
+        ),
         phases,
         ...optionalProp(
           "closeout",

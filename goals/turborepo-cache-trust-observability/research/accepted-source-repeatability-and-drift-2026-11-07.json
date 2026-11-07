@@ -1,0 +1,269 @@
+{
+  "schemaVersion": "accepted-source-dependency-repeatability/v1",
+  "observedAt": "2026-11-07T00:21:19.416894+00:00",
+  "preparedAt": "2026-11-07T01:24:54.830421+00:00",
+  "observedSourceRevision": "b0c9bab1e13b7aa9d785a5ea5e8d44c6667e4d72",
+  "reportPreparedAtAcceptedRevision": "ce87ff21b246877706c8c27c599ef65b9acc0fe4",
+  "pairPassedAtObservedRevision": true,
+  "comparison": {
+    "all13ControlsAndResourceBoundsEqual": true,
+    "rawCanonicalDigestEqual": true,
+    "sourceDifferencePaths": [],
+    "changedGroups": [],
+    "changedFiles": [],
+    "digestsNormalizedOrFilesExcluded": false
+  },
+  "observations": [
+    {
+      "runId": 42315200356,
+      "attempt": 1,
+      "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42315200356",
+      "sourceRevision": "b0c9bab1e13b7aa9d785a5ea5e8d44c6667e4d72",
+      "conclusion": "success",
+      "resolvedWorkflows": [
+        {
+          "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+          "sha": "b0c9bab1e13b7aa9d785a5ea5e8d44c6667e4d72",
+          "ref": "refs/heads/main"
+        }
+      ],
+      "aggregateReportBytes": 3485525,
+      "diagnosticStatus": "stable-match",
+      "sourceInspectionPassed": true,
+      "approvalGranted": false,
+      "credentialsOrSigningActivated": false,
+      "taskBodiesExecuted": false,
+      "executedInspectionJobId": 128225994797,
+      "sourceUnchanged": true,
+      "snapshotsEqual": true,
+      "declaredDigestMatches": true,
+      "declaredDependencySha256": "7bb708159bee071af7da6eccdc3c6b3f54904ecde3094d4d5b016ceecb512c38",
+      "observedDependencySha256": "7bb708159bee071af7da6eccdc3c6b3f54904ecde3094d4d5b016ceecb512c38",
+      "packageGroups": 2269,
+      "diagnosticSeconds": 46.049,
+      "fileDetailsSummary": {
+        "group": "node-gyp",
+        "files": 330,
+        "kindCounts": {
+          "other": 272,
+          "python-source": 58
+        },
+        "encodedRowBytesBounded": 49617,
+        "entryLimit": 512,
+        "encodedBytesLimit": 131072
+      },
+      "artifacts": [
+        {
+          "id": 13551007018,
+          "name": "cache-producer-inspection-42315200356-1",
+          "archiveBytes": 2749680,
+          "archiveSha256": "58c84d86ae342c9e4f6008a3d20d4e94a4f11ecadc8f88886c986c890ff1c053",
+          "reportBytes": 2749544,
+          "reportSha256": "c10e76ac30f86ce3c1c68ed7496db6f84a9b1ab94eb16f7f3dedcd3b4310d04c",
+          "expiresAt": "2026-11-08T00:07:10Z"
+        },
+        {
+          "id": 13550537729,
+          "name": "cache-producer-dependencies-42315200356-1",
+          "archiveBytes": 736129,
+          "archiveSha256": "806b5f39740848cbd594ee4422742169a0883781b8989c444bbff0c364b737ff",
+          "reportBytes": 735981,
+          "reportSha256": "c32ffa192e56188c3f16e9421d8a8dd4cca52efe8136d83cd3c9e6db65830482",
+          "expiresAt": "2026-11-08T00:07:11Z"
+        }
+      ]
+    },
+    {
+      "runId": 42316571895,
+      "attempt": 1,
+      "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42316571895",
+      "sourceRevision": "b0c9bab1e13b7aa9d785a5ea5e8d44c6667e4d72",
+      "conclusion": "success",
+      "resolvedWorkflows": [
+        {
+          "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+          "sha": "b0c9bab1e13b7aa9d785a5ea5e8d44c6667e4d72",
+          "ref": "refs/heads/main"
+        }
+      ],
+      "aggregateReportBytes": 3485524,
+      "diagnosticStatus": "stable-match",
+      "sourceInspectionPassed": true,
+      "approvalGranted": false,
+      "credentialsOrSigningActivated": false,
+      "taskBodiesExecuted": false,
+      "executedInspectionJobId": 128230518594,
+      "sourceUnchanged": true,
+      "snapshotsEqual": true,
+      "declaredDigestMatches": true,
+      "declaredDependencySha256": "7bb708159bee071af7da6eccdc3c6b3f54904ecde3094d4d5b016ceecb512c38",
+      "observedDependencySha256": "7bb708159bee071af7da6eccdc3c6b3f54904ecde3094d4d5b016ceecb512c38",
+      "packageGroups": 2269,
+      "diagnosticSeconds": 45.26,
+      "fileDetailsSummary": {
+        "group": "node-gyp",
+        "files": 330,
+        "kindCounts": {
+          "other": 272,
+          "python-source": 58
+        },
+        "encodedRowBytesBounded": 49617,
+        "entryLimit": 512,
+        "encodedBytesLimit": 131072
+      },
+      "artifacts": [
+        {
+          "id": 13550564567,
+          "name": "cache-producer-inspection-42316571895-1",
+          "archiveBytes": 2749680,
+          "archiveSha256": "256c33270b572c8fdd8e7e23d7ecc62984d82db6cab191dbbd9d2334ae468df8",
+          "reportBytes": 2749544,
+          "reportSha256": "c10e76ac30f86ce3c1c68ed7496db6f84a9b1ab94eb16f7f3dedcd3b4310d04c",
+          "expiresAt": "2026-11-08T00:18:14Z"
+        },
+        {
+          "id": 13550524633,
+          "name": "cache-producer-dependencies-42316571895-1",
+          "archiveBytes": 736128,
+          "archiveSha256": "ab0818cc969edc7fdacdf06cae7ce06d4a3acb49ac9d1568a2020dedae6bb215",
+          "reportBytes": 735980,
+          "reportSha256": "6cd437bcdb91890c4a7bad8443ac17ca11e5f50b08cd452331b911c4013e4f27",
+          "expiresAt": "2026-11-08T00:18:15Z"
+        }
+      ]
+    }
+  ],
+  "bounds": {
+    "runnerJobsAtOnce": 1,
+    "jobMinutes": 10,
+    "aggregateArtifactBytes": 4194304,
+    "archiveBytesPerPass": 6442450944,
+    "entriesPerPass": 600000,
+    "groupsPerPass": 4096,
+    "passes": 2,
+    "retentionDays": 1,
+    "seconds": 300
+  },
+  "currentSourceApplicability": {
+    "controls": [
+      {
+        "path": ".github/workflows/cache-producer-inspect.yml",
+        "observedSha256": "9b0fdc6777c67d070db99758b31002b0674437fbd0b5247ea6763535e783ca92",
+        "acceptedSha256": "9b0fdc6777c67d070db99758b31002b0674437fbd0b5247ea6763535e783ca92",
+        "matches": true
+      },
+      {
+        "path": ".github/workflows/heavy.yml",
+        "observedSha256": "4601dcc6ba6f226d8d8007f580e7c8610edee700d810c481cb89a494c1d36b1c",
+        "acceptedSha256": "4601dcc6ba6f226d8d8007f580e7c8610edee700d810c481cb89a494c1d36b1c",
+        "matches": true
+      },
+      {
+        "path": ".github/actions/setup-monorepo-ci/action.yml",
+        "observedSha256": "44262ad3cd003a8674568cc8a252ec28ccf9e4c9a5c8543f2126ef0c820fe22b",
+        "acceptedSha256": "44262ad3cd003a8674568cc8a252ec28ccf9e4c9a5c8543f2126ef0c820fe22b",
+        "matches": true
+      },
+      {
+        "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+        "observedSha256": "5934f0861d1d908584706773c72514c100e28e1039a1b076f2b00b95af243c99",
+        "acceptedSha256": "5934f0861d1d908584706773c72514c100e28e1039a1b076f2b00b95af243c99",
+        "matches": true
+      },
+      {
+        "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
+        "observedSha256": "c22565b6fdd9bfe8aeac4f88742e19546706e49f0fe1308dcf707fa8c5c0e6e1",
+        "acceptedSha256": "c22565b6fdd9bfe8aeac4f88742e19546706e49f0fe1308dcf707fa8c5c0e6e1",
+        "matches": true
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+        "observedSha256": "6d11ef5065110bd491965ed92792037125edd3900cb7db268b3359a044be31a9",
+        "acceptedSha256": "6d11ef5065110bd491965ed92792037125edd3900cb7db268b3359a044be31a9",
+        "matches": true
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/cache-workflow.test.ts",
+        "observedSha256": "926ec6c25270f04daed508236155c96696e0f0ceaaa846e1d22e4d7885f0b203",
+        "acceptedSha256": "926ec6c25270f04daed508236155c96696e0f0ceaaa846e1d22e4d7885f0b203",
+        "matches": true
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
+        "observedSha256": "9c66effc682e8d3e05de2c7c1af885497342e7230d9c7ce91fdc2c9441b5000b",
+        "acceptedSha256": "9c66effc682e8d3e05de2c7c1af885497342e7230d9c7ce91fdc2c9441b5000b",
+        "matches": true
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.errors.ts",
+        "observedSha256": "c1a235549333a9dbe34e6a56830e4cb7e26b31b9f6436c49fe244f4eb4bdca03",
+        "acceptedSha256": "c1a235549333a9dbe34e6a56830e4cb7e26b31b9f6436c49fe244f4eb4bdca03",
+        "matches": true
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+        "observedSha256": "ee8a5dae274fb99d67837bdc1d63593a7d72eeac13c59f89e453d45d06f27c9e",
+        "acceptedSha256": "ee8a5dae274fb99d67837bdc1d63593a7d72eeac13c59f89e453d45d06f27c9e",
+        "matches": true
+      },
+      {
+        "path": "bun.lock",
+        "observedSha256": "be1185fe770f7285dfe5b8620ece78d2462c8b4a8655bdddd07cbafc100babc9",
+        "acceptedSha256": "172546b71271d1624276f33e6eebf29bd7544b971a1570b76ed259ed6965922f",
+        "matches": false
+      },
+      {
+        "path": "package.json",
+        "observedSha256": "8aeab93d1609618577fdce356c0da33c095e2adb0df1d1eddb8c51d67e9d3a2f",
+        "acceptedSha256": "a6d4d802d1fa4264da4e0697d218ad02615761e532c09296003a1bcd05f48afa",
+        "matches": false
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
+        "observedSha256": "a043702f07bf24d9579e1d75e50dbd4739f67488f4aef529c426ae0e814fa164",
+        "acceptedSha256": "a043702f07bf24d9579e1d75e50dbd4739f67488f4aef529c426ae0e814fa164",
+        "matches": true
+      }
+    ],
+    "allControlsMatch": false,
+    "freshCurrentProfilePairRequired": true,
+    "runtimeDependencyEqualityClaimed": false,
+    "qualificationGranted": false
+  },
+  "candidateAdapter": {
+    "sourceRevision": "ff3970ddf0c0848d65830d60af080ad903ed4b6a",
+    "runId": 42281221097,
+    "artifactId": 13535573041,
+    "recordedProviderExpiry": "2026-11-07T19:47:19Z",
+    "declaredBuildInputs": [
+      {
+        "path": "infra/r2-cache/policy.sh",
+        "candidateSha256": "b57a1dc52066ca0d334e40326295fd3e53dddaaa5c5b2d9fcc16a91ad04513d0",
+        "acceptedSha256": "b57a1dc52066ca0d334e40326295fd3e53dddaaa5c5b2d9fcc16a91ad04513d0",
+        "matches": true
+      },
+      {
+        "path": "infra/r2-cache/policy-build-requirements.txt",
+        "candidateSha256": "8270e2e179f2b0abbaea61f6a08ad8b1770322408e032122d2bece32413d194a",
+        "acceptedSha256": "8270e2e179f2b0abbaea61f6a08ad8b1770322408e032122d2bece32413d194a",
+        "matches": true
+      },
+      {
+        "path": "infra/r2-cache/patches/4.0.20-signed-policy.patch",
+        "candidateSha256": "740ce934d3fb22a0244edd7dc3a9cc89a4fe043982defe28af485f10ebfd494e",
+        "acceptedSha256": "740ce934d3fb22a0244edd7dc3a9cc89a4fe043982defe28af485f10ebfd494e",
+        "matches": true
+      },
+      {
+        "path": "infra/r2-cache/patches/4.0.20-signed-policy.json",
+        "candidateSha256": "e5d55b089b4636f8d28384057a3342e203d2525c6d913e86060ec087fc8867e4",
+        "acceptedSha256": "e5d55b089b4636f8d28384057a3342e203d2525c6d913e86060ec087fc8867e4",
+        "matches": true
+      }
+    ],
+    "allDeclaredInputsMatch": true,
+    "providerAvailabilityRevalidated": false,
+    "executableApprovedOrRun": false
+  },
+  "scope": "Two real credential-free inspection observations at the named accepted revision. The newer dependency profile is not proven. No producer approval, credential activation, protected trial, task qualification or representative-window acceptance."
+}

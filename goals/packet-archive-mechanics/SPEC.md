@@ -97,6 +97,48 @@ exploration's DECISIONS.md first, never an in-place edit here.
 
 Reverse: Reopen the specific decision in explorations/packet-archive-and-alpha-harvest/DECISIONS.md with a dated superseding entry and amend research/P0-DESIGN.md accordingly
 
+### Archive is recorded in the manifest archive block, not as a packet event, 2026-11-06
+
+`beep goals archive --write` records the operation only in `ops/manifest.json`
+(`archive: ArchiveRecord`). Adding an `archived` packet event is more than a new
+literal: it needs an event body, a fold branch, a SetStatus body switch case, a
+transition-writer request type and a decision on derived state and trace. That is
+a change to the packet event vocabulary and gets its own reviewed PR; the 65
+packets with event streams are untouched by the sweep. Doctor, INDEX and the
+capability graph read the manifest, so nothing observable depends on the event.
+
+Reverse: Add an archived event type to the packet event vocabulary (body, fold branch, SetStatus switch, transition writer) in its own reviewed PR and have TombstoneWriter append it; existing archive blocks stay valid
+
+### Create the archive repo and add its beep refs member in the P0 PR, 2026-11-06
+
+The earlier decision deferred the goals-archive member until the repo existed, because provisioning a member with no remote breaks every checkout. The agent created beep-effect/beep-effect-goals-archive (public, wiki and issues off) and seeded main with the projection README that ArchiveStore writes, so the member is safe now and rides #2801. The SSH URL is used because the archive checkout must push. bun run beep refs provision linked .repos/goals-archive at 4ca1a37. The ledger is still regenerated at a main SHA in its own PR before batch 1.
+
+Lane `feat/packet-archive-mechanics` · PR #2801
+
+Reverse: Remove the goals-archive member from scripts/references.json and its two refs test rows; archive or delete beep-effect/beep-effect-goals-archive only if no tombstone links into it
+
+### Defer the goals-archive beep refs member to P1, 2026-11-06
+
+beep refs provision clones every member with no per-member recovery, and refs refresh reports a missing member as pull-failed with a critical notification, so a member whose remote does not exist yet would break provisioning for every checkout. The member is added in P1 when beep-effect/beep-effect-goals-archive exists.
+
+Reverse: Add the member to scripts/references.json once the archive repo exists
+
+### Exploration tombstones keep research/harvest/** so the harvest ledger stays on main, 2026-11-06
+
+The exploration tombstone decision keeps ops/manifest.json, README.md, DECISIONS.md and BRIEF.md, which would move explorations/packet-archive-and-alpha-harvest/research/harvest/ to the archive repo in the exploration batch. The ledger-home decision puts the harvest ledger and the panel verdicts on main under that path, and harvested-alpha-triage names it as its prerequisite and writes its merge output beside it. The two decisions only agree if the tombstone keeps that subtree, so TombstoneKeep.explorations gains research/harvest/**. Only this exploration has the directory, so the sweep is otherwise unchanged and no packet is exempted.
+
+Lane `feat/packet-archive-mechanics`
+
+Reverse: Drop research/harvest/** from TombstoneKeep.explorations once harvested-alpha-triage has closed and moved its inputs; re-run beep goals archive on the exploration
+
+### Retain executable fixture inputs beside consumers after packet archive, 2026-11-07
+
+The first fifty-goal archive removed three law-practice sampling/reference manifests and four CI Ops retained evidence files still consumed by hosted checks. Fallow reports four unresolved new-URL paths and Labs reports five missing-file test failures. Repair the inherited main regression once in a consolidated unblocker, not in each Turbo lane. Move the consumed files to package-owned fixture directories, update the existing locators and keep the archived packets as tombstones. Copy five files byte-for-byte from accepted pre-archive 7e0288484841963d726c0ee69ac6dcf6688d32f9; update only the adoption-table locator in the two KPI reading goldens. Preserve the adoption-table digest, replay-render digest, metrics, corpus selections, quota/digest checks and all assertions. No new samples or evidence generation, suppression, lowered floor, network-dependent test input or cache promotion. No local verify, publish, tests, compiler, docgen, package quality or manual source-generator entrypoint runs; ordinary bootstrap/hooks and native goal writers are allowed. Hosted CI remains authoritative. Existing Turbo PRs consume the fix through accepted main.
+
+Lane `codex/cache-archive-consumer-repair-20261107`
+
+Reverse: Restore the previous consumer locators and remove the seven promoted fixtures only after another retained runtime owner is supplied; keep the full packet archive intact.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

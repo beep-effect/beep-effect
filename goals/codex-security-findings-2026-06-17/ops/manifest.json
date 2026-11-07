@@ -291,5 +291,13 @@
     "findingsClosedAt": "2026-06-18"
   },
   "statusNote": "legacy status: complete",
-  "mission": "Triage, remediate-by-default, and close all 71 Codex Cloud security findings from scan `f4128216e9c08191b0431ea2a05322bb` in a single, mergeable PR on `security/6-17-2026`. Every finding ends Closed in Codex with the correct reason (`False positive` / `Won't fix` / `Already fixed`)."
+  "mission": "Triage, remediate-by-default, and close all 71 Codex Cloud security findings from scan `f4128216e9c08191b0431ea2a05322bb` in a single, mergeable PR on `security/6-17-2026`. Every finding ends Closed in Codex with the correct reason (`False positive` / `Won't fix` / `Already fixed`).",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/codex-security-findings-2026-06-17",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "341214c000e36c30944137e9fb83a80e1f2f235b",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }
