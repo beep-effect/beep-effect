@@ -90,6 +90,94 @@ export class VaultScanFailed extends S.TaggedError<VaultScanFailed, { readonly b
 ) {}
 
 /**
+ * Raised when a reviewed drift record does not exist in the requesting workspace.
+ *
+ * **Details**
+ *
+ * A conflict id owned by another workspace is indistinguishable from a missing one.
+ *
+ * **Example** (Make VaultSyncConflictNotFound error)
+ *
+ * ```ts
+ * import { VaultSyncConflictNotFound } from "@beep/documents-use-cases/aggregates/Sync/server"
+ *
+ * const error = VaultSyncConflictNotFound.make({ conflictId: 7 })
+ * console.log(error.conflictId)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class VaultSyncConflictNotFound extends S.TaggedError<
+  VaultSyncConflictNotFound,
+  { readonly brand: unique symbol }
+>($I`VaultSyncConflictNotFound`)(
+  "VaultSyncConflictNotFound",
+  {
+    conflictId: S.Int.annotateKey({ description: "Numeric legacy conflict id the caller asked to review." }),
+  },
+  $I.annoteError<VaultSyncConflictNotFound>("VaultSyncConflictNotFound", {
+    description: "A reviewed drift record does not exist in the requesting workspace.",
+  })
+) {}
+
+/**
+ * Raised when the projected vault-sync read model cannot be read or decoded.
+ *
+ * **Example** (Make VaultSyncReadUnavailable error)
+ *
+ * ```ts
+ * import { VaultSyncReadUnavailable } from "@beep/documents-use-cases/aggregates/Sync/server"
+ *
+ * const error = VaultSyncReadUnavailable.make({ reason: "list open conflicts failed" })
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class VaultSyncReadUnavailable extends S.TaggedError<
+  VaultSyncReadUnavailable,
+  { readonly brand: unique symbol }
+>($I`VaultSyncReadUnavailable`)(
+  "VaultSyncReadUnavailable",
+  {
+    reason: S.NonEmptyString.annotateKey({ description: "Non-empty read-model failure diagnostic." }),
+  },
+  $I.annoteError<VaultSyncReadUnavailable>("VaultSyncReadUnavailable", {
+    description: "The projected vault-sync read model could not be read or decoded.",
+  })
+) {}
+
+/**
+ * Raised when the vault-sync Model writer cannot accept or finish a command.
+ *
+ * **Example** (Make VaultSyncWriterUnavailable error)
+ *
+ * ```ts
+ * import { VaultSyncWriterUnavailable } from "@beep/documents-use-cases/aggregates/Sync/server"
+ *
+ * const error = VaultSyncWriterUnavailable.make({ reason: "pass did not complete" })
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class VaultSyncWriterUnavailable extends S.TaggedError<
+  VaultSyncWriterUnavailable,
+  { readonly brand: unique symbol }
+>($I`VaultSyncWriterUnavailable`)(
+  "VaultSyncWriterUnavailable",
+  {
+    reason: S.NonEmptyString.annotateKey({ description: "Non-empty writer failure diagnostic." }),
+  },
+  $I.annoteError<VaultSyncWriterUnavailable>("VaultSyncWriterUnavailable", {
+    description: "The vault-sync Model writer could not accept or finish a command.",
+  })
+) {}
+
+/**
  * Client-safe failure raised when a vault sync action cannot complete.
  *
  * **Example** (Create VaultSyncActionError instance)

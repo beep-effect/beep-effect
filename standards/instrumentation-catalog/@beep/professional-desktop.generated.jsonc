@@ -29,6 +29,7 @@
     {"name":"DesktopDock.makeGraph","owner":"@beep/professional-desktop","family":"app","conforms":true},
     {"name":"DesktopIntake.run","owner":"@beep/professional-desktop","family":"app","conforms":true},
     {"name":"DesktopOntology.run","owner":"@beep/professional-desktop","family":"app","conforms":true},
+    {"name":"DesktopVaultSync.orgOf","owner":"@beep/professional-desktop","family":"app","conforms":true},
     {"name":"DesktopVaultSync.run","owner":"@beep/professional-desktop","family":"app","conforms":true},
     {"name":"LocalStorageDockSnapshotStore.save","owner":"@beep/professional-desktop","family":"app","conforms":true},
     {"name":"OntologyWorkspaceSeed.seedPizzaTutorial","owner":"@beep/professional-desktop","family":"app","conforms":true},

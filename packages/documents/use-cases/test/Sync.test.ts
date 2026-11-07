@@ -20,10 +20,10 @@ import {
   VaultScanFailed,
   VaultSyncEngine,
   VaultSyncError,
+  VaultSyncReadUnavailable,
   VaultSyncStatus,
   VaultSyncStatusInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
-import { SyncItemRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncItem/server";
 import {
   GetVaultSyncStatusPayload,
   GetVaultSyncStatusRpc,
@@ -248,9 +248,9 @@ describe("VaultSyncEngine port", () => {
       expect(mirrorDown._tag).toBe("DmsMirrorUnavailable");
 
       const repositoryDown = yield* decodeVaultSyncError(
-        SyncItemRepositoryUnavailable.make({ reason: "database connection closed" })
+        VaultSyncReadUnavailable.make({ reason: "database connection closed" })
       );
-      expect(repositoryDown._tag).toBe("SyncItemRepositoryUnavailable");
+      expect(repositoryDown._tag).toBe("VaultSyncReadUnavailable");
 
       pipe(S.is(VaultSyncError)(VaultScanFailed.make({ reason: "vault root missing" })), assertTrue);
       pipe(S.is(VaultSyncError)(VaultSyncActionError.new("client-safe failure")), assertFalse);

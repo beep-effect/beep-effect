@@ -58,7 +58,7 @@ const mergeObservations = (observations: ReadonlyArray<VaultScanObservation>): V
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as FileSystem from "effect/FileSystem"
- * import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts"
+ * import { makeVaultSyncFileStore } from "@beep/documents-server/aggregates/Sync"
  *
  * const scan = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
@@ -67,7 +67,6 @@ const mergeObservations = (observations: ReadonlyArray<VaultScanObservation>): V
  *   return yield* files.scan(root)
  * })
  * ```
- * @internal
  * @category constructors
  * @since 0.0.0
  */

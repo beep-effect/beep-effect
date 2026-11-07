@@ -404,7 +404,7 @@ export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
  * @category layers
  * @since 0.0.0
  */
-export const PgliteDrizzleLive: Layer.Layer<PostgresDrizzle, never, Digest.Digest> = Layer.unwrap(
+export const PgliteDrizzleLive: Layer.Layer<PostgresDrizzle | SqlClient.SqlClient, never, Digest.Digest> = Layer.unwrap(
   Effect.gen(function* () {
     const dataDir = yield* ChatDbDataDir;
     const shouldMarkDataDir = yield* ensureCompatibleChatDbDataDir(dataDir);
@@ -414,7 +414,8 @@ export const PgliteDrizzleLive: Layer.Layer<PostgresDrizzle, never, Digest.Diges
       Layer.tap((context: Context.Context<PostgresDrizzle>) =>
         Effect.provide(migrateOnBoot, context).pipe(Effect.andThen(markAfterMigration))
       ),
-      Layer.provide(makeBundledPgliteLayer({ dataDir }))
+      // The vault-sync Model hosts its event store on the same client.
+      Layer.provideMerge(makeBundledPgliteLayer({ dataDir }))
     );
   })
 ).pipe(Layer.provide(DataDirPlatformLive), Layer.orDie);

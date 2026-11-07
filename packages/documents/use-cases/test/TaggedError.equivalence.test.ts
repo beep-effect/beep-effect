@@ -1,4 +1,3 @@
-import { VaultRelPath } from "@beep/documents-domain/values/Sync";
 import {
   DocumentIntakeActionError,
   DocumentMaterializationFailed,
@@ -8,23 +7,10 @@ import {
   DmsMirrorUnavailable,
   VaultScanFailed,
   VaultSyncActionError,
+  VaultSyncConflictNotFound,
+  VaultSyncReadUnavailable,
+  VaultSyncWriterUnavailable,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
-import {
-  SyncConflictRepositoryNotFound,
-  SyncConflictRepositoryUnavailable,
-} from "@beep/documents-use-cases/entities/SyncConflict/server";
-import { SyncCursorRepositoryUnavailable } from "@beep/documents-use-cases/entities/SyncCursor/server";
-import {
-  SyncItemRepositoryConflict,
-  SyncItemRepositoryNotFound,
-  SyncItemRepositoryUnavailable,
-} from "@beep/documents-use-cases/entities/SyncItem/server";
-import {
-  SyncOperationRepositoryConflict,
-  SyncOperationRepositoryNotFound,
-  SyncOperationRepositoryUnavailable,
-} from "@beep/documents-use-cases/entities/SyncOperation/server";
-import * as Documents from "@beep/shared-domain/identity/Documents";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
@@ -42,15 +28,6 @@ const expectDeclaredEquivalence = <Schema extends S.Top>(
   pipe(same(a, b), assertTrue);
   pipe(same(a, c), assertFalse);
 };
-
-const conflictId = Documents.SyncConflictId.make(1);
-const otherConflictId = Documents.SyncConflictId.make(2);
-const syncItemId = Documents.SyncItemId.make(1);
-const otherSyncItemId = Documents.SyncItemId.make(2);
-const syncOperationId = Documents.SyncOperationId.make(1);
-const otherSyncOperationId = Documents.SyncOperationId.make(2);
-const localRelPath = VaultRelPath.make("matters/client-default/complaint.pdf");
-const otherLocalRelPath = VaultRelPath.make("matters/client-default/answer.pdf");
 
 describe("documents-use-cases tagged-error declared equivalence", () => {
   it("compares document and sync action errors by their declared fields", () => {
@@ -92,66 +69,24 @@ describe("documents-use-cases tagged-error declared equivalence", () => {
     );
   });
 
-  it("compares SyncConflict and SyncCursor repository errors by their declared fields", () => {
+  it("compares vault sync read and writer errors by their declared fields", () => {
     expectDeclaredEquivalence(
-      SyncConflictRepositoryNotFound,
-      SyncConflictRepositoryNotFound.make({ conflictId }),
-      SyncConflictRepositoryNotFound.make({ conflictId }),
-      SyncConflictRepositoryNotFound.make({ conflictId: otherConflictId })
+      VaultSyncConflictNotFound,
+      VaultSyncConflictNotFound.make({ conflictId: 1 }),
+      VaultSyncConflictNotFound.make({ conflictId: 1 }),
+      VaultSyncConflictNotFound.make({ conflictId: 2 })
     );
     expectDeclaredEquivalence(
-      SyncConflictRepositoryUnavailable,
-      SyncConflictRepositoryUnavailable.make({ reason: "database unavailable" }),
-      SyncConflictRepositoryUnavailable.make({ reason: "database unavailable" }),
-      SyncConflictRepositoryUnavailable.make({ reason: "transaction aborted" })
+      VaultSyncReadUnavailable,
+      VaultSyncReadUnavailable.make({ reason: "database unavailable" }),
+      VaultSyncReadUnavailable.make({ reason: "database unavailable" }),
+      VaultSyncReadUnavailable.make({ reason: "transaction aborted" })
     );
     expectDeclaredEquivalence(
-      SyncCursorRepositoryUnavailable,
-      SyncCursorRepositoryUnavailable.make({ reason: "database unavailable" }),
-      SyncCursorRepositoryUnavailable.make({ reason: "database unavailable" }),
-      SyncCursorRepositoryUnavailable.make({ reason: "transaction aborted" })
-    );
-  });
-
-  it("compares SyncItem repository errors by their declared fields", () => {
-    expectDeclaredEquivalence(
-      SyncItemRepositoryConflict,
-      SyncItemRepositoryConflict.make({ localRelPath, reason: "already tracked" }),
-      SyncItemRepositoryConflict.make({ localRelPath, reason: "already tracked" }),
-      SyncItemRepositoryConflict.make({ localRelPath: otherLocalRelPath, reason: "already tracked" })
-    );
-    expectDeclaredEquivalence(
-      SyncItemRepositoryNotFound,
-      SyncItemRepositoryNotFound.make({ syncItemId }),
-      SyncItemRepositoryNotFound.make({ syncItemId }),
-      SyncItemRepositoryNotFound.make({ syncItemId: otherSyncItemId })
-    );
-    expectDeclaredEquivalence(
-      SyncItemRepositoryUnavailable,
-      SyncItemRepositoryUnavailable.make({ reason: "database unavailable" }),
-      SyncItemRepositoryUnavailable.make({ reason: "database unavailable" }),
-      SyncItemRepositoryUnavailable.make({ reason: "transaction aborted" })
-    );
-  });
-
-  it("compares SyncOperation repository errors by their declared fields", () => {
-    expectDeclaredEquivalence(
-      SyncOperationRepositoryConflict,
-      SyncOperationRepositoryConflict.make({ idempotencyKey: "item-1:upload:1", reason: "already enqueued" }),
-      SyncOperationRepositoryConflict.make({ idempotencyKey: "item-1:upload:1", reason: "already enqueued" }),
-      SyncOperationRepositoryConflict.make({ idempotencyKey: "item-2:upload:1", reason: "already enqueued" })
-    );
-    expectDeclaredEquivalence(
-      SyncOperationRepositoryNotFound,
-      SyncOperationRepositoryNotFound.make({ syncOperationId }),
-      SyncOperationRepositoryNotFound.make({ syncOperationId }),
-      SyncOperationRepositoryNotFound.make({ syncOperationId: otherSyncOperationId })
-    );
-    expectDeclaredEquivalence(
-      SyncOperationRepositoryUnavailable,
-      SyncOperationRepositoryUnavailable.make({ reason: "database unavailable" }),
-      SyncOperationRepositoryUnavailable.make({ reason: "database unavailable" }),
-      SyncOperationRepositoryUnavailable.make({ reason: "transaction aborted" })
+      VaultSyncWriterUnavailable,
+      VaultSyncWriterUnavailable.make({ reason: "pass failed" }),
+      VaultSyncWriterUnavailable.make({ reason: "pass failed" }),
+      VaultSyncWriterUnavailable.make({ reason: "admission refused" })
     );
   });
 });

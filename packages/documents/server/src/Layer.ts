@@ -6,20 +6,37 @@
  * @since 0.0.0
  */
 
-import { VaultSyncEngine } from "@beep/documents-use-cases/aggregates/Sync/server";
+import { AlchemyPostgres, AlchemyPostgresConfig, ProvenanceMapping } from "@beep/alchemy-postgres";
+import * as V from "@beep/documents-domain/aggregates/VaultSync";
+import {
+  VaultSyncEngine,
+  VaultSyncReadUnavailable,
+  VaultSyncWriterUnavailable,
+} from "@beep/documents-use-cases/aggregates/Sync/server";
+import { VaultSyncPassModel, VaultSyncPolicies } from "@beep/documents-use-cases/aggregates/VaultSync";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { DocumentsServerLayer, DocumentsServerLlmLayer } from "./aggregates/Document/index.ts";
-import { DmsMirrorFixtureLayer, makeVaultSyncEngine, VaultSyncConfigLayer } from "./aggregates/Sync/index.ts";
 import {
-  SyncConflictRepositoryDrizzleLayer,
-  SyncConflictRepositoryInMemoryLayer,
-} from "./entities/SyncConflict/index.ts";
-import { SyncCursorRepositoryDrizzleLayer, SyncCursorRepositoryInMemoryLayer } from "./entities/SyncCursor/index.ts";
-import { SyncItemRepositoryDrizzleLayer, SyncItemRepositoryInMemoryLayer } from "./entities/SyncItem/index.ts";
-import {
-  SyncOperationRepositoryDrizzleLayer,
-  SyncOperationRepositoryInMemoryLayer,
-} from "./entities/SyncOperation/index.ts";
+  BOX_MIRROR_DEFAULT_ROOT_NAME,
+  BOX_MIRROR_ROOT_NAME_ENV,
+  BoxMirrorEvidence,
+  BoxMirrorLive,
+  DmsMirrorFixtureLayer,
+  ensureSyncCutover,
+  LegacySyncAuditLive,
+  LegacySyncProjections,
+  LegacySyncReadModel,
+  LegacySyncReadModelLive,
+  makeVaultSyncModelEngine,
+  SyncAdmissionOptions,
+  VaultSyncMirrorRoot,
+  VaultSyncPassLive,
+  VaultSyncRootRegistryLive,
+} from "./aggregates/Sync/index.ts";
 
 /**
  * Document filing configuration layers consumed by application composition.
@@ -78,77 +95,129 @@ export const DocumentsServerLive = DocumentsServerLayer;
 export const DocumentsServerLlmLive = DocumentsServerLlmLayer;
 
 /**
- * Vault sync engine layer; requires the four sync repositories, the DMS
- * mirror with its availability probe, the vault sync configuration, and
- * platform filesystem and path services.
+ * Box mirror root name from `DOCUMENTS_SYNC_BOX_MIRROR_ROOT`, defaulting to `beep-vault`.
  *
- * **Example** (Import DocumentsSyncEngineLayer)
+ * **Example** (Import VaultSyncMirrorRootLayer)
  *
  * ```ts
- * import { DocumentsSyncEngineLayer } from "@beep/documents-server/layer"
+ * import { VaultSyncMirrorRootLayer } from "@beep/documents-server/layer"
  *
- * console.log(DocumentsSyncEngineLayer)
+ * console.log(VaultSyncMirrorRootLayer)
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const DocumentsSyncEngineLayer = Layer.effect(VaultSyncEngine, makeVaultSyncEngine());
-
-/**
- * Vault sync engine over Drizzle-backed sync repositories and env-backed
- * configuration; still requires `PostgresDrizzle`, the DMS mirror with its
- * availability probe, and platform filesystem and path services.
- *
- * **Example** (Import DocumentsSyncDrizzleLive layer)
- *
- * ```ts
- * import { DocumentsSyncDrizzleLive } from "@beep/documents-server/layer"
- *
- * console.log(DocumentsSyncDrizzleLive)
- * ```
- *
- * @category layers
- * @since 0.0.0
- */
-export const DocumentsSyncDrizzleLive = DocumentsSyncEngineLayer.pipe(
-  Layer.provide(
-    Layer.mergeAll(
-      SyncConflictRepositoryDrizzleLayer,
-      SyncCursorRepositoryDrizzleLayer,
-      SyncItemRepositoryDrizzleLayer,
-      SyncOperationRepositoryDrizzleLayer,
-      VaultSyncConfigLayer
-    )
+export const VaultSyncMirrorRootLayer = Layer.effect(
+  VaultSyncMirrorRoot,
+  Config.NonEmptyString(BOX_MIRROR_ROOT_NAME_ENV).pipe(
+    Config.withDefault(BOX_MIRROR_DEFAULT_ROOT_NAME),
+    Effect.map((name) => VaultSyncMirrorRoot.of({ name }))
   )
 );
 
+// The provider cannot yet prove an interrupted upload's outcome, so absent evidence holds it.
+const NoBoxMirrorEvidence = Layer.succeed(BoxMirrorEvidence, {
+  lookup: Effect.fn("BoxMirrorEvidence.none")(() => Effect.succeedNone),
+});
+
+// Genesis sends carry their import principal in this request context; the driver stamps it on events.
+const platformConfig = AlchemyPostgresConfig.make({
+  provenance: O.some(
+    ProvenanceMapping.make({
+      contextKey: V.GenesisProvenance.key,
+      principalField: "principal",
+      sourceKindField: "source",
+    })
+  ),
+});
+
+const ModelHost = VaultSyncPassModel.layer(
+  Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive, LegacySyncProjections)
+).pipe(
+  Layer.provide(BoxMirrorLive),
+  Layer.provide(Layer.mergeAll(LegacySyncAuditLive, NoBoxMirrorEvidence, VaultSyncRootRegistryLive)),
+  Layer.provide(AlchemyPostgres.layer(platformConfig)),
+  // A store whose event tables cannot be created is not a recoverable sync state.
+  Layer.orDie
+);
+
+const maintenanceEngine = Effect.fnUntraced(function* (reason: string) {
+  const reads = yield* LegacySyncReadModel;
+  const message = `vault sync is in maintenance: ${reason}`;
+  const refused = Effect.fn("VaultSyncEngine.maintenanceWrite")(() =>
+    Effect.fail(VaultSyncWriterUnavailable.make({ reason: message }))
+  );
+  return VaultSyncEngine.of({
+    listOpenConflicts: Effect.fn("VaultSyncEngine.maintenanceConflicts")((input) =>
+      reads.openConflicts(input.workspaceId)
+    ),
+    markConflictReviewed: refused,
+    status: Effect.fn("VaultSyncEngine.maintenanceStatus")(() =>
+      Effect.fail(VaultSyncReadUnavailable.make({ reason: message }))
+    ),
+    syncOnce: refused,
+  });
+});
+
+const EngineLive = Layer.effect(
+  VaultSyncEngine,
+  Effect.gen(function* () {
+    const root = yield* VaultSyncMirrorRoot;
+    // Genesis and admission run once, before the engine accepts a command.
+    return yield* ensureSyncCutover(SyncAdmissionOptions.make({ mirrorRootName: root.name })).pipe(
+      Effect.matchCauseEffect({
+        onFailure: (cause) =>
+          Effect.logError("vault sync admission refused; serving read-only maintenance").pipe(
+            Effect.annotateLogs({ cause: Cause.pretty(cause) }),
+            Effect.andThen(maintenanceEngine(Cause.hasFails(cause) ? "admission refused" : "admission failed"))
+          ),
+        onSuccess: () => makeVaultSyncModelEngine(),
+      })
+    );
+  })
+);
+
 /**
- * Deterministic vault sync composition over in-memory sync repositories, the
- * DMS mirror fixture, and env-backed configuration; requires only platform
- * filesystem and path services. The fixture handle stays exposed for tests
- * and smoke runs.
+ * Vault sync over the alchemy Model as the only writer of the four legacy tables.
  *
- * **Example** (Import DocumentsSyncFixtureLive layer)
+ * **Details**
+ *
+ * Hosts `VaultSyncPassModel` with its policies, the durable pass saga, the
+ * BoxMirror adapter and the SQL projections on `AlchemyPostgres.layer()`. On
+ * build it runs genesis and admission once (a no-op on an admitted store); if
+ * admission refuses, the engine serves reads and refuses writes. Requires the
+ * DMS mirror with its availability probe, `SqlClient`, `PostgresDrizzle`,
+ * `VaultSyncOwnership`, `VaultSyncMirrorRoot`, and platform filesystem and path.
+ *
+ * **Example** (Import DocumentsVaultSyncLive)
  *
  * ```ts
- * import { DocumentsSyncFixtureLive } from "@beep/documents-server/layer"
+ * import { DocumentsVaultSyncLive } from "@beep/documents-server/layer"
  *
- * console.log(DocumentsSyncFixtureLive)
+ * console.log(DocumentsVaultSyncLive)
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const DocumentsSyncFixtureLive = DocumentsSyncEngineLayer.pipe(
-  Layer.provideMerge(
-    Layer.mergeAll(
-      SyncConflictRepositoryInMemoryLayer,
-      SyncCursorRepositoryInMemoryLayer,
-      SyncItemRepositoryInMemoryLayer,
-      SyncOperationRepositoryInMemoryLayer,
-      DmsMirrorFixtureLayer,
-      VaultSyncConfigLayer
-    )
-  )
+export const DocumentsVaultSyncLive = EngineLive.pipe(
+  Layer.provide(Layer.mergeAll(ModelHost, LegacySyncAuditLive, LegacySyncReadModelLive, VaultSyncRootRegistryLive))
 );
+
+/**
+ * {@link DocumentsVaultSyncLive} over the deterministic DMS mirror fixture; the
+ * fixture handle stays exposed for tests and smoke runs.
+ *
+ * **Example** (Import DocumentsVaultSyncFixtureLive)
+ *
+ * ```ts
+ * import { DocumentsVaultSyncFixtureLive } from "@beep/documents-server/layer"
+ *
+ * console.log(DocumentsVaultSyncFixtureLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const DocumentsVaultSyncFixtureLive = DocumentsVaultSyncLive.pipe(Layer.provideMerge(DmsMirrorFixtureLayer));

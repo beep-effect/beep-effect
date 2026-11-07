@@ -6,14 +6,11 @@
  */
 
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import { RemoteItemId } from "@beep/documents-domain/values/Sync";
 import { DmsEventType } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as F from "effect/Function";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultPush.model");
 const SyncOperationType = DomainSyncOperation.SyncOperationType;
@@ -94,142 +91,3 @@ export const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> 
     renamed: () => O.some<EchoClass>(EchoClass.Enum.renamed),
     unknown: O.none<EchoClass>,
   });
-
-/**
- * One successful push recorded during the current pass; polled events consume
- * these to suppress the provider echoing our own verbs.
- *
- * **Example** (Record a content push)
- *
- * ```ts
- * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
- * import { ContentPushRecord } from "./VaultPush.model.ts"
- * ContentPushRecord.make({ remoteId: RemoteItemId.make("file-1") }).echoClass // "content"
- * ```
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export class ContentPushRecord extends S.Opaque<ContentPushRecord, { readonly brand: unique symbol }>()(
-  S.Struct({
-    echoClass: S.tag("content"),
-    remoteId: RemoteItemId,
-  }).pipe(
-    $I.annoteSchema("ContentPushRecord", {
-      description: "A successful content push awaiting its provider echo.",
-    })
-  )
-) {}
-
-/**
- * Successful move whose provider echo is expected in this pass.
- *
- * **Example** (Record a move)
- *
- * ```ts
- * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
- * import { MovedPushRecord } from "./VaultPush.model.ts"
- * MovedPushRecord.make({ remoteId: RemoteItemId.make("file-1") }).echoClass // "moved"
- * ```
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export class MovedPushRecord extends S.Opaque<MovedPushRecord, { readonly brand: unique symbol }>()(
-  S.Struct({
-    echoClass: S.tag("moved"),
-    remoteId: RemoteItemId,
-  }).pipe(
-    $I.annoteSchema("MovedPushRecord", {
-      description: "A successful move awaiting its provider echo.",
-    })
-  )
-) {}
-
-/**
- * Successful rename whose provider echo is expected in this pass.
- *
- * **Example** (Record a rename)
- *
- * ```ts
- * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
- * import { RenamedPushRecord } from "./VaultPush.model.ts"
- * RenamedPushRecord.make({ remoteId: RemoteItemId.make("file-1") }).echoClass // "renamed"
- * ```
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export class RenamedPushRecord extends S.Opaque<RenamedPushRecord, { readonly brand: unique symbol }>()(
-  S.Struct({
-    echoClass: S.tag("renamed"),
-    remoteId: RemoteItemId,
-  }).pipe(
-    $I.annoteSchema("RenamedPushRecord", {
-      description: "A successful rename awaiting its provider echo.",
-    })
-  )
-) {}
-
-/**
- * Successful same-pass pushes consumed by remote drift polling.
- *
- * **Example** (Classify a provider echo)
- *
- * ```ts
- * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
- * import * as S from "effect/Schema"
- * import { makePushRecord, PushRecord } from "./VaultPush.model.ts"
- * S.is(PushRecord)(makePushRecord("content", RemoteItemId.make("remote-file"))) // true
- * ```
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export const PushRecord = S.Union([ContentPushRecord, MovedPushRecord, RenamedPushRecord]).pipe(
-  S.toTaggedUnion("echoClass"),
-  $I.annoteSchema("PushRecord", {
-    description:
-      "One successful push recorded during the current pass; polled events consume these to suppress the provider echoing our own verbs",
-  })
-);
-/**
- * Runtime push observation represented by {@link PushRecord}.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type PushRecord = typeof PushRecord.Type;
-
-/**
- * Record a successful push without storing provider payloads.
- *
- * **Example** (Classify a provider echo)
- *
- * ```ts
- * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
- * import { makePushRecord } from "./VaultPush.model.ts"
- * const record = makePushRecord("content", RemoteItemId.make("remote-file"))
- * console.log(record.echoClass) // "content"
- * ```
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export const makePushRecord: {
-  (echoClass: EchoClass, remoteId: RemoteItemId): PushRecord;
-  (remoteId: RemoteItemId): (echoClass: EchoClass) => PushRecord;
-} = dual(
-  2,
-  (echoClass: EchoClass, remoteId: RemoteItemId): PushRecord =>
-    EchoClass.match(echoClass, {
-      content: () => ContentPushRecord.make({ remoteId }),
-      moved: () => MovedPushRecord.make({ remoteId }),
-      renamed: () => RenamedPushRecord.make({ remoteId }),
-    })
-);

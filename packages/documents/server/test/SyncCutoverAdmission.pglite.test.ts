@@ -25,6 +25,7 @@ import { makeLayer as makePgliteLayer } from "@beep/pglite/PgliteClient.service"
 import { makeDrizzle, makeDrizzleLayer, migrate, PostgresDrizzle } from "@beep/postgres";
 import { BunServices } from "@effect/platform-bun";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -98,7 +99,7 @@ describe("vault-sync single-writer cutover", () => {
         yield* sql`INSERT INTO documents_sync_item ${sql.insert(legacyRow(41, "documents_sync_item_asynthetic41"))}`;
         yield* sql`SELECT setval('documents_sync_item_id_seq', 41, true)`;
         const before = yield* readSyncWriterEpoch;
-        expect(before).toEqual(O.none());
+        assertNone(before);
 
         const scope = yield* Scope.make();
         const runtime = yield* Layer.buildWithScope(runtimeLayer, scope);
@@ -107,7 +108,10 @@ describe("vault-sync single-writer cutover", () => {
         const again = yield* ensureSyncCutover(options).pipe(Effect.provide(runtime));
         expect(again).toEqual({ admitted: "already-admitted", importId: admitted.importId });
         const epoch = yield* readSyncWriterEpoch;
-        expect(O.map(epoch, (s) => s.epoch)).toEqual(O.some("model"));
+        assertSome(
+          O.map(epoch, (s) => s.epoch),
+          "model"
+        );
         const genesisDiff = yield* diffSyncCutoverSnapshot("cutover_backup");
         expect(genesisDiff).toEqual([]);
 
@@ -118,8 +122,8 @@ describe("vault-sync single-writer cutover", () => {
         const rawLegacy = yield* sql`UPDATE documents_sync_item SET last_error = 'old build'`.pipe(Effect.flip);
         expect(rawLegacy._tag).toBe("SqlError");
         const db = yield* PostgresDrizzle;
-        const ormLegacy = yield* db.update(syncItemTable).set({ lastError: "old build" }).pipe(Effect.exit);
-        expect(Exit.isFailure(ormLegacy)).toBe(true);
+        // Effect.flip fails the test if the ORM update were admitted.
+        yield* db.update(syncItemTable).set({ lastError: "old build" }).pipe(Effect.flip);
         // A re-run of the old executable's migrations does not disarm the fence.
         yield* bootLegacyExecutable;
         const afterReboot = yield* sql`DELETE FROM documents_sync_item`.pipe(Effect.flip);
@@ -212,7 +216,10 @@ describe("vault-sync single-writer cutover", () => {
         yield* sql`INSERT INTO documents_sync_item ${sql.insert(legacyRow(Number(next[0]?.id), "documents_sync_item_alegacy2"))}`;
         yield* db.update(syncItemTable).set({ lastError: "legacy again" });
         const legacyAgain = yield* requireSyncWriterEpoch("legacy");
-        expect(legacyAgain).toMatchObject(O.some({ epoch: "legacy", generation: 1 }));
+        assertSome(
+          O.map(legacyAgain, (state) => [state.epoch, state.generation] as const),
+          ["legacy", 1] as const
+        );
 
         // The abandoned Model can neither resume nor write.
         const resumed = yield* Layer.build(runtimeLayer).pipe(

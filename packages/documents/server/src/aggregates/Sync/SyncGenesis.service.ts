@@ -32,6 +32,28 @@ class SyncGenesisSnapshot extends S.Opaque<SyncGenesisSnapshot, { readonly brand
 ) {}
 
 /**
+ * The Box destination that owns one workspace's legacy rows.
+ *
+ * **Details**
+ *
+ * Genesis and the Model engine derive the same id, so a workspace keeps one
+ * destination before and after the cutover.
+ *
+ * **Example** (Derive a destination id)
+ *
+ * ```ts
+ * import { legacyBoxDestinationId } from "@beep/documents-server/aggregates/Sync"
+ *
+ * console.log(legacyBoxDestinationId(3))
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const legacyBoxDestinationId = (workspaceId: number): V.DestinationId =>
+  V.DestinationId.make(`legacy-box-workspace-${workspaceId}`);
+
+/**
  * Imports the immutable offline backup, including every audit field and numeric identity.
  *
  * **Details**
@@ -96,7 +118,7 @@ export const importSyncGenesis = Effect.fn($I`importSyncGenesis`)(function* (bac
     V.LegacyItemRow | V.LegacyOperationRow | V.LegacyConflictRow | V.LegacyCursorRow
   >();
   for (const row of allRows) workspaceRows = H.set(workspaceRows, row.workspace_id, row);
-  const destinationId = (workspaceId: number) => V.DestinationId.make(`legacy-box-workspace-${workspaceId}`);
+  const destinationId = legacyBoxDestinationId;
   let itemIds = H.empty<number, V.ItemId>();
   for (const row of snapshot.items) itemIds = H.set(itemIds, row.id, V.ItemId.make(row.public_id));
   const itemId = (numericId: number) =>

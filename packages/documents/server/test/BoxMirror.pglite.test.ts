@@ -17,7 +17,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as Result from "effect/Result";
 
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer, DmsMirrorFixtureLayer);
 describe("BoxMirror durable intent receipts", () => {
@@ -53,14 +52,15 @@ describe("BoxMirror durable intent receipts", () => {
             )
           );
           const mirror = Context.get(context, BoxMirror);
-          const first = yield* Effect.result(mirror.uploadFile(args));
-          const second = yield* Effect.result(mirror.uploadFile({ ...args, passId: "another-runtime" }));
+          const again = mirror.uploadFile({ ...args, passId: "another-runtime" });
           if (outcome === "completed") {
-            expect(Result.isSuccess(first)).toBe(true);
+            const first = yield* mirror.uploadFile(args);
+            const second = yield* again;
             expect(second).toEqual(first);
           } else {
-            expect(Result.isFailure(first)).toBe(true);
-            expect(Result.isFailure(second)).toBe(true);
+            // Stale input and an uncertain intent both refuse, and a second runtime refuses too.
+            yield* Effect.flip(mirror.uploadFile(args));
+            yield* Effect.flip(again);
           }
           const counts = yield* fixture.counts;
           expect(counts.uploadFile - before.uploadFile).toBe(outcome === "stale" ? 0 : 1);

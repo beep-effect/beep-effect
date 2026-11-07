@@ -11,6 +11,7 @@ import {
   LegacySyncOperation,
 } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { $DocumentsServerId } from "@beep/identity/packages";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
@@ -26,6 +27,13 @@ import type * as V from "@beep/documents-domain/aggregates/VaultSync";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/LegacySync.projection");
 const IdRows = S.NonEmptyArray(S.Struct({ id: S.Int }));
+// The legacy readers decode `entity_type` as the identity's entity type, not the table name.
+const entityTypes = {
+  item: Documents.SyncItemId.entityType,
+  operation: Documents.SyncOperationId.entityType,
+  conflict: Documents.SyncConflictId.entityType,
+  cursor: Documents.SyncCursorId.entityType,
+};
 /**
  * Resolves historical envelope provenance and workspace ownership for SQL compatibility.
  *
@@ -77,7 +85,7 @@ const store = Effect.gen(function* () {
     return A.headNonEmpty(rows).id;
   });
   const write = Effect.fnUntraced(function* (
-    entity: string,
+    entity: keyof typeof entityTypes,
     publicId: string,
     stream: string,
     seq: number,
@@ -106,7 +114,7 @@ const store = Effect.gen(function* () {
           const row = {
             id,
             public_id: publicId,
-            entity_type: table,
+            entity_type: entityTypes[entity],
             org_id: meta.orgId,
             workspace_id: meta.workspaceId,
             provider: "box",

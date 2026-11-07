@@ -13,29 +13,14 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import {
-  SyncConflictRepositoryNotFound,
-  SyncConflictRepositoryUnavailable,
-  SyncConflictRepositoryVersionConflict,
-} from "../../entities/SyncConflict/SyncConflict.repository.ts";
-import {
-  SyncCursorRepositoryUnavailable,
-  SyncCursorRepositoryVersionConflict,
-} from "../../entities/SyncCursor/SyncCursor.repository.ts";
-import {
-  SyncItemRepositoryConflict,
-  SyncItemRepositoryNotFound,
-  SyncItemRepositoryUnavailable,
-  SyncItemRepositoryVersionConflict,
-} from "../../entities/SyncItem/SyncItem.repository.ts";
-import {
-  SyncOperationRepositoryConflict,
-  SyncOperationRepositoryNotFound,
-  SyncOperationRepositoryUnavailable,
-  SyncOperationRepositoryVersionConflict,
-} from "../../entities/SyncOperation/SyncOperation.repository.ts";
 import { DmsMirrorDisconnectReason } from "./DmsMirror.ts";
-import { DmsMirrorUnavailable, VaultScanFailed } from "./Sync.errors.ts";
+import {
+  DmsMirrorUnavailable,
+  VaultScanFailed,
+  VaultSyncConflictNotFound,
+  VaultSyncReadUnavailable,
+  VaultSyncWriterUnavailable,
+} from "./Sync.errors.ts";
 import type * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Sync/VaultSyncEngine");
@@ -130,9 +115,9 @@ export class VaultSyncStatus extends S.Opaque<VaultSyncStatus, { readonly brand:
  *
  * **Details**
  *
- * The member set is exactly the failures reachable through the engine's ports:
- * vault scanning, the DMS mirror adapter, and the four sync repositories,
- * including their optimistic-concurrency version conflicts.
+ * The member set is exactly the failures reachable through the engine: vault
+ * scanning, the DMS mirror adapter, the projected read model, and the alchemy
+ * Model writer.
  *
  * **Example** (Decode tagged scan failure)
  *
@@ -151,20 +136,10 @@ export class VaultSyncStatus extends S.Opaque<VaultSyncStatus, { readonly brand:
  */
 export const VaultSyncError = S.Union([
   DmsMirrorUnavailable,
-  SyncConflictRepositoryNotFound,
-  SyncConflictRepositoryUnavailable,
-  SyncConflictRepositoryVersionConflict,
-  SyncCursorRepositoryUnavailable,
-  SyncCursorRepositoryVersionConflict,
-  SyncItemRepositoryConflict,
-  SyncItemRepositoryNotFound,
-  SyncItemRepositoryUnavailable,
-  SyncItemRepositoryVersionConflict,
-  SyncOperationRepositoryConflict,
-  SyncOperationRepositoryNotFound,
-  SyncOperationRepositoryUnavailable,
-  SyncOperationRepositoryVersionConflict,
   VaultScanFailed,
+  VaultSyncConflictNotFound,
+  VaultSyncReadUnavailable,
+  VaultSyncWriterUnavailable,
 ]).pipe(
   $I.annoteSchema("VaultSyncError", {
     description: "Internal typed failure raised by the vault sync engine.",

@@ -33,17 +33,19 @@ import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { AnthropicLanguageModelOptions, AnthropicLive, makeAnthropicLanguageModelLayer } from "@beep/anthropic";
 import { Box, BoxCcgConfig, BoxDeveloperTokenConfig } from "@beep/box";
 import { DocTextFileProcessingEngine } from "@beep/doc-text";
+import { VaultSyncOwnership } from "@beep/documents-server/aggregates/Sync";
 import {
   BoxMirrorConfigLayer,
   DmsMirrorAvailabilityBoxLayer,
   DmsMirrorBoxLive,
   DocumentsServerLive,
   DocumentsServerLlmLive,
-  DocumentsSyncDrizzleLive,
-  DocumentsSyncFixtureLive,
+  DocumentsVaultSyncFixtureLive,
+  DocumentsVaultSyncLive,
   FILING_DECISION_DEFAULT_MODEL,
   FILING_DECISION_MODEL_ENV,
   FilingDecisionLlmConfigLayer,
+  VaultSyncMirrorRootLayer,
 } from "@beep/documents-server/layer";
 import {
   EpistemicServerDrizzleLive,
@@ -53,6 +55,7 @@ import {
 import { ContradictionReviewer, ContradictionReviewScope } from "@beep/epistemic-use-cases/server";
 import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
+import { makeDrizzleLayer } from "@beep/postgres";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -70,8 +73,9 @@ import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake
 import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { OntologyWorkspaceSeedLive } from "@/ontology/OntologyWorkspaceSeed";
+import { migrateOnBoot } from "@/runtime/Migrations";
 import { ObservabilityLive } from "@/runtime/Observability";
-import { PgliteDrizzleLive } from "@/runtime/Pglite";
+import { makeBundledPgliteLayer, PgliteDrizzleLive } from "@/runtime/Pglite";
 import { DmsMirrorAvailabilityDisconnectedLayer, DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected";
 import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
@@ -293,31 +297,39 @@ const boxAuthLayer = Effect.gen(function* () {
   return O.none<Layer.Layer<Box>>();
 });
 
+// The sidecar hosts one local organization; it owns every workspace's sync destination.
+const VaultSyncHostingLive = Layer.merge(
+  Layer.succeed(VaultSyncOwnership, {
+    orgOf: Effect.fn("DesktopVaultSync.orgOf")(() => Effect.succeed(desktopOrganizationId)),
+  }),
+  VaultSyncMirrorRootLayer
+);
+
 /**
- * Select the documents vault-sync engine layer. `CHAT_AGENT=fixture` keeps the
- * fully deterministic keyless engine (in-memory repos + fixture mirror);
- * otherwise the Drizzle-backed engine runs against the Box mirror when Box
- * credentials are configured — {@link boxAuthLayer} prefers the
- * self-refreshing Client Credentials Grant over the static `CLOUD_BOX_TOKEN`
- * developer token — or against the app-local disconnected mirror layers
- * (typed `DmsMirrorUnavailable` + probe `connected: false`) when neither is
- * set — the honest not-connected state while the Box test tenant is not
- * provisioned.
+ * Select the documents vault-sync layer. Every branch runs the same alchemy
+ * Model as the only writer of the four sync tables (genesis and admission run
+ * once at startup over the sidecar's PGlite store); only the DMS mirror
+ * differs. `CHAT_AGENT=fixture` uses the deterministic fixture mirror;
+ * otherwise the Box mirror runs when Box credentials are configured —
+ * {@link boxAuthLayer} prefers the self-refreshing Client Credentials Grant
+ * over the static `CLOUD_BOX_TOKEN` developer token — or the app-local
+ * disconnected mirror layers (typed `DmsMirrorUnavailable` + probe
+ * `connected: false`) when neither is set.
  *
  * @category layers
  * @since 0.0.0
  */
 const DocumentsSyncLive = selectByChatAgent(
-  DocumentsSyncFixtureLive,
+  DocumentsVaultSyncFixtureLive,
   Effect.gen(function* () {
     const box = yield* boxAuthLayer;
     return O.match(box, {
       onNone: () =>
-        DocumentsSyncDrizzleLive.pipe(
+        DocumentsVaultSyncLive.pipe(
           Layer.provide([DmsMirrorDisconnectedLayer, DmsMirrorAvailabilityDisconnectedLayer])
         ),
       onSome: (boxDriver) =>
-        DocumentsSyncDrizzleLive.pipe(
+        DocumentsVaultSyncLive.pipe(
           // The availability probe resolves the mirror root itself, so it needs
           // the Box driver and mirror config just like the mirror layer.
           Layer.provide([DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer))]),
@@ -325,6 +337,18 @@ const DocumentsSyncLive = selectByChatAgent(
         ),
     });
   })
+).pipe(Layer.provide(VaultSyncHostingLive));
+
+// The fixture runtime has no shared database, so vault sync gets a migrated in-memory PGlite of its own.
+const SyncDatabaseInMemory = makeDrizzleLayer().pipe(
+  Layer.tap((context) => Effect.provide(migrateOnBoot, context)),
+  Layer.provideMerge(makeBundledPgliteLayer()),
+  Layer.orDie
+);
+
+const DocumentsSyncTest = DocumentsVaultSyncFixtureLive.pipe(
+  Layer.provide(VaultSyncHostingLive),
+  Layer.provide(SyncDatabaseInMemory)
 );
 
 /**
@@ -386,7 +410,7 @@ export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersTest.pipe(
     ContradictionRequestContextLive,
     UsageRecordSinkInMemory,
     DocumentsServerLive,
-    DocumentsSyncFixtureLive,
+    DocumentsSyncTest,
     OntologyServerLive,
   ]),
   Layer.provide(BunCrypto.layer),
