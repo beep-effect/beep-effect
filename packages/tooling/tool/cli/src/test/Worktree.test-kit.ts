@@ -6,6 +6,10 @@
  */
 
 export * from "../commands/Worktree/index.ts";
+export * from "../commands/Worktree/internal/FleetRegistry.schemas.ts";
+export * from "../commands/Worktree/internal/FleetRegistry.ts";
+export * from "../commands/Worktree/internal/FleetRoots.schemas.ts";
+export * from "../commands/Worktree/internal/FleetRoots.ts";
 export { fleetScannerCacheRoot, selectFleetScannerDir } from "../commands/Worktree/internal/FleetScannerDir.ts";
 export * from "../commands/Worktree/internal/ResidueReap.schemas.ts";
 export * from "../commands/Worktree/internal/ResidueReap.ts";
