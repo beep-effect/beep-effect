@@ -22,6 +22,28 @@ import * as Result from "effect/Result";
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer, DmsMirrorFixtureLayer);
 describe("BoxMirror durable intent receipts", () => {
   layer(infrastructure, { timeout: "20 seconds", excludeTestServices: true, concurrent: false })("adapter", (it) => {
+    it.effect("probe refreshes provider availability without a Box mutation", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const fixture = yield* DmsMirrorFixtureHandle;
+        const before = yield* fixture.counts;
+        const context = yield* Layer.build(
+          BoxMirrorLive.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(VaultSyncRoot, { resolve: Effect.fn("fixture.root")(() => Effect.succeed(root)) }),
+                Layer.succeed(BoxMirrorEvidence, { lookup: Effect.fn("fixture.evidence")(() => Effect.succeedNone) })
+              )
+            )
+          )
+        );
+        const result = yield* Context.get(context, BoxMirror).probe({ destinationId: V.DestinationId.make("adapter") });
+        expect(result).toEqual({ connected: true });
+        const after = yield* fixture.counts;
+        expect(after.uploadFile).toBe(before.uploadFile);
+      })
+    );
     for (const outcome of ["completed", "stale", "uncertain"]) {
       it.effect(outcome, () =>
         Effect.gen(function* () {

@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T11:01:28.916Z",
-  "git_sha": "5b8d9cee3573c6d05bad89c4acb88a093e1db87a",
-  "command": "bun run coverage -- --filter=@beep/documents-domain --filter=@beep/documents-use-cases --filter=@beep/documents-server --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-07T11:41:27.903Z",
+  "git_sha": "287badb69aef953eb5f0f25dd3a2263bf9920f52",
+  "command": "bun run coverage -- --filter=@beep/documents-server --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -7201,6 +7201,18 @@
             "branches": 14,
             "functions": 2
           }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/VaultSyncRequest.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
         }
       }
     },
@@ -7671,6 +7683,42 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncRpcs.api.ts": {
+          "lines": 100,
+          "statements": 97.26,
+          "branches": 55.55,
+          "functions": 92.59,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 8,
+            "functions": 2
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncSession.repository.ts": {
+          "lines": 88.88,
+          "statements": 88.88,
+          "branches": 100,
+          "functions": 75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncSession.ts": {
+          "lines": 93.22,
+          "statements": 87.5,
+          "branches": 80.76,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 4,
+            "statements": 8,
+            "branches": 5,
+            "functions": 1
           }
         }
       }
@@ -8388,6 +8436,18 @@
           }
         },
         "packages/documents/use-cases/src/aggregates/VaultSync/Api.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/aggregates/VaultSync/VaultSyncRequests.policy.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

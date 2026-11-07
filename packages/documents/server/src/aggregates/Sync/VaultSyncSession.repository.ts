@@ -43,6 +43,11 @@ export class VaultSyncMembership extends Context.Service<
 /**
  * Reads the owning shared membership table and checks workspace ownership each time.
  *
+ * **Details**
+ *
+ * Only active, undeleted rows grant access; an owner role carries the diagnostics grant that
+ * OperationQueue requires. A failed read denies; nothing is cached between calls.
+ *
  * **Example** (Inspect live repository)
  * ```ts
  * import { VaultSyncMembershipLive } from "@beep/documents-server/aggregates/Sync";
@@ -60,7 +65,7 @@ export const VaultSyncMembershipLive = Layer.effect(
         const rows = yield* sql`SELECT m.role, m.status FROM ${sql(getTableName(MembershipTable.Table))} m
         JOIN ${sql(WorkspaceId.tableName)} w ON w.org_id = m.org_id
         WHERE m.user_id = ${userId} AND m.org_id = ${scope.orgId}
-          AND w.id = ${scope.workspaceId} AND m.status = 'active'`.pipe(
+          AND w.id = ${scope.workspaceId} AND m.status = 'active' AND m.deleted_at IS NULL`.pipe(
           Effect.flatMap(S.decodeUnknownEffect(Grants)),
           Effect.mapError(() => V.ScopeDenied.make({}))
         );

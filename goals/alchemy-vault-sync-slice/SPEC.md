@@ -162,11 +162,51 @@ Lane `goals/alchemy-vault-sync-slice`
 
 Reverse: Re-point the spikes and driver at the reference checkout once the trio is bumped to a release that matches it (a named goal task per D11)
 
+### Desktop membership rows ship with writer activation, 2026-11-07
+
+The desktop PGlite migration bundle has no shared_membership table. Until activation adds it and seeds an active owner row for the desktop principal (user 1, org 1), every vault-sync adapter denies with ScopeDenied, which is the intended fail-closed state. This is an activation input for the cutover lane, not a permissive default.
+
+Lane `goals/vault-sync-api`
+
+Reverse: Drop the shared_membership migration and seed; adapters keep failing closed
+
+### Remote CLI uses a gated RPC endpoint, never the raw Api fetch, 2026-11-07
+
+The generated CLI speaks the Api RPC protocol. The sidecar serves that protocol at /vault-sync/rpc with handlers that forward every RPC to the protected delivery client with the caller's headers, so Session runs and watch/events pass the per-frame gate. The unwrapped Api fetch, whose streams bypass that gate, is not mounted. The remote CLI reads the launch token per call from BEEP_DESKTOP_RPC_SESSION_TOKEN, redacted. An IPC-mode sidecar serves no HTTP, so the remote CLI then cannot connect.
+
+Lane `goals/vault-sync-api`
+
+Reverse: Unmount VaultSyncRpcHttp; the CLI stays in-process only
+
 ### Hold desktop API cutover until verified identity hosting exists, 2026-11-07
 
 Live source search found no signed-in principal or bearer/session verifier in the desktop host; RpcSessionAuth verifies only the per-launch token. The new SessionResolver remains a required host service, with no anonymous, uid or launch-token identity fallback. Existing desktop callers have not been switched. PR 3c is not content-final: destination-scoped pass/probe initiators and compatibility mapping also remain. This records an implementation hold, not acceptance or permission to publish a partial cutover.
 
 Reverse: Supply host credential verification, enrollment and live membership adapters, then migrate callers
+
+### Per-route launch-token session adapters lift the identity hold, 2026-11-07
+
+Supersedes the 2026-11-07 identity hold. Each sidecar route builds its own SessionResolver: launch-token adapters for HTTP (http), the gated RPC endpoint (cli) and MCP (mcp), a channel adapter for the desktop RPC surface (sidecar; HTTP passes the global token middleware and IPC the Tauri token check before handlers run), and the local-operator adapter for in-process CLI. The route fixes the transport kind; headers can only prove the token and supply a correlation id. All adapters bind the desktop principal and read active, undeleted shared_membership rows live on every call and frame; the owner role carries the diagnostics grant OperationQueue needs. No test stub sits in a production Layer.
+
+Lane `goals/vault-sync-api`
+
+Reverse: Add a bearer adapter behind SessionResolver; no caller changes
+
+### Desktop vault-sync RPCs keep their wire and run through the Api, 2026-11-07
+
+VaultSyncRpcsApiLive implements the four VaultSyncRpcs over the protected Api client with unchanged payloads and DTOs. Workspace maps to its destination through the authorized DestinationList View. Trigger and forceProbe record RequestVaultSync and ProbeDestination and answer with the status at acceptance, not after the pass; the panel's existing invalidation re-reads status. forceProbe also refreshes the probe cache for the answer. Conflict rows come from the legacy SQL read model the slice projects, restricted to public ids the authorized OpenConflicts View returns; review resolves the numeric id through those rows, sends ReviewConflict with a per-conflict heal operation id, and never writes legacy tables. Mounting it in RuntimeLive is the single-writer flip and belongs to the cutover activation, which also hosts the model on the sidecar PGlite.
+
+Lane `goals/vault-sync-api`
+
+Reverse: Keep VaultSyncHandlersLive in RuntimeLive; VaultSyncRpcsApiLive is a drop-in layer swap
+
+### Probe requests reuse the pass saga with a probe-only flag, 2026-11-07
+
+RequestVaultSync and ProbeDestination are public destination commands with Session. Their events route through the VaultSyncRequests policy to VaultSyncPass under the key destination/event/requestId, so repeated delivery resumes one run. The probe run executes only the BoxMirror probe activity. A paused destination refuses RequestVaultSync; probing stays allowed.
+
+Lane `goals/vault-sync-api`
+
+Reverse: Split a dedicated probe saga keyed by request id
 
 ### Reauthorize every delivered frame and terminate on revocation, 2026-11-07
 

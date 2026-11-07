@@ -49,18 +49,30 @@ export class VaultSyncApi extends Domain.Api("VaultSyncApi", {
 export const vaultSyncCli = <E, R>(options: Cli.Options<E, R>) => Cli.toCli(VaultSyncApi, options);
 
 /**
- * Generated remote CLI bound to the sidecar RPC endpoint.
+ * Options for the remote CLI: the sidecar's protected RPC endpoint plus per-call credentials.
+ *
+ * **Details**
+ *
+ * The headers effect reads the launch token from the sidecar handoff for every call and never logs it.
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export type VaultSyncRemoteCliOptions<E, R> = Cli.Options<E, R> & { readonly url: string };
+
+/**
+ * Generated remote CLI bound to the sidecar's gated RPC endpoint.
  *
  * **Example** (Select the sidecar endpoint)
  * ```ts
  * import { vaultSyncRemoteCli } from "@beep/documents-use-cases/aggregates/VaultSync";
- * const command = vaultSyncRemoteCli("http://localhost:3939/vault-sync/rpc", { headers: {} });
+ * const command = vaultSyncRemoteCli({ url: "http://127.0.0.1:3939/vault-sync/rpc", headers: {} });
  * void command;
  * ```
  * @category protocols
  * @since 0.0.0
  */
-export const vaultSyncRemoteCli = <E, R>(url: string, options: Cli.Options<E, R>) =>
+export const vaultSyncRemoteCli = <E, R>({ url, ...options }: VaultSyncRemoteCliOptions<E, R>) =>
   Cli.toCli(
     {
       apiName: VaultSyncApi.apiName,
