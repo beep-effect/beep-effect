@@ -27,7 +27,7 @@ import type { CitationEngineOperation } from "@beep/law-practice-use-cases/serve
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const otherArtifact = Sha256Hex.make(Str.repeat(64)("b"));
 const zero = { semanticCitations: 0, verifiedMentions: 0, unverifiedCitations: 0, unverifiedComponents: 0 };
-const counts = (overrides: Partial<typeof CitationExtractionMeasurements.Type> = {}) =>
+const counts = (overrides: Partial<CitationExtractionMeasurements> = {}) =>
   CitationExtractionMeasurements.make({ tokenizer: null, ...zero, unboundWarnings: 0, ...overrides });
 const storage = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([0x61]) });
 const diagnostics = CitationExtractionDiagnostics.make({
@@ -40,7 +40,7 @@ const fixture = Effect.gen(function* () {
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const { source, verifiedSource } = yield* fixtureSource("1 U.S. 1");
   const other = yield* fixtureSource("2 U.S. 2");
-  const citation = yield* S.decodeUnknownEffect(Citation)({
+  const citation = yield* S.decodeEffect(Citation)({
     type: "unknown",
     components: {},
     metadata: { pinCite: null, parenthetical: null },
@@ -72,14 +72,14 @@ const fixture = Effect.gen(function* () {
   return { limits, source, verifiedSource, other, citation, report, document };
 });
 
-const refuses = <A>(schema: S.Codec<A>) => {
+const refuses = <A, I>(schema: S.Codec<A, I>) => {
   const decode = S.decodeUnknownEffect(S.toType(schema));
   return Effect.fnUntraced(function* (value: unknown) {
     const refused = yield* decode(value).pipe(Effect.flip);
     expect(refused._tag).toBe("SchemaError");
   });
 };
-const accepts = <A>(schema: S.Codec<A>) => {
+const accepts = <A, I>(schema: S.Codec<A, I>) => {
   const decode = S.decodeUnknownEffect(S.toType(schema));
   return Effect.fnUntraced(function* (value: unknown) {
     yield* decode(value);
