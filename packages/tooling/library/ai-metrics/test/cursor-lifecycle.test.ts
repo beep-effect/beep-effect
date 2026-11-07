@@ -646,7 +646,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
       expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true);
     })
   );
-  for (const fault of ["oversized-source", "missing-inodes", "changed-source", "different-copy-bytes"]) {
+  for (const fault of [
+    "oversized-source",
+    "missing-inodes",
+    "changed-source",
+    "different-copy-bytes",
+    "missing-owner",
+    "wrong-owner",
+  ]) {
     it.effect(`sealed copy ${fault} refuses before child dispatch and removes its owned directory`, () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -675,6 +682,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
                   if (fault === "oversized-source") return { ...stat, size: ByteSize.bytes(268435457) };
                   if (fault === "changed-source" && sourceStats > 1) return { ...stat, size: ByteSize.bytes(1) };
                 }
+                if (path !== source && fault === "missing-owner") return { ...stat, uid: O.none() };
+                if (path !== source && fault === "wrong-owner")
+                  return { ...stat, uid: O.map(stat.uid, (owner) => owner + 1) };
                 return fault === "missing-inodes" ? { ...stat, ino: O.none() } : stat;
               })
             ),
