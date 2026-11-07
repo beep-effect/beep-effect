@@ -1,5 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
 import { ReferenceWorkspaceManifest, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
+import { ReferencesManifestPath } from "@beep/repo-configs/PolicyData";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -152,7 +153,7 @@ describe("reference planning and refresh", () => {
         "pulls the manifest branch explicitly and preserves a checkout on another branch",
         Effect.fnUntraced(function* () {
           const f = yield* prepare();
-          const manifestFile = f.path.join(f.owner, "scripts/references.json");
+          const manifestFile = f.path.join(f.owner, ReferencesManifestPath);
           const readFileString6 = yield* f.fs.readFileString(manifestFile);
           const manifest = yield* ReferenceWorkspaceManifest.decodeJson(readFileString6);
           const pinned = ReferenceWorkspaceManifest.make({
@@ -437,7 +438,7 @@ describe("reference planning and refresh", () => {
           yield* f.fs.writeFileString(state, "operator state file");
           const error = yield* workspace.use((service) => service.refresh(f.home, f.root)).pipe(Effect.flip);
           expect(error.message).toBe("Cannot complete reference refresh.");
-          expect(error.path).toBe(f.path.join(f.owner, "scripts", "references.json"));
+          expect(error.path).toBe(f.path.join(f.owner, ReferencesManifestPath));
           expect(error.cause).toBeDefined();
           const readFileString24 = yield* f.fs.readFileString(state);
           expect(readFileString24).toBe("operator state file");

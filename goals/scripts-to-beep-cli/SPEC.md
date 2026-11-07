@@ -40,13 +40,13 @@ Higher sources outrank lower sources when they conflict.
 | `scripts/ci-change-profile.sh` | `beep ci change-profile <base>` (prints the same `eval`-able assignments) |
 | `scripts/ci-runner-resources.sh` | `beep ci runner-resources <lane> -- <command>` |
 | `scripts/ci-prune-apt-sources.sh` | `beep ci prune-apt` |
-| `scripts/github-app/create-*.ts` + manifests | `beep github app mint <app>` over `@beep/github`; manifests move to the command's policy data |
-| `scripts/prune-tsgo-backups.mjs` | `beep toolchain prune-tsgo-backups` (root `prepare` calls it) |
-| `scripts/regenerate-merge-driver.sh` | `beep git merge-driver regenerate` (the `check.yml` assertion updates) |
-| `scripts/changeset-changelog.cjs` | `@beep/repo-cli` changeset changelog formatter referenced from `.changeset/config.json` |
-| `scripts/test-gitleaks-observation-digest.py` | vitest in the owning package (`python-free-repo` triage row) |
-| `scripts/knowledge-refs-rewrite.rules.json`, `scripts/references.json` | policy data under `packages/tooling/policy-pack/repo-configs` |
-| `scripts/systemd/*` | installed by `beep` (the unit text becomes a rendered template in the owning command) |
+| the two GitHub App `create-*.ts` registration scripts + manifests (retired) | `beep github app mint <app>` over `@beep/github`; manifests move to the command's policy data |
+| `prune-tsgo-backups.mjs` (retired) | `beep toolchain prune-tsgo-backups` in `packages/tooling/tool/cli/src/commands/Toolchain/` (root `prepare` calls it) |
+| `regenerate-merge-driver.sh` (retired) | `beep git merge-driver regenerate` (the `check.yml` assertion updates) |
+| `changeset-changelog.cjs` (retired) | `packages/tooling/tool/cli/src/ChangesetChangelog.ts`, referenced from `.changeset/config.json` |
+| `test-gitleaks-observation-digest.py` (retired) | `packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts` (`python-free-repo` triage row) |
+| `knowledge-refs-rewrite.rules.json`, `references.json` (moved) | `packages/tooling/policy-pack/repo-configs/data/` |
+| the `agent-runs.slice` systemd units (retired) | `beep quality scheduler slice [--install]`, rendered from `packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts` |
 | `scripts/cloud/bootstrap.sh`, `scripts/cloud/fetch.sh` | `bootstrap.sh` stays as the one exception; `fetch.sh` folds into it or into the compiled binary fetch |
 
 New: a `release`/`main` workflow step that runs `bun build --compile` on the beep CLI and
@@ -111,7 +111,53 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug scripts-to-beep-cli`; add a `kind: decision` file there, never edit this block._
 
-_No decision files yet._
+### Compiled CI binary is a slim bin-ci entry, not the full CLI, 2026-11-07
+
+Probe 2026-11-06: `bun build --compile src/bin-main.ts` bundles 6687 modules (163 MB) and dies at start with `Cannot find module '@duckdb/node-api'`; even the full `ci` group drags in vite. A probe entry holding only `CiOperational` bundles 672 modules (110 MB) and starts in about 0.15 s. So `src/bin-ci.ts` registers a root `beep` with a `ci` group of the pre-toolchain commands (change-profile, runner-resources, prune-apt, patterns, job-env); the same command values are registered in the full `ci` group, so `beep ci <x>` is byte-identical in both.
+
+Lane `goals/scripts-to-beep-cli`
+
+Reverse: Compile src/bin-main.ts with native externals and fix its eager DuckDB load
+
+### change-profile reads the checkout's pattern file and fails open like the shell, 2026-11-07
+
+Parity with scripts/ci-change-profile.sh: pinned `BEEP_CI_PR_BASE_SHA`/`BEEP_CI_PR_HEAD_SHA` win over positional base/head; a missing pin or failed diff on a pull_request warns and keeps every profile active; patterns come from the checkout's `CiOperational.patterns.json` when present (fail closed on an invalid file) because the binary is main's code but must classify the PR's tree.
+
+Lane `goals/scripts-to-beep-cli`
+
+Reverse: Drop the runtime pattern read and the fail-open branch; use the compiled-in patterns
+
+### Binary ships as a checksum-pinned GitHub release asset built from main, 2026-11-07
+
+A workflow on `push` to `main` (paths: the CLI and its workspace deps, plus `workflow_dispatch`) compiles `bin-ci.ts` for linux-x64 and publishes release `beep-ci-<short sha>` with a `.sha256`. `setup-monorepo-ci` and the bare-runner steps fetch a pinned tag and verify the pinned sha256 before running it; a pin bump is its own PR. The PR's own head never builds the binary that gates it (SPEC constraint). Cut over in two PRs: PR 1 lands the commands and the publisher, PR 2 pins the first published asset and switches the workflows.
+
+Lane `goals/scripts-to-beep-cli`
+
+Reverse: Delete the publish workflow and restore the shell steps from git history
+
+### New command groups toolchain, git and github in @beep/repo-cli, 2026-11-07
+
+No existing group fits the tsgo backup prune, the merge driver or GitHub App registration. Until goals/beep-cli-composition moves groups into beep-<group> tools, every group stays in @beep/repo-cli (07-non-slice-families Repo CLI Command Topology).
+
+Lane `goals/scripts-to-beep-cli`
+
+Reverse: Fold the commands into existing groups and remove the three groups
+
+### Root prepare calls the beep command and the command never fails install, 2026-11-07
+
+Workspace exports resolve to src, so `bun run beep` works during `prepare` without built dists. The command catches every failure and exits 0 with a warning, matching the old script's try/catch: pruning is an optimization, never an install gate.
+
+Lane `goals/scripts-to-beep-cli`
+
+Reverse: Restore the former prune-tsgo-backups.mjs node script in package.json prepare (from git history)
+
+### tracked-shell-allowlist exempts packet evidence, infra/ and two named fixtures, 2026-11-07
+
+On 2026-11-07 `git ls-files '*.sh'` outside the hook dirs lists 84 files: packet evidence under `goals/` and `explorations/` (a SPEC non-goal), seven under `infra/` (deleted by `infra-alchemy-rebuild`), two test fixtures (`packages/tooling/tool/cli/test/fixtures/models/locators.sh`, `packages/tooling/tool/docgen/test/fixtures/section-example/tsc-wrapper.sh`), and the `scripts/` files this packet deletes. The law therefore allows exact roots `.claude/`, `.codex/`, `.cursor/`, `goals/`, `explorations/`, `infra/` (removal condition: infra-alchemy-rebuild retires `infra/`), plus exact file paths `scripts/cloud/bootstrap.sh` and the two fixtures. No glob patterns; every entry carries an owner and a removal condition in the Exception Ledger.
+
+Lane `goals/scripts-to-beep-cli`
+
+Reverse: Remove the extra roots from the law's allowlist once their owners delete the shell
 
 <!-- beep:decisions:end -->
 

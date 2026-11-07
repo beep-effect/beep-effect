@@ -15,7 +15,7 @@
         ".claude/skills/atom-reactivity-specialist",
         ".agents/skills/atom-reactivity-specialist"
       ],
-      "installedTreeHash": "a0806982722747b4c6f3dcd66f270c3d247e27d3b4e322e6ed17688bfaa7aa11"
+      "installedTreeHash": "ceacb539a7f19066d2df0189ef261f55202fe73f7052649924ffc42614d78d14"
     },
     "browser-qa-loop": {
       "_tag": "local",
@@ -31,7 +31,7 @@
         ".claude/skills/closeout",
         ".agents/skills/closeout"
       ],
-      "installedTreeHash": "33f7e04e1561c9c4e25e50b4d7fe9f6ea0124db40b565f6b99356ab67ec66c00"
+      "installedTreeHash": "e99fc397c09603ac4286564a8ee5c438f69a23bcb1c7975709c286da31470d8e"
     },
     "codex-findings": {
       "_tag": "local",
@@ -55,7 +55,7 @@
         ".claude/skills/effect-first-development",
         ".agents/skills/effect-first-development"
       ],
-      "installedTreeHash": "a5b17c4c08ceb60731515130400d5ec60192d5a21452ea59aee453df20d1188d"
+      "installedTreeHash": "dc4adfbe4a302ec470f3e2599e24d7cb5081489c8410e0d2f0f31a82ac5934a7"
     },
     "explore": {
       "_tag": "local",
@@ -235,7 +235,7 @@
         ".claude/skills/operator-handoff",
         ".agents/skills/operator-handoff"
       ],
-      "installedTreeHash": "f99dd4748cdf65de9fa9cd59070c9d903dbddc55c6a162f7255db776a69438b3"
+      "installedTreeHash": "34d18518161ee579de24ea989f9006543150e21038e6cab7fbabd6bb44890d8b"
     },
     "orchestrate": {
       "_tag": "local",
@@ -243,7 +243,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "54bb86e58d712b3eeb20c773004fc7b6b300e9bf434b4064b78a9ba60bd39ddc"
+      "installedTreeHash": "775aa9e5fa8d319f3a6e89b9aecd03ed976fe330034384a5f8c8884b3cbafa06"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -338,7 +338,7 @@
         ".claude/skills/remote-development-agents",
         ".agents/skills/remote-development-agents"
       ],
-      "installedTreeHash": "931c2779bb5fb054a496e417691ba1d610c55cb9c8f1a1794793cfacd3b7a7e9"
+      "installedTreeHash": "82daedd15ae0a3fdc097327ff10a2220758efa3c8d6be98979e4347cacef8b76"
     },
     "schema-first-development": {
       "_tag": "local",
@@ -517,7 +517,7 @@
         ".claude/skills/sparql-expert",
         ".agents/skills/sparql-expert"
       ],
-      "installedTreeHash": "c84b809a2ca039720af161fc122a9a7a86c3287fda859a80c4a87fc27f7751bc"
+      "installedTreeHash": "5e4d80233fac145e37e6ab8339d57e005b125f551dd1b513087119cede5aebf3"
     },
     "teach": {
       "_tag": "vendored",

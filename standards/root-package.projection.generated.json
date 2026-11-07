@@ -138,7 +138,7 @@
     "pkg:verify": "beep-cli quality package-verify",
     "pkg:verify:quick": "beep-cli quality package-verify --quick",
     "postinstall": "lefthook install && bun run infra:prepare-gha-runners",
-    "prepare": "effect-tsgo unpatch --tsrs && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch --tsrs",
+    "prepare": "effect-tsgo unpatch --tsrs && bun run beep toolchain prune-tsgo-backups && effect-tsgo patch --tsrs",
     "purge": "bun run beep purge",
     "quality:dev": "bun run beep quality dev",
     "services:up": "docker compose up -d",
