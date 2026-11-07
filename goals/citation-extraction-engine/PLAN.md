@@ -1509,6 +1509,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert XML transport and restore the original HTML process block together; preserve all source corpora, physical retirement requirements and open acceptance duties.
 
+### Bind table capacity failures to engine budgets, 2026-11-07
+
+Existing dictionary/set owners now bind capacity/work refusals to actual engine ceilings without guessing categories for unbound guards. Resolution, cleaner registry, extractor ordering and edition deduplication preserve those bindings. Fifty-one regression tests pass in 4.74s and seven final capacity/extractor/edition controls in 2.86s. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Complete public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-table-capacity-bindings.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert optional table budget bindings and owner mappings together while retaining source table histories, capture controls and all acceptance duties.
+
 ### Connect verified extraction and document resolution, 2026-11-07
 
 One admitted operation now connects canonical source resolution, native semantic extraction, verified occurrences, authenticated edition spelling and registered default resolution. Three actual Bun/Node/shortcut tests pass in 33.68s, including independent plain/markup lineage, exact original spans/grouping and complete receipt restoration. Lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Public Engine/Layer, complete failure boundaries and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-connected-source-document.md.

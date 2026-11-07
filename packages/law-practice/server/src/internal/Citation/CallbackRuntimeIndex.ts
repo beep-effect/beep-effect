@@ -283,6 +283,8 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
         const table = yield* makeCitationRuntimeDictionary({
           entries: owner.limits.authorities,
           iterations: owner.limits.resolutionIterations,
+          entryLimit: "authorities",
+          iterationLimit: "resolutionIterations",
         }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison), Effect.mapError(mapped));
         const issueSlot = Effect.suspend(() => {
           if (closed || nextSlot >= owner.limits.resolutionIterations)
@@ -407,6 +409,8 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             const set = yield* makeCitationRuntimeSet({
               entries: owner.limits.authorities,
               iterations: owner.limits.resolutionIterations,
+              entryLimit: "authorities",
+              iterationLimit: "resolutionIterations",
             }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison), Effect.mapError(mapped));
             for (const resource of resources) {
               yield* owner.step;

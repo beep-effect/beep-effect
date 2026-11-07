@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "ff446c4f9ae0ab0a261f1d153bd291268d3bdcca7a1db46c6ef952d46666a665",
+  "planSha256": "bcc3796db7b070c5f1b9712fbfe383ca44fe29648a53ceb61ea19349bb344277",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1537,6 +1537,14 @@
         {
           "path": "packages/law-practice/server/test/CitationResolutionLimit.test.ts",
           "sha256": "0a78f0e27dcfe56b8390a061fcabf1af3a1a2da2ccde26b895b4602482b2b1b1"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-table-capacity-bindings.md",
+          "sha256": "cd11d97a5994d6db0055a3bc9eb6b7ee4540814d3b8d757b449d3103edfa4e2d"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationTableCapacity.test.ts",
+          "sha256": "dae073ffb043bcc062ae7de013fdbdf4cb7aac21e09a1919be5ae5f6ffa13e42"
         }
       ],
       "workflowState": "audit",
@@ -2261,7 +2269,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CleanerRegistry.ts",
-          "sha256": "0031164df9106683f1a6ddc80485684d3f01f5b3d0aeb826de963b37f97e9f66"
+          "sha256": "d67fc34f35630d617a4832900663c44dcc1736e69e5d5edfde8d8907671cc5b5"
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerRegistry.test.ts",

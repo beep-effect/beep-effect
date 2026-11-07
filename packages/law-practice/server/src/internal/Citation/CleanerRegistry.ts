@@ -168,7 +168,12 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     if (crossPrimitiveKinds(aPlain, bPlain, O.isSome(aBytes), O.isSome(bBytes))) return false;
     return yield* protocols.equal(a, b);
   });
-  const table = yield* makeCitationRuntimeDictionary({ entries: limits.authorities, iterations: maximum }).pipe(
+  const table = yield* makeCitationRuntimeDictionary({
+    entries: limits.authorities,
+    iterations: maximum,
+    entryLimit: "authorities",
+    iterationLimit: "resolutionIterations",
+  }).pipe(
     Effect.provideService(CitationRuntimeDictionaryComparison, {
       exactUnicode: (id) => capture(exact(id)),
       equal: (a, b) => capture(equal(a, b)),
@@ -178,8 +183,8 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
   );
   const translate = (error: CitationRuntimeDictionaryFailure): Failure =>
     O.getOrElse(callbackFailure, () =>
-      error.reason === "limit-exceeded"
-        ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: "authorities" })
+      error.reason === "limit-exceeded" && error.limit !== undefined
+        ? CitationSafetyLimitExceeded.make({ operation: "clean", limit: error.limit })
         : fail("runtime-failed")
     );
   const prune = Effect.gen(function* () {

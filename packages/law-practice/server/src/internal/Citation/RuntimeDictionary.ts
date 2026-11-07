@@ -17,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
@@ -86,9 +87,12 @@ export class CitationRuntimeDictionaryLimits extends S.Opaque<
   S.Struct({
     entries: CitationEngineLimits.fields.authorities,
     iterations: CitationEngineLimits.fields.resolutionIterations,
+    entryLimit: S.optionalKey(CitationSafetyBudget),
+    iterationLimit: S.optionalKey(CitationSafetyBudget),
   }).pipe(
     $I.annoteSchema("CitationRuntimeDictionaryLimits", {
-      description: "Private ceiling projection for active entries and bounded probe/rebuild work.",
+      description:
+        "Private count ceilings and optional trusted engine budget bindings; absence never invents a resource category.",
     })
   )
 ) {}
@@ -196,7 +200,15 @@ const textPoint = (value: string | CitationPythonUnicodeStorage, index: number) 
 const textAdvance = (value: string | CitationPythonUnicodeStorage, point: number) =>
   P.isString(value) && point > 65535 ? 2 : 1;
 const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
-const exceeded = () => CitationRuntimeDictionaryFailure.make({ reason: "limit-exceeded" });
+/** Attribute a table refusal only when the trusted owner supplied its budget.
+ * @internal @category errors @since 0.0.0
+ */
+export const citationRuntimeDictionaryLimitFailure = (limit?: CitationSafetyBudget) =>
+  CitationRuntimeDictionaryFailure.make({
+    reason: "limit-exceeded",
+    ...R.getSomes({ limit: O.fromUndefinedOr(limit) }),
+  });
+const exceeded = citationRuntimeDictionaryLimitFailure;
 const freshFailure = (failure: CitationRuntimeDictionaryFailure) =>
   CitationRuntimeDictionaryFailure.make({
     reason: failure.reason,
@@ -223,6 +235,8 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   );
   const maximumEntries = limits.entries;
   const maximumSteps = limits.iterations;
+  const entryLimit = limits.entryLimit;
+  const iterationLimit = limits.iterationLimit;
   const comparison = yield* CitationRuntimeDictionaryComparison;
   const mutex = yield* Semaphore.make(1);
   let steps = 0;
@@ -282,7 +296,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   let order = Chunk.empty<number>();
   let nextEntry = 0;
   const step = Effect.suspend(() => {
-    if (steps >= maximumSteps) return Effect.fail(exceeded());
+    if (steps >= maximumSteps) return Effect.fail(exceeded(iterationLimit));
     steps += 1;
     return comparison.step.pipe(Effect.mapError(freshFailure));
   });
@@ -437,7 +451,8 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
       const citationResult2 = yield* Effect.fromOption(HashMap.get(entries, entry.entryId), invalid);
       return copyEntry(citationResult2);
     }
-    if (HashMap.size(entries) >= maximumEntries || nextEntry >= 9_007_199_254_740_991) return yield* exceeded();
+    if (HashMap.size(entries) >= maximumEntries) return yield* exceeded(entryLimit);
+    if (nextEntry >= 9_007_199_254_740_991) return yield* exceeded();
     const next = yield* prepareInsertion(false);
     const index = yield* emptySlot(next.buckets, next.capacity, key.hash);
     const entry = CitationRuntimeDictionaryEntry.make({
