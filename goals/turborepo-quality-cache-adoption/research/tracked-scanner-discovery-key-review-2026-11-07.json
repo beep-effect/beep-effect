@@ -98,7 +98,7 @@
     "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts": "403973826d6a1a81bfb858ae99f7470303034e7ed94b37b6eb03e4aaacd8aff5",
     "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": "01f2ddbe7578332427b27f59c0c8b98bd869c75c5dfee55619f1e29a3fd31c41",
     "packages/tooling/tool/cli/test/lint-policy-scope.test.ts": "abed92b13d2734b43a80868b763dc8c6b63555c9f0392b62103846757709938d",
-    "packages/tooling/tool/cli/test/quality-tasks.test.ts": "d4331b50b6757f9ba2b6a410f50acde70f621aae337fdc5a34e90a6a5433cb26",
+    "packages/tooling/tool/cli/test/quality-tasks.test.ts": "35e8b67ef8781096e8ce385a0298fbc6bb17d57a846bd9a16a8b5e669885f190",
     "packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts": "3db51be4d4af78083250592c00fcd13c10b4dc7a08625a82c315b583a404b97e"
   },
   "rootConfigurationBeforeSha256": "ac2286808e66d71d4af7045b469e1aa03a83a792dd74d38d0160c17d3144bc6a",
@@ -123,6 +123,7 @@
     ],
     "policy": "Five held checks execute in the existing unfiltered state graph; concurrency width unchanged.",
     "localQualityExecuted": false,
-    "correctedHeadHostedProof": "pending"
+    "correctedHeadHostedProof": "pending",
+    "followOn": "Hosted repo-cli-2 passed 1993 tests and failed one stale full-plan prefix-count assertion. Replace that derived prefix with the exact full-scope sequence, including all five held discovery tasks; local and hosted plan scopes remain separately asserted. Corrected-head hosted proof pending."
   }
 }

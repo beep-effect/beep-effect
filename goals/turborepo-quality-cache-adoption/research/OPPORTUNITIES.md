@@ -1323,3 +1323,7 @@ The entity-kit discovery fix exposed three additional cached root callers of sca
 ### Hosted tracked-discovery repair, 2026-11-07
 
 PR #2826 unit/property failures exposed stale cache/env assertions, a staged Git fixture mismatch, and five discovery checks still affected-filtered despite cache holds. Preserve input probes, align fixture staging before removal, and route these checks through the existing unfiltered state graph without adding concurrency. The coverage aggregator refused failed unit producers; it did not measure a separate coverage regression. Prevent recurrence with exact caller-selection assertions alongside cache policy changes. Local quality suites were not run; hosted confirmation is pending.
+
+### Avoid positional cross-plan expectations, 2026-11-07
+
+PR #2826 hosted repo-cli-2 left one introduced failure: the full-plan assertion borrowed seventeen entries from the changed-scope plan, accidentally including five documentation tasks after discovery routing changed. Replace the borrowed prefix with an explicit full-scope sequence, retaining all five held discovery tasks and the separate unfiltered-selection assertions. Hosted logs report 1,993 passed and one failed test in this shard; no complete-suite success is claimed. No local quality suite was run.

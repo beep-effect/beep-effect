@@ -5163,7 +5163,18 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "quality:test-tsgo",
       ]);
       expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
-        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(17)),
+        "lint:laws",
+        "lint:native-runtime:roots",
+        "lint:schema-first",
+        "lint:identity-registry",
+        "lint:circular",
+        "lint:effect-imports",
+        "lint:effect-imports-markdown",
+        "lint:schema-tag-idioms",
+        "lint:holds",
+        "lint:tsconfig-overlay",
+        "lint:package-test-typecheck",
+        "lint:effect-vitest",
         "knowledge:semantic-delta",
         "knowledge:refs-check",
         "lint:jsdoc-module-tags",
@@ -5173,6 +5184,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:typos",
         "jsdoc:inventory:check",
         "jsdoc:ratchet:check",
+        "lint:markdown-fences",
+        "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
+        "lint:retired-iri-authorities",
+        "lint:opaque-roundtrips",
       ]);
       // A local full-scope plan (no review base) leaves the two git-delta knowledge checks and the
       // knowledge doctor (report-only until the first seal) to the hosted plan; the changed-scope
