@@ -6,4 +6,10 @@ import * as Domain from "@alchemy.run/domain";
 import * as Layer from "effect/Layer";
 import { conformance } from "./scenarios.ts";
 
-conformance({ name: "Domain.InMemory", base: Layer.empty, platform: Domain.InMemory, durable: false });
+conformance({
+  name: "Domain.InMemory",
+  base: Layer.empty,
+  platform: Domain.InMemory,
+  durable: false,
+  redelivers: false,
+});

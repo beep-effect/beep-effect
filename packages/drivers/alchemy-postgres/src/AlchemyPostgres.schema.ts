@@ -41,9 +41,10 @@ const $I = $AlchemyPostgresId.create("AlchemyPostgres.schema");
  * @category models
  * @since 0.0.0
  */
-export const ScheduleStatus = LiteralKit(["pending", "executed", "cancelled"]).pipe(
+export const ScheduleStatus = LiteralKit(["pending", "executed", "rejected", "cancelled"]).pipe(
   $I.annoteSchema("ScheduleStatus", {
-    description: "Lifecycle of a scheduled command: pending until it fires or is cancelled.",
+    description:
+      "Lifecycle of a scheduled command: pending until it fires (executed, or rejected without a receipt) or is cancelled.",
   })
 );
 
@@ -465,7 +466,7 @@ const ddl = (sql: SqlClient.SqlClient, tables: AlchemyPostgresTables, prefix: st
     command jsonb NOT NULL,
     meta jsonb NOT NULL,
     due_at bigint NOT NULL,
-    status text NOT NULL CHECK (status IN ('pending', 'executed', 'cancelled')),
+    status text NOT NULL CHECK (status IN ('pending', 'executed', 'rejected', 'cancelled')),
     updated_at bigint NOT NULL,
     PRIMARY KEY (model, aggregate, id, command_id)
   )`,
@@ -483,6 +484,9 @@ const ddl = (sql: SqlClient.SqlClient, tables: AlchemyPostgresTables, prefix: st
     delivery jsonb NOT NULL,
     status text NOT NULL CHECK (status IN ('pending', 'delivered')),
     attempts integer NOT NULL DEFAULT 0,
+    next_attempt_at bigint NOT NULL DEFAULT 0,
+    locked_until bigint NOT NULL DEFAULT 0,
+    claimed_by text,
     at bigint NOT NULL
   )`,
   sql`CREATE INDEX IF NOT EXISTS ${sql(`${prefix}delivery_pending_idx`)}

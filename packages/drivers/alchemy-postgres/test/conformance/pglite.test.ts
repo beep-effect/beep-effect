@@ -53,10 +53,24 @@ const auditEvents = Effect.fn("test.auditEvents")(function* (aggregate: string, 
   }));
 }, Effect.orDie);
 
+const StatusRow = S.Struct({ status: S.String });
+const decodeStatusRows = S.decodeUnknownEffect(S.Array(StatusRow));
+
+const scheduleStatus = Effect.fn("test.scheduleStatus")(function* (aggregate: string, id: string, commandId: string) {
+  const sql = yield* SqlClient.SqlClient;
+  const rows = yield* sql`SELECT status FROM ${sql(tables.aggregateSchedule)}
+    WHERE model = 'Conformance' AND aggregate = ${aggregate} AND id = ${id} AND command_id = ${commandId}`.pipe(
+    Effect.flatMap(decodeStatusRows)
+  );
+  return O.match(A.head(rows), { onNone: () => "missing", onSome: ({ status }) => status });
+}, Effect.orDie);
+
 conformance({
   name: "AlchemyPostgresPlatform over PGlite",
   base: PgliteTestLayer,
   platform: AlchemyPostgresPlatform.layer(config),
   durable: true,
+  redelivers: true,
   auditEvents,
+  scheduleStatus,
 });

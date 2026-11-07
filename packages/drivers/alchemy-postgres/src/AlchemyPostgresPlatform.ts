@@ -30,11 +30,14 @@ import { A, O, P, R } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as Queue from "effect/Queue";
+import * as Random from "effect/Random";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
@@ -58,7 +61,9 @@ import {
 } from "./AlchemyPostgres.schema.ts";
 import type * as Aggregate from "@alchemy.run/domain/Aggregate";
 import type * as DomainPlatform from "@alchemy.run/domain/Platform";
+import type * as Cause from "effect/Cause";
 import type { AlchemyPostgresConcept, AlchemyPostgresOperation } from "./AlchemyPostgres.errors.ts";
+import type { ScheduleStatus } from "./AlchemyPostgres.schema.ts";
 
 /** A command the kernel rejected: fails the commit's transaction so it writes nothing. */
 class RejectedCommand extends S.TaggedError<RejectedCommand, { readonly brand: unique symbol }>()("RejectedCommand", {
@@ -124,6 +129,12 @@ const dueAt = (now: number) =>
     Match.orElse(({ afterMillis }) => now + afterMillis)
   );
 
+/** How long a claimed outbox row stays leased to the host delivering it. */
+const deliveryLeaseMillis = Duration.toMillis(Duration.seconds(30));
+/** The longest a failed delivery waits before its next attempt. */
+const retryCeilingMillis = Duration.toMillis(Duration.minutes(1));
+const byPosition = Order.mapInput(Order.Number, (row: DeliveryRow) => row.position);
+
 const unsupported = (concept: AlchemyPostgresConcept, name: string) =>
   Effect.die(AlchemyPostgresUnsupported.make({ concept, definition: name }));
 
@@ -131,6 +142,8 @@ interface HostDeps {
   readonly config: AlchemyPostgresConfig;
   readonly modelName: string;
   readonly now: Effect.Effect<number>;
+  /** This host's id, written on the outbox rows it leases. */
+  readonly owner: string;
   readonly scope: Scope.Scope;
   readonly sql: SqlClient.SqlClient;
   readonly tables: AlchemyPostgresTables;
@@ -139,7 +152,7 @@ interface HostDeps {
 }
 
 const makeHost = (deps: HostDeps): DomainPlatform.ModelHost => {
-  const { config, modelName, now, scope, sql, tables, wake } = deps;
+  const { config, modelName, now, owner, scope, sql, tables, wake } = deps;
   const poll = Duration.millis(config.pollMillis);
   const signal = Queue.offer(wake, undefined).pipe(Effect.asVoid);
   /** Each aggregate's `deliver`, by aggregate name: the outbox row names its producer. */
@@ -147,24 +160,90 @@ const makeHost = (deps: HostDeps): DomainPlatform.ModelHost => {
   /** Background passes started once every store is built. */
   const workers: Array<Effect.Effect<void>> = [];
 
-  const drainOnce = Effect.gen(function* () {
-    const rows = yield* sql`SELECT position, aggregate, delivery FROM ${sql(tables.delivery)}
-      WHERE model = ${modelName} AND status = 'pending'
-      ORDER BY position LIMIT ${config.deliveryBatchSize}`.pipe(Effect.flatMap(decodeDeliveries));
-    const delivered = yield* Effect.forEach(rows, (row) =>
-      O.match(MutableHashMap.get(delivers, row.aggregate), {
-        onNone: () => Effect.succeed(false),
-        onSome: (deliver) =>
-          deliver(row.delivery).pipe(
-            Effect.andThen(
-              sql`UPDATE ${sql(tables.delivery)} SET status = 'delivered', attempts = attempts + 1
-                WHERE position = ${row.position}`
-            ),
-            Effect.as(true)
-          ),
-      })
+  /**
+   * Claim the next deliverable outbox rows for this host: the oldest pending row
+   * of each `(source, target)` whose retry is due and that no host holds a lease
+   * on. `FOR UPDATE SKIP LOCKED` plus the lease keep two hosts on one database
+   * from claiming one row; heads-only keeps every `(source, target)` in order.
+   * Rows from aggregates this host does not run wait for a host that does.
+   */
+  const claim = Effect.fnUntraced(function* (at: number, hosted: A.NonEmptyReadonlyArray<string>) {
+    const rows = yield* sql`UPDATE ${sql(tables.delivery)}
+      SET locked_until = ${at + deliveryLeaseMillis}, claimed_by = ${owner}
+      WHERE position IN (
+        SELECT head.position FROM ${sql(tables.delivery)} head
+        WHERE head.model = ${modelName} AND head.status = 'pending' AND head.aggregate IN ${sql.in(hosted)}
+          AND head.next_attempt_at <= ${at} AND head.locked_until <= ${at}
+          AND NOT EXISTS (
+            SELECT 1 FROM ${sql(tables.delivery)} earlier
+            WHERE earlier.model = head.model AND earlier.status = 'pending'
+              AND earlier.source = head.source AND earlier.target_kind = head.target_kind
+              AND earlier.target_name = head.target_name AND earlier.position < head.position
+          )
+        ORDER BY head.position LIMIT ${config.deliveryBatchSize}
+        FOR UPDATE SKIP LOCKED
+      )
+      RETURNING position, aggregate, delivery`.pipe(Effect.flatMap(decodeDeliveries));
+    return A.sort(rows, byPosition);
+  });
+
+  const acknowledge = (row: DeliveryRow) =>
+    sql`UPDATE ${sql(tables.delivery)} SET status = 'delivered', attempts = attempts + 1, locked_until = 0
+      WHERE position = ${row.position} AND claimed_by = ${owner}`;
+
+  /** A failed run stays pending: count the attempt, back off, and release the lease. */
+  const retryLater = Effect.fnUntraced(function* (row: DeliveryRow, cause: Cause.Cause<unknown>) {
+    const at = yield* now;
+    yield* Effect.logError(
+      `alchemy-postgres ${modelName} delivery ${row.position} to ${row.delivery.target.kind} ${row.delivery.target.name} failed; retrying`,
+      cause
     );
-    return A.length(rows) === config.deliveryBatchSize && A.every(delivered, P.isTruthy);
+    yield* sql`UPDATE ${sql(tables.delivery)}
+      SET attempts = attempts + 1, locked_until = 0,
+        next_attempt_at = ${at} + LEAST(${config.pollMillis} * POWER(2, attempts)::bigint, ${retryCeilingMillis})
+      WHERE position = ${row.position} AND claimed_by = ${owner}`;
+  });
+
+  const release = (rows: ReadonlyArray<DeliveryRow>) =>
+    A.match(rows, {
+      onEmpty: () => Effect.void,
+      onNonEmpty: (left) =>
+        sql`UPDATE ${sql(tables.delivery)} SET locked_until = 0
+          WHERE ${sql.in(
+            "position",
+            A.map(left, ({ position }) => position)
+          )} AND claimed_by = ${owner}`.pipe(Effect.asVoid),
+    });
+
+  /** Deliver claimed rows in position order; the first failure stops the pass and frees the rest. */
+  const deliverAll = (rows: ReadonlyArray<DeliveryRow>): Effect.Effect<boolean, SqlError.SqlError> =>
+    A.match(rows, {
+      onEmpty: () => Effect.succeed(true),
+      onNonEmpty: ([row, ...rest]) =>
+        Effect.exit(deliverRow(row)).pipe(
+          Effect.flatMap(
+            Exit.match({
+              onSuccess: () => acknowledge(row).pipe(Effect.andThen(deliverAll(rest))),
+              onFailure: (cause) => retryLater(row, cause).pipe(Effect.andThen(release(rest)), Effect.as(false)),
+            })
+          )
+        ),
+    });
+
+  /** Route one claimed row through its producer's kit; `claim` only returns rows of hosted producers. */
+  const deliverRow = (row: DeliveryRow) =>
+    O.match(MutableHashMap.get(delivers, row.aggregate), {
+      onNone: () => Effect.die(AlchemyPostgresError.fromUnknown("deliver", undefined, tables.delivery)),
+      onSome: (deliver) => deliver(row.delivery),
+    });
+
+  /** One pass: claim, deliver; another pass follows while every claimed row was delivered. */
+  const drainOnce = Effect.gen(function* () {
+    const at = yield* now;
+    const hosted = A.fromIterable(MutableHashMap.keys(delivers));
+    const rows = A.isReadonlyArrayNonEmpty(hosted) ? yield* claim(at, hosted) : [];
+    const completed = yield* deliverAll(rows);
+    return completed && A.isReadonlyArrayNonEmpty(rows);
   }).pipe(orDieAs("deliver", tables.delivery));
 
   /** Deliver pending outbox rows in position order, one at a time, until none are left. */
@@ -375,13 +454,22 @@ const makeHost = (deps: HostDeps): DomainPlatform.ModelHost => {
               const pending = O.filter(row, ({ status }) => status === "pending");
               if (O.isNone(pending)) return;
               const { command, meta } = pending.value;
-              if (!(yield* executed(id, commandId)))
-                yield* commitLocked(id, current, command, meta).pipe(
-                  Effect.catchTag("RejectedCommand", ({ rejection }) =>
-                    Effect.logWarning(`alchemy-postgres scheduled ${name}/${id} ${commandId} was rejected`, rejection)
-                  )
-                );
-              yield* sql`UPDATE ${sql(tables.aggregateSchedule)} SET status = 'executed', updated_at = ${yield* now}
+              const alreadyRan = yield* executed(id, commandId);
+              // Executed only with a receipt. A rejection writes none, so like InMemory the
+              // command id stays free: `unschedule` says NotScheduled and `schedule` re-arms it.
+              const status: ScheduleStatus = alreadyRan
+                ? "executed"
+                : yield* commitLocked(id, current, command, meta).pipe(
+                    Effect.as<ScheduleStatus>("executed"),
+                    Effect.catchTag("RejectedCommand", ({ rejection }) =>
+                      Effect.logWarning(
+                        `alchemy-postgres scheduled ${name}/${id} ${commandId} was rejected`,
+                        rejection
+                      ).pipe(Effect.as<ScheduleStatus>("rejected"))
+                    )
+                  );
+              const at = yield* now;
+              yield* sql`UPDATE ${sql(tables.aggregateSchedule)} SET status = ${status}, updated_at = ${at}
                 WHERE model = ${modelName} AND aggregate = ${name} AND id = ${id} AND command_id = ${commandId}`;
             })
           )
@@ -483,11 +571,9 @@ const makeHost = (deps: HostDeps): DomainPlatform.ModelHost => {
           return created;
         });
       return {
-        // The outbox marks a delivery done only after this returns: at least once, in order per key.
-        receive: (delivery) =>
-          lockFor(delivery.key)
-            .withPermits(1)(kit.run(delivery))
-            .pipe(Effect.catchCause((cause) => Effect.logError(`alchemy-postgres policy ${kit.name} failed`, cause))),
+        // The outbox marks a delivery done only after this succeeds: at least once, in order per key.
+        // A failed run fails the delivery: the outbox keeps the row pending and retries it.
+        receive: (delivery) => lockFor(delivery.key).withPermits(1)(kit.run(delivery)),
       };
     });
 
@@ -522,7 +608,9 @@ const make = Effect.fn("AlchemyPostgresPlatform.make")(function* (config: Alchem
       orDieAs("claim", tables.hostedModel)
     );
     const wake = yield* Queue.sliding<void>(1);
-    return makeHost({ sql, tables, config, now, scope, modelName: hosted.modelName, wake });
+    const nonce = yield* Random.nextInt;
+    const owner = `${hosted.modelName}:${builtAt}:${nonce}`;
+    return makeHost({ sql, tables, config, now, owner, scope, modelName: hosted.modelName, wake });
   });
   return Platform.of({ model });
 });
