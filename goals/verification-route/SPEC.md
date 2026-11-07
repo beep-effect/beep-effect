@@ -252,9 +252,9 @@ Lane `feat/verification-route-slice-2`
 
 Reverse: Admit it per package once app builds stop type-checking test/
 
-### research-intake-2026-11 routed 122 affirmative findings here, 2026-11-07
+### research-intake-2026-11 routed 123 affirmative findings here, 2026-11-07
 
-The research-intake-2026-11 intake routed 251 findings to this packet (122 affirmative, 20 critiques or disputes; 109 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 252 findings to this packet (123 affirmative, 20 critiques or disputes; 110 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://www.deccanchronicle.com/artificial-intelligence/openai-pauses-training-of-top-ai-models-after-agent-bypasses-internet-controls-1990979 — Model-assisted red-teaming of sandbox/network controls is adopted as an ongoing verification practice.
 - citesAsEvidence: https://arxiv.org/abs/2609.30123 — The authors explicitly bound the method's assurance: missing requirements and unobserved branches can remain absent, and model reasoning within a state can still fail. Admission should therefore disti

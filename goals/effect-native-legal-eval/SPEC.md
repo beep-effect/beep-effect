@@ -76,9 +76,9 @@ operator-approved upstream C&H harness run as an external baseline.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug effect-native-legal-eval`; add a `kind: decision` file there, never edit this block._
 
-### research-intake-2026-11 routed 162 affirmative findings here, 2026-11-07
+### research-intake-2026-11 routed 165 affirmative findings here, 2026-11-07
 
-The research-intake-2026-11 intake routed 448 findings to this packet (162 affirmative, 31 critiques or disputes; 309 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 454 findings to this packet (165 affirmative, 33 critiques or disputes; 315 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - usesMethodIn: https://arxiv.org/abs/2610.33489 — Gold-set evaluation uses property constraints (must_call, must_not_call, must_ground, must_thread, must_abstain) instead of a fixed reference output, an eval design applicable to extraction tasks.
 - citesAsEvidence: https://www.nber.org/papers/w35720 — The study reports blinded domain-expert scoring, a useful methodological precedent for evaluating patent-drafting quality independently of treatment knowledge. The capture does not supply the scoring 

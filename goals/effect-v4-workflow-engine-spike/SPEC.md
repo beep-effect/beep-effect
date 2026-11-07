@@ -115,7 +115,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 ### research-intake-2026-11 routed 62 affirmative findings here, 2026-11-07
 
-The research-intake-2026-11 intake routed 150 findings to this packet (62 affirmative, 0 critiques or disputes; 115 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 151 findings to this packet (62 affirmative, 0 critiques or disputes; 116 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://github.com/effect-ts/effect — The upstream README identifies the principal capabilities offered by Effect, providing a broad reference for Effect-native architecture without establishing how any individual capability should be imp
 - citesAsEvidence: https://effect.website/blog/releases/effect/40 — The release identifies these capabilities as parts of the shared programming model underlying the standard library, platform integrations, and distributed-system primitives. This provides upstream arc

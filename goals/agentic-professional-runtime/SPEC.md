@@ -268,9 +268,9 @@ new architecture decisions:
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug agentic-professional-runtime`; add a `kind: decision` file there, never edit this block._
 
-### research-intake-2026-11 routed 164 affirmative findings here, 2026-11-07
+### research-intake-2026-11 routed 165 affirmative findings here, 2026-11-07
 
-The research-intake-2026-11 intake routed 504 findings to this packet (164 affirmative, 4 critiques or disputes; 451 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 506 findings to this packet (165 affirmative, 4 critiques or disputes; 453 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://govtribe.com/file/government-file/sam-dot-gov-announcement-october-15-ai-roundtable-dot-pdf — USPTO names agentic analysis of patent applications as a desired analytics capability.
 - citesAsEvidence: https://github.com/beep-effect/beep-effect/blob/main/docs/ROADMAP.md — The product strategy places attorney approval between agent proposals and retained practice knowledge, making human admission authority central to the professional runtime.

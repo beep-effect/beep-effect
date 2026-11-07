@@ -77,9 +77,9 @@ Missing source access remains an explicit coverage gap; do independent synthetic
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug harness-telemetry-enrollment`; add a `kind: decision` file there, never edit this block._
 
-### research-intake-2026-11 routed 41 affirmative findings here, 2026-11-07
+### research-intake-2026-11 routed 43 affirmative findings here, 2026-11-07
 
-The research-intake-2026-11 intake routed 100 findings to this packet (41 affirmative, 1 critiques or disputes; 68 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 104 findings to this packet (43 affirmative, 1 critiques or disputes; 72 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - supports: https://www.debevoisedatablog.com/2026/11/04/your-ai-agent-can-bind-you-a-governance-framework-for-autonomous-contracts/ — Calls for audit trails that reconstruct which agent acted, what it accessed, and which approvals applied.
 - citesAsEvidence: https://github.com/anthropics/skills — The documented Claude Code activation flow connects plugin installation with invocation by mentioning a skill. This provides a concrete activation behavior to consider when testing whether a remote ha

@@ -222,9 +222,9 @@ and recorded under `history/` as evidence when run.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug coding-agent-effectiveness-evidence-loop`; add a `kind: decision` file there, never edit this block._
 
-### research-intake-2026-11 routed 214 affirmative findings here, 2026-11-07
+### research-intake-2026-11 routed 215 affirmative findings here, 2026-11-07
 
-The research-intake-2026-11 intake routed 371 findings to this packet (214 affirmative, 23 critiques or disputes; 88 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 373 findings to this packet (215 affirmative, 23 critiques or disputes; 90 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://github.com/beep-effect/beep-effect/blob/main/docs/ROADMAP.md — The stated agent workflow feeds reflection back into later implementation packets, establishing a recurring improvement loop.
 - citesAsEvidence: https://arxiv.org/abs/2609.30123 — The reported benchmark results support testing compiled skill execution against native document-following agents. Gains vary substantially by task: LiveMath improves by 31.4–38.0 percentage points, wh

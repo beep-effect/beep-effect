@@ -1,11 +1,11 @@
 ---
-title: "research-intake-2026-11 routed 61 affirmative findings here"
+title: "research-intake-2026-11 routed 62 affirmative findings here"
 date: 2026-11-07
 lane: "feat/research-intake-2026-11"
 reversal: "Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl"
 ---
 
-The research-intake-2026-11 intake routed 205 findings to this packet (61 affirmative, 5 critiques or disputes; 188 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 210 findings to this packet (62 affirmative, 5 critiques or disputes; 193 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - usesMethodIn: https://github.com/parkerhancock/patent-client-agents — MPEP and TMEP are served from locally built SQLite/FTS5 corpus snapshots that support section lookup and search.
 - supports: https://www.artificiallawyer.com/2026/10/14/from-ai-tools-to-agentic-ai-a-roadmap/ — Governed context: matter-ranked retrieval that returns structured excerpts plus metadata and links documents to parties and relationships.

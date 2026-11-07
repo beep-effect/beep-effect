@@ -255,9 +255,9 @@ Higher sources outrank lower sources when they conflict.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug agentic-governance-laws`; add a `kind: decision` file there, never edit this block._
 
-### research-intake-2026-11 routed 103 affirmative findings here, 2026-11-07
+### research-intake-2026-11 routed 110 affirmative findings here, 2026-11-07
 
-The research-intake-2026-11 intake routed 373 findings to this packet (103 affirmative, 14 critiques or disputes; 288 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 389 findings to this packet (110 affirmative, 14 critiques or disputes; 304 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://govtribe.com/file/government-file/sam-dot-gov-announcement-october-15-ai-roundtable-dot-pdf — Monitoring and auditability are expected of vendor AI tooling, supporting observability and evidence-ledger work.
 - supports: https://developer.nvidia.com/blog/nvidia-open-agent-safety-platform-a-reference-for-continuous-in-silicon-agent-monitoring/ — Core claim that agent self-governance is insufficient, so controls must be independent of the agent. This motivates external execution authority and governance layers.

@@ -1,11 +1,11 @@
 ---
-title: "research-intake-2026-11 routed 54 affirmative findings here"
+title: "research-intake-2026-11 routed 56 affirmative findings here"
 date: 2026-11-07
 lane: "feat/research-intake-2026-11"
 reversal: "Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl"
 ---
 
-The research-intake-2026-11 intake routed 175 findings to this packet (54 affirmative, 9 critiques or disputes; 48 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 178 findings to this packet (56 affirmative, 9 critiques or disputes; 51 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://govtribe.com/file/government-file/sam-dot-gov-announcement-october-15-ai-roundtable-dot-pdf — Vendor requirement for American-built models with model cards and bias/drift monitoring constrains model admission for any USPTO-facing offering.
 - citesAsEvidence: https://github.com/voltagent/awesome-openclaw-skills — The source identifies post-inclusion mutability as a risk. Any later evaluation or adoption needs an identifiable version and integrity evidence so its conclusions remain tied to the inspected artifac

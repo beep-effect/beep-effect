@@ -1,11 +1,11 @@
 ---
-title: "research-intake-2026-11 routed 192 affirmative findings here"
+title: "research-intake-2026-11 routed 202 affirmative findings here"
 date: 2026-11-07
 lane: "feat/research-intake-2026-11"
 reversal: "Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl"
 ---
 
-The research-intake-2026-11 intake routed 463 findings to this packet (192 affirmative, 11 critiques or disputes; 407 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 479 findings to this packet (202 affirmative, 11 critiques or disputes; 423 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://github.com/beep-effect/beep-effect/blob/main/docs/ROADMAP.md — The source expressly denies model output independent citation authority and pairs this rule with source-span reproduction before a quote can cross the grounding boundary.
 - usesMethodIn: https://arxiv.org/abs/2610.33489 — Error-aware LLM compilation loop: deterministic legality checks feed errors back to the LLM for repair, a reusable pattern for structured LLM extraction.

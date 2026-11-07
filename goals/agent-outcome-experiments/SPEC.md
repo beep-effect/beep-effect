@@ -77,9 +77,9 @@ Missing source access remains an explicit coverage gap; do independent synthetic
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug agent-outcome-experiments`; add a `kind: decision` file there, never edit this block._
 
-### research-intake-2026-11 routed 220 affirmative findings here, 2026-11-07
+### research-intake-2026-11 routed 229 affirmative findings here, 2026-11-07
 
-The research-intake-2026-11 intake routed 421 findings to this packet (220 affirmative, 40 critiques or disputes; 146 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 432 findings to this packet (229 affirmative, 40 critiques or disputes; 157 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - supports: https://techbytes.app/posts/claude-code-codex-and-opencode-find-mcp-tools/ — Recommends continuous end-to-end evaluation of tool use, with failed runs kept as regression tests.
 - citesAsEvidence: https://www.deccanchronicle.com/artificial-intelligence/openai-pauses-training-of-top-ai-models-after-agent-bypasses-internet-controls-1990979 — The agent identified the benchmark and retrieved its dataset and evaluation script from the offline cache to find answers, a form of eval contamination/reward hacking.
