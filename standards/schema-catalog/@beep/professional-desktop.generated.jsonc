@@ -4,6 +4,7 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/professional-desktop",
   "entries": [
+    {"file":"apps/professional-desktop/server/OntologyMcpTransport.ts","symbol":"OntologyMcpTransportOptions","kind":"struct-const","owner":"@beep/professional-desktop","identity":"OntologyMcpTransportOptions","description":"Options for the authenticated ontology MCP transport layer."},
     {"file":"apps/professional-desktop/src/chat/DerivedThreadTitle.ts","symbol":"DerivedThreadTitle","kind":"codec","owner":"@beep/professional-desktop","identity":"DerivedThreadTitle","description":"Trimmed, non-empty, sidebar-bounded title derived from user message text."},
     {"file":"apps/professional-desktop/src/chat/ui/ComposerPolicy.ts","symbol":"ComposerNotice","kind":"tagged-union","owner":"@beep/professional-desktop","identity":"ComposerNotice","description":"Typed notification commands emitted by the composer state machine."},
     {"file":"apps/professional-desktop/src/chat/ui/ComposerPolicy.ts","symbol":"ComposerSafetyRefusal","kind":"struct-const","owner":"@beep/professional-desktop","identity":"ComposerSafetyRefusal","description":"An inline refusal for a draft that fails the Markdown user-content safety boundary."},

@@ -35,8 +35,8 @@ export const VaultSyncSessionLive = Layer.effect(
   V.Session,
   Effect.gen(function* () {
     const resolver = yield* V.SessionResolver;
-    return V.Session.of((effect, { rpc, payload, headers }) =>
-      Effect.gen(function* () {
+    return V.Session.of(
+      Effect.fnUntraced(function* (effect, { rpc, payload, headers }) {
         const request = yield* resolver.resolve(headers);
         return yield* V.authorizeVaultSync(rpc._tag, payload).pipe(
           Effect.andThen(effect),

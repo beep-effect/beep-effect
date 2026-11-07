@@ -51,7 +51,7 @@ import { SidecarReadyMarker } from "@/runtime/Migrations";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import { DesktopRpcs } from "./DesktopRpcs.ts";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
-import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
+import { makeOntologyMcpTransportLayer, OntologyMcpTransportOptions } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
 import type { ServeError } from "effect/http/HttpServerError";
 import type * as Redacted from "effect/Redacted";
@@ -100,7 +100,7 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
   const OntologyMcp = O.match(RPC_SESSION_TOKEN, {
     onNone: () => Layer.empty,
     onSome: (token: Redacted.Redacted<string>) =>
-      makeOntologyMcpTransportLayer({ token }).pipe(
+      makeOntologyMcpTransportLayer(OntologyMcpTransportOptions.make({ token })).pipe(
         Layer.provide(OntologyMcpConfigLive),
         Layer.provide(ExecutionLedgerDrizzle),
         Layer.provide(EpistemicConfigLive),

@@ -31,6 +31,7 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
 import * as McpProtocol from "effect/ai/McpProtocol";
 import * as McpServer from "effect/ai/McpServer";
 import * as Context from "effect/Context";
@@ -173,6 +174,69 @@ const ontologyEgressSink = ExecutionSink.make({
 const ontologySessionGrantTtl = Duration.hours(12);
 
 /**
+ * Transport function a test injects beneath the governed egress boundary.
+ *
+ * **Details**
+ *
+ * A function value is a runtime capability held by reference, so its schema
+ * only recognizes a function; it is never encoded or decoded.
+ *
+ * **Example** (Type an injected fetch)
+ *
+ * ```ts
+ * import type { OntologyMcpEgressFetch } from "./OntologyMcpTransport.ts"
+ * const egressFetch: OntologyMcpEgressFetch = globalThis.fetch
+ * console.log(typeof egressFetch)
+ * // "function"
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type OntologyMcpEgressFetch = typeof globalThis.fetch;
+
+const OntologyMcpEgressFetch = S.declare((u: unknown): u is OntologyMcpEgressFetch => P.isFunction(u)).pipe(
+  $I.annoteSchema("OntologyMcpEgressFetch", {
+    description: "Transport function a test injects beneath the governed egress boundary.",
+  })
+);
+
+/**
+ * Options for {@link makeOntologyMcpTransportLayer}.
+ *
+ * **Example** (Build transport options)
+ *
+ * ```ts
+ * import * as Redacted from "effect/Redacted";
+ * import { OntologyMcpTransportOptions } from "./OntologyMcpTransport.ts"
+ * const options = OntologyMcpTransportOptions.make({ token: Redacted.make("test-token") })
+ * console.log(options.approvedMutationTools)
+ * // undefined
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class OntologyMcpTransportOptions extends S.Opaque<
+  OntologyMcpTransportOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    token: S.Redacted(S.String).annotateKey({
+      description: "Launch token every MCP request must present as its bearer credential.",
+    }),
+    approvedMutationTools: S.String.pipe(S.Array, S.optionalKey).annotateKey({
+      description: "Mutation tools granted to the session; test-only, production grants none.",
+    }),
+    egressFetch: OntologyMcpEgressFetch.pipe(S.optionalKey).annotateKey({
+      description: "Fetch beneath the governed egress boundary; test-only, production uses the platform fetch.",
+    }),
+  }).pipe(
+    $I.annoteSchema("OntologyMcpTransportOptions", {
+      description: "Options for the authenticated ontology MCP transport layer.",
+    })
+  )
+) {}
+
+/**
  * Builds the `/mcp` route layer with read-only registration independent of mutation enablement.
  *
  * **Details**
@@ -188,25 +252,22 @@ const ontologySessionGrantTtl = Duration.hours(12);
  *
  * `approvedMutationTools` lets a test register mutation tools while granting
  * none of them, proving that registration is not authorization. Production
- * never passes it.
+ * never passes it, nor `egressFetch`, which only tests supply to observe the
+ * governed egress boundary without reaching the network.
  *
  * **Example** (Build the ontology transport layer)
  *
  * ```ts
  * import * as Layer from "effect/Layer";
  * import * as Redacted from "effect/Redacted";
- * import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts"
- * const layer = makeOntologyMcpTransportLayer({ token: Redacted.make("test-token") })
+ * import { makeOntologyMcpTransportLayer, OntologyMcpTransportOptions } from "./OntologyMcpTransport.ts"
+ * const layer = makeOntologyMcpTransportLayer(OntologyMcpTransportOptions.make({ token: Redacted.make("test-token") }))
  * console.log(Layer.isLayer(layer))
  * ```
  * @category layers
  * @since 0.0.0
  */
-export const makeOntologyMcpTransportLayer = (options: {
-  readonly token: Redacted.Redacted;
-  readonly approvedMutationTools?: ReadonlyArray<string> | undefined;
-  readonly egressFetch?: typeof globalThis.fetch | undefined;
-}) => {
+export const makeOntologyMcpTransportLayer = (options: OntologyMcpTransportOptions) => {
   const approvedTools = options.approvedMutationTools ?? [];
   const security = desktopMcpSecurityMiddleware(options.token);
   // `layerHttp` fails with `IllegalArgumentError` only on a malformed path or an

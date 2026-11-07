@@ -82,9 +82,7 @@
     "@beep/utils": "workspace:^",
     "@noble/hashes": "catalog:",
     "drizzle-orm": "catalog:",
-    "effect": "catalog:",
-    "@alchemy.run/domain": "catalog:",
-    "@beep/alchemy-postgres": "workspace:^"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@beep/pglite": "workspace:^",
@@ -94,7 +92,6 @@
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:",
-    "@beep/pglite": "workspace:^"
+    "bun-types": "catalog:"
   }
 }
