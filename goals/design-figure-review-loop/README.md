@@ -62,7 +62,7 @@ and the overlay's edge extent; PR-K (embedded label text) and PR-L (edge emphasi
 
 Not started. Round-1 facts carried in: the attorney marked up the unshaded set (PDF sha256 prefix
 17e086a2), not the signable shaded set (227efb7a); both hashes are in the predecessor's
-[live-matter evidence record](../design-figure-generation/history/live-matter/evidence.json).
+[live-matter evidence record](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/design-figure-generation/history/live-matter/evidence.json).
 
 ## Notes
 
