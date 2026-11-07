@@ -1130,6 +1130,14 @@ The scanner selects tracked tests through git ls-files. Four native metadata fix
 
 Reverse: Restore reuse only after portable discovery-state identity and membership controls are implemented and qualified; retain the failed-key evidence.
 
+### Prepare an unpublished local types pilot behind the recipe parent, 2026-11-06
+
+Prepare the next implementation while three owned PRs remain open. The publication cap does not forbid an unpublished dependent worktree: start from parent #2813 head 563b0b210647b6909ea9f3de8638a28c5513bf86, then replay only this unpublished work onto accepted main after the parent lands, before opening another PR. Select the reviewed recipe from the verified activation preview. Types lint has no dependency tasks, uses local-only observations, rejects identity scanner routing and signed execution, and does not fabricate a dependency-source control. Unknown computations fail before task execution. Existing input, native plan, runtime key, capture and integrity checks remain required; failed candidate comparisons remain failed observations. Nine process-boundary cases are authored but unrun locally: five named cases and four fault-refusal cases. No local verify, publish, tests, check, docgen, package verification or manual source generator is run, per operator instruction; ordinary hooks are allowed. Syntax parsing alone is not type or runtime proof. Types caching remains disabled, and no qualification, signing, credential or production grant changes. Types input-profile review and admitted native comparisons remain necessary before any adoption.
+
+Lane `codex/cache-types-pilot-20261106`
+
+Reverse: Revert local types observation support; identity remains the only execution recipe. No deployment or qualification state changes.
+
 ### Bind pilot selection and mounts to one reviewed recipe, 2026-11-06
 
 Centralize the existing identity pilot computation, package filter, selected package path, and fresh dependency paths in one internal schema-backed recipe. Route activation, closure validation, native summary selection, filters, sandbox mounts, and mutation paths through that recipe. Identity remains the sole admitted recipe. This is the first implementation step toward additional reviewed computation recipes, beginning with dependency-free types lint; it does not add types execution or reuse authority. Static substitution of the unchanged recipe values reproduces the prior runner source exactly before formatting. Hosted CI remains required runtime and type-check evidence. No manual local verify, publish, tests, check, docgen or package verification was run, per operator instruction. Both whole goals and all qualification and rollout obligations remain open.
@@ -1137,6 +1145,12 @@ Centralize the existing identity pilot computation, package filter, selected pac
 Lane `codex/cache-pilot-recipes-20261106`
 
 Reverse: Revert the recipe refactor; no task cache setting or qualification state changes.
+
+### Prepare explicit types lint policy inputs from native invalidation evidence, 2026-11-06
+
+Twelve bounded native metadata-only plans show stable and canary ignore a root Git ignore-policy change under the inherited types lint inputs. Biome explicitly reads Git ignore files. Preserve package defaults and existing root Biome/plugin inputs, add root and possible ancestor ignore policies plus conservative root tsconfig coverage, and keep caching disabled. A separate JSONC comment control proves root tsconfig byte coverage only, not lint semantics. See research/types-lint-semantic-inputs-2026-11-06.json and its Markdown interpretation. No task execution or qualification is claimed. Keep this unpublished behind #2813; consume the independent toolchain-env input from #2816 after acceptance rather than copying an unlanded fix.
+
+Reverse: Revert the types input override and retain cache false; no qualification or rollout state changes.
 
 ### Preserve external suite inputs across all CLI test consumers, 2026-11-06
 
@@ -1165,6 +1179,12 @@ After accepted PR #2695, nonempty affected-query summaries still reported zero p
 Lane `codex/turbo-query-package-counts`
 
 Reverse: Revert the package counter and its assertions while preserving historical source and native evidence.
+
+### Recover stale GitHub CLI quota responses without changing credentials, 2026-11-06
+
+GitHub CLI 2.102.1 caches the pull-request feature probe for 24 hours. Two exact local HTTP 200 response-cache entries contained GraphQL RATE_LIMIT errors from the earlier exhausted window. Live REST and direct GraphQL quota reads had already recovered. Preserve byte-exact copies and digests privately, verify absence of authorization/cookie headers and error-only JSON bodies, then remove only those two verified entries. The unchanged check-list command succeeds immediately afterward; native Yeet remote status also reads complete required and optional check counts. Keep the existing monitor jobs instead of restarting them. No credential, quota, configuration or unrelated cache changes are involved. The private rollback restores an entry only if no fresh entry has replaced it.
+
+Reverse: Restore the two preserved response entries only if no newer entry exists; leave fresh responses, credentials and all other cache entries untouched.
 
 ### Declare the types lint toolchain hash before qualification, 2026-11-06
 

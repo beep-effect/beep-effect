@@ -31,7 +31,6 @@ const key = Effect.runSync(Effect.flatMap(emailAddress("Dana Example <Dana@EXAMP
 | `Resolution` | Effective accepted claims, active vetoes before merges, numeric surviving ids, redirects and key assignments. |
 | `Admission` | Purpose-specific evidence gates, including independent corroboration and source support checks. |
 | `Projection`, `Hierarchy` | Selector and organization graphs, declared versus operational hierarchy, review findings and Mermaid output. |
-| `ClaimEvidenceReview`, `ClaimProjection`, `Contradiction`, `ContradictionDetection`, `EdgeEndpoint`, `EvidenceVerification`, `LogicalEdgeIdentity` | Party bindings for the foundation epistemic factories. |
 
 Time uses foundation epoch-millisecond intervals. Resolution queries supply both
 knowledge time and valid time. Retractions and supersessions change the effective
@@ -41,6 +40,11 @@ previous merge; replay is deterministic for the same versions and query scope.
 `Party.keys` describes associated keys, while accepted `KeyAssignment` claims
 control the resolver's key lookup. Neither a matching address nor a Proposed
 claim authorizes a merge. Product integrations must preserve this distinction.
+
+Each module is a thin root barrel over its concept folder: identity-bearing
+concepts sit in `src/entities/`, admission and the read-time resolution and
+projection views in `src/policies/`, and identifiers, keys, propositions and ids
+in `src/values/`. Import the root subpath, never the folder.
 
 The package has no storage or source-reader dependencies. See the
 [slice specification](../../../goals/party-slice/SPEC.md) for the canonical-key

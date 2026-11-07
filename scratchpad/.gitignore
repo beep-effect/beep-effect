@@ -1,4 +1,3 @@
 # Local per-target docgen configs stay untracked; the hand-kept configs stay tracked.
 docgen.*.json
 !docgen.effect-ontology.json
-.tsgo-lanes/

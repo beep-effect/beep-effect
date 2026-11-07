@@ -1,0 +1,208 @@
+{
+  "schemaVersion": "cache-types-semantic-input-observation/v1",
+  "observedAt": "2026-11-06T21:27:07.338684+00:00",
+  "sourceRevision": "d18e492a99aa0c78fbd761764ccd470d9a4a1d30",
+  "sourceState": "working-tree-overlay",
+  "computation": "@beep/types#lint",
+  "configurationBeforeSha256": "6c8d1d6e3c12318fa0273a3ec1585487e4661e8a80bda2ccf5d48a2c821dedd4",
+  "configurationCandidateSha256": "7da759e726485c57c87b4086c532d711c0d9b83186e674ff6eb86d0bbb530c8f",
+  "candidate": {
+    "$schema": "https://v2-11-10.turborepo.dev/schema.json",
+    "extends": ["//"],
+    "tasks": {
+      "lint": {
+        "cache": false,
+        "inputs": [
+          "$TURBO_DEFAULT$",
+          "$TURBO_ROOT$/biome.jsonc",
+          "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**",
+          "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
+          "$TURBO_ROOT$/.gitignore",
+          "$TURBO_ROOT$/packages/.gitignore",
+          "$TURBO_ROOT$/packages/foundation/.gitignore",
+          "$TURBO_ROOT$/packages/foundation/primitive/.gitignore",
+          "$TURBO_ROOT$/tsconfig*.json",
+          "!.beep/**",
+          "!.fallow/**"
+        ]
+      }
+    }
+  },
+  "sourceInputs": {
+    "packages/foundation/primitive/types/turbo.json": "6c8d1d6e3c12318fa0273a3ec1585487e4661e8a80bda2ccf5d48a2c821dedd4",
+    ".gitignore": "2d1e5f27bae718891400678b7d810ae83396a48746fe6c311d88895d41026323",
+    "tsconfig.json": "9f98304658164079151a20ec46934a8eddbbb5c28aaaa9a08d909c26a374d757"
+  },
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "observations": [
+    {
+      "phase": "before",
+      "mutation": "baseline",
+      "channel": "stable",
+      "taskHash": "becf03dad8961f9c",
+      "inputs": 32,
+      "rawSha256": "be2f96da8267953e09e4e582d35235fb2ce7a9c9213e6856af17b1079d05196d",
+      "rawBytes": 6790,
+      "exit": 0
+    },
+    {
+      "phase": "before",
+      "mutation": "baseline",
+      "channel": "canary",
+      "taskHash": "7990e0e9de842124",
+      "inputs": 32,
+      "rawSha256": "ea05051d8ae0eea28bfa980848e2455925a3763385dfc0e0c4931121075ea832",
+      "rawBytes": 6799,
+      "exit": 0
+    },
+    {
+      "phase": "before",
+      "mutation": "ignore-policy",
+      "channel": "stable",
+      "taskHash": "becf03dad8961f9c",
+      "inputs": 32,
+      "rawSha256": "88be7c09e61b75dc05a24657466cafd6726eba40f3135d5d561af0b34f4ff23f",
+      "rawBytes": 6790,
+      "exit": 0
+    },
+    {
+      "phase": "before",
+      "mutation": "ignore-policy",
+      "channel": "canary",
+      "taskHash": "7990e0e9de842124",
+      "inputs": 32,
+      "rawSha256": "df56ce9a8bbaf47d1a6c69485d10744e26d4a79c2e1c15bbf089c762b15835bd",
+      "rawBytes": 6799,
+      "exit": 0
+    },
+    {
+      "phase": "before",
+      "mutation": "root-aliases",
+      "channel": "stable",
+      "taskHash": "becf03dad8961f9c",
+      "inputs": 32,
+      "rawSha256": "95327ca20f6dc7345bb841523ac327b6abb6e17bb2f026d40a3baa07b3303c41",
+      "rawBytes": 6790,
+      "exit": 0
+    },
+    {
+      "phase": "before",
+      "mutation": "root-aliases",
+      "channel": "canary",
+      "taskHash": "7990e0e9de842124",
+      "inputs": 32,
+      "rawSha256": "6742a95a0d97450efebe0638dc96b413c52ba95e2ef323930917f6920db3fa6d",
+      "rawBytes": 6799,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "mutation": "baseline",
+      "channel": "stable",
+      "taskHash": "9df716ef26f3eade",
+      "inputs": 37,
+      "rawSha256": "6e6a0f563adeaaef99df0166461ec3d6b725d77222a2f511a366385fc1529ceb",
+      "rawBytes": 7368,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "mutation": "baseline",
+      "channel": "canary",
+      "taskHash": "92c8c1f8bf496abf",
+      "inputs": 37,
+      "rawSha256": "3bc48d7649aba30fae47ab1d68ea8a4a7ff6c5331e7c812b93aebf96f710e1e0",
+      "rawBytes": 7377,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "mutation": "ignore-policy",
+      "channel": "stable",
+      "taskHash": "0b786d8441963dc0",
+      "inputs": 37,
+      "rawSha256": "4ea925509bd26fa6ec711b60f19a5becd594dd0af91fb96b1ad5762812d35223",
+      "rawBytes": 7368,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "mutation": "ignore-policy",
+      "channel": "canary",
+      "taskHash": "a8b11bc491520497",
+      "inputs": 37,
+      "rawSha256": "6e105f23ebf25bb29e60656dcb84c812b1b1323784e1458f2cb4731d1dda6529",
+      "rawBytes": 7377,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "mutation": "root-aliases",
+      "channel": "stable",
+      "taskHash": "c555de6615c3ccf1",
+      "inputs": 37,
+      "rawSha256": "feb93457be1063609097849321c0eae3f0b9d96373dc80c82dbf77f854b7a1ea",
+      "rawBytes": 7368,
+      "exit": 0
+    },
+    {
+      "phase": "candidate",
+      "mutation": "root-aliases",
+      "channel": "canary",
+      "taskHash": "420a5d4afcb62e4b",
+      "inputs": 37,
+      "rawSha256": "c3dfa13aabd142efae6a59a312a87adb7bad3f4ab575d7cbc1ac76a8ae10f984",
+      "rawBytes": 7377,
+      "exit": 0
+    }
+  ],
+  "comparisons": [
+    {
+      "channel": "stable",
+      "mutation": "ignore-policy",
+      "beforeInvalidates": false,
+      "candidateInvalidates": true
+    },
+    {
+      "channel": "stable",
+      "mutation": "root-aliases",
+      "beforeInvalidates": false,
+      "candidateInvalidates": true
+    },
+    {
+      "channel": "canary",
+      "mutation": "ignore-policy",
+      "beforeInvalidates": false,
+      "candidateInvalidates": true
+    },
+    {
+      "channel": "canary",
+      "mutation": "root-aliases",
+      "beforeInvalidates": false,
+      "candidateInvalidates": true
+    }
+  ],
+  "taskBodiesExecuted": false,
+  "secretsLoaded": false,
+  "qualitySuitesRun": false,
+  "bounds": {
+    "calls": 12,
+    "secondsPerCall": 30,
+    "overallSeconds": 240,
+    "aggregateBytes": 50331648,
+    "bytesPerStream": 4194304,
+    "virtualMemoryBytes": 2147483648
+  },
+  "authority": "Native metadata-only invalidation. Root-aliases control changes a JSONC comment, not alias resolution semantics. No task correctness, performance, cache qualification or runtime activation proof.",
+  "preparedConfigurationSha256": "293cbb4d734de2d61e32cae30738301ddd1b5e17ef097630ab6902142d2382db",
+  "preparedConfigurationDifference": "Formatting only: extends array compacted after native observations; parsed candidate identical. Raw native plan/configuration hashes retain their actual observed bytes."
+}
