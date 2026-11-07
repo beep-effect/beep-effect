@@ -17,6 +17,7 @@ import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { hashObservationPayload } from "../internal/native-trace-wire.ts";
+import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoAiMetricsId.create("test/sealed-runtime");
 class RuntimeFixtureError extends S.TaggedError<RuntimeFixtureError, { readonly brand: unique symbol }>(
@@ -27,6 +28,25 @@ class RuntimeFixtureError extends S.TaggedError<RuntimeFixtureError, { readonly 
   $I.annote("RuntimeFixtureError", { description: "Payload-free synthetic runtime failure." })
 ) {}
 const failure = (reason: RuntimeFixtureError["reason"]) => RuntimeFixtureError.make({ reason });
+/**
+ * Observe terminal completion and require the exact owned process handle to be stopped.
+ * A scoped signal is not represented as a successful zero exit status.
+ * **Example** (Inspect the process observation helper)
+ * ```ts
+ * import { observeFixtureProcessStopped } from "@beep/repo-ai-metrics/test/sealed-runtime"
+ * console.log(typeof observeFixtureProcessStopped)
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const observeFixtureProcessStopped = Effect.fn("NativeBoundaryTest.processStopped")(
+  function* (child: ChildProcessHandle) {
+    yield* child.exitCode.pipe(Effect.result);
+    const running = yield* child.isRunning;
+    if (running) return yield* failure("runtime");
+  },
+  Effect.mapError(() => failure("runtime"))
+);
 // One real process serves serial fixture callbacks, preserving runtime PID/start-ticks for replay.
 // Only bounded ACK text leaves stdout; the input channel keeps lost-ACK peers alive until teardown.
 /**
@@ -164,12 +184,7 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
     );
     // A scope-owned SIGKILL is an exit observation, not an expected zero exit code.
     // Require the exact handle to report stopped; never expose the native command-bearing error.
-    const closed = child.exitCode.pipe(
-      Effect.result,
-      Effect.andThen(child.isRunning),
-      Effect.flatMap((running) => (running ? Effect.fail(failure("runtime")) : Effect.void)),
-      Effect.mapError(() => failure("runtime"))
-    );
+    const closed = observeFixtureProcessStopped(child);
     return { ...sealed, send, close, closed };
   }).pipe(
     Scope.provide(owned),

@@ -14,7 +14,11 @@ import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { failure } from "../internal/cursor-lifecycle-schemas.ts";
-import { makeSealedRuntimeFixture, sealedRuntimeSocketPeerSource } from "./sealed-runtime.ts";
+import {
+  makeSealedRuntimeFixture,
+  observeFixtureProcessStopped,
+  sealedRuntimeSocketPeerSource,
+} from "./sealed-runtime.ts";
 import type { CursorLifecycleError } from "../internal/cursor-lifecycle-schemas.ts";
 
 const $I = $RepoAiMetricsId.create("test/cowork-ancestor");
@@ -154,10 +158,8 @@ export const coworkAncestorFixture: Effect.Effect<
       return yield* decodeScriptResult(result).pipe(Effect.mapError(() => failure("transport")));
     });
     const runtimeStopped = runtime.closed.pipe(Effect.mapError(() => failure("transport")));
-    const closed = child.exitCode.pipe(
-      Effect.result,
-      Effect.andThen(child.isRunning),
-      Effect.flatMap((running) => (running ? Effect.fail(failure("transport")) : runtimeStopped)),
+    const closed = observeFixtureProcessStopped(child).pipe(
+      Effect.andThen(runtimeStopped),
       Effect.mapError(() => failure("transport"))
     );
     const fixture: CoworkAncestorFixture = { ...app, runtime, send, runScript, close, closed };
