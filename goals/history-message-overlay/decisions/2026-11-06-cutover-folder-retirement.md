@@ -1,7 +1,7 @@
 ---
 title: "Track the map, archive the rest of the cutover folder"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 reversal: "Restore the folder from $HOME/.local/state/beep/archive/beep-effect-cutover/"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Notes ref is a projection of the tracked map, published only by a post-merge job"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 reversal: "Remove the workflow and the History command; the tracked map stays as plain data"
 ---
 
