@@ -240,6 +240,14 @@ Reverse: Remove this publication checkpoint and regenerate projections; preserve
 
 Reverse: Revert the guide correction if a later pinned implementation removes the runtime guard
 
+### Count distinct classes in coverage examples, 2026-11-07
+
+Parent review found that OPTIONAL and UNION can yield several rows per class. Correct both label and definition coverage examples to count distinct total and covered class identities. Preserve the blank-node exclusion, both definition properties and existing targets. Static cardinality counterexamples and primary SPARQL syntax review support the correction; no ontology or endpoint query was executed. PM and ADHD remain separate.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Revert this checkpoint and its two coverage example corrections if class-based coverage is no longer the intended metric.
+
 ### Pin the notification sender citation to the verified source, 2026-11-07
 
 Read the current 99-line notification guide and checked bounded hook, worker and upstream source context. The URI override is forwarded before its environment name is removed, and desktop markup is escaped before delivery; those suspected discrepancies were rejected. The cited Ghostty v1.3.1 line 1578 handles environment setup, while the notification sender begins at line 1718. Pin that link to verified commit 332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28 and the actual sender. This is a source-citation repair, not proof of installed desktop behavior, focus, receipt visibility or clicks. No hooks, services or billing changed. P4 remains partial; PM and ADHD holds remain separate. Raw source and parent review receipts stay in the private archive.
