@@ -1,5 +1,5 @@
 /**
- * Admitted local execution of the real identity lint computation.
+ * Admitted local observations of reviewed lint computations.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -139,17 +139,22 @@ class PilotTransport extends S.Opaque<PilotTransport, { readonly brand: unique s
   )
 ) {}
 
+const PilotComputation = LiteralKit(["@beep/identity#lint", "@beep/types#lint"]).pipe(
+  $I.annoteSchema("PilotComputation", { description: "Reviewed lint computations with an explicit pilot recipe." })
+);
 class PilotRecipe extends S.Opaque<PilotRecipe, { readonly brand: unique symbol }>()(
   S.Struct({
     selected: S.Struct({
-      computation: CacheActivationRequest.fields.computation,
+      computation: PilotComputation,
       directory: S.NonEmptyString,
       package: S.NonEmptyString,
     }),
-    dependency: S.Struct({
-      computation: CacheActivationRequest.fields.computation,
-      directory: S.NonEmptyString,
-    }),
+    dependency: S.OptionFromOptionalKey(
+      S.Struct({
+        computation: CacheActivationRequest.fields.computation,
+        directory: S.NonEmptyString,
+      })
+    ).pipe(S.withConstructorDefault(Effect.succeedNone)),
     additionalDependencies: S.Record(S.String, S.NonEmptyString),
   }).pipe(
     $I.annoteSchema("PilotRecipe", {
@@ -159,22 +164,29 @@ class PilotRecipe extends S.Opaque<PilotRecipe, { readonly brand: unique symbol 
   )
 ) {}
 
-// Keep the existing identity recipe as the only admitted execution recipe.
-// A second computation needs its own scanner, mutation and replay evidence.
-const recipe = PilotRecipe.make({
+const identityRecipe = PilotRecipe.make({
   selected: {
     computation: "@beep/identity#lint",
     directory: "packages/foundation/modeling/identity",
     package: "@beep/identity",
   },
-  dependency: {
+  dependency: O.some({
     computation: "@beep/types#lint",
     directory: "packages/foundation/primitive/types",
-  },
+  }),
   additionalDependencies: {
     "@beep/fc-runs#lint": "packages/tooling/test-kit/fc-runs",
     "@beep/test-runner#lint": "packages/tooling/test-kit/test-runner",
   },
+});
+// Local observations only. Signed execution remains restricted to identity.
+const typesRecipe = PilotRecipe.make({
+  selected: {
+    computation: "@beep/types#lint",
+    directory: "packages/foundation/primitive/types",
+    package: "@beep/types",
+  },
+  additionalDependencies: {},
 });
 const captureBound = OutputBound.make({ maxChars: 1024 * 1024, truncatedNotice: "[pilot capture overflow]" });
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
@@ -222,7 +234,7 @@ class PilotRoot extends S.Opaque<PilotRoot, { readonly brand: unique symbol }>()
     directory: S.NonEmptyString,
     gitFile: S.NonEmptyString,
     identity: S.NonEmptyString,
-    types: S.NonEmptyString,
+    types: S.OptionFromOptionalKey(S.NonEmptyString),
     additionalPackages: S.Record(S.String, S.String),
     before: S.String,
     after: S.String,
@@ -384,7 +396,8 @@ const validatePilotClient = Effect.fn("CachePilot.validateClient")(function* (
 
 const validatePilotClosure = Effect.fn("CachePilot.validateClosure")(function* (
   current: CacheActivationPreview,
-  dependencies: CacheDependencyMaterialization
+  dependencies: CacheDependencyMaterialization,
+  recipe: PilotRecipe
 ) {
   const installed = yield* current.source.toolchain.installedDependencies.pipe(
     Effect.fromOption(() => CacheCommandError.new("Pilot qualification requires an installed dependency identity."))
@@ -407,12 +420,15 @@ const validatePilotClosure = Effect.fn("CachePilot.validateClosure")(function* (
     A.some(
       dependencyNodes,
       (node) =>
-        (node.id !== recipe.dependency.computation && !R.has(recipe.additionalDependencies, node.id)) ||
+        (!O.exists(recipe.dependency, (dependency) => dependency.computation === node.id) &&
+          !R.has(recipe.additionalDependencies, node.id)) ||
         node.configuration.cache
     )
   ) {
     return yield* CacheCommandError.new(
-      "Pilot dependencies must be limited to fresh, unqualified types, fc-runs and test-runner lint."
+      O.isNone(recipe.dependency)
+        ? "The selected leaf pilot recipe requires an empty dependency closure."
+        : "Pilot dependencies must be limited to fresh, unqualified types, fc-runs and test-runner lint."
     );
   }
   return dependencyNodes;
@@ -457,6 +473,18 @@ const runPilot = Effect.fn("CachePilot.run")(
         Effect.flatMap(decodeText),
         Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode)
       );
+      const recipe = yield* S.decodeUnknownEffect(PilotComputation)(preview.source.key.computation).pipe(
+        Effect.mapBoth({
+          onSuccess: PilotComputation.match({
+            "@beep/identity#lint": () => identityRecipe,
+            "@beep/types#lint": () => typesRecipe,
+          }),
+          onFailure: () => CacheCommandError.new("The pilot computation has no reviewed execution recipe."),
+        })
+      );
+      if (mode === "signed" && recipe.selected.computation !== identityRecipe.selected.computation) {
+        return yield* CacheCommandError.new("Signed types pilot execution is not admitted.");
+      }
       const activationRequest = CacheActivationRequest.make({
         computation: recipe.selected.computation,
         ...preview.activation,
@@ -468,13 +496,13 @@ const runPilot = Effect.fn("CachePilot.run")(
       if (mode === "signed" && request.selection !== "full") {
         return yield* CacheCommandError.new("Signed comparisons require full selection.");
       }
-      return Tuple.make(current, activationRequest);
+      return Tuple.make(current, activationRequest, recipe);
     });
-    const [current, activationRequest] = yield* resolveReviewedActivation();
+    const [current, activationRequest, recipe] = yield* resolveReviewedActivation();
     yield* validatePilotClient(current, request);
     const dependencies = yield* readCacheDependencyMaterialization(root, request.dependencies);
     yield* verifyCacheDependencies(root, dependencies);
-    const dependencyNodes = yield* validatePilotClosure(current, dependencies);
+    const dependencyNodes = yield* validatePilotClosure(current, dependencies, recipe);
     const expectedTasks = A.sort(
       A.map(current.source.configuration.nodes, (node) => node.id),
       Order.String
@@ -540,24 +568,31 @@ const runPilot = Effect.fn("CachePilot.run")(
     });
     yield* verifyTools();
     const census = yield* collectCacheCensus(root, O.some(turbo));
-    const needsProfile = A.some(
-      census.nodes,
-      (node) =>
-        node.id === recipe.selected.computation &&
-        O.isSome(node.command) &&
-        A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
-    );
+    const verifySelectedProfile = Effect.fn("CachePilot.verifySelectedProfile")(function* () {
+      const needsProfile = A.some(
+        census.nodes,
+        (node) =>
+          node.id === recipe.selected.computation &&
+          O.isSome(node.command) &&
+          A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
+      );
+      if (recipe.selected.computation === typesRecipe.selected.computation && needsProfile) {
+        return yield* CacheCommandError.new("Types pilot execution does not admit the identity scanner profile.");
+      }
+      if (needsProfile) {
+        yield* verifyCacheIdentityLintProfile(root);
+        yield* collectCacheTaskSelection(
+          root,
+          ["run", "lint", `--filter=${recipe.selected.package}`, "--env-mode=strict"],
+          O.some(turbo)
+        );
+      }
+      return needsProfile;
+    });
+    const needsProfile = yield* verifySelectedProfile();
     const profileObservation = Effect.fn("CachePilot.profileObservation")(function* (guest: string) {
       return `BIOME_CONFIG_PATH=${yield* hashText(path.join(guest, "biome.identity.jsonc"))}`;
     });
-    if (needsProfile) {
-      yield* verifyCacheIdentityLintProfile(root);
-      yield* collectCacheTaskSelection(
-        root,
-        ["run", "lint", `--filter=${recipe.selected.package}`, "--env-mode=strict"],
-        O.some(turbo)
-      );
-    }
     const runtimeExecutables = { bun, biome, node, turbo, bash: "/usr/bin/bash", sh: "/usr/bin/sh" };
     const reviewedLinker = yield* current.source.toolchain.runtimeLinker.pipe(
       Effect.fromOption(() => CacheCommandError.new("Pilot qualification requires startup library identity."))
@@ -586,9 +621,11 @@ const runPilot = Effect.fn("CachePilot.run")(
     const runtimeKeyObservation = `BEEP_CACHE_TOOLCHAIN_DIGEST=${yield* hashText(runtimeIdentity.toolchainDigest)}`;
     const before = yield* readCacheEvidenceBytes(root, current.activation.before).pipe(Effect.flatMap(decodeText));
     const after = yield* readCacheEvidenceBytes(root, current.activation.after).pipe(Effect.flatMap(decodeText));
-    const typesConfig = yield* readBytes(root, `${recipe.dependency.directory}/turbo.json`).pipe(
-      Effect.flatMap(decodeText)
-    );
+    const typesConfig = yield* O.match(recipe.dependency, {
+      onNone: () => Effect.succeedNone,
+      onSome: (dependency) =>
+        readBytes(root, `${dependency.directory}/turbo.json`).pipe(Effect.flatMap(decodeText), Effect.asSome),
+    });
     const experiment = yield* fs
       .makeTempDirectoryScoped({
         directory: "/tmp",
@@ -614,9 +651,19 @@ const runPilot = Effect.fn("CachePilot.run")(
       const directory = path.join(experiment, name);
       yield* fs.makeDirectory(directory);
       const identity = path.join(directory, "identity");
-      const types = path.join(directory, "types");
       yield* copyPackage(path.join(source, recipe.selected.directory), identity);
-      yield* copyPackage(path.join(source, recipe.dependency.directory), types);
+      const types = yield* O.match(recipe.dependency, {
+        onNone: () => Effect.succeedNone,
+        onSome: Effect.fn("CachePilot.preparePrimaryDependency")(function* (dependency) {
+          const target = path.join(directory, "types");
+          yield* copyPackage(path.join(source, dependency.directory), target);
+          const configuration = yield* typesConfig.pipe(
+            Effect.fromOption(() => CacheCommandError.new("The reviewed dependency configuration is missing."))
+          );
+          yield* writeContainedFileString(target, "turbo.json", configuration);
+          return O.some(target);
+        }),
+      });
       const additionalPackages = yield* Effect.forEach(
         R.toEntries(recipe.additionalDependencies),
         Effect.fn("CachePilot.prepareDependency")(function* ([task, relative]) {
@@ -628,13 +675,12 @@ const runPilot = Effect.fn("CachePilot.run")(
         }),
         { concurrency: 1 }
       ).pipe(Effect.map((entries) => R.fromEntries(A.getSomes(entries))));
-      for (const packageRoot of [identity, types, ...R.values(additionalPackages)]) {
+      for (const packageRoot of [identity, ...O.toArray(types), ...R.values(additionalPackages)]) {
         if (yield* fs.exists(path.join(packageRoot, ".turbo"))) {
           return yield* CacheCommandError.new("Clean pilot source unexpectedly contains runtime outputs.");
         }
         yield* fs.makeDirectory(path.join(packageRoot, ".turbo"));
       }
-      yield* writeContainedFileString(types, "turbo.json", typesConfig);
       yield* writeContainedFileString(identity, "turbo.json", before);
       // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const gitDirectory = yield* captureHost(source, ["rev-parse", "--absolute-git-dir"]);
@@ -678,7 +724,12 @@ const runPilot = Effect.fn("CachePilot.run")(
         node_modules: path.join(dependencies.directory, "node_modules"),
         ".turbo": path.join(fixture.directory, "run"),
         [recipe.selected.directory]: fixture.identity,
-        [recipe.dependency.directory]: fixture.types,
+        ...O.getOrElse(
+          O.zipWith(recipe.dependency, fixture.types, (dependency, directory) => ({
+            [dependency.directory]: directory,
+          })),
+          R.empty<string, string>
+        ),
       };
       const mounts: Array<string> = [];
       const parents: Array<string> = [];
@@ -712,11 +763,18 @@ const runPilot = Effect.fn("CachePilot.run")(
         } else mounts.push("--ro-bind", path.join(fixture.source, relative), destination);
       });
       yield* visit("");
-      for (const [directory, name] of [
-        [recipe.selected.directory, "identity-log"],
-        [recipe.dependency.directory, "types-log"],
-      ] as const)
-        mounts.push("--bind", path.join(fixture.directory, name), path.join(guest, directory, ".turbo"));
+      mounts.push(
+        "--bind",
+        path.join(fixture.directory, "identity-log"),
+        path.join(guest, recipe.selected.directory, ".turbo")
+      );
+      if (O.isSome(recipe.dependency)) {
+        mounts.push(
+          "--bind",
+          path.join(fixture.directory, "types-log"),
+          path.join(guest, recipe.dependency.value.directory, ".turbo")
+        );
+      }
       for (const relative of R.keys(fixture.additionalPackages))
         mounts.push(
           "--bind",
@@ -944,7 +1002,7 @@ const runPilot = Effect.fn("CachePilot.run")(
               expectedTasks
             )
           ) {
-            return yield* CacheCommandError.new("Pilot graph differs from the reviewed identity task closure.");
+            return yield* CacheCommandError.new("Pilot graph differs from the reviewed selected-task closure.");
           }
           for (const node of joined) {
             const expected = yield* A.findFirst(census.nodes, (row) => row.id === node.id).pipe(
@@ -1077,7 +1135,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       const expectedProfile = yield* profileObservation(guest);
       yield* prepareExecution(fixture, enabled);
       const beforeTrees = yield* Effect.forEach(
-        [fixture.identity, fixture.types, ...R.values(fixture.additionalPackages)],
+        [fixture.identity, ...O.toArray(fixture.types), ...R.values(fixture.additionalPackages)],
         snapshot,
         { concurrency: 2 }
       );
@@ -1124,7 +1182,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         return yield* CacheCommandError.new("Native pilot summary repeated the selected task.");
       }
       const afterTrees = yield* Effect.forEach(
-        [fixture.identity, fixture.types, ...R.values(fixture.additionalPackages)],
+        [fixture.identity, ...O.toArray(fixture.types), ...R.values(fixture.additionalPackages)],
         snapshot,
         { concurrency: 2 }
       );
@@ -1359,14 +1417,17 @@ const runPilot = Effect.fn("CachePilot.run")(
         yield* writeContainedFileString(fixture.identity, "src/index.ts", "export const = ;\n");
       }
       if (id === "dependency-source") {
+        const types = yield* fixture.types.pipe(
+          Effect.fromOption(() => CacheCommandError.new("Dependency mutation requires a reviewed dependency."))
+        );
         yield* writeContainedFileString(
           fixture.identity,
           "src/qualification-dependency.ts",
           'import { qualificationDependency } from "../../../primitive/types/src/index.ts";\n\nexport const qualificationValue = qualificationDependency;\n'
         );
-        const dependencySource = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
+        const dependencySource = yield* readBytes(types, "src/index.ts").pipe(Effect.flatMap(decodeText));
         yield* writeContainedFileString(
-          fixture.types,
+          types,
           "src/index.ts",
           `${dependencySource}\n/** @deprecated qualification dependency control */\nexport const qualificationDependency = 1;\n`
         );
@@ -1472,10 +1533,16 @@ const runPilot = Effect.fn("CachePilot.run")(
         } else if (id === "child-task-config" || id === "missing-child-config") {
           yield* changeChildConfiguration();
         } else if (id === "dependency-source") {
-          changedPath = `${recipe.dependency.directory}/src/index.ts`;
-          original = yield* readBytes(fixture.types, "src/index.ts").pipe(Effect.flatMap(decodeText));
+          const dependency = yield* recipe.dependency.pipe(
+            Effect.fromOption(() => CacheCommandError.new("Dependency mutation requires a reviewed dependency."))
+          );
+          const types = yield* fixture.types.pipe(
+            Effect.fromOption(() => CacheCommandError.new("Dependency mutation requires its owned overlay."))
+          );
+          changedPath = `${dependency.directory}/src/index.ts`;
+          original = yield* readBytes(types, "src/index.ts").pipe(Effect.flatMap(decodeText));
           changedText = Str.replace("/** @deprecated qualification dependency control */\n", "")(original);
-          yield* writeContainedFileString(fixture.types, "src/index.ts", changedText);
+          yield* writeContainedFileString(types, "src/index.ts", changedText);
         } else {
           yield* changeRootMetadata();
         }
@@ -2330,6 +2397,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
         return passed;
       });
       for (const id of mutationIds.literals) {
+        if (id === "dependency-source" && O.isNone(recipe.dependency)) continue;
         if (!(yield* runMutationControl(id))) break;
       }
     });
@@ -2424,6 +2492,10 @@ export const runCachePilotForTesting = Effect.fn("CachePilot.runLocalForTesting"
  * Task-log/cache mounts and disposable namespace storage are writable; this
  * is not a complete write-trace audit. Returned local observations cannot
  * promote a qualification tuple.
+ * The verified activation selects either identity lint or dependency-free
+ * types lint. Types uses its own local observations, rejects identity scanner
+ * routing, and cannot use the signed producer path. A failed candidate
+ * comparison remains a failed observation, never a qualification grant.
  *
  * **Example** (Plan the admitted experiment)
  *

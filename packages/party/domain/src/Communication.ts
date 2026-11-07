@@ -3,4 +3,4 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-export * from "./values/Communication/index.ts";
+export * from "./entities/Communication/index.ts";

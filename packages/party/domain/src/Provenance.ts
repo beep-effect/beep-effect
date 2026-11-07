@@ -3,4 +3,4 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-export * from "./values/Provenance/index.ts";
+export * from "./entities/Provenance/index.ts";
