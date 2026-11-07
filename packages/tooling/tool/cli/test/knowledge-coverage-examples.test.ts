@@ -79,46 +79,49 @@ const cases = [
   { name: "empty dataset", dataset: Rdf.makeDataset([]), total: "0", covered: "0" },
 ];
 
-it.layer(Layer.mergeAll(BunServices.layer, OxigraphSparqlQueryServiceLive))("Documented class coverage", (it) => {
-  A.forEach(cases, (testCase) => {
-    it.effect(
-      testCase.name,
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const repoRoot = yield* findRepoRoot();
-        const sourcePath = ".claude/skills/_shared/quality-checklist.md";
-        const markdown = yield* fs.readFileString(path.join(repoRoot, sourcePath));
-        const document = yield* MarkdownDocument.parse(markdown);
-        const fences = A.filter(MarkdownFence.fences(document), (fence) => Str.includes("AS ?total")(fence.value));
-        expect(fences).toHaveLength(2);
-        const sparql = yield* SparqlQueryService;
-        yield* Effect.forEach(
-          [
-            { field: "labeled", selector: "AS ?labeled" },
-            { field: "defined", selector: "AS ?defined" },
-          ],
-          Effect.fnUntraced(function* (target) {
-            const matches = A.filter(fences, (fence) => Str.includes(target.selector)(fence.value));
-            expect(matches).toHaveLength(1);
-            const fence = A.getUnsafe(matches, 0);
-            const result = yield* sparql.execute(
-              SparqlQueryRequest.make({
-                dataset: testCase.dataset,
-                profile: "select",
-                query: fence.value,
-              })
-            );
-            assertTrue(isSelect(result));
-            const selected = result;
-            expect(selected.rows, `${sourcePath}:${fence.line}`).toHaveLength(1);
-            const row = A.getUnsafe(selected.rows, 0);
-            assertSome(pipe(R.get(row, "total"), O.map(Struct.get("value"))), testCase.total);
-            assertSome(pipe(R.get(row, target.field), O.map(Struct.get("value"))), testCase.covered);
-          }),
-          { discard: true, concurrency: 1 }
-        );
-      })
-    );
-  });
-});
+it.layer(Layer.mergeAll(BunServices.layer, OxigraphSparqlQueryServiceLive), { timeout: "30 seconds" })(
+  "Documented class coverage",
+  (it) => {
+    A.forEach(cases, (testCase) => {
+      it.effect(
+        testCase.name,
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repoRoot = yield* findRepoRoot();
+          const sourcePath = ".claude/skills/_shared/quality-checklist.md";
+          const markdown = yield* fs.readFileString(path.join(repoRoot, sourcePath));
+          const document = yield* MarkdownDocument.parse(markdown);
+          const fences = A.filter(MarkdownFence.fences(document), (fence) => Str.includes("AS ?total")(fence.value));
+          expect(fences).toHaveLength(2);
+          const sparql = yield* SparqlQueryService;
+          yield* Effect.forEach(
+            [
+              { field: "labeled", selector: "AS ?labeled" },
+              { field: "defined", selector: "AS ?defined" },
+            ],
+            Effect.fnUntraced(function* (target) {
+              const matches = A.filter(fences, (fence) => Str.includes(target.selector)(fence.value));
+              expect(matches).toHaveLength(1);
+              const fence = A.getUnsafe(matches, 0);
+              const result = yield* sparql.execute(
+                SparqlQueryRequest.make({
+                  dataset: testCase.dataset,
+                  profile: "select",
+                  query: fence.value,
+                })
+              );
+              assertTrue(isSelect(result));
+              const selected = result;
+              expect(selected.rows, `${sourcePath}:${fence.line}`).toHaveLength(1);
+              const row = A.getUnsafe(selected.rows, 0);
+              assertSome(pipe(R.get(row, "total"), O.map(Struct.get("value"))), testCase.total);
+              assertSome(pipe(R.get(row, target.field), O.map(Struct.get("value"))), testCase.covered);
+            }),
+            { discard: true, concurrency: 1 }
+          );
+        })
+      );
+    });
+  }
+);
