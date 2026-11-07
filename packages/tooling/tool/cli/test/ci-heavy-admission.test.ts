@@ -4,6 +4,7 @@ import { Git, GitCommandError, UnknownRefError } from "@beep/git/Git";
 import { ActionEnvironment } from "@beep/github-actions/ActionEnvironment";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import {
+  ChangeClassifier,
   CiAdmissionInput,
   ciAdmissionCommand,
   decideHeavyAdmission,
@@ -16,10 +17,13 @@ import {
   heavyAdmissionSchemasForTesting,
   heavyDocsOnlyPattern,
   isHeavyDocsOnlyPath,
+  RouteError,
   readHeavyAdmissionEvent,
+  readHeavyAdmissionRoute,
   renderHeavyAdmissionSummary,
   runCiAdmission,
 } from "@beep/repo-cli/commands/Ci";
+import { ChangedPathEntry, ClassifyDiff, classifyChangedPaths } from "@beep/repo-cli/commands/Ci/RouteClassify";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -291,10 +295,14 @@ describe("B8 heavy admission contracts", () => {
     // Parity with the lines `ci admission` appended before the write moved to
     // `ActionOutputs.set`: the same names, values and order the runner reads.
     expect(heavyAdmissionGithubOutputs(run)).toEqual(
-      parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
+      parseRunnerFile(
+        "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\n"
+      )
     );
     expect(heavyAdmissionGithubOutputs(hold)).toEqual(
-      parseRunnerFile("verdict=hold\nadmitted=false\ndocs_only=false\nsources=\n")
+      parseRunnerFile(
+        "verdict=hold\nadmitted=false\ndocs_only=false\nsources=\nroute_skips=\nroute_receipt=route-unavailable\n"
+      )
     );
     expect(renderHeavyAdmissionSummary(hold)).toBe(
       "heavy admission: hold; sources: none; docs-only: no; changed paths: 1; admit: gh pr edit --add-label ready-for-heavy"
@@ -486,10 +494,14 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
                 "admitted=false",
                 "docs_only=false",
                 "sources=",
+                "route_skips=",
+                "route_receipt=route-unavailable",
                 "verdict=skip-satisfied",
                 "admitted=false",
                 "docs_only=true",
                 "sources=",
+                "route_skips=",
+                "route_receipt=route-unavailable",
                 "",
               ],
               "\n"
@@ -544,9 +556,11 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
         );
         const readFileString8 = yield* fs.readFileString(output);
         expect(parseRunnerFile(readFileString8)).toEqual(
-          parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
+          parseRunnerFile(
+            "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\n"
+          )
         );
-        expect(A.map(gitWork(spawner), (spawn) => spawn.args[0])).toEqual(["fetch", "diff"]);
+        expect(A.map(gitWork(spawner), (spawn) => spawn.args[0])).toEqual(["fetch", "diff", "merge-base"]);
         // The environment alone drives a push: no payload, no git, exit 0.
         const idle = gitSpawner([]);
         yield* runAdmissionCommand([]).pipe(
@@ -556,7 +570,9 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
         expect(idle.spawns).toEqual([]);
         const readFileString9 = yield* fs.readFileString(output);
         expect(parseRunnerFile(readFileString9)).toEqual(
-          parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
+          parseRunnerFile(
+            "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\n"
+          )
         );
         const again = yield* logs;
         const decoded10 = yield* HeavyAdmissionJson.decode(lastLine(again));
@@ -585,4 +601,145 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
       })
     )
   );
+});
+
+it.layer(platform, { timeout: "30 seconds" })("hosted admission route", (layerIt) => {
+  const classify = (paths: ReadonlyArray<string>) =>
+    classifyChangedPaths(
+      ClassifyDiff.make({
+        base: "base",
+        head: "head",
+        commits: 1,
+        entries: A.map(paths, (path) => ChangedPathEntry.make({ path, status: "M" })),
+      }),
+      (_ref, path) =>
+        Effect.succeed(
+          path === "package.json" ? O.some('{"name":"@fixture/root","workspaces":["packages/*"]}') : O.none()
+        )
+    );
+
+  for (const row of [
+    {
+      name: "packet markdown emits check and build skips",
+      paths: ["goals/x/SPEC.md"],
+      eventName: "pull_request",
+      revoked: false,
+      failed: false,
+      skips: "build,check",
+    },
+    {
+      name: "source changes retain every heavy lane",
+      paths: ["packages/x/src/index.ts"],
+      eventName: "pull_request",
+      revoked: false,
+      failed: false,
+      skips: "",
+    },
+    {
+      name: "push never routes",
+      paths: ["goals/x/SPEC.md"],
+      eventName: "push",
+      revoked: false,
+      failed: false,
+      skips: "",
+    },
+    {
+      name: "merge groups never route",
+      paths: ["goals/x/SPEC.md"],
+      eventName: "merge_group",
+      revoked: false,
+      failed: false,
+      skips: "",
+    },
+    {
+      name: "classifier failure retains every lane",
+      paths: ["goals/x/SPEC.md"],
+      eventName: "pull_request",
+      revoked: false,
+      failed: true,
+      skips: "",
+    },
+    {
+      name: "revoked refinement runs shadow skips",
+      paths: ["goals/x/SPEC.md"],
+      eventName: "pull_request",
+      revoked: true,
+      failed: false,
+      skips: "",
+    },
+  ] as const) {
+    layerIt.layer(
+      Git.layerTest({
+        mergeBase: () => Effect.succeed("merge-base"),
+        show: () =>
+          Effect.succeed(
+            row.revoked
+              ? O.some('{"revoked":[{"id":"packet-markdown-out-of-build-check","reason":"fixture"}]}')
+              : O.none()
+          ),
+      }),
+      { timeout: "30 seconds" }
+    )(row.name, (routeIt) => {
+      routeIt.effect("publishes lane skips and receipt", () =>
+        temporary((root) =>
+          Effect.gen(function* () {
+            const path = yield* writeEvent(root, payload([HEAVY_ADMISSION_LABEL]));
+            const change = yield* classify(row.paths);
+            let calls = 0;
+            const route = yield* readHeavyAdmissionRoute(
+              HeavyAdmissionReadInput.make({
+                eventName: row.eventName,
+                eventPath: O.some(path),
+                cwd: root,
+              })
+            ).pipe(
+              Effect.provideService(
+                ChangeClassifier,
+                ChangeClassifier.of({
+                  classify: (input) => {
+                    calls++;
+                    expect(input.base).toBe("merge-base");
+                    expect(input.head).toBe("HEAD");
+                    return row.failed
+                      ? Effect.fail(RouteError.make({ reason: "classify", message: "fixture classifier failure" }))
+                      : Effect.succeed(change);
+                  },
+                })
+              )
+            );
+            const admission = HeavyAdmission.make({ ...decideHeavyAdmission(event()), route });
+            const outputs = R.fromEntries(heavyAdmissionGithubOutputs(admission));
+            expect(outputs.route_skips).toBe(row.skips);
+            expect(outputs.route_receipt).not.toContain("\n");
+            if (row.eventName !== "pull_request") {
+              expect(calls).toBe(0);
+            } else if (row.failed) {
+              expect(route.receipt).toBe("route-unavailable");
+            } else {
+              expect(route.lanes).toHaveLength(6);
+              if (row.revoked)
+                expect(A.filter(route.lanes, (lane) => lane.decision === "shadow-skipped")).toHaveLength(2);
+              if (row.skips !== "") {
+                const receipt = yield* S.decodeUnknownEffect(UnknownJson)(route.receipt);
+                expect(receipt).toMatchObject({
+                  footprintDigest: expect.stringMatching(/^[a-f0-9]{64}$/u),
+                  atoms: expect.arrayContaining([
+                    { kind: "packet", count: 1 },
+                    { kind: "commits", count: 1 },
+                  ]),
+                  skipped: expect.arrayContaining([
+                    {
+                      lane: "check",
+                      refinements: ["packet-markdown-out-of-build-check"],
+                      reason: expect.stringContaining("footprint"),
+                    },
+                  ]),
+                });
+              }
+            }
+          })
+        )
+      );
+    });
+  }
 });

@@ -43,6 +43,10 @@ import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { patientGit } from "../../internal/repo-run/PatientGit.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { ciOperationalPatterns } from "./CiOperational.schemas.ts";
+import { CHANGE_ATOM_KIND_VALUES, RouteLaneDecision, RouteSentinel } from "./Route.schemas.ts";
+import { ChangeClassifier, ClassifyInput } from "./Route.service.ts";
+import { routeFootprintDigest } from "./RouteCensus.ts";
+import { routeLaneDecisions } from "./RouteFootprints.ts";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Ci/HeavyAdmission");
@@ -237,6 +241,34 @@ export class HeavyAdmissionEvent extends S.Opaque<HeavyAdmissionEvent, { readonl
 ) {}
 
 /**
+ * Per-lane hosted route decisions and their bounded, single-line receipt.
+ *
+ * **Example** (Fail open when routing is unavailable)
+ *
+ * ```ts import.meta.vitest name="Fail open when routing is unavailable"
+ * import { HeavyAdmissionRoute } from "@beep/repo-cli/commands/Ci"
+ *
+ * HeavyAdmissionRoute.make({ lanes: [], receipt: "route-unavailable" }).lanes.length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HeavyAdmissionRoute extends S.Opaque<HeavyAdmissionRoute, { readonly brand: unique symbol }>()(
+  S.Struct({ lanes: S.Array(RouteLaneDecision), receipt: S.String }).pipe(
+    $I.annoteSchema("HeavyAdmissionRoute", { description: "Heavy lane decisions and a compact route receipt." })
+  )
+) {}
+
+const unavailableRoute = HeavyAdmissionRoute.make({ lanes: [], receipt: "route-unavailable" });
+const heavyRouteLanes = LiteralKit(["lint-policy", "check", "test-integration", "docgen", "doctest", "build"]).pipe(
+  $I.annoteSchema("HeavyRouteLanes", { description: "Lane ids in heavy.yml's verify matrix." })
+);
+const isHeavyRouteLane = S.is(heavyRouteLanes);
+const RouteReceiptJson = S.fromJsonString(S.Unknown);
+const decodeRouteSentinel = S.decodeUnknownEffect(S.fromJsonString(RouteSentinel));
+
+/**
  * The admission decision as data: verdict, its sources, and the docs-only flag.
  *
  * **Example** (Construct a held admission)
@@ -264,6 +296,10 @@ export class HeavyAdmission extends S.Opaque<HeavyAdmission, { readonly brand: u
     sources: S.Array(HeavyAdmissionSource),
     docsOnly: S.Boolean,
     changedPathCount: S.Int,
+    route: HeavyAdmissionRoute.pipe(
+      S.withConstructorDefault(Effect.succeed(unavailableRoute)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(unavailableRoute))
+    ),
   }).pipe(
     $I.annoteSchema("HeavyAdmission", {
       description: "The heavy-matrix admission verdict with its sources and the docs-only classification.",
@@ -611,6 +647,74 @@ export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(f
 });
 
 /**
+ * Classify the PR merge-base diff and read revocations at HEAD, failing open on every route error.
+ *
+ * **Details**
+ *
+ * Push and merge-group events never consult the classifier. Receipts are capped at 16 KiB of
+ * UTF-16 output, well below GitHub's 1 MiB job output limit; overflow retains every lane.
+ *
+ * **Example** (Build the route read)
+ *
+ * ```ts
+ * import { HeavyAdmissionReadInput, readHeavyAdmissionRoute } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * Effect.isEffect(readHeavyAdmissionRoute(HeavyAdmissionReadInput.make({ eventName: "push", cwd: "." }))) // => true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(function* (
+  input: HeavyAdmissionReadInput
+) {
+  if (input.eventName !== "pull_request") {
+    return HeavyAdmissionRoute.make({ lanes: [], receipt: "route-not-applicable" });
+  }
+  return yield* Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Effect.fromOption(input.eventPath);
+    const text = yield* fs.readFileString(path);
+    const payload = yield* decodeGhPullRequestEventPayload(text);
+    const branch = yield* safeBranch(branchOfBase(O.getOrElse(input.base, () => payload.pull_request.base.ref)));
+    const git = yield* Git;
+    const base = yield* git.mergeBase(input.cwd, `origin/${branch}`, "HEAD");
+    const classifier = yield* ChangeClassifier;
+    const change = yield* classifier.classify(ClassifyInput.make({ repoRoot: input.cwd, base, head: "HEAD" }));
+    const sentinelText = yield* git.show(input.cwd, "HEAD", "standards/verification-route.sentinel.json");
+    const sentinel = yield* O.match(sentinelText, {
+      onNone: () => Effect.succeed(RouteSentinel.make({ revoked: [] })),
+      onSome: decodeRouteSentinel,
+    });
+    const lanes = A.filter(
+      routeLaneDecisions(
+        change.atoms,
+        A.map(sentinel.revoked, (row) => row.id)
+      ),
+      (row) => isHeavyRouteLane(row.lane)
+    );
+    const footprintDigest = yield* routeFootprintDigest;
+    const receipt = yield* S.encodeUnknownEffect(RouteReceiptJson)({
+      footprintDigest,
+      atoms: A.map(CHANGE_ATOM_KIND_VALUES, (kind) => ({
+        kind,
+        count: A.length(A.filter(change.atoms, (atom) => atom.kind === kind)),
+      })),
+      skipped: A.map(
+        A.filter(lanes, (row) => row.decision === "skipped"),
+        (row) => ({
+          lane: row.lane,
+          refinements: row.refinements,
+          reason: "No changed atom intersects the enforced lane footprint.",
+        })
+      ),
+    });
+    return receipt.length > 8192 ? unavailableRoute : HeavyAdmissionRoute.make({ lanes, receipt });
+  }).pipe(Effect.catchCause(() => Effect.succeed(unavailableRoute)));
+});
+
+/**
  * The step outputs the `check.yml` admission job consumes, in publication order.
  *
  * **Example** (Project a run verdict)
@@ -620,11 +724,11 @@ export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(f
  *
  * const admission = HeavyAdmission.make({ verdict: "run", admitted: true, sources: ["label"], docsOnly: false, changedPathCount: 2 })
  * console.log(heavyAdmissionGithubOutputs(admission))
- * // [["verdict","run"],["admitted","true"],["docs_only","false"],["sources","label"]]
+ * // [["verdict","run"],["admitted","true"],["docs_only","false"],["sources","label"],["route_skips",""],["route_receipt","route-unavailable"]]
  * ```
  *
  * @param admission - The decided admission.
- * @returns The `verdict`, `admitted`, `docs_only` and `sources` output name and value pairs.
+ * @returns Admission outputs plus comma-separated `route_skips` and the single-line JSON `route_receipt`.
  * @category formatting
  * @since 0.0.0
  */
@@ -633,6 +737,17 @@ export const heavyAdmissionGithubOutputs = (admission: HeavyAdmission): Readonly
   ["admitted", `${admission.admitted}`],
   ["docs_only", `${admission.docsOnly}`],
   ["sources", A.join(admission.sources, ",")],
+  [
+    "route_skips",
+    A.join(
+      A.map(
+        A.filter(admission.route.lanes, (row) => row.decision === "skipped"),
+        (row) => row.lane
+      ),
+      ","
+    ),
+  ],
+  ["route_receipt", admission.route.receipt],
 ];
 
 /**
@@ -677,7 +792,7 @@ export const renderHeavyAdmissionSummary = (admission: HeavyAdmission): string =
  *
  * const names = Object.keys(heavyAdmissionSchemasForTesting).sort()
  * console.log(names)
- * // ["GhPullRequestEventPayload", "HeavyAdmission", "HeavyAdmissionEvent", "HeavyAdmissionReadInput"]
+ * // ["GhPullRequestEventPayload", "HeavyAdmission", "HeavyAdmissionEvent", "HeavyAdmissionReadInput", "HeavyAdmissionRoute"]
  * console.log(heavyAdmissionSchemasForTesting.HeavyAdmission.make({
  *   verdict: "hold", admitted: false, sources: [], docsOnly: false, changedPathCount: 3
  * }).verdict) // "hold"
@@ -691,4 +806,5 @@ export const heavyAdmissionSchemasForTesting = {
   HeavyAdmission,
   HeavyAdmissionEvent,
   HeavyAdmissionReadInput,
+  HeavyAdmissionRoute,
 } as const;
