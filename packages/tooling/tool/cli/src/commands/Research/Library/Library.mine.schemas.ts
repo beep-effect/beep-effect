@@ -119,6 +119,13 @@ export const LibraryAffirmativeCitoRelation = LiteralKit([
     description: "CiTO relations asserting that the source backs a claim.",
   })
 );
+/**
+ * Runtime type of LibraryAffirmativeCitoRelation.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryAffirmativeCitoRelation = typeof LibraryAffirmativeCitoRelation.Type;
 
 /**
  * Runner profile that launches a tier job.

@@ -525,11 +525,15 @@ it.layer(services, { timeout: "30 seconds" })("research library mine PDFs", (it)
         const catalog = yield* loadCatalog(root);
         const report = O.getOrThrow(A.findFirst(catalog.documents, (document) => document.sha256 === shas.local));
         const findings = A.filter(catalog.findings, (finding) => Str.startsWith("mine:t2:")(finding.id));
+        // Identity migration rehashes the fixture's "paper" id from its identity; the capture keeps its binding.
+        const paperSourceId = O.getOrThrow(
+          A.findFirst(catalog.captures, (capture) => capture.id === "capture-paper")
+        ).sourceId;
         expect(
           A.map(findings, (finding) => [finding.sourceId, finding.captureId, finding.documentId, finding.span])
         ).toStrictEqual([
           // The span crossed a PDF line break: it resolves to the verbatim slice of the derived text.
-          ["paper", "capture-paper", "", "keep valid time\nand transaction time apart."],
+          [paperSourceId, "capture-paper", "", "keep valid time\nand transaction time apart."],
           ["", "", report.id, "retrieval spans and citation checks"],
         ]);
         const readingsOut = yield* recordsUnder(root, "t2", S.decodeEffect(ReadingRecordJson));

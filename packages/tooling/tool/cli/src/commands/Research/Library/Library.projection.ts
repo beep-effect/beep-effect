@@ -76,6 +76,25 @@ export class LibraryTopic extends S.Opaque<LibraryTopic, { readonly brand: uniqu
   }).pipe($I.annoteSchema("LibraryTopic", { description: "Packet identifier and preferred title." }))
 ) {}
 
+type PacketRead =
+  | { readonly _tag: "Topic"; readonly topic: LibraryTopic }
+  | { readonly _tag: "Unreadable" }
+  | { readonly _tag: "NotAPacket" };
+
+// Loose files and template folders beside the packets carry no manifest and are not topics.
+const readPacketTopic = Effect.fnUntraced(function* (manifest: string, kind: string, slug: string) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(manifest).pipe(Effect.orElseSucceed(() => false))))
+    return { _tag: "NotAPacket" } satisfies PacketRead as PacketRead;
+  const packet = yield* fs
+    .readFileString(manifest)
+    .pipe(Effect.flatMap(S.decodeUnknownEffect(PacketJson)), Effect.option);
+  return O.match(packet, {
+    onNone: (): PacketRead => ({ _tag: "Unreadable" }),
+    onSome: (value): PacketRead => ({ _tag: "Topic", topic: packetTopic(kind, slug, value) }),
+  });
+});
+
 /**
  * Read packet manifests without admitting their unrelated fields.
  * **Example** (Prepare topic discovery)
@@ -89,25 +108,17 @@ export class LibraryTopic extends S.Opaque<LibraryTopic, { readonly brand: uniqu
 export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: string, reportWarnings = true) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const topics: Array<LibraryTopic> = [];
-  let warnings = 0;
-  for (const kind of ["goals", "explorations"]) {
-    const directory = path.join(repoRoot, kind);
-    const entries = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(() => []));
-    for (const slug of A.sort(entries, Str.Order)) {
-      const manifest = path.join(directory, slug, "ops/manifest.json");
-      // Loose files and template folders beside the packets carry no manifest and are not topics.
-      if (!(yield* fs.exists(manifest).pipe(Effect.orElseSucceed(() => false)))) continue;
-      const packet = yield* fs
-        .readFileString(manifest)
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(PacketJson)), Effect.option);
-      if (O.isNone(packet)) {
-        warnings++;
-        continue;
-      }
-      topics.push(packetTopic(kind, slug, packet.value));
-    }
-  }
+  const listed = yield* Effect.forEach(["goals", "explorations"], (kind) =>
+    fs.readDirectory(path.join(repoRoot, kind)).pipe(
+      Effect.orElseSucceed(A.empty<string>),
+      Effect.map((entries) => A.map(A.sort(entries, Str.Order), (slug) => ({ kind, slug })))
+    )
+  );
+  const reads = yield* Effect.forEach(A.flatten(listed), ({ kind, slug }) =>
+    readPacketTopic(path.join(repoRoot, kind, slug, "ops/manifest.json"), kind, slug)
+  );
+  const topics = A.flatMap(reads, (read) => (read._tag === "Topic" ? [read.topic] : []));
+  const warnings = A.filter(reads, (read) => read._tag === "Unreadable").length;
   if (warnings > 0 && reportWarnings === true)
     yield* Effect.logWarning(`library topics: skipped=${warnings} unreadable manifests`);
   return topics;

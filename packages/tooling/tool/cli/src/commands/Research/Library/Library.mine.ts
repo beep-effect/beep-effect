@@ -736,23 +736,99 @@ const writeReceipt = Effect.fn("Library.mine.writeReceipt")(function* (
 
 const failureTag = (error: MineFailure) => error._tag;
 
-const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, job: LibraryMineJob) {
+// The early exits before a launch: a paused batch, an unreadable binding or a text that cannot be read.
+const stop = (outcome: JobOutcome): Result.Result<BoundText, JobOutcome> => Result.fail(outcome);
+const proceed = (bound: BoundText): Result.Result<BoundText, JobOutcome> => Result.succeed(bound);
+
+const jobPreflight = Effect.fnUntraced(function* (context: JobContext, job: LibraryMineJob) {
   if (yield* Ref.get(context.paused))
-    return { key: job.key, outcome: "paused", label: `${job.artifactId} paused` } satisfies JobOutcome;
+    return stop({ key: job.key, outcome: "paused", label: `${job.artifactId} paused` } satisfies JobOutcome);
   const resolved = yield* jobText(context.root, job).pipe(Effect.result);
   if (resolved._tag === "Failure")
-    return {
+    return stop({
       key: job.key,
       outcome: "failed",
       label: `${job.artifactId} ${resolved.failure._tag}: ${resolved.failure.message}`,
-    } satisfies JobOutcome;
+    } satisfies JobOutcome);
   if (resolved.success._tag === "Failure")
-    return {
+    return stop({
       key: job.key,
       outcome: "skipped-unreadable",
       label: `${job.artifactId} skipped-unreadable: ${resolved.success.failure.message}`,
-    } satisfies JobOutcome;
-  const { text, derivedTextSha256 } = resolved.success.success;
+    } satisfies JobOutcome);
+  return proceed(resolved.success.success);
+});
+
+interface ReceiptFields {
+  readonly droppedTopicIds?: ReadonlyArray<string>;
+  readonly errorTag?: string;
+  readonly findingIds?: ReadonlyArray<string>;
+  readonly message?: string;
+  readonly outcome: LibraryMineReceipt["outcome"];
+  readonly outputSha256?: string;
+  readonly recordedAt: string;
+}
+
+const mineReceipt = (
+  context: JobContext,
+  job: LibraryMineJob,
+  launched: { readonly modelRun: LibraryModelRun; readonly promptSha256: string },
+  fields: ReceiptFields
+) =>
+  LibraryMineReceipt.make({
+    errorTag: "",
+    message: "",
+    outputSha256: "",
+    findingIds: [],
+    droppedTopicIds: [],
+    ...fields,
+    tier: context.tier,
+    jobKey: job.key,
+    artifactId: job.artifactId,
+    profile: context.profile.id,
+    modelRun: launched.modelRun,
+    promptSha256: launched.promptSha256,
+  });
+
+// A failed or rejected job: pause the batch on a quota error, then record the terminal receipt.
+const settleFailure = Effect.fnUntraced(function* (
+  context: JobContext,
+  job: LibraryMineJob,
+  stamp: string,
+  receipt: (fields: ReceiptFields) => LibraryMineReceipt,
+  error: MineFailure
+) {
+  const quota = error._tag === "LibraryMineRunnerError" && error.quota;
+  if (quota) yield* Ref.set(context.paused, true);
+  const failedAt = yield* now;
+  yield* writeReceipt(
+    context.root,
+    context.tier,
+    job.key,
+    stamp,
+    receipt({
+      outcome: receiptOutcome(error, quota),
+      errorTag: failureTag(error),
+      message: error.message,
+      recordedAt: failedAt,
+    })
+  );
+  return {
+    key: job.key,
+    outcome: quota ? "paused" : "failed",
+    label: `${job.artifactId} ${failureTag(error)}: ${error.message}`,
+  } satisfies JobOutcome;
+});
+
+const receiptOutcome = (error: MineFailure, quota: boolean): LibraryMineReceipt["outcome"] => {
+  if (quota) return "paused";
+  return error._tag === "LibraryMineRunnerError" ? "failed" : "rejected";
+};
+
+const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, job: LibraryMineJob) {
+  const preflight = yield* jobPreflight(context, job);
+  if (Result.isFailure(preflight)) return preflight.failure;
+  const { text, derivedTextSha256 } = preflight.success;
   if (O.isSome(job.pdfDocument)) yield* saveDocumentBinding(context.root, job.pdfDocument.value);
   const prompt =
     context.tier === "t1"
@@ -760,30 +836,7 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
       : readingPrompt(context.catalog, job, context.topics, text);
   const launched = yield* launch(context, job, prompt);
   const { modelRun, stamp } = launched;
-  const receipt = (fields: {
-    readonly outcome: LibraryMineReceipt["outcome"];
-    readonly errorTag?: string;
-    readonly message?: string;
-    readonly outputSha256?: string;
-    readonly findingIds?: ReadonlyArray<string>;
-    readonly droppedTopicIds?: ReadonlyArray<string>;
-    readonly recordedAt: string;
-  }) =>
-    LibraryMineReceipt.make({
-      tier: context.tier,
-      jobKey: job.key,
-      artifactId: job.artifactId,
-      profile: context.profile.id,
-      modelRun,
-      outcome: fields.outcome,
-      errorTag: fields.errorTag ?? "",
-      message: fields.message ?? "",
-      promptSha256: launched.promptSha256,
-      outputSha256: fields.outputSha256 ?? "",
-      findingIds: fields.findingIds ?? [],
-      droppedTopicIds: fields.droppedTopicIds ?? [],
-      recordedAt: fields.recordedAt,
-    });
+  const receipt = (fields: ReceiptFields) => mineReceipt(context, job, launched, fields);
   const process = Effect.fnUntraced(function* (answer: string) {
     const output = yield* saveText(context.root, `${tierDir(context.tier, "outputs")}/${job.key}/${stamp}.txt`, answer);
     const json = libraryMineAnswerJson(answer);
@@ -883,27 +936,7 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
     yield* writeReceipt(context.root, context.tier, job.key, stamp, settled.success);
     return { key: job.key, outcome: "completed", label: job.artifactId } satisfies JobOutcome;
   }
-  const error: MineFailure = settled.failure;
-  const quota = error._tag === "LibraryMineRunnerError" && error.quota;
-  if (quota) yield* Ref.set(context.paused, true);
-  const failedAt = yield* now;
-  yield* writeReceipt(
-    context.root,
-    context.tier,
-    job.key,
-    stamp,
-    receipt({
-      outcome: quota ? "paused" : error._tag === "LibraryMineRunnerError" ? "failed" : "rejected",
-      errorTag: failureTag(error),
-      message: error.message,
-      recordedAt: failedAt,
-    })
-  );
-  return {
-    key: job.key,
-    outcome: quota ? "paused" : "failed",
-    label: `${job.artifactId} ${failureTag(error)}: ${error.message}`,
-  } satisfies JobOutcome;
+  return yield* settleFailure(context, job, stamp, receipt, settled.failure);
 });
 
 /**

@@ -43,6 +43,13 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.mine.runner");
 export const LibraryMinePromptTransport = LiteralKit(["stdin", "prompt-file"]).pipe(
   $I.annoteSchema("LibraryMinePromptTransport", { description: "How a runner receives its prompt." })
 );
+/**
+ * Runtime type of LibraryMinePromptTransport.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryMinePromptTransport = typeof LibraryMinePromptTransport.Type;
 
 /**
  * A runner profile: the pool pin and route a tier job launches on.
