@@ -101,7 +101,7 @@ export const causeTagOf = (cause: Cause.Cause<unknown>): string =>
       );
 
 /** The role an address belongs to (`node`, `run`, `scanner`, `source`, `consumer`), never its key. */
-const roleOf = (address: string): string => O.getOrElse(A.head(Str.split(":")(address)), () => "unknown");
+export const roleOf: (address: string) => string = flow(Str.split(":"), A.headNonEmpty);
 
 /** Split `rest` at its first `/`: `["view:Name", "a-1/b"]` for `view:Name/a-1/b`. */
 const splitFirst = (rest: string): O.Option<readonly [string, string]> =>
