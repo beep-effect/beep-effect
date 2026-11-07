@@ -372,7 +372,11 @@ const hasExampleCarrier = (commentText: string): boolean =>
 const isPureTypeLevelExport = (declaration: Node): boolean =>
   Node.isTypeAliasDeclaration(declaration) ||
   Node.isInterfaceDeclaration(declaration) ||
-  Node.isModuleDeclaration(declaration);
+  (Node.isModuleDeclaration(declaration) &&
+    pipe(
+      O.fromUndefinedOr(declaration.getSymbol()),
+      O.exists((symbol) => !symbol.hasFlags(ts.SymbolFlags.ValueModule))
+    ));
 
 const missingRequiredExportTags = (
   declaration: Node,
