@@ -13,6 +13,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -29,6 +30,9 @@ const Receipt = S.Struct({ remoteId: V.RemoteItemId, name: S.String, parentRemot
 const Stored = S.Array(S.Struct({ fingerprint: S.String, result: S.NullOr(S.String) })).pipe(
   $I.annoteSchema("StoredBoxReceipt", { description: "Persisted intent fingerprint and optional acknowledged result." })
 );
+const localStages: ReadonlyArray<MirrorFailureStage | null> = ["local-root", "stale-input"];
+const isLocalFailure = (error: D.DmsMirrorUnavailable | BoxMirrorUnavailable): error is BoxMirrorUnavailable =>
+  S.is(BoxMirrorUnavailable)(error) && A.contains(localStages, error.stage);
 const encode = S.encodeEffect(S.fromJsonString(Receipt));
 const decode = S.decodeUnknownEffect(S.fromJsonString(Receipt));
 // Fingerprints contain only reference metadata, never bytes or credentials.
@@ -81,6 +85,27 @@ export class BoxMirrorEvidence extends Context.Service<
 >()($I`BoxMirrorEvidence`) {}
 
 /**
+ * Production {@link BoxMirrorEvidence} while the provider cannot prove an interrupted outcome.
+ *
+ * **Details**
+ *
+ * It always answers no evidence, so an interrupted upload stays held instead
+ * of being sent again. Replace it once Box offers verified version or digest
+ * lookup.
+ *
+ * **Example** (Inspect the layer)
+ * ```ts
+ * import { BoxMirrorNoEvidenceLive } from "@beep/documents-server/aggregates/Sync";
+ * void BoxMirrorNoEvidenceLive;
+ * ```
+ * @category adapters
+ * @since 0.0.0
+ */
+export const BoxMirrorNoEvidenceLive = Layer.succeed(BoxMirrorEvidence, {
+  lookup: Effect.fn("BoxMirrorEvidence.none")(() => Effect.succeedNone),
+});
+
+/**
  * Adapts a destination-scoped DmsMirrorBox or DmsMirrorFixture with durable mutation receipts.
  *
  * **Example** (Inspect the adapter)
@@ -117,7 +142,10 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       relPath: V.VaultRelPath,
       digest: string
     ) {
-      const configured = yield* roots.resolve(destinationId);
+      // The resolver cannot know the call it serves; its failure is a local-root stage of this call.
+      const configured = yield* roots
+        .resolve(destinationId)
+        .pipe(Effect.mapError(() => unavailable(verb, "local-root")));
       const root = yield* fs.realPath(configured).pipe(Effect.mapError(() => unavailable(verb, "local-root")));
       const bytes = yield* files.read(root, relPath).pipe(Effect.mapError(() => unavailable(verb, "stale-input")));
       if (bytesToHex(sha256(bytes)) !== digest) return yield* unavailable(verb, "stale-input");
@@ -148,17 +176,16 @@ export const BoxMirrorLive = BoxMirror.toLayer(
         );
         return found.value;
       }
-      // A local stage failure (root, stale input) never reached Box: release the claim and keep its stage.
-      // Only a failure of the Box call itself leaves the outcome uncertain and the claim held.
       const item = yield* call.pipe(
-        Effect.catchTag("BoxMirrorUnavailable", (local) =>
-          sql`DELETE FROM documents_sync_box_receipt WHERE operation_id = ${receiptId} AND result IS NULL`.pipe(
-            Effect.orDie,
-            Effect.andThen(Effect.fail(local))
-          )
-        ),
-        Effect.mapError((error) =>
-          S.is(BoxMirrorUnavailable)(error) ? error : unavailable(verb, "uncertain-outcome-held")
+        Effect.catch((error) =>
+          // A local read failure happens before any Box request, so nothing can be in doubt:
+          // release the claim and report it with its stage. Anything else may have reached Box and stays held.
+          isLocalFailure(error)
+            ? sql`DELETE FROM documents_sync_box_receipt WHERE operation_id = ${receiptId} AND result IS NULL`.pipe(
+                Effect.orDie,
+                Effect.andThen(Effect.fail(error))
+              )
+            : Effect.fail(unavailable(verb, "uncertain-outcome-held"))
         )
       );
       const receipt = { remoteId: item.remoteId, name: item.name, parentRemoteId: O.getOrNull(item.parentRemoteId) };

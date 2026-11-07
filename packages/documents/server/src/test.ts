@@ -27,4 +27,7 @@ export {
  * @category testing
  * @since 0.0.0
  */
-export { DocumentsServerLive as DocumentsServerTest, DocumentsSyncFixtureLive as DocumentsSyncTest } from "./Layer.ts";
+export {
+  DocumentsServerLive as DocumentsServerTest,
+  DocumentsVaultSyncFixtureLive as DocumentsSyncTest,
+} from "./Layer.ts";
