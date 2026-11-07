@@ -684,7 +684,7 @@ export class ObservationInventorySummary extends S.Opaque<
 ) {}
 
 const populationIds = ObservationPopulation.match({
-  Unknown: () => A.empty<Sha256Hex>(),
+  Unknown: A.empty<Sha256Hex>,
   Enumerated: (population) => population.ids,
 });
 

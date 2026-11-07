@@ -16,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { PatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
 
 const independent = (claimNumber: number, body: string) =>
@@ -93,6 +94,53 @@ it.layer(Layer.effect(ExhaustedFixture, exhaustedFixture), { timeout: "10 second
     );
   }
 );
+
+// Nightly seed 1453086931 (#2687): a determiner surface counts only when
+// whitespace follows it in the source, and multi-word surfaces tolerate any
+// whitespace run, so the scanner and the ClaimTerm quote check agree.
+describe("determiner surfaces follow source whitespace", () => {
+  const termsOf = Effect.fn("PolicyWorkTest.termsOf")(function* (body: string) {
+    const claim = independent(1, body);
+    const tree = yield* decomposeClaim(claim, [claim]);
+    return A.flatMap(A.drop(tree.elements, 1), ({ terms }) =>
+      A.map(terms, ({ anchor, determiner, head }): readonly [string, string, string] => [
+        determiner,
+        head,
+        anchor.quote,
+      ])
+    );
+  });
+
+  const cases: ReadonlyArray<readonly [body: string, terms: ReadonlyArray<readonly [string, string, string]>]> = [
+    ["a+b.", [["bare", "b", "b"]]],
+    [
+      "a voltage V=a*b.",
+      [
+        ["a", "voltage v", "a voltage V"],
+        ["bare", "b", "b"],
+      ],
+    ],
+    [
+      "a sensor; the+x.",
+      [
+        ["a", "sensor", "a sensor"],
+        ["bare", "x", "x"],
+      ],
+    ],
+    ["at  least one sensor.", [["at-least-one", "sensor", "at  least one sensor"]]],
+    ["a plurality  of sensors.", [["plurality-of", "sensors", "a plurality  of sensors"]]],
+    ["one or\nmore sensors.", [["at-least-one", "sensors", "one or\nmore sensors"]]],
+  ];
+
+  for (const [body, expected] of cases) {
+    it.effect(`decomposes "${Str.replace(/\n/gu, "\\n")(body)}" into coherent terms`, () =>
+      Effect.gen(function* () {
+        const terms = yield* termsOf(body);
+        assert.deepStrictEqual(terms, expected);
+      })
+    );
+  }
+});
 
 describe("bounded antecedent policy preparation", () => {
   it.effect("abstains when sparse chains exhaust preparation lookup and copy reservations", () =>

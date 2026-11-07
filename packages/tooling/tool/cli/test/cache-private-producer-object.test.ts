@@ -32,7 +32,7 @@ import {
 } from "@beep/repo-cli/test/Cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { fcRuns } from "@beep/test-utils";
+import { fcRunsCapped } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
@@ -258,7 +258,11 @@ it.layer(
         expect(actual).toEqual(expected);
         expect(requests).toBe(1);
       }),
-    { arbitrary: fcRuns(20) }
+    // Each run issues a fresh fixture through real filesystem, crypto and git work,
+    // while the generated run identity only varies the S3 key: 20 draws cover it.
+    // fcRunsCapped keeps the nightly BEEP_FC_NUM_RUNS=1000 floor from multiplying the
+    // I/O past the 300 s timeout (#2687) and still honours BEEP_FC_SEED for reruns.
+    { arbitrary: fcRunsCapped(20) }
   );
 
   it.effect("reads one private observation and refuses a symbolic alias", () =>

@@ -7,11 +7,7 @@ import {
   CitationBuiltinCleaners,
   makeCitationBuiltinCleaners,
 } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
-import {
-  CitationCleanerFailure,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationCleanerProtocols,
   makeCitationCleanerRegistry,
@@ -20,7 +16,11 @@ import {
   CitationCleanerValues,
   makeCitationCleanerValues,
 } from "@beep/law-practice-server/internal/Citation/CleanerValues";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import {
+  CitationCleaner,
+  CitationCleanerFailure,
+  CitationPythonUnicodeStorage,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -32,10 +32,7 @@ import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { citationHtmlWorkerTestRuntime, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
-import type {
-  CitationCleanerObject,
-  CitationCleanerWork,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
 const Snapshot = S.Struct({
   codepoints: S.Array(S.Natural),
@@ -125,7 +122,7 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
       }),
     })
   );
-  const runtime = CitationCleanerRuntime.of({
+  const runtime = CitationCleaner.of({
     ...registry.runtime,
     fromText: Effect.fn("UnicodePipelineTest.captureSource")(function* (text: string) {
       const value = yield* useText ? values.sourceText(text) : values.sourceUnicode(initial);
@@ -142,9 +139,7 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
       )
     ),
   });
-  const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-    Effect.provideService(CitationCleanerRuntime, runtime)
-  );
+  const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(Effect.provideService(CitationCleaner, runtime));
   return {
     values,
     runtime,

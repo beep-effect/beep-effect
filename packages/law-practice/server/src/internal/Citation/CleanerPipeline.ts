@@ -1,103 +1,41 @@
 /**
  * Captured, lazy cleaner orchestration adapted from eyecite 2.7.6 clean.py.
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
- * This execution seam has no live default adapter or global admission Layer.
+ * Captures the public cleaner port; live server adapters retain value ownership.
  * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationCleaner,
+  CitationCleanerFailure,
+  CitationCleanerRun,
+  CitationCleanerTextCharge,
+  CitationCleanerWorkSnapshot,
   CitationEngineAbsoluteMaxima,
+  CitationEngineCleanInput,
   CitationEngineLimits,
+  CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
+  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
-import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
+import { makeCitationTextCapacity } from "./TextCapacity.ts";
+import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerPipeline");
-/**
- * An adapter-owned runtime value/step/function identity. Decoding this data does
- * not issue ownership; the captured adapter must validate its original handle.
- * No host value or callable is serialized in this schema.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export class CitationCleanerObject extends S.Opaque<CitationCleanerObject, { readonly brand: unique symbol }>()(
-  S.Struct({ slot: S.Natural }).pipe(
-    $I.annoteSchema("CitationCleanerObject", {
-      description: "Private runtime identity; never a citation, source anchor or persisted entity ID.",
-    })
-  )
-) {}
-/**
- * A positive text charge. Issuance and single consumption are checked by the
- * operation's private weak map; a structural clone has no spending authority.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export class CitationCleanerTextCharge extends S.Opaque<CitationCleanerTextCharge, { readonly brand: unique symbol }>()(
-  S.Struct({
-    units: S.Int.check(S.isBetween({ minimum: 1, maximum: CitationEngineAbsoluteMaxima.producedTextUtf16 })),
-  }).pipe(
-    $I.annoteSchema("CitationCleanerTextCharge", {
-      description: "Source-free, operation-issued text reservation; zero text needs no charge object.",
-    })
-  )
-) {}
-// A structural decoder reconstructs data. These fields instead carry live
-// adapter/operation handles unchanged; their owner still rejects decoded copies.
-const LiveObject = S.declare<CitationCleanerObject>((value): value is CitationCleanerObject =>
-  S.is(CitationCleanerObject)(value)
-).pipe(
-  $I.annoteSchema("LiveObject", {
-    description: "Preserve a live reference's identity while validating its shape; ownership is checked separately.",
-  })
-);
-const LiveCharge = S.declare<CitationCleanerTextCharge>((value): value is CitationCleanerTextCharge =>
-  S.is(CitationCleanerTextCharge)(value)
-).pipe(
-  $I.annoteSchema("LiveCharge", {
-    description: "Preserve the operation's exact reservation token; decoding data never issues a reservation.",
-  })
-);
-/** @internal @category models @since 0.0.0 */
-export class CitationCleanerProduced extends S.Opaque<CitationCleanerProduced, { readonly brand: unique symbol }>()(
-  S.Struct({ value: LiveObject, charges: S.Array(LiveCharge) }).pipe(
-    $I.annoteSchema("CitationCleanerProduced", {
-      description:
-        "Runtime result plus reservations made before materializing its text; non-text results have no text charge.",
-    })
-  )
-) {}
-/** @internal @category models @since 0.0.0 */
-export class CitationCleanerWorkSnapshot extends S.Opaque<
-  CitationCleanerWorkSnapshot,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({ producedTextUtf16: S.Natural, closed: S.Boolean }).pipe(
-    $I.annoteSchema("CitationCleanerWorkSnapshot", {
-      description: "One operation's cumulative text reservations and lifetime, without source content.",
-    })
-  )
-) {}
-const Plan = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
-  $I.annoteSchema("Plan", { description: "Trusted registered server program selector; never executable request code." })
-);
+const Plan = CitationEngineCleanInput.fields.plan;
 const Request = S.Struct({
   text: S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16)),
   plan: Plan,
@@ -106,111 +44,13 @@ const Request = S.Struct({
     description: "Private raw-text invocation of a captured server plan, not the final public cleaner request.",
   })
 );
-const Reason = LiteralKit([
-  "invalid-input",
-  "unknown-plan",
-  "unknown-step",
-  "lookup-key-missing",
-  "not-callable",
-  "callback-failed",
-  "iteration-failed",
-  "unissued-value",
-  "closed-work",
-  "invalid-reservation",
-  "runtime-failed",
-  "closed-owner",
-  "identity-exhausted",
-  "invalid-text-allocation",
-  "builtin-input-type",
-  "html-parse-error",
-  "html-unicode-encoding-declaration",
-  "html-unicode-decode-error",
-]).pipe(
-  $I.annoteSchema("Reason", {
-    description: "Closed private execution/adapter failures; no native messages, host values or nested causes.",
+const OwnedRequest = S.Struct({ value: CitationLiveCleanerObject, plan: Plan }).pipe(
+  $I.annoteSchema("OwnedRequest", {
+    description:
+      "An issued immutable native/host value and captured server plan; structural decoding does not grant ownership.",
   })
 );
-/** @internal @category errors @since 0.0.0 */
-export class CitationCleanerFailure extends S.TaggedError<CitationCleanerFailure, { readonly brand: unique symbol }>(
-  $I`CitationCleanerFailure`
-)(
-  "CitationCleanerFailure",
-  { reason: Reason },
-  $I.annoteError<CitationCleanerFailure>("CitationCleanerFailure", {
-    description: "Redacted cleaner execution failure pending the complete engine translator.",
-  })
-) {}
-/** @internal @category models @since 0.0.0 */
-export class CitationCleanerRun extends S.Opaque<CitationCleanerRun, { readonly brand: unique symbol }>()(
-  S.Struct({ value: LiveObject, producedTextUtf16: S.Natural }).pipe(
-    $I.annoteSchema("CitationCleanerRun", {
-      description: "Private complete result identity and logical work; no partial result accompanies failure.",
-    })
-  )
-) {}
 type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
-/** Runtime cursor: no iterator or function is placed in request data. @internal @category services @since 0.0.0 */
-export interface CitationCleanerCursor {
-  readonly next: Effect.Effect<O.Option<CitationCleanerObject>, Failure>;
-}
-/**
- * A runtime capability captured by adapter code. Reserve positive units before
- * materializing text, then return those exact tickets with the produced value.
- * Nested execution shares these charges and the enclosing timer. Adapters must
- * own/retire native work and must not detach callback work.
- * @internal
- * @category services
- * @since 0.0.0
- */
-export interface CitationCleanerWork {
-  readonly nested: (plan: string, initial: CitationCleanerObject) => Effect.Effect<CitationCleanerObject, Failure>;
-  readonly reserveText: (units: number) => Effect.Effect<CitationCleanerTextCharge, Failure>;
-  readonly snapshot: Effect.Effect<CitationCleanerWorkSnapshot>;
-  /**
-   * Exclusively lend remaining capacity to a captured bounded producer. It must
-   * enforce this ceiling before allocating output and retire native work before
-   * returning. No ledger reentry is permitted from the borrowing fiber. Empty
-   * output is valid even at zero capacity; settlement issues no empty ticket.
-   */
-  readonly withTextCapacity: <A, E>(
-    produce: (remaining: number) => Effect.Effect<{ readonly value: A; readonly units: number }, E>
-  ) => Effect.Effect<{ readonly value: A; readonly charges: ReadonlyArray<CitationCleanerTextCharge> }, E | Failure>;
-}
-/**
- * All host values, callables, registries and iterator state stay in a captured
- * server adapter. Every method returns R = never. `contains` and `get` are
- * separate observable operations. `invoke` must reserve text before allocation;
- * `textUnits` inspects owned text without invoking user length/coercion hooks.
- * Default primitive/native adapters, ownership issuance and their safety laws
- * are integration work; this service does not license unsafe arbitrary code.
- * @internal
- * @category services
- * @since 0.0.0
- */
-export class CitationCleanerRuntime extends Context.Service<
-  CitationCleanerRuntime,
-  {
-    readonly fromText: (text: string) => Effect.Effect<CitationCleanerObject, Failure>;
-    readonly assertOwned: (value: CitationCleanerObject) => Effect.Effect<void, Failure>;
-    readonly textUnits: (value: CitationCleanerObject) => Effect.Effect<O.Option<number>, Failure>;
-    readonly open: (
-      plan: string,
-      initial: CitationCleanerObject,
-      work: CitationCleanerWork
-    ) => Effect.Effect<CitationCleanerCursor, Failure>;
-    readonly contains: (step: CitationCleanerObject, work: CitationCleanerWork) => Effect.Effect<boolean, Failure>;
-    readonly get: (
-      step: CitationCleanerObject,
-      work: CitationCleanerWork
-    ) => Effect.Effect<CitationCleanerObject, Failure>;
-    readonly callable: (value: CitationCleanerObject, work: CitationCleanerWork) => Effect.Effect<boolean, Failure>;
-    readonly invoke: (
-      callable: CitationCleanerObject,
-      value: CitationCleanerObject,
-      work: CitationCleanerWork
-    ) => Effect.Effect<CitationCleanerProduced, Failure>;
-  }
->()($I`CitationCleanerRuntime`) {}
 const fail = (reason: CitationCleanerFailure["reason"]) => CitationCleanerFailure.make({ reason });
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "clean", limit });
@@ -230,7 +70,9 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     Effect.mapError(() => fail("invalid-input"))
   );
   const clock = yield* Clock.Clock;
-  const runtime = yield* CitationCleanerRuntime;
+  const runtime = yield* CitationCleaner;
+  const parent = yield* Effect.serviceOption(CitationTextBudget);
+  if (O.isSome(parent) && parent.value.maximum > limits.producedTextUtf16) return yield* fail("invalid-input");
   const sanitize = <A>(body: Effect.Effect<A, Failure>): Effect.Effect<A, Failure> =>
     body.pipe(
       Effect.catchCause((cause) => {
@@ -252,17 +94,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
   const makeWork = Effect.gen(function* () {
     const state = yield* Ref.make(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false }));
     const issued = new WeakMap<CitationCleanerTextCharge, number>();
-    const capacity = yield* Semaphore.make(1);
-    let borrower = O.none<number>();
-    const exclusive = <A, E>(body: Effect.Effect<A, E>): Effect.Effect<A, E | Failure> =>
-      Effect.withFiber((fiber) =>
-        Effect.suspend(
-          (): Effect.Effect<A, E | Failure> =>
-            O.isSome(borrower) && borrower.value === fiber.id
-              ? Effect.fail(fail("invalid-reservation"))
-              : capacity.withPermit(body)
-        )
-      );
+    const capacity = yield* makeCitationTextCapacity(() => fail("invalid-reservation"));
+    const exclusive = capacity.exclusive;
     const ensureOpen = Ref.get(state).pipe(
       Effect.flatMap((value) => (value.closed ? Effect.fail(fail("closed-work")) : Effect.void))
     );
@@ -285,32 +118,42 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         }
       ).pipe(Effect.flatten);
     });
-    const reserveText = (units: number) => exclusive(reserveUnlocked(units));
-    const withTextCapacity: CitationCleanerWork["withTextCapacity"] = (produce) =>
+    const reserveText = (units: number) =>
       exclusive(
-        Effect.withFiber((fiber) =>
-          Effect.acquireUseRelease(
-            ensureOpen.pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  borrower = O.some(fiber.id);
-                })
-              )
-            ),
-            Effect.fnUntraced(function* () {
-              const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
-              const result = yield* produce(remaining);
-              const units = yield* S.decodeEffect(Units)(result.units).pipe(
-                Effect.mapError(() => fail("invalid-reservation"))
-              );
-              yield* ensureOpen;
-              const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
-              return { value: result.value, charges };
-            }),
-            () =>
-              Effect.sync(() => {
-                borrower = O.none();
+        Effect.gen(function* () {
+          const amount = yield* S.decodeEffect(ReservationUnits)(units).pipe(
+            Effect.mapError(() => fail("invalid-reservation"))
+          );
+          yield* ensureOpen;
+          const current = yield* Ref.get(state);
+          if (amount > limits.producedTextUtf16 - current.producedTextUtf16) return yield* safety("producedTextUtf16");
+          if (O.isSome(parent)) yield* parent.value.reserve(amount);
+          return yield* Effect.uninterruptible(reserveUnlocked(amount));
+        })
+      );
+    const withTextCapacity: CitationCleanerWork["withTextCapacity"] = (produce) =>
+      capacity.borrow(
+        ensureOpen.pipe(
+          Effect.andThen(
+            Effect.uninterruptibleMask(
+              Effect.fnUntraced(function* (restore) {
+                const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
+                const run = Effect.fnUntraced(function* (allowance: number) {
+                  const result = yield* restore(produce(allowance));
+                  const units = yield* S.decodeEffect(Units)(result.units).pipe(
+                    Effect.mapError(() => fail("invalid-reservation"))
+                  );
+                  if (units > allowance) return yield* safety("producedTextUtf16");
+                  yield* ensureOpen;
+                  const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
+                  return { value: { value: result.value, charges }, units };
+                });
+                const result = O.isSome(parent)
+                  ? yield* parent.value.withCapacity((available) => run(available < remaining ? available : remaining))
+                  : yield* run(remaining);
+                return result.value;
               })
+            )
           )
         )
       );
@@ -338,14 +181,14 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
       yield* ensureOpen;
       if (total !== actual) return yield* fail("invalid-reservation");
     });
-    const consumeUnchanged = Effect.fnUntraced(function* (value: CitationCleanerObject) {
+    const consumeUnchanged = Effect.fnUntraced(function* (value: CitationCleanerObject, chargeParent: boolean) {
       const units = yield* runtime.textUnits(value);
       if (O.isSome(units)) {
         const amount = yield* S.decodeEffect(S.Natural)(units.value).pipe(
           Effect.mapError(() => fail("invalid-reservation"))
         );
         if (amount > 0) {
-          const charge = yield* reserveText(amount);
+          const charge = yield* chargeParent ? reserveText(amount) : exclusive(reserveUnlocked(amount));
           yield* consume([charge], amount);
         }
       }
@@ -357,7 +200,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     });
     const execute = Effect.fn("Citation.executeCleanerPlan")(function* (
       plan: string,
-      initial: CitationCleanerObject
+      initial: CitationCleanerObject,
+      chargeUnchangedParent = true
     ): Effect.fn.Return<CitationCleanerObject, Failure> {
       yield* ensureOpen;
       const selected = yield* S.decodeEffect(Plan)(plan).pipe(Effect.mapError(() => fail("invalid-input")));
@@ -370,7 +214,7 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         yield* Effect.yieldNow;
         const next = yield* cursor.next;
         if (O.isNone(next)) {
-          if (steps === 0) yield* consumeUnchanged(value);
+          if (steps === 0) yield* consumeUnchanged(value, chargeUnchangedParent);
           return value;
         }
         yield* runtime.assertOwned(next.value);
@@ -398,8 +242,39 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     };
     return {
       work,
+      execute,
       close: Ref.update(state, (current) => CitationCleanerWorkSnapshot.make({ ...current, closed: true })),
     };
+  });
+  const runInitial = Effect.fn("Citation.runOwnedCleanerPlan")(function* (
+    plan: string,
+    initial: Effect.Effect<CitationCleanerObject, Failure>,
+    chargeUnchangedParent = true
+  ) {
+    return yield* Effect.acquireUseRelease(
+      makeWork,
+      ({ work, execute }) =>
+        sanitize(
+          Effect.gen(function* () {
+            const value = yield* initial;
+            const result = yield* execute(plan, value, chargeUnchangedParent);
+            return CitationCleanerRun.make({
+              value: result,
+              producedTextUtf16: (yield* work.snapshot).producedTextUtf16,
+            });
+          })
+        ).pipe(
+          Effect.timeoutOrElse({
+            duration: limits.cleanDeadline,
+            orElse: () => Effect.fail(safety("cleanDeadline")),
+          }),
+          Effect.timeoutOrElse({
+            duration: limits.operationDeadline,
+            orElse: () => Effect.fail(safety("operationDeadline")),
+          })
+        ),
+      ({ close }) => close
+    );
   });
   return {
     run: Effect.fn("Citation.runCleanerPipeline")(
@@ -409,26 +284,31 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         const request = yield* S.decodeUnknownEffect(Request, { onExcessProperty: "error" })(input).pipe(
           Effect.mapError(() => fail("invalid-input"))
         );
-        return yield* Effect.acquireUseRelease(
-          makeWork,
-          ({ work }) =>
-            sanitize(
-              Effect.gen(function* () {
-                const initial = yield* runtime.fromText(request.text);
-                const value = yield* work.nested(request.plan, initial);
-                return CitationCleanerRun.make({ value, producedTextUtf16: (yield* work.snapshot).producedTextUtf16 });
-              })
-            ).pipe(
-              Effect.timeoutOrElse({
-                duration: limits.cleanDeadline,
-                orElse: () => Effect.fail(safety("cleanDeadline")),
-              }),
-              Effect.timeoutOrElse({
-                duration: limits.operationDeadline,
-                orElse: () => Effect.fail(safety("operationDeadline")),
-              })
-            ),
-          ({ close }) => close
+        return yield* runInitial(request.plan, runtime.fromText(request.text));
+      },
+      sanitize,
+      Effect.provideService(Clock.Clock, clock)
+    ),
+    /** Run an already-issued value without projecting native words or replacing
+     * its object identity. The enclosing document owns the initial handle.
+     * Unchanged input is counted locally without another parent allocation:
+     * the enclosing operation owns its source reservation. New callback/builtin
+     * output still charges both ledgers. Uses the same timers and close path.
+     */
+    runOwned: Effect.fn("Citation.runOwnedCleanerPipeline")(
+      function* (input: unknown) {
+        const request = yield* S.decodeUnknownEffect(OwnedRequest, { onExcessProperty: "error" })(input).pipe(
+          Effect.mapError(() => fail("invalid-input"))
+        );
+        return yield* runInitial(
+          request.plan,
+          Effect.gen(function* () {
+            yield* runtime.assertOwned(request.value);
+            const units = yield* runtime.textUnits(request.value);
+            if (O.isSome(units) && units.value > limits.sourceUtf16) return yield* safety("sourceUtf16");
+            return request.value;
+          }),
+          false
         );
       },
       sanitize,

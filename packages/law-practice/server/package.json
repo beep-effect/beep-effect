@@ -57,6 +57,9 @@
   },
   "files": [
     "assets/citation-html/**",
+    "assets/citation-xml/**",
+    "assets/citation-diff/**",
+    "assets/citation/**",
     "src/**/*.ts",
     "dist/**/*.js",
     "dist/**/*.js.map",

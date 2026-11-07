@@ -1289,6 +1289,21 @@ No computation qualification or production-cache activation follows from this
 repair. Prevent recurrence by auditing the script's full executed suite rather
 than treating property tests or coverage as narrower without source evidence.
 
+## Tracked membership is missing from a cached scanner key, 2026-11-06
+
+Source review found that opaque-roundtrip discovery uses Git tracking membership. An isolated metadata fixture changes that membership without changing task hash in either pinned client. A temporary fresh boundary and retained receipt prevent treating this as qualified reuse; a portable discovery-state contract would prevent the gap. No lint/scanner task was executed.
+
+## Script-map digest changes are not literal command changes, 2026-11-06
+
+A fresh accepted-source native census adds thirteen executable computations. Fifty-three root rows change their workspace script-map digest despite identical literal commands. Compare the recorded digest semantics and source text before discarding earlier reviews. Preserve exact unchanged evidence and explicitly renew changed manifests rather than redoing all earlier classification. No task was executed and the canonical population was not replaced.
+
+## New tracked-source law repeats the discovery-key gap, 2026-11-06
+
+Source review of the added entity-kit freeze check finds Git index path and regular-mode selection outside its native content key. Four isolated metadata plans preserve the key across a changed tracked-source list. Prepare a fresh boundary while complete discovery identity and qualification remain unfinished. The test-only membership collector must not be presented as covering all source discovery. No law body was executed.
+
+## General source discovery needs index modes, 2026-11-06
+
+The entity-kit scanner uses regular index modes across source files; the prepared test-only path key cannot cover that boundary. Reuse the existing Git stage command and bounded scrubbed capture instead of importing the ambient-environment Git service into a fingerprint probe. Include all index metadata conservatively and retain cache:false until the actual scanner, native input chain and isolation are qualified. Source and authored controls are in Cache.fingerprint.ts and cache-runtime.test.ts; no local suite ran.
 ## Replay formatting and pilot profile phase complexity, 2026-11-06
 
 Hosted #2824 Lint found expanded singleton arrays in types/turbo.json left by an unpublished replay resolution. Apply the exact formatter diff and keep the environment/input declarations unchanged. Fallow artifact13548435278 attributes one new cognitive/CRAP finding to runPilot. Group its selected-profile discovery, refusal and validation in one named phase, leaving executable pin checks reusable before every execution and preserving validation order. Retain the three failed logs and artifact digests privately. No baseline, threshold, suppression or local quality suite changes.
@@ -1318,6 +1333,17 @@ work continued in an isolated source-bound checkout. Retaining immutable hosted
 source bindings and coordinating a short exact-source approval interval would
 avoid repeated static reads while preserving the final live-ref check.
 
+## Audit shared tracked discovery before promoting a single caller, 2026-11-07
+
+The entity-kit discovery fix exposed three additional cached root callers of scanTrackedTextFiles: retired Effect paths, retired IRI authorities and Markdown fences. Review the entire helper call-site family once, while separating EffectImports' tracked-plus-untracked semantics. Four metadata-only Markdown controls preserve task hashes across changed tracked membership. Extend the same temporary fresh boundary and runtime key declaration without claiming qualified adoption. Source, exact clients and raw observation digests are bound in tracked-scanner-discovery-key-review-2026-11-07.json.
+
+### Hosted tracked-discovery repair, 2026-11-07
+
+PR #2826 unit/property failures exposed stale cache/env assertions, a staged Git fixture mismatch, and five discovery checks still affected-filtered despite cache holds. Preserve input probes, align fixture staging before removal, and route these checks through the existing unfiltered state graph without adding concurrency. The coverage aggregator refused failed unit producers; it did not measure a separate coverage regression. Prevent recurrence with exact caller-selection assertions alongside cache policy changes. Local quality suites were not run; hosted confirmation is pending.
+
+### Avoid positional cross-plan expectations, 2026-11-07
+
+PR #2826 hosted repo-cli-2 left one introduced failure: the full-plan assertion borrowed seventeen entries from the changed-scope plan, accidentally including five documentation tasks after discovery routing changed. Replace the borrowed prefix with an explicit full-scope sequence, retaining all five held discovery tasks and the separate unfiltered-selection assertions. Hosted logs report 1,993 passed and one failed test in this shard; no complete-suite success is claimed. No local quality suite was run.
 ## Storybook mixed source and declaration contexts, 2026-11-07
 
 Heavy / Check job 128225577677 on #2826 executed merge 5541cb724 with accepted base b0c9bab1. Fresh md and editor checks completed, while Storybook rejected TaskItem/TaskList constructors and an unknown Effect context in the unchanged editor-viewer story. Storybook maps Markdown and Lexical models to source but leaves their shared schema helpers outside that source mapping; editor stories inherit the root schema source mapping. Align Storybook's schema root and leaf aliases with that source context. This is a source-based repair candidate; hosted CI must establish whether it resolves the failures. No constructor, story, diagnostic, threshold or test expectation is suppressed, and no local quality suite ran. No matching open fix or unblocks-main PR was found at the initial inventory.
