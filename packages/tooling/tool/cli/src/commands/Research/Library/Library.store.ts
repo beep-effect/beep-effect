@@ -44,6 +44,29 @@ export const hashBytes = Effect.fn("ResearchLibrary.hashBytes")(function* (bytes
   return Hex.encode(pipe1);
 });
 
+// The writer lock admits one writer at a time, so a process may reuse the catalog it last wrote while the
+// canonical file still carries the same modification time and size. Any other writer changes them.
+interface WrittenCatalog {
+  readonly catalog: LibraryCatalog;
+  readonly fingerprint: string;
+  readonly root: string;
+}
+let lastWrittenCatalog: O.Option<WrittenCatalog> = O.none();
+
+const catalogFingerprint = Effect.fnUntraced(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const info = yield* fs.stat(path.join(root, "catalog/library.json")).pipe(Effect.option);
+  return O.map(
+    info,
+    (stat) =>
+      `${O.getOrElse(
+        O.map(stat.mtime, (date) => date.getTime()),
+        () => -1
+      )}:${stat.size}`
+  );
+});
+
 /**
  * Read a schema-validated catalog, or an empty catalog for a new library.
  * **Example** (Read a catalog)
@@ -72,6 +95,15 @@ export const loadCatalog = Effect.fn("ResearchLibrary.loadCatalog")(function* (r
       captures: [],
       qualifications: [],
     });
+  }
+  if (target === canonicalTarget) {
+    // A catalog this process wrote is still current while the canonical file keeps its fingerprint.
+    const fingerprint = yield* catalogFingerprint(root);
+    const written = O.filter(
+      lastWrittenCatalog,
+      (entry) => entry.root === root && O.isSome(fingerprint) && entry.fingerprint === fingerprint.value
+    );
+    if (O.isSome(written)) return written.value.catalog;
   }
   const text = yield* fs.readFileString(target).pipe(mapFailure("Cannot read library catalog."));
   return yield* S.decodeEffect(codec)(text).pipe(mapFailure("Invalid library catalog."));
@@ -438,29 +470,6 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
     occurrences: A.map(catalog.occurrences, (occurrence) => reboundOccurrence(catalog.sources, sources, occurrence)),
     captures: A.map(catalog.captures, (capture) => reboundCapture(catalog.sources, sources, capture)),
   });
-});
-
-// The writer lock admits one writer at a time, so a process may reuse the catalog it last wrote while the
-// canonical file still carries the same modification time and size. Any other writer changes them.
-interface WrittenCatalog {
-  readonly catalog: LibraryCatalog;
-  readonly fingerprint: string;
-  readonly root: string;
-}
-let lastWrittenCatalog: O.Option<WrittenCatalog> = O.none();
-
-const catalogFingerprint = Effect.fnUntraced(function* (root: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const info = yield* fs.stat(path.join(root, "catalog/library.json")).pipe(Effect.option);
-  return O.map(
-    info,
-    (stat) =>
-      `${O.getOrElse(
-        O.map(stat.mtime, (date) => date.getTime()),
-        () => -1
-      )}:${stat.size}`
-  );
 });
 
 /**
