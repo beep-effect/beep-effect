@@ -115,11 +115,13 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
       mission: "Ship the done packet.",
       provides: ["archive/done"],
       researchReports: ["research/OPPORTUNITIES.md", "research/notes.md"],
+      opsScripts: [{ path: "ops/check.ts", purpose: "Check the done packet." }],
     }),
   ],
   ["goals/done/README.md", "# Done\n\nSee [plan](./PLAN.md).\n"],
   ["goals/done/PLAN.md", "# Plan\n"],
   ["goals/done/SPEC.md", "# Spec\n"],
+  ["goals/done/ops/check.ts", "export {};\n"],
   ["goals/done/history/reflections/2026-11-05-codex.md", REFLECTION("Older finding.")],
   ["goals/done/history/reflections/2026-11-06-codex.md", REFLECTION("Cache the slow scan.")],
   ["goals/done/research/OPPORTUNITIES.md", "# Friction\n"],
@@ -399,7 +401,12 @@ describe("goals archive", () => {
                 "goals/done/ops/manifest.json",
                 "goals/done/research/OPPORTUNITIES.md",
               ],
-              remove: ["goals/done/PLAN.md", "goals/done/SPEC.md", "goals/done/research/notes.md"],
+              remove: [
+                "goals/done/PLAN.md",
+                "goals/done/SPEC.md",
+                "goals/done/ops/check.ts",
+                "goals/done/research/notes.md",
+              ],
               links: [
                 [
                   "docs/guide.md",
@@ -641,6 +648,7 @@ describe("goals archive", () => {
         assert.strictEqual(manifest.archive?.contentHash, archivedTree);
         assert.strictEqual(manifest.archive?.path, "goals/done");
         assert.deepStrictEqual(manifest.researchReports, ["research/OPPORTUNITIES.md"]);
+        assert.strictEqual(manifest.opsScripts, undefined);
         const explorationText = yield* readText(root, "explorations/gone/ops/manifest.json");
         assertSome(
           O.map(decodeExplorationManifestText(explorationText), (value) => value.exploration.archive?.path),

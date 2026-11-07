@@ -40,12 +40,7 @@
     "explorations/deterministic-doc-structure-extraction/MAP.md",
     "explorations/deterministic-doc-structure-extraction/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/2026-07-25-academia-corpus-mining-note.md",
-    "research/2026-08-17-academia-wave2-findings.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -92,5 +87,13 @@
     "The implementation would exceed the paired office-action rule-family scope or weaken fail-closed evidence.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/law-doc-structure-oa-slice",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "ac1a6d4bcaedecba37622d216a69a9df82c6268d",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

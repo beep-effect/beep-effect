@@ -260,7 +260,7 @@ open questions** — appetite and sequencing must size the net-new work, not jus
   `@beep/federal-register`. Recreate with
   `bun run beep create-package <name> --family drivers` in the same PR as
   the first real surface. Procedure:
-  [`goals/honest-repo-signal/research/FOLLOW-UPS.md`](../../goals/honest-repo-signal/research/FOLLOW-UPS.md).
+  [`goals/honest-repo-signal/research/FOLLOW-UPS.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md).
   Delivery `GOAL.md` is recreate-first, not a path into deleted trees.
 - **`packages/drivers/govinfo` is PARTIAL — domain-only, 27 src files, no
   transport** (confirmed: `find … -name '*.service.ts' -o '*.config.ts' -o

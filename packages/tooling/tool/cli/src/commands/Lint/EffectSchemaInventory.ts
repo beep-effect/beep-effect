@@ -37,7 +37,7 @@ const effectSchemaInventoryCommandDefinition = Command.make(
     ),
     out: Flag.String("out").pipe(
       Flag.withDescription(
-        "Prompt path relative to the repository root (default goals/effect-schema-parity/ops/prompts/<slug>.md)"
+        "Prompt path relative to the repository root (default standards/effect-schema-inventory/prompts/<slug>.md)"
       ),
       Flag.optional
     ),

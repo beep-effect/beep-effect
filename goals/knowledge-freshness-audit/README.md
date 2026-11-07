@@ -15,7 +15,7 @@ work through publication and exact-head PR readiness; it does not complete the a
 Account for repository knowledge, verify its claims against explicit sources,
 reconcile remote-derived skills without losing local adaptations, and prove
 targeted repairs. This campaign extends the semantic coverage of
-[knowledge-surface-automation](../knowledge-surface-automation/SPEC.md) and
+[knowledge-surface-automation](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/SPEC.md) and
 inherits that initiative's ratified decisions. Its broader graph, bootstrap,
 warehouse, and scheduling roadmap remains with that initiative.
 

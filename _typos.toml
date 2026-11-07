@@ -6,6 +6,9 @@ adjascent = "adjascent"
 abd = "abd"
 compilability = "compilability"
 anc = "anc"
+# Exploration research cites Mata v. Avianca and the virtua.cloud domain.
+Mata = "Mata"
+virtua = "virtua"
 # @beep/markdown tests name the HTML entity "&curren;".
 curren = "curren"
 # @beep/commands quotes "raison d'etre"; @beep/schema-org tests reference the

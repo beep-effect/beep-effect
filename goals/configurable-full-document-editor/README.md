@@ -40,7 +40,7 @@ After the resume condition is met, use:
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - inherited source corpus.
 6. Goal A prerequisite contract:
-   [`SPEC.md`](../lexical-playground-capability-atlas/SPEC.md).
+   [`SPEC.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/lexical-playground-capability-atlas/SPEC.md).
 7. Binding decisions D1-D27 and D28 pause semantics:
    [`DECISIONS.md`](../../explorations/full-document-editor/DECISIONS.md).
 8. [`history/`](./history/) - later execution evidence and closeout reflection.
