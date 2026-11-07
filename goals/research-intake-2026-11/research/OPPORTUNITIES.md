@@ -78,3 +78,25 @@ private-archive content.
 - **Would have prevented it:** a replay test that runs `inventory` twice with
   different roots and asserts the earlier intake's derivations are unchanged,
   and a scale fixture at real catalog size.
+
+## 2026-11-07 — Reference resolution only accepts GitHub proofs
+
+- **Doing:** accounting for unresolved hop-1 shorthand citations.
+- **Evidence:** two citations name Hugging Face datasets by `owner/name`
+  without a host. `LibraryReferenceResolutionPayload` validates only a GitHub
+  API object, so they were disposed `tool-blocked` with the canonical dataset
+  URL in the reason instead of being resolved.
+- **Would have prevented it:** a resolution proof per registry (Hugging Face
+  dataset and model APIs return a stable JSON id), like the GitHub one.
+
+## 2026-11-07 — Every catalog write re-decoded a 41 MB catalog
+
+- **Doing:** hop-1 acquisition of 936 sources.
+- **Evidence:** about 16 s per capture (two catalog writes per source, each
+  decoding, migrating and artifact-checking the whole catalog, then writing a
+  full history copy; `catalog/history` already held 23 GB in 2,929
+  snapshots). The last-written-catalog reuse in `withCatalog` took it to
+  about 1.2 s per capture.
+- **Would have prevented it:** an append-only receipt journal folded into the
+  catalog in batches, and content-addressed history deltas instead of full
+  copies.
