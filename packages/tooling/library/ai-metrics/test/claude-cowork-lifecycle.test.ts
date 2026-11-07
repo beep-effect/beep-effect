@@ -235,9 +235,15 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
           Effect.provideService(FileSystem.FileSystem, guarded)
         )
       );
-      yield* Deferred.await(startup).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+      yield* Deferred.await(startup).pipe(
+        Effect.timeoutOrElse({ duration: "5 seconds", orElse: () => Effect.die("startup-delay-not-observed") }),
+        TestClock.withLive
+      );
       yield* TestClock.adjust("3 seconds");
-      const path = yield* Deferred.await(ready).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+      const path = yield* Deferred.await(ready).pipe(
+        Effect.timeoutOrElse({ duration: "5 seconds", orElse: () => Effect.die("readiness-not-observed-after-delay") }),
+        TestClock.withLive
+      );
       yield* TestClock.adjust("2500 millis");
       const body = yield* encode(start);
       const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
@@ -245,7 +251,13 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         coworkLifecycleFixtureCodecs.makeEnvelope({ callback, occurrenceId: "late-in-configured-window" })
       );
       yield* f.ancestor.send(path, projected).pipe(TestClock.withLive);
-      const result = yield* Fiber.join(receiving).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+      const result = yield* Fiber.join(receiving).pipe(
+        Effect.timeoutOrElse({
+          duration: "5 seconds",
+          orElse: () => Effect.die("admission-not-terminal-after-callback"),
+        }),
+        TestClock.withLive
+      );
       const receipt = yield* Effect.fromResult(result);
       expect(receipt.accepted).toBe(1);
       expect((yield* f.journal.stats).pages).toBe(1);
@@ -291,7 +303,10 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         assertFailure(refused, CoworkLifecycleError.make({ reason: "enrollment" }));
         const wrongApp = yield* makeCoworkLifecycleReceiver(
           CoworkLifecyclePolicy.make({ ...policy, appSha256: id })
-        ).pipe(Effect.result);
+        ).pipe(
+          Effect.result,
+          Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
+        );
         assertFailure(wrongApp, CoworkLifecycleError.make({ reason: "enrollment" }));
         expect((yield* f.journal.stats).pages).toBe(0);
       })
@@ -333,7 +348,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
               : fault === "listen-timeout"
                 ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
                 : Stream.make(new TextEncoder().encode(`${ready}\n${observed}\n`));
-          const output = Stream.concat(Stream.fromEffect(Deferred.await(policySeen)).pipe(Stream.drain), response);
+          const output = policySeen.pipe(Deferred.await, Stream.fromEffect, Stream.drain, Stream.concat(response));
           const spawner = ChildProcessSpawner.make((command) =>
             Effect.gen(function* () {
               const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
@@ -424,10 +439,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
         expect(received.length).toBeLessThanOrEqual(8192);
         const guarded = FileSystem.FileSystem.of({
           ...fs,
-          makeTempDirectoryScoped: (options) =>
+          makeTempDirectoryScoped: Effect.fn("CoworkLifecycleTest.occupiedSocketDirectory")((options) =>
             fs
               .makeTempDirectoryScoped(options)
-              .pipe(Effect.tap((directory) => fs.writeFileString(`${directory}/s`, "owned-occupied", { mode: 0o600 }))),
+              .pipe(Effect.tap((directory) => fs.writeFileString(`${directory}/s`, "owned-occupied", { mode: 0o600 })))
+          ),
         });
         const refused = yield* makeLifecycleAckServer("{}", false).pipe(
           Effect.result,
@@ -445,14 +461,15 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
         let executable = "";
         const trackedFs = FileSystem.FileSystem.of({
           ...fs,
-          copyFile: (source, destination) =>
+          copyFile: Effect.fn("CoworkLifecycleTest.trackRuntimeCopy")((source, destination) =>
             fs.copyFile(source, destination).pipe(
               Effect.tap(() =>
                 Effect.sync(() => {
                   executable = destination;
                 })
               )
-            ),
+            )
+          ),
         });
         const output = Stream.make(new TextEncoder().encode("not-json\n"));
         const spawner = ChildProcessSpawner.make((command) => {
