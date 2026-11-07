@@ -127,6 +127,9 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
   const rows = selectRows(corpus.cases, full, uncheckedOnly ?? false);
   let children = 0;
   for (const row of rows) {
+    yield* Effect.logInfo("Citation callback replay row started").pipe(
+      Effect.annotateLogs({ runtime: kind, row: row.id, mode: row.mode, program: row.program })
+    );
     const observed = yield* Ref.make<ReadonlyArray<typeof Trace.Type>>([]);
     const port = CitationAnnotationAnnotator.of({
       annotate: Effect.fn("AnnotationCallbackTest.annotate")(function* (before, span, after) {
@@ -167,6 +170,10 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
     const actual = yield* Ref.get(observed);
     expect(actual, `${kind}:${row.id}:trace`).toEqual(row.trace);
     children += A.filter(row.checks, (check) => !check.fast).length + row.wrapped.length;
+    const counts = yield* setup.observed.snapshot;
+    yield* Effect.logInfo("Citation callback replay row completed").pipe(
+      Effect.annotateLogs({ runtime: kind, row: row.id, spawned: counts.spawned, confirmed: counts.confirmed })
+    );
   }
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, children);
 });

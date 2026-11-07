@@ -1,11 +1,8 @@
 /** Fresh cleaner operation ownership for source replay fixtures.
  * @internal @packageDocumentation @since 0.0.0
  */
-import {
-  CitationOperationAdmission,
-  makeCitationOperationAdmission,
-} from "@beep/law-practice-server/internal/Citation/Admission";
-import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
+import { makeCitationOperationAdmission } from "@beep/law-practice-server/internal/Citation/Admission";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import type { CitationCleanerObject, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -18,10 +15,12 @@ export const makeCitationReplayCleanerOperation = Effect.fn("CleanerReplayTest.m
   runtime: CitationCleaner["Service"]
 ) {
   const admission = yield* makeCitationOperationAdmission(limits);
-  const operation = yield* makeCitationCleanerOperation(limits).pipe(
-    Effect.provideService(CitationOperationAdmission, admission),
-    Effect.provideService(CitationCleaner, runtime)
-  );
+  const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(Effect.provideService(CitationCleaner, runtime));
+  // Original private failure categories remain observable in the source replay.
+  // CitationPortFailure.test.ts separately verifies the public redaction boundary.
+  const operation = {
+    run: Effect.fn("CleanerReplayTest.run")((input: unknown) => admission.run("clean", pipeline.run(input))),
+  };
   return { operation, admission };
 });
 

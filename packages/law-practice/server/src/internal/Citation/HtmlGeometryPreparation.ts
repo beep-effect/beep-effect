@@ -99,7 +99,8 @@ export const prepareCitationForwardHtmlMap = Effect.fn("Citation.prepareForwardH
   regexRuntime: CitationNativeProcessRuntime,
   config: CitationHtmlGeometryPreparationConfiguration,
   markup: unknown,
-  plainInput: Effect.Effect<unknown, E>
+  plainInput: Effect.Effect<unknown, E>,
+  useDmp = true
 ) {
   const input = yield* makeCitationRegexInput(limits);
   const discovery = yield* makeCitationHtmlDiscoveryRunner(limits, regexRuntime, config.discovery);
@@ -107,7 +108,7 @@ export const prepareCitationForwardHtmlMap = Effect.fn("Citation.prepareForwardH
   const plainValue = yield* plainInput;
   const plain = yield* input.prepareUnicode(plainValue, () => Effect.void);
   const placeholder = yield* input.prepareUnicode(masked.placeholder, () => Effect.void);
-  const diff = yield* makeCitationDiffWorker(limits, config.diffRuntime);
+  const diff = yield* makeCitationDiffWorker(limits, config.diffRuntime, useDmp);
   const forwardSteps = yield* diff.evaluate(plain.value.storage, placeholder.value.storage);
   return {
     discovery,

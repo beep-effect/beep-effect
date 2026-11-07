@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Project pinned source and independent observations into auditable parity ledgers.
 
-This producer never manufactures target proof or terminal workflow states.
+This producer applies only explicit authenticated proof bindings; source discovery never manufactures target proof.
 It retains references to the byte-preserving evidence rather than copying it.
 """
 import argparse
@@ -13,7 +13,7 @@ import subprocess
 
 PIN = "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"
 TREE = "a35a58fac03400f71a93a93485b77f1d56f2b02f"
-VERSION = "citation-ledger-projection/v1"
+VERSION = "citation-ledger-projection/v2"
 LICENSE = {"id": "BSD-2-Clause", "material": "source-adaptation-and-test-observations",
            "notice": "THIRD_PARTY_NOTICES.md",
            "sha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772"}
@@ -103,6 +103,49 @@ def regex_sources(root):
     return sorted(rows, key=lambda row: row["id"])
 
 
+def apply_proof_plan(repo, canonical_cases, path):
+    raw = path.read_bytes()
+    plan = json.loads(raw)
+    if plan.get("schemaVersion") != "citation-ledger-proof-plan/v1":
+        raise RuntimeError("unsupported ledger proof plan")
+    rows = {row["id"]: row for row in canonical_cases["cases"]}
+    bound = set()
+    def checked_file(relative, expected):
+        location = Path(relative)
+        if location.is_absolute() or ".." in location.parts:
+            raise RuntimeError("proof reference must be repository relative")
+        resolved = (repo / location).resolve()
+        if not resolved.is_relative_to(repo) or not resolved.is_file() or sha(resolved.read_bytes()) != expected:
+            raise RuntimeError("missing or stale proof reference")
+        return resolved
+    for binding in plan["bindings"]:
+        proof = binding["proof"]
+        state = binding["workflowState"]
+        if state not in ("ready", "complete") or proof["result"] != "passed":
+            raise RuntimeError("unsupported proof state")
+        if proof["scope"] not in ("stage", "complete-case") or (state == "complete" and proof["scope"] != "complete-case"):
+            raise RuntimeError("stage proof cannot complete a canonical case")
+        if proof.get("operation") not in ("clean", "extract", "resolve", "annotate", "pipeline"):
+            raise RuntimeError("unsupported proof operation")
+        if not proof["command"] or not binding["rationale"] or not proof["targetTests"] or not binding["cases"]:
+            raise RuntimeError("incomplete proof binding")
+        checked_file(proof["evidencePath"], proof["evidenceSha256"])
+        for target in proof["targetTests"]:
+            source = checked_file(target["path"], target["sha256"]).read_text()
+            if not target["name"] or target["name"] not in source:
+                raise RuntimeError("target test label absent")
+        for reference in proof["references"]:
+            checked_file(reference["path"], reference["sha256"])
+        for case in binding["cases"]:
+            row = rows.get(case["id"])
+            if row is None or case["id"] in bound or row["observation"]["normalizedSha256"] != case["observationSha256"]:
+                raise RuntimeError("unknown, duplicate or changed source proof binding")
+            row.update(workflowState=state, proof=proof, targetTest=proof["targetTests"][0])
+            bound.add(case["id"])
+    canonical_cases["proofPlan"] = {"path": str(path.relative_to(repo)), "sha256": sha(raw)}
+    return len(bound)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--oracle-root", type=Path, required=True)
@@ -143,7 +186,7 @@ def main():
             raise RuntimeError("unclassified source row")
     regexes = regex_sources(root)
     source_rows.extend(regexes)
-    source = common | {"schemaVersion": "citation-source-inventory/v1", "rows": source_rows,
+    source = common | {"schemaVersion": "citation-source-inventory/v2", "rows": source_rows,
                        "testMethods": [row for row in discovery["sourceRows"] if row["kind"] == "testMethod"],
                        "parameterSources": assertions["source"],
                        "declarationExpansions": [{"declarationId": row["id"], "eventIds": [event["id"] for event in assertions["events"]
@@ -167,7 +210,7 @@ def main():
                       "targetTest": None, "proof": None})
     fixture_rows = [row | {"license": LICENSE, "repository": provenance["repository"], "commit": PIN,
                           "bytes": (root / row["path"]).stat().st_size} for row in source_rows if row["kind"] == "fixture"]
-    canonical_cases = common | {"schemaVersion": "citation-canonical-cases/v1", "capabilities": capabilities,
+    canonical_cases = common | {"schemaVersion": "citation-canonical-cases/v2", "capabilities": capabilities,
                                "cases": cases, "fixtures": fixture_rows,
                                "operationObservations": [{"id": row["id"], "sourceSiteId": row["sourceSiteId"],
                                                           "operation": row["operation"], "test": row["test"],
@@ -181,10 +224,11 @@ def main():
             patterns.append({"id": f"{artifact_hash}::{index}", "artifactSha256": artifact_hash, "index": index,
                              "patternSha256": sha(fields["regex"].encode()), "flags": fields["flags"],
                              "constructor": fields["constructor"]["callable"], "workflowState": "audit", "proof": None})
-    regex_report = common | {"schemaVersion": "citation-regex-inventory/v1",
+    regex_report = common | {"schemaVersion": "citation-regex-inventory/v2",
                              "families": [{"id": row["id"], "form": row["form"], "workflowState": "audit", "proof": None}
                                           for row in regexes], "extractorInstances": patterns,
                              "scope": "Source families and expanded tokenizer instances; no JavaScript regex safety proof yet."}
+    bound = apply_proof_plan(repo, canonical_cases, repo / "goals/citation-extraction-engine/ops/ledger-proof-plan.json")
     output.mkdir(parents=True, exist_ok=True)
     for name, value in [("source-inventory.json", source), ("canonical-cases.json", canonical_cases), ("regex-inventory.json", regex_report)]:
         # One record per line keeps expanded pattern/case evidence reviewable.
@@ -196,7 +240,7 @@ def main():
             text += ",\n".join("    " + canonical(item) for item in items)
             text += "\n  ]"
         output.joinpath(name).write_text(text + "\n}\n")
-    print(f"source={len(source_rows)}; capabilities={len(capabilities)}; cases={len(cases)}; regexFamilies={len(regexes)}; extractorInstances={len(patterns)}")
+    print(f"boundProofCases={bound}; source={len(source_rows)}; capabilities={len(capabilities)}; cases={len(cases)}; regexFamilies={len(regexes)}; extractorInstances={len(patterns)}")
 
 
 if __name__ == "__main__":

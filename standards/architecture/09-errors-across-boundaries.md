@@ -299,7 +299,7 @@ const problemDetail = ProblemDetail.make;
 // import { problemDetail } from "@beep/http-problem-detail";
 
 const handler = Effect.fn("http.POST /v1/iam/memberships/:id/revoke")(
-  function* (cmd: RevokeMembership, correlationId: string) {
+  function* (cmd: RevokeMembership, correlationId: string): Effect.fn.Return<void | typeof ProblemDetail.Type> {
     return yield* service.revoke(cmd).pipe(
       Effect.catchTags({
         MembershipNotFound: () =>
@@ -329,7 +329,12 @@ const handler = Effect.fn("http.POST /v1/iam/memberships/:id/revoke")(
 );
 ````
 
-`Effect.catchTags` is exhaustive against the public action-error union. The handler's return type is the protocol response — no action error escapes.
+`Effect.catchTags` handles every member of this declared public action-error
+union; it does not itself require exhaustive recovery. The explicit
+`Effect.fn.Return<void | typeof ProblemDetail.Type>` fixes the error channel to
+`never`, so adding an unhandled public error to `service.revoke` fails at compile
+time. The `void` success result and problem-detail failure values remain
+unchanged.
 
 The exact transport helper (`problemDetail`, JSON shape, status mapping table) is defined once per protocol stack and reused. It is not invented per handler.
 

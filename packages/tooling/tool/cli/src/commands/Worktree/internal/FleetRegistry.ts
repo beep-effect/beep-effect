@@ -14,6 +14,7 @@ import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -43,7 +44,6 @@ import {
   FleetSeatRole,
 } from "./FleetRegistry.schemas.ts";
 import { fleetStateDirectory, readOptionalFleetStateFile } from "./FleetRoots.ts";
-import type * as Digest from "effect/crypto/Digest";
 import type { SessionLedgerRow } from "../../Session/Session.schemas.ts";
 import type { PrRepository } from "../../Yeet/internal/Provenance.ts";
 import type { FleetCheckout, FleetScanOptions } from "../Worktree.schemas.ts";
@@ -545,9 +545,12 @@ export const FleetRegistryStoreLive: Layer.Layer<
 > = Layer.effect(
   FleetRegistryStore,
   Effect.gen(function* () {
-    const context = yield* Effect.context<
+    // Only the services the store uses: the caller's Clock and ConfigProvider must stay in effect, so a store
+    // built under a test clock or one environment never overrides the caller's.
+    const runtime = yield* Effect.context<
       FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
     >();
+    const context = Context.pick(FileSystem.FileSystem, Path.Path, SecureRandom.SecureRandom, Digest.Digest)(runtime);
     // The lock file serializes processes; this permit serializes fibers of one process, which a
     // same-process lock-file contender would otherwise spin against.
     const writer = yield* Semaphore.make(1);

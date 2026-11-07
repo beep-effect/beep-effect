@@ -11,6 +11,7 @@ import { COMMON_HTML, CURRENCY, ENTITY_ACTION, EntityDecoder } from "@nodable/en
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -1480,6 +1481,22 @@ export class LibraryEffectiveCapture extends S.Opaque<
   )
 ) {}
 
+// Catalogs are immutable values: one capture index per catalog reference keeps per-source evidence linear.
+let lastCaptureIndex: O.Option<readonly [LibraryCatalog, HashMap.HashMap<string, ReadonlyArray<LibraryCapture>>]> =
+  O.none();
+
+const capturesBySourceIndex = (catalog: LibraryCatalog): HashMap.HashMap<string, ReadonlyArray<LibraryCapture>> => {
+  if (O.isSome(lastCaptureIndex) && lastCaptureIndex.value[0] === catalog) return lastCaptureIndex.value[1];
+  let index = HashMap.empty<string, Array<LibraryCapture>>();
+  for (const capture of catalog.captures) {
+    const existing = HashMap.get(index, capture.sourceId);
+    if (O.isSome(existing)) existing.value.push(capture);
+    else index = HashMap.set(index, capture.sourceId, [capture]);
+  }
+  lastCaptureIndex = O.some([catalog, index] as const);
+  return index;
+};
+
 /**
  * Select the latest validated claim in immutable catalog append order for each required revision.
  * **Details**
@@ -1510,8 +1527,11 @@ export const libraryEffectiveCaptures = Effect.fn("Library.effectiveCaptures")(f
         capture: null,
         category: "missing",
       });
-      for (const capture of catalog.captures) {
-        if (capture.sourceId !== source.id || capture.requestedRevision !== revision) continue;
+      for (const capture of O.getOrElse(
+        HashMap.get(capturesBySourceIndex(catalog), source.id),
+        A.empty<LibraryCapture>
+      )) {
+        if (capture.requestedRevision !== revision) continue;
         const claim = yield* currentCaptureClaim(root, catalog, source, capture, revision);
         if (O.isSome(claim)) selected = claim.value;
       }
