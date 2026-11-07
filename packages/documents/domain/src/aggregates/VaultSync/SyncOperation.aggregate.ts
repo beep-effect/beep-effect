@@ -44,7 +44,9 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
       s === null
         ? [C.OperationQueued.make(Struct.omit(c, ["_tag"]))]
         : retarget(s, c.input)
-          ? [C.OperationRetargeted.make(Struct.omit(c, ["_tag"]))]
+          ? c.input.generation <= s.input.generation
+            ? []
+            : [C.OperationRetargeted.make(Struct.omit(c, ["_tag"]))]
           : refused("not-retargetable"),
     SquashOperation: (s, c) =>
       retarget(s, c.input) ? [C.OperationSquashed.make(Struct.omit(c, ["_tag"]))] : refused("not-retargetable"),
@@ -110,7 +112,7 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
       s === null ? s : { ...s, status: "retrying", holder: null, retryAt: e.retryAt },
     OperationFailed: (s): C.OperationState => (s === null ? s : { ...s, status: "failed", holder: null }),
     OperationSuperseded: (s): C.OperationState => (s === null ? s : { ...s, status: "superseded", holder: null }),
-    OperationRevived: (s): C.OperationState => (s === null ? s : { ...s, status: "queued", attempts: 0 }),
+    OperationRevived: (s): C.OperationState => (s === null ? s : { ...s, status: "queued" }),
     OperationRequeued: (s): C.OperationState => (s === null ? s : { ...s, status: "queued" }),
   },
 }) {}
