@@ -306,7 +306,9 @@ const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(
   // Stand-ins for the files the install and prepare stamps hash.
   yield* fs.writeFileString(path.join(root, "bun.lock"), "fixture lock\n");
   yield* fs.writeFileString(path.join(root, "package.json"), "{}\n");
-  yield* fs.writeFileString(path.join(root, "scripts/prune-tsgo-backups.mjs"), "\n");
+  const pruneSource = path.join(root, "packages/tooling/tool/cli/src/commands/Toolchain/Toolchain.prune.ts");
+  yield* fs.makeDirectory(path.dirname(pruneSource), { recursive: true });
+  yield* fs.writeFileString(pruneSource, "\n");
   const readFileString1 = yield* fs.readFileString(path.join(root, ".nvmrc"));
   const nodeVersion = Str.trim(readFileString1);
   const nodeBin = path.join(root, "node-src", `node-v${nodeVersion}-linux-x64`, "bin");

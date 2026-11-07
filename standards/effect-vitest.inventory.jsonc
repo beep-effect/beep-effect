@@ -1982,6 +1982,72 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/agent-runs-slice.test.ts:7:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/agent-runs-slice.test.ts",
+      "line": 7,
+      "endLine": 7,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The --install cases spawn the real CLI bin with a scoped temp HOME and assert the unit files it writes; a child process sees only the real filesystem, and the temp directory is scoped by it.layer."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/github-app-mint.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/github-app-mint.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The handler spawns a real bash pipeline into a fake op and op-doctor on PATH through ChildProcessSpawner, and the dry run reads the committed repo-configs manifests; a live child process sees only the real filesystem."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts:10:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Each case runs the pinned gitleaks binary over a scoped temp directory with the repository's real .gitleaks.toml; an external scanner sees only the real filesystem."
+    },
+    {
       "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:165:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -2328,6 +2394,28 @@
       "mechanization": "detector",
       "status": "exception",
       "reason": "The CLI command reads process.cwd directly. withCwd acquires and releases a narrow override around one command call, restoring the original function even on failure; native Git checkout behavior is the test subject. Owner: @beep/repo-cli. Exit: the session open, note and register commands take their checkout from an injected working-directory service instead of process.cwd(). #1855 wave 5 register."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/toolchain-prune-tsgo-backups.test.ts:3:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/toolchain-prune-tsgo-backups.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The CLI cases spawn the real bin with a scoped temp node_modules fixture as cwd, as root prepare does; a child process sees only the real filesystem, and the temp directory is scoped by it.layer."
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/worktree-remove-fence.test.ts:105:withRealCwd@20#1",

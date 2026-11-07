@@ -31,12 +31,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Depends on `goals/repo-cli-gh-git-consolidation` for `beep github app mint`; follows `goals/beep-cli-composition` for tool placement.
+P1 Implement — in progress (lane `beep-effect-worktrees/scripts-to-beep-cli`, branch `goals/scripts-to-beep-cli`). Two PRs: PR 1 lands every replacement command, the slim compiled `bin-ci` entry and the binary publisher; PR 2 pins the first published binary, switches the workflows, deletes the CI shell and adds the tracked-shell law. Commands stay in `@beep/repo-cli` until `goals/beep-cli-composition` moves them.
 
 ## Latest Evidence
 
 - 2026-11-06 grill session decisions D10, D11, D15 in [`explorations/pulumi-to-alchemy/DECISIONS.md`](../../explorations/pulumi-to-alchemy/DECISIONS.md).
 - Consumer inventory of `scripts/` recorded in `SPEC.md` Target Surfaces.
+- 2026-11-07 P0: compile probe (full CLI fails on eager DuckDB, slim CiOperational entry bundles 672 modules / 110 MB) and five decisions under [`decisions/`](./decisions/).
 
 ## Notes
 

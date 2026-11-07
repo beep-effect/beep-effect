@@ -1,0 +1,15 @@
+{
+  "previous": "2c1be6c679009496631354e7eb1e0c439f6308f72c9e5d88b3dba8c9b7ba8ce6",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/scripts-to-beep-cli PR 1, #2860)",
+    "reason": "Re-record this PR's root prepare swap to beep toolchain prune-tsgo-backups, the repo-cli changeset formatter dev dependencies and beep:check script, and the regenerated policy-fingerprint seals on top of main after #2881, #2859 and #2863 (97a7bb87f4); no command, input, output, env or cache flag changes and no qualification is granted.",
+    "basis": {
+      "path": "goals/scripts-to-beep-cli/research/cache-baseline-review-pr1.md",
+      "sha256": "910deea915420b8f5e03f5a4a8e878bb62bdc35e9e03fb3d6215afec3d912540"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "subjects": ["//", "@beep/repo-cli"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

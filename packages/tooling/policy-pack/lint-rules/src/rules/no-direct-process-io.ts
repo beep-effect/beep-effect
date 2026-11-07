@@ -21,7 +21,7 @@ import type { ESTree } from "@oxlint/plugins";
 import type { AstNode, MaybeNode } from "./utils.ts";
 
 // These calls run at synchronous host boundaries: the IPC guard and error reporter
-// cannot yield an Effect; the CLI repairs the TTY and exits after stream drain;
+// cannot yield an Effect; the full and slim CI CLI entrypoints exit after stream drain;
 // docgen forces a successful exit after its runtime has completed.
 // Match both file and operation so a new direct write in either entrypoint is flagged.
 const HOST_OPERATIONS: ReadonlyArray<readonly [path: string, operation: string]> = [
@@ -29,6 +29,7 @@ const HOST_OPERATIONS: ReadonlyArray<readonly [path: string, operation: string]>
   ["packages/foundation/capability/observability/src/server/ErrorReporting.ts", "process.stderr.write"],
   ["packages/tooling/tool/cli/src/bin-main.ts", "process.stdout.write"],
   ["packages/tooling/tool/cli/src/bin-main.ts", "process.exit"],
+  ["packages/tooling/tool/cli/src/bin-ci.ts", "process.exit"],
   ["packages/tooling/tool/docgen/src/bin.ts", "process.exit"],
 ];
 
