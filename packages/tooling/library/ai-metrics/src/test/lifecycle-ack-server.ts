@@ -11,6 +11,8 @@ import * as FileSystem from "effect/FileSystem";
 import { failure } from "../internal/cursor-lifecycle-schemas.ts";
 import type { Socket } from "node:net";
 
+const destroySocket = (socket: Socket) => socket.destroy();
+
 /**
  * Accept one bounded synthetic callback and return the configured test ACK.
  * **Example** (Inspect the transport fixture without listening)
@@ -47,12 +49,12 @@ export const makeLifecycleAckServer = Effect.fn("LifecycleTest.syntheticAckServe
           Deferred.doneUnsafe(seen, Effect.void);
           if (!hold) socket.end(reply);
         });
-        socket.once("error", () => socket.destroy());
+        socket.once("error", destroySocket.bind(undefined, socket));
       })
     ),
     (server) =>
       Effect.callback<void>((resume) => {
-        A.forEach(sockets, (socket) => socket.destroy());
+        A.forEach(sockets, destroySocket);
         server.close(() => resume(Effect.void));
       })
   );

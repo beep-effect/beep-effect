@@ -9,7 +9,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as Queue from "effect/Queue";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { CursorLifecycleCodecs, failure, isLifecycleError } from "./cursor-lifecycle-schemas.ts";
+import { CursorLifecycleCodecs, failure, normalizeLifecycleFailure } from "./cursor-lifecycle-schemas.ts";
 import { hashObservationPayload } from "./native-trace-wire.ts";
 import type * as Context from "effect/Context";
 import type { NativeTraceBatch } from "../native-trace.ts";
@@ -142,7 +142,7 @@ export const makeLifecycleBridge = Effect.fn("AiMetrics.lifecycle.bridge")(funct
     ).pipe(Effect.timeoutOrElse({ duration: lifetimeMillis, orElse: () => Effect.fail(failure("transport")) }));
     const running = yield* Effect.forkChild(
       control.run(work).pipe(
-        Effect.mapError((error) => (isLifecycleError(error) ? error : failure("transport"))),
+        Effect.mapError(normalizeLifecycleFailure),
         Effect.tapError((error) => Deferred.fail(ready, error)),
         Effect.tapCause(() => Deferred.fail(ready, failure("transport")))
       )

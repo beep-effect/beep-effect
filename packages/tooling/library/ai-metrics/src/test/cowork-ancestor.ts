@@ -31,6 +31,7 @@ const scriptResult = S.Struct({ code: S.Int, stdout: S.String, stderr: S.String 
 const encode = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeIdentity = S.decodeEffect(S.fromJsonString(identity));
 const decodeScriptResult = S.decodeEffect(S.fromJsonString(scriptResult));
+const transportFailure = (_error: unknown) => failure("transport");
 /**
  * Named source-only process fixture port; no inferred private error brands cross this boundary.
  * **Example** (Reference the port type without launching a process)
@@ -146,7 +147,7 @@ export const coworkAncestorFixture: Effect.Effect<
       semaphore.withPermit,
       Effect.onInterrupt(() => close),
       Effect.timeout("6 seconds"),
-      Effect.mapError(() => failure("transport"))
+      Effect.mapError(transportFailure)
     );
     const send = Effect.fnUntraced(function* (path: string, body: string, drop = false) {
       if (new TextEncoder().encode(body).byteLength > 8192 || Str.includes("\n")(body))
@@ -155,21 +156,18 @@ export const coworkAncestorFixture: Effect.Effect<
     });
     const runScript = Effect.fnUntraced(function* (script: string, path: string, body: string, selector: string) {
       const result = yield* exchange({ kind: "script", script, path, body, selector });
-      return yield* decodeScriptResult(result).pipe(Effect.mapError(() => failure("transport")));
+      return yield* decodeScriptResult(result).pipe(Effect.mapError(transportFailure));
     });
-    const runtimeStopped = runtime.closed.pipe(Effect.mapError(() => failure("transport")));
+    const runtimeStopped = runtime.closed.pipe(Effect.mapError(transportFailure));
     const closed = observeFixtureProcessStopped(child).pipe(
       Effect.andThen(runtimeStopped),
-      Effect.mapError(() => failure("transport"))
+      Effect.mapError(transportFailure)
     );
     const fixture: CoworkAncestorFixture = { ...app, runtime, send, runScript, close, closed };
     return fixture;
   }).pipe(
     Scope.provide(owned),
     Effect.onError(() => close),
-    Effect.mapError(() => failure("transport"))
+    Effect.mapError(transportFailure)
   );
-}).pipe(
-  Effect.mapError(() => failure("transport")),
-  Effect.withSpan("CoworkTest.ancestor")
-);
+}).pipe(Effect.mapError(transportFailure), Effect.withSpan("CoworkTest.ancestor"));

@@ -13,7 +13,7 @@ import {
   CursorLifecycleCodecs,
   failure,
   isCursorReportedEffort,
-  isLifecycleError,
+  normalizeLifecycleFailure,
 } from "./cursor-lifecycle-schemas.ts";
 import { cursorPeerSource } from "./cursor-peer-source.ts";
 import { makeLifecycleBridge } from "./lifecycle-bridge.ts";
@@ -116,12 +116,9 @@ export const makeCursorLifecycleCore = Effect.fn("AiMetrics.cursorLifecycle.make
       runtimeSha256: policy.runtimeSha256,
       sourcePins: policy.sourcePins,
     },
-    Effect.fnUntraced(
-      function* (message: string) {
-        const observed = yield* decodeObserved(message).pipe(Effect.mapError(() => failure("callback")));
-        return yield* projectOccurrence(policy, observed);
-      },
-      Effect.mapError((error) => (isLifecycleError(error) ? error : failure("transport")))
-    )
+    Effect.fnUntraced(function* (message: string) {
+      const observed = yield* decodeObserved(message).pipe(Effect.mapError(() => failure("callback")));
+      return yield* projectOccurrence(policy, observed);
+    }, Effect.mapError(normalizeLifecycleFailure))
   );
 });

@@ -1,3 +1,4 @@
+import { createConnection } from "node:net";
 import {
   CoworkLifecycleError,
   CoworkLifecyclePolicy,
@@ -194,6 +195,29 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
   it.effect(
+    "a stalled journal acknowledgement expires without a commit or durable ACK and removes the owned listener",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const attempted = yield* Deferred.make<void>();
+        const journal: typeof f.journal = {
+          ...f.journal,
+          acceptBatch: () => Deferred.succeed(attempted, undefined).pipe(Effect.andThen(Effect.never)),
+        };
+        const deliver = makeDelivery(f.policy, journal, f.control, f.ancestor);
+        const delivering = yield* Effect.forkChild(deliver(start));
+        yield* Deferred.await(attempted);
+        yield* TestClock.adjust("1 second");
+        const delivered = yield* Fiber.join(delivering);
+        assertFailure(delivered.result, CoworkLifecycleError.make({ reason: "transport" }));
+        assertFailure(delivered.reply, CoworkLifecycleError.make({ reason: "transport" }));
+        expect((yield* f.journal.stats).pages).toBe(0);
+        const listener = yield* fs.exists(f.policy.socketPath);
+        assertFalse(listener);
+      })
+  );
+  it.effect(
     "fixed public pins permit inert construction but synthetic source enrollment still refuses before dispatch",
     () =>
       Effect.gen(function* () {
@@ -309,6 +333,95 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
 
 it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), { memoMap: Layer.makeMemoMapUnsafe() })(
   (it) => {
+    it.effect("synthetic ACK server closes an oversized request and refuses an occupied owned socket path", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const server = yield* makeLifecycleAckServer("{}", false);
+        const socket = yield* Effect.acquireRelease(
+          Effect.sync(() => createConnection({ path: server.path })),
+          (owned) =>
+            Effect.sync(() => {
+              owned.destroy();
+            })
+        );
+        yield* Effect.callback<void>((resume) => {
+          socket.once("connect", () => socket.end(Str.repeat(8193)("x")));
+          socket.once("error", () => resume(Effect.void));
+          socket.once("close", () => resume(Effect.void));
+        });
+        const received = yield* server.received;
+        expect(received.length).toBeLessThanOrEqual(8192);
+        const guarded = FileSystem.FileSystem.of({
+          ...fs,
+          makeTempDirectoryScoped: (options) =>
+            fs
+              .makeTempDirectoryScoped(options)
+              .pipe(Effect.tap((directory) => fs.writeFileString(`${directory}/s`, "owned-occupied", { mode: 0o600 }))),
+        });
+        const refused = yield* makeLifecycleAckServer("{}", false).pipe(
+          Effect.result,
+          Effect.provideService(FileSystem.FileSystem, guarded)
+        );
+        assertFailure(refused, CoworkLifecycleError.make({ reason: "transport" }));
+      })
+    );
+    it.effect("malformed synthetic application readiness fails finite and releases the owned runtime copy", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const original = yield* ChildProcessSpawner.ChildProcessSpawner;
+        let calls = 0;
+        let releases = 0;
+        let executable = "";
+        const trackedFs = FileSystem.FileSystem.of({
+          ...fs,
+          copyFile: (source, destination) =>
+            fs.copyFile(source, destination).pipe(
+              Effect.tap(() =>
+                Effect.sync(() => {
+                  executable = destination;
+                })
+              )
+            ),
+        });
+        const output = Stream.make(new TextEncoder().encode("not-json\n"));
+        const spawner = ChildProcessSpawner.make((command) => {
+          calls++;
+          if (calls === 1) return original.spawn(command);
+          return Effect.acquireRelease(
+            Effect.succeed(
+              ChildProcessSpawner.makeHandle({
+                all: output,
+                stdout: output,
+                stderr: Stream.empty,
+                stdin: Sink.drain,
+                exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+                isRunning: Effect.succeed(false),
+                kill: () => Effect.void,
+                getInputFd: () => Sink.drain,
+                getOutputFd: () => Stream.empty,
+                pid: ChildProcessSpawner.ProcessId(1),
+                unref: Effect.succeed(Effect.void),
+              })
+            ),
+            () =>
+              Effect.sync(() => {
+                releases++;
+              })
+          );
+        });
+        const result = yield* coworkAncestorFixture.pipe(
+          Effect.result,
+          Effect.provideService(FileSystem.FileSystem, trackedFs),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+        );
+        assertFailure(result, CoworkLifecycleError.make({ reason: "transport" }));
+        expect(calls).toBe(2);
+        expect(releases).toBe(1);
+        expect(executable.length).toBeGreaterThan(0);
+        const remains = yield* fs.exists(executable);
+        expect(remains).toBe(false);
+      })
+    );
     it.effect("owned ancestor refuses callback injection and oversized commands before an ACK request", () =>
       Effect.gen(function* () {
         const ancestor = yield* coworkAncestorFixture;
