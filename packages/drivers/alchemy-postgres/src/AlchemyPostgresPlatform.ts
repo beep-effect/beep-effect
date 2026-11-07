@@ -163,7 +163,8 @@ const make = Effect.fn("AlchemyPostgresPlatform.make")(function* (config: Alchem
  *
  * **Details**
  *
- * Provenance columns are filled from `meta.context` per `config.provenance`;
+ * Provenance columns are filled from `meta.context` per `config.provenance`
+ * and `config.provenanceMappings` (string fields only);
  * each event row's `schema_version` is its class's static `schemaVersion`
  * (default 1), and reads lift older rows with the class's static `upcast`.
  * Hosting two different models with the same name on one built platform
