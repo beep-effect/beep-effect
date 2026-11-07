@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T20:53:33.693Z
+Generated: 2026-11-07T22:14:10.644Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 176 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3821 |
-| publicExports | 27186 |
+| publicModules | 3822 |
+| publicExports | 27190 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -218,7 +218,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 160 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
 | 161 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
 | 162 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 163 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 552 | 5083 | 45 | 29 |
+| 163 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 553 | 5087 | 45 | 29 |
 | 164 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
 | 165 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
 | 166 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
