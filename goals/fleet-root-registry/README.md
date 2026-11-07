@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,10 +34,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement and P2 Verify complete (2026-11-06). P3 Yeet and P4 Close run
-in the final PR #2859 (supporting fix #2852), which carries the closeout
-reflection and proposes `completed-retained`; a packet-state PR adopts it
-after the merge.
+Complete (`completed-retained`, 2026-11-07). The work shipped in #2852 (origin
+canonicalization) and #2859 (roots list, registry, `--join`/`describe`/
+`register`), with #2890 restoring the coverage floors #2859 dropped. The
+docs-only re-final #2893 carried the closeout pointer because #2859 merged under
+S11; `goals completion refresh` verified it. `lane-bootstrap` and
+`ops-seat-timers` are unblocked.
 
 ## Latest Evidence
 

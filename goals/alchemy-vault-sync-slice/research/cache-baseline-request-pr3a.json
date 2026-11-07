@@ -1,0 +1,14 @@
+{
+  "previous": "2c1be6c679009496631354e7eb1e0c439f6308f72c9e5d88b3dba8c9b7ba8ce6",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (orchestrator; PR 3a GPT-6.1 Sol self-review applied)",
+    "reason": "Review the alchemy domain dependency and documents use-case PGlite/driver test dependency edges only; no cache posture or qualification change.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3a.md",
+      "sha256": "aeb57f11e58aa293888a4af16fc0eafa9ceb85b0d54330e015fdff591213fd94"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

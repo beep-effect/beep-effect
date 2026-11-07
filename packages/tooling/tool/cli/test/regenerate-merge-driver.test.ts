@@ -18,8 +18,10 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 
-const sourceRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
-const driverPath = `${sourceRoot}scripts/regenerate-merge-driver.sh`;
+const cliEntry = NodeURL.fileURLToPath(new URL("../src/bin.ts", import.meta.url));
+// The configured driver is `bun run --silent beep git merge-driver regenerate ...`; the fixture has no
+// root `beep` script, so it runs the same command through the bin directly.
+const driverArgs = ["--silent", cliEntry, "git", "merge-driver", "regenerate"];
 const mergeDriverScenario = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -45,38 +47,49 @@ const mergeDriverScenario = Effect.fnUntraced(function* () {
   yield* fs.writeFileString(ancestor, "ancestor\n");
   yield* fs.writeFileString(current, "current\n");
   yield* fs.writeFileString(other, "other\n");
-  const [generated, , generatedStderr] = yield* run(driverPath, [ancestor, current, other, "tsconfig.json"]);
-  expect(generated).not.toBe(0);
-  expect(generatedStderr).toContain("left tsconfig.json conflicted");
+  const [generated, generatedStdout, generatedStderr] = yield* run("bun", [
+    ...driverArgs,
+    ancestor,
+    current,
+    other,
+    "tsconfig.json",
+  ]);
+  expect(generated).toBe(1);
+  expect(generatedStdout).toBe("");
+  expect(generatedStderr).toBe(
+    "regenerate merge driver left tsconfig.json conflicted; regenerate it after Git installs the merged tree\n"
+  );
   const readFileString1 = yield* fs.readFileString(current);
   expect(readFileString1).toBe("current\n");
 
-  const [manifest, , manifestStderr] = yield* run(driverPath, [
+  const [manifest, , manifestStderr] = yield* run("bun", [
+    ...driverArgs,
     ancestor,
     current,
     other,
     "goals/demo/ops/manifest.json",
   ]);
-  expect(manifest).not.toBe(0);
+  expect(manifest).toBe(1);
   expect(manifestStderr).toContain("left goals/demo/ops/manifest.json conflicted");
 
-  const [refused, , refusedStderr] = yield* run(driverPath, [ancestor, current, other, "bun.lock"]);
-  expect(refused).not.toBe(0);
-  expect(refusedStderr).toContain("refused non-projection path: bun.lock");
+  const [refused, , refusedStderr] = yield* run("bun", [...driverArgs, ancestor, current, other, "bun.lock"]);
+  expect(refused).toBe(1);
+  expect(refusedStderr).toBe("regenerate merge driver refused non-projection path: bun.lock\n");
 
-  yield* fs.makeDirectory(path.join(root, "scripts"));
-  yield* fs.copyFile(driverPath, path.join(root, "scripts", "regenerate-merge-driver.sh"));
+  const commandSource = path.join(root, "packages", "tooling", "tool", "cli", "src", "commands", "Git");
+  yield* fs.makeDirectory(commandSource, { recursive: true });
+  yield* fs.writeFileString(path.join(commandSource, "Git.command.ts"), "\n");
   yield* installRegenerateMergeDriver(root);
   yield* installRegenerateMergeDriver(root);
   const [configured, configuredStdout] = yield* run("git", ["config", "--local", "--get", "merge.regenerate.driver"]);
   expect(configured).toBe(0);
-  expect(configuredStdout).toContain("scripts/regenerate-merge-driver.sh");
+  expect(configuredStdout).toBe("bun run --silent beep git merge-driver regenerate %O %A %B %P\n");
 });
 
 // `installRegenerateMergeDriver` writes its config through `Git.configSet` (W7c).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "5 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "60 seconds" })(
   "regenerate merge driver",
   (it) => {
     it.effect("leaves allowlisted projections conflicted until the merged tree is available", mergeDriverScenario);

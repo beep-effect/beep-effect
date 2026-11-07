@@ -8,7 +8,7 @@ Lanes record decisions as their own files; SPEC.md and PLAN.md blocks are genera
 
 - Converting the 265 existing packets' hand-written Decision Log tables and
   dated sections into files (forward-only; per-packet conversion is optional).
-- Editing `.gitattributes` or `scripts/regenerate-merge-driver.sh`; the
+- Editing `.gitattributes` or `packages/tooling/tool/cli/src/commands/Git/Git.command.ts`; the
   sibling lane feat/goal-manifest-research-projection owns both.
 - Generating any other SPEC.md or PLAN.md section (phase tables, acceptance
   criteria, exception ledgers stay authored).
@@ -101,7 +101,7 @@ Reverse: Convert a packet by hand: move each legacy entry into a decision file, 
 
 ### Generated blocks are regenerate-driver candidates; .gitattributes handoff to the manifest-research lane, 2026-11-05
 
-The SPEC.md and PLAN.md blocks are pure projections of `decisions/*.md`, so they qualify for the `regenerate` merge driver (`scripts/regenerate-merge-driver.sh`, `.gitattributes`). This lane does not edit those two files: the sibling lane feat/goal-manifest-research-projection is making `ops/manifest.json` `research[]` a directory projection and owns both edits. Handoff: that lane adds `goals/*/SPEC.md` and `goals/*/PLAN.md` to the allowlist only if the driver learns to regenerate a marker block inside an otherwise authored file; until then the documented repair is to merge main and run `bun run beep goals decisions write --slug <slug>`. The doctor keeps both honest either way.
+The SPEC.md and PLAN.md blocks are pure projections of `decisions/*.md`, so they qualify for the `regenerate` merge driver (`packages/tooling/tool/cli/src/commands/Git/Git.command.ts`, `.gitattributes`). This lane does not edit those two files: the sibling lane feat/goal-manifest-research-projection is making `ops/manifest.json` `research[]` a directory projection and owns both edits. Handoff: that lane adds `goals/*/SPEC.md` and `goals/*/PLAN.md` to the allowlist only if the driver learns to regenerate a marker block inside an otherwise authored file; until then the documented repair is to merge main and run `bun run beep goals decisions write --slug <slug>`. The doctor keeps both honest either way.
 
 Lane `feat/goal-packet-decision-files`
 

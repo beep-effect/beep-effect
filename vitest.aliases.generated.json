@@ -2279,5 +2279,20 @@
     "./packages/tooling/tool/cli/src/commands/History/index.ts"
   ],
   "@beep/firecrawl": ["./packages/drivers/firecrawl/src/index.ts"],
-  "@beep/firecrawl/*": ["./packages/drivers/firecrawl/src/*"]
+  "@beep/firecrawl/*": ["./packages/drivers/firecrawl/src/*"],
+  "@beep/alchemy-postgres/internal/*": [
+    "./packages/drivers/alchemy-postgres/src/internal/*"
+  ],
+  "@beep/repo-cli/ChangesetChangelog": [
+    "./packages/tooling/tool/cli/src/ChangesetChangelog.ts"
+  ],
+  "@beep/repo-cli/commands/Git": [
+    "./packages/tooling/tool/cli/src/commands/Git/index.ts"
+  ],
+  "@beep/repo-cli/commands/Github": [
+    "./packages/tooling/tool/cli/src/commands/Github/index.ts"
+  ],
+  "@beep/repo-cli/commands/Toolchain": [
+    "./packages/tooling/tool/cli/src/commands/Toolchain/index.ts"
+  ]
 }

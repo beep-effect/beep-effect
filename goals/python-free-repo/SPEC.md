@@ -46,7 +46,7 @@ Inventory at graduation (`git ls-files '*.py'`, 2026-11-06): about 290 files.
 | `.claude/skills/plasma-sensitive-entry/scripts/*.py` | 4 | port to TypeScript over `effect/process` driving `kdialog`; the skill's install step updates |
 | `.claude/skills/ontology-foundational-auditor/scripts/validate_artifacts.py` | 1 | port to TypeScript (`bun` runnable from the skill) |
 | `apps/labs/ciops/scripts/*.py` | 2 | port to the app's test or script surface |
-| `scripts/test-gitleaks-observation-digest.py` | 1 | vitest in the owning package (`scripts-to-beep-cli` coordinates) |
+| `test-gitleaks-observation-digest.py` (retired) | 1 | ported to `packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts` (`scripts-to-beep-cli` PR #2860) |
 | `goals/*/ops/*.py` still run by timers or commands | triage | port |
 | `goals/*/ops`, `goals/*/research`, `explorations/*` one-shot probes | majority | delete, ledger note per packet naming the retained outputs |
 
@@ -57,7 +57,7 @@ outside the repo if you must, never commit it."
 ## Constraints
 
 - Triage is evidence-based: a file is "still run" only if `rg` finds a consumer in workflows,
-  `scripts/systemd`, `~/.config/systemd/user` units committed to the repo, skill `SKILL.md`
+  `packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts`, `~/.config/systemd/user` units committed to the repo, skill `SKILL.md`
   text, hooks, package scripts or a packet `ops/manifest.json`; record the consumer in the
   triage table under `research/`.
 - Ports are behaviour-preserving: each ported script carries a test that replays a recorded

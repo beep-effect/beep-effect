@@ -38,12 +38,15 @@ import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Formatter from "effect/Formatter";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as References from "effect/References";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -348,12 +351,27 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
         yield* fs.symlink(path.join(outside, "secret.txt"), path.join(root, "leak.txt"));
         yield* fs.symlink(path.join(root, "missing.txt"), path.join(root, "dangling.txt"));
 
-        const status = yield* engine.syncOnce(syncInput(root));
+        const logged: Array<{ readonly message: unknown; readonly annotations: unknown }> = [];
+        const recorder = Logger.make(({ fiber, message }) => {
+          logged.push({ message, annotations: fiber.getRef(References.CurrentLogAnnotations) });
+        });
+        const status = yield* engine
+          .syncOnce(syncInput(root))
+          .pipe(Effect.withLogger(recorder), Effect.provideService(References.MinimumLogLevel, "Debug"));
 
         expect(status.currentItems).toBe(1);
         expect(status.errorItems).toBe(0);
         const tree = yield* handle.snapshotTree;
         expect(R.keys(tree)).toEqual(["tracked.txt"]);
+        // Each skipped link is logged by depth only: no vault path, no entry name.
+        const skipped = A.filter(logged, ({ message }) => Str.includes("skipped a symlink")(Formatter.format(message)));
+        expect(A.map(skipped, ({ annotations }) => annotations)).toEqual([
+          { "documents.vault_sync.depth": 1 },
+          { "documents.vault_sync.depth": 1 },
+        ]);
+        const everything = Formatter.format(logged);
+        expect(everything).not.toContain(root);
+        expect(everything).not.toContain("leak.txt");
       })
     );
   });

@@ -15,22 +15,20 @@ const { A, Str } = await import("@beep/utils");
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
 const { Git } = await import("@beep/git/Git");
-const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { CliRuntime }, { renderCliFailure }] =
+const [ConfigProvider, Console, Effect, Layer, Logger, R, Runtime, { CliRuntime }, { renderCliFailure }] =
   await Promise.all([
     import("effect/ConfigProvider"),
     import("effect/Console"),
     import("effect/Effect"),
     import("effect/Layer"),
     import("effect/Logger"),
-    import("effect/Option"),
     import("effect/Record"),
     import("effect/Runtime"),
     import("@beep/cli-kit/CliRuntime"),
     import("@beep/repo-cli-kit/cli/FailureRendering"),
   ]);
-const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
-  "@beep/repo-cli-kit/cli/Stdout"
-);
+const { streamConsole } = await import("@beep/repo-cli-kit/cli/Stdout");
+const { drainThenExit } = await import("./internal/runtime/ExitDrain.ts");
 const [Dispatch, { loadQualityTasks }, HashSet, Command] = await Promise.all([
   import("./internal/dispatch/Dispatch.ts"),
   import("./internal/dispatch/Dispatch.manifest.ts"),
@@ -175,23 +173,17 @@ const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
       teardown: (exit, onExit) => {
         // A dead terminal must not abort before the drain and exit.
         Result.try(restoreSharedTerminal);
-        Runtime.defaultTeardown(exit, (code) => {
-          // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
-          drainProcessStreams((failure) => {
-            if (Option.isSome(failure)) {
-              const { stream, message, droppedLines } = failure.value;
-              const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
-              const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
-              writeBestEffortLine(
-                channel,
-                fallback,
-                `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
-              );
-            }
-            onExit(code);
-            process.exit(code);
-          });
-        });
+        // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
+        Runtime.defaultTeardown(exit, (code) =>
+          drainThenExit({
+            label: "beep-cli",
+            code,
+            onDrained: () => {
+              onExit(code);
+              process.exit(code);
+            },
+          })
+        );
       },
     }
   );
