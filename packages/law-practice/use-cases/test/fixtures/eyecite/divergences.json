@@ -1692,7 +1692,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-public-semantic-metadata.md",
-          "sha256": "f6d1e9efa909982ed6431bc215198d73d05913c925c60d19206d288777891ae8"
+          "sha256": "67fa7418ea97620ed89059e360f04c7dad232d481ab0ae95eebe679aa4c21be5"
         }
       ],
       "workflowState": "audit",
