@@ -654,8 +654,8 @@ jobs:
     name: Execute approved signed producer
     if: >-
       inputs.producer_execution && !inputs.producer_inspection && !inputs.producer_preparation &&
-      (inputs.producer_channel == 'stable' || inputs.producer_channel == 'canary') &&
       !inputs.local_pilot_observation &&
+      (inputs.producer_channel == 'stable' || inputs.producer_channel == 'canary') &&
       github.repository == 'beep-effect/beep-effect' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&

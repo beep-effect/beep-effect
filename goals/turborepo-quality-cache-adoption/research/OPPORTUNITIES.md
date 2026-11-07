@@ -1410,3 +1410,12 @@ Retain the failing logs privately. No baseline, test expectation, safety bound o
 production setting is relaxed; hosted CI remains the proof authority, and no local
 quality command was run. Match fixtures to the operational byte boundary and
 existing layer patterns when authoring adapters to prevent this repair wave.
+
+### Protected caller condition ordering, 2026-11-07
+
+PR #2850 Property Laws job 128302958851 found that the workflow placed the local
+observation exclusion after the channel condition while its exact security
+assertion required it before. Both conjunctions were present. Align the workflow
+ordering with the existing assertion; retain every guard and the unchanged test.
+No local quality command was run. Review exact workflow-expression assertions
+alongside the corresponding YAML edits to avoid another hosted repair wave.
