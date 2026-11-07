@@ -239,16 +239,21 @@ export const CiOperationalLive = Layer.effect(
 
     const pruneAptSources = Effect.fn("Ci.pruneAptSources")(
       function* (directory: string) {
-        const listing = Effect.fn("Ci.listAptSources")(function* (heading: string) {
-          yield* Console.log(heading);
-          const { stdout, status } = yield* capture("ls", ["-l", directory]);
+        // Echo a command's stdout like the shell did and fail on a non-zero exit.
+        const echoed = Effect.fn("Ci.echoAptCommand")(function* (
+          label: string,
+          command: string,
+          args: ReadonlyArray<string>
+        ) {
+          const { stdout, status } = yield* capture(command, args);
           if (Str.isNonEmpty(stdout)) yield* Console.log(Str.replace(/\n$/u, "")(stdout));
-          if (status !== 0)
-            return yield* CiCommandError.make({ message: `ci prune-apt: ls -l ${directory} exited ${status}` });
+          if (status !== 0) return yield* CiCommandError.make({ message: `ci prune-apt: ${label} exited ${status}` });
         });
+        const listing = (heading: string) =>
+          Console.log(heading).pipe(Effect.andThen(echoed(`ls -l ${directory}`, "ls", ["-l", directory])));
         yield* listing("apt sources before pruning:");
         if (directory === SYSTEM_APT_SOURCES) {
-          const { stdout, status } = yield* capture("sudo", [
+          yield* echoed("sudo find", "sudo", [
             "find",
             directory,
             "-maxdepth",
@@ -268,8 +273,6 @@ export const CiOperationalLive = Layer.effect(
             "-print",
             "-delete",
           ]);
-          if (Str.isNonEmpty(stdout)) yield* Console.log(Str.replace(/\n$/u, "")(stdout));
-          if (status !== 0) return yield* CiCommandError.make({ message: `ci prune-apt: sudo find exited ${status}` });
         } else {
           // `find -maxdepth 1 -type f` without privilege: regular files only, symlinks excluded.
           const prefix = Str.endsWith("/")(directory) ? directory : `${directory}/`;

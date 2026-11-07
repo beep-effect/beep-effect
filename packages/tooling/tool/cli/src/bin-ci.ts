@@ -14,12 +14,7 @@
  */
 import { CliRuntime } from "@beep/cli-kit/CliRuntime";
 import { renderCliFailure } from "@beep/repo-cli-kit/cli/FailureRendering";
-import {
-  drainProcessStreams,
-  ProcessStreamName,
-  streamConsole,
-  writeBestEffortLine,
-} from "@beep/repo-cli-kit/cli/Stdout";
+import { streamConsole } from "@beep/repo-cli-kit/cli/Stdout";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
@@ -27,9 +22,9 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Runtime from "effect/Runtime";
 import { ciBootstrapCommands } from "./commands/Ci/CiBootstrap.command.ts";
+import { drainThenExit } from "./internal/runtime/ExitDrain.ts";
 
 const argv = A.drop(process.argv, 2);
 
@@ -60,21 +55,6 @@ BunRuntime.runMain(
     disableErrorReporting: true,
     // As in bin-main: drain the stream console, then exit with the teardown's code.
     teardown: (exit, onExit) =>
-      Runtime.defaultTeardown(exit, (code) => {
-        drainProcessStreams((failure) => {
-          if (O.isSome(failure)) {
-            const { stream, message, droppedLines } = failure.value;
-            const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
-            const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
-            writeBestEffortLine(
-              channel,
-              fallback,
-              `[beep-ci] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
-            );
-          }
-          onExit(code);
-          process.exit(code);
-        });
-      }),
+      Runtime.defaultTeardown(exit, (code) => drainThenExit({ label: "beep-ci", code, onExit })),
   }
 );

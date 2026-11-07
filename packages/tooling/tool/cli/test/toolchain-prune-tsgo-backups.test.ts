@@ -40,6 +40,28 @@ const BACKUP_FIXTURE_FILES = [
   "tsc",
 ];
 
+const seedBackupDirectory = Effect.fn("ToolchainPruneTest.seedBackupDirectory")(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(directory, { recursive: true });
+  yield* Effect.forEach(BACKUP_FIXTURE_FILES, (file) => fs.writeFileString(path.join(directory, file), file), {
+    discard: true,
+  });
+});
+
+const expectPrunedDirectory = Effect.fn("ToolchainPruneTest.expectPrunedDirectory")(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const removed = yield* Effect.forEach(
+    ["tsc.original.1", "tsc.original.12", "tsc.original.7", "tsc.patched"],
+    (file) => fs.exists(path.join(directory, file))
+  );
+  expect(removed).toEqual([false, false, false, false]);
+  const kept = ["tsc.original", "tsc.original.old", "tsc"];
+  const contents = yield* Effect.forEach(kept, (file) => fs.readFileString(path.join(directory, file)));
+  expect(contents).toEqual(kept);
+});
+
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("beep toolchain prune-tsgo-backups", (it) => {
   it.effect("keeps compiler originals and unrelated files while removing only rotations and patched leftovers", () =>
     Effect.gen(function* () {
@@ -51,27 +73,13 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("beep toolchain prune-ts
         path.join(root, "node_modules", "@typescript", "typescript-linux-x64", "lib"),
         path.join(root, "node_modules", "@tsrs", "linux-x64"),
       ];
-      for (const directory of directories) {
-        yield* fs.makeDirectory(directory, { recursive: true });
-        for (const file of BACKUP_FIXTURE_FILES) {
-          yield* fs.writeFileString(path.join(directory, file), file);
-        }
-      }
+      yield* Effect.forEach(directories, seedBackupDirectory, { discard: true });
       // A 3 MiB rotation proves the reclaimed size is reported in rounded MB.
       yield* fs.writeFile(path.join(directories[0] ?? root, "tsc.original.7"), new Uint8Array(3 * 1024 * 1024));
       yield* pruneTsgoBackups(root);
       const reported = yield* TestConsole.logLines;
       expect(reported).toEqual(["[prune-tsgo-backups] reclaimed ~3 MB of stale binary backups"]);
-      for (const directory of directories) {
-        for (const removed of ["tsc.original.1", "tsc.original.12", "tsc.original.7", "tsc.patched"]) {
-          const exists = yield* fs.exists(path.join(directory, removed));
-          expect(exists).toBe(false);
-        }
-        for (const kept of ["tsc.original", "tsc.original.old", "tsc"]) {
-          const content = yield* fs.readFileString(path.join(directory, kept));
-          expect(content).toBe(kept);
-        }
-      }
+      yield* Effect.forEach(directories, expectPrunedDirectory, { discard: true });
       const rerun = yield* runCli(root);
       expect(rerun).toEqual({
         exitCode: 0,
