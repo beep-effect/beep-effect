@@ -3,15 +3,17 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationDocument, CitationDocumentReceipt, FullCitation } from "@beep/law-practice-domain/values";
-import { CitationEngineReport } from "@beep/law-practice-use-cases/server";
+import { CitationEngineReport, CitationInputError } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
+import { failCitationExtractionBoundary } from "./EngineFailure.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { makeCitationRegisteredResolver } from "./RegisteredResolver.ts";
 import { CitationResourceBinding } from "./ResourceIdentity.ts";
 import {
@@ -119,7 +121,7 @@ const definition = {
  * Returned extract requires no services; full host protocols remain required.
  * @internal @category constructors @since 0.0.0
  */
-export const makeCitationSourceDocument = makeCitationMetadataStage({
+const installSingle = makeCitationMetadataStage({
   ...definition,
   method: "extract",
   prepare: prepareSource(prepareCitationSourceExtraction),
@@ -127,8 +129,31 @@ export const makeCitationSourceDocument = makeCitationMetadataStage({
 /** Same connected operation for independently verified plain/markup inputs.
  * @internal @category constructors @since 0.0.0
  */
-export const makeCitationSourcePairDocument = makeCitationMetadataStage({
+const installPair = makeCitationMetadataStage({
   ...definition,
   method: "extract",
   prepare: prepareSource(prepareCitationSourcePairExtraction),
 });
+
+const closeMethod = (install: typeof installSingle) =>
+  Effect.fn("Citation.installSourceDocumentBoundary")(
+    function* (policy: unknown, runtime: unknown, configuration: unknown) {
+      const limits = yield* decodeCitationRegexPolicy(policy, () => CitationInputError.make({ operation: "extract" }));
+      const stage = yield* install(limits, runtime, configuration);
+      return {
+        extract: Effect.fn("Citation.extractSourceDocumentBoundary")((raw: unknown) =>
+          stage.extract(raw).pipe(Effect.catch(failCitationExtractionBoundary))
+        ),
+      };
+    },
+    Effect.provideService(CitationRegexOperation, "extract")
+  );
+/** Single source document with a closed engine method failure and captured
+ * extraction operation. Installation errors remain trusted composition errors.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationSourceDocument = closeMethod(installSingle);
+/** Paired sources share the same closed failure, admission and timing owner.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationSourcePairDocument = closeMethod(installPair);

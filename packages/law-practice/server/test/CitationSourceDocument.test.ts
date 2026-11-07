@@ -18,6 +18,7 @@ import { installCitationDefaultConfigurationFixture } from "./CitationDefaultCon
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
   "connected verified citation document",
@@ -53,6 +54,11 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               Effect.provideService(SourceTextResolver, resolver),
               DateTime.withCurrentZoneOffset(0)
             );
+            const refused = yield* stage.extract(null).pipe(Effect.flip);
+            expect(refused).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+            expect(resolves).toBe(0);
+            const admission = yield* setup.operation.snapshot;
+            expect(admission).toMatchObject({ active: 0, queued: 0 });
             const invocation = stage.extract(
               markup === null
                 ? { source: proof.source, sourceText: text, role: "plain", cleanSteps: [] }
@@ -62,10 +68,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
                     cleanSteps: [],
                   }
             );
-            const closed: Effect.Effect<
-              Effect.Success<typeof invocation>,
-              Effect.Error<typeof invocation>
-            > = invocation;
+            const closed: Effect.Effect<Effect.Success<typeof invocation>, CitationEngineFailure> = invocation;
             const result = yield* closed;
             expect(S.is(CitationDocument)(result.document)).toBe(true);
             expect(result.document.mentions).toHaveLength(2);

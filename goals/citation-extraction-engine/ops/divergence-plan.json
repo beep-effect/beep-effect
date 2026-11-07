@@ -391,7 +391,11 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-07-cleaner-resolver-boundaries.md",
         "packages/law-practice/server/src/internal/Citation/PortFailure.ts",
         "packages/law-practice/server/test/CitationPortFailure.test.ts",
-        "packages/law-practice/server/test/CitationResolverBoundary.test.ts"
+        "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-extraction-method-boundary.md",
+        "packages/law-practice/server/src/internal/Citation/EngineFailure.ts",
+        "packages/law-practice/server/test/CitationEngineFailure.test.ts",
+        "packages/law-practice/server/test/CitationPythonUnicode.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

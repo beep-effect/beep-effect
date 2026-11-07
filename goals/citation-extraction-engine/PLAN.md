@@ -1525,6 +1525,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the typed method translators/wrappers and restore preflight placement together while retaining source corpora, closed-method tests and all acceptance requirements.
 
+### Close connected extraction method failure surfaces, 2026-11-07
+
+Single/pair connected extraction now captures the extract operation and exposes only CitationEngineFailure with R=never. Native Unicode deadlines retain producer metadata. Sixteen applicable tests, package lint/types, declaration build, blocking laws and scoped Fallow pass. Public Engine/Layer, admitted resolver composition and all eleven laws, four fidelity questions and fifteen proof rows remain open. See history/evidence/2026-11-07-extraction-method-boundary.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the extraction wrapper and typed translator together, preserving native corpora and every unfinished acceptance requirement.
+
 ### Connect verified extraction and document resolution, 2026-11-07
 
 One admitted operation now connects canonical source resolution, native semantic extraction, verified occurrences, authenticated edition spelling and registered default resolution. Three actual Bun/Node/shortcut tests pass in 33.68s, including independent plain/markup lineage, exact original spans/grouping and complete receipt restoration. Lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Public Engine/Layer, complete failure boundaries and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-connected-source-document.md.

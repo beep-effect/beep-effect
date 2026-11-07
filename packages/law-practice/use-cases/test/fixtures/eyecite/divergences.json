@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "01ef2d7a4ceef5be9cce366334e712b9aebf8532dd68e5a3899deb46c9d1fe82",
+  "planSha256": "3f3945e34b68c9904f369c4a072adb6db45e4662bcf8b48fe30248d6f878ffd9",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1524,11 +1524,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SourceDocument.ts",
-          "sha256": "b010abb3ffc4ad04dbf58d37b501b801c87320c1893d5cf7e2046be694a45d79"
+          "sha256": "e780efa37c3328896cb4fc3d448110fbfbcbc056a6e463ac4ce70ad0305f9101"
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceDocument.test.ts",
-          "sha256": "341e4a7cfce74604785c3ddeea344ba7b39a9795a6e47b96ccb6ff09443af987"
+          "sha256": "867b11fc8886cf5088f73af33416a77a451e0c73cff48722ad20153bcef8c8d8"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-resolution-limit-diagnostics.md",
@@ -1561,6 +1561,22 @@
         {
           "path": "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
           "sha256": "03b8732f4f2452b0dac1a775ac0edf6966e9ff1a5796f9c29caa20dbfcf4bcae"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-extraction-method-boundary.md",
+          "sha256": "d9f88352b2ad1250205e623b99ab6b0a064c971997690bd85c3b281f8e66c95f"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/EngineFailure.ts",
+          "sha256": "93e2c2a7d916504599ce499215a9b9b9cc7b09de555f38be78abb7a64593973c"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationEngineFailure.test.ts",
+          "sha256": "9fba9572c7a4c802b9023efc4bdf0d37e6c842b33134b3930a7916219b4b629c"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
+          "sha256": "20313aa2441c9f2fdff2edb5c50b9e9242432dcf6c037b11a72d717fb0c8232a"
         }
       ],
       "workflowState": "audit",
@@ -2241,11 +2257,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
-          "sha256": "07ea9f34ad6fef2ea25f36786e6a0b37f399ec0aa12f13d4fa893da63831d9a3"
+          "sha256": "891782d0c121914ac1704211716e128297713476e752ff2060f1eb8bfd2ba813"
         },
         {
           "path": "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
-          "sha256": "614ecb2a6fc4265a88e3e8fe208f0a34df7b8d72e587f6e8f44c22b604ca554c"
+          "sha256": "20313aa2441c9f2fdff2edb5c50b9e9242432dcf6c037b11a72d717fb0c8232a"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-python-unicode-representation.md",

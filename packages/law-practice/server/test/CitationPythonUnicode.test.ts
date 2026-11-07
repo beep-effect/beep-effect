@@ -176,7 +176,7 @@ it.effect("captures the deadline and Clock without returning a partial projectio
     expect(citationResult10).toBe(1000);
     yield* Deferred.succeed(wake, undefined);
     const failed = yield* Fiber.join(running).pipe(Effect.flip);
-    expect(failed.reason).toBe("deadline-exceeded");
+    expect(failed).toMatchObject({ reason: "deadline-exceeded", limit: "cleanDeadline" });
   })
 );
 
@@ -238,7 +238,7 @@ it.effect("uses the explicit annotation deadline rather than the default cleanin
     expect(early).toBe(false);
     yield* TestClock.adjust(Duration.millis(49));
     const failure = yield* Fiber.join(pending);
-    expect(failure).toMatchObject({ reason: "deadline-exceeded" });
+    expect(failure).toMatchObject({ reason: "deadline-exceeded", limit: "annotateDeadline" });
     const invalid = yield* makeCitationPythonUnicode(policy.limits, "unknown").pipe(Effect.flip);
     expect(invalid).toMatchObject({ reason: "invalid-input" });
   })

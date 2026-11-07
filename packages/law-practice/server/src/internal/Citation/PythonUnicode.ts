@@ -9,6 +9,7 @@ import {
   CitationEngineLimits,
   CitationEngineOperation,
   CitationPythonUnicodeStorage,
+  CitationSafetyBudget,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -39,7 +40,7 @@ export class CitationPythonUnicodeFailure extends S.TaggedError<
   { readonly brand: unique symbol }
 >($I`CitationPythonUnicodeFailure`)(
   "CitationPythonUnicodeFailure",
-  { reason: Reason },
+  { reason: Reason, limit: S.optionalKey(CitationSafetyBudget) },
   $I.annoteError<CitationPythonUnicodeFailure>("CitationPythonUnicodeFailure", {
     description: "Lossless Unicode preparation failed without source text, bytes or nested causes.",
   })
@@ -451,13 +452,20 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     Effect.mapError(invalidInput)
   );
   const deadlineField = `${operation}Deadline` as const;
+  const deadlineLimit = Duration.isLessThanOrEqualTo(limits.operationDeadline, limits[deadlineField])
+    ? "operationDeadline"
+    : deadlineField;
   const deadline = Duration.min(limits[deadlineField], limits.operationDeadline).pipe(
     Duration.toMillis,
     Duration.millis
   );
   const bounded = <A, E>(body: Effect.Effect<A, E>) =>
     body.pipe(
-      Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(fail("deadline-exceeded")) }),
+      Effect.timeoutOrElse({
+        duration: deadline,
+        orElse: () =>
+          Effect.fail(CitationPythonUnicodeFailure.make({ reason: "deadline-exceeded", limit: deadlineLimit })),
+      }),
       Effect.provideService(Clock.Clock, clock)
     );
   const decodeStorage = Effect.fn("Citation.decodeNativeUnicodeStorage")(function* (input: unknown) {

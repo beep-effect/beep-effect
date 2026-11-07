@@ -37,6 +37,9 @@ export const makeCitationPythonLower = Effect.fn("Citation.makePythonLower")(fun
   const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(Effect.mapError(() => fail("invalid-input")));
   const unicode = yield* makeCitationPythonUnicode(limits);
   const clock = yield* Clock.Clock;
+  const deadlineLimit = Duration.isLessThanOrEqualTo(limits.operationDeadline, limits.cleanDeadline)
+    ? "operationDeadline"
+    : "cleanDeadline";
   const deadline = Duration.min(limits.cleanDeadline, limits.operationDeadline).pipe(
     Duration.toMillis,
     Duration.millis
@@ -105,7 +108,11 @@ export const makeCitationPythonLower = Effect.fn("Citation.makePythonLower")(fun
       yield* encode;
       return CitationPythonUnicodeStorage.make({ width: outputWidth, bytes: output });
     },
-    Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(fail("deadline-exceeded")) }),
+    Effect.timeoutOrElse({
+      duration: deadline,
+      orElse: () =>
+        Effect.fail(CitationPythonUnicodeFailure.make({ reason: "deadline-exceeded", limit: deadlineLimit })),
+    }),
     Effect.provideService(Clock.Clock, clock)
   );
   const lower = Effect.fn("Citation.lowerNativeWord")((input: unknown) => lowerImpl(input));
