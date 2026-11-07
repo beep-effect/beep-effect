@@ -225,7 +225,8 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         ),
       });
       const receiver = yield* makeCoworkLifecycleFixtureReceiver(policy).pipe(
-        Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
+        Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control }),
+        Effect.provideService(FileSystem.FileSystem, guarded)
       );
       const receiving = yield* Effect.forkChild(
         receiver.open().pipe(
