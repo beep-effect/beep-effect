@@ -34,7 +34,14 @@
     "goals/execution-authority-slice/GOAL.md",
     "goals/execution-authority-slice/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/cache-baseline-request.json",
+    "research/cache-baseline-review.md",
+    "research/p1-move-evidence.md",
+    "research/recordings/post-move.json",
+    "research/recordings/pre-move.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +57,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

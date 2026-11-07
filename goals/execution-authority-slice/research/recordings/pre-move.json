@@ -1,0 +1,252 @@
+{
+  "sidecarHost": ["127.0.0.1"],
+  "ledger": {
+    "chains": [
+      "allowed,allowed => chain-intact",
+      "allowed,denied:destination-not-granted => chain-intact"
+    ],
+    "outcomeSettlements": ["completed", "completed", "failed"]
+  },
+  "columns": [
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "run_key",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "seq",
+      "data_type": "integer",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "prev_hash",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "verdict",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "reason",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "operation_digest",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "sink_class",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "audience",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "destination_digest",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "grant_set_digest",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "policy_revision",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_decision",
+      "column_name": "decided_at",
+      "data_type": "bigint",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_outcome",
+      "column_name": "run_key",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_outcome",
+      "column_name": "decision_hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_outcome",
+      "column_name": "decision_verdict",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_outcome",
+      "column_name": "settlement",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_outcome",
+      "column_name": "recorded_at",
+      "data_type": "bigint",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "epistemic_execution_outcome",
+      "column_name": "hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    }
+  ],
+  "constraints": [
+    {
+      "conname": "epistemic_execution_decision_audience_bounded",
+      "contype": "c"
+    },
+    {
+      "conname": "epistemic_execution_decision_audience_not_null",
+      "contype": "n"
+    },
+    {
+      "conname": "epistemic_execution_decision_decided_at_not_null",
+      "contype": "n"
+    },
+    {
+      "conname": "epistemic_execution_decision_destination_digest_not_null",
+      "contype": "n"
+    },
+    { "conname": "epistemic_execution_decision_genesis_prev", "contype": "c" },
+    {
+      "conname": "epistemic_execution_decision_grant_set_digest_not_null",
+      "contype": "n"
+    },
+    { "conname": "epistemic_execution_decision_hash_not_null", "contype": "n" },
+    { "conname": "epistemic_execution_decision_hash_unique", "contype": "u" },
+    {
+      "conname": "epistemic_execution_decision_hash_verdict_unique",
+      "contype": "u"
+    },
+    {
+      "conname": "epistemic_execution_decision_operation_digest_not_null",
+      "contype": "n"
+    },
+    { "conname": "epistemic_execution_decision_pk", "contype": "p" },
+    {
+      "conname": "epistemic_execution_decision_policy_revision_not_null",
+      "contype": "n"
+    },
+    {
+      "conname": "epistemic_execution_decision_reason_bounded",
+      "contype": "c"
+    },
+    {
+      "conname": "epistemic_execution_decision_reason_iff_denied",
+      "contype": "c"
+    },
+    {
+      "conname": "epistemic_execution_decision_run_hash_unique",
+      "contype": "u"
+    },
+    {
+      "conname": "epistemic_execution_decision_run_key_not_null",
+      "contype": "n"
+    },
+    {
+      "conname": "epistemic_execution_decision_seq_nonnegative",
+      "contype": "c"
+    },
+    { "conname": "epistemic_execution_decision_seq_not_null", "contype": "n" },
+    {
+      "conname": "epistemic_execution_decision_sink_class_bounded",
+      "contype": "c"
+    },
+    {
+      "conname": "epistemic_execution_decision_sink_class_not_null",
+      "contype": "n"
+    },
+    {
+      "conname": "epistemic_execution_decision_verdict_bounded",
+      "contype": "c"
+    },
+    {
+      "conname": "epistemic_execution_decision_verdict_not_null",
+      "contype": "n"
+    },
+    { "conname": "epistemic_execution_outcome_decision_fk", "contype": "f" },
+    {
+      "conname": "epistemic_execution_outcome_decision_hash_not_null",
+      "contype": "n"
+    },
+    {
+      "conname": "epistemic_execution_outcome_decision_verdict_fk",
+      "contype": "f"
+    },
+    {
+      "conname": "epistemic_execution_outcome_decision_verdict_not_null",
+      "contype": "n"
+    },
+    { "conname": "epistemic_execution_outcome_hash_not_null", "contype": "n" },
+    { "conname": "epistemic_execution_outcome_hash_unique", "contype": "u" },
+    { "conname": "epistemic_execution_outcome_pk", "contype": "p" },
+    {
+      "conname": "epistemic_execution_outcome_recorded_at_not_null",
+      "contype": "n"
+    },
+    {
+      "conname": "epistemic_execution_outcome_run_key_not_null",
+      "contype": "n"
+    },
+    {
+      "conname": "epistemic_execution_outcome_settlement_bounded",
+      "contype": "c"
+    },
+    {
+      "conname": "epistemic_execution_outcome_settlement_not_null",
+      "contype": "n"
+    },
+    { "conname": "epistemic_execution_outcome_settles_allowed", "contype": "c" }
+  ],
+  "triggers": [
+    {
+      "tgname": "epistemic_execution_decision_append_only",
+      "proname": "epistemic_execution_ledger_block_mutation"
+    },
+    {
+      "tgname": "epistemic_execution_decision_block_truncate",
+      "proname": "epistemic_execution_ledger_block_mutation"
+    },
+    {
+      "tgname": "epistemic_execution_outcome_append_only",
+      "proname": "epistemic_execution_ledger_block_mutation"
+    },
+    {
+      "tgname": "epistemic_execution_outcome_block_truncate",
+      "proname": "epistemic_execution_ledger_block_mutation"
+    }
+  ]
+}

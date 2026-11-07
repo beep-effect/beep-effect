@@ -5,16 +5,16 @@
  * @since 0.0.0
  */
 
-import { EpistemicConfig } from "@beep/epistemic-config/server";
+import { ExecutionAuthorityConfig } from "@beep/execution-authority-config/server";
 import {
   ExecutionSink,
   GrantOperation,
   GrantPurpose,
   GrantResource,
   SinkDestination,
-} from "@beep/epistemic-domain/values/ExecutionGrant";
-import { GovernedEgressLive, GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress";
-import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate";
+} from "@beep/execution-authority-domain/values/ExecutionGrant";
+import { GovernedEgressLive, GovernedEgressOptions } from "@beep/execution-authority-server/GovernedEgress";
+import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/execution-authority-server/GovernedTierGate";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { sanitizedToolkit } from "@beep/mcp-kit/SanitizedSpan";
 import { OntologyMcpConfig } from "@beep/ontology-config/server";
@@ -158,7 +158,7 @@ const ontologySessionGrantTtl = Duration.hours(12);
  * Every mutation dispatches through the governed TierGate, which freezes a
  * per-session grant set and writes a write-ahead ledger decision before any
  * effect runs. The returned layer therefore requires `ExecutionLedger` and
- * `EpistemicConfig`; the entrypoint provides the Drizzle ledger over the shared
+ * `ExecutionAuthorityConfig`; the entrypoint provides the Drizzle ledger over the shared
  * PGlite, and a test may inject a failing ledger to prove the fail-closed
  * refusal.
  *
@@ -281,7 +281,7 @@ export const makeOntologyMcpTransportLayer = (options: {
   const registration = Layer.unwrap(
     Effect.gen(function* () {
       const mcpConfig = yield* OntologyMcpConfig;
-      const epistemic = yield* EpistemicConfig;
+      const epistemic = yield* ExecutionAuthorityConfig;
       if (!mcpConfig.mutationsEnabled) {
         return readOnly;
       }

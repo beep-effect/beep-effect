@@ -300,12 +300,6 @@
         ]
       },
       {
-        "name": "@beep/epistemic-config",
-        "patterns": [
-          "packages/epistemic/config/src/**"
-        ]
-      },
-      {
         "name": "@beep/epistemic-domain",
         "patterns": [
           "packages/epistemic/domain/src/**"
@@ -339,6 +333,36 @@
         "name": "@beep/epistemics",
         "patterns": [
           "packages/foundation/modeling/epistemics/src/**"
+        ]
+      },
+      {
+        "name": "@beep/execution-authority-config",
+        "patterns": [
+          "packages/execution-authority/config/src/**"
+        ]
+      },
+      {
+        "name": "@beep/execution-authority-domain",
+        "patterns": [
+          "packages/execution-authority/domain/src/**"
+        ]
+      },
+      {
+        "name": "@beep/execution-authority-server",
+        "patterns": [
+          "packages/execution-authority/server/src/**"
+        ]
+      },
+      {
+        "name": "@beep/execution-authority-tables",
+        "patterns": [
+          "packages/execution-authority/tables/src/**"
+        ]
+      },
+      {
+        "name": "@beep/execution-authority-use-cases",
+        "patterns": [
+          "packages/execution-authority/use-cases/src/**"
         ]
       },
       {
@@ -1889,6 +1913,8 @@
           "@beep/documents-tables",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-tables",
           "@beep/identity",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
@@ -1905,6 +1931,8 @@
           "@beep/documents-tables",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-tables",
           "@beep/identity",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
@@ -2247,23 +2275,6 @@
         ]
       },
       {
-        "from": "@beep/epistemic-config",
-        "allow": [
-          "@beep/epistemic-config",
-          "@beep/epistemic-domain",
-          "@beep/identity",
-          "@beep/test-runner",
-          "@beep/test-utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/epistemic-config",
-          "@beep/epistemic-domain",
-          "@beep/identity",
-          "@beep/test-runner",
-          "@beep/test-utils"
-        ]
-      },
-      {
         "from": "@beep/epistemic-domain",
         "allow": [
           "@beep/effect-drizzle",
@@ -2293,8 +2304,6 @@
       {
         "from": "@beep/epistemic-server",
         "allow": [
-          "@beep/api-transport",
-          "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
@@ -2302,7 +2311,6 @@
           "@beep/epistemics",
           "@beep/file-processing",
           "@beep/identity",
-          "@beep/mcp-kit",
           "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
@@ -2316,8 +2324,6 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/api-transport",
-          "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
@@ -2325,7 +2331,6 @@
           "@beep/epistemics",
           "@beep/file-processing",
           "@beep/identity",
-          "@beep/mcp-kit",
           "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
@@ -2445,6 +2450,113 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/execution-authority-config",
+        "allow": [
+          "@beep/execution-authority-config",
+          "@beep/execution-authority-domain",
+          "@beep/identity",
+          "@beep/test-runner",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/execution-authority-config",
+          "@beep/execution-authority-domain",
+          "@beep/identity",
+          "@beep/test-runner",
+          "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/execution-authority-domain",
+        "allow": [
+          "@beep/epistemics",
+          "@beep/execution-authority-domain",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemics",
+          "@beep/execution-authority-domain",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/execution-authority-server",
+        "allow": [
+          "@beep/api-transport",
+          "@beep/execution-authority-config",
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-server",
+          "@beep/execution-authority-tables",
+          "@beep/execution-authority-use-cases",
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/postgres",
+          "@beep/shared-domain",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/api-transport",
+          "@beep/execution-authority-config",
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-server",
+          "@beep/execution-authority-tables",
+          "@beep/execution-authority-use-cases",
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/postgres",
+          "@beep/shared-domain",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/execution-authority-tables",
+        "allow": [
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-tables",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-runner"
+        ],
+        "allowTypeOnly": [
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-tables",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-runner"
+        ]
+      },
+      {
+        "from": "@beep/execution-authority-use-cases",
+        "allow": [
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-use-cases",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-runner"
+        ],
+        "allowTypeOnly": [
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-use-cases",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-runner"
         ]
       },
       {
@@ -4305,13 +4417,16 @@
           "@beep/documents-use-cases",
           "@beep/editor",
           "@beep/epistemic-client",
-          "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
           "@beep/epistemic-ui",
           "@beep/epistemic-use-cases",
           "@beep/epistemics",
+          "@beep/execution-authority-config",
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-server",
+          "@beep/execution-authority-use-cases",
           "@beep/file-processing",
           "@beep/graph-3d",
           "@beep/identity",
@@ -4358,13 +4473,16 @@
           "@beep/documents-use-cases",
           "@beep/editor",
           "@beep/epistemic-client",
-          "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
           "@beep/epistemic-ui",
           "@beep/epistemic-use-cases",
           "@beep/epistemics",
+          "@beep/execution-authority-config",
+          "@beep/execution-authority-domain",
+          "@beep/execution-authority-server",
+          "@beep/execution-authority-use-cases",
           "@beep/file-processing",
           "@beep/graph-3d",
           "@beep/identity",

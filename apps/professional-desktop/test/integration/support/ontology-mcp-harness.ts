@@ -1,5 +1,5 @@
-import { EpistemicConfigTest } from "@beep/epistemic-config/test";
-import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
+import { ExecutionAuthorityConfigTest } from "@beep/execution-authority-config/test";
+import { ExecutionLedger } from "@beep/execution-authority-use-cases/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import { OpenInspectRequest, OpenInspectResponse } from "@beep/ontology-use-cases/tools";
@@ -32,8 +32,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeOntologyMcpTransportLayer } from "../../../server/OntologyMcpTransport.ts";
 import { rpcSessionAuthorizationHeader } from "../../../server/RpcSessionAuth.ts";
-import type { EpistemicConfig } from "@beep/epistemic-config/server";
-import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
+import type { ExecutionAuthorityConfig } from "@beep/execution-authority-config/server";
+import type {
+  ExecutionDecisionRecord,
+  ExecutionOutcomeRecord,
+} from "@beep/execution-authority-domain/entities/ExecutionRecord";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 export const token = Redacted.make("ontology-mcp-http-test-token");
@@ -56,7 +59,7 @@ export type TransportOptions = {
   readonly mutationsEnabled: boolean;
   readonly approvedMutationTools: ReadonlyArray<string>;
   readonly egressFetch?: typeof globalThis.fetch | undefined;
-  readonly epistemicConfig?: Layer.Layer<EpistemicConfig> | undefined;
+  readonly executionAuthorityConfig?: Layer.Layer<ExecutionAuthorityConfig> | undefined;
   readonly ledger?: Layer.Layer<ExecutionLedger> | undefined;
 };
 
@@ -122,7 +125,7 @@ const transportLayer = (root: string, options: TransportOptions) =>
   }).pipe(
     Layer.provide(OntologyMcpConfigLive),
     Layer.provide(options.ledger ?? silentLedgerLayer),
-    Layer.provide(options.epistemicConfig ?? EpistemicConfigTest),
+    Layer.provide(options.executionAuthorityConfig ?? ExecutionAuthorityConfigTest),
     Layer.provide(transportConfigProvider(root, options)),
     Layer.orDie
   );

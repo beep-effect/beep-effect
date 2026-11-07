@@ -20,6 +20,7 @@ import { workerTable } from "@beep/architecture-lab-tables/entities/Worker";
 import { DbSchema as ArchitectureLabDbSchema } from "@beep/architecture-lab-tables/tables";
 import { DbSchema as DocumentsDbSchema } from "@beep/documents-tables/tables";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
+import { DbSchema as ExecutionAuthorityDbSchema } from "@beep/execution-authority-tables";
 import { DbSchema as LawPracticeDbSchema } from "@beep/law-practice-tables";
 import { DbSchema as WorkspaceDbSchema } from "@beep/workspace-tables";
 
@@ -42,12 +43,18 @@ import { DbSchema as WorkspaceDbSchema } from "@beep/workspace-tables";
  * @since 0.0.0
  */
 /**
+ * Execution authority Drizzle schema export.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+/**
  * Workspace Drizzle schema export.
  *
  * @category configuration
  * @since 0.0.0
  */
-export { ArchitectureLabDbSchema, DocumentsDbSchema, EpistemicDbSchema, WorkspaceDbSchema };
+export { ArchitectureLabDbSchema, DocumentsDbSchema, EpistemicDbSchema, ExecutionAuthorityDbSchema, WorkspaceDbSchema };
 
 /**
  * Architecture lab work item table (drizzle-kit generate surface).
@@ -227,38 +234,38 @@ export const epistemicClaimDispositionTable: typeof EpistemicDbSchema.claimDispo
   EpistemicDbSchema.claimDisposition;
 
 /**
- * Epistemic execution-decision table (drizzle-kit generate surface).
+ * Execution authority decision table (drizzle-kit generate surface).
  *
- * **Example** (Reference the epistemic execution-decision table)
+ * **Example** (Reference the execution authority decision table)
  *
  * ```ts
- * import { epistemicExecutionDecisionTable } from "@beep/db-admin/schema"
+ * import { executionAuthorityDecisionTable } from "@beep/db-admin/schema"
  *
- * console.log(epistemicExecutionDecisionTable)
+ * console.log(executionAuthorityDecisionTable)
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const epistemicExecutionDecisionTable: typeof EpistemicDbSchema.executionDecision =
-  EpistemicDbSchema.executionDecision;
+export const executionAuthorityDecisionTable: typeof ExecutionAuthorityDbSchema.executionDecision =
+  ExecutionAuthorityDbSchema.executionDecision;
 
 /**
- * Epistemic execution-outcome table (drizzle-kit generate surface).
+ * Execution authority outcome table (drizzle-kit generate surface).
  *
- * **Example** (Reference the epistemic execution-outcome table)
+ * **Example** (Reference the execution authority outcome table)
  *
  * ```ts
- * import { epistemicExecutionOutcomeTable } from "@beep/db-admin/schema"
+ * import { executionAuthorityOutcomeTable } from "@beep/db-admin/schema"
  *
- * console.log(epistemicExecutionOutcomeTable)
+ * console.log(executionAuthorityOutcomeTable)
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const epistemicExecutionOutcomeTable: typeof EpistemicDbSchema.executionOutcome =
-  EpistemicDbSchema.executionOutcome;
+export const executionAuthorityOutcomeTable: typeof ExecutionAuthorityDbSchema.executionOutcome =
+  ExecutionAuthorityDbSchema.executionOutcome;
 
 /**
  * Epistemic contradiction candidate table (drizzle-kit generate surface).

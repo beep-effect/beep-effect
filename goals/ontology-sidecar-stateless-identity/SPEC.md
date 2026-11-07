@@ -46,10 +46,10 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
   without exposing the token.
 - `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` — delete the 2025
   `mcp-session-id` read (`mcpSessionIdHeader`) in this goal's PR, so no header can key the gate.
-- `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts` — `runIdOf` reads the
+- `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts` — `runIdOf` reads the
   anchor; the gate's own spans become `epistemic.governed_tier_gate.evaluate` and
   `epistemic.governed_tier_gate.record_outcome` carrying `epistemic.governed_tier_gate.run_id`
-  (the digest, never the bearer); tests in `packages/epistemic/server/test/GovernedTierGate.test.ts`.
+  (the digest, never the bearer); tests in `packages/execution-authority/server/test/GovernedTierGate.test.ts`.
 - `packages/ontology/server` — `OntologyChangeActor` keyed to the anchor value.
 - `packages/ontology/config/src/McpConfig.ts` — `OntologyMcpServerConfig` gains the Origin
   allow-list field (`ReadonlyArray` of origins, deny-all default); the desktop ConfigProvider
@@ -105,7 +105,7 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
 
 | Claim | Command or evidence | Required result |
 | --- | --- | --- |
-| Launch keying | `bunx vitest run packages/epistemic/server/test/GovernedTierGate.test.ts -t "keys the run on the launch"`; `-t "grant expiry is permanent"`; `-t "never evicts a frozen grant"` | Passes |
+| Launch keying | `bunx vitest run packages/execution-authority/server/test/GovernedTierGate.test.ts -t "keys the run on the launch"`; `-t "grant expiry is permanent"`; `-t "never evicts a frozen grant"` | Passes |
 | Old test gone | `rg -n 'keys the run on the session, not on the per-request client id' packages/epistemic/server/test` | No matches |
 | Bearer digest | `bunx vitest run apps/professional-desktop/test/integration/ontology-mcp-http.test.ts -t "two bearers open two runs"`; `-t "one bearer keeps one run across requests"` | Passes |
 | Initialize rejected | `bunx vitest run apps/professional-desktop/test/integration/ontology-mcp-http.test.ts -t "rejects initialize with 2026 headers as 404 -32601"`; `-t "rejects bare initialize as 400 -32020"` | Passes |
@@ -114,7 +114,7 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
 | Config-owned list | `rg -n 'allowedOrigins' packages/ontology/config/src/McpConfig.ts`; `rg -n 'beep.localhost\|tauri://' packages/ontology/config/src` | Matches; no matches |
 | Tagged error | `rg -n 'S.TaggedError' apps/professional-desktop/server/OntologyMcpTransport.ts`; `rg -n 'Data.TaggedError' apps/professional-desktop/server/OntologyMcpTransport.ts` | Matches; no matches |
 | No raw bearer leak | `rg -n 'Redacted.value' apps/professional-desktop/server packages/epistemic/server/src` lists only `rpcSessionAuthorizationHeader`, the digest function and the verifier; `rg -n 'launch:' packages/epistemic/server apps/professional-desktop/server` shows digest interpolation only | As stated |
-| Actor + spans | `bunx vitest run packages/ontology/server -t "attributes changes by the dispatch anchor"`; `rg -n 'epistemic.governed_tier_gate.run_id' packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts` | Passes; matches |
+| Actor + spans | `bunx vitest run packages/ontology/server -t "attributes changes by the dispatch anchor"`; `rg -n 'epistemic.governed_tier_gate.run_id' packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts` | Passes; matches |
 | Live client | `rg -n '@beep/mcp-kit/client' goals/ontology-agent-surface/ops/live-mcp-client.ts`; `rg -n 'initialize' goals/ontology-agent-surface/ops/live-mcp-client.ts` | Matches; no matches |
 | Decision 10 | `rg -n 'a run is a sidecar launch' goals/agent-execution-authority/SPEC.md` | Matches |
 | Packages | `bun run beep quality package-verify @beep/epistemic-server`; `... @beep/ontology-config`; `... @beep/ontology-server`; `... @beep/mcp-kit` | Passes |
