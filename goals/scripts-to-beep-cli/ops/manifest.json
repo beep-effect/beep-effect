@@ -34,7 +34,11 @@
     "goals/scripts-to-beep-cli/GOAL.md",
     "goals/scripts-to-beep-cli/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/cache-baseline-request-pr1.json",
+    "research/cache-baseline-review-pr1.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

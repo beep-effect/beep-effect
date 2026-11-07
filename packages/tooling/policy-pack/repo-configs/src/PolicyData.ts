@@ -89,6 +89,8 @@ export type GitHubAppName = typeof GitHubAppName.Type;
  * // packages/tooling/policy-pack/repo-configs/data/github-apps/beep-reviewer.manifest.json
  * ```
  *
+ * @param app - The GitHub App whose registration manifest to locate.
+ * @returns The manifest path relative to the checkout root.
  * @category configuration
  * @since 0.0.0
  */

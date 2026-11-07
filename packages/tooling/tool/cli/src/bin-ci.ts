@@ -55,6 +55,15 @@ BunRuntime.runMain(
     disableErrorReporting: true,
     // As in bin-main: drain the stream console, then exit with the teardown's code.
     teardown: (exit, onExit) =>
-      Runtime.defaultTeardown(exit, (code) => drainThenExit({ label: "beep-ci", code, onExit })),
+      Runtime.defaultTeardown(exit, (code) =>
+        drainThenExit({
+          label: "beep-ci",
+          code,
+          onDrained: () => {
+            onExit(code);
+            process.exit(code);
+          },
+        })
+      ),
   }
 );

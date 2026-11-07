@@ -1,11 +1,11 @@
 /**
- * Process-exit drain shared by the full and slim CLI entry points.
+ * Stream-console drain shared by the full and slim CLI entry points.
  *
  * **Details**
  *
  * The runner's `onExit` hard-exits on a nonzero code, so the stream console
  * must drain first; a dropped-line report goes to the other stream. Both
- * `bin-main.ts` and `bin-ci.ts` hand the teardown's exit code here.
+ * `bin-main.ts` and `bin-ci.ts` drain here, then exit from their own module.
  *
  * @internal
  * @packageDocumentation
@@ -16,17 +16,17 @@ import { drainProcessStreams, ProcessStreamName, writeBestEffortLine } from "@be
 import * as O from "effect/Option";
 
 /**
- * Drain the process streams, report any dropped lines, then exit with `code`.
+ * Drain the process streams, report any dropped lines, then call `onDrained`.
  *
  * **Example** (Exit after the stream console drains)
  *
  * ```ts
  * import { drainThenExit } from "./ExitDrain.ts"
  *
- * drainThenExit({ label: "beep-ci", code: 0, onExit: (code) => console.log(`exiting ${code}`) })
+ * drainThenExit({ label: "beep-ci", code: 0, onDrained: () => console.log("drained") })
  * ```
  *
- * @param options - The entry point `label` printed in the dropped-line report, the teardown's exit `code`, and the runner's `onExit` callback (called before `process.exit`).
+ * @param options - The entry point `label` and the teardown's exit `code`, both printed in the dropped-line report, and `onDrained`, called once the streams have drained.
  * @internal
  * @category configuration
  * @since 0.0.0
@@ -34,11 +34,11 @@ import * as O from "effect/Option";
 export const drainThenExit = ({
   label,
   code,
-  onExit,
+  onDrained,
 }: {
   readonly label: string;
   readonly code: number;
-  readonly onExit: (code: number) => void;
+  readonly onDrained: () => void;
 }): void =>
   drainProcessStreams((failure) => {
     if (O.isSome(failure)) {
@@ -51,6 +51,5 @@ export const drainThenExit = ({
         `[${label}] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
       );
     }
-    onExit(code);
-    process.exit(code);
+    onDrained();
   });

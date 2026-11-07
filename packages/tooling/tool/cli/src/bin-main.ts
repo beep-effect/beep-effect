@@ -174,7 +174,16 @@ const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
         // A dead terminal must not abort before the drain and exit.
         Result.try(restoreSharedTerminal);
         // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
-        Runtime.defaultTeardown(exit, (code) => drainThenExit({ label: "beep-cli", code, onExit }));
+        Runtime.defaultTeardown(exit, (code) =>
+          drainThenExit({
+            label: "beep-cli",
+            code,
+            onDrained: () => {
+              onExit(code);
+              process.exit(code);
+            },
+          })
+        );
       },
     }
   );
