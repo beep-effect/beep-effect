@@ -1,8 +1,8 @@
 /**
  * The Postgres stream store, mirroring `Domain.InMemory`'s: one writer per
  * key, a write whose origin is not after the last applied one is dropped, and
- * entries carry the envelope InMemory stamps (`{ id: key, stream, seq, at,
- * commandId }`, no correlation id).
+ * entries carry the envelope InMemory stamps: id (the key), stream, seq, at
+ * and commandId, with no correlation id.
  */
 import { isAfter, mergeCheckpoints } from "@alchemy.run/domain/InMemory";
 import { emptyStreamMeta } from "@alchemy.run/domain/Platform";

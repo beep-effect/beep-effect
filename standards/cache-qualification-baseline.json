@@ -3,10 +3,6 @@
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3",
   "scope": [
-    "@beep/alchemy-postgres#build",
-    "@beep/alchemy-postgres#check",
-    "@beep/alchemy-postgres#lint:deprecated-apis",
-    "@beep/alchemy-postgres#test",
     "@beep/documents-server#build",
     "@beep/documents-server#check",
     "@beep/documents-server#lint:deprecated-apis",
@@ -18,11 +14,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
-      "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
+      "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover PR 3b2)",
+      "reason": "Restore the PR 3b dependency-edge records for @beep/documents-server and @beep/documents-use-cases on top of #2863's re-recorded baseline. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
-        "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-main.md",
+        "sha256": "8dbdd4fd5711c75a6c8550ed6c5c9989aa9ebfd6e6640bb46c4dfe90acc4f931"
       }
     },
     "@beep/acp": {
@@ -90,11 +86,11 @@
       }
     },
     "@beep/alchemy-postgres": {
-      "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
-      "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Restore the @beep/postgres dev-dependency edge record for @beep/alchemy-postgres on top of #2881's re-recorded baseline; re-stamp the root turbo.json source review row. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
-        "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b-main.md",
+        "sha256": "54c4e0290bd5f7e9967b8a95f609040f65cdb19ba2fe63de416450c06701213d"
       }
     },
     "@beep/anthropic": {
@@ -346,11 +342,11 @@
       }
     },
     "@beep/documents-server": {
-      "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
-      "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
+      "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover PR 3b2)",
+      "reason": "Restore the PR 3b dependency-edge records for @beep/documents-server and @beep/documents-use-cases on top of #2863's re-recorded baseline. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
-        "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-main.md",
+        "sha256": "8dbdd4fd5711c75a6c8550ed6c5c9989aa9ebfd6e6640bb46c4dfe90acc4f931"
       }
     },
     "@beep/documents-tables": {
@@ -362,11 +358,11 @@
       }
     },
     "@beep/documents-use-cases": {
-      "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
-      "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
+      "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover PR 3b2)",
+      "reason": "Restore the PR 3b dependency-edge records for @beep/documents-server and @beep/documents-use-cases on top of #2863's re-recorded baseline. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
-        "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-main.md",
+        "sha256": "8dbdd4fd5711c75a6c8550ed6c5c9989aa9ebfd6e6640bb46c4dfe90acc4f931"
       }
     },
     "@beep/drizzle": {

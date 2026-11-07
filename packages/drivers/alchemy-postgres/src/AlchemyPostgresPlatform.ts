@@ -9,8 +9,8 @@
  * Semantics follow the installed beta.85 `Platform` contract, with
  * `Domain.InMemory` as the executable reference.
  *
- * - Aggregates: one writer per instance (an advisory lock plus `SELECT ... FOR
- *   UPDATE` on its instance row inside one transaction), `commandId` dedupe
+ * - Aggregates: one writer per instance (an advisory lock plus
+ *   `SELECT ... FOR UPDATE` on its instance row inside one transaction), `commandId` dedupe
  *   through stored receipts, an atomic commit of events, state, receipt and
  *   outbox deliveries, scheduled commands fired by a polling worker.
  * - Views: one writer per key; snapshot, entries, input log and downstream

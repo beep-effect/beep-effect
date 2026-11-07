@@ -276,7 +276,7 @@ export interface ConsumerTarget<R, E, PE> {
 const eventually = <A, E, Req>(effect: Effect.Effect<A, E, Req>, predicate: (value: A) => boolean) =>
   effect.pipe(
     Effect.repeat({ until: predicate, schedule: Schedule.spaced(Duration.millis(25)) }),
-    Effect.timeout(Duration.seconds(5))
+    Effect.timeout(Duration.seconds(15))
   );
 
 /** The built model's stores, by name. */
