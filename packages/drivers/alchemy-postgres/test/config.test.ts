@@ -6,8 +6,9 @@ import {
   ProvenanceMappings,
 } from "@beep/alchemy-postgres";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -49,14 +50,14 @@ describe("provenance mappings", () => {
   it.effect("decodes one mapping per distinct context key", () =>
     Effect.sync(() => {
       const decoded = S.decodeResult(ProvenanceMappings)([actor, session]);
-      expect(Result.isSuccess(decoded)).toBe(true);
+      pipe(decoded, Result.isSuccess, assertTrue);
     })
   );
 
   it.effect("rejects two mappings for the same context key", () =>
     Effect.sync(() => {
       const decoded = S.decodeResult(ProvenanceMappings)([actor, { ...session, contextKey: actor.contextKey }]);
-      expect(Result.isFailure(decoded)).toBe(true);
+      pipe(decoded, Result.isFailure, assertTrue);
     })
   );
 
