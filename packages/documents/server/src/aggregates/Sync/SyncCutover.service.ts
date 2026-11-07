@@ -18,15 +18,18 @@ const State = S.Array(S.Struct({ phase: S.Literals(["backed-up", "restored"]), i
  * **Example** (Inspect a refusal)
  * ```ts
  * import { SyncCutoverRejected } from "@beep/documents-server/aggregates/Sync";
- * const refusal = new SyncCutoverRejected({ reason: "backup-required" });
+ * const refusal = SyncCutoverRejected.make({ reason: "backup-required" });
  * console.log(refusal.reason);
  * ```
  * @category errors
  * @since 0.0.0
  */
-export class SyncCutoverRejected extends S.TaggedError<SyncCutoverRejected>()("SyncCutoverRejected", {
-  reason: S.String,
-}) {}
+export class SyncCutoverRejected extends S.TaggedError<SyncCutoverRejected, { readonly brand: unique symbol }>()(
+  "SyncCutoverRejected",
+  {
+    reason: S.String,
+  }
+) {}
 
 /**
  * Captures all four tables and sequence positions atomically before any importer runs.
@@ -43,7 +46,7 @@ export class SyncCutoverRejected extends S.TaggedError<SyncCutoverRejected>()("S
  * const backup = backupSyncTables("synthetic-import-v1");
  * void backup;
  * ```
- * @category migration
+ * @category constructors
  * @since 0.0.0
  */
 export const backupSyncTables = Effect.fn($I`backupSyncTables`)(function* (importId: string) {
@@ -59,7 +62,7 @@ export const backupSyncTables = Effect.fn($I`backupSyncTables`)(function* (impor
       );
       if (A.isReadonlyArrayNonEmpty(state)) {
         if (state[0].import_id !== importId || state[0].phase !== "backed-up")
-          return yield* new SyncCutoverRejected({ reason: "backup-belongs-to-another-import-or-was-restored" });
+          return yield* SyncCutoverRejected.make({ reason: "backup-belongs-to-another-import-or-was-restored" });
         return;
       }
       for (const entity of entities) yield* sql`LOCK TABLE ${sql(`documents_sync_${entity}`)} IN ACCESS EXCLUSIVE MODE`;
@@ -89,7 +92,7 @@ export const backupSyncTables = Effect.fn($I`backupSyncTables`)(function* (impor
  * const reversal = restoreSyncTables("synthetic-import-v1");
  * void reversal;
  * ```
- * @category migration
+ * @category constructors
  * @since 0.0.0
  */
 export const restoreSyncTables = Effect.fn($I`restoreSyncTables`)(function* (importId: string) {
@@ -97,13 +100,13 @@ export const restoreSyncTables = Effect.fn($I`restoreSyncTables`)(function* (imp
   yield* sql.withTransaction(
     Effect.gen(function* () {
       const exists = yield* sql`SELECT to_regclass('documents_sync_cutover_backup') AS name`;
-      if (exists[0]?.name === null) return yield* new SyncCutoverRejected({ reason: "backup-required" });
+      if (exists[0]?.name === null) return yield* SyncCutoverRejected.make({ reason: "backup-required" });
       yield* sql`LOCK TABLE documents_sync_cutover_backup IN ACCESS EXCLUSIVE MODE`;
       const state = yield* sql`SELECT phase, import_id FROM documents_sync_cutover_backup`.pipe(
         Effect.flatMap(S.decodeUnknownEffect(State))
       );
       if (!A.isReadonlyArrayNonEmpty(state) || state[0].import_id !== importId)
-        return yield* new SyncCutoverRejected({ reason: "backup-required" });
+        return yield* SyncCutoverRejected.make({ reason: "backup-required" });
       if (state[0].phase === "restored") return;
       for (const entity of entities) yield* sql`LOCK TABLE ${sql(`documents_sync_${entity}`)} IN ACCESS EXCLUSIVE MODE`;
       // DELETE retains the table contract, indexes, constraints, and dependent readers.

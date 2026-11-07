@@ -3,6 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import {
   LegacySyncConflict,
   LegacySyncCursor,
@@ -20,6 +21,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
+import type * as V from "@beep/documents-domain/aggregates/VaultSync";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/LegacySync.projection");
 const IdRows = S.NonEmptyArray(S.Struct({ id: S.Int }));
@@ -117,7 +119,38 @@ const store = Effect.gen(function* () {
       )
       .pipe(Effect.orDie);
   });
-  return { sql, path, identity, write };
+  const genesis = Effect.fnUntraced(function* (
+    entity: string,
+    row: V.LegacyItemRow | V.LegacyOperationRow | V.LegacyConflictRow | V.LegacyCursorRow,
+    stream: string,
+    seq: number
+  ) {
+    yield* sql
+      .withTransaction(
+        Effect.gen(function* () {
+          const accepted = yield* sql`INSERT INTO documents_sync_projection_checkpoint (projection, stream, seq)
+        VALUES (${entity}, ${stream}, ${seq}) ON CONFLICT(projection, stream) DO UPDATE SET seq=EXCLUDED.seq
+        WHERE documents_sync_projection_checkpoint.seq < EXCLUDED.seq RETURNING seq`;
+          if (A.isReadonlyArrayEmpty(accepted)) return;
+          yield* sql`INSERT INTO documents_sync_legacy_identity (entity, public_id, id)
+        VALUES (${entity}, ${row.public_id}, ${row.id}) ON CONFLICT(entity, public_id)
+        DO UPDATE SET id = EXCLUDED.id`;
+          // JSON values must be serialized for SqlClient's generic insert helper.
+          const stored = {
+            ...row,
+            created_by_principal: yield* S.encodeEffect(S.fromJsonString(S.Unknown))(row.created_by_principal),
+            updated_by_principal: yield* S.encodeEffect(S.fromJsonString(S.Unknown))(row.updated_by_principal),
+            ...("remote_payload" in row
+              ? { remote_payload: yield* S.encodeEffect(S.fromJsonString(S.Unknown))(row.remote_payload) }
+              : {}),
+          };
+          yield* sql`INSERT INTO ${sql(`documents_sync_${entity}`)} ${sql.insert(stored)}
+        ON CONFLICT(id) DO UPDATE SET ${sql.update(stored)}`;
+        })
+      )
+      .pipe(Effect.orDie);
+  });
+  return { sql, path, identity, write, genesis };
 });
 /**
  * Writes derived rows with D14 numeric references and transactional delivery checkpoints.
@@ -133,9 +166,13 @@ const store = Effect.gen(function* () {
 export const LegacySyncProjections = Layer.mergeAll(
   LegacySyncItem.toLayer(
     Effect.gen(function* () {
-      const { write, path } = yield* store;
+      const { genesis, write, path } = yield* store;
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, event, envelope } of batch) {
+          if (event._tag === "ItemGenesisImported") {
+            yield* genesis("item", event.row, envelope.stream, envelope.seq);
+            continue;
+          }
           if (state === null) continue;
           const o = state.observation;
           const pushed = event._tag === "ItemPushed";
@@ -172,9 +209,13 @@ export const LegacySyncProjections = Layer.mergeAll(
   ),
   LegacySyncOperation.toLayer(
     Effect.gen(function* () {
-      const { write, path, identity } = yield* store;
+      const { genesis, write, path, identity } = yield* store;
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
+          if (event._tag === "OperationGenesisImported") {
+            yield* genesis("operation", event.row, envelope.stream, envelope.seq);
+            continue;
+          }
           if (state === null) continue;
           const input = state.input;
           const item = yield* identity("item", input.itemId);
@@ -199,9 +240,13 @@ export const LegacySyncProjections = Layer.mergeAll(
   ),
   LegacySyncConflict.toLayer(
     Effect.gen(function* () {
-      const { write, identity } = yield* store;
+      const { genesis, write, identity } = yield* store;
       return Effect.fnUntraced(function* (batch) {
         for (const { source, event, envelope } of batch) {
+          if (event._tag === "ConflictGenesisImported") {
+            yield* genesis("conflict", event.row, envelope.stream, envelope.seq);
+            continue;
+          }
           const record = event.record;
           const item = record.itemId === null ? null : yield* identity("item", record.itemId);
           yield* write("conflict", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
@@ -221,9 +266,13 @@ export const LegacySyncProjections = Layer.mergeAll(
   ),
   LegacySyncCursor.toLayer(
     Effect.gen(function* () {
-      const { write } = yield* store;
+      const { genesis, write } = yield* store;
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
+          if (event._tag === "CursorGenesisImported") {
+            yield* genesis("cursor", event.row, envelope.stream, envelope.seq);
+            continue;
+          }
           if (state === null || state._tag !== "Registered" || state.cursor === null) continue;
           yield* write(
             "cursor",

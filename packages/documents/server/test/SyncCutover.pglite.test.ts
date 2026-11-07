@@ -59,13 +59,18 @@ describe("offline vault-sync reversal", () => {
         yield* sql`UPDATE documents_sync_item SET last_error='changed', row_version=999`;
         yield* sql`SELECT nextval('documents_sync_cursor_id_seq')`;
         yield* sql`SELECT nextval('documents_sync_item_id_seq')`;
-        expect(yield* backupSyncTables("another-import").pipe(Effect.result)).toMatchObject({ _tag: "Failure" });
+        const value1 = yield* backupSyncTables("another-import").pipe(Effect.result);
+        expect(value1).toMatchObject({ _tag: "Failure" });
         yield* restoreSyncTables("synthetic-v1");
-        expect(yield* sql`SELECT * FROM documents_sync_item`).toEqual(before);
-        expect(yield* sql`SELECT nextval('documents_sync_item_id_seq') AS id`).toEqual([{ id: 1000 }]);
-        expect(yield* sql`SELECT nextval('documents_sync_cursor_id_seq') AS id`).toEqual([{ id: 1 }]);
+        const value2 = yield* sql`SELECT * FROM documents_sync_item`;
+        expect(value2).toEqual(before);
+        const value3 = yield* sql`SELECT nextval('documents_sync_item_id_seq') AS id`;
+        expect(value3).toEqual([{ id: 1000 }]);
+        const value4 = yield* sql`SELECT nextval('documents_sync_cursor_id_seq') AS id`;
+        expect(value4).toEqual([{ id: 1 }]);
         yield* restoreSyncTables("synthetic-v1");
-        expect(yield* sql`SELECT nextval('documents_sync_item_id_seq') AS id`).toEqual([{ id: 1001 }]);
+        const value5 = yield* sql`SELECT nextval('documents_sync_item_id_seq') AS id`;
+        expect(value5).toEqual([{ id: 1001 }]);
       })
     );
   });

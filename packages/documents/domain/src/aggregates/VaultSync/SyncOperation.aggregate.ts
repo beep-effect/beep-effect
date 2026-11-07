@@ -4,9 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as Domain from "@alchemy.run/domain";
 import * as DateTime from "effect/DateTime";
 import * as Struct from "effect/Struct";
+import * as G from "./SyncGenesis.command.ts";
 import * as C from "./SyncOperation.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
@@ -36,6 +38,7 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
   state: C.OperationState,
   initial: null,
   commands: [
+    G.ImportOperationGenesis,
     C.QueueOperation,
     C.SquashOperation,
     C.LeaseOperation,
@@ -47,6 +50,10 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
     C.ReviveOperation,
   ],
   decide: {
+    ImportOperationGenesis: (s, c) =>
+      s === null
+        ? [G.OperationGenesisImported.make(Struct.omit(c, ["_tag"]))]
+        : SyncRuleViolation.make({ rule: "genesis-requires-empty-stream", evidence: c.importId }),
     QueueOperation: (s, c, { id }) =>
       c.input.idempotencyKey !== id
         ? refused("operation-key")
@@ -111,6 +118,7 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
     ReviveOperation: (s) => (s?.status === "failed" ? [C.OperationRevived.make({})] : []),
   },
   evolve: {
+    OperationGenesisImported: (_s, e) => e.record,
     OperationQueued: (_, e): C.OperationState =>
       C.OperationRecord.make({
         input: e.input,

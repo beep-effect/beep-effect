@@ -4,10 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Struct from "effect/Struct";
+import * as G from "./SyncGenesis.command.ts";
 import * as C from "./SyncItem.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
@@ -40,8 +42,19 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
   id: V.ItemId,
   state: C.ItemState,
   initial: null,
-  commands: [C.ObserveItem, C.MarkItemPushed, C.MarkItemPushFailed, C.FlagItemDrift, C.ReturnItemToPending],
+  commands: [
+    G.ImportItemGenesis,
+    C.ObserveItem,
+    C.MarkItemPushed,
+    C.MarkItemPushFailed,
+    C.FlagItemDrift,
+    C.ReturnItemToPending,
+  ],
   decide: {
+    ImportItemGenesis: (s, c) =>
+      s === null
+        ? [G.ItemGenesisImported.make(Struct.omit(c, ["_tag"]))]
+        : SyncRuleViolation.make({ rule: "genesis-requires-empty-stream", evidence: c.importId }),
     ObserveItem: (s, c) => {
       const o = c.observation;
       if (s === null) return [C.ItemTracked.make(Struct.omit(c, ["_tag"]))];
@@ -92,6 +105,7 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
           ],
   },
   evolve: {
+    ItemGenesisImported: (_s, e) => e.record,
     ItemTracked: observed,
     ItemEdited: observed,
     ItemMoved: observed,

@@ -28,6 +28,7 @@ export class OpenConflicts extends Domain.View("OpenConflicts", {
   initial: H.empty(),
   keyOf: { SyncConflict: ({ event }) => SyncDestination.ref(event.record.destinationId) },
   evolve: {
+    ConflictGenesisImported: (s, e) => (e.record.reviewed ? s : H.set(s, e.record.remoteEventId, e.record)),
     ConflictRecorded: (s, e) => H.set(s, e.record.remoteEventId, e.record),
     ConflictReviewed: (s, e) => H.remove(s, e.record.remoteEventId),
   },

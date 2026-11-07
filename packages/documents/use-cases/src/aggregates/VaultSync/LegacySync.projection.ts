@@ -20,6 +20,7 @@ export class LegacySyncItem extends Domain.Projection("LegacySyncItem", {
   from: [V.SyncItemSnapshot],
   key: V.SyncItem,
   on: [
+    V.ItemGenesisImported,
     V.ItemTracked,
     V.ItemEdited,
     V.ItemMoved,
@@ -45,6 +46,7 @@ export class LegacySyncOperation extends Domain.Projection("LegacySyncOperation"
   from: [V.SyncOperationSnapshot],
   key: V.SyncOperation,
   on: [
+    V.OperationGenesisImported,
     V.OperationQueued,
     V.OperationRetargeted,
     V.OperationSquashed,
@@ -72,7 +74,7 @@ export class LegacySyncOperation extends Domain.Projection("LegacySyncOperation"
 export class LegacySyncConflict extends Domain.Projection("LegacySyncConflict", {
   from: [V.SyncConflict],
   key: V.SyncConflict,
-  on: [V.ConflictRecorded, V.ConflictReviewed],
+  on: [V.ConflictGenesisImported, V.ConflictRecorded, V.ConflictReviewed],
 }) {}
 /**
  * Consumes SyncDestination events into its legacy read table.
@@ -89,6 +91,7 @@ export class LegacySyncCursor extends Domain.Projection("LegacySyncCursor", {
   from: [V.SyncDestinationSnapshot],
   key: V.SyncDestination,
   on: [
+    V.CursorGenesisImported,
     V.DestinationRegistered,
     V.DestinationRenamed,
     V.RootFolderResolved,

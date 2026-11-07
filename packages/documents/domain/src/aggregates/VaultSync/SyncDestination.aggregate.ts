@@ -4,11 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Struct from "effect/Struct";
 import * as C from "./SyncDestination.command.ts";
+import * as G from "./SyncGenesis.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 
@@ -30,6 +32,8 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
   state: C.DestinationState,
   initial: { _tag: "Unregistered" },
   commands: [
+    G.ImportCursorGenesis,
+    G.ImportDestinationGenesis,
     C.RegisterDestination,
     C.RenameDestination,
     C.ResolveDestinationRoot,
@@ -40,6 +44,12 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
     C.ReleaseItemPath,
   ],
   decide: {
+    ImportCursorGenesis: (s, c) =>
+      s._tag === "Registered" ? [G.CursorGenesisImported.make(Struct.omit(c, ["_tag"]))] : refused("not-registered"),
+    ImportDestinationGenesis: (s, c) =>
+      s._tag === "Unregistered"
+        ? [G.DestinationGenesisImported.make(Struct.omit(c, ["_tag"]))]
+        : SyncRuleViolation.make({ rule: "genesis-requires-empty-stream", evidence: c.importId }),
     RegisterDestination: (s, c) =>
       s._tag === "Unregistered"
         ? [C.DestinationRegistered.make(Struct.omit(c, ["_tag"]))]
@@ -89,6 +99,15 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
         : [],
   },
   evolve: {
+    CursorGenesisImported: (s, e): C.DestinationState =>
+      s._tag !== "Registered"
+        ? s
+        : {
+            ...s,
+            paused: s.paused || e.paused,
+            ...(e.selected ? { cursor: e.row.stream_position, cursorError: e.row.last_error } : {}),
+          },
+    DestinationGenesisImported: (_s, e) => e.record,
     DestinationRegistered: (_, e): C.DestinationState => ({
       _tag: "Registered",
       orgId: e.orgId,
