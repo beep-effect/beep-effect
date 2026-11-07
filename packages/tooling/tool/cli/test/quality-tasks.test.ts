@@ -5103,16 +5103,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:circular",
         "lint:effect-imports",
         "lint:effect-imports-markdown",
-        "lint:markdown-fences",
-        "lint:retired-effect-paths",
-        "lint:entity-kit-freeze",
-        "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
         "lint:holds",
         "lint:tsconfig-overlay",
         "lint:package-test-typecheck",
         "lint:effect-vitest",
-        "lint:opaque-roundtrips",
         "lint:jsdoc",
         "lint:jsdoc:root",
         "lint:jsdoc-module-tags",
@@ -5127,6 +5122,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:oxlint",
         "lint:shadcn",
         "lint:typos",
+        "lint:markdown-fences",
+        "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
+        "lint:retired-iri-authorities",
+        "lint:opaque-roundtrips",
       ]);
       for (const index of [0, 1, 4]) {
         const step = O.getOrThrow(A.get(local, index));

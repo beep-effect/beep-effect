@@ -95,7 +95,11 @@
     "packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.ts": "48370a644447ea3610bcb35268ff64e9a527c34eaee72c5529ce09903197690f",
     "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts": "8b3dba1f63763c7005a6c73dfeeab4d26c593855a8f92834912328c5420084b8",
     "packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.ts": "0413149807f5b6e026d35f0119414152221493b84774ae07a05f5e34ab26456c",
-    "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts": "403973826d6a1a81bfb858ae99f7470303034e7ed94b37b6eb03e4aaacd8aff5"
+    "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts": "403973826d6a1a81bfb858ae99f7470303034e7ed94b37b6eb03e4aaacd8aff5",
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": "01f2ddbe7578332427b27f59c0c8b98bd869c75c5dfee55619f1e29a3fd31c41",
+    "packages/tooling/tool/cli/test/lint-policy-scope.test.ts": "abed92b13d2734b43a80868b763dc8c6b63555c9f0392b62103846757709938d",
+    "packages/tooling/tool/cli/test/quality-tasks.test.ts": "d4331b50b6757f9ba2b6a410f50acde70f621aae337fdc5a34e90a6a5433cb26",
+    "packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts": "3db51be4d4af78083250592c00fcd13c10b4dc7a08625a82c315b583a404b97e"
   },
   "rootConfigurationBeforeSha256": "ac2286808e66d71d4af7045b469e1aa03a83a792dd74d38d0160c17d3144bc6a",
   "sourceBasedFinding": "Three additional root checks call the same regular-index-file scanner as entity-kit freeze. Their native inputs bind content while Git metadata and a runtime discovery env input were absent.",
@@ -109,5 +113,16 @@
     "reason": "Uses tracked plus visible untracked paths with Git-failure fallback. A plain untracked-to-tracked transition does not establish changed selection; unchanged by this repair."
   },
   "scope": "Four isolated Markdown dry-run metadata observations only. Does not execute repository scanner bodies, their fingerprint dependency chain, or observe an actual stale verdict.",
-  "remaining": "Qualify complete native input chain, law-specific scope/baselines, semantic negatives, output/log safety, portable runtime and concurrent-index isolation before restoring reuse. Temporary fresh boundaries remain unfinished adoption."
+  "remaining": "Qualify complete native input chain, law-specific scope/baselines, semantic negatives, output/log safety, portable runtime and concurrent-index isolation before restoring reuse. Temporary fresh boundaries remain unfinished adoption.",
+  "hostedRepair": {
+    "failedHead": "8589d4eb7e511020f52cbba1f3eae0f65828c224",
+    "causes": [
+      "outdated cache/env contract assertions",
+      "Git fixture staged/worktree mismatch",
+      "affected filtering still skips index-sensitive discovery"
+    ],
+    "policy": "Five held checks execute in the existing unfiltered state graph; concurrency width unchanged.",
+    "localQualityExecuted": false,
+    "correctedHeadHostedProof": "pending"
+  }
 }

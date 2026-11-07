@@ -1319,3 +1319,7 @@ avoid repeated static reads while preserving the final live-ref check.
 ## Audit shared tracked discovery before promoting a single caller, 2026-11-07
 
 The entity-kit discovery fix exposed three additional cached root callers of scanTrackedTextFiles: retired Effect paths, retired IRI authorities and Markdown fences. Review the entire helper call-site family once, while separating EffectImports' tracked-plus-untracked semantics. Four metadata-only Markdown controls preserve task hashes across changed tracked membership. Extend the same temporary fresh boundary and runtime key declaration without claiming qualified adoption. Source, exact clients and raw observation digests are bound in tracked-scanner-discovery-key-review-2026-11-07.json.
+
+### Hosted tracked-discovery repair, 2026-11-07
+
+PR #2826 unit/property failures exposed stale cache/env assertions, a staged Git fixture mismatch, and five discovery checks still affected-filtered despite cache holds. Preserve input probes, align fixture staging before removal, and route these checks through the existing unfiltered state graph without adding concurrency. The coverage aggregator refused failed unit producers; it did not measure a separate coverage regression. Prevent recurrence with exact caller-selection assertions alongside cache policy changes. Local quality suites were not run; hosted confirmation is pending.

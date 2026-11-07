@@ -31,6 +31,7 @@ import { Sha256Hex } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -274,7 +275,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             timeout: Duration.seconds(10),
             bound: StepExec.OutputBound.make({ maxChars: 4096, truncatedNotice: "[git fixture overflow]" }),
           });
-          expect(result.exitCode).toBe(0);
+          expect(result.exitCode, `fixture git ${A.join(args, " ")}`).toBe(0);
           expect(result.truncated).toBe(false);
         });
         yield* git(["init", "--template=", "."]);
@@ -347,6 +348,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* fs.writeFileString(path.join(clone, candidateName), "export const sample = false;\n");
         const contentOnlyChange = yield* collectCacheTrackedTestMembership(clone);
         expect(contentOnlyChange).toBe(trackedMembership);
+        // Align the newly staged fixture with its working-tree contents first.
+        yield* git(["add", "--", candidateName]);
         yield* git(["rm", "--cached", "--", candidateName]);
         const removedMembership = yield* collectCacheTrackedTestMembership(clone);
         expect(removedMembership).toBe(emptyMembership);

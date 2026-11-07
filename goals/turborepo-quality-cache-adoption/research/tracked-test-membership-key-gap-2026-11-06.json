@@ -111,7 +111,7 @@
     "nativeInput": "BEEP_CACHE_TOOLCHAIN_DIGEST declared for the affected root task; existing calculated-key path and caller-override rejection reused.",
     "scope": "The same observed runtime identity conservatively invalidates other governed computations when tracked test membership changes. No per-task cache promotion follows.",
     "sourceRaceLimit": "Observation does not freeze concurrent index mutation; existing qualification isolation remains required.",
-    "testsAuthoredNotRun": [
+    "testsAuthoredNotRunLocally": [
       "empty and untracked membership",
       "index-only add/removal",
       "independent linked worktree indexes",
@@ -128,7 +128,7 @@
     "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "61ef182fc929f3a1b97a66bcb83c2110efeea98721f18b73b992d091ce70ee51",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "5c63da2d613525645b62edd679cd23ad10dc37b794c28bd5547d340154ebb531",
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "84dce03fbd76a2b130d7aad47f5960437323eec3dd791c55d9ff62304049a500",
-    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "31e6a8069484d83cef1dac99261a97ae4bf6eb26ec8510945d1af6501263d4fa"
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "16abe67618265b20cce88fe0b3421ea48620f3441de783e401944641d235e9c6"
   },
   "preparedSourceParent": "91848cad972714901cb1100e68f4c77b71b5df1a"
 }
