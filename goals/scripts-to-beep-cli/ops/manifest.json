@@ -38,6 +38,7 @@
     "research/SOURCES.md",
     "research/cache-baseline-request-pr1.json",
     "research/cache-baseline-request-pr1b.json",
+    "research/cache-baseline-request-pr1c.json",
     "research/cache-baseline-review-pr1.md"
   ],
   "agentLaunchers": [
