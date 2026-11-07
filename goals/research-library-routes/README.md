@@ -31,11 +31,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P4 Close — re-final the closeout through a goals-only PR, then verify and adopt
+`completed-retained` in a separate packet-state PR. The operative lifecycle stays
+`active` until completion verification succeeds.
+
+Implementation PR [#2868](https://github.com/beep-effect/beep-effect/pull/2868)
+merged as `821f4287e2` over attributed S11 reds. Its merge-time completion receipt
+is unsatisfied. Re-final PR [#2880](https://github.com/beep-effect/beep-effect/pull/2880)
+re-finals the existing reflection and closeout proposal
+through the strict merge gate; it changes no implementation or acceptance criteria.
 
 ## Latest Evidence
 
-Not started.
+- `@beep/firecrawl` driver plus native web, Box, VidBee, alphaXiv routes, hop
+  extraction and the hop-2 gate; research-library tests 196/196 green.
+- Live probes (2026-11-06): Firecrawl qualification verified on a real page; Box
+  qualification verified on one user-owned file with `DMS_BOX_USER_ID`.
+- Intake surface: [`history/intake-handoff.md`](./history/intake-handoff.md).
 
 ## Notes
 

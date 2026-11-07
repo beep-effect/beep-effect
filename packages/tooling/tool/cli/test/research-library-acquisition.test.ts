@@ -1,3 +1,4 @@
+import { decodeFirecrawlScrapeBody, Firecrawl } from "@beep/firecrawl";
 import {
   hashBytes,
   importLibraryResult,
@@ -12,7 +13,6 @@ import {
   LibrarySourceVersion,
   loadCatalog,
   qualifyLibrary,
-  removedLibraryWebAdapter,
   requiredLibraryAdapters,
   saveImmutable,
   validateLibraryScrape,
@@ -25,10 +25,12 @@ import {
   acquireLibraryYoutube,
   correctLibraryCaptures,
   encodeLibraryCaptureJson,
+  LibraryBoxFixture,
   LibraryCaptureCorrection,
   libraryCaptionProvenance,
   libraryQualificationValid,
   librarySourceEvidenceValid,
+  makeLibraryBoxTest,
   runLibraryCommand,
   saveLibraryText,
   validateProviderQualification,
@@ -36,6 +38,7 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -66,6 +69,25 @@ const source = LibrarySource.make({
   ownership: "external",
   locators: [],
 });
+const encodeFixtureJson = S.encodeEffect(UnknownJson);
+// Deterministic Firecrawl: a 404 target for `status-404`, a PDF for `.pdf`, a full page otherwise.
+const fixtureFirecrawl = Firecrawl.makeTestLayer((request) =>
+  encodeFixtureJson({
+    success: true,
+    data: {
+      markdown: `# Article\n\nFull text of ${request.url}.`,
+      rawHtml: Str.endsWith(".pdf")(request.url) ? "%PDF-1.7" : `<article>Full text of ${request.url}.</article>`,
+      metadata: {
+        sourceURL: request.url,
+        statusCode: Str.includes("status-404")(request.url) ? 404 : 200,
+        contentType: "text/html",
+      },
+    },
+  }).pipe(
+    Effect.orDie,
+    Effect.flatMap((body) => decodeFirecrawlScrapeBody(request.url, new TextEncoder().encode(body)))
+  )
+);
 const prepare = Effect.fn("test.prepare")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -132,7 +154,9 @@ it.layer(
     Layer.succeed(
       HttpClient.HttpClient,
       HttpClient.make(() => Effect.die("Unexpected fixture HTTP request"))
-    )
+    ),
+    fixtureFirecrawl,
+    makeLibraryBoxTest(LibraryBoxFixture.make({ folders: {}, bytes: {} }))
   ),
   { timeout: "30 seconds" }
 )("research acquisition integrity", (it) => {
@@ -858,41 +882,54 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
     })
   );
 
-  it.effect("routes web sources to an import-only disposition and never requires the removed scraper route", () =>
+  it.effect("acquires web sources natively through Firecrawl under the unchanged web contract", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
-      // The suite HTTP client dies on any request, so a network attempt would fail this test.
       const capture = yield* acquireLibrarySource(fixture.root, source);
-      expect(capture.method).toBe("disposition");
-      expect(capture.status).toBe("unsupported");
-      expect(capture.reason).toContain("library import-result");
-      const retained = LibraryQualification.make({
-        id: "retained-firecrawl",
-        adapter: "firecrawl",
-        status: "verified",
-        required: true,
-        recordedAt: "2026-10-06T00:00:00Z",
-        evidence: [],
-        reason: "Retained receipt from the removed web route.",
-      });
-      const catalog = yield* loadCatalog(fixture.root);
-      expect(requiredLibraryAdapters(LibraryCatalog.make({ ...catalog, qualifications: [retained] }))).toEqual([
-        "grok-deep-research",
+      expect(capture.method).toBe("firecrawl");
+      expect(capture.status).toBe("readable");
+      expect(A.map(capture.artifacts, (artifact) => artifact.role)).toEqual([
+        "raw-response",
+        "raw-full-text",
+        "extracted-full-text",
       ]);
+      const observed5 = yield* librarySourceEvidenceValid(fixture.root, source, capture);
+      expect(observed5).toBe(true);
+      const catalog = yield* loadCatalog(fixture.root);
+      expect(requiredLibraryAdapters(catalog)).toContain("firecrawl");
     })
   );
 
-  it.effect("refuses to probe the removed web route instead of skipping it", () =>
+  it.effect("keeps a non-2xx or mismatched web target blocked with its response retained", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
-      const error = yield* Effect.flip(
-        qualifyLibrary(
-          fixture.root,
-          LibraryQualifyOptions.make({ adapters: [removedLibraryWebAdapter], sourceIds: [], maxProbes: 1 })
-        )
+      const missing = LibrarySource.make({ ...source, id: "missing", canonicalUrl: "https://example.com/status-404" });
+      const pdf = LibrarySource.make({ ...source, id: "pdf", canonicalUrl: "https://example.com/report.pdf" });
+      const blocked = yield* acquireLibrarySource(fixture.root, missing);
+      const unsupported = yield* acquireLibrarySource(fixture.root, pdf);
+      expect([blocked.status, blocked.complete]).toEqual(["blocked", false]);
+      expect(A.some(blocked.artifacts, (artifact) => artifact.role === "raw-response")).toBe(true);
+      const observed6 = yield* librarySourceEvidenceValid(fixture.root, missing, blocked);
+      expect(observed6).toBe(false);
+      expect(unsupported.status).toBe("unsupported");
+      expect(unsupported.reason).toContain("unsupported-content");
+    })
+  );
+
+  it.effect("qualifies the web route by a real bounded scrape of a catalogued source", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const catalog = yield* qualifyLibrary(
+        fixture.root,
+        LibraryQualifyOptions.make({ adapters: ["firecrawl"], sourceIds: [], maxProbes: 1 })
       );
-      expect(error.message).toContain(`Adapter ${removedLibraryWebAdapter} was removed`);
-      expect((yield* loadCatalog(fixture.root)).qualifications).toEqual([]);
+      const qualification = A.findLast(catalog.qualifications, (item) => item.adapter === "firecrawl");
+      assertSome(
+        O.map(qualification, (item) => item.status),
+        "verified"
+      );
+      const observed7 = yield* libraryQualificationValid(fixture.root, catalog, O.getOrThrow(qualification));
+      expect(observed7).toBe(true);
     })
   );
 });

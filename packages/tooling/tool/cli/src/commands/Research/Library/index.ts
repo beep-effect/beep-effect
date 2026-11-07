@@ -5,14 +5,27 @@
  * @since 0.0.0
  */
 
-export {
-  acquireLibrary,
-  libraryAdapterFor,
-  removedLibraryWebAdapter,
-  requiredLibraryAdapters,
-} from "./Library.acquire.ts";
+export { acquireLibrary, libraryAdapterFor, requiredLibraryAdapters } from "./Library.acquire.ts";
+export { LibraryBoxAcquireOptions, registerLibraryBoxSources } from "./Library.box.ts";
 export { libraryCommand } from "./Library.command.ts";
 export { LibraryError } from "./Library.errors.ts";
+export { libraryWebAdapter } from "./Library.firecrawl.ts";
+export { LibraryHopPolicy } from "./Library.hopPolicy.ts";
+export { libraryHopTotals } from "./Library.hopStatus.ts";
+export {
+  LibraryHopDecision,
+  LibraryHopGateInput,
+  LibraryHopGateReason,
+  LibraryPacketConcept,
+  libraryHopGate,
+  libraryHopTwoOnly,
+  libraryLiveConcepts,
+  libraryPacketConcepts,
+  libraryRefusedHopTwo,
+  librarySourceDomain,
+  librarySourceHopDepth,
+  recordLibraryHops,
+} from "./Library.hops.ts";
 export {
   importLibraryResult,
   LibraryDispositionImportPayload,
@@ -22,6 +35,16 @@ export {
   libraryDispositionValid,
   libraryNonReferenceContextValid,
 } from "./Library.import.ts";
+export {
+  importLibraryAlphaxiv,
+  importLibraryRoutedResult,
+  importLibraryVidbee,
+  LibraryAlphaxivImportPayload,
+  LibraryAlphaxivReference,
+  LibraryImportOriginal,
+  LibraryVidbeeImportPayload,
+  libraryFrontmatter,
+} from "./Library.importMethods.ts";
 export { classifyLibraryReference, extractLibraryReferences, inventoryLibrary } from "./Library.inventory.ts";
 export {
   LIBRARY_MIGRATIONS_DIR,
@@ -33,6 +56,8 @@ export {
 } from "./Library.paths.ts";
 export { LibraryProbeEvidence, LibraryQualifyOptions, qualifyLibrary } from "./Library.qualify.ts";
 export { renderLibrary } from "./Library.render.ts";
+export { LibraryAlphaxivBinding, LibraryVidbeeBinding } from "./Library.routeEvidence.ts";
+export { acquireLibraryBox, inventoryLibraryWithHops, libraryHopReport } from "./Library.routes.ts";
 export {
   LIBRARY_VALIDATOR_CONTRACT,
   LibraryAccessClass,
