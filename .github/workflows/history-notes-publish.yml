@@ -1,0 +1,61 @@
+# Publishes refs/notes/history, the commit-message overlay projected from
+# docs/history/commit-message-map.json (goals/history-message-overlay).
+#
+# This job is the only writer of origin's notes ref: the map changes only by
+# pull request, and after it lands on main this rebuilds the ref with
+# `beep history notes --write` and proves it with `--check --require-published`.
+# Each rebuild is one parentless, deterministic commit, so the push is a
+# force-push of the notes ref (never of a branch). An unchanged map rebuilds
+# the identical commit and the push is a no-op.
+name: History Notes Publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/history/commit-message-map.json
+  workflow_dispatch:
+
+concurrency:
+  group: history-notes-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish refs/notes/history
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # --check proves every map key reachable from origin/main and refuses
+          # a shallow clone, so the full history is required.
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      - name: Rebuild the notes ref from the map
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run beep history notes --write
+          bun run beep history notes --check --require-published
+
+      - name: Push the notes ref
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git push --force \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "refs/notes/history:refs/notes/history"
