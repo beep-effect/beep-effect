@@ -139,6 +139,27 @@ attempts; report an actual external blocker without claiming usefulness.
 | 2026-11-05 | Adopt independently reviewed prospective source-only annotation handbook v2; freeze all 24 families / 567 claims with 572 raw context nodes | Resolve representation/recording ambiguity before new independent annotations, retaining all six table gaps and every selected unknown; no old 71 admission or gate change | New prospective reviewed version/frame only; preserve both private activation overlays and all prior outcomes |
 | 2026-11-05 | Admit only the native-generated new ClaimInspection.tools file coverage identity after independent review; preserve every preexisting baseline row | Retain defensive encoding error handling while testing real source-acquisition refusal, substantive findings and stale cursor failure; native package comparison passes | Regenerate the new identity after stronger source tests/coverage; never lower old floors or alter structural labels/scorer |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug claim-check-performance`; add a `kind: decision` file there, never edit this block._
+
+### research-intake-2026-11 routed 86 affirmative findings here, 2026-11-07
+
+The research-intake-2026-11 intake routed 223 findings to this packet (86 affirmative, 11 critiques or disputes; 107 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+
+- citesAsEvidence: https://govtribe.com/file/government-file/sam-dot-gov-announcement-october-15-ai-roundtable-dot-pdf — USPTO explicitly seeks filing-wizard tooling that produces exam-ready and issue-ready patent applications, a market signal for claim-checking and drafting-quality tooling.
+- citesAsEvidence: https://arxiv.org/abs/2606.21155 — Agentic verification has a large step cost, which bears on budgeting and performance for claim checking.
+- usesMethodIn: https://github.com/gfodor/legal-skills — Mechanical checks such as the claim dependency graph, antecedent candidates and dates are computed deterministically, not by the model.
+- citesAsEvidence: https://github.com/boschresearch/pedantic-patentsemtech — Indefiniteness under §112(b) is among the most frequent rejection grounds, which motivates automated claim-definiteness checking.
+- citesAsEvidence: https://patentlyo.com/uspto-news — The September 1 excerpt reports that both a drafting AI and a reviewing AI missed nonexistent patent-record citations in a claim-construction filing, followed by a public OED reprimand. This supplies
+
+This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 None. No poor-performance completion exception is authorized.

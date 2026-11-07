@@ -7,6 +7,7 @@ import {
   CitationAnnotationMode,
   CitationAnnotationReplacement,
   CitationEngineAbsoluteMaxima,
+  CitationEngineAnnotationInput,
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
@@ -78,6 +79,7 @@ const ModeProbe = S.Struct({
     description: "Validate the original mode before inspecting potentially ignored fields.",
   })
 );
+const DiffProbe = S.Struct({ useDmp: CitationEngineAnnotationInput.fields.useDmp });
 const SourceProbe = S.Struct({
   source: CitationPythonUnicodeStorage.pipe(S.withDecodingDefaultKey(Effect.succeed(empty))),
 }).pipe(
@@ -199,12 +201,14 @@ const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
     const plain = yield* word(input.plain);
     if (source.pythonLength === 0 || nativeEqual(source.storage, plain.storage))
       return { source: plain, updater: O.none() };
+    const algorithm = yield* S.decodeUnknownEffect(DiffProbe)(raw).pipe(Effect.mapError(invalid));
     const mapped = yield* prepareCitationAnnotationSourceMap(
       limits,
       runtime,
       owned.geometry,
       plain.storage,
-      source.storage
+      source.storage,
+      algorithm.useDmp
     );
     return { source: mapped.source, updater: O.some(mapped.updater) };
   });
@@ -257,8 +261,9 @@ const install = makeCitationMetadataStage({
 });
 /** One admitted native operation with fresh Scope/budget by default. The native
  * profile composes default DMP mapping or a captured updater, all markup modes
- * and an optional captured annotator. General host values, builtin difflib and
- * verified raw-source/public engine dispatch remain separate required work.
+ * and an optional captured annotator. Explicit useDmp=false selects the source
+ * builtin algorithm inside the same isolated diff owner. General host values
+ * remain separate required work.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationAnnotationEntry = Effect.fn("Citation.makeAnnotationEntry")(

@@ -6,21 +6,27 @@ import {
   FLEET_LIVENESS_WINDOW_SECONDS,
   FleetCheckout,
   FleetContestedPath,
+  FleetEpochTarget,
   FleetLivenessReadings,
+  FleetScanCoverage,
+  FleetSnapshot,
   linkReferences,
   parseMergeTreeConflictNames,
   parseProcStatStartTime,
   rankContestedPaths,
+  renderFleetSnapshot,
   statusFactsFromEntries,
   transcriptProjectDirName,
 } from "@beep/repo-cli/commands/Worktree";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import { fixture, ReferenceFixture, referenceFixtureLayer, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 
 const FRESH_SECONDS = 30;
@@ -413,14 +419,15 @@ it.effect(
     const f = yield* fixture();
     yield* f.fs.makeDirectory(f.path.join(f.owner, ".git"));
     yield* f.fs.writeFileString(f.path.join(f.owner, ".env"), "COPIED=yes\n");
-    yield* f.fs.makeDirectory(f.path.join(f.owner, "scripts"), { recursive: true });
-    yield* f.fs.writeFileString(f.path.join(f.owner, "scripts", "regenerate-merge-driver.sh"), "#!/bin/sh\nexit 1\n");
+    const driverSource = f.path.join("packages", "tooling", "tool", "cli", "src", "commands", "Git");
+    yield* f.fs.makeDirectory(f.path.join(f.owner, driverSource), { recursive: true });
+    yield* f.fs.writeFileString(f.path.join(f.owner, driverSource, "Git.command.ts"), "\n");
     yield* writeExecutable(
       f.path.join(f.bin, "git"),
       `#!/bin/sh
 case "$1 $2" in
   "worktree list") printf 'worktree %s\\0HEAD 0000000000000000000000000000000000000000\\0branch refs/heads/main\\0\\0' "$PWD" ;;
-  "worktree add") mkdir -p "$5/scripts"; cp "$PWD/scripts/regenerate-merge-driver.sh" "$5/scripts/" ;;
+  "worktree add") mkdir -p "$5/${driverSource}"; cp "$PWD/${driverSource}/Git.command.ts" "$5/${driverSource}/" ;;
   "fetch origin"|"submodule update"|"config merge.regenerate."*) exit 0 ;;
   "rev-parse --verify") printf '0000000000000000000000000000000000000000\\n' ;;
   *) exit 91 ;;
@@ -492,3 +499,35 @@ esac
   }, testPlatform),
   30000
 );
+
+describe("renderFleetSnapshot", () => {
+  it.effect("prints each report line alone, without the forEach index", () =>
+    Effect.gen(function* () {
+      yield* renderFleetSnapshot(
+        FleetSnapshot.make({
+          fleetRoot: "/fleet",
+          originUrl: "git@example.test:acme/fleet.git",
+          scannedAt: "1970-01-01T00:00:00.000Z",
+          target: FleetEpochTarget.make({ ref: "main", sha: null, materialized: false }),
+          coverage: FleetScanCoverage.make({
+            clonesDiscovered: 0,
+            checkoutsDiscovered: 0,
+            checkoutsDegraded: 0,
+            processesScanned: 0,
+            processesUnreadable: 0,
+          }),
+          checkouts: [],
+          contestedPaths: [],
+        })
+      );
+      const lines = yield* TestConsole.logLines;
+      expect(lines).toEqual([
+        "Fleet root: /fleet",
+        "Origin:     git@example.test:acme/fleet.git",
+        "Target:     main @ unknown (remote unresolved — signals 2 and 3 read unknown)",
+        "Coverage:   0 clone(s), 0 checkout(s), 0 degraded; processes: 0 scanned, 0 unreadable",
+        "No checkouts sharing this origin were found under the fleet root.",
+      ]);
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+});

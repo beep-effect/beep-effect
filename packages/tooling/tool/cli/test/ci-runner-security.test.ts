@@ -18,6 +18,7 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constant, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -368,6 +369,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         { file: "heavy-admit.yml", job: "heavy" },
         { file: "cache-producer-inspect.yml", job: "inspect" },
         { file: "cache-producer-prepare.yml", job: "prepare" },
+        { file: "cache-local-observe.yml", job: "observe" },
         { file: "cache-producer.yml", job: "produce" },
       ]) {
         const workflowYaml = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
@@ -857,10 +859,24 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const renameHead = commit("PR moves code into docs");
       assert.strictEqual(profile(base, renameHead).docs_only, "false");
       const typedRename = Bun.spawnSync(
-        ["bun", path.join(repoRoot, "packages/tooling/tool/cli/src/bin.ts"), "--", "ci", "change-profile", base],
+        [
+          "bun",
+          path.join(repoRoot, "packages/tooling/tool/cli/src/bin.ts"),
+          "--",
+          "ci",
+          "change-profile",
+          base,
+          "HEAD",
+        ],
         {
           cwd: tempRoot,
-          env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", GITHUB_OUTPUT: "" },
+          env: {
+            ...process.env,
+            GITHUB_EVENT_NAME: "pull_request",
+            GITHUB_OUTPUT: "",
+            BEEP_CI_PR_BASE_SHA: "",
+            BEEP_CI_PR_HEAD_SHA: "",
+          },
           stdout: "pipe",
           stderr: "pipe",
         }
@@ -886,9 +902,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
-  it.effect(
-    "classifies goals-only and docs-only pull requests without suppressing mixed or push runs",
-    Effect.fnUntraced(function* () {
+  it.effect.each([
+    { scenario: "packet prose" },
+    { scenario: "nested fixture paths" },
+    { scenario: "documentation and push" },
+    { scenario: "executable and mixed" },
+  ] as const)("classifies $scenario without suppressing mixed or push runs", ({ scenario }) =>
+    Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
@@ -906,10 +926,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             "ci",
             "change-profile",
             "origin/main",
+            "HEAD",
           ],
           {
             cwd: tempRoot,
-            env: { ...process.env, GITHUB_EVENT_NAME: eventName, GITHUB_OUTPUT: "" },
+            env: {
+              ...process.env,
+              GITHUB_EVENT_NAME: eventName,
+              GITHUB_OUTPUT: "",
+              BEEP_CI_PR_BASE_SHA: "",
+              BEEP_CI_PR_HEAD_SHA: "",
+            },
             stdout: "pipe",
             stderr: "pipe",
           }
@@ -928,109 +955,133 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["add", "."]);
       git(["commit", "-m", "baseline"]);
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
-
-      // Compare both classifiers once per unchanged fixture state; reuse the
-      // result for field assertions instead of starting the full CLI again.
-      const baselineProfile = profile("pull_request");
-      assert.strictEqual(baselineProfile.goals_only, "false");
-      assert.strictEqual(baselineProfile.docs_only, "false");
-      assert.strictEqual(baselineProfile.desktop_rust_relevant, "false");
-      yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
-      git(["add", "."]);
-      git(["commit", "-m", "goals-only"]);
-      const outputPath = path.join(tempRoot, "profile-output.txt");
-      assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
-      // goals_only implies docs_only.
-      assert.strictEqual(profile("pull_request").docs_only, "true");
-      const readFileString7 = yield* fs.readFileString(outputPath);
-      assert.strictEqual(parseProfileOutput(readFileString7).goals_only, "true");
-      yield* fs.remove(outputPath);
-
-      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
-      yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
-      git(["add", "."]);
-      git(["commit", "-m", "goal metadata"]);
-      assert.strictEqual(profile("pull_request").goals_only, "true");
-      // The goal bootstrap emits these markers. They must not turn packet
-      // prose into a code-bearing diff (the #2750 unit-d regression).
-      for (const directory of ["history", "history/reflections", "research"]) {
-        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory), { recursive: true });
-        yield* fs.writeFileString(path.join(tempRoot, "goals", "example", directory, ".gitkeep"), "");
-      }
-      git(["add", "."]);
-      git(["commit", "-m", "generated packet scaffolding"]);
-      const scaffoldingProfile = profile("pull_request");
-      assert.strictEqual(scaffoldingProfile.goals_only, "true");
-      assert.strictEqual(scaffoldingProfile.docs_only, "true");
-      const metadataHead = git(["rev-parse", "HEAD"]);
-
-      for (const directory of ["docs", "designs", "history", "research"] as const) {
-        git(["reset", "--hard", metadataHead]);
-        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory, "fixtures"), { recursive: true });
-        yield* fs.writeFileString(
-          path.join(tempRoot, "goals", "example", directory, "fixtures", "expected.md"),
-          "# Executable test fixture\n"
-        );
+      const metadata = Effect.gen(function* () {
+        yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
         git(["add", "."]);
-        git(["commit", "-m", `nested ${directory} markdown fixture`]);
-        const fixtureProfile = profile("pull_request");
-        assert.strictEqual(fixtureProfile.goals_only, "false");
-        // Heavy admission's path rule counts markdown outside the code roots
-        // as documentation, wherever it sits.
-        assert.strictEqual(fixtureProfile.docs_only, "true");
-      }
-
-      // Documentation outside packet prose is docs-only, never goals-only; the
-      // same file under a code root carries code.
-      git(["reset", "--hard", metadataHead]);
-      for (const [relative, content] of [
-        ["docs/runbooks/ci.md", "# runbook\n"],
-        ["research/ledger/claims.jsonl", "{}\n"],
-        [".changeset/quiet-lane.md", "---\n---\n"],
-        ["README.md", "# readme\n"],
-      ] as const) {
-        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relative)), { recursive: true });
-        yield* fs.writeFileString(path.join(tempRoot, relative), content);
-      }
-      git(["add", "."]);
-      git(["commit", "-m", "documentation only"]);
-      const docsProfile = profile("pull_request");
-      assert.strictEqual(docsProfile.goals_only, "false");
-      assert.strictEqual(docsProfile.docs_only, "true");
-      assert.strictEqual(profile("push").docs_only, "false");
-      yield* fs.makeDirectory(path.join(tempRoot, "packages", "demo"), { recursive: true });
-      yield* fs.writeFileString(path.join(tempRoot, "packages", "demo", "README.md"), "# package readme\n");
-      git(["add", "."]);
-      git(["commit", "-m", "package readme"]);
-      assert.strictEqual(profile("pull_request").docs_only, "false");
-
-      git(["reset", "--hard", metadataHead]);
-
-      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "fixtures"));
-      yield* fs.writeFileString(
-        path.join(tempRoot, "goals", "example", "fixtures", "expected.md"),
-        "# Executable test fixture\n"
+        git(["commit", "-m", "goals-only"]);
+        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
+        yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
+        git(["add", "."]);
+        git(["commit", "-m", "goal metadata"]);
+        for (const directory of ["history", "history/reflections", "research"]) {
+          yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory), { recursive: true });
+          yield* fs.writeFileString(path.join(tempRoot, "goals", "example", directory, ".gitkeep"), "");
+        }
+        git(["add", "."]);
+        git(["commit", "-m", "generated packet scaffolding"]);
+        return git(["rev-parse", "HEAD"]);
+      });
+      return yield* Match.value(scenario).pipe(
+        Match.when("packet prose", () =>
+          Effect.gen(function* () {
+            const baselineProfile = profile("pull_request");
+            assert.strictEqual(baselineProfile.goals_only, "false");
+            assert.strictEqual(baselineProfile.docs_only, "false");
+            assert.strictEqual(baselineProfile.desktop_rust_relevant, "false");
+            yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
+            git(["add", "."]);
+            git(["commit", "-m", "goals-only"]);
+            const outputPath = path.join(tempRoot, "profile-output.txt");
+            assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
+            assert.strictEqual(profile("pull_request").docs_only, "true");
+            const readFileString7 = yield* fs.readFileString(outputPath);
+            assert.strictEqual(parseProfileOutput(readFileString7).goals_only, "true");
+            yield* fs.remove(outputPath);
+            yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
+            yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
+            git(["add", "."]);
+            git(["commit", "-m", "goal metadata"]);
+            assert.strictEqual(profile("pull_request").goals_only, "true");
+            for (const directory of ["history", "history/reflections", "research"]) {
+              yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory), { recursive: true });
+              yield* fs.writeFileString(path.join(tempRoot, "goals", "example", directory, ".gitkeep"), "");
+            }
+            git(["add", "."]);
+            git(["commit", "-m", "generated packet scaffolding"]);
+            const scaffoldingProfile = profile("pull_request");
+            assert.strictEqual(scaffoldingProfile.goals_only, "true");
+            assert.strictEqual(scaffoldingProfile.docs_only, "true");
+          })
+        ),
+        Match.when("nested fixture paths", () =>
+          Effect.gen(function* () {
+            const metadataHead = yield* metadata;
+            for (const directory of ["docs", "designs", "history", "research"] as const) {
+              git(["reset", "--hard", metadataHead]);
+              yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory, "fixtures"), {
+                recursive: true,
+              });
+              yield* fs.writeFileString(
+                path.join(tempRoot, "goals", "example", directory, "fixtures", "expected.md"),
+                "# Executable test fixture\n"
+              );
+              git(["add", "."]);
+              git(["commit", "-m", `nested ${directory} markdown fixture`]);
+              const fixtureProfile = profile("pull_request");
+              assert.strictEqual(fixtureProfile.goals_only, "false");
+              // Heavy admission's path rule counts markdown outside the code roots
+              // as documentation, wherever it sits.
+              assert.strictEqual(fixtureProfile.docs_only, "true");
+            }
+          })
+        ),
+        Match.when("documentation and push", () =>
+          Effect.gen(function* () {
+            const metadataHead = yield* metadata;
+            git(["reset", "--hard", metadataHead]);
+            for (const [relative, content] of [
+              ["docs/runbooks/ci.md", "# runbook\n"],
+              ["research/ledger/claims.jsonl", "{}\n"],
+              [".changeset/quiet-lane.md", "---\n---\n"],
+              ["README.md", "# readme\n"],
+            ] as const) {
+              yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relative)), { recursive: true });
+              yield* fs.writeFileString(path.join(tempRoot, relative), content);
+            }
+            git(["add", "."]);
+            git(["commit", "-m", "documentation only"]);
+            const docsProfile = profile("pull_request");
+            assert.strictEqual(docsProfile.goals_only, "false");
+            assert.strictEqual(docsProfile.docs_only, "true");
+            assert.strictEqual(profile("push").docs_only, "false");
+            yield* fs.makeDirectory(path.join(tempRoot, "packages", "demo"), { recursive: true });
+            yield* fs.writeFileString(path.join(tempRoot, "packages", "demo", "README.md"), "# package readme\n");
+            git(["add", "."]);
+            git(["commit", "-m", "package readme"]);
+            assert.strictEqual(profile("pull_request").docs_only, "false");
+          })
+        ),
+        Match.when("executable and mixed", () =>
+          Effect.gen(function* () {
+            const metadataHead = yield* metadata;
+            git(["reset", "--hard", metadataHead]);
+            yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "fixtures"));
+            yield* fs.writeFileString(
+              path.join(tempRoot, "goals", "example", "fixtures", "expected.md"),
+              "# Executable test fixture\n"
+            );
+            git(["add", "."]);
+            git(["commit", "-m", "goal markdown fixture"]);
+            assert.strictEqual(profile("pull_request").goals_only, "false");
+            yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "scripts"));
+            yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "scripts", "verify.sh"), "exit 0\n");
+            git(["add", "."]);
+            git(["commit", "-m", "goal executable"]);
+            const executableProfile = profile("pull_request");
+            assert.strictEqual(executableProfile.goals_only, "false");
+            assert.strictEqual(executableProfile.docs_only, "false");
+            yield* fs.makeDirectory(path.join(tempRoot, "src"));
+            yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
+            git(["add", "."]);
+            git(["commit", "-m", "mixed"]);
+            const mixedProfile = profile("pull_request");
+            assert.strictEqual(mixedProfile.goals_only, "false");
+            assert.strictEqual(mixedProfile.docs_only, "false");
+            assert.strictEqual(profile("push").goals_only, "false");
+          })
+        ),
+        Match.exhaustive
       );
-      git(["add", "."]);
-      git(["commit", "-m", "goal markdown fixture"]);
-      assert.strictEqual(profile("pull_request").goals_only, "false");
-
-      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "scripts"));
-      yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "scripts", "verify.sh"), "exit 0\n");
-      git(["add", "."]);
-      git(["commit", "-m", "goal executable"]);
-      const executableProfile = profile("pull_request");
-      assert.strictEqual(executableProfile.goals_only, "false");
-      assert.strictEqual(executableProfile.docs_only, "false");
-
-      yield* fs.makeDirectory(path.join(tempRoot, "src"));
-      yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
-      git(["add", "."]);
-      git(["commit", "-m", "mixed"]);
-      const mixedProfile = profile("pull_request");
-      assert.strictEqual(mixedProfile.goals_only, "false");
-      assert.strictEqual(mixedProfile.docs_only, "false");
-      assert.strictEqual(profile("push").goals_only, "false");
     })
   );
 
@@ -1797,6 +1848,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const root = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
       const exemptions = [
+        // Publishes the compiled pre-toolchain binary from main; a release step, not a quality lane.
+        "beep-ci-binary.yml:Publish Beep CI Binary",
         "check.yml:Heavy Admission",
         "check.yml:Heavy",
         "check.yml:Lint (${{ matrix.partition }})",
@@ -1804,6 +1857,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Coverage Artifact Migration",
         "cache-warm.yml:Warm Turbo cache",
         // Manual source inspection is operational evidence, not a required quality lane.
+        "cache-local-observe.yml:Observe local cache pilot",
+        "heavy.yml:Heavy / Observe local cache pilot",
         "cache-producer-inspect.yml:Inspect producer sources and tools",
         "heavy.yml:Heavy / Inspect producer sources and tools",
         // A candidate adapter build grants no producer or quality verdict authority.
@@ -1813,6 +1868,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "cache-producer.yml:Execute approved signed producer",
         "heavy.yml:Heavy / Execute approved signed producer",
         "data-sync.yml:Sync Official Data",
+        // Post-merge publisher of the commit-message overlay ref; it proves the
+        // ref with `beep history notes --check` and grants no quality verdict.
+        "history-notes-publish.yml:Publish refs/notes/history",
         // Prod deploy of the Alchemy stack; environment-gated, not a local lane.
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
@@ -1871,6 +1929,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         ["heavy-admit.yml", "heavy"],
         ["cache-producer-inspect.yml", "inspect"],
         ["cache-producer-prepare.yml", "prepare"],
+        ["cache-local-observe.yml", "observe"],
         ["cache-producer.yml", "produce"],
       ] as const;
       for (const [file, job] of callers) {
@@ -1933,12 +1992,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
         A.join(
           [
             "inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution &&",
+            "!inputs.local_pilot_observation &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
             "github.ref == 'refs/heads/main' &&",
@@ -1968,10 +2028,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       });
       const sandboxName = "Ensure native sandbox inspection dependency";
       const sandbox = stepByName(steps, sandboxName);
-      expect(sandbox.run).toContain("dnf install -y bubblewrap");
-      expect(sandbox.run).toContain("apt-get install -y --no-install-recommends bubblewrap");
-      expect(sandbox.run).toContain("test -x /usr/bin/bwrap");
-      expect(sandbox.run).toContain("/usr/bin/bwrap --version");
+      expect(sandbox.run).toBe("bash scripts/ci-cache-native-sandbox.sh");
+      const sandboxScript = yield* fs.readFileString(`${root}/scripts/ci-cache-native-sandbox.sh`);
+      expect(sandboxScript).toContain("dnf install -y bubblewrap");
+      expect(sandboxScript).toContain("apt-get install -y --no-install-recommends bubblewrap");
+      expect(sandboxScript).toContain("test -x /usr/bin/bwrap");
+      expect(sandboxScript).toContain("/usr/bin/bwrap --version");
       expect(stepIndexByName(steps, sandboxName)).toBeLessThan(
         stepIndexByName(steps, "Write bounded source inspection")
       );
@@ -2072,12 +2134,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "if"])).toBe(
         A.join(
           [
             "inputs.producer_preparation && !inputs.producer_inspection && !inputs.producer_execution &&",
+            "!inputs.local_pilot_observation &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
             "github.ref == 'refs/heads/main' &&",
@@ -2226,12 +2289,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toBe(
         A.join(
           [
             "inputs.producer_execution && !inputs.producer_inspection && !inputs.producer_preparation &&",
+            "!inputs.local_pilot_observation &&",
             "(inputs.producer_channel == 'stable' || inputs.producer_channel == 'canary') &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
@@ -2305,7 +2369,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       expect(stepRun(steps, runName)).toContain("timeout --signal=TERM --kill-after=30s 50m");
       expect(stepRun(steps, runName)).toContain("cache producer-run");
-      expect(stepRun(steps, "Prepare fixed full-pilot inputs without credentials")).toContain("'selection':'full'");
+      expect(stepRun(steps, "Prepare fixed full-pilot inputs without credentials")).toBe(
+        "bash scripts/ci-cache-pilot-inputs.sh signed"
+      );
+      const inputScript = yield* fs.readFileString(`${root}/scripts/ci-cache-pilot-inputs.sh`);
+      expect(inputScript).toContain("'selection':'full'");
+      expect(inputScript).toContain("Signed execution remains restricted to identity lint.");
       expect(stepByName(steps, publishName).env).toEqual({
         R2_ACCESS_KEY_ID: "${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}",
         R2_SECRET_ACCESS_KEY: "${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}",
@@ -2349,9 +2418,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(stepByName(steps, "Remove only this trial's private files and worktrees").if).toBe(
         "always() && steps.private.outputs.root != ''"
       );
-      expect(stepRun(steps, "Remove only this trial's private files and worktrees")).toContain(
-        '"$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1"'
+      expect(stepRun(steps, "Remove only this trial's private files and worktrees")).toBe(
+        "bash scripts/ci-cache-pilot-cleanup.sh signed"
       );
+      const cleanupScript = yield* fs.readFileString(`${root}/scripts/ci-cache-pilot-cleanup.sh`);
+      expect(cleanupScript).toContain('"$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1"');
+      expect(cleanupScript).toContain('git worktree remove -- "$tree"');
+      expect(cleanupScript).not.toContain("--force");
     })
   );
 
@@ -2425,6 +2498,48 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       expect(verification.run).toBe("./apps/practice-review-hub/deploy/windows/test-send-token.ps1");
       expect(yamlAt(workflow, ["jobs", "windows-pipe", "steps", 1, "shell"])).toBe("powershell");
+    })
+  );
+  it.effect("passes the admission route outputs to the optional hosted route inputs", () =>
+    Effect.gen(function* () {
+      const policy = yield* readCredentialPolicySources();
+      for (const name of ["route_skips", "route_receipt"]) {
+        expect(yamlAt(policy.heavyWorkflow, ["on", "workflow_call", "inputs", name, "type"])).toBe("string");
+        expect(yamlAt(policy.heavyWorkflow, ["on", "workflow_call", "inputs", name, "default"])).toBe("");
+        expect(yamlAt(policy.workflow, ["jobs", "heavy", "with", name])).toBe(
+          `\${{ needs.admission.outputs.${name} }}`
+        );
+        expect(yamlAt(policy.workflow, ["jobs", "admission", "outputs", name])).toBe(
+          `\${{ steps.decide.outputs.${name} }}`
+        );
+      }
+      // The label-triggered caller is usually a pull request's first admission, so it forwards the
+      // same route outputs as check.yml.
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const admitText = yield* fs.readFileString(`${root}/.github/workflows/heavy-admit.yml`);
+      const admit = parseWorkflowYaml(admitText);
+      for (const name of ["route_skips", "route_receipt"]) {
+        expect(yamlAt(admit, ["jobs", "heavy", "with", name])).toBe(`\${{ needs.admission.outputs.${name} }}`);
+        expect(yamlAt(admit, ["jobs", "admission", "outputs", name])).toBe(`\${{ steps.decide.outputs.${name} }}`);
+      }
+      const jobs = yield* workflowJobs(policy.heavyWorkflow);
+      const gate = stepByName(jobSteps(jobs, "verify"), "Determine lane execution");
+      expect(gate.env).toMatchObject({
+        ROUTE_SKIPS: "${{ inputs.route_skips }}",
+        ROUTE_RECEIPT: "${{ inputs.route_receipt }}",
+        LANE_ID: "${{ matrix.id }}",
+      });
+      expect(gate.run).toContain('"$GITHUB_EVENT_NAME" == "pull_request"');
+      expect(gate.run).toContain('",${ROUTE_SKIPS}," == *",${LANE_ID},"*');
+      expect(gate.run).toContain("### Verification route: skip-satisfied");
+      expect(gate.run).not.toContain("${{ inputs.route_");
+      const script = gate.run ?? "";
+      const admitted = pipe(script, Str.indexOf("ADMITTED"), O.getOrThrow);
+      const route = pipe(script, Str.indexOf("ROUTE_SKIPS"), O.getOrThrow);
+      const goals = pipe(script, Str.indexOf("goals_only"), O.getOrThrow);
+      expect(route).toBeLessThan(goals);
+      expect(admitted).toBeLessThan(route);
     })
   );
   it.effect("keeps coverage comparison separate from Heavy and validates same-run producer artifacts", () =>
@@ -2709,6 +2824,54 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(readFileString37).toBe("");
       const readFileString38 = yield* fs.readFileString(calls);
       expect(readFileString38).toContain(`show ${sha}:.github/workflows/heavy.yml`);
+    })
+  );
+  it.effect("keeps manual local observations separate from protected producers and quality verdicts", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const callerText = yield* fs.readFileString(`${root}/.github/workflows/cache-local-observe.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const caller = parseWorkflowYaml(callerText);
+      expect(yamlAt(caller, ["on", "workflow_dispatch", "inputs", "computation", "options"])).toEqual([
+        "@beep/types#lint",
+        "@beep/identity#lint",
+      ]);
+      expect(yamlAt(caller, ["jobs", "observe", "secrets"])).toBeUndefined();
+      expect(yamlAt(caller, ["concurrency", "cancel-in-progress"])).toBe(false);
+      expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "local_pilot_observation", "default"])).toBe(false);
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "environment"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "timeout-minutes"])).toBe(20);
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "if"])).toContain(
+        "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-local-observe.yml@refs/heads/main'"
+      );
+      const jobs = yield* workflowJobs(heavy);
+      expect(setupMonorepoInputs(jobs, "local-pilot-observe")).toEqual({
+        "turbo-remote-cache": "false",
+        "r2-enabled": "false",
+        "app-secrets": "false",
+      });
+      const localSteps = jobSteps(jobs, "local-pilot-observe");
+      expect(stepRun(localSteps, "Observe the existing local pilot")).toContain("15m");
+      expect(stepRun(localSteps, "Observe the existing local pilot")).toContain("cache pilot");
+      expect(stepRun(localSteps, "Project only bounded digest and count evidence")).toContain("-I -S -B");
+      expect(stepByName(localSteps, "Retain only the public summary for one day").with).toMatchObject({
+        "retention-days": 1,
+        path: "${{ steps.summary.outputs.path }}",
+      });
+      const local = yield* encodeJobsFixture(yamlAt(heavy, ["jobs", "local-pilot-observe"]));
+      for (const forbidden of [
+        "secrets.",
+        "producer-install",
+        "producer-run",
+        "producer-publish",
+        "BEEP_CACHE_PRODUCER_STORE",
+      ])
+        expect(local).not.toContain(forbidden);
+      for (const job of ["verify", "producer-inspect", "producer-prepare", "producer-execute"])
+        expect(yamlAt(heavy, ["jobs", job, "if"])).toContain("!inputs.local_pilot_observation");
     })
   );
 });

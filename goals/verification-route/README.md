@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,13 +37,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Slice 1 complete (2026-10-31, lane `verification-route-s1`). Next: P1 Slice 2,
-starting from the ranked refinements in
-[`research/census-2026-10-31.md`](./research/census-2026-10-31.md): the taxonomy refinement
-for packet data files first, then footprint refinements with mutation fixtures.
+Closed `completed-retained` 2026-11-07. Final PR #2885 (completion verified with readiness job
+`2a2091a4`). Slice 1 #2414, slice 2 #2856, slice 3 #2879 and #2884; the hosted proof is on #2885,
+where Heavy / Build and Heavy / Check completed `skip-satisfied` with the route receipt. The packet
+is retained; the reflection is `history/reflections/2026-11-07-claude.md`.
 
 ## Latest Evidence
 
+- [`research/slice-2-replay.md`](./research/slice-2-replay.md): refined-record replay, recall 100%,
+  242 skipped lane runs, 0 skipped reds; [`research/slice-2-layer1-dryrun.md`](./research/slice-2-layer1-dryrun.md).
 - [`research/census-2026-10-31.md`](./research/census-2026-10-31.md): census and replay over
   6,328 hosted runs (5,083 PR heads, 11,710 h); replay recall 100% at the all-`unknown`
   record; the corpus is pinned by sha256 in `research/corpus/RECEIPTS.json`.

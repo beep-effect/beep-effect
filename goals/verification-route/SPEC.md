@@ -121,32 +121,42 @@ Slice 1 (cut line):
 
 Slice 2:
 
-- [ ] At least one refinement is enforced: its mutation fixtures and a 100%
-      replay recall are green and cited in the PR.
-- [ ] Layer 1 landed for that refinement: turbo task inputs, the root
+- [x] At least one refinement is enforced: its mutation fixtures and a 100%
+      replay recall are green and cited in the PR (`packet-markdown-out-of-build-check`,
+      `research/slice-2-replay.md`).
+- [x] Layer 1 landed for that refinement: turbo task inputs, the root
       `package.json` field projections written in the prepare phase and
       drift-checked, and the package-local `turbo.json` sweep; a dry-run fixture
       shows the biome catalog bump invalidates at most the lanes whose footprint
-      names `pkg:catalog`.
-- [ ] `yeet final-check` receipts carry the route section (selected, skipped,
+      names `pkg:catalog` (met: every lane still names it; a Biome bump stays global because
+      Biome is a root dependency, and a non-root catalog bump invalidates only its dependents,
+      `research/slice-2-layer1-dryrun.md`).
+- [x] `yeet final-check` receipts carry the route section (selected, skipped,
       reasons); the shadow sentinel row exists; enforcement is per refinement
       and revocable from the sentinel.
-- [ ] The proof-ledger shadow's resulting misses are attributed in the receipt
+- [x] The proof-ledger shadow's resulting misses are attributed in the receipt
       as key change, not disagreement.
-- [ ] Package-grain propagation reads the workspace graph at the requested head,
+- [x] Package-grain propagation reads the workspace graph at the requested head,
       not the checkout, before any lane is selected from affected packages (see
-      the 2026-10-31 Decision Log row).
+      the 2026-10-31 Decision Log row). Slice 2 selects no lane from affected packages
+      (decision `2026-11-07-propagation-stays-a-label-in-slice-2`).
 
 Slice 3:
 
-- [ ] A hosted lane the route excludes starts, routes, and completes
+- [x] A hosted lane the route excludes starts, routes, and completes
       `skip-satisfied` success with the receipt in its job summary; the
-      required-context set on `main`'s ruleset is unchanged.
+      required-context set on `main`'s ruleset is unchanged. Proven on #2885 (packet markdown only),
+      `heavy-admit.yml` run 42364996454: Heavy / Build (job 128381390298) and Heavy / Check (job
+      128381390311) ran admitted with `ROUTE_SKIPS: build,check`, wrote the route receipt to their
+      job summaries and succeeded, while the other Heavy lanes ran; no ruleset or required context
+      changed (#2879, #2884).
 
 All slices:
 
-- [ ] `bun run beep quality package-verify @beep/repo-cli` green on each PR.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `bun run beep quality package-verify @beep/repo-cli` green on each PR, with named skips where
+      the workstation's OOM killer stopped a local gate; hosted CI proved each skipped gate, and each
+      PR body records the skips.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -204,6 +214,75 @@ new rulings append here.
 | 2026-10-31 | Census purity is judged over tree kinds (ignores `commits`) | Nearly every head carries `commits`; including it empties the pure columns that rank refinements | Count `commits` in purity |
 | 2026-10-31 | Slice 1 reports affected packages from the live workspace graph, not the graph at each head | The field only labels the plan; every lane selects from atoms, which already resolve owners at the commit. A graph per head means reading every workspace manifest at each of 5,083 census heads | Read the graph at the head (batched `git cat-file`) once propagation selects lanes in slice 2 |
 | 2026-10-31 | Corpus capture assumes one writer per corpus directory | Capture is a hand-run operator refresh of committed evidence; a safe lock needs stale-lock recovery after a crash | Add an exclusive directory lock when slice 2 adds an unattended corpus refresh |
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug verification-route`; add a `kind: decision` file there, never edit this block._
+
+### First enforced refinement: packet markdown and commits out of build and check, 2026-11-07
+
+Census rank 2 narrowed to the two lanes where the absence is provable from the checkout: packet markdown is root-owned (outside every workspace glob), turbo registers no //#build or //#check, and no non-test source imports .md/.mdx. Both lanes read the tree only, so the commits atom is removed too. Packet data stays in both footprints. Fixtures: test/ci-route-refinements.test.ts; replay: research/slice-2-replay.md.
+
+Lane `feat/verification-route-slice-2`
+
+Reverse: Set the refinement's mode to shadow, or revoke it in standards/verification-route.sentinel.json
+
+### Layer 1: root package.json replaced by a catalog-free projection; root-dependency bumps stay global, 2026-11-07
+
+tsconfig-sync writes standards/root-package.projection.generated.json (every top-level field but catalog, scripts included) and config-sync:check drift-checks it; turbo.json global.inputs carries the projection instead of package.json, in one commit. Measured under turbo 2.11.10: a catalog bump of a dependency the root does not itself depend on invalidates only its dependents (fixture: verification-layer1-turbo.test.ts, gated by BEEP_LAYER1_DRYRUN). A bump of a root dependency (the Biome case in SPEC's acceptance row) still invalidates every task because turbo hashes the root's external dependencies into each task; moving Biome out of the root manifest is outside this goal. SPEC's row is met as written, since every lane's footprint still names pkg:catalog. The 25 package-local turbo.json files were swept and none re-adds the root manifest.
+
+Lane `feat/verification-route-slice-2`
+
+Reverse: Restore package.json in turbo.json global.inputs and drop the projection section from tsconfig-sync
+
+### Propagation stays a label in slice 2, 2026-11-07
+
+No slice-2 refinement selects lanes from affected packages; every decision comes from atoms whose owners already resolve at the commit. The SPEC row about the head graph applies only once a lane selects from affected packages, which slice 2 does not do.
+
+Lane `feat/verification-route-slice-2`
+
+Reverse: Read the workspace graph at the head (batched git cat-file) when a lane first selects from affected packages
+
+### Refinement registry and revocation sentinel, 2026-11-07
+
+ROUTE_REFINEMENTS beside ROUTE_FOOTPRINTS; each row's kinds are derived from it so a refinement and its footprint effect cannot drift. Only enforced refinements not listed in the tracked standards/verification-route.sentinel.json skip a lane (routeLaneDecision); revoking is a one-line commit.
+
+Lane `feat/verification-route-slice-2`
+
+Reverse: Inline the removals into ROUTE_FOOTPRINTS and delete the sentinel file
+
+### Reject src:test out of build, 2026-11-07
+
+Census rank 3 is unsound as stated: apps/docket-intake, apps/labs/ciops and others build with tsrs -p tsconfig.check.json, which includes test/, and their package-local turbo.json re-includes test/ in build inputs.
+
+Lane `feat/verification-route-slice-2`
+
+Reverse: Admit it per package once app builds stop type-checking test/
+
+### research-intake-2026-11 routed 123 affirmative findings here, 2026-11-07
+
+The research-intake-2026-11 intake routed 252 findings to this packet (123 affirmative, 20 critiques or disputes; 110 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+
+- citesAsEvidence: https://www.deccanchronicle.com/artificial-intelligence/openai-pauses-training-of-top-ai-models-after-agent-bypasses-internet-controls-1990979 — Model-assisted red-teaming of sandbox/network controls is adopted as an ongoing verification practice.
+- citesAsEvidence: https://arxiv.org/abs/2609.30123 — The authors explicitly bound the method's assurance: missing requirements and unobserved branches can remain absent, and model reasoning within a state can still fail. Admission should therefore disti
+- citesAsEvidence: https://ipwatchdog.com/2026/08/28/uspto-issues-its-first-ai-predicated-discipline-order-involving-hallucinated-cites-to-intrinsic-record/ — A second AI review did not prevent the reported citation failures or the resulting disciplinary findings. For a citation-verification workflow, this case supports requiring checks against source docum
+- citesAsEvidence: https://modelcontextprotocol.io/seps/2640-skills-extension — A disk cache must either be exclusively writable by the host with immutable cached files or rehash cached bytes on every access. Integrity checks must evaluate the bytes actually served, including aft
+- citesAsEvidence: https://github.com/modelcontextprotocol/typescript-sdk/pull/2818 — The README points to runnable client/server pairs described as self-verifying. These are potential integration-validation references; the capture itself does not include their implementations or execu
+
+This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
+
+### Taxonomy refinement: packet:data, cfg:baseline, scratchpad; src:test narrowed, 2026-11-07
+
+Census rank 1. New kinds are on every footprint, so the change is sound by construction. src:test no longer matches a file under the owner's src/ (packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts compiles into dist), and packet roots win over the test rule (goals/**/test/items.json is packet data).
+
+Lane `feat/verification-route-slice-2`
+
+Reverse: Drop the three kinds and restore the directory-anywhere src:test rule
+
+<!-- beep:decisions:end -->
 
 ## Exception Ledger
 

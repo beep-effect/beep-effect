@@ -1,0 +1,387 @@
+[
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "test(auth): fix anonymous plugin test",
+    "old_subject": "test: fix",
+    "reason": "upstream-author",
+    "sha": "086f72ef099753567ef67c73deb438ec992421a6"
+  },
+  {
+    "drafted_new_body": "Adds authentication/basic-usage/installation/integration docs and a Node.js integration entrypoint.",
+    "drafted_new_subject": "feat(better-auth): scaffold express dev app, expand rate-limiter",
+    "old_subject": "x",
+    "reason": "upstream-author",
+    "sha": "0fbc3dc8d1174b062a8a25ec9f580db0f877f742"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs: fix typo in oauth concepts guide",
+    "old_subject": "typo",
+    "reason": "upstream-author",
+    "sha": "14f135bf413892e09b16dba6b06d07ad1f9a92b6"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs: add example for throwing errors in database hooks (#790)",
+    "old_subject": "update(docs): example code to throw errors in database hooks (#790)",
+    "reason": "upstream-author",
+    "sha": "24e12de95ab6e43fbe99c5cd4e3960cf46d2f905"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs(sso): update sso plugin docs",
+    "old_subject": "dep",
+    "reason": "upstream-author",
+    "sha": "2f4449048b40792607a8a63e34d21e673d61c391"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "feat(docs): add v1 landing page",
+    "old_subject": "feat: v1",
+    "reason": "upstream-author",
+    "sha": "43a31515b81f4fddfb7363acffd1773a6f137d98"
+  },
+  {
+    "drafted_new_body": "Resolve conflicts per #254: drop repo-exports catalog and repo-codegraph artifacts;\nkeep provenance identity composers; regenerate tsconfig.json via config-sync.",
+    "drafted_new_subject": "chore: merge main (#254 security overhaul) into baseline-synthesis",
+    "old_subject": "Merge origin/main (#254 security/repo-quality overhaul) into baseline-synthesis",
+    "reason": "keep-original-rich-message",
+    "sha": "464f53023d6d294e5090af26d3bab64d63daf317"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs: capitalize Supabase in migration guide",
+    "old_subject": "Supabase",
+    "reason": "upstream-author",
+    "sha": "4b3fedae895bef5e13e672d606fb881de758e108"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "fix(docs): patch theme toggler component",
+    "old_subject": "ui patch",
+    "reason": "upstream-author",
+    "sha": "4c0a9116f6ef247702100fa86d2665f51a81d4ae"
+  },
+  {
+    "drafted_new_body": "Resolve conflicts: keep all agents-domain tests; take main's repo-exports catalog shard.",
+    "drafted_new_subject": "chore: merge origin/main into fix/main-verify-cleanup",
+    "old_subject": "merge origin/main into fix/main-verify-cleanup",
+    "reason": "keep-original-rich-message",
+    "sha": "4fa126a748a87e552735b42635f0936b3728caae"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "fix(docs): add auth middleware and fix nav bar",
+    "old_subject": "fix: docs",
+    "reason": "upstream-author",
+    "sha": "532dd7f7505676a8cb0813fa93be82f2a40bdd36"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "fix(docs): correct hero env reference",
+    "old_subject": "fix: env",
+    "reason": "upstream-author",
+    "sha": "561792539730c8df8d1ef1556e1065f3524bc607"
+  },
+  {
+    "drafted_new_body": "Co-authored-by: cubic-dev-ai[bot] <191113872+cubic-dev-ai[bot]@users.noreply.github.com>",
+    "drafted_new_subject": "fix(better-auth): use z.string() key type for mcp jwks field",
+    "old_subject": "Update packages/better-auth/src/plugins/mcp/index.ts",
+    "reason": "upstream-author",
+    "sha": "58f4b113dc2d3464995a5f3c290ad003fcc7fdd2"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "chore: merge main into feature branch (docs fixes)",
+    "old_subject": "merge main",
+    "reason": "upstream-author",
+    "sha": "5d3e9294253e1438988d0a8aaccdac3df437f053"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "feat(better-auth): scaffold open-api package, rework generator script",
+    "old_subject": "wip",
+    "reason": "upstream-author",
+    "sha": "6a387f1bbf1fd050ecfc65a3e35c21fa2b2554ba"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "chore(examples): update auth client and lockfile",
+    "old_subject": "examples",
+    "reason": "upstream-author",
+    "sha": "6ad887d46826ea0a106d47d61855fa9bf3e57b44"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style: reformat root package.json indentation",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "6c617418b16c2f9502f0a3e091381773f1b48193"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "fix(demo): correct nextjs home page",
+    "old_subject": "demo: fix",
+    "reason": "upstream-author",
+    "sha": "6c69b804d2e1eaa6ea8c5521c94819812ce61652"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "feat(kysely-adapter): allow providing debug logs",
+    "old_subject": "update(kysley-adapter): Allow providing debug logs",
+    "reason": "upstream-author",
+    "sha": "75a23f53625741fec3271f9913dd79f2dc82a4fd"
+  },
+  {
+    "drafted_new_body": "Regenerate repo-exports catalogs after merging PR #181's $I.annoteSchema migration.",
+    "drafted_new_subject": "chore: merge origin/main into feat/dedup-clone-engine-closeout",
+    "old_subject": "Merge origin/main into feat/dedup-clone-engine-closeout",
+    "reason": "keep-original-rich-message",
+    "sha": "7d9437e6e81dba13062b6687e0656520896cd041"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "feat(better-auth): add 2fa with otp, totp, and backup codes",
+    "old_subject": "feat: 2fa",
+    "reason": "upstream-author",
+    "sha": "7fd1a59eee4e36c0511284a6a327bd9d8cc2c8f6"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style(auth): lint anonymous plugin",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "84e50598b3b788733c9ac6f454fa859a0795be42"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "feat(docs): wire up doc source generation script",
+    "old_subject": "wip",
+    "reason": "upstream-author",
+    "sha": "8c0e2fcada1f7ffbc94b3045ec025da8639733db"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "feat(docs): add sign-in and sign-up builder components",
+    "old_subject": "wip",
+    "reason": "upstream-author",
+    "sha": "8f8d4b6b272f8e92b9547b0079777a069356030d"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs(better-auth): standardize API capitalization in docs/tests",
+    "old_subject": "API",
+    "reason": "upstream-author",
+    "sha": "952a6613adba8ca4d64f420743ca58fd979aefef"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "chore(deps): update pnpm lockfile",
+    "old_subject": "wip",
+    "reason": "upstream-author",
+    "sha": "9c3deb58557e6ee209c01167141eccfa4e13dd02"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "feat(kysely-adapter): allow providing debug logs",
+    "old_subject": "update(kysley-adapter): Allow providing debug logs",
+    "reason": "upstream-author",
+    "sha": "9e728a7c37177ab965e6593361d3b52e9e803b29"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs(passkey): format localhost origin values as inline code",
+    "old_subject": "Code",
+    "reason": "upstream-author",
+    "sha": "9f78ee8d4c726765508b35c04365dbdcd6114b21"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs: fix installation guide typo",
+    "old_subject": "docs: fix",
+    "reason": "upstream-author",
+    "sha": "a138d32a607acafba7a22e32b483ed847c13502f"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs(better-auth): standardize URL capitalization across docs and code",
+    "old_subject": "URL",
+    "reason": "upstream-author",
+    "sha": "a313d19198c4fa8d32ad01f1aa36ba28c6f4c212"
+  },
+  {
+    "drafted_new_body": "Adds per-endpoint (api) reference mdx pages and generated open-api.json/openapi.json/yml.",
+    "drafted_new_subject": "docs(better-auth): generate api reference pages and openapi specs",
+    "old_subject": "wip",
+    "reason": "upstream-author",
+    "sha": "a555d57c01903743511abc0482f6f3917e1667be"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "chore(docs): tweak builder ui and db utils",
+    "old_subject": "wip",
+    "reason": "upstream-author",
+    "sha": "b21e419ae939db053e9d0789f4598f3692be2639"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs: capitalize GitHub across workflows, demo, and docs",
+    "old_subject": "GitHub",
+    "reason": "upstream-author",
+    "sha": "b36a1b83c8fb062d348659fd1817a668fae7054c"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "refactor(docs): simplify ui builder index component",
+    "old_subject": "wip",
+    "reason": "upstream-author",
+    "sha": "b7dc9e16bc7b81b1bad3e6d0c31d9aef001ace7d"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style(docs): reformat OG route handler to tab indentation",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "ba5b8dfc236c57b4e92869eed0294de2093c3e80"
+  },
+  {
+    "drafted_new_body": "Co-authored-by: cubic-dev-ai[bot] <191113872+cubic-dev-ai[bot]@users.noreply.github.com>",
+    "drafted_new_subject": "fix(better-auth): import zod default export in sign-up route",
+    "old_subject": "Update packages/better-auth/src/api/routes/sign-up.ts",
+    "reason": "upstream-author",
+    "sha": "ba813865d535ff752db3b4b1d8feaec6eace2043"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "refactor(organization): change requests for dynamic AC (#4337)",
+    "old_subject": "update(organization): change requests for dynamic AC (#4337)",
+    "reason": "upstream-author",
+    "sha": "c06353c594b8bf8c8bef8a8d96f68d9b5bf88c89"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style(better-auth): reformat haveibeenpwned test imports and assertions",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "c0aca984627f8253f80e6028d5fa695c5821c932"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs: hyphenate built-in rate limiter and CLI references",
+    "old_subject": "built-in",
+    "reason": "upstream-author",
+    "sha": "c2999c83cce743df6652e7ef649f78a1190add59"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style(docs): reformat community stats component",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "c3751211e7d0d0dd4187e6c660a9b5827c4f862e"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "docs: clarify rate limiting is disabled by default in development",
+    "old_subject": "Update rate-limit.mdx",
+    "reason": "upstream-author",
+    "sha": "c3bd98202964dc4cb8637dee969e239551a27ec6"
+  },
+  {
+    "drafted_new_body": "Resolve generated repo-exports catalog conflicts by regenerating from shards.",
+    "drafted_new_subject": "chore: merge origin/main into agent-reflection-loop",
+    "old_subject": "Merge origin/main into agent-reflection-loop",
+    "reason": "keep-original-rich-message",
+    "sha": "c4dfe264a299808b8d3f0c5d1e8abaf8e02f6770"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style(better-auth): remove unused icon import; reformat haveibeenpwned",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "c8b52765e27fd57a065d8333c84e7af44943d298"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "fix(ci): prune pnpm lockfile bloat",
+    "old_subject": "fix: CI",
+    "reason": "upstream-author",
+    "sha": "c92fb47321e78774fe2f20fe04435dc367c2c024"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style(better-auth): reformat haveibeenpwned plugin",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "c9ac010940d59cd78e671c26887a85ed2b189e52"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "fix(demo): repair dashboard cards and build config",
+    "old_subject": "fix: demo",
+    "reason": "upstream-author",
+    "sha": "db761d43588d401ef8e0d25ac6993079d670e109"
+  },
+  {
+    "drafted_new_body": "add `enabled: true`",
+    "drafted_new_subject": "docs(rate-limit): document enabled option",
+    "old_subject": "Update rate-limit.mdx",
+    "reason": "upstream-author",
+    "sha": "de5b8d2e5e1cf897f210098bdbc7d6014965ca32"
+  },
+  {
+    "drafted_new_body": "Also updates the next-js examples (sign-in, two-factor, passkey) and docs sidebar.",
+    "drafted_new_subject": "refactor(better-auth): rework social providers, sign-in/session routes",
+    "old_subject": "examples",
+    "reason": "upstream-author",
+    "sha": "e61501705efa3abdb6f6e3312b2bc38dc886391e"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "feat(docs): add code-tabs and focus-card to ui builder",
+    "old_subject": "wip",
+    "reason": "upstream-author",
+    "sha": "e95ec216808d88d09d69ef468f10fad68c059bf7"
+  },
+  {
+    "drafted_new_body": "Add the dev/expo-app Expo Router starter (primitives, native/web\ncomponent variants, iOS project files) and update the better-auth\ninstallation docs.",
+    "drafted_new_subject": "chore: vendor better-auth Expo example app and installation docs",
+    "old_subject": "docs: fix",
+    "reason": "upstream-author",
+    "sha": "effc2383faba858f627e4572a186ecef55e3873e"
+  },
+  {
+    "drafted_new_body": "Resolve conflicts in tsconfig.json and tstyche.json.",
+    "drafted_new_subject": "chore: merge origin/main into baseline-synthesis",
+    "old_subject": "Merge origin/main into baseline-synthesis",
+    "reason": "keep-original-rich-message",
+    "sha": "f5cc1c1c1b037d7c1e2b8c5cb368106f3ffcdd17"
+  },
+  {
+    "drafted_new_body": "remove useSecureCookies from middleware - it's configured in the advanced\noptions in the auth options",
+    "drafted_new_subject": "docs(next): remove useSecureCookies from middleware example",
+    "old_subject": "Update next.mdx",
+    "reason": "upstream-author",
+    "sha": "f64b71e1050ef0c615c33da05d99b5766f67a4ef"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "chore(examples): simplify next.js config",
+    "old_subject": "mv config",
+    "reason": "upstream-author",
+    "sha": "f7cb4beead319629f06d63800116f55fc23903f9"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style(docs): reformat components to tab indentation",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "f9d735fb0ec293199f64be1ddee7a8e456725a20"
+  },
+  {
+    "drafted_new_body": "",
+    "drafted_new_subject": "style(better-auth): reformat haveibeenpwned test expectations",
+    "old_subject": "lint",
+    "reason": "upstream-author",
+    "sha": "feebaa81625b19bdb4e1088ed7634e3293fa5f7d"
+  }
+]

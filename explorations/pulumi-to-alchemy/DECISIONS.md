@@ -182,7 +182,7 @@ hash). `@beep/infra-hosts` owns both. Rejected: a repo-owned SSH resource; CLI-o
 
 **Answer:** `@beep/infra-github` owns the repository's rulesets (including the beep-reviewer
 advisory switch), Actions secrets and variables, environments, labels and webhooks. GitHub Apps
-stay CLI-minted: `scripts/github-app/create-*.ts` becomes `beep github app mint` (in
+stay CLI-minted: the two GitHub App `create-*.ts` registration scripts become `beep github app mint` (in
 `scripts-to-beep-cli`), and app ids and keys feed the stack as config. This packet depends on
 `goals/repo-cli-gh-git-consolidation`, not the reverse.
 

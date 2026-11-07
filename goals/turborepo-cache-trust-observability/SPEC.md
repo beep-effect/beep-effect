@@ -163,7 +163,10 @@ secret failure through desktop sign-in.
   introduced regression remains.
 - [ ] The final implementation PR reaches Yeet `merge-ready: yes`, with
   required checks and reviews handled.
-- [ ] Final evidence, reflection and lifecycle closeout land in that same PR.
+- [ ] Final evidence, reflection and proposedCloseout land in the final implementation
+  PR; after it merges, completion refresh verifies the proposal and a separate
+  packet-state PR adopts completed-retained. That PR is merged and origin/main
+  has matching closeout and initiative statuses.
 
 Packet creation satisfies no implementation criterion. A partial or blocked
 result remains active/paused with receipts, not completed-retained.
@@ -1468,6 +1471,14 @@ Lane `codex/cache-import-bytecode-20261106`
 
 Reverse: Remove the source-only job environment guard and its regression assertions; retain immutable observations, failed comparisons and the canonical digest policy.
 
+### Apply verified two-PR goal closeout without weakening acceptance, 2026-11-07
+
+The launcher, acceptance criterion and P6 checklist still prescribed lifecycle adoption in the final implementation PR, contradicting the current Agent Guide. Keep all behavioral, trust, observation-window and hosted-proof requirements. Land final evidence, reflection and proposedCloseout with implementation while status stays active or paused; after merge, completion refresh verifies it and a separate packet-state PR adopts completed-retained and updates README/statusNote. Completion requires that adoption PR merged and origin/main closeout.status equals initiative.status. This is navigation and lifecycle alignment, not a completion proposal, signing activation, qualification grant or observation-window waiver.
+
+Lane `codex/cache-current-dependency-evidence-20261107`
+
+Reverse: Restore the old packet prose only if the governing repository closeout law is deliberately changed; never mark completion from an unverified or unmerged proposal.
+
 ### Apply frozen producer source eligibility to pilot worktrees, 2026-11-07
 
 Both registered pilot source roots must pass the existing assertCacheProducerWorkflowProfile guard after ordinary Git cleanliness and before tool probes, source copying or sandbox execution. Reuse its ignored-source and root dotenv policy, scrubbed bounded Git capture and metadata-only dotenv inspection; do not invent another denylist, read dotenv contents or clean source trees automatically. Add two authored orchestration cases covering six regular dotenv refusals across both local source roots and two dangling-alias refusals across both signed source roots. These process-boundary controls use real contained filesystem operations with a deterministic process double; no native task or production leak is claimed. No local verify, publish, tests, compiler, docgen, package-quality suite or manual source generator runs. Ordinary bootstrap/hooks and native goal writers are allowed. Hosted CI is authoritative. No signing, credential, capability, qualification, backend or production setting changes. Both full Turbo goals and representative windows remain open.
@@ -1475,5 +1486,13 @@ Both registered pilot source roots must pass the existing assertCacheProducerWor
 Lane `codex/cache-pilot-source-profile-20261107`
 
 Reverse: Remove the pilot guard call while retaining the producer workflow guard and recorded qualification limits.
+
+### Retain bounded failure footers for repo-run captures, 2026-11-07
+
+Repeated hosted unit-d captures end before the final failure summary. Keep repo-run captures within their existing 524288-character budget while retaining both initial context and the final diagnostic footer. Extend the existing OutputBound schema and fold with explicit retention, defaulting legacy constructors and encoded inputs to head-only behavior. Opt only repoRunOutputBound into head-tail retention. Other consumers, process exit codes, deadlines and required proof gates retain their contracts. Hosted controls cover the legacy default, chunk partitioning, empty and small budgets, and actual stream footer retention. No local test, compiler or quality suite runs; syntax/source inspection and ordinary hooks only. This is a diagnostic prerequisite, not evidence that the inherited law-practice-server failure is fixed or that either Turbo goal is complete.
+
+Lane `codex/cache-ci-failure-tail-20261107`
+
+Reverse: Restore repoRunOutputBound to head retention; other callers already default to head.
 
 <!-- beep:decisions:end -->

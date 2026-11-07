@@ -1,0 +1,15 @@
+{
+  "previous": "2c1be6c679009496631354e7eb1e0c439f6308f72c9e5d88b3dba8c9b7ba8ce6",
+  "review": {
+    "reviewer": "GPT-6.1 Sol medium and Claude Opus 5.5 medium (PR 3c implementation self-review)",
+    "reason": "Review the documents-server mcp-kit and shared-tables dependencies and generated reference edges only; no cache policy or qualification change.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3c.md",
+      "sha256": "11706b07605c232a6a9978ae33032999bc0f8ed21e5626913948b63633b00f2f"
+    }
+  },
+  "scope": ["@beep/documents-server#build"],
+  "subjects": ["@beep/documents-server"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

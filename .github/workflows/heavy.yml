@@ -17,6 +17,18 @@ on:
         type: boolean
         default: true
 
+      route_skips:
+        description: Comma-separated heavy lane ids satisfied by the enforced verification route.
+        required: false
+        type: string
+        default: ""
+
+      route_receipt:
+        description: Compact verification route receipt with footprint, atom counts and skip reasons.
+        required: false
+        type: string
+        default: ""
+
       producer_inspection:
         description: >-
           Run only the credential-free protected source inspection for the
@@ -38,6 +50,18 @@ on:
         required: false
         type: boolean
         default: false
+
+      local_pilot_observation:
+        description: Observe the existing credential-free local pilot through its exact main dispatcher.
+        required: false
+        type: boolean
+        default: false
+
+      local_pilot_computation:
+        description: Reviewed local-only lint recipe; never widens signed producer execution.
+        required: false
+        type: string
+        default: '@beep/types#lint'
 
       producer_channel:
         description: Exact native client channel for the protected signed trial.
@@ -87,7 +111,7 @@ jobs:
     # matrix: skipping it leaves required contexts "Expected". Only the
     # dedicated manual inspection, preparation or execution selects a job below;
     # it does not publish quality verdicts.
-    if: ${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}
+    if: ${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
     runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
@@ -158,11 +182,25 @@ jobs:
         env:
           ADMITTED: ${{ inputs.admitted }}
           LANE_NAME: ${{ matrix.name }}
+          LANE_ID: ${{ matrix.id }}
+          ROUTE_SKIPS: ${{ inputs.route_skips }}
+          ROUTE_RECEIPT: ${{ inputs.route_receipt }}
         run: |
           set -euo pipefail
           if [[ "${ADMITTED}" != "true" ]]; then
             echo "heavy admission: not admitted; ${LANE_NAME} passes without work"
             echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && ",${ROUTE_SKIPS}," == *",${LANE_ID},"* ]]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Verification route: skip-satisfied"
+              echo
+              printf 'Lane: `%s`\n\n' "$LANE_ID"
+              printf '%s\n' "$ROUTE_RECEIPT"
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
@@ -343,6 +381,7 @@ jobs:
     name: Inspect producer sources and tools
     if: >-
       inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution &&
+      !inputs.local_pilot_observation &&
       github.repository == 'beep-effect/beep-effect' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
@@ -372,26 +411,7 @@ jobs:
 
       - name: Ensure native sandbox inspection dependency
         shell: bash
-        run: |
-          set -euo pipefail
-          if [[ ! -x /usr/bin/bwrap ]]; then
-            privilege=()
-            if [[ "$EUID" -ne 0 ]]; then
-              privilege=(sudo -n)
-            fi
-            if command -v dnf >/dev/null 2>&1; then
-              "${privilege[@]}" dnf install -y bubblewrap
-            elif command -v apt-get >/dev/null 2>&1; then
-              bash scripts/ci-prune-apt-sources.sh
-              "${privilege[@]}" apt-get update
-              "${privilege[@]}" apt-get install -y --no-install-recommends bubblewrap
-            else
-              echo "::error::Producer inspection requires /usr/bin/bwrap; no supported package manager."
-              exit 1
-            fi
-          fi
-          test -x /usr/bin/bwrap
-          /usr/bin/bwrap --version
+        run: bash scripts/ci-cache-native-sandbox.sh
 
       - name: Write bounded source inspection
         id: inspection
@@ -462,6 +482,7 @@ jobs:
     name: Build candidate producer adapter
     if: >-
       inputs.producer_preparation && !inputs.producer_inspection && !inputs.producer_execution &&
+      !inputs.local_pilot_observation &&
       github.repository == 'beep-effect/beep-effect' &&
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
@@ -659,6 +680,7 @@ jobs:
     name: Execute approved signed producer
     if: >-
       inputs.producer_execution && !inputs.producer_inspection && !inputs.producer_preparation &&
+      !inputs.local_pilot_observation &&
       (inputs.producer_channel == 'stable' || inputs.producer_channel == 'canary') &&
       github.repository == 'beep-effect/beep-effect' &&
       github.event_name == 'workflow_dispatch' &&
@@ -727,27 +749,7 @@ jobs:
 
       - name: Ensure native sandbox trial dependency
         shell: bash
-        run: |
-          set -euo pipefail
-          if [[ ! -x /usr/bin/bwrap ]]; then
-            privilege=()
-            if [[ "$EUID" -ne 0 ]]; then
-              privilege=(sudo -n)
-            fi
-            if command -v dnf >/dev/null 2>&1; then
-              "${privilege[@]}" dnf install -y bubblewrap
-            elif command -v apt-get >/dev/null 2>&1; then
-              bash scripts/ci-prune-apt-sources.sh
-              "${privilege[@]}" apt-get update
-              "${privilege[@]}" apt-get install -y --no-install-recommends bubblewrap
-            else
-              echo "::error::Producer inspection requires /usr/bin/bwrap; no supported package manager."
-              exit 1
-            fi
-          fi
-          test -x /usr/bin/bwrap
-          /usr/bin/bwrap --version
-
+        run: bash scripts/ci-cache-native-sandbox.sh
 
       - name: Download independently selected candidate
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -793,88 +795,7 @@ jobs:
       - name: Prepare fixed full-pilot inputs without credentials
         id: inputs
         shell: bash
-        run: |
-          set -euo pipefail
-          umask 077
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          git diff --quiet HEAD
-          python3 - <<'PY'
-          import base64,hashlib,io,json,os,pathlib,re,shutil,tarfile,urllib.parse,urllib.request
-          root=pathlib.Path.cwd()
-          private=pathlib.Path(os.environ['BEEP_CACHE_PRODUCER_PRIVATE_ROOT'])
-          channel=os.environ['BEEP_CACHE_PRODUCER_CHANNEL']
-          if channel not in ['stable','canary']:
-              raise SystemExit('Only the two reviewed native channels are supported.')
-          pins=json.loads((root/'goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json').read_text())[channel]
-          executable=root/'node_modules/@turbo/linux-64/bin/turbo'
-          if channel=='canary':
-              url=urllib.parse.urlsplit(pins['tarball'])
-              if url.scheme!='https' or url.netloc!='registry.npmjs.org' or url.query or url.fragment:
-                  raise SystemExit('Native canary must use its reviewed public registry source.')
-              with urllib.request.urlopen(pins['tarball'],timeout=30) as response:
-                  archive=response.read(64*1024*1024+1)
-              if len(archive)>64*1024*1024 or 'sha512-'+base64.b64encode(hashlib.sha512(archive).digest()).decode()!=pins['integrity']:
-                  raise SystemExit('Native canary archive differs from its reviewed integrity.')
-              with tarfile.open(fileobj=io.BytesIO(archive),mode='r:gz') as package:
-                  members=package.getmembers()
-                  if len(members)>32 or sum(m.size for m in members)>128*1024*1024:
-                      raise SystemExit('Native canary archive exceeds its reviewed extraction bounds.')
-                  matches=[m for m in members if m.name==pins['archiveMember']]
-                  if len(matches)!=1 or not matches[0].isfile() or not 0<matches[0].size<=64*1024*1024:
-                      raise SystemExit('Native canary executable member is invalid.')
-                  with package.extractfile(matches[0]) as member:
-                      native=member.read(64*1024*1024+1)
-              executable=private/'turbo-canary'
-              with executable.open('xb') as output:
-                  output.write(native)
-              executable.chmod(0o500)
-          if hashlib.sha256(executable.read_bytes()).hexdigest()!=pins['sha256']:
-              raise SystemExit('Native client differs from its reviewed binary pin.')
-          folder=root/'.beep/cache/protected-producer-trial'
-          folder.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
-          folder.mkdir(mode=0o700)
-          before=(root/'packages/foundation/modeling/identity/turbo.json').read_bytes()
-          after=json.loads(before)
-          if after['tasks']['lint'].get('cache') is not False:
-              raise SystemExit('The identity-lint pilot source profile changed; renew its review.')
-          after['tasks']['lint']['cache']=True
-          (folder/'before.json').write_bytes(before)
-          (folder/'after.json').write_text(json.dumps(after,indent=2)+'\n')
-          def reference(name):
-              file=folder/name
-              return {'path':file.relative_to(root).as_posix(),'sha256':hashlib.sha256(file.read_bytes()).hexdigest()}
-          (folder/'activation-request.json').write_text(json.dumps({'computation':'@beep/identity#lint',
-              'path':'packages/foundation/modeling/identity/turbo.json','before':reference('before.json'),'after':reference('after.json')})+'\n')
-          if not re.fullmatch('[1-9][0-9]*',os.environ['GITHUB_RUN_ID']) or not re.fullmatch('[1-9][0-9]*',os.environ['GITHUB_RUN_ATTEMPT']):
-              raise SystemExit('Hosted run identity is invalid.')
-          prefix='cache-producer-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT']
-          trees=[str(root)+'-worktrees/'+prefix+'-'+suffix for suffix in ['a','b']]
-          (folder/'tools.json').write_text(json.dumps({'executable':str(executable.resolve()),'client':{
-              'version':pins['reportedVersion'],'sha256':pins['sha256'],'namespace':'team_beep_signed_canary_v1'},'worktrees':trees})+'\n')
-          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
-              output.write('source_inputs='+str(folder)+'\nworktree_a='+trees[0]+'\nworktree_b='+trees[1]+'\n')
-          PY
-          bun --no-env-file run beep cache dependencies --output .beep/cache/protected-producer-trial/dependencies.json
-          bun --no-env-file run beep cache activation --request .beep/cache/protected-producer-trial/activation-request.json --output .beep/cache/protected-producer-trial/activation.json
-          python3 - <<'PY'
-          import hashlib,json,os,pathlib,shutil,subprocess
-          root=pathlib.Path.cwd();folder=root/'.beep/cache/protected-producer-trial'
-          tools=json.loads((folder/'tools.json').read_text())
-          pathlib.Path(tools['worktrees'][0]).parent.mkdir(mode=0o700,exist_ok=True)
-          for tree in tools['worktrees']:
-              subprocess.run(['git','worktree','add','--detach',tree,os.environ['GITHUB_SHA']],check=True)
-          def reference(name):
-              file=folder/name
-              return {'path':file.relative_to(root).as_posix(),'sha256':hashlib.sha256(file.read_bytes()).hexdigest()}
-          request={'sourceRoot':str(root),'pilot':{'channel':os.environ['BEEP_CACHE_PRODUCER_CHANNEL'],
-              'client':tools['client'],'executable':tools['executable'],
-              'biomeExecutable':str((root/'node_modules/@biomejs/cli-linux-x64/biome').resolve(strict=True)),
-              'nodeExecutable':str(pathlib.Path(shutil.which('node')).resolve(strict=True)),
-              'dependencies':reference('dependencies.json'),'worktrees':tools['worktrees'],
-              'activation':reference('activation.json'),'selection':'full'}}
-          (folder/'request.json').write_text(json.dumps(request)+'\n')
-          PY
-          git diff --quiet HEAD
+        run: bash scripts/ci-cache-pilot-inputs.sh signed
 
       - name: Install independently approved issuer only
         shell: bash
@@ -939,30 +860,101 @@ jobs:
           TRIAL_INPUTS: ${{ steps.inputs.outputs.source_inputs }}
           TRIAL_WORKTREE_A: ${{ steps.inputs.outputs.worktree_a }}
           TRIAL_WORKTREE_B: ${{ steps.inputs.outputs.worktree_b }}
+        run: bash scripts/ci-cache-pilot-cleanup.sh signed
+
+  local-pilot-observe:
+    name: Observe local cache pilot
+    if: >-
+      inputs.local_pilot_observation && !inputs.producer_inspection &&
+      !inputs.producer_preparation && !inputs.producer_execution &&
+      github.repository == 'beep-effect/beep-effect' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-local-observe.yml@refs/heads/main'
+    runs-on: beep-ec2-heavy
+    timeout-minutes: 20
+    # No protected environment and no cache, application or issuer secret inputs.
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      BEEP_TURBO_HOST_CACHE_DISABLED: "true"
+      BEEP_CACHE_PRODUCER_CHANNEL: ${{ inputs.producer_channel }}
+      BEEP_CACHE_PILOT_COMPUTATION: ${{ inputs.local_pilot_computation }}
+    steps:
+      - name: Checkout exact main source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup pinned toolchain without cache capabilities
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          turbo-remote-cache: "false"
+          r2-enabled: "false"
+          app-secrets: "false"
+
+      - name: Ensure native sandbox observation dependency
+        shell: bash
+        run: bash scripts/ci-cache-native-sandbox.sh
+
+      - name: Allocate private observation scratch
+        id: private
+        shell: bash
         run: |
           set -euo pipefail
-          cleanup_status=0
-          for tree in "$TRIAL_WORKTREE_A" "$TRIAL_WORKTREE_B"; do
-            if [[ -n "$tree" && -e "$tree" ]]; then
-              case "$tree" in
-                "$GITHUB_WORKSPACE"-worktrees/cache-producer-"$GITHUB_RUN_ID"-"$GITHUB_RUN_ATTEMPT"-[ab])
-                  git worktree remove -- "$tree" || cleanup_status=1 ;;
-                *) echo "::error::Refusing unexpected producer worktree."; cleanup_status=1 ;;
-              esac
-            fi
-          done
-          if [[ -n "$TRIAL_INPUTS" ]]; then
-            if [[ "$TRIAL_INPUTS" == "$GITHUB_WORKSPACE/.beep/cache/protected-producer-trial" ]]; then
-              rm -rf -- "$TRIAL_INPUTS"
-            else
-              echo "::error::Refusing unexpected producer input directory."
-              cleanup_status=1
-            fi
-          fi
-          if [[ "$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1" ]]; then
-            rm -rf -- "$TRIAL_ROOT"
-          else
-            echo "::error::Refusing unexpected private producer directory."
-            cleanup_status=1
-          fi
-          exit "$cleanup_status"
+          umask 077
+          root="$(mktemp -d "$RUNNER_TEMP/beep-cache-local-observation.XXXXXX")"
+          mkdir "$root/publication"
+          printf 'root=%s\n' "$root" >> "$GITHUB_OUTPUT"
+          printf 'BEEP_CACHE_PRODUCER_PRIVATE_ROOT=%s\n' "$root" >> "$GITHUB_ENV"
+
+      - name: Prepare fixed full-pilot inputs without credentials
+        id: inputs
+        shell: bash
+        run: bash scripts/ci-cache-pilot-inputs.sh local "$BEEP_CACHE_PILOT_COMPUTATION"
+
+      - name: Observe the existing local pilot
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 15m \
+            bun --no-env-file run beep cache pilot \
+            --request .beep/cache/local-pilot-observation/request.json \
+            --output "$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/local-observation.json"
+
+      - name: Project only bounded digest and count evidence
+        id: summary
+        if: always() && steps.inputs.outcome == 'success' && steps.private.outputs.root != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/publication/observation-summary.json"
+          /usr/bin/python3 -I -S -B scripts/ci-cache-local-summary.py \
+            --report "$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/local-observation.json" \
+            --request .beep/cache/local-pilot-observation/request.json \
+            --output "$output" --revision "$GITHUB_SHA" \
+            --channel "$BEEP_CACHE_PRODUCER_CHANNEL" \
+            --computation "$BEEP_CACHE_PILOT_COMPUTATION"
+          printf 'path=%s\n' "$output" >> "$GITHUB_OUTPUT"
+
+      - name: Retain only the public summary for one day
+        if: always() && steps.summary.outputs.path != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cache-local-observation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.summary.outputs.path }}
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+      - name: Remove only this observation's private files and worktrees
+        if: always() && steps.private.outputs.root != ''
+        shell: bash
+        env:
+          TRIAL_ROOT: ${{ steps.private.outputs.root }}
+          TRIAL_INPUTS: ${{ steps.inputs.outputs.source_inputs }}
+          TRIAL_WORKTREE_A: ${{ steps.inputs.outputs.worktree_a }}
+          TRIAL_WORKTREE_B: ${{ steps.inputs.outputs.worktree_b }}
+        run: bash scripts/ci-cache-pilot-cleanup.sh local

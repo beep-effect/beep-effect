@@ -172,7 +172,10 @@ secret failure through desktop sign-in.
   introduced regression remains.
 - [ ] The final implementation PR reaches Yeet `merge-ready: yes`, with
   required checks and reviews handled.
-- [ ] Final evidence, reflection and lifecycle closeout land in that same PR.
+- [ ] Final evidence, reflection and proposedCloseout land in the final implementation
+  PR; after it merges, completion refresh verifies the proposal and a separate
+  packet-state PR adopts completed-retained. That PR is merged and origin/main
+  has matching closeout and initiative statuses.
 
 Packet creation satisfies no implementation criterion. A partial or blocked
 result remains active/paused with receipts, not completed-retained.
@@ -1193,6 +1196,22 @@ Prepare the dependency-free types lint computation for the existing pilot runtim
 Lane `codex/cache-types-key-input-20261106`
 
 Reverse: Remove the hashed environment declaration or revert this change; types lint stays uncached.
+
+### Apply verified two-PR goal closeout without weakening acceptance, 2026-11-07
+
+Align the launcher, acceptance criterion and P6 checklist with the Agent Guide: final evidence, reflection and proposedCloseout land with final implementation while the goal stays active or paused; after merge, completion refresh verifies the proposal and a separate packet-state PR adopts completed-retained and updates README/statusNote. Completion requires the adoption merged and origin/main closeout.status matching initiative.status. Preserve every task/profile disposition, eligibility/adoption obligation, correctness and portability proof, hosted status, measured value and representative observation requirement. No criterion is checked and no qualification, cache activation, exclusion or observation waiver is granted.
+
+Lane `codex/cache-current-dependency-evidence-20261107`
+
+Reverse: Restore the old packet prose only if the governing repository closeout law is deliberately changed; never mark completion from an unverified or unmerged proposal.
+
+### Observe existing local pilot recipes on bounded credential-free hosted runners, 2026-11-07
+
+Independent producer approvals remain separate from the existing credential-free local pilot. Add an exact-main manual caller through the already admitted Heavy workflow, with no protected environment, cache or application secrets, remote cache, issuer or publication capability. Reuse the existing pilot CLI and extract its existing input preparation for both signed and local callers; retain signed identity-only restrictions. Local observations select only reviewed identity/types lint and pinned stable/canary clients. One workflow job at a time, maximum twenty job minutes and fifteen execution minutes; no capacity increase. Keep full local receipts private with a sixteen MiB read bound, a 256 MiB/ten-second publication worker, publish only a maximum sixty-four KiB allowlisted digest/count summary for one day, and remove only owned worktrees/scratch. The summary cannot promote a qualification tuple. Add hosted security/control regressions; no manual local tests or quality suites. Dispatch only after accepted source and preview review. This enables actual local observation independently of signed grants and does not reduce any full-goal acceptance, portability, trust or representative-window requirement.
+
+Lane `codex/cache-local-observation-hosted-20261107`
+
+Reverse: Remove the manual local-observation caller and Heavy leaf; keep signed producer gates, inactive grants and previously retained observations unchanged.
 
 ### Keep index-sensitive law discovery outside affected selection, 2026-11-07
 

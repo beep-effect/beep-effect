@@ -215,6 +215,33 @@ export const MarkVaultSyncConflictReviewedRpc = Rpc.make("MarkVaultSyncConflictR
 });
 
 /**
+ * Streaming RPC that pushes the vault sync status each time the status View changes.
+ *
+ * **Details**
+ *
+ * The panel subscribes once and its counts update when a pass finishes, instead
+ * of re-reading the status that `TriggerVaultSync` returned at acceptance.
+ *
+ * **Example** (Verify watch RPC registration)
+ *
+ * ```ts
+ * import { VaultSyncRpcs, WatchVaultSyncStatusRpc } from "@beep/documents-use-cases/public"
+ *
+ * const registered = VaultSyncRpcs.requests.get("WatchVaultSyncStatus")
+ * console.log(registered === WatchVaultSyncStatusRpc)
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const WatchVaultSyncStatusRpc = Rpc.make("WatchVaultSyncStatus", {
+  payload: VaultSyncWorkspacePayload,
+  success: VaultSyncStatus,
+  error: VaultSyncActionError,
+  stream: true,
+});
+
+/**
  * Vault sync RPC group exposed by the professional desktop server.
  *
  * **Example** (Check trigger request exists)
@@ -232,5 +259,6 @@ export const VaultSyncRpcs = RpcGroup.make(
   TriggerVaultSyncRpc,
   GetVaultSyncStatusRpc,
   ListVaultSyncConflictsRpc,
-  MarkVaultSyncConflictReviewedRpc
+  MarkVaultSyncConflictReviewedRpc,
+  WatchVaultSyncStatusRpc
 );

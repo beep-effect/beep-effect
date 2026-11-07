@@ -740,6 +740,153 @@ export class RefEntry extends S.Opaque<RefEntry, { readonly brand: unique symbol
 ) {}
 
 /**
+ * One note on a notes ref, from `git notes list`.
+ *
+ * **Details**
+ *
+ * `note` is the id of the blob holding the note text; `object` is the id of
+ * the object (usually a commit) the note annotates. Comparing `note` against
+ * the blob id of an expected body tells whether a note drifted without
+ * reading the blob.
+ *
+ * **Example** (Represent a commit note)
+ *
+ * ```ts import.meta.vitest name="Represent a commit note"
+ * import { NoteEntry } from "@beep/git/Git";
+ *
+ * const entry = NoteEntry.make({ note: "a".repeat(40), object: "b".repeat(40) });
+ * entry.object.length // => 40
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class NoteEntry extends S.Opaque<NoteEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** The id of the blob that holds the note text. */
+    note: S.String.pipe(
+      $I.annoteKey("NoteEntry.note", { description: "The id of the blob that holds the note text." })
+    ),
+    /** The id of the object the note annotates. */
+    object: S.String.pipe(
+      $I.annoteKey("NoteEntry.object", { description: "The id of the object the note annotates." })
+    ),
+  }).pipe($I.annoteSchema("NoteEntry", { description: "One note on a notes ref, from `git notes list`." }))
+) {}
+
+/**
+ * One note to write: the object it annotates and the exact note text.
+ *
+ * **Details**
+ *
+ * `body` is stored byte for byte; nothing trims it or appends a newline, so
+ * a caller that wants `git notes add -m` semantics ends it with one `\n`.
+ *
+ * **Example** (Describe a note to write)
+ *
+ * ```ts import.meta.vitest name="Describe a note to write"
+ * import { NoteWrite } from "@beep/git/Git";
+ *
+ * const note = NoteWrite.make({ object: "b".repeat(40), body: "fix: subject\n" });
+ * note.body.endsWith("\n") // => true
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class NoteWrite extends S.Opaque<NoteWrite, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** The full id of the object the note annotates. */
+    object: S.String.pipe(
+      $I.annoteKey("NoteWrite.object", { description: "The full id of the object the note annotates." })
+    ),
+    /** The exact note text, stored byte for byte. */
+    body: S.String.pipe($I.annoteKey("NoteWrite.body", { description: "The exact note text, stored byte for byte." })),
+  }).pipe($I.annoteSchema("NoteWrite", { description: "One note to write onto a notes ref." }))
+) {}
+
+/**
+ * The email half of a git identity (`Name <email>`), as git's ident line
+ * accepts it.
+ *
+ * **Details**
+ *
+ * An external-protocol field, deliberately not `@beep/schema` `Email`: git
+ * stores whatever sits between `<` and `>` verbatim, so the only hard rules
+ * are that it is non-empty and contains no `<`, `>` or line break. It is plain
+ * text because the value is written straight into a fast-import stream.
+ *
+ * **Example** (Accept a git identity email)
+ *
+ * ```ts
+ * import { GitIdentEmail } from "@beep/git/Git.models"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GitIdentEmail)("noreply@beep-effect.com")) // true
+ * console.log(S.is(GitIdentEmail)("a<b")) // false
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export const GitIdentEmail = S.String.check(
+  S.isPattern(
+    /^[^<>\r\n]+$/u,
+    $I.annote("GitIdentEmailPatternCheck", {
+      title: "Git Ident Email Pattern",
+      description: "A non-empty git ident email with no angle brackets or line breaks.",
+      message: "Expected a non-empty git ident email without '<', '>' or line breaks",
+    })
+  )
+).pipe(
+  $I.annoteSchema("GitIdentEmail", {
+    description: "The email half of a git identity, as git's ident line accepts it.",
+  })
+);
+
+/**
+ * The fixed metadata of a notes commit: message, one identity used as both
+ * author and committer, and a timestamp in seconds since the epoch (UTC).
+ *
+ * **Details**
+ *
+ * Fixing all three makes the commit id a pure function of the notes, which
+ * is what lets a projection rewrite its ref idempotently.
+ *
+ * **Example** (Describe a reproducible notes commit)
+ *
+ * ```ts import.meta.vitest name="Describe a reproducible notes commit"
+ * import { NotesCommit } from "@beep/git/Git";
+ *
+ * const commit = NotesCommit.make({ message: "notes", name: "bot", email: "bot@example.com", timestamp: 0 });
+ * commit.timestamp // => 0
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class NotesCommit extends S.Opaque<NotesCommit, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** The commit message. */
+    message: S.String.pipe($I.annoteKey("NotesCommit.message", { description: "The commit message." })),
+    /** The author and committer name. */
+    name: S.String.pipe($I.annoteKey("NotesCommit.name", { description: "The author and committer name." })),
+    /** The author and committer email. */
+    email: GitIdentEmail.pipe($I.annoteKey("NotesCommit.email", { description: "The author and committer email." })),
+    /** Author and committer time, in whole seconds since the epoch, UTC. */
+    timestamp: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+      $I.annoteKey("NotesCommit.timestamp", {
+        description: "Author and committer time, in whole seconds since the epoch, UTC.",
+      })
+    ),
+  }).pipe($I.annoteSchema("NotesCommit", { description: "The fixed metadata of a reproducible notes commit." }))
+) {}
+
+/**
  * One configuration entry, from `git config --list`.
  *
  * **Example** (Represent a valueless config key)

@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { PhoenixConfigInput } from "@beep/phoenix";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import { EvidenceRetentionPolicy } from "@beep/repo-ai-metrics/evidence-retention";
@@ -7,9 +8,19 @@ import {
   nativeDeliveryTargetId,
 } from "@beep/repo-ai-metrics/native-delivery";
 import { NativeHttpPolicy } from "@beep/repo-ai-metrics/native-http";
+import {
+  ObservationAvailabilityReceipt,
+  ObservationAvailabilityReport,
+  ObservationAvailabilitySnapshot,
+} from "@beep/repo-ai-metrics/observation-availability";
 import { ObservationBackupPolicy } from "@beep/repo-ai-metrics/observation-backup";
 import { ObservationControlPolicy } from "@beep/repo-ai-metrics/observation-control";
 import { makeObservationMaintenanceHttp } from "@beep/repo-ai-metrics/observation-maintenance-http";
+import {
+  ObservationAvailabilityView,
+  ObservationLaunchOutcome,
+  renderObservationAvailability,
+} from "@beep/repo-ai-metrics/observation-outcomes";
 import { makeObservationRuntime, ObservationRuntimePolicy } from "@beep/repo-ai-metrics/observation-runtime";
 import { makeObservationWorker, ObservationWorkerConfig } from "@beep/repo-ai-metrics/observation-worker";
 import { PayloadRetentionPolicy } from "@beep/repo-ai-metrics/payload-reclamation";
@@ -28,12 +39,15 @@ import { TranscriptSweepInput } from "@beep/repo-ai-metrics/transcript-sweep";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -62,6 +76,87 @@ const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const isStringRows = S.is(S.Array(S.String));
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.Struct({ id: Sha256Hex })]));
+const launchOutcomeJson = S.fromJsonString(ObservationLaunchOutcome);
+const encodeLaunchOutcome = S.encodeEffect(launchOutcomeJson);
+const decodeLaunchOutcome = S.decodeEffect(launchOutcomeJson);
+const availabilityViewJson = S.fromJsonString(ObservationAvailabilityView);
+const encodeAvailabilityView = S.encodeEffect(availabilityViewJson);
+const decodeAvailabilityView = S.decodeEffect(availabilityViewJson);
+const equalLaunchOutcome = S.toEquivalence(ObservationLaunchOutcome);
+const equalAvailabilityReceipt = S.toEquivalence(ObservationAvailabilityReceipt);
+const equalAvailabilityView = S.toEquivalence(ObservationAvailabilityView);
+const reportedCases = [
+  { weekly: 100, session: 100, expected: "weekly-exhausted" },
+  { weekly: 100, session: 0, expected: "weekly-exhausted" },
+  { weekly: 0, session: 100, expected: "session-capped" },
+  { weekly: 0, session: 0, expected: "unknown" },
+] as const;
+
+it.effect.prop(
+  "roundtrips schema-derived process outcomes without losing identity or inventing native model evidence",
+  [Arbitrary.schema(ObservationLaunchOutcome)],
+  Effect.fnUntraced(function* ([outcome]) {
+    const encoded = yield* encodeLaunchOutcome(outcome);
+    const decoded = yield* decodeLaunchOutcome(encoded);
+    assertTrue(equalLaunchOutcome(decoded, outcome));
+    expect(decoded).toMatchObject({
+      nativeRuntime: "unknown",
+      model: "unknown",
+      cause: "unknown",
+      population: "unknown",
+    });
+  }),
+  { arbitrary: fcRuns(50) }
+);
+
+it.effect.prop(
+  "enforces receipt-derived Reported labels including weekly precedence in constructors and JSON decoding",
+  [Arbitrary.schema(ObservationAvailabilityReceipt)],
+  Effect.fnUntraced(function* ([receipt]) {
+    yield* Effect.forEach(
+      reportedCases,
+      Effect.fnUntraced(function* (scenario) {
+        const reported = ObservationAvailabilityReceipt.make({
+          ...receipt,
+          snapshot: ObservationAvailabilitySnapshot.make({
+            ...receipt.snapshot,
+            report: ObservationAvailabilityReport.cases.Reported.make({
+              weekly: O.some({ usedPercent: scenario.weekly, reportedResetAt: O.none() }),
+              session: O.some({ usedPercent: scenario.session, reportedResetAt: O.none() }),
+            }),
+          }),
+        });
+        const view = renderObservationAvailability(reported);
+        expect(view.reportedAvailability).toBe(scenario.expected);
+        const encoded = yield* encodeAvailabilityView(view);
+        const decoded = yield* decodeAvailabilityView(encoded);
+        expect(decoded.reportedAvailability).toBe(scenario.expected);
+        const inconsistent = {
+          ...view,
+          reportedAvailability: scenario.expected === "unknown" ? ("weekly-exhausted" as const) : ("unknown" as const),
+        };
+        expect(() => ObservationAvailabilityView.make(inconsistent)).toThrow();
+        const json = yield* encodeJsonValue(inconsistent);
+        yield* decodeAvailabilityView(json).pipe(Effect.flip);
+      })
+    );
+  }),
+  { arbitrary: fcRuns(50) }
+);
+it.effect.prop(
+  "preserves arbitrary historical quota receipts through the view codec while current availability and invocation remain unknown",
+  [Arbitrary.schema(ObservationAvailabilityReceipt)],
+  Effect.fnUntraced(function* ([receipt]) {
+    const view = renderObservationAvailability(receipt);
+    const encoded = yield* encodeAvailabilityView(view);
+    const decoded = yield* decodeAvailabilityView(encoded);
+    assertTrue(equalAvailabilityReceipt(decoded.receipt, receipt));
+    assertTrue(equalAvailabilityView(decoded, view));
+    expect(decoded).toMatchObject({ currentAvailability: "unknown", invocationBinding: "unknown" });
+    if (receipt.snapshot.report._tag !== "Reported") expect(decoded.reportedAvailability).toBe("unknown");
+  }),
+  { arbitrary: fcRuns(50) }
+);
 
 const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBackend = false, blockAdmission = false) {
   const sql = yield* SqlClient.SqlClient;
@@ -218,6 +313,38 @@ const futureClock = Effect.gen(function* () {
     sleep: (duration) => clock.sleep(duration),
   } satisfies Clock.Clock;
 });
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("gates quota ingestion behind admission and exposes only its separate historical view", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const snapshot = {
+        snapshotId: id("1"),
+        sourceEvidenceId: id("e"),
+        declaredHarness: "muse",
+        sourceKind: "registered-proxy-account-status",
+        observedAt: 0,
+        report: { _tag: "Unknown", reason: "not-observed" },
+      };
+      const denied = yield* f.worker.recordAvailability(snapshot, 0).pipe(Effect.flip);
+      expect(denied.reason).toBe("paused");
+      const missing = yield* f.worker.availabilityOutcome(id("1"), 0);
+      assertNone(missing);
+      yield* f.worker.resume;
+      const first = yield* f.worker.recordAvailability(snapshot, 0);
+      yield* f.worker.pause;
+      const view = yield* f.worker.availabilityOutcome(id("1"), 0);
+      expect(O.getOrThrow(view)).toMatchObject({
+        currentAvailability: "unknown",
+        invocationBinding: "unknown",
+        receipt: first,
+      });
+      const noLaunch = yield* f.worker.launchOutcome(id("1"), 0);
+      assertNone(noLaunch);
+      expect((yield* f.worker.stats).pages).toBe(0);
+    })
+  )
+);
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("starts paused, refuses both HTTP encodings and drains a durable send before maintenance", () =>
@@ -382,61 +509,91 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   )
 );
 
-it.layer(Layer.fresh(Layer.merge(sqlLayer, NodeServices.layer)), { timeout: "30 seconds", excludeTestServices: true })(
-  (it) =>
-    it.effect("gates real filesystem discovery and its durable reader behind worker admission", () =>
-      Effect.gen(function* () {
-        const f = yield* fixture();
-        const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.makeTempDirectoryScoped();
-        yield* fs.writeFileString(
-          `${dir}/rollout-synthetic.jsonl`,
-          '{"type":"response_item","payload":{"type":"message"}}\n'
-        );
-        const discovery = yield* makeTranscriptDiscovery(
-          TranscriptDiscoveryInput.make({
-            roots: [{ path: dir, source: "codex", retired: false }],
-            hashSalt: f.config.nativeHttp.hashSalt,
-            maxDepth: 2,
-            maxEntries: 1,
-            maxFiles: 32,
-            maxCycleEntries: 128,
-          })
-        );
-        const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
-        const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-        expect(pipe25).toMatchObject({ reason: "paused" });
-        expect((yield* f.worker.stats).pages).toBe(0);
-        yield* f.worker.resume;
-        const result = yield* f.worker.discover(discovery, policy);
-        expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
-        expect(result.discovery.activeHelpers).toBe(1);
-        expect((yield* f.worker.stats).pages).toBe(0);
-        yield* f.worker.pause;
-        const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-        expect(pipe26).toMatchObject({ reason: "paused" });
-        yield* f.worker.resume;
-        const restarted = yield* f.worker.discover(discovery, policy);
-        expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
-        const accepted = yield* f.worker.discover(discovery, policy);
-        expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
-        expect((yield* f.worker.stats).pages).toBe(1);
-        const other = yield* makeTranscriptDiscovery(
-          TranscriptDiscoveryInput.make({
-            roots: [{ path: dir, source: "codex", retired: false }],
-            hashSalt: f.config.nativeHttp.hashSalt,
-            maxDepth: 2,
-            maxEntries: 1,
-            maxFiles: 1,
-            maxCycleEntries: 128,
-          })
-        );
-        const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
-        expect(pipe27).toMatchObject({ reason: "configuration" });
-        yield* f.worker.pause;
-        expect((yield* f.worker.stats).pages).toBe(1);
-      })
-    )
+// Real filesystem discovery and Git root metadata are the subject, so a memory filesystem
+// changes the observed source. The spawner is limited by the existing discovery implementation.
+it.layer(
+  Layer.mergeAll(
+    sqlLayer,
+    NodeFileSystem.layer,
+    NodePath.layer,
+    NodeChildProcessSpawner.layer.pipe(Layer.provide(Layer.merge(NodeFileSystem.layer, NodePath.layer)))
+  ),
+  {
+    timeout: "30 seconds",
+    excludeTestServices: true,
+    // Own the full native bundle's cache, preserving the previous fresh build and scope.
+    memoMap: Layer.makeMemoMapUnsafe(),
+  }
+)((it) =>
+  it.effect("gates real filesystem discovery and its durable reader behind worker admission", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const dir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(
+        `${dir}/rollout-synthetic.jsonl`,
+        '{"type":"response_item","payload":{"type":"message"}}\n'
+      );
+      const discovery = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          roots: [{ path: dir, source: "codex", retired: false }],
+          hashSalt: f.config.nativeHttp.hashSalt,
+          maxDepth: 2,
+          maxEntries: 1,
+          maxFiles: 32,
+          maxCycleEntries: 128,
+        })
+      );
+      const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
+      const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+      expect(pipe25).toMatchObject({ reason: "paused" });
+      expect((yield* f.worker.stats).pages).toBe(0);
+      yield* f.worker.resume;
+      const result = yield* f.worker.discover(discovery, policy);
+      expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
+      expect(result.discovery.activeHelpers).toBe(1);
+      expect((yield* f.worker.stats).pages).toBe(0);
+      yield* f.worker.pause;
+      const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+      expect(pipe26).toMatchObject({ reason: "paused" });
+      yield* f.worker.resume;
+      const restarted = yield* f.worker.discover(discovery, policy);
+      expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
+      const accepted = yield* f.worker.discover(discovery, policy);
+      expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
+      expect((yield* f.worker.stats).pages).toBe(1);
+      const other = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          roots: [{ path: dir, source: "codex", retired: false }],
+          hashSalt: f.config.nativeHttp.hashSalt,
+          maxDepth: 2,
+          maxEntries: 1,
+          maxFiles: 1,
+          maxCycleEntries: 128,
+        })
+      );
+      const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
+      expect(pipe27).toMatchObject({ reason: "configuration" });
+      yield* f.worker.pause;
+      expect((yield* f.worker.stats).pages).toBe(1);
+      // The scanner observes native canonical paths/inodes. A real symlink must
+      // fail enrollment without changing this worker's already accepted page.
+      const alias = `${dir}/linked-root`;
+      yield* fs.symlink(dir, alias);
+      const linked = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          roots: [{ path: alias, source: "codex", retired: false }],
+          hashSalt: f.config.nativeHttp.hashSalt,
+          maxDepth: 2,
+          maxEntries: 1,
+          maxFiles: 32,
+          maxCycleEntries: 128,
+        })
+      ).pipe(Effect.flip);
+      expect(linked).toMatchObject({ reason: "configuration" });
+      expect((yield* f.worker.stats).pages).toBe(1);
+    })
+  )
 );
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>

@@ -407,7 +407,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 - effect v3↔v4 differences: validate against the Effect reference checkout
   (`.repos/effect`, the Effect child at `$HOME/YeeBois/references/effect/effect`),
   never training-data priors. `bun run beep refs provision` provisions the
-  workspace from `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides
+  workspace from `packages/tooling/policy-pack/repo-configs/data/references.json`; `BEEP_REFERENCES_ROOT` overrides
   its `$HOME/YeeBois/references/effect` root. `beep refs plan` and
   `beep refs install-timer --refresh` are agent-permitted; `beep refs refresh`
   and a fresh `beep refs install-timer` are operator-only.

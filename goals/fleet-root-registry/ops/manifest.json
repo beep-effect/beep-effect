@@ -3,13 +3,13 @@
   "initiative": {
     "id": "fleet-root-registry",
     "title": "Fleet Root Registry",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-05",
-    "updated": "2026-11-06",
+    "updated": "2026-11-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fleet-root-registry",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "One fleet-root setting read by every path-dependent CLI surface, plus an authored seat/lane registry joined onto the derived fleet mirror.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -22,7 +22,28 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2852,
+        "role": "supporting"
+      },
+      {
+        "number": 2859,
+        "role": "supporting"
+      },
+      {
+        "number": 2893,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_fleet-root-registry-refinal-cf51eeef5dbf/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -37,7 +58,7 @@
     "explorations/agent-fleet-layout/MAP.md",
     "goals/fleet-root-registry/decisions/"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -56,22 +77,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -87,5 +108,10 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "provides": ["fleet/root-config", "fleet/registry"]
+  "provides": ["fleet/root-config", "fleet/registry"],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2893
+  },
+  "retentionReason": "Documents a live system: the fleet discovery-roots list (BEEP_FLEET_ROOTS, roots.json), the seat registry and the worktree fleet --join/describe/register views; lane-bootstrap and ops-seat-timers build on its decisions (seat roles, owning seat, lanes/ root)."
 }

@@ -66,4 +66,20 @@ Lane `docs/goal-packet-conflict-free-appends-closeout`
 
 Reverse: Revert this PR; the packet returns to active with no proposal.
 
+### First closeout merged before readiness; second re-final, 2026-11-06
+
+PR #2794 merged 2026-11-06T19:04Z (merge ea90653910) while both of its until-ready monitors were still stopped at the draft gate, so `goals completion refresh` reports `unknown` for it with either job. This docs-only PR records #2794 as `supporting`, rebinds `proposedCloseout.finalPullRequest`, the final `completionGate.pullRequests` entry and the `yeet-verdict` ref to this branch, and is held until its own until-ready job prints `merge-ready: yes`.
+
+Lane `docs/goal-packet-conflict-free-appends-refinal`
+
+Reverse: Revert this PR; the proposal points back at #2794, which cannot verify.
+
+### Second re-final merged with a predicted PR number; third re-final, 2026-11-07
+
+PR #2869 merged 2026-11-07T06:44Z at its first commit (b32c79590a). That commit named a predicted final PR number, #2848, which another PR had taken; the bind commit naming #2869 was still local. No #2869 readiness monitor recorded `merge-ready: yes` before the merge. This docs-only PR removes #2848, records #2869 as `supporting`, rebinds the final entry, `proposedCloseout.finalPullRequest` and the `yeet-verdict` ref to this branch, and stays draft until the bind commit is pushed.
+
+Lane `gpcfa-refinal3`
+
+Reverse: Revert this PR; the proposal points back at #2848, an unrelated PR.
+
 <!-- beep:decisions:end -->

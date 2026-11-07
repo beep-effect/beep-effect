@@ -26,6 +26,15 @@ export * from "./Ci.errors.ts";
  */
 export * from "./CiAdmission.ts";
 /**
+ * Slim CI binary program export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiBinary.ts";
+export * from "./CiBootstrap.command.ts";
+export * from "./CiCompileBinary.ts";
+/**
  * Hosted CI governance commands and policy checks.
  *
  * @category cli-commands

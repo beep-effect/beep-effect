@@ -28,6 +28,7 @@ const Corpus = S.fromJsonString(
     maps: S.Array(
       S.Struct({
         id: S.Natural,
+        engine: S.Literals(["dmp", "builtin", "supplied"]),
         before: Native,
         after: Native,
         error: S.Null,

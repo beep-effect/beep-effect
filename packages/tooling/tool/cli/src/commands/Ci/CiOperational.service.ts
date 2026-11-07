@@ -27,22 +27,17 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { collectBaseRangeChangedFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import {
   CiChangeProfile,
-  CiDesktopInput,
   CiEnvironmentSelection,
-  CiGoalDocument,
   CiOperationalPatterns,
   CiResourceSample,
   ciOperationalPatterns,
 } from "./CiOperational.schemas.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
-import { isHeavyDocsOnlyPath } from "./HeavyAdmission.ts";
-import type { Git } from "@beep/git/Git";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Scope from "effect/Scope";
 
 const $I = $RepoCliId.create("commands/Ci/CiOperational.service");
@@ -58,15 +53,51 @@ const appNames = [
   "SECURITY_TRUSTED_ORIGINS",
   "LIVEBLOCKS_SECRET_KEY",
 ];
-const isGoal = S.is(CiGoalDocument);
-const isDesktop = S.is(CiDesktopInput);
+const PATTERN_FILE = "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json";
+/** The hosted image's apt source directory; only it is pruned with `sudo`. */
+const SYSTEM_APT_SOURCES = "/etc/apt/sources.list.d";
 const environmentEntry = S.Tuple([S.String, S.Redacted(S.String)]);
 const decodeNumber = S.decodeUnknownEffect(S.FiniteFromString);
 const decodeSample = S.decodeUnknownEffect(CiResourceSample);
 const encodePatterns = S.encodeEffect(S.fromJsonString(CiOperationalPatterns, { space: 2 }));
+const isCiCommandError = S.is(CiCommandError);
+const decodePatterns = S.decodeUnknownEffect(S.fromJsonString(CiOperationalPatterns));
 const unavailable = Console.error(
   WorkflowCommand.warning("Runner resource measurement unavailable; lane exit status is preserved.")
 );
+const unavailableDirect = Console.error(
+  WorkflowCommand.warning("Runner resource measurement unavailable; running lane directly.")
+);
+const diffUnavailable = Console.error(
+  "ci-change-profile: pinned PR diff unavailable; keeping every verification profile active"
+);
+/** The profile of a run with no diff to scope: every verification stays active. */
+const fullProfile = CiChangeProfile.make({ goalsOnly: false, docsOnly: false, desktopRustRelevant: true });
+const inherited = { stdin: "inherit", stdout: "inherit", stderr: "inherit" } as const;
+
+// `grep -E` semantics: a pattern matches a path when it matches anywhere in it.
+const searchFor = (pattern: string) => {
+  const expression = new RegExp(pattern, "u");
+  return (line: string): boolean => expression.test(line);
+};
+
+// The shell adapter's three greps over the pinned diff, one path per line.
+const classifyChangedPaths = (patterns: CiOperationalPatterns, paths: ReadonlyArray<string>): CiChangeProfile => {
+  const goals = searchFor(patterns.goals);
+  const docs = searchFor(patterns.docs);
+  const codeRoot = searchFor(patterns.codeRoots);
+  const desktop = searchFor(patterns.desktop);
+  const changed = A.isReadonlyArrayNonEmpty(paths);
+  return CiChangeProfile.make({
+    goalsOnly: changed && A.every(paths, goals),
+    docsOnly: changed && !A.some(paths, codeRoot) && A.every(paths, (line: string) => goals(line) || docs(line)),
+    desktopRustRelevant: changed && A.some(paths, desktop),
+  });
+};
+
+// `$(git diff ...)` drops the trailing newlines; each remaining line is one path.
+const diffLines = (stdout: string): ReadonlyArray<string> =>
+  A.filter(Str.split(Str.replace(/\n+$/u, "")(stdout), "\n"), Str.isNonEmpty);
 
 /**
  * CI operational contract, with platform dependencies supplied by its live layer.
@@ -85,8 +116,9 @@ export class CiOperational extends Context.Service<
   CiOperational,
   {
     readonly patterns: (write: boolean) => Effect.Effect<void, CiCommandError>;
-    readonly changeProfile: (base: string) => Effect.Effect<void, CiCommandError>;
+    readonly changeProfile: (base: O.Option<string>, head: O.Option<string>) => Effect.Effect<void, CiCommandError>;
     readonly jobEnvironment: Effect.Effect<void, CiCommandError>;
+    readonly pruneAptSources: (directory: string) => Effect.Effect<void, CiCommandError>;
     readonly runnerResources: (
       lane: string,
       command: string,
@@ -115,7 +147,6 @@ export const CiOperationalLive = Layer.effect(
     const path = yield* Path.Path;
     const outputs = yield* ActionOutputs;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git>();
     const append = (target: string, body: string) => fs.writeFileString(target, body, { flag: "a" });
     const patterns = Effect.fn("Ci.patterns")(
       function* (write: boolean) {
@@ -123,7 +154,7 @@ export const CiOperationalLive = Layer.effect(
           Effect.provideService(FileSystem.FileSystem, fs),
           Effect.provideService(Path.Path, path)
         );
-        const target = path.join(root, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json");
+        const target = path.join(root, PATTERN_FILE);
         const projection = `${yield* encodePatterns(ciOperationalPatterns)}\n`;
         if (write) yield* fs.writeFileString(target, projection);
         else if ((yield* fs.readFileString(target)) !== projection)
@@ -132,23 +163,67 @@ export const CiOperationalLive = Layer.effect(
       },
       Effect.mapError(CiCommandError.new("Failed to synchronize CI patterns. Run bun run beep ci patterns --write."))
     );
-    const changeProfile = Effect.fn("Ci.changeProfile")(
-      function* (base: string) {
-        const event = yield* text("GITHUB_EVENT_NAME");
+    // A spawned command's stdout and exit status; stderr stays on the job log.
+    const capture = Effect.fn("Ci.capture")(function* (command: string, args: ReadonlyArray<string>) {
+      const handle = yield* spawner.spawn(
+        ChildProcess.make(command, args, { stdin: "ignore", stdout: "pipe", stderr: "inherit" })
+      );
+      const [stdout, status] = yield* Effect.all(
+        [handle.stdout.pipe(Stream.decodeText, Stream.mkString), handle.exitCode],
+        {
+          concurrency: 2,
+        }
+      );
+      return { stdout, status };
+    }, Effect.scoped);
+    // The checkout's own pattern file classifies its tree; a binary built from
+    // main must not judge a pull request by main's compiled-in literals. A file
+    // that is present but unreadable fails closed.
+    const changeProfilePatterns = Effect.gen(function* () {
+      const root = yield* findRepoRoot().pipe(
+        Effect.provideService(FileSystem.FileSystem, fs),
+        Effect.provideService(Path.Path, path),
+        Effect.option
+      );
+      if (O.isNone(root)) return ciOperationalPatterns;
+      const target = path.join(root.value, PATTERN_FILE);
+      const read = fs
+        .exists(target)
+        .pipe(
+          Effect.flatMap((present) =>
+            present
+              ? fs.readFileString(target).pipe(Effect.flatMap(decodePatterns), Effect.asSome)
+              : Effect.succeed(O.none<CiOperationalPatterns>())
+          )
+        );
+      const loaded = yield* read.pipe(
+        CiCommandError.mapError(`ci-change-profile: could not read the CI patterns from ${target}`)
+      );
+      return O.getOrElse(loaded, () => ciOperationalPatterns);
+    });
+    const pinnedDiff = (base: string, head: string) =>
+      capture("git", ["diff", "--name-only", "--no-renames", `${base}...${head}`]).pipe(
+        Effect.map(({ stdout, status }) => (status === 0 ? O.some(diffLines(stdout)) : O.none())),
+        Effect.orElseSucceed(O.none<ReadonlyArray<string>>)
+      );
+    const emitChangeProfile = Effect.fn("Ci.emitChangeProfile")(
+      function* (patterns: CiOperationalPatterns, positionalBase: O.Option<string>, positionalHead: O.Option<string>) {
+        const event = yield* Config.String("GITHUB_EVENT_NAME").pipe(Config.withDefault("local"));
+        // Hosted callers pin the refs; explicit arguments are the local seam.
+        const pinned = Effect.fn("Ci.pinnedRef")(function* (name: string, positional: O.Option<string>) {
+          const value = yield* text(name);
+          return Str.isNonEmpty(value) ? value : O.getOrElse(positional, () => "");
+        });
+        const base = yield* pinned("BEEP_CI_PR_BASE_SHA", positionalBase);
+        const head = yield* pinned("BEEP_CI_PR_HEAD_SHA", positionalHead);
         const paths =
-          event === "pull_request"
-            ? yield* collectBaseRangeChangedFiles(path.resolve("."), {
-                base,
-                head: "HEAD",
-                pathspecs: [],
-                noRenames: true,
-              }).pipe(Effect.provide(context))
-            : [];
-        const scoped = event === "pull_request" && A.isReadonlyArrayNonEmpty(paths);
-        const profile = CiChangeProfile.make({
-          goalsOnly: scoped && A.every(paths, isGoal),
-          docsOnly: scoped && A.every(paths, isHeavyDocsOnlyPath),
-          desktopRustRelevant: event !== "pull_request" || A.some(paths, isDesktop),
+          event === "pull_request" && Str.isNonEmpty(base) && Str.isNonEmpty(head)
+            ? yield* pinnedDiff(base, head)
+            : O.none<ReadonlyArray<string>>();
+        if (event === "pull_request" && O.isNone(paths)) yield* diffUnavailable;
+        const profile = O.match(paths, {
+          onNone: () => fullProfile,
+          onSome: (changed) => classifyChangedPaths(patterns, changed),
         });
         const output = `goals_only=${profile.goalsOnly}\ndocs_only=${profile.docsOnly}\ndesktop_rust_relevant=${profile.desktopRustRelevant}\n`;
         const target = yield* text("GITHUB_OUTPUT");
@@ -156,6 +231,74 @@ export const CiOperationalLive = Layer.effect(
         yield* Console.log(Str.trimEnd(output));
       },
       Effect.mapError(CiCommandError.new("Failed to determine the CI change profile."))
+    );
+    const changeProfile = (base: O.Option<string>, head: O.Option<string>) =>
+      Effect.flatMap(changeProfilePatterns, (patterns) => emitChangeProfile(patterns, base, head)).pipe(
+        Effect.withSpan("Ci.changeProfile")
+      );
+
+    const pruneAptSources = Effect.fn("Ci.pruneAptSources")(
+      function* (directory: string) {
+        // Echo a command's stdout like the shell did and fail on a non-zero exit.
+        const echoed = Effect.fn("Ci.echoAptCommand")(function* (
+          label: string,
+          command: string,
+          args: ReadonlyArray<string>
+        ) {
+          const { stdout, status } = yield* capture(command, args);
+          if (Str.isNonEmpty(stdout)) yield* Console.log(Str.replace(/\n$/u, "")(stdout));
+          if (status !== 0) return yield* CiCommandError.make({ message: `ci prune-apt: ${label} exited ${status}` });
+        });
+        const listing = (heading: string) =>
+          Console.log(heading).pipe(Effect.andThen(echoed(`ls -l ${directory}`, "ls", ["-l", directory])));
+        yield* listing("apt sources before pruning:");
+        if (directory === SYSTEM_APT_SOURCES) {
+          yield* echoed("sudo find", "sudo", [
+            "find",
+            directory,
+            "-maxdepth",
+            "1",
+            "-type",
+            "f",
+            "(",
+            "-name",
+            "*.list",
+            "-o",
+            "-name",
+            "*.sources",
+            ")",
+            "!",
+            "-name",
+            "ubuntu.sources",
+            "-print",
+            "-delete",
+          ]);
+        } else {
+          // `find -maxdepth 1 -type f` without privilege: regular files only, symlinks excluded.
+          const prefix = Str.endsWith("/")(directory) ? directory : `${directory}/`;
+          const entries = yield* fs.readDirectory(directory);
+          const pruned = A.filter(
+            entries,
+            (name) => (Str.endsWith(".list")(name) || Str.endsWith(".sources")(name)) && name !== "ubuntu.sources"
+          );
+          yield* Effect.forEach(
+            pruned,
+            Effect.fnUntraced(function* (name) {
+              const target = `${prefix}${name}`;
+              const symlink = yield* fs.readLink(target).pipe(Effect.isSuccess);
+              const info = yield* fs.stat(target);
+              if (symlink || info.type !== "File") return;
+              yield* Console.log(target);
+              yield* fs.remove(target);
+            }),
+            { concurrency: 1, discard: true }
+          );
+        }
+        yield* listing("apt sources after pruning:");
+      },
+      Effect.mapError((error) =>
+        isCiCommandError(error) ? error : CiCommandError.new(error, "Failed to prune the apt sources.")
+      )
     );
 
     const entry = (name: string, value: string): typeof environmentEntry.Type => [name, Redacted.make(value)];
@@ -233,133 +376,151 @@ export const CiOperationalLive = Layer.effect(
       Effect.withSpan("Ci.jobEnvironment")
     );
 
+    // The lane without measurement: the shell adapter's `exec "$@"` fallback.
+    const directRun = Effect.fn("Ci.runLaneDirectly")(function* (command: string, args: ReadonlyArray<string>) {
+      yield* unavailableDirect;
+      const child = yield* spawner.spawn(ChildProcess.make(command, args, inherited));
+      return yield* child.exitCode;
+    });
+    const measuredRun = Effect.fn("Ci.measuredRun")(function* (
+      lane: string,
+      command: string,
+      args: ReadonlyArray<string>,
+      started: Ref.Ref<boolean>
+    ) {
+      const procRoot = yield* Config.String("BEEP_CI_PROC_ROOT").pipe(Config.withDefault("/proc"));
+      const temp = yield* Config.String("RUNNER_TEMP").pipe(
+        Config.orElse(() => Config.String("TMPDIR")),
+        Config.withDefault("/tmp")
+      );
+      const dir = path.join(temp, "beep-runner-resources");
+      const samplesPath = path.join(dir, `${lane}.tsv`);
+      const summaryPath = path.join(dir, `${lane}.md`);
+      const readSample = Effect.gen(function* () {
+        const mem = yield* fs.readFileString(path.join(procRoot, "meminfo"));
+        const stat = yield* fs.readFileString(path.join(procRoot, "stat"));
+        const swap = yield* fs.readFileString(path.join(procRoot, "vmstat"));
+        const readCounter = Effect.fn("Ci.readCounter")(function* (body: string, key: string) {
+          const line = A.findFirst(Str.split(body, "\n"), Str.startsWith(key));
+          return yield* decodeNumber(
+            O.match(line, { onNone: () => "0", onSome: (value) => Str.split(Str.trim(value), /\s+/u)[1] ?? "0" })
+          );
+        });
+        const cpuLine = O.getOrElse(A.findFirst(Str.split(stat, "\n"), Str.startsWith("cpu ")), () => "cpu");
+        const cpu = yield* Effect.forEach(
+          A.take(A.drop(Str.split(Str.trim(cpuLine), /\s+/u), 1), 8),
+          (value) => decodeNumber(value),
+          { concurrency: 1 }
+        );
+        const now1 = yield* DateTime.now;
+        return yield* decodeSample({
+          epoch: DateTime.toEpochMillis(now1) / 1000,
+          total: yield* readCounter(mem, "MemTotal:"),
+          available: yield* readCounter(mem, "MemAvailable:"),
+          cpu: A.reduce(cpu, 0, (sum, value) => sum + value),
+          idle: (cpu[3] ?? 0) + (cpu[4] ?? 0),
+          swapIn: yield* readCounter(swap, "pswpin "),
+          swapOut: yield* readCounter(swap, "pswpout "),
+        });
+      });
+      const measurementFailed = yield* Ref.make(false);
+      const samples: Array<CiResourceSample> = [];
+      const sample = Effect.gen(function* () {
+        const value = yield* readSample;
+        yield* append(
+          samplesPath,
+          `${value.epoch}\t${value.total}\t${value.available}\t${value.total - value.available}\n`
+        );
+        samples.push(value);
+        return value;
+      });
+      const initial = yield* Effect.gen(function* () {
+        yield* fs.makeDirectory(dir, { recursive: true });
+        yield* fs.writeFileString(samplesPath, "epoch\ttotal_kib\tavailable_kib\tused_kib\n");
+        yield* fs.writeFileString(summaryPath, "");
+        return yield* sample;
+      }).pipe(Effect.option);
+      const sampler = yield* O.match(initial, {
+        onNone: () => unavailable.pipe(Effect.as(O.none<Fiber.Fiber<unknown, unknown>>())),
+        onSome: Effect.fn("Ci.startSampler")(function* () {
+          const fiber = yield* Effect.sleep(Duration.seconds(5)).pipe(
+            Effect.andThen(sample),
+            Effect.forever,
+            Effect.catch(() => Ref.set(measurementFailed, true)),
+            Effect.forkChild
+          );
+          return O.some(fiber);
+        }),
+      });
+      const child = yield* spawner.spawn(
+        ChildProcess.make("bash", ["-c", '"$@"; exit "$?"', "beep-ci-lane", command, ...args], inherited)
+      );
+      yield* Ref.set(started, true);
+      const status = yield* child.exitCode;
+      if (O.isSome(sampler)) yield* Fiber.interrupt(sampler.value);
+      if (yield* Ref.get(measurementFailed)) {
+        yield* unavailable;
+        return status;
+      }
+      if (O.isSome(initial)) {
+        yield* Effect.gen(function* () {
+          const last = yield* sample;
+          const first = initial.value;
+          const peak = A.reduce(samples, 0, (max, value) => Math.max(max, value.total - value.available));
+          const available = A.reduce(samples, first.available, (min, value) => Math.min(min, value.available));
+          const delta = last.cpu - first.cpu;
+          const summary = A.join(
+            [
+              `### Runner resources: ${lane}`,
+              "",
+              GitHubMarkdown.table(
+                ["Measurement", "Value"],
+                [
+                  ["Lane exit status", `${status}`],
+                  ["Elapsed seconds", `${Math.floor(last.epoch - first.epoch)}`],
+                  ["Memory samples (5-second interval)", `${A.length(samples)}`],
+                  ["Host memory GiB", (last.total / 1048576).toFixed(2)],
+                  ["Sampled used-memory peak GiB", (peak / 1048576).toFixed(2)],
+                  ["Minimum available memory GiB", (available / 1048576).toFixed(2)],
+                  ...(delta > 0
+                    ? [
+                        [
+                          "Host CPU busy percent (excluding I/O wait)",
+                          ((100 * (delta - (last.idle - first.idle))) / delta).toFixed(1),
+                        ],
+                      ]
+                    : []),
+                  ["Swap-in / swap-out pages", `${last.swapIn - first.swapIn} / ${last.swapOut - first.swapOut}`],
+                ]
+              ),
+              "",
+              "Host-wide samples include the OS and other processes. Peaks between samples may be missed.",
+              "Elapsed time excludes checkout/setup and is not billed instance lifetime.",
+              "",
+            ],
+            "\n"
+          );
+          yield* fs.writeFileString(summaryPath, summary);
+          yield* Console.log(summary);
+          const target = yield* text("GITHUB_STEP_SUMMARY");
+          if (Str.isNonEmpty(target)) yield* outputs.summary(summary).pipe(Effect.catch(() => unavailable));
+        }).pipe(Effect.catch(() => unavailable));
+      }
+      return status;
+    });
+    // A measurement that cannot start the lane still runs it, exactly once:
+    // only a failure before the measured spawn falls back to a direct run.
     const runnerResources = Effect.fn("Ci.runnerResources")(
       function* (lane: string, command: string, args: ReadonlyArray<string>) {
-        const procRoot = yield* Config.String("BEEP_CI_PROC_ROOT").pipe(Config.withDefault("/proc"));
-        const temp = yield* Config.String("RUNNER_TEMP").pipe(
-          Config.orElse(() => Config.String("TMPDIR")),
-          Config.withDefault("/tmp")
+        const started = yield* Ref.make(false);
+        return yield* measuredRun(lane, command, args, started).pipe(
+          Effect.catch((error) =>
+            Effect.flatMap(Ref.get(started), (running) => (running ? Effect.fail(error) : directRun(command, args)))
+          )
         );
-        const dir = path.join(temp, "beep-runner-resources");
-        const samplesPath = path.join(dir, `${lane}.tsv`);
-        const summaryPath = path.join(dir, `${lane}.md`);
-        const readSample = Effect.gen(function* () {
-          const mem = yield* fs.readFileString(path.join(procRoot, "meminfo"));
-          const stat = yield* fs.readFileString(path.join(procRoot, "stat"));
-          const swap = yield* fs.readFileString(path.join(procRoot, "vmstat"));
-          const readCounter = Effect.fn("Ci.readCounter")(function* (body: string, key: string) {
-            const line = A.findFirst(Str.split(body, "\n"), Str.startsWith(key));
-            return yield* decodeNumber(
-              O.match(line, { onNone: () => "0", onSome: (value) => Str.split(Str.trim(value), /\s+/u)[1] ?? "0" })
-            );
-          });
-          const cpuLine = O.getOrElse(A.findFirst(Str.split(stat, "\n"), Str.startsWith("cpu ")), () => "cpu");
-          const cpu = yield* Effect.forEach(
-            A.take(A.drop(Str.split(Str.trim(cpuLine), /\s+/u), 1), 8),
-            (value) => decodeNumber(value),
-            { concurrency: 1 }
-          );
-          const now1 = yield* DateTime.now;
-          return yield* decodeSample({
-            epoch: DateTime.toEpochMillis(now1) / 1000,
-            total: yield* readCounter(mem, "MemTotal:"),
-            available: yield* readCounter(mem, "MemAvailable:"),
-            cpu: A.reduce(cpu, 0, (sum, value) => sum + value),
-            idle: (cpu[3] ?? 0) + (cpu[4] ?? 0),
-            swapIn: yield* readCounter(swap, "pswpin "),
-            swapOut: yield* readCounter(swap, "pswpout "),
-          });
-        });
-        const measurementFailed = yield* Ref.make(false);
-        const samples: Array<CiResourceSample> = [];
-        const sample = Effect.gen(function* () {
-          const value = yield* readSample;
-          yield* append(
-            samplesPath,
-            `${value.epoch}\t${value.total}\t${value.available}\t${value.total - value.available}\n`
-          );
-          samples.push(value);
-          return value;
-        });
-        const initial = yield* Effect.gen(function* () {
-          yield* fs.makeDirectory(dir, { recursive: true });
-          yield* fs.writeFileString(samplesPath, "epoch\ttotal_kib\tavailable_kib\tused_kib\n");
-          yield* fs.writeFileString(summaryPath, "");
-          return yield* sample;
-        }).pipe(Effect.option);
-        const sampler = yield* O.match(initial, {
-          onNone: () => unavailable.pipe(Effect.as(O.none<Fiber.Fiber<unknown, unknown>>())),
-          onSome: Effect.fn("Ci.startSampler")(function* () {
-            const fiber = yield* Effect.sleep(Duration.seconds(5)).pipe(
-              Effect.andThen(sample),
-              Effect.forever,
-              Effect.catch(() => Ref.set(measurementFailed, true)),
-              Effect.forkChild
-            );
-            return O.some(fiber);
-          }),
-        });
-        const child = yield* spawner.spawn(
-          ChildProcess.make("bash", ["-c", '"$@"; exit "$?"', "beep-ci-lane", command, ...args], {
-            stdin: "inherit",
-            stdout: "inherit",
-            stderr: "inherit",
-          })
-        );
-        const status = yield* child.exitCode;
-        if (O.isSome(sampler)) yield* Fiber.interrupt(sampler.value);
-        if (yield* Ref.get(measurementFailed)) {
-          yield* unavailable;
-          return status;
-        }
-        if (O.isSome(initial)) {
-          yield* Effect.gen(function* () {
-            const last = yield* sample;
-            const first = initial.value;
-            const peak = A.reduce(samples, 0, (max, value) => Math.max(max, value.total - value.available));
-            const available = A.reduce(samples, first.available, (min, value) => Math.min(min, value.available));
-            const delta = last.cpu - first.cpu;
-            const summary = A.join(
-              [
-                `### Runner resources: ${lane}`,
-                "",
-                GitHubMarkdown.table(
-                  ["Measurement", "Value"],
-                  [
-                    ["Lane exit status", `${status}`],
-                    ["Elapsed seconds", `${Math.floor(last.epoch - first.epoch)}`],
-                    ["Memory samples (5-second interval)", `${A.length(samples)}`],
-                    ["Host memory GiB", (last.total / 1048576).toFixed(2)],
-                    ["Sampled used-memory peak GiB", (peak / 1048576).toFixed(2)],
-                    ["Minimum available memory GiB", (available / 1048576).toFixed(2)],
-                    ...(delta > 0
-                      ? [
-                          [
-                            "Host CPU busy percent (excluding I/O wait)",
-                            ((100 * (delta - (last.idle - first.idle))) / delta).toFixed(1),
-                          ],
-                        ]
-                      : []),
-                    ["Swap-in / swap-out pages", `${last.swapIn - first.swapIn} / ${last.swapOut - first.swapOut}`],
-                  ]
-                ),
-                "",
-                "Host-wide samples include the OS and other processes. Peaks between samples may be missed.",
-                "Elapsed time excludes checkout/setup and is not billed instance lifetime.",
-                "",
-              ],
-              "\n"
-            );
-            yield* fs.writeFileString(summaryPath, summary);
-            yield* Console.log(summary);
-            const target = yield* text("GITHUB_STEP_SUMMARY");
-            if (Str.isNonEmpty(target)) yield* outputs.summary(summary).pipe(Effect.catch(() => unavailable));
-          }).pipe(Effect.catch(() => unavailable));
-        }
-        return status;
       },
       Effect.mapError(CiCommandError.new("Failed to execute the CI lane."))
     );
-    return { patterns, changeProfile, jobEnvironment, runnerResources };
+    return { patterns, changeProfile, jobEnvironment, pruneAptSources, runnerResources };
   })
 ).pipe(Layer.provide(CiRunnerOutputsLive));

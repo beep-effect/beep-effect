@@ -27,6 +27,7 @@ export * from "./aggregates/IntakeBatch/index.ts";
  * @since 0.0.0
  */
 export * as Aggregates from "./aggregates/index.ts";
+export * as VaultSync from "./aggregates/VaultSync/index.ts";
 /**
  * Entity namespace exports.
  *

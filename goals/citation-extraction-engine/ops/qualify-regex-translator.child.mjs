@@ -51,7 +51,7 @@ const operations = fixture("operation-cases.json", "ae441000ddc90537864e3fdd4a9d
 const facts = fixture("regex-character-facts.json", "9dec7f6a29162fd6b479cf083546bf07655c23437a362f034d4ff72a1adb59c0");
 assert.equal(operations.commit, "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e");
 assert.equal(facts.oracleCommit, operations.commit);
-const inventory = fixture("regex-inventory.json", "b0e75c4cd10ee153aeafe4f1b40750415c7f32ca0fabaaadc740b9f69f35fa83");
+const inventory = fixture("regex-inventory.json", "0267857cf6f1fec3401ffc18f988c78c27eeaeab7865ff9c40e91e787144539d");
 const programFacts = fixture(
   "regex-program-facts.json",
   "5b93d0172fc9a24f364a89d2ccaab193506b68c10458f962857badb630d32d52"

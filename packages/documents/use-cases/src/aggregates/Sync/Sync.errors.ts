@@ -90,6 +90,34 @@ export class VaultScanFailed extends S.TaggedError<VaultScanFailed, { readonly b
 ) {}
 
 /**
+ * Raised when the projected vault-sync read model cannot be read or decoded.
+ *
+ * **Example** (Make VaultSyncReadUnavailable error)
+ *
+ * ```ts
+ * import { VaultSyncReadUnavailable } from "@beep/documents-use-cases/aggregates/Sync/server"
+ *
+ * const error = VaultSyncReadUnavailable.make({ reason: "list open conflicts failed" })
+ * console.log(error.reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class VaultSyncReadUnavailable extends S.TaggedError<
+  VaultSyncReadUnavailable,
+  { readonly brand: unique symbol }
+>($I`VaultSyncReadUnavailable`)(
+  "VaultSyncReadUnavailable",
+  {
+    reason: S.NonEmptyString.annotateKey({ description: "Non-empty read-model failure diagnostic." }),
+  },
+  $I.annoteError<VaultSyncReadUnavailable>("VaultSyncReadUnavailable", {
+    description: "The projected vault-sync read model could not be read or decoded.",
+  })
+) {}
+
+/**
  * Client-safe failure raised when a vault sync action cannot complete.
  *
  * **Example** (Create VaultSyncActionError instance)

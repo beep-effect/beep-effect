@@ -20,6 +20,7 @@ import {
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Stream from "effect/Stream";
 
 const disconnected = Effect.fail(
   DmsMirrorUnavailable.make({
@@ -78,5 +79,9 @@ const disconnectedProbe = Effect.succeed(
  */
 export const DmsMirrorAvailabilityDisconnectedLayer: Layer.Layer<DmsMirrorAvailability> = Layer.succeed(
   DmsMirrorAvailability,
-  DmsMirrorAvailability.of({ probe: disconnectedProbe, refresh: disconnectedProbe })
+  DmsMirrorAvailability.of({
+    changes: Stream.fromEffect(disconnectedProbe),
+    probe: disconnectedProbe,
+    refresh: disconnectedProbe,
+  })
 );

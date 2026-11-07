@@ -12,20 +12,24 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { removedLibraryWebAdapter, requiredLibraryAdapters } from "./Library.acquire.ts";
+import { requiredLibraryAdapters } from "./Library.acquire.ts";
 import { encodeLibraryCaptureJson, runLibraryCommand } from "./Library.adapter.ts";
+import { libraryBoxFileId } from "./Library.box.ts";
 import { LibraryCaptureCorrection } from "./Library.corrections.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { libraryEffectiveCaptures, libraryEffectiveCategory, librarySourceEvidenceValid } from "./Library.evidence.ts";
+import { libraryHopTwoOnly } from "./Library.hops.ts";
 import { LibraryDispositionImportPayload, libraryDispositionValid } from "./Library.import.ts";
 import { libraryArtifactIntegrity } from "./Library.integrity.ts";
 import { extractLibraryReferences } from "./Library.inventory.ts";
 import { assembleLibraryOntology, libraryShapes, libraryShapesDataset } from "./Library.ontology.ts";
+import { libraryPdfSnapshot } from "./Library.paths.ts";
 import { catalogDataset, libraryTopics } from "./Library.projection.ts";
 import { decodeProviderEvents, validateProviderQualification } from "./Library.provenance.ts";
 import { LibraryProbeEvidence } from "./Library.qualify.ts";
@@ -119,6 +123,9 @@ const pinIdentityMatches = (
   pin.clone === `repos/github/${source.repository}` &&
   pin.remote === `https://github.com/${source.repository}.git`;
 const targetRevision = (source: LibrarySource, capture: LibraryCapture) => {
+  // Box captures record `<fileId>:<versionId>`; the version id is the cited source revision.
+  if (O.isSome(libraryBoxFileId(source.canonicalUrl)))
+    return { revision: capture.requestedRevision, reason: "Box requested version differs from source versions" };
   if (source.kind === "youtube")
     return { revision: capture.requestedRevision, reason: "video request differs from inventoried source target" };
   if (source.kind === "paper" && Str.startsWith("arxiv:")(source.identity))
@@ -204,6 +211,13 @@ type VerificationContext = Effect.Success<ReturnType<typeof makeVerificationCont
 const verifyIntakeCensus = Effect.fn("Library.verifyIntakeCensus")(function* (context: VerificationContext) {
   const { root, fs, path, catalog, issue, artifactValid } = context;
   const verifyIntakeFile = Effect.fn("Library.verifyIntakeFile")(function* (file: LibraryIntakeFile) {
+    if (file.retention === "referenced") {
+      // Referenced media is never snapshotted; an original still on disk must keep its recorded size.
+      const stat = yield* fs.stat(file.originalPath).pipe(Effect.option);
+      if (O.isSome(stat) && Number(stat.value.size) !== file.bytes)
+        issue(`${file.originalPath}: referenced media size changed since the intake census`);
+      return;
+    }
     yield* artifactValid(
       LibraryArtifact.make({
         path: file.snapshotPath,
@@ -251,6 +265,13 @@ const verifyIntakeCensus = Effect.fn("Library.verifyIntakeCensus")(function* (co
 const verifyDocumentCitations = Effect.fn("Library.verifyDocumentCitations")(function* (context: VerificationContext) {
   const { root, fs, path, catalog, issue, artifactValid } = context;
   yield* Effect.forEach(catalog.artifacts, artifactValid, { concurrency: 1 });
+  // The census replays inventory, which knows only identities cited from hop-0 text. Identities that
+  // hop derivation catalogued from capture text never shaped a census, so they must not reshape it here.
+  const cited = HashSet.fromIterable(A.map(catalog.occurrences, (occurrence) => occurrence.sourceId));
+  const knownReferences = A.flatMap(
+    A.filter(catalog.sources, (source: LibrarySource) => HashSet.has(cited, source.id)),
+    (source: LibrarySource) => [source.repository, source.identity]
+  );
   yield* Effect.forEach(
     catalog.documents,
     Effect.fnUntraced(function* (document) {
@@ -264,13 +285,19 @@ const verifyDocumentCitations = Effect.fn("Library.verifyDocumentCitations")(fun
         })
       );
       if (!valid) return;
+      // A PDF report is registered by `mine` from an unparsed intake file: it has no citation census.
+      if (libraryPdfSnapshot(document.snapshotPath)) {
+        if (
+          document.expectedOccurrences !== 0 ||
+          A.some(catalog.occurrences, (item) => item.documentId === document.id)
+        )
+          issue(`${document.id}: PDF report carries a citation census`);
+        return;
+      }
       const text = yield* fs
         .readFileString(path.resolve(root, document.snapshotPath))
         .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot read verified report", cause })));
-      const expected = extractLibraryReferences(
-        text,
-        A.flatMap(catalog.sources, (source) => [source.repository, source.identity])
-      );
+      const expected = extractLibraryReferences(text, knownReferences);
       const actual = A.filter(catalog.occurrences, (item) => item.documentId === document.id);
       if (expected.length !== document.expectedOccurrences || actual.length !== expected.length)
         issue(`${document.id}: citation census mismatch`);
@@ -313,6 +340,7 @@ const verifyOccurrenceBindings = Effect.fn("Library.verifyOccurrenceBindings")(f
 const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function* (context: VerificationContext) {
   const { root, fs, path, catalog, issue, artifactValid } = context;
   let readable = 0;
+  let cataloguedOnly = 0;
   let unavailable = 0;
   let nonReferences = 0;
   let missing = 0;
@@ -494,6 +522,10 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
   };
   const verifySource = Effect.fn("Library.verifySource")(function* (source: LibrarySource) {
     const captures = A.filter(catalog.captures, (item) => item.sourceId === source.id);
+    if (!A.isReadonlyArrayNonEmpty(captures) && libraryHopTwoOnly(catalog, source.id)) {
+      cataloguedOnly++;
+      return;
+    }
     if (!A.isReadonlyArrayNonEmpty(captures)) {
       recordMissingSource(source);
       return;
@@ -520,6 +552,7 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
   });
   for (const source of catalog.sources) yield* verifySource(source);
   return {
+    cataloguedOnly,
     readable,
     unavailable,
     nonReferences,
@@ -595,9 +628,7 @@ const verifyRequiredQualifications = Effect.fn("Library.verifyRequiredQualificat
       Str.isNonEmpty(receipt.recordedAt)
     )
       requiredVerified++;
-    // The removed web route cannot be re-qualified, so its retained receipt is held only to the
-    // evidence integrity checks above; anything else would wedge verify permanently.
-    else if (adapter !== removedLibraryWebAdapter) {
+    else {
       requiredFailed++;
       issue(`${adapter}: required route lacks verified source-bound probe evidence`);
     }
@@ -642,10 +673,11 @@ export const verifyLibrary = Effect.fn("Research.Library.verify")(function* (roo
     incomplete,
     toolBlocked,
     versionCategories,
+    cataloguedOnly,
   } = yield* verifySourceCoverage(context);
   const { requiredVerified, requiredFailed } = yield* verifyRequiredQualifications(context);
   yield* Console.log(
-    `library verify: readable=${readable} unavailable=${unavailable} nonReferences=${nonReferences} missing=${missing} ambiguous=${ambiguous} incomplete=${incomplete} toolBlocked=${toolBlocked} failedAttempts=${failed} interruptedAttempts=${interrupted} providerBlockedAttempts=${providerBlocked} requiredVerified=${requiredVerified} requiredFailed=${requiredFailed} integrityFailures=${problems.length}`
+    `library verify: readable=${readable} unavailable=${unavailable} nonReferences=${nonReferences} missing=${missing} ambiguous=${ambiguous} incomplete=${incomplete} toolBlocked=${toolBlocked} failedAttempts=${failed} interruptedAttempts=${interrupted} providerBlockedAttempts=${providerBlocked} requiredVerified=${requiredVerified} requiredFailed=${requiredFailed} cataloguedHop2=${cataloguedOnly} integrityFailures=${problems.length}`
   );
   yield* Console.log(
     `source/version coverage: ${A.join(

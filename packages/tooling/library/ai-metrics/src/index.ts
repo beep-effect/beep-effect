@@ -40,6 +40,8 @@ export * from "./archive.ts";
  * @since 0.0.0
  */
 export * from "./circuit-breaker.ts";
+export * from "./claude-cowork-lifecycle.ts";
+export * from "./claude-cowork-plugin.ts";
 /**
  * Docker Compose rendering for the local Phoenix observability backend that
  * receives exported spans. Examples live on the owning declarations in
@@ -305,6 +307,13 @@ export * from "./native-schedule.ts";
  */
 export * from "./native-trace.ts";
 /**
+ * Separately attributed historical availability receipts, without invocation causation.
+ * Examples live in `./observation-availability.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-availability.ts";
+/**
  * Bounded independent physical snapshots and fresh-destination restoration.
  * Examples live in `./observation-backup.ts`.
  * @category exports
@@ -359,6 +368,13 @@ export * from "./observation-launch-http.ts";
  * @since 0.0.0
  */
 export * from "./observation-maintenance-http.ts";
+/**
+ * Independent process outcomes and receipt-consistent historical availability views.
+ * Examples live in `./observation-outcomes.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-outcomes.ts";
 /**
  * Bounded declared-root inventory producer and retained observation evidence.
  *

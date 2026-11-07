@@ -23,8 +23,11 @@ import { drawingsCommand } from "./Drawings/index.ts";
 import { exploreCommand } from "./Explore/index.ts";
 import { fallowCommand } from "./Fallow/index.ts";
 import { filesCommand } from "./Files/index.ts";
+import { gitCommand } from "./Git/index.ts";
+import { githubCommand } from "./Github/index.ts";
 import { goalsCommand } from "./Goals/index.ts";
 import { harnessLedgerCommand } from "./HarnessLedger/index.ts";
+import { historyCommand } from "./History/index.ts";
 import { holdsCommand } from "./Holds/index.ts";
 import { imageCommand } from "./Image/index.ts";
 import { kbCommand } from "./Kb/index.ts";
@@ -45,6 +48,7 @@ import { runnersCommand } from "./Runners/index.ts";
 import { sessionCommand } from "./Session/index.ts";
 import { skillsCommand } from "./Skills/index.ts";
 import { syncDataToTsCommand } from "./SyncDataToTs/index.ts";
+import { toolchainCommand } from "./Toolchain/index.ts";
 import { topoSortCommand } from "./TopoSort/index.ts";
 import { tsconfigSyncCommand } from "./TsconfigSync/index.ts";
 import { versionSyncCommand } from "./VersionSync/index.ts";
@@ -94,8 +98,11 @@ export const rootCommand = Command.make("beep-cli").pipe(
     exploreCommand,
     fallowCommand,
     filesCommand,
+    gitCommand,
+    githubCommand,
     goalsCommand as Command.Command<"goals", {}, {}, never, never>,
     harnessLedgerCommand,
+    historyCommand,
     holdsCommand,
     kbCommand,
     refsCommand,
@@ -120,6 +127,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     qaCommand,
     skillsCommand,
     syncDataToTsCommand,
+    toolchainCommand,
     tsconfigSyncCommand,
     versionSyncCommand,
     worktreeCommand as Command.Command<"worktree", {}, {}, never, never>,

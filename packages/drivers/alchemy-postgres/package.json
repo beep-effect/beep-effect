@@ -40,7 +40,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*.ts",
-    "./internal/*": null,
+    "./internal/*": "./src/internal/*.ts",
     "./package.json": "./package.json"
   },
   "files": [
@@ -64,6 +64,7 @@
   "dependencies": {
     "@alchemy.run/domain": "catalog:",
     "@beep/identity": "workspace:^",
+    "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "alchemy": "catalog:",
@@ -72,6 +73,7 @@
   },
   "devDependencies": {
     "@beep/pglite": "workspace:^",
+    "@beep/postgres": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"

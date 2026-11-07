@@ -1,0 +1,37 @@
+name: Cache Local Observation
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Reviewed native client channel
+        required: true
+        type: choice
+        default: stable
+        options: [stable, canary]
+      computation:
+        description: Existing local-only pilot recipe
+        required: true
+        type: choice
+        default: '@beep/types#lint'
+        options: ['@beep/types#lint', '@beep/identity#lint']
+
+concurrency:
+  group: cache-local-observation-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  # The reusable Heavy workflow includes a separately gated signed job.
+  actions: read
+
+jobs:
+  observe:
+    name: Observe local cache pilot
+    if: github.ref == 'refs/heads/main'
+    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
+    with:
+      admitted: false
+      local_pilot_observation: true
+      local_pilot_computation: ${{ inputs.computation }}
+      producer_channel: ${{ inputs.channel }}

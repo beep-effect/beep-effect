@@ -3,6 +3,7 @@ import {
   KnowledgeRewriteRules,
   rewriteKnowledgeReferences,
 } from "@beep/repo-cli/commands/Knowledge";
+import { KnowledgeRefsRewriteRulesPath } from "@beep/repo-configs/PolicyData";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
@@ -18,8 +19,8 @@ const fixture = Effect.fn("KnowledgeRewriteTest.fixture")(function* (rules: Read
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-rewrite-" });
-  yield* fs.makeDirectory(path.join(root, "scripts"));
-  const rulesFile = path.join(root, "scripts", "knowledge-refs-rewrite.rules.json");
+  const rulesFile = path.join(root, KnowledgeRefsRewriteRulesPath);
+  yield* fs.makeDirectory(path.dirname(rulesFile), { recursive: true });
   const value = yield* S.encodeEffect(KnowledgeRewriteRulesJson)(
     KnowledgeRewriteRules.make({ schemaVersion: "knowledge-refs-rewrite/v1", rules })
   );

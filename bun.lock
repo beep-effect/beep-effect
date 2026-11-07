@@ -703,6 +703,7 @@
         "@beep/identity": "workspace:^",
         "@beep/law-practice-tables": "workspace:^",
         "@beep/postgres": "workspace:^",
+        "@beep/shared-tables": "workspace:^",
         "@beep/workspace-tables": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
@@ -959,11 +960,13 @@
       "name": "@beep/documents-domain",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/domain": "catalog:",
         "@beep/identity": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@noble/hashes": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -980,21 +983,26 @@
       "name": "@beep/documents-server",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/domain": "catalog:",
+        "@beep/alchemy-postgres": "workspace:^",
         "@beep/box": "workspace:^",
         "@beep/documents-domain": "workspace:^",
         "@beep/documents-tables": "workspace:^",
         "@beep/documents-use-cases": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
+        "@beep/shared-tables": "workspace:^",
         "@beep/utils": "workspace:^",
         "@noble/hashes": "catalog:",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/pglite": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
@@ -1027,6 +1035,7 @@
       "name": "@beep/documents-use-cases",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/domain": "catalog:",
         "@beep/documents-domain": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
@@ -1034,6 +1043,8 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/alchemy-postgres": "workspace:^",
+        "@beep/pglite": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
@@ -1084,6 +1095,7 @@
       "dependencies": {
         "@alchemy.run/domain": "catalog:",
         "@beep/identity": "workspace:^",
+        "@beep/observability": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "alchemy": "catalog:",
@@ -1092,6 +1104,7 @@
       },
       "devDependencies": {
         "@beep/pglite": "workspace:^",
+        "@beep/postgres": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1323,6 +1336,20 @@
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/drivers/firecrawl": {
+      "name": "@beep/firecrawl",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -4114,6 +4141,7 @@
       },
       "dependencies": {
         "@beep/ai-sync": "workspace:^",
+        "@beep/box": "workspace:^",
         "@beep/chalk": "workspace:^",
         "@beep/cli-kit": "workspace:^",
         "@beep/colors": "workspace:^",
@@ -4124,6 +4152,7 @@
         "@beep/exiftool": "workspace:^",
         "@beep/ffmpeg": "workspace:^",
         "@beep/file-processing": "workspace:^",
+        "@beep/firecrawl": "workspace:^",
         "@beep/git": "workspace:^",
         "@beep/github": "workspace:^",
         "@beep/github-actions": "workspace:^",
@@ -4144,6 +4173,7 @@
         "@beep/obs": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/occt": "workspace:^",
+        "@beep/onepassword-cli": "workspace:^",
         "@beep/ontology": "workspace:^",
         "@beep/oxigraph": "workspace:^",
         "@beep/package-json": "workspace:^",
@@ -4205,6 +4235,8 @@
         "@beep/fc-runs": "workspace:^",
         "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
+        "@changesets/changelog-github": "catalog:",
+        "@changesets/cli": "catalog:",
         "@changesets/parse": "catalog:",
         "@commitlint/is-ignored": "catalog:",
         "@effect/platform-node-shared": "catalog:",
@@ -4408,6 +4440,7 @@
   "patchedDependencies": {
     "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
     "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
+    "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch",
     "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch",
     "effect@4.1.2": "patches/effect@4.1.2.patch",
   },
@@ -4940,6 +4973,8 @@
     "@beep/ffmpeg": ["@beep/ffmpeg@workspace:packages/drivers/ffmpeg"],
 
     "@beep/file-processing": ["@beep/file-processing@workspace:packages/foundation/capability/file-processing"],
+
+    "@beep/firecrawl": ["@beep/firecrawl@workspace:packages/drivers/firecrawl"],
 
     "@beep/freshbooks": ["@beep/freshbooks@workspace:packages/drivers/freshbooks"],
 

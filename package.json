@@ -329,7 +329,8 @@
     "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
     "effect@4.1.2": "patches/effect@4.1.2.patch",
     "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch",
-    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch"
+    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
+    "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch"
   },
   "private": true,
   "repository": {
@@ -397,7 +398,7 @@
     "pkg:verify": "beep-cli quality package-verify",
     "pkg:verify:quick": "beep-cli quality package-verify --quick",
     "postinstall": "lefthook install && bun run infra:prepare-gha-runners",
-    "prepare": "effect-tsgo unpatch --tsrs && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch --tsrs",
+    "prepare": "effect-tsgo unpatch --tsrs && bun run beep toolchain prune-tsgo-backups && effect-tsgo patch --tsrs",
     "purge": "bun run beep purge",
     "quality:dev": "bun run beep quality dev",
     "services:up": "docker compose up -d",
@@ -585,6 +586,7 @@
     "packages/party/domain",
     "packages/party/use-cases",
     "packages/party/server",
-    "packages/drivers/alchemy-postgres"
+    "packages/drivers/alchemy-postgres",
+    "packages/drivers/firecrawl"
   ]
 }
