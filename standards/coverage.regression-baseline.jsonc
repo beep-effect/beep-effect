@@ -41621,6 +41621,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.box.ts": {
+          "lines": 99.48,
+          "statements": 99.53,
+          "branches": 100,
+          "functions": 98.46,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.command.ts": {
           "lines": 32.43,
           "statements": 32.43,
@@ -41681,6 +41693,18 @@
             "functions": 22
           }
         },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.firecrawl.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.github.ts": {
           "lines": 58.54,
           "statements": 56.4,
@@ -41693,6 +41717,30 @@
             "functions": 17
           }
         },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.hopStatus.ts": {
+          "lines": 100,
+          "statements": 98.14,
+          "branches": 93.75,
+          "functions": 96,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.hops.ts": {
+          "lines": 97.45,
+          "statements": 96.42,
+          "branches": 88.23,
+          "functions": 93.63,
+          "uncovered": {
+            "lines": 6,
+            "statements": 10,
+            "branches": 14,
+            "functions": 7
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.import.ts": {
           "lines": 77.7,
           "statements": 74.92,
@@ -41703,6 +41751,18 @@
             "statements": 88,
             "branches": 66,
             "functions": 31
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.importMethods.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 92.53,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 5,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.integrity.ts": {
@@ -41727,6 +41787,42 @@
             "statements": 81,
             "branches": 33,
             "functions": 52
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.mine.runner.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.mine.text.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.mine.ts": {
+          "lines": 99.75,
+          "statements": 99.57,
+          "branches": 99.51,
+          "functions": 98.83,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.provenance.ts": {
@@ -41763,6 +41859,30 @@
             "statements": 10,
             "branches": 17,
             "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.routeEvidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.routes.ts": {
+          "lines": 97.43,
+          "statements": 97.67,
+          "branches": 93.33,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.schemas.ts": {
