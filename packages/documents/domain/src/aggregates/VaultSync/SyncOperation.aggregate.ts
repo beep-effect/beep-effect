@@ -12,8 +12,9 @@ import * as G from "./SyncGenesis.command.ts";
 import * as C from "./SyncOperation.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
+import type { SyncRule } from "./SyncRuleViolation.rejection.ts";
 
-const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "operation state" });
+const refused = (rule: SyncRule) => SyncRuleViolation.make({ rule, evidence: "operation state" });
 const retarget = (s: C.OperationState, c: C.OperationInput) =>
   s !== null &&
   s.status === "queued" &&

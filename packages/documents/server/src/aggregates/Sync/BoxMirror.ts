@@ -21,6 +21,7 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as SqlClient from "effect/sql/SqlClient";
 import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
+import type { MirrorFailureStage } from "@beep/documents-use-cases/aggregates/VaultSync";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/BoxMirror");
 const Receipt = S.Struct({ remoteId: V.RemoteItemId, name: S.String, parentRemoteId: S.NullOr(V.RemoteItemId) }).pipe(
@@ -29,14 +30,16 @@ const Receipt = S.Struct({ remoteId: V.RemoteItemId, name: S.String, parentRemot
 const Stored = S.Array(S.Struct({ fingerprint: S.String, result: S.NullOr(S.String) })).pipe(
   $I.annoteSchema("StoredBoxReceipt", { description: "Persisted intent fingerprint and optional acknowledged result." })
 );
-const localOperations = ["local-root", "stale-input"];
+const localStages: ReadonlyArray<MirrorFailureStage | null> = ["local-root", "stale-input"];
 const isLocalFailure = (error: D.DmsMirrorUnavailable | BoxMirrorUnavailable): error is BoxMirrorUnavailable =>
-  error._tag === "BoxMirrorUnavailable" && A.contains(localOperations, error.operation);
-const unavailable = (operation: string) =>
+  S.is(BoxMirrorUnavailable)(error) && A.contains(localStages, error.stage);
+// `operation` names the Box call; `stage` names where the adapter stopped it before or around that call.
+const unavailable = (operation: V.MirrorOperation, stage: MirrorFailureStage | null = null) =>
   BoxMirrorUnavailable.make({
     retryable: false,
     disconnectReason: null,
     operation,
+    stage,
   });
 /**
  * Resolves the authorized local vault root for a destination at call time.
@@ -131,14 +134,23 @@ export const BoxMirrorLive = BoxMirror.toLayer(
     const parent = Effect.fnUntraced(function* (id: V.RemoteItemId) {
       return id === (yield* rootId) ? O.none<V.RemoteItemId>() : O.some(id);
     });
-    const read = Effect.fnUntraced(function* (destinationId: V.DestinationId, relPath: V.VaultRelPath, digest: string) {
-      const configured = yield* roots.resolve(destinationId);
-      const root = yield* fs.realPath(configured).pipe(Effect.mapError(() => unavailable("local-root")));
-      const bytes = yield* files.read(root, relPath).pipe(Effect.mapError(() => unavailable("stale-input")));
-      if (bytesToHex(sha256(bytes)) !== digest) return yield* unavailable("stale-input");
+    const read = Effect.fnUntraced(function* (
+      verb: V.MirrorOperation,
+      destinationId: V.DestinationId,
+      relPath: V.VaultRelPath,
+      digest: string
+    ) {
+      // The resolver cannot know the call it serves; its failure is a local-root stage of this call.
+      const configured = yield* roots
+        .resolve(destinationId)
+        .pipe(Effect.mapError(() => unavailable(verb, "local-root")));
+      const root = yield* fs.realPath(configured).pipe(Effect.mapError(() => unavailable(verb, "local-root")));
+      const bytes = yield* files.read(root, relPath).pipe(Effect.mapError(() => unavailable(verb, "stale-input")));
+      if (bytesToHex(sha256(bytes)) !== digest) return yield* unavailable(verb, "stale-input");
       return bytes;
     });
     const mutation = Effect.fnUntraced(function* (
+      verb: V.MirrorOperation,
       operationId: V.OperationId,
       generation: number,
       fingerprint: string,
@@ -152,10 +164,10 @@ export const BoxMirrorLive = BoxMirror.toLayer(
         const rows = yield* sql`SELECT fingerprint, result FROM documents_sync_box_receipt
         WHERE operation_id = ${receiptId}`.pipe(Effect.flatMap(S.decodeUnknownEffect(Stored)), Effect.orDie);
         const stored = yield* Effect.fromOption(A.head(rows)).pipe(Effect.orDie);
-        if (stored.fingerprint !== fingerprint) return yield* unavailable("intent-mismatch");
+        if (stored.fingerprint !== fingerprint) return yield* unavailable(verb, "intent-mismatch");
         if (stored.result !== null) return yield* decode(stored.result).pipe(Effect.orDie);
         const found = yield* evidence.lookup({ operationId, fingerprint });
-        if (O.isNone(found)) return yield* unavailable("uncertain-outcome-held");
+        if (O.isNone(found)) return yield* unavailable(verb, "uncertain-outcome-held");
         const result = yield* encode(found.value).pipe(Effect.orDie);
         yield* sql`UPDATE documents_sync_box_receipt SET result = ${result} WHERE operation_id = ${receiptId}`.pipe(
           Effect.orDie
@@ -165,13 +177,13 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       const item = yield* call.pipe(
         Effect.catch((error) =>
           // A local read failure happens before any Box request, so nothing can be in doubt:
-          // release the claim and report it. Anything else may have reached Box and stays held.
+          // release the claim and report it with its stage. Anything else may have reached Box and stays held.
           isLocalFailure(error)
-            ? sql`DELETE FROM documents_sync_box_receipt WHERE operation_id = ${receiptId}`.pipe(
+            ? sql`DELETE FROM documents_sync_box_receipt WHERE operation_id = ${receiptId} AND result IS NULL`.pipe(
                 Effect.orDie,
                 Effect.andThen(Effect.fail(error))
               )
-            : Effect.fail(unavailable("uncertain-outcome-held"))
+            : Effect.fail(unavailable(verb, "uncertain-outcome-held"))
         )
       );
       const receipt = { remoteId: item.remoteId, name: item.name, parentRemoteId: O.getOrNull(item.parentRemoteId) };
@@ -184,12 +196,12 @@ export const BoxMirrorLive = BoxMirror.toLayer(
     // Fingerprints contain only reference metadata, never bytes or credentials.
     const fingerprint = S.encodeEffect(S.fromJsonString(S.Unknown));
     const run = Effect.fnUntraced(function* (
-      verb: string,
+      verb: V.MirrorOperation,
       args: { readonly operationId: V.OperationId; readonly passId: string; readonly generation: number },
       call: Effect.Effect<D.DmsRemoteItem, D.DmsMirrorUnavailable | BoxMirrorUnavailable>
     ) {
       const encoded = yield* fingerprint({ verb, args: Struct.omit(args, ["passId"]) }).pipe(Effect.orDie);
-      return yield* mutation(args.operationId, args.generation, encoded, call);
+      return yield* mutation(verb, args.operationId, args.generation, encoded, call);
     });
     const implementation: Context.Service.Shape<typeof BoxMirror> = {
       probe: () => Effect.map(availability.refresh, (result) => ({ connected: result.connected })),
@@ -210,7 +222,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       uploadFile: Effect.fnUntraced(function* (args) {
         const parentRemoteId = yield* parent(args.parentRemoteId);
         const call = Effect.gen(function* () {
-          const content = yield* read(args.destinationId, args.path, args.digest);
+          const content = yield* read("uploadFile", args.destinationId, args.path, args.digest);
           return yield* mirror.uploadFile(
             D.UploadFileInput.make({ name: path.basename(args.path), parentRemoteId, content })
           );
@@ -222,7 +234,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
           "uploadFileVersion",
           args,
           Effect.gen(function* () {
-            const content = yield* read(args.destinationId, args.path, args.digest);
+            const content = yield* read("uploadFileVersion", args.destinationId, args.path, args.digest);
             return yield* mirror.uploadFileVersion(
               D.UploadFileVersionInput.make({
                 name: path.basename(args.path),
@@ -271,6 +283,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
                 retryable: error.retryable,
                 disconnectReason: null,
                 operation: "pollEvents",
+                stage: null,
               })
             )
           );

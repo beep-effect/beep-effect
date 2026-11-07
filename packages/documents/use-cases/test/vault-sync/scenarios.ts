@@ -161,12 +161,15 @@ export const scenarios = <E>({
           Effect.gen(function* () {
             const destinations = yield* V.SyncDestination;
             yield* destinations.send(destination, V.RecordDestinationPoll.make({ position: "p1", error: null }));
-            yield* destinations.send(destination, V.RecordDestinationPoll.make({ position: "p2", error: "offline" }));
+            yield* destinations.send(
+              destination,
+              V.RecordDestinationPoll.make({ position: "p2", error: "pollEvents" })
+            );
             yield* destinations.send(destination, V.PauseDestination.make({}));
             const actual2 = yield* destinations.state(destination);
             expect(actual2).toMatchObject({
               cursor: "p1",
-              cursorError: "offline",
+              cursorError: "pollEvents",
               paused: true,
             });
             yield* destinations.send(destination, V.ResolveDestinationRoot.make({ rootId: remote }));
@@ -248,12 +251,12 @@ export const scenarios = <E>({
           yield* ops.send(id, V.QueueOperation.make({ input: input("expiry") }));
           yield* ops.send(
             id,
-            V.LeaseOperation.make({ holder: "first", leaseMillis: 60, parentRemoteId: remote, itemRemoteId: null })
+            V.LeaseOperation.make({ holder: "first", leaseMillis: 750, parentRemoteId: remote, itemRemoteId: null })
           );
           const busy = yield* ops
             .send(
               id,
-              V.LeaseOperation.make({ holder: "other", leaseMillis: 60, parentRemoteId: remote, itemRemoteId: null })
+              V.LeaseOperation.make({ holder: "other", leaseMillis: 750, parentRemoteId: remote, itemRemoteId: null })
             )
             .pipe(Effect.flip);
           expect(busy.rule).toBe("not-queued");
@@ -277,7 +280,8 @@ export const scenarios = <E>({
         () =>
           Effect.gen(function* () {
             const ops = yield* V.SyncOperation;
-            for (const n of ["retry", "terminal", "budget"]) {
+            const expected = { retry: "retrying", terminal: "failed", budget: "failed" } as const;
+            for (const n of ["retry", "terminal", "budget"] as const) {
               yield* ops.send(opId(n), V.QueueOperation.make({ input: input(n) }));
               yield* ops.send(
                 opId(n),
@@ -295,20 +299,17 @@ export const scenarios = <E>({
                   attempt: 1,
                   retryable: n !== "terminal",
                   maxAttempts: n === "budget" ? 1 : 3,
-                  backoffMillis: 60,
-                  reason: "vendor",
+                  backoffMillis: 750,
+                  reason: "uploadFile",
                 })
               );
+              // Read each state right after its own failure, well before the 750 ms retry deadline fires.
+              const failed = yield* ops.state(opId(n));
+              expect(failed).toMatchObject({ status: expected[n] });
             }
-            const actual6 = yield* ops.state(opId("retry"));
-            expect(actual6).toMatchObject({ status: "retrying" });
-            const actual7 = yield* ops.state(opId("terminal"));
-            expect(actual7).toMatchObject({ status: "failed" });
-            const actual8 = yield* ops.state(opId("budget"));
-            expect(actual8).toMatchObject({ status: "failed" });
             yield* eventually(ops.state(opId("retry")), (s) => s?.status === "queued");
             yield* ops.send(opId("terminal"), V.ReviveOperation.make({}));
-            yield* ops.send(opId("terminal"), V.SupersedeOperation.make({ reason: "replacement" }));
+            yield* ops.send(opId("terminal"), V.SupersedeOperation.make({ reason: "kind-replaced" }));
             yield* ops.send(opId("terminal"), V.ReviveOperation.make({}));
             const actual9 = yield* ops.state(opId("terminal"));
             expect(actual9).toMatchObject({ status: "superseded" });
@@ -467,7 +468,7 @@ export const scenarios = <E>({
               retryable: false,
               maxAttempts: 3,
               backoffMillis: 10,
-              reason: "auth",
+              reason: "uploadFile",
             })
           );
           yield* eventually(items.state(itemId("recovery")), (s) => s?.status === "error");
@@ -708,13 +709,155 @@ export const scenarios = <E>({
               key: ref,
               source: ref,
               route: undefined,
-              event: V.OperationFailed.make({ reason: "late deleted snapshot" }),
+              event: V.OperationFailed.make({ reason: "uploadFile" }),
               state: null,
               envelope,
             });
             const retained = yield* ops.state(id);
             expect(retained).toEqual(state);
           })
+      );
+      it.effect("a foreign operation id records a terminal item failure and later deliveries keep flowing", () =>
+        Effect.gen(function* () {
+          const items = yield* V.SyncItem;
+          const ops = yield* V.SyncOperation;
+          const owner = itemId("owner");
+          const intruder = itemId("intruder");
+          const held = opId("owner");
+          yield* items.send(owner, V.ObserveItem.make({ observation: observe("owner") }));
+          yield* eventually(ops.state(held), (s) => s !== null);
+          // A replayed observation names an operation another item owns: QueueOperation refuses it permanently.
+          yield* items.send(
+            intruder,
+            V.ObserveItem.make({ observation: { ...observe("intruder"), operationId: held } })
+          );
+          yield* eventually(items.state(intruder), (s) => s?.status === "error");
+          yield* items.send(
+            intruder,
+            V.ObserveItem.make({
+              observation: { ...observe("intruder"), operationId: held, generation: 2, digest: "sha256:b" },
+            })
+          );
+          yield* eventually(items.state(intruder), (s) => s?.observation.generation === 2 && s.status === "error");
+          const failed = yield* items.state(intruder);
+          expect(failed?.slots.pipe(H.get("uploadFile"))).toEqual(O.some(held));
+          // Healing the intruder queues a fresh operation and leaves the owner's operation alone.
+          yield* items.send(intruder, V.ReturnItemToPending.make({ operationId: opId("intruderheal") }));
+          yield* eventually(ops.state(opId("intruderheal")), (s) => s?.status === "queued");
+          const owned = yield* ops.state(held);
+          expect(owned).toMatchObject({ status: "queued", input: { itemId: owner, generation: 1 } });
+        })
+      );
+      it.effect("a correction refused by its operation keeps the conflict open for another review", () =>
+        Effect.gen(function* () {
+          const registry = yield* V.ConflictEventRegistry;
+          const conflicts = yield* V.SyncConflict;
+          const ops = yield* V.SyncOperation;
+          const id = V.ConflictId.make("documents_sync_conflict_arefused");
+          const held = opId("refusedheld");
+          yield* ops.send(held, V.QueueOperation.make({ input: input("refusedheld") }));
+          yield* registry.send(
+            destination,
+            V.RecordConflict.make({
+              record: {
+                publicId: id,
+                destinationId: destination,
+                workspaceId: 1,
+                remoteEventId: "refused-event",
+                itemId: itemId("refusedreview"),
+                evidence: "remote moved",
+                reviewed: false,
+              },
+            })
+          );
+          yield* eventually(conflicts.state(id), (s) => s !== null);
+          const review = (operationId: V.OperationId) =>
+            conflicts.send(
+              id,
+              V.ReviewConflict.make({
+                remoteEventId: "refused-event",
+                destinationId: destination,
+                workspaceId: 1,
+                healOperationId: opId("refusedunused"),
+                correction: {
+                  operationId,
+                  input: { ...input("refusedreview", "moveItem"), idempotencyKey: operationId },
+                },
+              })
+            );
+          yield* review(held);
+          // The second review only applies if the refused first one left the conflict open.
+          yield* review(opId("refusedfresh"));
+          yield* eventually(conflicts.state(id), (s) => s?.reviewed === true);
+          const fresh = yield* ops.state(opId("refusedfresh"));
+          expect(fresh).toMatchObject({ status: "queued", input: { itemId: itemId("refusedreview") } });
+          const untouched = yield* ops.state(held);
+          expect(untouched).toMatchObject({ status: "queued", input: { itemId: itemId("refusedheld") } });
+        })
+      );
+      it.effect("healing an item the slice never tracked closes the review without a stalled delivery", () =>
+        Effect.gen(function* () {
+          const registry = yield* V.ConflictEventRegistry;
+          const conflicts = yield* V.SyncConflict;
+          const items = yield* V.SyncItem;
+          const id = V.ConflictId.make("documents_sync_conflict_auntrackedheal");
+          yield* registry.send(
+            destination,
+            V.RecordConflict.make({
+              record: {
+                publicId: id,
+                destinationId: destination,
+                workspaceId: 1,
+                remoteEventId: "untracked-heal",
+                itemId: itemId("untrackedheal"),
+                evidence: "remote edit",
+                reviewed: false,
+              },
+            })
+          );
+          yield* eventually(conflicts.state(id), (s) => s !== null);
+          yield* conflicts.send(
+            id,
+            V.ReviewConflict.make({
+              remoteEventId: "untracked-heal",
+              destinationId: destination,
+              workspaceId: 1,
+              correction: null,
+              healOperationId: opId("untrackedheal"),
+            })
+          );
+          yield* eventually(conflicts.state(id), (s) => s?.reviewed === true);
+          const untracked = yield* items.state(itemId("untrackedheal"));
+          expect(untracked).toBe(null);
+        })
+      );
+      it.effect("a failed operation for an untracked item completes its failure delivery", () =>
+        Effect.gen(function* () {
+          const ops = yield* V.SyncOperation;
+          const items = yield* V.SyncItem;
+          const failures = yield* OperationFailures;
+          const id = opId("untrackedfail");
+          const ref = V.SyncOperation.ref(id);
+          const receipt = yield* ops.send(id, V.QueueOperation.make({ input: input("untrackedfail") }));
+          const state = yield* ops.state(id);
+          yield* failures({
+            key: ref,
+            source: ref,
+            route: undefined,
+            event: V.OperationFailed.make({ reason: "uploadFile" }),
+            state,
+            envelope: {
+              id,
+              stream: receipt.stream,
+              seq: receipt.version,
+              at: DateTime.makeUnsafe(1000),
+              commandId: "failure-replay",
+              correlationId: "failure-replay",
+            },
+          });
+          const untracked = yield* items.state(itemId("untrackedfail"));
+          expect(untracked).toBe(null);
+        })
       );
       it.effect("read contracts route org/destination state without exposing a transport", () =>
         Effect.gen(function* () {

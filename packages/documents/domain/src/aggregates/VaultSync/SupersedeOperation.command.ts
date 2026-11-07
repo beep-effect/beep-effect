@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import * as Domain from "@alchemy.run/domain";
-import * as S from "effect/Schema";
 import * as E from "./SyncOperation.events.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
@@ -23,7 +22,7 @@ import * as V from "./Values.ts";
  */
 export class SupersedeOperation extends Domain.Command("SupersedeOperation", {
   target: V.OperationId,
-  input: { reason: S.String },
+  input: { reason: V.SupersedeReason },
   events: [E.OperationSuperseded],
   rejects: [SyncRuleViolation],
 }) {}

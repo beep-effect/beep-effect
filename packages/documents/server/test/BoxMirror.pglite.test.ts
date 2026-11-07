@@ -59,10 +59,15 @@ describe("BoxMirror durable intent receipts", () => {
             const second = yield* mirror.uploadFile(retried);
             expect(second).toEqual(first);
           } else {
+            // The call name stays in `operation`; the adapter stage says where it stopped.
+            const expected = {
+              operation: "uploadFile",
+              stage: outcome === "stale" ? "stale-input" : "uncertain-outcome-held",
+            };
             const first = yield* Effect.flip(mirror.uploadFile(args));
             const second = yield* Effect.flip(mirror.uploadFile(retried));
-            expect(first._tag).toBe("BoxMirrorUnavailable");
-            expect(second._tag).toBe("BoxMirrorUnavailable");
+            expect({ operation: first.operation, stage: first.stage }).toEqual(expected);
+            expect({ operation: second.operation, stage: second.stage }).toEqual(expected);
           }
           const counts = yield* fixture.counts;
           expect(counts.uploadFile - before.uploadFile).toBe(outcome === "stale" ? 0 : 1);

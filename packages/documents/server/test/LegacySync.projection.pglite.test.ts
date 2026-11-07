@@ -207,12 +207,12 @@ describe("legacy sync SQL projections", () => {
         yield* LegacySyncConflict.caughtUp(reviewedReceipt).pipe(Effect.provideContext(runtime));
         const reviewedRows = yield* sql`SELECT resolution_status, sync_item_id FROM documents_sync_conflict`;
         expect(reviewedRows).toEqual([{ resolution_status: "reviewed", sync_item_id: 1 }]);
-        yield* destinations.send(destinationId, V.RecordDestinationPoll.make({ position: null, error: "offline" }));
+        yield* destinations.send(destinationId, V.RecordDestinationPoll.make({ position: null, error: "pollEvents" }));
         const cursorError = yield* sql`SELECT stream_position, status, last_error FROM documents_sync_cursor`.pipe(
           Effect.repeat({ until: (rows) => rows[0]?.status === "error", schedule: Schedule.spaced("10 millis") }),
           Effect.timeout("10 seconds")
         );
-        expect(cursorError).toEqual([{ stream_position: "opaque-2", status: "error", last_error: "offline" }]);
+        expect(cursorError).toEqual([{ stream_position: "opaque-2", status: "error", last_error: "pollEvents" }]);
         const replacementId = V.OperationId.make("documents_sync_operation_areplacement");
         yield* items.send(
           itemId,
@@ -272,7 +272,7 @@ describe("legacy sync SQL projections", () => {
             retryable: false,
             maxAttempts: 3,
             backoffMillis: 1000,
-            reason: "synthetic-failure",
+            reason: "ensureFolder",
           })
         );
         yield* LegacySyncOperation.caughtUp(failed).pipe(Effect.provideContext(runtime));
@@ -281,9 +281,7 @@ describe("legacy sync SQL projections", () => {
           Effect.repeat({ until: (rows) => rows[0]?.status === "failed", schedule: Schedule.spaced("10 millis") }),
           Effect.timeout("10 seconds")
         );
-        expect(failedRows).toEqual([
-          { status: "failed", last_error: "synthetic-failure", operation_type: "createFolder" },
-        ]);
+        expect(failedRows).toEqual([{ status: "failed", last_error: "ensureFolder", operation_type: "createFolder" }]);
         const before = yield* sql`SELECT * FROM documents_sync_item`;
         // The command receipt is replayed while the projection row remains byte-for-byte stable.
         yield* operations
