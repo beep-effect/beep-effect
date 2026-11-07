@@ -28,7 +28,7 @@ Higher sources outrank lower sources when they conflict.
 
 - `packages/tooling/tool/cli/src/commands/Goals/**` (new `Archive.*`, `Harvest.*`, schema additions in `Goals.schemas.ts`, doctor and index changes).
 - Exploration manifest schema under `commands/Explore/**` for the `archive` block.
-- `scripts/references.json` (`.repos/goals-archive` member).
+- `packages/tooling/policy-pack/repo-configs/data/references.json` (`.repos/goals-archive` member).
 - `goals/README.md`, `explorations/README.md` (archive operation, `retentionReason`, closeout step); `.claude/skills/closeout/**` (archive step).
 - Every tombstoned packet under `goals/` and `explorations/`, and every file holding an inbound link to a moved file.
 - the exploration's `research/harvest/ledger.jsonl`.
@@ -115,13 +115,13 @@ The earlier decision deferred the goals-archive member until the repo existed, b
 
 Lane `feat/packet-archive-mechanics` · PR #2801
 
-Reverse: Remove the goals-archive member from scripts/references.json and its two refs test rows; archive or delete beep-effect/beep-effect-goals-archive only if no tombstone links into it
+Reverse: Remove the goals-archive member from packages/tooling/policy-pack/repo-configs/data/references.json and its two refs test rows; archive or delete beep-effect/beep-effect-goals-archive only if no tombstone links into it
 
 ### Defer the goals-archive beep refs member to P1, 2026-11-06
 
 beep refs provision clones every member with no per-member recovery, and refs refresh reports a missing member as pull-failed with a critical notification, so a member whose remote does not exist yet would break provisioning for every checkout. The member is added in P1 when beep-effect/beep-effect-goals-archive exists.
 
-Reverse: Add the member to scripts/references.json once the archive repo exists
+Reverse: Add the member to packages/tooling/policy-pack/repo-configs/data/references.json once the archive repo exists
 
 ### Exploration tombstones keep research/harvest/** so the harvest ledger stays on main, 2026-11-06
 

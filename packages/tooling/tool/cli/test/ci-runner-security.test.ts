@@ -859,10 +859,24 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const renameHead = commit("PR moves code into docs");
       assert.strictEqual(profile(base, renameHead).docs_only, "false");
       const typedRename = Bun.spawnSync(
-        ["bun", path.join(repoRoot, "packages/tooling/tool/cli/src/bin.ts"), "--", "ci", "change-profile", base],
+        [
+          "bun",
+          path.join(repoRoot, "packages/tooling/tool/cli/src/bin.ts"),
+          "--",
+          "ci",
+          "change-profile",
+          base,
+          "HEAD",
+        ],
         {
           cwd: tempRoot,
-          env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", GITHUB_OUTPUT: "" },
+          env: {
+            ...process.env,
+            GITHUB_EVENT_NAME: "pull_request",
+            GITHUB_OUTPUT: "",
+            BEEP_CI_PR_BASE_SHA: "",
+            BEEP_CI_PR_HEAD_SHA: "",
+          },
           stdout: "pipe",
           stderr: "pipe",
         }
@@ -912,10 +926,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             "ci",
             "change-profile",
             "origin/main",
+            "HEAD",
           ],
           {
             cwd: tempRoot,
-            env: { ...process.env, GITHUB_EVENT_NAME: eventName, GITHUB_OUTPUT: "" },
+            env: {
+              ...process.env,
+              GITHUB_EVENT_NAME: eventName,
+              GITHUB_OUTPUT: "",
+              BEEP_CI_PR_BASE_SHA: "",
+              BEEP_CI_PR_HEAD_SHA: "",
+            },
             stdout: "pipe",
             stderr: "pipe",
           }
@@ -1827,6 +1848,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const root = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
       const exemptions = [
+        // Publishes the compiled pre-toolchain binary from main; a release step, not a quality lane.
+        "beep-ci-binary.yml:Publish Beep CI Binary",
         "check.yml:Heavy Admission",
         "check.yml:Heavy",
         "check.yml:Lint (${{ matrix.partition }})",

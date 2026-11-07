@@ -52,7 +52,7 @@ within these constraints.
 - **`ReferenceWorkspaceManifest`** — `schemaVersion: "beep-references/v1"`, `theme` (`"effect"`),
   `rootDefault` (`"$HOME/YeeBois/references/effect"`, written with `$HOME`, resolved against the
   `home` parameter), `members: ReadonlyArray<ReferenceMember>`, `workspaceLink`
-  (`".repos/effect-workspace"`). Lives at `scripts/references.json`; the bash provisioner and the
+  (`".repos/effect-workspace"`). Lives at `packages/tooling/policy-pack/repo-configs/data/references.json`; the bash provisioner and the
   CLI both read it.
 - **`MemberRefreshOutcome`** — `LiteralKit(["pulled", "unchanged", "skipped-dirty",
   "skipped-off-branch", "pull-failed", "build-failed"])`. A status string only.
@@ -74,7 +74,7 @@ They name the same locations recorded by R1, R6, and the frozen fleet census.
 
 ## Target Surfaces
 
-- `scripts/references.json` (new) and `scripts/setup-effect-ref.sh` (rewritten as the manifest-
+- `packages/tooling/policy-pack/repo-configs/data/references.json` (new) and `scripts/setup-effect-ref.sh` (rewritten as the manifest-
   driven provisioner; keep the filename so existing docs and the test path stay valid) (R6).
 - `packages/tooling/tool/cli/src/commands/Refs/**` (new group: schemas, errors, service,
   command) registered in the CLI root; `bun run beep refs plan|refresh|install-timer` (R8, R9).
@@ -89,7 +89,7 @@ They name the same locations recorded by R1, R6, and the frozen fleet census.
   prose, `standards/schema-first-development-prompt.md` L64-66, the four skill/agent files,
   the graft local-recovery runbook (retired 2026-10-28) (cross-link to the refs timer),
   `docs/runbooks/systemd-timers.md` (new unit), `greptile.json` (add
-  `.repos/effect-tsgo/**`, `.repos/effect-workspace/**`), `scripts/knowledge-refs-rewrite.rules.json`.
+  `.repos/effect-tsgo/**`, `.repos/effect-workspace/**`), `packages/tooling/policy-pack/repo-configs/data/knowledge-refs-rewrite.rules.json`.
 - `.claude/settings.json` permissions: `Bash(bun run beep refs plan:*)`,
   `Bash(bun run beep refs install-timer --refresh:*)` allowed; `refresh` and a fresh
   `install-timer` denied for agents, mirroring the graft deep policy.
@@ -119,7 +119,7 @@ They name the same locations recorded by R1, R6, and the frozen fleet census.
 
 ## Acceptance Criteria
 
-- [ ] `scripts/references.json` decodes as `ReferenceWorkspaceManifest` and lists exactly
+- [ ] `packages/tooling/policy-pack/repo-configs/data/references.json` decodes as `ReferenceWorkspaceManifest` and lists exactly
       `effect` (deep) and `effect-tsgo` (deep).
 - [ ] `bash scripts/setup-effect-ref.sh <checkout>` is idempotent and produces `.repos/effect`,
       `.repos/effect-tsgo`, `.repos/effect-workspace` pointing under `$BEEP_REFERENCES_ROOT`
@@ -189,4 +189,4 @@ They name the same locations recorded by R1, R6, and the frozen fleet census.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| The bash provisioner and the CLI both read `scripts/references.json` | R6/R8 | packet | A fresh clone must be able to link before `bun install` has run; the bash path stays for bootstrap, the CLI owns refresh and the timer | Retire the bash path when `beep worktree new` and a `beep refs link` command cover every bootstrap route |
+| The bash provisioner and the CLI both read `packages/tooling/policy-pack/repo-configs/data/references.json` | R6/R8 | packet | A fresh clone must be able to link before `bun install` has run; the bash path stays for bootstrap, the CLI owns refresh and the timer | Retire the bash path when `beep worktree new` and a `beep refs link` command cover every bootstrap route |

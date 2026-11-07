@@ -4,6 +4,7 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/repo-configs",
   "entries": [
+    {"file":"packages/tooling/policy-pack/repo-configs/src/PolicyData.ts","symbol":"GitHubAppName","kind":"literal-kit","owner":"@beep/repo-configs","identity":"GitHubAppName","description":"GitHub Apps whose registration manifest the repo-configs policy pack owns."},
     {"file":"packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts","symbol":"CachePolicyAuditReport","kind":"struct-const","owner":"@beep/repo-configs","identity":"CachePolicyAuditReport","description":"Blocking findings and honest unassessed legacy population for an audit."},
     {"file":"packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts","symbol":"CachePolicyAuditRequest","kind":"struct-const","owner":"@beep/repo-configs","identity":"CachePolicyAuditRequest","description":"Inputs to the read-only audit for one named environment and epoch."},
     {"file":"packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts","symbol":"CachePolicyBaseline","kind":"struct-const","owner":"@beep/repo-configs","identity":"CachePolicyBaseline","description":"Explicitly reviewed legacy posture and the currently authorized implementation scope."},

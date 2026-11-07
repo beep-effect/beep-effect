@@ -279,7 +279,7 @@ First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
 
 The reference workspace lives at `$HOME/YeeBois/references/effect`, with `effect`
 and `effect-tsgo` child clones. `bun run beep refs provision` provisions it from
-`scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides the workspace root.
+`packages/tooling/policy-pack/repo-configs/data/references.json`; `BEEP_REFERENCES_ROOT` overrides the workspace root.
 The gitignored `.repos/effect` link still points to the
 [Effect-TS/effect](https://github.com/Effect-TS/effect) child, whose `main` is
 Effect v4, so existing relative source links stay valid. `.repos/effect-tsgo`
