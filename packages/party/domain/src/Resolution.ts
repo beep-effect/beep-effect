@@ -4,4 +4,4 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-export * from "./values/Resolution/index.ts";
+export * from "./policies/Resolution/index.ts";

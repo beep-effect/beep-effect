@@ -151,7 +151,7 @@ describe("frozen corpus scorer control", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const freezePath = yield* path.fromFileUrl(
-          new URL("../../../../goals/claim-element-antecedent-check/research/reference-freeze.json", import.meta.url)
+          new URL("./fixtures/claim-element/reference-freeze.json", import.meta.url)
         );
         const argument = S.decodeEffect(referenceFamiliesJson);
         const readFileString1 = yield* fs.readFileString(freezePath);

@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "storybook-declaration-context-observation/v1",
+  "observations": [
+    {
+      "case": "candidate",
+      "head": "63f21c77c531072eb0222fb6370ab9759342b9bf",
+      "runId": 42316703391,
+      "jobId": 128234151275,
+      "conclusion": "success",
+      "executedBase": "b0c9bab1e13b7aa9d785a5ea5e8d44c6667e4d72",
+      "logBytes": 91559,
+      "logSha256": "3026239f07c02ccbd4f46be2ce0dd6d836fe2c1070cf0a64fde3faf82c8d83e2",
+      "sourceHashes": {
+        "package.json": "8aeab93d1609618577fdce356c0da33c095e2adb0df1d1eddb8c51d67e9d3a2f",
+        "bun.lock": "be1185fe770f7285dfe5b8620ece78d2462c8b4a8655bdddd07cbafc100babc9"
+      },
+      "taskCacheReports": [
+        {
+          "task": "@beep/identity#build",
+          "origin": "hit",
+          "hash": "f873f4ac543a2181"
+        },
+        {
+          "task": "@beep/schema#build",
+          "origin": "hit",
+          "hash": "84803e4bb95bf371"
+        },
+        {
+          "task": "@beep/md#build",
+          "origin": "hit",
+          "hash": "51e8cf8b341730dd"
+        },
+        {
+          "task": "@beep/editor#check",
+          "origin": "hit",
+          "hash": "91dcd7b5031b0c21"
+        },
+        {
+          "task": "@beep/storybook#check",
+          "origin": "miss",
+          "hash": "6fded647f64e260f"
+        }
+      ]
+    },
+    {
+      "case": "original-resolution control",
+      "head": "60bbd20d8af5bfc30fcd11c2b177c0872c25b6cd",
+      "runId": 42322719277,
+      "jobId": 128253098816,
+      "conclusion": "success",
+      "executedBase": "d8f335cab011f8de2e0fc511f5bc7b3b310a1bf3",
+      "logBytes": 91878,
+      "logSha256": "01b724a2307a6bea2e45527d5b54501c7c0a608e43e4b3f1815b311541c44f46",
+      "sourceHashes": {
+        "package.json": "a6d4d802d1fa4264da4e0697d218ad02615761e532c09296003a1bcd05f48afa",
+        "bun.lock": "172546b71271d1624276f33e6eebf29bd7544b971a1570b76ed259ed6965922f"
+      },
+      "taskCacheReports": [
+        {
+          "task": "@beep/identity#build",
+          "origin": "hit",
+          "hash": "fd49c25512b94418"
+        },
+        {
+          "task": "@beep/schema#build",
+          "origin": "hit",
+          "hash": "f2817cc9d7df3aef"
+        },
+        {
+          "task": "@beep/md#build",
+          "origin": "hit",
+          "hash": "5bb0960b49a26ccd"
+        },
+        {
+          "task": "@beep/editor#check",
+          "origin": "miss",
+          "hash": "2a3ab00eca53c92c"
+        },
+        {
+          "task": "@beep/storybook#check",
+          "origin": "miss",
+          "hash": "7ee9f7ba33ed0351"
+        }
+      ]
+    }
+  ],
+  "priorFailure": {
+    "head": "91848cad972714901cb1100e68f4c77b71b5df1a",
+    "runId": 42314750102,
+    "jobId": 128225577677,
+    "executedBase": "b0c9bab1e13b7aa9d785a5ea5e8d44c6667e4d72",
+    "conclusion": "failure",
+    "reportedErrors": [
+      "TaskItem.make absent",
+      "TaskList.make absent",
+      "documentToEditorState unknown requirements/error"
+    ],
+    "logSha256": "02425e1fe04b4d38fc3bf4df8670d25cf000c74be588d88d185b51e83cffb782"
+  },
+  "comparison": {
+    "hostedProfilesMatched": false,
+    "reason": "Actual executed bases have different root manifest and lockfile; prerequisite task hashes differ.",
+    "localMetadataMatchedOnlyAtBranchSources": true,
+    "cacheHitTransport": "unattributed",
+    "exactRestoredBodyIdentityEstablished": false,
+    "historicalRootCauseProven": false,
+    "cacheCorruptionProven": false,
+    "aliasNecessityEstablishedForCurrentProfile": false
+  },
+  "disposition": {
+    "configuration": "Withdraw unproven aliases and diagnostic pretty option; retain accepted main Storybook configuration exactly.",
+    "historicalCase": "Still required in full task qualification; no reuse promotion or exception is granted.",
+    "goalStatus": "active",
+    "qualificationGranted": false,
+    "signingOrCredentialsChanged": false
+  },
+  "scope": "Specific source-bound hosted observations and candidate disposition. Not a matched causal experiment, task qualification, representative reliability or whole-goal acceptance."
+}

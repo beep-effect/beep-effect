@@ -149,7 +149,7 @@ The match is exact and case-sensitive.
 Interim: since 2026-10-20 the deployed hub allows the operator's own login, which the
 attorney's device shares, until the attorney has a login of their own. While that holds,
 every device on that login reaches the hub. The decision and how to reverse it are in the
-[attorney-question-loop Decision Log](../../goals/attorney-question-loop/SPEC.md#decision-log).
+[attorney-question-loop Decision Log](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/attorney-question-loop/SPEC.md#decision-log).
 
 ## 5. Docket intake writes the questions
 

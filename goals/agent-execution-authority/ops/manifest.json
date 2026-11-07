@@ -33,7 +33,6 @@
     "goals/agent-execution-authority/GOAL.md",
     "goals/agent-execution-authority/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -87,5 +86,13 @@
     "DISCHARGED 2026-07-27 (PR 6): the policy Fetch reaches a request issued from inside a real dispatched MCP tool handler, measured with a falsification control; see history/pr6-fetch-reach-spike.md. The surviving invariant is that no middleware or request-scoped layer in a transport mounting governed tools may provide FetchHttpClient.Fetch, because request-time context takes precedence over the composition root.",
     "Widening EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST authorizes an agent-chosen POST of workspace content to that origin and everything beneath it; treat allowlist edits as security review, not configuration."
   ],
-  "updated": "2026-07-28"
+  "updated": "2026-07-28",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/agent-execution-authority",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "350f91ed48cda870466afab76d99d7839c5f9495",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

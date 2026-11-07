@@ -65,24 +65,6 @@
     "goals/beep-effect-web-alchemy/research/SOURCES.md",
     "goals/beep-effect-web-alchemy/research/alchemy-fit-2026-10-28.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/alchemy-fit-2026-10-28.md",
-    "research/cache-baseline-request-2026-10-31-2.json",
-    "research/cache-baseline-request-2026-10-31-3.json",
-    "research/cache-baseline-request-2026-10-31-4.json",
-    "research/cache-baseline-request-2026-10-31-5.json",
-    "research/cache-baseline-request-2026-10-31-6.json",
-    "research/cache-baseline-request-2026-10-31-7.json",
-    "research/cache-baseline-request-2026-10-31.json",
-    "research/cache-baseline-review-2026-10-31-2.md",
-    "research/cache-baseline-review-2026-10-31-3.md",
-    "research/cache-baseline-review-2026-10-31-4.md",
-    "research/cache-baseline-review-2026-10-31-5.md",
-    "research/cache-baseline-review-2026-10-31-6.md",
-    "research/cache-baseline-review-2026-10-31-7.md",
-    "research/cache-baseline-review-2026-10-31.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -138,5 +120,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0 through P5 complete; beep-effect.com deploys from CI (run 41244684210). Closeout final PR #2583 merged as f21859a6f0 (2026-11-02T17:09:53Z): hosted-required-checks VERIFIED (15 green, rule suite pass); yeet-verdict UNKNOWN because no until-ready job reached merge-ready before the merge (monitors b8a861fc and ea2235a4 died on GraphQL RATE_LIMIT). The operator accepted the closeout with that residual (\"Accept as closed\", Decision Log 2026-11-02)."
+  "statusNote": "P0 through P5 complete; beep-effect.com deploys from CI (run 41244684210). Closeout final PR #2583 merged as f21859a6f0 (2026-11-02T17:09:53Z): hosted-required-checks VERIFIED (15 green, rule suite pass); yeet-verdict UNKNOWN because no until-ready job reached merge-ready before the merge (monitors b8a861fc and ea2235a4 died on GraphQL RATE_LIMIT). The operator accepted the closeout with that residual (\"Accept as closed\", Decision Log 2026-11-02).",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/beep-effect-web-alchemy",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "18ca1660cba4785321448a55c9ba1c7140aa9e5c",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

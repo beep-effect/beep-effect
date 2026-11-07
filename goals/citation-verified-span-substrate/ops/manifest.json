@@ -38,12 +38,7 @@
     "explorations/citation-grounding-hallucination-guard/MAP.md",
     "explorations/citation-grounding-hallucination-guard/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/2026-07-25-academia-corpus-mining-note.md",
-    "research/2026-08-17-academia-wave2-findings.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -89,5 +84,13 @@
     "The implementation would require fuzzy/case-fold authorization, off-box privileged text, legal vocabulary in foundation, or the span-lossy AnnotatedDocument boundary.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/citation-verified-span-substrate",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "85c0d3fcabe92cc41fec44f48093c2d1bbf57466",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }
