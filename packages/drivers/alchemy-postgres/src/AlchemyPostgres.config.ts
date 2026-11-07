@@ -57,6 +57,46 @@ export class ProvenanceMapping extends S.Opaque<ProvenanceMapping, { readonly br
 ) {}
 
 /**
+ * How much catch-up work each step does: history rows a reader reads per
+ * call, instances a directory node handles per step, buffered rows a key
+ * applies per step, how many instances a directory leaf lists before it
+ * splits, and the depth instances list themselves at. Absent fields keep upstream `Backfill.defaultLimits`.
+ *
+ * **Example** (Small pages for a test)
+ *
+ * ```ts
+ * import { BackfillTuning } from "@beep/alchemy-postgres/AlchemyPostgres.config"
+ *
+ * const tuning = BackfillTuning.make({ page: 2, nodePage: 2, apply: 2, leafSize: 2, depth: 1 })
+ * console.log(tuning.page) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BackfillTuning extends S.Opaque<BackfillTuning, { readonly brand: unique symbol }>()(
+  S.Struct({
+    page: S.Int.check(S.isGreaterThan(0)).annotateKey({ description: "History rows a reader reads per call." }),
+    nodePage: S.Int.check(S.isGreaterThan(0)).annotateKey({
+      description: "Source instances a directory node handles per step.",
+    }),
+    apply: S.Int.check(S.isGreaterThan(0)).annotateKey({
+      description: "Buffered rows a consumer key applies per step.",
+    }),
+    leafSize: S.Int.check(S.isGreaterThan(0)).annotateKey({
+      description: "Instances a directory node lists before it splits into 16 children.",
+    }),
+    depth: S.Int.check(S.isGreaterThan(0)).annotateKey({
+      description: "Depth of the directory nodes instances list themselves at before any split (16^depth leaves).",
+    }),
+  }).pipe(
+    $I.annoteSchema("BackfillTuning", {
+      description: "Per-step sizes of the upstream Backfill protocol the driver runs for catch-up.",
+    })
+  )
+) {}
+
+/**
  * Driver configuration with constructor defaults.
  *
  * **Example** (Defaults)
@@ -89,6 +129,10 @@ export class AlchemyPostgresConfig extends S.Opaque<AlchemyPostgresConfig, { rea
     provenance: S.OptionFromOptionalKey(ProvenanceMapping).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Provenance mapping; absent keeps only the encoded context JSON." })
+    ),
+    backfill: S.OptionFromOptionalKey(BackfillTuning).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({ description: "Catch-up step sizes; absent keeps upstream `Backfill.defaultLimits`." })
     ),
   }).pipe(
     $I.annoteSchema("AlchemyPostgresConfig", {

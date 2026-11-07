@@ -2,7 +2,6 @@ import {
   AlchemyPostgresConfig,
   AlchemyPostgresError,
   AlchemyPostgresOperation,
-  AlchemyPostgresUnsupported,
   ProvenanceMapping,
 } from "@beep/alchemy-postgres";
 import { describe, expect, it } from "@effect/vitest";
@@ -53,18 +52,6 @@ describe("AlchemyPostgresError", () => {
       const error = AlchemyPostgresError.fromUnknown("listen");
       assertNone(error.table);
       assertNone(error.message);
-    })
-  );
-});
-
-describe("AlchemyPostgresUnsupported", () => {
-  it.effect("names the concept, the definition and when support lands", () =>
-    Effect.sync(() => {
-      const error = AlchemyPostgresUnsupported.make({ concept: "view", definition: "Statement" });
-      expect(error._tag).toBe("AlchemyPostgresUnsupported");
-      expect(error.message).toBe(
-        "view Statement cannot be hosted: @beep/alchemy-postgres does not support views until PR 2b"
-      );
     })
   );
 });
