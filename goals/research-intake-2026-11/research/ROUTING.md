@@ -134,6 +134,29 @@ Affirmative counts drive the amendment threshold (see
 
 ## Amendments
 
-Pending: routing amendments land in the owning packets as decision files with a
-back-link to this document.
+Every live goal packet with at least 40 affirmative routed findings received one
+decision file in its own `decisions/` directory, holding the counts, the five strongest public
+findings and a back-link here. The amendment adds evidence only; it changes no
+acceptance criterion, and the owning lane decides what to act on. Packets below the threshold,
+and all explorations, are served by the rows in `routing.jsonl`.
 
+| Packet | Affirmative | Amendment |
+| --- | ---: | --- |
+| `goals/agent-outcome-experiments` | 220 | [decision](../../../goals/agent-outcome-experiments/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/coding-agent-effectiveness-evidence-loop` | 213 | [decision](../../../goals/coding-agent-effectiveness-evidence-loop/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/agentic-professional-runtime` | 164 | [decision](../../../goals/agentic-professional-runtime/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/effect-native-legal-eval` | 153 | [decision](../../../goals/effect-native-legal-eval/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/agent-rating-critique-fixes` | 129 | [decision](../../../goals/agent-rating-critique-fixes/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/verification-route` | 121 | [decision](../../../goals/verification-route/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/uspto-prosecution-read` | 105 | [decision](../../../goals/uspto-prosecution-read/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/agentic-governance-laws` | 103 | [decision](../../../goals/agentic-governance-laws/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/skill-contract-gate-certificates` | 98 | [decision](../../../goals/skill-contract-gate-certificates/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/execution-authority-slice` | 91 | [decision](../../../goals/execution-authority-slice/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/claim-check-performance` | 86 | [decision](../../../goals/claim-check-performance/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/openclaw-workstation-agent` | 65 | [decision](../../../goals/openclaw-workstation-agent/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/agent-pool-doctrine` | 64 | [decision](../../../goals/agent-pool-doctrine/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/citation-extraction-engine` | 63 | [decision](../../../goals/citation-extraction-engine/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/model-arrangement-admission-core` | 48 | [decision](../../../goals/model-arrangement-admission-core/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/patent-drafting-episode-ledger` | 48 | [decision](../../../goals/patent-drafting-episode-ledger/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/hybrid-retrieval-fusion-core` | 47 | [decision](../../../goals/hybrid-retrieval-fusion-core/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
+| `goals/attributed-multi-claim-span` | 40 | [decision](../../../goals/attributed-multi-claim-span/decisions/2026-11-07-research-intake-2026-11-routed-findings.md) |
