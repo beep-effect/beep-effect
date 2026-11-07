@@ -2274,5 +2274,10 @@
   "@beep/alchemy-postgres": [
     "./packages/drivers/alchemy-postgres/src/index.ts"
   ],
-  "@beep/alchemy-postgres/*": ["./packages/drivers/alchemy-postgres/src/*"]
+  "@beep/alchemy-postgres/*": ["./packages/drivers/alchemy-postgres/src/*"],
+  "@beep/repo-cli/commands/History": [
+    "./packages/tooling/tool/cli/src/commands/History/index.ts"
+  ],
+  "@beep/firecrawl": ["./packages/drivers/firecrawl/src/index.ts"],
+  "@beep/firecrawl/*": ["./packages/drivers/firecrawl/src/*"]
 }

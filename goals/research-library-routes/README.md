@@ -31,11 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P3 Yeet — implementation landed on `feat/research-library-routes`; PR in review.
 
 ## Latest Evidence
 
-Not started.
+- `@beep/firecrawl` driver plus native web, Box, VidBee, alphaXiv routes, hop
+  extraction and the hop-2 gate; research-library tests 191/191 green.
+- Live probes (2026-11-06): Firecrawl qualification verified on a real page; Box
+  qualification verified on one user-owned file with `DMS_BOX_USER_ID`.
+- Intake surface: [`history/intake-handoff.md`](./history/intake-handoff.md).
 
 ## Notes
 

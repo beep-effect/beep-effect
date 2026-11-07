@@ -23,9 +23,11 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -355,11 +357,11 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
     )
   );
 
-  it.effect("honors the repo's 150-character footer budget for squash bullets", () =>
+  it.effect("folds historical squash bullets before real commitlint without changing default prediction", () =>
     Effect.forEach(
       [
         { subject: longSubject, expected: "pass" },
-        { subject: `${longSubject} ${longSubject}`, expected: "fail" },
+        { subject: `${longSubject} ${longSubject}`, expected: "pass" },
       ],
       ({ subject, expected }) =>
         withScripted(
@@ -374,15 +376,27 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
             Effect.gen(function* () {
               const report = yield* readSquashCommitlint(context, pullFacts);
               expect(report.verdict._tag).toBe(expected);
-              if (report.verdict._tag === "fail") {
-                expect(report.verdict.rules).toEqual(["footer-max-line-length"]);
-                expect(A.map(report.verdict.offendingLines, (line) => [line.length, line.text])).toEqual([
-                  [Str.length(subject) + 2, `* ${subject}`],
-                ]);
-                expect(renderSquashCommitlintVerdict(report.verdict)).toContain(`"* ${subject}"`);
-              }
+              pipe(
+                report.message.body,
+                Str.split("\n"),
+                A.every((line) => Str.length(line) < 100),
+                assertTrue
+              );
+              const predicted = predictSquashCommitMessage(source(["fix(x): one", subject]));
+              expect(predicted.body).toContain(`* ${subject}`);
+              expect(pipe(report.message.body, Str.replaceAll("\n", " "))).toContain(subject);
             })
         )
+    )
+  );
+
+  it.effect("an unbreakable invalid body still fails real commitlint", () =>
+    withScripted({ commits: [commit("fix(x): one", Str.repeat(160)("x")), commit("fix(x): two")] }, (_calls, context) =>
+      Effect.gen(function* () {
+        const report = yield* readSquashCommitlint(context, pullFacts);
+        expect(report.verdict._tag).toBe("fail");
+        expect(report.message.body).toContain(Str.repeat(160)("x"));
+      })
     )
   );
 

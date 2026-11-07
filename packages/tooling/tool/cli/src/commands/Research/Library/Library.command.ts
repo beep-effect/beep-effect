@@ -6,13 +6,16 @@
  */
 
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import { LibraryBoxAcquireOptions } from "./Library.box.ts";
 import { LibraryError } from "./Library.errors.ts";
+import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
 import { LibraryMineOptions } from "./Library.mine.schemas.ts";
 import { resolveLibraryInputRoots, resolveLibraryRoot } from "./Library.paths.ts";
 import { LibraryQualifyOptions } from "./Library.qualify.ts";
@@ -43,30 +46,117 @@ const inventory = Command.make(
   })
 ).pipe(
   Command.provide(ResearchLibraryLive),
-  Command.withDescription("Snapshot all input documents and record citation provenance without fetching sources")
+  Command.withDescription(
+    "Snapshot input documents, record hop-1 citations and hop-2 identities from readable hop-1 captures, without fetching"
+  )
 );
+const validateAcquireFlags = Effect.fn("ResearchLibrary.validateAcquireFlags")(function* (
+  concurrency: number,
+  hop2DomainCap: number
+) {
+  if (concurrency < 1 || concurrency > 8)
+    return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: concurrency });
+  if (hop2DomainCap < 0)
+    return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
+});
+const acquireBoxSelection = Effect.fn("ResearchLibrary.acquireBoxSelection")(function* (
+  root: string,
+  flags: {
+    readonly boxFolder: ReadonlyArray<string>;
+    readonly boxFile: ReadonlyArray<string>;
+    readonly boxPublic: boolean;
+    readonly retryFailed: boolean;
+  }
+) {
+  if (A.isReadonlyArrayEmpty(flags.boxFolder) && A.isReadonlyArrayEmpty(flags.boxFile))
+    return yield* LibraryError.make({ message: "--route box needs --box-folder or --box-file.", cause: "options" });
+  const research = yield* ResearchLibrary;
+  return yield* research.acquireBox(
+    root,
+    LibraryBoxAcquireOptions.make({
+      folderIds: flags.boxFolder,
+      fileIds: flags.boxFile,
+      accessClass: flags.boxPublic ? "public" : "private",
+      retryFailed: flags.retryFailed,
+    })
+  );
+});
 const acquire = Command.make(
   "acquire",
   {
     library,
+    route: Flag.Literals("route", ["catalog", "box"]).pipe(
+      Flag.withDefault("catalog"),
+      Flag.withDescription("catalog: every catalogued source by its kind; box: list and download Box files")
+    ),
     source: Flag.String("source").pipe(
       Flag.atLeast(0),
       Flag.withDescription("Source ID; repeat, or omit for all sources")
     ),
+    boxFolder: Flag.String("box-folder").pipe(
+      Flag.atLeast(0),
+      Flag.withDescription("Box folder ID for --route box; repeat; subfolders are included")
+    ),
+    boxFile: Flag.String("box-file").pipe(Flag.atLeast(0), Flag.withDescription("Box file ID for --route box; repeat")),
+    boxPublic: Flag.Boolean("box-public").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Record Box sources in the public partition instead of the private default")
+    ),
+    hop2DomainCap: Flag.Int("hop2-domain-cap").pipe(
+      Flag.withDefault(25),
+      Flag.withDescription("Acquired hop-2 sources allowed per domain per intake")
+    ),
     concurrency: Flag.Int("concurrency").pipe(Flag.withDefault(2)),
     retryFailed: Flag.Boolean("retry-failed").pipe(Flag.withDefault(false)),
   },
-  Effect.fn("ResearchLibrary.acquireCommand")(function* ({ library, source, concurrency, retryFailed }) {
+  Effect.fn("ResearchLibrary.acquireCommand")(function* ({
+    library,
+    route,
+    source,
+    boxFolder,
+    boxFile,
+    boxPublic,
+    hop2DomainCap,
+    concurrency,
+    retryFailed,
+  }) {
     const research = yield* ResearchLibrary;
-    if (concurrency < 1 || concurrency > 8)
-      return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: concurrency });
+    yield* validateAcquireFlags(concurrency, hop2DomainCap);
     const root = yield* resolveLibraryRoot(library);
-    yield* research.acquire(root, LibraryAcquireOptions.make({ sourceIds: source, concurrency, retryFailed }));
+    yield* route === "box"
+      ? acquireBoxSelection(root, { boxFolder, boxFile, boxPublic, retryFailed })
+      : research.acquire(
+          root,
+          LibraryAcquireOptions.make({
+            sourceIds: source,
+            concurrency,
+            retryFailed,
+            hopPolicy: LibraryHopPolicy.make({ domainCap: hop2DomainCap }),
+          })
+        );
     yield* Console.log(`Acquisition receipts recorded in ${root}; run verify for coverage.`);
   })
 ).pipe(
   Command.provide(ResearchLibraryLive),
-  Command.withDescription("Acquire referenced sources, clone every external repository, and retain per-source receipts")
+  Command.withDescription(
+    "Acquire referenced sources (web/docs/registry via Firecrawl, papers, GitHub, YouTube, gated hop 2) or a Box selection, with per-source receipts"
+  )
+);
+const hops = Command.make(
+  "hops",
+  {
+    library,
+    limit: Flag.Int("limit").pipe(Flag.withDefault(50), Flag.withDescription("Hop-2 gate decisions to print")),
+    hop2DomainCap: Flag.Int("hop2-domain-cap").pipe(Flag.withDefault(25)),
+  },
+  Effect.fn("ResearchLibrary.hopsCommand")(function* ({ library, limit, hop2DomainCap }) {
+    const research = yield* ResearchLibrary;
+    const root = yield* resolveLibraryRoot(library);
+    yield* research.hops(root, limit, LibraryHopPolicy.make({ domainCap: hop2DomainCap }));
+  })
+).pipe(
+  Command.provide(ResearchLibraryLive),
+  Command.withDescription("Report per-hop totals and the routed-finding hop-2 gate decisions without acquiring")
 );
 const qualify = Command.make(
   "qualify",
@@ -100,7 +190,9 @@ const importResult = Command.make(
   })
 ).pipe(
   Command.provide(ResearchLibraryLive),
-  Command.withDescription("Import validated Grok, alphaXiv, transcript, or explicit disposition results")
+  Command.withDescription(
+    "Import validated Grok, alphaXiv, VidBee, transcript, web-scrape, or explicit disposition results"
+  )
 );
 /**
  * Render verification diagnostics and fail the process gate on incomplete coverage.
@@ -304,5 +396,17 @@ const mine = Command.make("mine").pipe(
  */
 export const libraryCommand = Command.make("library").pipe(
   Command.withDescription("Reusable, evidence-backed research source library"),
-  Command.withSubcommands([inventory, qualify, acquire, importResult, verify, render, status, ontology, migrate, mine])
+  Command.withSubcommands([
+    inventory,
+    qualify,
+    acquire,
+    hops,
+    importResult,
+    verify,
+    render,
+    status,
+    ontology,
+    migrate,
+    mine,
+  ])
 );
