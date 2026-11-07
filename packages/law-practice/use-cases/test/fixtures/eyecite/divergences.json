@@ -1768,7 +1768,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-default-engine-corpus.md",
-          "sha256": "ffc00ed70afcef699266523954e205cf1d8d8ecfb9fa69712bb3dcd0367b5356"
+          "sha256": "003d69451ef60a33c549e75527a883c53b89e0f38de2d884e4c01a2868971076"
         }
       ],
       "workflowState": "audit",

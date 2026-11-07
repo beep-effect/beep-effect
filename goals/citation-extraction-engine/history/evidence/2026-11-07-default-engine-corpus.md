@@ -23,7 +23,12 @@ claimed. Full source/donor accounting, representation laws, safety/scaling and
 final lifecycle acceptance remain open.
 
 Server package lint/types and the scoped Fallow new-only audit pass with zero
-introduced findings. The focused runtime replay is pending at publication. The
-broader cheap-gates scan identified a Bluebook Option-none comparison; it now
-uses upstream `assertNone` with the same operand. Its focused test and detector
-recheck are pending at publication. No inventory baseline is refreshed.
+introduced findings. Both focused runtime tests pass (176.88 seconds), replaying
+seven original source documents on each runtime through the default Layer.
+The broader cheap-gates scan identified a Bluebook Option-none comparison; it
+now uses upstream `assertNone` with the same operand. All eight Bluebook tests
+pass (30.87 seconds), including both 100-example properties. A direct rerun of
+the canonical detector on that file returns zero findings. The complete broad
+cheap-gates run is not claimed green: it also reported a Fallow dependency
+inventory finding, while the scoped new-only audit passes. No inventory baseline
+is refreshed. Full hosted integration remains pending.
