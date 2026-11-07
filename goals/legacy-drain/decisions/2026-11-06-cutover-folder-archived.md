@@ -2,7 +2,7 @@
 title: "beep-effect-cutover archived by goals/history-message-overlay"
 date: 2026-11-06
 kind: checkpoint
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 pullRequest: 2785
 reversal: "mv $HOME/.local/state/beep/archive/beep-effect-cutover $HOME/YeeBois/projects/beep-effect-cutover"
 ---
