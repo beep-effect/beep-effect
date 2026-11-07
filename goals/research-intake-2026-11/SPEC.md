@@ -184,6 +184,14 @@ Lane `explore/research-library-ontology`
 
 Reverse: Remove the partition's objects from the library; the repo never held them
 
+### Hop 0 takes the Box nightly series as listed at snapshot time; aliases are versions, not new dates, 2026-11-07
+
+The Box root now lists 36 nightly files against the 34 surveyed: a 2026-11-06 report and a misnamed alias of 2026-11-04 with the same SHA-1. The snapshot includes 2026-11-06 because Box is authoritative for the series and freezing an older listing would drop a source; the alias shares the 2026-11-04 object. Local 11-05 (3) is byte-identical to Box 2026-10-21 and attaches to that identity, not to 11-05. Rejected: filename-keyed identity, which files three different reports under 11-05.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Exclude the 2026-11-06 nightly from the snapshot by re-inventorying with a date filter; objects and receipts are additive
+
 ### mine runs tiers as spawned runners with output schemas, span-checked findings and argv on ModelRun, 2026-11-07
 
 Port of the academia T1/T2/T3 scripts (codex exec with an output schema per job) into research library mine: mine triage (T1, gpt-6-luna), mine read (T2, Junie claude-opus-5-5 while JetBrains credits remain, then claude-opus-5-5), mine synthesize (T3, imports session-authored synthesis). Each job spawns a configured runner, validates the JSON result against a schema, rejects any finding whose span is not verbatim in the bound capture text, and records a LibraryModelRun carrying model, effort, route and the exact launch argv (new additive field, decoding default empty so existing catalogs decode). Private-partition artifacts never route to Junie or Cursor runners. Rejected: keeping the runners as packet scripts (the academia packet lost them) and an MCP-driven runner (not reproducible from argv).
