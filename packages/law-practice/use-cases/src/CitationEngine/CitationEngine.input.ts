@@ -201,3 +201,26 @@ export class CitationEngineResolutionInput extends S.Opaque<
     })
   )
 ) {}
+
+/** Raw canonical source and a captured server cleaner-plan selector. A plan name
+ * selects registered behavior; it never contains an iterator or callback.
+ * **Example** (Inspect cleaner selection)
+ * ```ts
+ * import { CitationEngineCleanInput } from "@beep/law-practice-use-cases/server"
+ * console.log(CitationEngineCleanInput.fields.plan !== undefined) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CitationEngineCleanInput extends S.Opaque<CitationEngineCleanInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    source: CitationEngineSourceInput.fields.source,
+    sourceText: CitationEngineSourceInput.fields.sourceText,
+    plan: S.NonEmptyString.check(S.isMaxLength(4096)),
+  }).pipe(
+    $I.annoteSchema("CitationEngineCleanInput", {
+      description:
+        "Raw source identity/text and a bounded installed server-plan name, without executable request data.",
+    })
+  )
+) {}

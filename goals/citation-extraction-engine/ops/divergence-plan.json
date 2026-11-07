@@ -408,7 +408,14 @@
         "packages/law-practice/server/src/internal/Citation/Snapshot.ts",
         "goals/citation-extraction-engine/history/evidence/2026-11-07-public-source-resolution.md",
         "packages/law-practice/server/src/internal/Citation/SourceResolution.ts",
-        "packages/law-practice/server/src/internal/Citation/ResolutionEditions.ts"
+        "packages/law-practice/server/src/internal/Citation/ResolutionEditions.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-four-operation-engine-layer.md",
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.service.ts",
+        "packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts",
+        "packages/law-practice/server/src/internal/Citation/SourceCleaning.ts",
+        "packages/law-practice/server/src/internal/Citation/TextBudget.ts",
+        "packages/law-practice/server/test/CitationEngineLayer.test.ts",
+        "packages/law-practice/server/test/CitationSourceCleaning.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

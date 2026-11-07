@@ -10,7 +10,6 @@ import {
   CitationInputError,
   CitationPrerequisiteError,
   CitationSafetyLimitExceeded,
-  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -27,7 +26,7 @@ import { makeCitationResolutionEditions } from "./ResolutionEditions.ts";
 import { CitationResourceBinding } from "./ResourceIdentity.ts";
 import { captureCitationOperationPolicy, snapshotCitationValue } from "./Snapshot.ts";
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
-import { makeCitationTextBudget } from "./TextBudget.ts";
+import { measureCitationTextWork } from "./TextBudget.ts";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceResolution");
@@ -122,11 +121,10 @@ export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolu
               "resolve",
               Effect.scoped(
                 Effect.gen(function* () {
-                  const budget = yield* makeCitationTextBudget(limits);
-                  const [workDuration, result] = yield* Effect.timed(
-                    prepare(raw).pipe(Effect.provideService(CitationTextBudget, budget))
+                  const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
+                    limits,
+                    prepare(raw)
                   );
-                  const producedTextUtf16 = yield* budget.snapshot;
                   const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
                   const report = CitationEngineReport.make({
                     operation: "resolve",

@@ -7,6 +7,7 @@ import { Citation, CitationDocument } from "@beep/law-practice-domain/values";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import * as S from "effect/Schema";
+import { CitationLiveCleanerObject } from "./CitationEngine.cleaner.ts";
 import { CitationEngineSourceEvidence, CitationExtractionDiagnostics } from "./CitationEngine.evidence.ts";
 import { CitationEngineAbsoluteMaxima } from "./CitationEngine.limits.ts";
 import { CitationEngineReport } from "./CitationEngine.report.ts";
@@ -144,6 +145,39 @@ export class CitationEngineResolutionResult extends S.Opaque<
     .pipe(
       $I.annoteSchema("CitationEngineResolutionResult", {
         description: "Reverified source, completed resolution document and separate captured-policy/work report.",
+      })
+    )
+) {}
+
+/** Completed cleaning preserves the original owned value, an independently
+ * copied native text view when text-valued, and genuine input source evidence.
+ * Non-text host values remain opaque capabilities and are never coerced. The
+ * cleaned value does not assert a newly verified source manifestation.
+ * **Example** (Inspect the owned-value result)
+ * ```ts
+ * import { CitationEngineCleanResult } from "@beep/law-practice-use-cases/server"
+ * console.log(CitationEngineCleanResult.fields.value !== undefined) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CitationEngineCleanResult extends S.Opaque<CitationEngineCleanResult, { readonly brand: unique symbol }>()(
+  S.Struct({
+    ...ResolutionEvidence,
+    value: CitationLiveCleanerObject,
+    text: S.OptionFromNullOr(CitationPythonUnicodeStorage),
+    report: CitationEngineReport,
+  })
+    .check(
+      S.makeFilter(
+        ({ report }) => report.operation === "clean",
+        $I.annote("CleanReport", { description: "Cleaning results retain their own captured operation report." })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("CitationEngineCleanResult", {
+        description:
+          "Genuine input source, exact owned cleaner result, optional detached native text and measured operation report.",
       })
     )
 ) {}

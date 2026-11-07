@@ -57,3 +57,18 @@ export const makeCitationTextBudget = Effect.fn("Citation.makeTextBudget")(funct
 export const captureCitationTextReservation = Effect.serviceOption(CitationTextBudget).pipe(
   Effect.map(O.match({ onNone: () => constant(Effect.void), onSome: (budget) => budget.reserve }))
 );
+
+/** Measure a standalone operation under one fresh parent text budget. The
+ * enclosing admitted caller owns Scope and finalizers; this helper composes
+ * Effect timing and service provision without another admission or child owner.
+ * @internal @category operations @since 0.0.0
+ */
+export const measureCitationTextWork = Effect.fn("Citation.measureTextWork")(function* <A, E, R>(
+  policy: unknown,
+  work: Effect.Effect<A, E, R>
+) {
+  const budget = yield* makeCitationTextBudget(policy);
+  const [workDuration, result] = yield* Effect.timed(work.pipe(Effect.provideService(CitationTextBudget, budget)));
+  const producedTextUtf16 = yield* budget.snapshot;
+  return { workDuration, result, producedTextUtf16 };
+});

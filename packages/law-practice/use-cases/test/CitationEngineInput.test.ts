@@ -6,6 +6,7 @@ import {
   CitationBuiltinCleanerName,
   CitationCleanerContainerKind,
   CitationEngineAnnotationInput,
+  CitationEngineCleanInput,
   CitationEngineExtractionOptions,
   CitationEngineExtractionResult,
   CitationEngineResolutionInput,
@@ -63,6 +64,18 @@ it.effect("retains exact raw Unicode and identity without granting a verified ca
     expect(source.source).toEqual(identity);
     expect(source.role).toBe("plain");
     expect(S.is(VerifiedSourceText)(source)).toBe(false);
+    const cleaning = yield* S.decodeEffect(CitationEngineCleanInput)({
+      source: identity,
+      sourceText: " A😀\n",
+      plan: "registered-cleaner-plan",
+    });
+    expect(cleaning.plan).toBe("registered-cleaner-plan");
+    const callablePlan = yield* S.decodeUnknownEffect(CitationEngineCleanInput)({
+      ...cleaning,
+      plan: () => "html",
+    }).pipe(Effect.flip);
+    expect(callablePlan._tag).toBe("SchemaError");
+
     const resolution = yield* S.decodeEffect(CitationEngineResolutionInput)({
       source: identity,
       sourceText: " A😀\n",
@@ -105,7 +118,10 @@ it.effect("retains exact raw Unicode and identity without granting a verified ca
 it.effect("keeps raw source and mode contracts out of root and client surfaces", () =>
   Effect.sync(() => {
     for (const name of [
+      "CitationEngine",
       "CitationEngineSourceInput",
+      "CitationEngineCleanInput",
+      "CitationEngineCleanResult",
       "CitationEngineResolutionInput",
       "CitationEngineResolutionResult",
       "CitationAnnotationMode",

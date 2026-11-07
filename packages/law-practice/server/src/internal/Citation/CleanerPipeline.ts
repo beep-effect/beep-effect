@@ -14,6 +14,7 @@ import {
   CitationCleanerTextCharge,
   CitationCleanerWorkSnapshot,
   CitationEngineAbsoluteMaxima,
+  CitationEngineCleanInput,
   CitationEngineLimits,
   CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
@@ -34,9 +35,7 @@ import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-pract
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerPipeline");
-const Plan = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
-  $I.annoteSchema("Plan", { description: "Trusted registered server program selector; never executable request code." })
-);
+const Plan = CitationEngineCleanInput.fields.plan;
 const Request = S.Struct({
   text: S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16)),
   plan: Plan,

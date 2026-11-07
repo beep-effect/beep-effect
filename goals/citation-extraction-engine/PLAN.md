@@ -1541,6 +1541,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the extraction wrapper and typed translator together, preserving native corpora and every unfinished acceptance requirement.
 
+### Compose the captured four-operation CitationEngine Layer, 2026-11-07
+
+CitationEngine Context.Service and CitationEngineLive compose real clean/extract/resolve/annotate operations with closed failures and R=never methods. Actual Bun and Node Layer paths execute all four operations, preserve outputs and confirm exits. Final eleven service/cleaner/resolver tests, twenty-two cleaner regressions and four contracts pass; lint/types/declarations/laws/Fallow pass. Ninety-four documentation export checks pass; prior-head hosted JSDoc/Fallow are green. Broader protocols, lawful transforms, deployment/lifecycle, safety/scaling and exhaustive accounting remain open. See history/evidence/2026-11-07-four-operation-engine-layer.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the service/Layer, cleaner public composition and shared standalone text-work helper together; preserve the earlier operation adapters, original corpora and every unfinished qualification requirement.
+
 ### Connect verified extraction and document resolution, 2026-11-07
 
 One admitted operation now connects canonical source resolution, native semantic extraction, verified occurrences, authenticated edition spelling and registered default resolution. Three actual Bun/Node/shortcut tests pass in 33.68s, including independent plain/markup lineage, exact original spans/grouping and complete receipt restoration. Lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Public Engine/Layer, complete failure boundaries and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-connected-source-document.md.

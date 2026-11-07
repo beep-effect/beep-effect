@@ -56,6 +56,7 @@ export {
 export {
   CitationBuiltinCleanerName,
   CitationCleanerContainerKind,
+  CitationEngineCleanInput,
   CitationEngineExtractionOptions,
   CitationEngineResolutionInput,
   CitationEngineSourceInput,
@@ -91,6 +92,7 @@ export { CitationEngineReport, CitationExtractionMeasurements } from "./Citation
  */
 export {
   CitationEngineAnnotationResult,
+  CitationEngineCleanResult,
   CitationEngineExtractionResult,
   CitationEngineResolutionResult,
 } from "./CitationEngine/CitationEngine.result.ts";
@@ -105,6 +107,11 @@ export { CitationPythonUnicodeStorage, CitationTextBudget } from "./CitationEngi
  * @since 0.0.0
  */
 export { CitationSafetyBudget, CitationSafetyLimitExceeded } from "./CitationEngine/CitationEngine.safety.ts";
+/** Captured four-operation server citation service.
+ * @category services
+ * @since 0.0.0
+ */
+export { CitationEngine } from "./CitationEngine/CitationEngine.service.ts";
 /** Captured native tokenizer and token-plan contracts; no request callbacks.
  * @category services
  * @since 0.0.0
