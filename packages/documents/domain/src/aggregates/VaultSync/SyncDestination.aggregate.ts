@@ -13,6 +13,10 @@ import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 
 const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "destination state" });
+const sameOwner = (
+  s: { readonly orgId: number; readonly workspaceId: number },
+  c: { readonly orgId: number; readonly workspaceId: number }
+): boolean => s.orgId === c.orgId && s.workspaceId === c.workspaceId;
 /**
  * SyncDestination vault sync contract.
  *
@@ -46,16 +50,12 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
         : s.orgId === c.orgId && s.workspaceId === c.workspaceId && s.name === c.name
           ? []
           : refused("already-registered"),
-    RenameDestination: (s, c) =>
-      s._tag !== "Registered"
-        ? refused("not-registered")
-        : s.orgId !== c.orgId || s.workspaceId !== c.workspaceId
-          ? refused("destination-scope")
-          : s.name === c.name
-            ? []
-            : s.name !== c.previousName
-              ? refused("stale-name")
-              : [C.DestinationRenamed.make(Struct.omit(c, ["_tag"]))],
+    RenameDestination: (s, c) => {
+      if (s._tag !== "Registered") return refused("not-registered");
+      if (!sameOwner(s, c)) return refused("destination-scope");
+      if (s.name === c.name) return [];
+      return s.name === c.previousName ? [C.DestinationRenamed.make(Struct.omit(c, ["_tag"]))] : refused("stale-name");
+    },
     ResolveDestinationRoot: (s, c) =>
       s._tag === "Registered" ? [C.RootFolderResolved.make(Struct.omit(c, ["_tag"]))] : refused("not-registered"),
     PauseDestination: (s) =>

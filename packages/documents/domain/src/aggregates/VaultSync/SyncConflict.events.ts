@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-file unused-class-member -- the @beep/alchemy-postgres driver reads the static `schemaVersion` reflectively to version stored events (D12). Owner: @beep/documents-domain. Exit: delete when alchemy ships a kernel event-version slot and the driver stops reading the static.
 import * as Domain from "@alchemy.run/domain";
 import { $DocumentsDomainId } from "@beep/identity/packages";
 import * as S from "effect/Schema";

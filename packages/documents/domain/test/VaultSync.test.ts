@@ -152,6 +152,47 @@ describe("vault sync pure transitions", () => {
     );
     expect(events).toEqual([]);
   });
+  it("name reservations reject another destination and ignore a repeated claim", () => {
+    const key = { ...ctx, id: V.ReservationKey.make("1:vault") };
+    const claim = V.NameClaim.make({
+      destinationId: destination,
+      orgId: 1,
+      workspaceId: 1,
+      name: "vault",
+      previousName: null,
+    });
+    const claimFor = (name: string, destinationId: V.DestinationId) =>
+      V.ClaimDestinationName.make({ claim: { ...claim, name, destinationId } });
+    const decide = V.DestinationNameReservation.definition.decide.ClaimDestinationName;
+    expect(decide(claim, claimFor("vault", V.DestinationId.make("vault-other")), key)).toMatchObject({
+      rule: "name-held",
+    });
+    expect(decide(claim, claimFor("vault", destination), key)).toEqual([]);
+    expect(decide(claim, claimFor("Vault", destination), key)).toMatchObject([{ _tag: "DestinationNameClaimed" }]);
+  });
+  it("rename checks registration, scope, and the previous name in order", () => {
+    const registered: V.DestinationState = {
+      _tag: "Registered",
+      orgId: 1,
+      workspaceId: 1,
+      name: "vault",
+      provider: "box",
+      rootId: null,
+      cursor: null,
+      cursorError: null,
+      paused: false,
+      paths: H.empty(),
+    };
+    const rename = (orgId: number, name: string, previousName: string) =>
+      V.RenameDestination.make({ orgId, workspaceId: 1, name, previousName });
+    const decide = (state: V.DestinationState, command: V.RenameDestination) =>
+      V.SyncDestination.definition.decide.RenameDestination(state, command, { ...ctx, id: destination });
+    expect(decide({ _tag: "Unregistered" }, rename(1, "renamed", "vault"))).toMatchObject({ rule: "not-registered" });
+    expect(decide(registered, rename(2, "renamed", "vault"))).toMatchObject({ rule: "destination-scope" });
+    expect(decide(registered, rename(1, "vault", "stale"))).toEqual([]);
+    expect(decide(registered, rename(1, "renamed", "stale"))).toMatchObject({ rule: "stale-name" });
+    expect(decide(registered, rename(1, "renamed", "vault"))).toMatchObject([{ _tag: "DestinationRenamed" }]);
+  });
   it.effect("remote evidence is capped by UTF-8 bytes, not character count (I20)", () =>
     Effect.gen(function* () {
       const accepted = yield* decodeEvidence(Str.repeat(8192)("a"));

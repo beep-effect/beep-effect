@@ -29,16 +29,13 @@ export class DestinationNameReservation extends Domain.Aggregate("DestinationNam
   initial: null,
   commands: [C.ClaimDestinationName, C.ReleaseDestinationName],
   decide: {
-    ClaimDestinationName: (s, c, { id }) =>
-      id !== `${c.claim.orgId}:${Str.toLowerCase(Str.trim(c.claim.name))}`
-        ? SyncRuleViolation.make({ rule: "wrong-key", evidence: id })
-        : s === null
-          ? [C.DestinationNameClaimed.make(Struct.omit(c, ["_tag"]))]
-          : s.destinationId === c.claim.destinationId
-            ? s.name === c.claim.name
-              ? []
-              : [C.DestinationNameClaimed.make(Struct.omit(c, ["_tag"]))]
-            : SyncRuleViolation.make({ rule: "name-held", evidence: id }),
+    ClaimDestinationName: (s, c, { id }) => {
+      if (id !== `${c.claim.orgId}:${Str.toLowerCase(Str.trim(c.claim.name))}`)
+        return SyncRuleViolation.make({ rule: "wrong-key", evidence: id });
+      if (s !== null && s.destinationId !== c.claim.destinationId)
+        return SyncRuleViolation.make({ rule: "name-held", evidence: id });
+      return s?.name === c.claim.name ? [] : [C.DestinationNameClaimed.make(Struct.omit(c, ["_tag"]))];
+    },
     ReleaseDestinationName: (s, c) =>
       s?.destinationId === c.destinationId ? [C.DestinationNameReleased.make(Struct.omit(c, ["_tag"]))] : [],
   },
