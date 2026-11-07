@@ -38,9 +38,10 @@ Environment variables remain a useful source. They should be modeled through
 Effect `Config` and `ConfigProvider`, not by direct `process.env` access inside
 slice code.
 
-Existing `env` package naming is legacy vocabulary. Migrate package names such
-as `@beep/<kernel>-env` and paths such as `packages/<kernel>/config` to
-`@beep/<kernel>-config` and `packages/<kernel>/config`.
+Existing `env` package naming is legacy vocabulary. Rename package names such
+as `@beep/<kernel>-env` to `@beep/<kernel>-config`. The canonical directory is
+`packages/<kernel>/config`; a package already at that path needs no directory
+move for the naming migration.
 
 Do not introduce new `env` packages or direct environment reads in
 architecture-sensitive slice work. Existing env-shaped code is transitional

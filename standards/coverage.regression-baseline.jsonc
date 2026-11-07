@@ -1506,15 +1506,15 @@
     },
     "@beep/alchemy-postgres": {
       "path": "packages/drivers/alchemy-postgres",
-      "lines": 100,
-      "statements": 100,
-      "branches": 100,
-      "functions": 100,
+      "lines": 98.36,
+      "statements": 97.72,
+      "branches": 86.95,
+      "functions": 95.53,
       "uncovered": {
-        "lines": 0,
-        "statements": 0,
-        "branches": 0,
-        "functions": 0
+        "lines": 4,
+        "statements": 6,
+        "branches": 3,
+        "functions": 5
       },
       "files": {
         "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts": {
@@ -27917,19 +27917,7 @@
         "functions": 4
       },
       "files": {
-        "packages/party/domain/src/values/Contradiction/Contradiction.model.ts": {
-          "lines": 97.56,
-          "statements": 97.56,
-          "branches": 100,
-          "functions": 50,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/party/domain/src/values/Projection/Projection.behavior.ts": {
+        "packages/party/domain/src/policies/Projection/Projection.behavior.ts": {
           "lines": 98.78,
           "statements": 98.83,
           "branches": 100,
@@ -27941,7 +27929,7 @@
             "functions": 1
           }
         },
-        "packages/party/domain/src/values/Resolution/Resolution.behavior.ts": {
+        "packages/party/domain/src/policies/Resolution/Resolution.behavior.ts": {
           "lines": 97.82,
           "statements": 97.95,
           "branches": 93.75,

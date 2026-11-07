@@ -236,4 +236,8 @@ Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
 
 Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
 
+### P4 clarifies config package naming without inventing a directory migration, 2026-11-07
+
+Reverse: Revert the wording clarification; retain the original source and parent qualification in the private archive.
+
 <!-- beep:decisions:end -->

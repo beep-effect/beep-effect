@@ -1558,7 +1558,7 @@
       "reason": "Service integration regression checks exact source-bound advisory items and their ReviewItem wire round-trip, alongside runtime errors and verdict projection. It does not define a new ReviewItem codec; the schema belongs to domain. Owner: @beep/law-practice-use-cases. Exit: retire when the detector excludes consumer integration round-trips or shared ReviewItem property coverage is directly recognized."
     },
     {
-      "file": "packages/party/domain/src/values/Admission/Admission.model.ts",
+      "file": "packages/party/domain/src/policies/Admission/Admission.model.ts",
       "symbol": "depositionOutlineEntry",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1568,7 +1568,7 @@
       "reason": "Exported function \"depositionOutlineEntry\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Hierarchy/Hierarchy.model.ts",
+      "file": "packages/party/domain/src/entities/Hierarchy/Hierarchy.model.ts",
       "symbol": "assessOperational",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1578,7 +1578,7 @@
       "reason": "Exported function \"assessOperational\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Hierarchy/Hierarchy.model.ts",
+      "file": "packages/party/domain/src/entities/Hierarchy/Hierarchy.model.ts",
       "symbol": "divergences",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1588,7 +1588,7 @@
       "reason": "Exported function \"divergences\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "file": "packages/party/domain/src/policies/Projection/Projection.behavior.ts",
       "symbol": "attributeEvents",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1598,7 +1598,7 @@
       "reason": "Exported function \"attributeEvents\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "file": "packages/party/domain/src/policies/Projection/Projection.behavior.ts",
       "symbol": "chainOfCommand",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1608,7 +1608,7 @@
       "reason": "Exported function \"chainOfCommand\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "file": "packages/party/domain/src/policies/Projection/Projection.behavior.ts",
       "symbol": "declaredLines",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1618,7 +1618,7 @@
       "reason": "Exported function \"declaredLines\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "file": "packages/party/domain/src/policies/Projection/Projection.behavior.ts",
       "symbol": "identityView",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1628,7 +1628,7 @@
       "reason": "Exported function \"identityView\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "file": "packages/party/domain/src/policies/Projection/Projection.behavior.ts",
       "symbol": "orgGraph",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1638,7 +1638,7 @@
       "reason": "Exported function \"orgGraph\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "file": "packages/party/domain/src/policies/Projection/Projection.behavior.ts",
       "symbol": "orgMermaid",
       "kind": "schema-policy-advisory",
       "status": "advisory",
@@ -1648,7 +1648,7 @@
       "reason": "Exported function \"orgMermaid\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
-      "file": "packages/party/domain/src/values/Projection/Projection.behavior.ts",
+      "file": "packages/party/domain/src/policies/Projection/Projection.behavior.ts",
       "symbol": "selectorReach",
       "kind": "schema-policy-advisory",
       "status": "advisory",
