@@ -31,11 +31,15 @@ import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Formatter from "effect/Formatter";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
+import * as References from "effect/References";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 type FakeParentField = { readonly id: string };
 
@@ -939,6 +943,45 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       // probe stays on the unclassified fallback.
       assertSome<string>(probe.disconnectReason, "probe-failed");
       pipe(probe.probedAt, O.isSome, assertTrue);
+    })
+  );
+
+  it.effect(
+    "logs a failed availability probe by tag and classification, never the vendor error text",
+    Effect.fnUntraced(function* () {
+      const logged: Array<{ readonly message: unknown; readonly annotations: unknown }> = [];
+      const recorder = Logger.make(({ fiber, message }) => {
+        logged.push({ message, annotations: fiber.getRef(References.CurrentLogAnnotations) });
+      });
+      const failing = makeFakeBox({
+        folders: {
+          getFolderItems: () =>
+            Promise.reject({
+              message: "Folder Client Matter 4471 is not visible to jane.doe@example.com",
+              responseInfo: { statusCode: 404, body: { message: "Client Matter 4471" } },
+            }),
+        },
+      });
+      const probe = yield* Effect.gen(function* () {
+        const availability = yield* DmsMirrorAvailability;
+        return yield* availability.probe;
+      }).pipe(provideScopedLayer(availabilityLayer(failing)), Effect.withLogger(recorder));
+
+      pipe(probe.connected, assertFalse);
+      const warnings = A.filter(logged, ({ message }) =>
+        Str.includes("availability probe failed")(Formatter.format(message))
+      );
+      expect(A.map(warnings, ({ annotations }) => annotations)).toEqual([
+        {
+          "documents.sync.disconnect_reason": "root-unreachable",
+          "documents.sync.failure": "DmsMirrorUnavailable",
+          "documents.sync.provider": "box",
+          "documents.sync.retryable": false,
+        },
+      ]);
+      const everything = Formatter.format(logged);
+      expect(everything).not.toContain("Client Matter");
+      expect(everything).not.toContain("jane.doe");
     })
   );
 

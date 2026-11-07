@@ -6,6 +6,7 @@
  */
 import * as Backfill from "@alchemy.run/domain/Backfill";
 import { A, O, P, R, Str } from "@beep/utils";
+import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -18,11 +19,12 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as SqlError from "effect/sql/SqlError";
+import * as Tracer from "effect/Tracer";
 import * as Tuple from "effect/Tuple";
 import { AlchemyPostgresError } from "../AlchemyPostgres.errors.ts";
+import { TargetKindAttribute, TargetNameAttribute } from "../AlchemyPostgres.instruments.ts";
 import { DeliveryRow, encodeJson } from "../AlchemyPostgres.schema.ts";
 import type * as DomainPlatform from "@alchemy.run/domain/Platform";
-import type * as Cause from "effect/Cause";
 import type * as Scope from "effect/Scope";
 import type * as SqlClient from "effect/sql/SqlClient";
 import type { AlchemyPostgresConfig } from "../AlchemyPostgres.config.ts";
@@ -73,6 +75,33 @@ const retryExponentCap = 30;
 /** How long a failed backfill job waits before it runs again. */
 const jobRetryMillis = Duration.toMillis(Duration.seconds(1));
 const byPosition = Order.mapInput(Order.Number, (row: DeliveryRow) => row.position);
+
+/** The longest failure tag a log line carries. */
+const failureTagLimit = 64;
+
+/** A tagged value's `_tag`, cut to {@link failureTagLimit}. */
+const tagOf = (value: unknown): O.Option<string> =>
+  P.hasProperty(value, "_tag") && P.isString(value._tag) ? O.some(Str.slice(0, failureTagLimit)(value._tag)) : O.none();
+
+/**
+ * The bounded tag a failure is logged by: its `_tag`, or what kind of failure
+ * it was. Never its message, payload, stack or the cause rendered as text,
+ * which can carry instance ids, paths and event payloads.
+ */
+export const failureTagOf = (value: unknown): string => O.getOrElse(tagOf(value), () => "Untagged");
+
+/** {@link failureTagOf} for a whole cause: interruption, or the tag of what failed first. */
+export const causeTagOf = (cause: Cause.Cause<unknown>): string =>
+  Cause.hasInterruptsOnly(cause)
+    ? "Interrupted"
+    : cause.pipe(
+        Cause.squash,
+        tagOf,
+        O.getOrElse(() => (Cause.hasFails(cause) ? "UntaggedFailure" : "UntaggedDefect"))
+      );
+
+/** The role an address belongs to (`node`, `run`, `scanner`, `source`, `consumer`), never its key. */
+const roleOf = (address: string): string => O.getOrElse(A.head(Str.split(":")(address)), () => "unknown");
 
 /** Split `rest` at its first `/`: `["view:Name", "a-1/b"]` for `view:Name/a-1/b`. */
 const splitFirst = (rest: string): O.Option<readonly [string, string]> =>
@@ -200,7 +229,7 @@ export const makeContext = (deps: HostDeps) => {
 
   /** Durable `Backfill.Jobs` for one object: a job table row per id, earliest due wins. */
   const jobs = (address: string): Backfill.Jobs => ({
-    schedule: Effect.fn("AlchemyPostgres.backfill.schedule")(function* (id: string, afterMillis: number) {
+    schedule: Effect.fn("AlchemyPostgres.Backfill.schedule")(function* (id: string, afterMillis: number) {
       const at = yield* now;
       const due = at + Math.max(0, afterMillis);
       // A job running now runs again at the new due time; a pending one keeps the earlier one.
@@ -374,7 +403,9 @@ export const makeContext = (deps: HostDeps) => {
           yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0 WHERE ${where}`;
           return;
         }
-        yield* Effect.logError(`alchemy-postgres ${modelName} backfill job ${address} ${job_id} failed`, exit.cause);
+        yield* Effect.logError(`alchemy-postgres ${modelName} backfill job failed`).pipe(
+          Effect.annotateLogs({ model: modelName, role: roleOf(address), failure: causeTagOf(exit.cause) })
+        );
         const later = yield* now;
         yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0, due_at = ${later + jobRetryMillis}
             WHERE ${where}`;
@@ -514,9 +545,14 @@ export const makeContext = (deps: HostDeps) => {
   /** A failed run stays pending: count the attempt, back off, and release the lease. */
   const retryLater = Effect.fnUntraced(function* (row: DeliveryRow, cause: Cause.Cause<unknown>) {
     const at = yield* now;
-    yield* Effect.logError(
-      `alchemy-postgres ${modelName} delivery ${row.position} to ${row.delivery.target.kind} ${row.delivery.target.name} failed; retrying`,
-      cause
+    yield* Effect.logError(`alchemy-postgres ${modelName} delivery failed; retrying`).pipe(
+      Effect.annotateLogs({
+        model: modelName,
+        position: row.position,
+        targetKind: row.delivery.target.kind,
+        targetName: row.delivery.target.name,
+        failure: causeTagOf(cause),
+      })
     );
     yield* sql`UPDATE ${sql(tables.delivery)}
       SET attempts = attempts + 1, locked_until = 0,
@@ -535,12 +571,23 @@ export const makeContext = (deps: HostDeps) => {
           )} AND claimed_by = ${owner}`.pipe(Effect.asVoid),
     });
 
-  /** Route one claimed row through its producer's kit; `claim` only returns rows of hosted producers. */
-  const deliverRow = (row: DeliveryRow) =>
-    Effect.fromOption(MutableHashMap.get(delivers, row.producer)).pipe(
+  /**
+   * Route one claimed row through its producer's kit; `claim` only returns rows
+   * of hosted producers. The span continues the trace stored with the commit
+   * that produced the row, as the kernel's own reaction spans do.
+   */
+  const deliverRow = (row: DeliveryRow) => {
+    const { envelope, target } = row.delivery;
+    return Effect.fromOption(MutableHashMap.get(delivers, row.producer)).pipe(
       Effect.orDie,
-      Effect.flatMap((deliver) => deliver(row.delivery))
+      Effect.flatMap((deliver) => deliver(row.delivery)),
+      Effect.withSpan("AlchemyPostgres.Outbox.deliver", {
+        kind: "consumer",
+        attributes: { [TargetKindAttribute]: target.kind, [TargetNameAttribute]: target.name },
+        parent: P.isUndefined(envelope.trace) ? undefined : Tracer.externalSpan(envelope.trace),
+      })
     );
+  };
 
   /** Deliver claimed rows in position order; the first failure stops the pass and frees the rest. */
   const deliverAll = (rows: ReadonlyArray<DeliveryRow>): Effect.Effect<boolean, SqlError.SqlError> =>
@@ -568,7 +615,9 @@ export const makeContext = (deps: HostDeps) => {
 
   /** Log a background failure; the next pass, poll or wake runs the work again. */
   const logFailure = (what: string) => (cause: Cause.Cause<unknown>) =>
-    Effect.logError(`alchemy-postgres ${modelName} ${what} failed`, cause);
+    Effect.logError(`alchemy-postgres ${modelName} ${what} failed`).pipe(
+      Effect.annotateLogs({ model: modelName, failure: causeTagOf(cause) })
+    );
 
   /** Run `pass` while it reports more work, on every wake and every poll interval. */
   const worker = (name: string, wake: Queue.Queue<void>, pass: Effect.Effect<boolean>) =>
