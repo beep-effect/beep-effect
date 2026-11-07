@@ -74,8 +74,11 @@
       "!packages/law-practice/server/test/fixtures/claim-element/allowed-sampling.json",
       "!packages/law-practice/server/test/fixtures/claim-element/reference-freeze.json",
       "!apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json",
-      // Attorney-review pages are sha256-bound by preservation-freeze.json and the
-      // reference-input provenance records, so formatting them would break the seal.
+      // Restored review pages are sha256-bound by preservation-freeze.json,
+      // autonomous-review-v1/preservation.json and the reference-input provenance
+      // records, so formatting them would break the seal.
+      "!goals/claim-element-antecedent-check/history/allowed-review-v1/index.html",
+      "!goals/claim-element-antecedent-check/history/allowed-review-v2/index.html",
       "!goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
       "!goals/claim-element-antecedent-check/history/attorney-review/index.html",
       "!goals/claim-element-antecedent-check/research/allowed-review.template.html",
