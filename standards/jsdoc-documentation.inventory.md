@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T20:47:54.321Z
+Generated: 2026-11-07T20:53:33.693Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
 | publicModules | 3821 |
-| publicExports | 27184 |
+| publicExports | 27186 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -236,7 +236,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 178 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
 | 179 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 180 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
-| 181 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 76 | 361 | 0 | 0 |
+| 181 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 76 | 363 | 0 | 0 |
 | 182 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
 | 183 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
 | 184 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |

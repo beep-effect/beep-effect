@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-07T20:47:54.321Z",
+  "generatedAt": "2026-11-07T20:53:33.693Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3821,
-    "publicExports": 27184,
+    "publicExports": 27186,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -660929,12 +660929,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export { CitationOracleLedgers } from \"./internal/citationOracleLedgers.ts\";",
+          "symbolName": "export { CitationOracleLedgerProofPlan, CitationOracleLedgers } from \"./internal/citationOracleLedgers.ts\";",
           "exportKind": "re-export",
           "filePath": "src/test.ts",
           "repoPath": "packages/law-practice/use-cases/src/test.ts",
           "line": 50,
-          "anchor": "packages-law-practice-use-cases-src-test-ts-50-export-citationoracleledgers-from-internal-citationoracleledgers-ts",
+          "anchor": "packages-law-practice-use-cases-src-test-ts-50-export-citationoracleledgerproofplan-citationoracleledgers-from-internal-citationoracleledgers-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -668238,7 +668238,7 @@
         "srcDir": "src",
         "sourceFileCount": 76,
         "publicModuleCount": 76,
-        "publicExportCount": 361
+        "publicExportCount": 363
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -668433,7 +668433,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -670300,8 +670300,8 @@
           "exportKind": "class",
           "filePath": "src/CitationEngine/CitationEngine.layer.ts",
           "repoPath": "packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts",
-          "line": 37,
-          "anchor": "packages-law-practice-server-src-citationengine-citationengine-layer-ts-37-citationengineconfiguration",
+          "line": 55,
+          "anchor": "packages-law-practice-server-src-citationengine-citationengine-layer-ts-55-citationengineconfiguration",
           "currentTags": [
             "@category",
             "@since"
@@ -670322,8 +670322,52 @@
           "exportKind": "const",
           "filePath": "src/CitationEngine/CitationEngine.layer.ts",
           "repoPath": "packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts",
-          "line": 106,
-          "anchor": "packages-law-practice-server-src-citationengine-citationengine-layer-ts-106-citationenginelive",
+          "line": 126,
+          "anchor": "packages-law-practice-server-src-citationengine-citationengine-layer-ts-126-citationenginelive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CitationEngineDefaultConfiguration",
+          "exportKind": "class",
+          "filePath": "src/CitationEngine/CitationEngine.layer.ts",
+          "repoPath": "packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts",
+          "line": 142,
+          "anchor": "packages-law-practice-server-src-citationengine-citationengine-layer-ts-142-citationenginedefaultconfiguration",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CitationEngineDefaultLive",
+          "exportKind": "const",
+          "filePath": "src/CitationEngine/CitationEngine.layer.ts",
+          "repoPath": "packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts",
+          "line": 216,
+          "anchor": "packages-law-practice-server-src-citationengine-citationengine-layer-ts-216-citationenginedefaultlive",
           "currentTags": [
             "@category",
             "@since"
@@ -672056,12 +672100,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export { CitationEngineConfiguration, CitationEngineLive } from \"./CitationEngine/CitationEngine.layer.ts\";",
+          "symbolName": "export {\n  CitationEngineConfiguration,\n  CitationEngineDefaultConfiguration,\n  CitationEngineDefaultLive,\n  CitationEngineLive,\n} from \"./CitationEngine/CitationEngine.layer.ts\";",
           "exportKind": "re-export",
           "filePath": "src/Layer.ts",
           "repoPath": "packages/law-practice/server/src/Layer.ts",
           "line": 102,
-          "anchor": "packages-law-practice-server-src-layer-ts-102-export-citationengineconfiguration-citationenginelive-from-citationengine-citationengine-layer-ts",
+          "anchor": "packages-law-practice-server-src-layer-ts-102-export-citationengineconfiguration-citationenginedefaultconfiguration-citationenginedefaultlive-citationenginelive-from-citationengine-citationengine-layer-ts",
           "currentTags": [
             "@category",
             "@since"
