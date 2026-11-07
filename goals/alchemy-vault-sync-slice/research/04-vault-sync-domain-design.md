@@ -1,0 +1,150 @@
+# Vault sync domain design (PR 3a)
+
+The installed @alchemy.run/domain 2.0.0-beta.85 is the API authority.
+This PR is additive: no legacy writer, table, transport or filesystem adapter changes.
+
+## Schemas and consistency boundaries
+
+All events declare static schemaVersion = 1. No upcast is needed until a second
+version exists. Principal/source/time remain driver metadata (D10), not payload.
+Public ids remain unchanged; new destination ids are branded strings. Org/workspace
+ids retain the legacy positive integers. Upload data is a relative path and digest,
+never bytes. Names normalize with Effect String trim/toLowerCase.
+
+| Aggregate | State | Commands and resulting facts | Rejections |
+| --- | --- | --- | --- |
+| SyncDestination | Unregistered / Registered: org, workspace, box, name, root, cursor, paused, path claims | RegisterDestination/DestinationRegistered; RenameDestination/DestinationRenamed; ResolveDestinationRoot/RootFolderResolved; PauseDestination/DestinationPaused; ResumeDestination/DestinationConnected; RecordDestinationPoll/CursorAdvanced or CursorFailed; ClaimItemPath/ItemPathClaimed; ReleaseItemPath/ItemPathReleased | SyncRuleViolation with rule/evidence |
+| DestinationNameReservation | Unclaimed / Claimed: destination, org, name and previous name | ClaimDestinationName/DestinationNameClaimed; ReleaseDestinationName/DestinationNameReleased | SyncRuleViolation(name-held or wrong-key) |
+| SyncItem | Untracked / Tracked: destination, workspace, path, kind, digest, generation, remote mapping, current operation slots | ObserveItem/ItemTracked, ItemEdited, ItemMoved, ItemKindReplaced; MarkItemPushed/ItemPushed; MarkItemPushFailed/ItemPushFailed; FlagItemDrift/ItemDriftFlagged; ReturnItemToPending/ItemReturnedToPending | SyncRuleViolation |
+| SyncOperation | Absent / Present: stable public id, item, destination, type, input generation/digest/path, status, attempts, lease, retry time | QueueOperation/OperationQueued or OperationRetargeted; SquashOperation/OperationSquashed; LeaseOperation/OperationLeased; ExpireLease/OperationLeaseExpired; CompleteOperation/OperationSucceeded; FailOperation/OperationRetryScheduled or OperationFailed; RetryOperation/OperationRequeued; SupersedeOperation/OperationSuperseded; ReviveOperation/OperationRevived | SyncRuleViolation |
+| SyncConflict | one record per existing public conflict id | RecordConflict/ConflictRecorded; ReviewConflict/ConflictReviewed | SyncRuleViolation |
+
+DestinationNameReservation is keyed by `orgId:sha256hex(normalizedName)`, where
+the normalized name is trimmed and lowercased. Every key is built by the one
+`reservationKey` helper in `Values.ts`, and the `ReservationKey` schema admits
+only an integer, a colon and a 64-character lowercase hex digest. Destination
+names therefore never reach `domain.id`, `domain.stream`, driver spans or
+`SyncRuleViolation.evidence` (PII audit F2). The claim's name and previous name
+stay in the reservation state and event payload, which the kernel does not put
+on spans. Its policy claims before registration/rename and releases the previous
+claim after the destination commit. A repeated claim by the same destination is a no-op. Rename requests carry
+the prior name; the destination rejects a stale prior name.
+
+DestinationId is an opaque minted id: the fixed prefix
+`documents_sync_destination_` followed by a CUID, checked by the schema's
+template pattern. It is the SyncDestination aggregate id, the View key, a URL
+segment and a saga key, so decode rejects any other string, including a
+destination name (PII audit F3). `mintDestinationId` draws a fresh CUID and
+`makeDestinationId` wraps an existing one. The cutover genesis (PR 3b2) must
+mint one id per destination with `mintDestinationId` and must never derive it
+from the destination name or the vault path.
+
+ConflictEventRegistry reserves remoteEventId on one stream per destination. Its policy
+records SyncConflict on the existing public conflict id. Thus dedupe is atomic at
+the reservation boundary and conflict stream ids satisfy D14.
+
+Destination owns path reservations (I6). Scan orchestration must claim before
+ObserveItem and release the previous path after the move commits. Item state owns
+one stable operation id per operation type (I5); subsequent observations retarget
+that operation. Kind replacement carries the prior slots for superseding policies.
+Concurrent command receipt dedupe and aggregate serialization replace rowVersion;
+lease holders additionally use a monotonically increasing leaseEpoch. Retry attempts
+reset on revival; leaseEpoch does not, preventing stale deadlines from matching a new lease.
+
+LeaseOperation takes observed parent/item remote ids, verified by the future pump,
+and refuses missing prerequisites without burning an attempt. It never reads a
+View as an authority. Completion must match holder and attempt; stale timer commands
+are successful no-ops. ExpireLease and RetryOperation never reject so beta.85 can
+schedule them. A policy schedules each with a deterministic command id and absolute
+due time. This is beta.85's Deadline pattern, not a separate constructor.
+
+## Contracts before hosting
+
+The aggregates and Views are Context services generated by alchemy. No repository,
+SqlClient, runtime Layer or external I/O enters decide/evolve.
+
+BoxMirror is an ExternalSystem in use-cases per the PR brief, with resolveRoot,
+ensureFolder, uploadFile, uploadFileVersion, moveItem, renameItem and pollEvents.
+Every operation declares a schema error carrying retryable and disconnectReason.
+The server adapter later reads bytes from the path at call time and enforces I19.
+The interface contains no local write or remote delete operation.
+
+Views are pure read contracts: VaultSyncStatus by destination, OpenConflicts by
+destination, DestinationList by org, OperationQueue by destination. They are not
+exposed by an Api here. Session authorization and live revocation tests belong to
+the subsequent transport PR; these declarations do not claim security acceptance.
+
+Policies: reservation claim -> destination registration/rename -> old release;
+item observations -> queue/retarget; kind replacement -> supersede old slots;
+review correction -> queue before review closes (an explicit review preparation
+command records intent; closing follows queue acknowledgement);
+review without correction -> pending/heal; terminal operation failure -> item error;
+destination connected -> revive failed operations; lease/retry facts -> schedules.
+Policies use deterministic command ids derived from source stream and seq.
+
+## Invariant allocation
+
+| Invariant | Authority in this PR or later owner |
+| --- | --- |
+| I1 | Later per-destination pass/review saga serialization; aggregate commands serialize now |
+| I2 | Operation decide lease exclusion and expiry Deadline; later pump limits concurrent leases |
+| I3 | Stable operation stream id and commandId dedupe; genesis maps old unique keys later |
+| I4 | Retarget/squash events preserve stream id and original key |
+| I5 | Item operation slots, repeated queue retargets one stable id |
+| I6 | Destination ClaimItemPath decide; ordered scan orchestration later |
+| I7 | Cursor folded into the destination |
+| I8 | ConflictEventRegistry decide dedupes remoteEventId; policy confirms the public-id stream |
+| I9 | Lease decide requires parent remote id for children, no attempt consumed on refusal |
+| I10 | Lease decide requires item remote id for version/move/rename |
+| I11 | Operation type has no delete; no missing-item deletion command |
+| I12 | Review emits facts/queues correction, no filesystem write contract |
+| I13 | Review decide matches destination/workspace; Session membership later |
+| I14 | Review intent -> corrective operation acknowledgement -> close; later review saga |
+| I15 | Later pump persists MarkItemPushed before CompleteOperation; no success policy reverses order |
+| I16 | Fail decide separates immediate terminal failure, budget exhaustion and retry scheduling |
+| I17 | Later pass saga classifies echoes; edited always drift |
+| I18 | Platform serialization/command dedupe; stale lease completion rejects holder/attempt mismatch |
+| I19 | Later BoxMirror/filesystem adapter canonical-root and fd checks |
+| I20 | RemoteEvidence schema bounds encoded UTF-8 to 8192 bytes |
+| I21 | Later poll saga classifies page before RecordDestinationPoll; failures preserve position |
+
+## Explicit later work
+
+No scan/push/reconcile saga, legacy projection, genesis import, replay/diff,
+cutover, Api, Session middleware, offline queue or observability catalog here.
+Genesis creates one destination per legacy workspace+box using row orgId and
+configured mirror root name (default beep-vault); no current rows are touched.
+
+
+## Implementation protocol notes
+
+ReturnItemToPending receives a fresh public operation id. Its event carries the
+observation and previous slots; ItemHealing supersedes those old slots before
+queuing the healing operation. MarkItemPushed clears completed slots so later
+observations can use a new public operation id. A new QueueOperation requires its
+idempotency key to equal its public stream id; legacy genesis keys are an import
+concern for the later PR, not mutable queue keys.
+
+Pure aggregate-dispatch policy handlers live in use-cases; no infrastructure
+adapter is instantiated there. Policy command ids derive from source stream/seq.
+Unexpected dispatch rejections become failed delivery defects, so the Postgres
+outbox retries without closing a review or releasing an old name prematurely.
+The reference InMemory platform logs and drops failed policy deliveries; tests
+must not treat it as proof of durable failure redelivery.
+
+The declaration layer is intentionally internal until the Session/Api PR. Direct
+RegisterDestination/RenameDestination and ConfirmConflict commands are trusted
+policy targets; callers initiate name claims and remote-event reservations.
+The future scan must claim a path before observing it, and the future pump must
+supply current authoritative remote mapping evidence before LeaseOperation.
+
+
+A failed registration/rename releases the rejected new name claim, retaining the
+reservation that matches the destination's current org/name. Case-only renames
+keep that reservation. Rename decide checks org/workspace before checking whether
+the display name is already current.
+
+ItemPushed acknowledges one operation id and clears only its slot. ItemPushFailed
+carries the input generation; a late failure for a prior generation is a no-op.
+Completion after expiresAt rejects even when the expiry worker has not run yet.
+Squash ignores an older input generation.

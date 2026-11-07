@@ -18,6 +18,12 @@
       "path": "../domain/tsconfig.json"
     },
     {
+      "path": "../../drivers/alchemy-postgres/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/pglite/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
