@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "330cfa1b381f82da85d8a9ce2be157d2b2902006717a8b9e3b4eb6c2e8917511",
+  "planSha256": "4fb0a0d4cdd66dd8c5f2741912a411d692085477030908602652c248f3ff58f5",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1376,7 +1376,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/AnnotationTemplate.ts",
-          "sha256": "f903eb4bc950734f2a14a3be902f72ed2357349ee3fcdc347c9f188267604754"
+          "sha256": "11b51965730bf9642aea55d35fa1eb6bf58279c64cc0bc17f9e65f2f66d464c8"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/AnnotationBudget.ts",
@@ -1752,7 +1752,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
-          "sha256": "f691057b93b639397b277a69f5ee5f280ceb73db053032e32a1a51b9e5f5a333"
+          "sha256": "f8fada9c24b6c15a90fc9b7a76b4911ff67471a2e1fcad611c6866707c8dfe25"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
@@ -1776,7 +1776,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-          "sha256": "f1c006671df7db6f2cb1b87980827a2e5a97634a980163c22b3f9997cacead8c"
+          "sha256": "0996f650a110dfdc2ebc6870586b59bfb5a01554ddfe0a2e8799c884b8f630e2"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -1792,7 +1792,15 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
-          "sha256": "7a0fa1dc12b772e4dbf722f8657fa9b4a716711b3f4273535f50a128046d35f4"
+          "sha256": "cbf37c5ec07176f6c0b211460d6e2b951000d163f2ccd04877b781d1bbf18443"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
+          "sha256": "764db2749c080d02580d602ec43ca022db05e62f3201b7f3939c3ebe691c6229"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+          "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
         }
       ],
       "workflowState": "audit",

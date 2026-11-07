@@ -1565,6 +1565,14 @@ Lane `feat/citation-default-owners` · PR #2847
 
 Reverse: Revert only an unsound coordinate projection after recording the source mismatch; retain the original captured ranges and verification requirement.
 
+### Compare original attribute operands through existing production correction and year kernels, 2026-11-07
+
+The default public engine replay now links all 182 original builtin attribute assertions to 150 count invocations. Reuse production ResourceCorrection and MetadataYear operations on actual public data, with source argument/frame/operand checks. All ten focused tests pass in 124.53 seconds; six exercised attribute cases receive local complete-case proof beside six existing count cases. Other attributes, model protocols and full hosted acceptance remain open. Repair the hosted TSDoc literal-brace warning without changing template parsing. See history/evidence/2026-11-07-canonical-attribute-proof.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the six explicit attribute bindings and return them to audit if their represented-data projection is unsound; retain original operands and all general model obligations.
+
 ### Compare public court and reporter identities with sealed evidence, 2026-11-07
 
 The public extraction corpus and private semantic replay independently compare case reporter ids, publication/court artifact versions and known/unmapped court objects against the sealed vocabulary mapping. All eighty original projection models and explicit unknown/empty/null controls are covered. Seven public/projection tests pass; the factored projection replay passes five tests. Prior head 50a493cef5 now passes hosted Labs and Fallow envelopes. See history/evidence/2026-11-07-public-vocabulary-identities.md. All full-goal proof rows remain open.

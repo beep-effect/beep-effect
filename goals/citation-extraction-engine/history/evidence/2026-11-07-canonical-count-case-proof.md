@@ -24,8 +24,8 @@ The six exact assertion events below have complete-case local proof:
 - `tests.test_FindTest.FindTest.test_find_journal_citations::tests/test_FindTest.py:76:20:caseDeclaration::1`
 - `tests.test_FindTest.FindTest.test_find_tc_citations::tests/test_FindTest.py:76:20:caseDeclaration::1`
 
-The corresponding parallel attribute assertions remain separate, nonterminal
-cases. Extra component/metadata/range checks do not silently complete those
+The corresponding parallel attribute assertions were initially left separate
+and nonterminal. Extra component/metadata/range checks do not silently complete those
 assertions or their parent capabilities. Other tokenizer implementations,
 model methods, resolution observations, all representation laws, source/donor
 accounting, safety/scaling and lifecycle acceptance remain required. The
@@ -37,3 +37,11 @@ The existing twenty-three annotation-stage bindings remain ready. Every other
 case keeps its prior state. These local case results do not establish full
 hosted or whole-engine acceptance. Server lint/types and scoped Fallow pass with
 zero introduced findings. The full 150-input integration remains unqualified.
+
+The count proof was replayed with original attribute checks enabled: all ten
+tests pass in 124.53 seconds. Helper references are refreshed to this tested
+version; see 2026-11-07-canonical-attribute-proof.md for the additional criteria.
+
+The six parallel attribute assertions now have their own explicit bindings in
+the newer attribute receipt. Parent capabilities and general model protocols
+remain open.

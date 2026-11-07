@@ -8,8 +8,14 @@ import { CitationEngineSourcePairInput } from "@beep/law-practice-use-cases/serv
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import {
+  makeCitationCanonicalAttributeAssertion,
+  projectCitationCanonicalExpectedMetadata,
+  readCitationCanonicalAttributeLinks,
+} from "./CitationCanonicalAttributes.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
@@ -78,23 +84,6 @@ const kinds = R.fromEntries([
   ["FullLawCitation", "law"],
   ["FullJournalCitation", "journal"],
 ]);
-const names: Readonly<Record<string, string>> = {
-  pin_cite: "pinCite",
-  antecedent_guess: "antecedentGuess",
-  extra: "additionalText",
-  resolved_case_name: "caseName",
-  resolved_case_name_short: "shortCaseName",
-};
-const metadata = (original: typeof Expected.Type) =>
-  R.fromEntries(
-    A.map(
-      A.filter(
-        R.toEntries(original.fields.metadata.fields),
-        ([key]) => key !== "pin_cite_span_start" && key !== "pin_cite_span_end"
-      ),
-      ([key, value]) => [names[key] ?? key, value] as const
-    )
-  );
 const assertCitation = Effect.fn("CanonicalExtractionTest.compare")(function* (
   citation: Citation,
   original: typeof Expected.Type,
@@ -104,7 +93,7 @@ const assertCitation = Effect.fn("CanonicalExtractionTest.compare")(function* (
   expect(encoded.type, id).toBe(kinds[original.citationType]);
   expect(encoded.components, id).toEqual(original.fields.groups);
   const actual = yield* projectCitationSemanticMetadata(citation);
-  expect(actual, id).toEqual(metadata(original));
+  expect(actual, id).toEqual(projectCitationCanonicalExpectedMetadata(original.fields.metadata.fields));
 });
 const families = {
   case: { method: "test_find_citations", count: 130 },
@@ -129,6 +118,7 @@ export const readCitationCanonicalExtractions = Effect.fn("CanonicalExtractionTe
     capture.events,
     (row) => row.test === `tests.test_FindTest.FindTest.${families[family].method}`
   );
+  const attributeLinks = yield* readCitationCanonicalAttributeLinks(selected);
   const rows = [];
   for (const row of selected) {
     const header = yield* S.decodeEffect(Header)(row.payload);
@@ -141,7 +131,9 @@ export const readCitationCanonicalExtractions = Effect.fn("CanonicalExtractionTe
       A.map(assertion.operands[0].value, (value) => value.pythonType),
       row.id
     ).toEqual(expectedTypes);
-    rows.push({ id: row.id, input });
+    const attributes = yield* Effect.fromOption(HashMap.get(attributeLinks, row.id));
+    expect(attributes, row.id).toHaveLength(input.expected_cites.length);
+    rows.push({ id: row.id, input, attributes });
   }
   expect(rows).toHaveLength(families[family].count);
   return rows;
@@ -167,6 +159,7 @@ export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionT
     ),
   });
   const { engine } = yield* buildCitationDefaultEngineFixture(installed, resolver);
+  const assertAttributes = yield* makeCitationCanonicalAttributeAssertion(installed);
   const replayRow = Effect.fn("CanonicalExtractionTest.replayRow")(function* (row: (typeof rows)[number]) {
     proof = yield* citationFixtureSourceProof(row.input.q);
     const source = { source: proof.source, sourceText: proof.sourceText };
@@ -182,6 +175,8 @@ export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionT
     expect(result.citations, row.id).toHaveLength(row.input.expected_cites.length);
     for (const [actual, expected] of A.zip(result.citations, row.input.expected_cites))
       yield* assertCitation(actual, expected, row.id);
+    for (const [actual, attribute] of A.zip(result.citations, row.attributes))
+      yield* assertAttributes(actual, attribute);
     expect(result.document.mentions, row.id).toHaveLength(row.input.cites_found.length);
     for (const [mention, original] of A.zip(result.document.mentions, row.input.cites_found))
       yield* assertCitationMentionRanges(result.source.source.sourceText, mention, original);
