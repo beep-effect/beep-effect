@@ -2733,8 +2733,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
-      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
-      const caller = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/cache-local-observe.yml`));
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const callerText = yield* fs.readFileString(`${root}/.github/workflows/cache-local-observe.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const caller = parseWorkflowYaml(callerText);
       expect(yamlAt(caller, ["on", "workflow_dispatch", "inputs", "computation", "options"])).toEqual([
         "@beep/types#lint",
         "@beep/identity#lint",

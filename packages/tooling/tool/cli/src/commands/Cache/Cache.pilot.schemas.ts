@@ -27,6 +27,11 @@ const LocalObservationCount = S.Natural.check(S.isLessThanOrEqualTo(1024)).pipe(
 /**
  * Public digest/count projection of a private local observation, without qualification authority.
  *
+ * **Details**
+ * The isolated CI adapter emits this contract. It retains hashes and counts;
+ * raw receipts, labels, paths and task output remain private. Decoding this
+ * summary never promotes a qualification tuple or proves protected publication.
+ *
  * **Example** (Decode an untrusted observation summary)
  * ```ts
  * import { CacheLocalPilotSummary } from "@beep/repo-cli/commands/Cache"
@@ -37,11 +42,6 @@ const LocalObservationCount = S.Natural.check(S.isLessThanOrEqualTo(1024)).pipe(
  * const pendingValidation = decodeSummary("{}")
  * console.assert(Effect.isEffect(pendingValidation))
  * ```
- *
- * **Details**
- * The isolated CI adapter emits this contract. It retains hashes and counts;
- * raw receipts, labels, paths and task output remain private. Decoding this
- * summary never promotes a qualification tuple or proves protected publication.
  *
  * @category schemas
  * @since 0.0.0

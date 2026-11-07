@@ -1398,3 +1398,15 @@ invalid records, request framing, mode refusal and foreign cleanup paths. No loc
 quality suite or real pilot has run for this change; its runtime observations remain
 pending accepted source and the bounded hosted dispatch. This prevents credential
 provisioning from serializing independent local observation work.
+
+### Hosted local-observation contract repair, 2026-11-07
+
+PR #2850 hosted Check run 42338553545 exposed a fixture passing JSON text to a
+byte-oriented receipt hash; Heavy run 42338556627 exposed a missing SecureRandom
+layer, an untyped decoder and nested yield arguments. JSDoc Ratchet also found
+Details after Example. Fix the actual fixture bytes, provide the existing crypto
+layer, retain typed decoding, separate file reads and restore documentation order.
+Retain the failing logs privately. No baseline, test expectation, safety bound or
+production setting is relaxed; hosted CI remains the proof authority, and no local
+quality command was run. Match fixtures to the operational byte boundary and
+existing layer patterns when authoring adapters to prevent this repair wave.

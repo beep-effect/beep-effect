@@ -57,17 +57,17 @@ class SummaryControls(unittest.TestCase):
             report = copy.deepcopy(original)
             report[field] = value
             with self.subTest(field=field), self.assertRaises(ValueError):
-                summary.summarize(json.dumps(report), json.dumps(request), REVISION, "stable", "@beep/types#lint")
+                summary.summarize(json.dumps(report).encode(), json.dumps(request), REVISION, "stable", "@beep/types#lint")
 
     def test_fanout_and_published_failure_labels_are_bounded(self):
         report, request = fixture()
         report["checks"] = [{"name": f"control-{n}", "passed": False} for n in range(100)]
-        projected = summary.summarize(json.dumps(report), json.dumps(request), REVISION, "stable", "@beep/types#lint")
+        projected = summary.summarize(json.dumps(report).encode(), json.dumps(request), REVISION, "stable", "@beep/types#lint")
         self.assertEqual(len(projected["failedLabelSha256"]), 64)
         self.assertEqual(projected["omittedFailedLabels"], 36)
         report["checks"] *= 11
         with self.assertRaises(ValueError):
-            summary.summarize(json.dumps(report), json.dumps(request), REVISION, "stable", "@beep/types#lint")
+            summary.summarize(json.dumps(report).encode(), json.dumps(request), REVISION, "stable", "@beep/types#lint")
 
     def test_reader_accepts_regular_files_and_refuses_aliases_and_overflow(self):
         with tempfile.TemporaryDirectory() as directory:
