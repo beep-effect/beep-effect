@@ -5,6 +5,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineReport, CitationExtractionMeasurements } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { ownCitationSemanticExtraction } from "./SemanticExtraction.ts";
@@ -84,6 +85,35 @@ export const prepareCitationSourceExtraction = prepareSource("prepare");
 export const prepareCitationSourcePairExtraction = prepareSource("preparePair");
 const prepare = prepareCitationSourceExtraction;
 const preparePair = prepareCitationSourcePairExtraction;
+/** Project measured extraction counts using the complete enclosing work duration.
+ * Source/document compositions share this producer; no fabricated measurements.
+ * @internal @category operations @since 0.0.0
+ */
+export const projectCitationSourceExtractionReport: {
+  (reservedUnits: number): (patch: Effect.Success<ReturnType<typeof prepare>>) => CitationEngineReport;
+  (patch: Effect.Success<ReturnType<typeof prepare>>, reservedUnits: number): CitationEngineReport;
+} = dual(2, (patch: Effect.Success<ReturnType<typeof prepare>>, reservedUnits: number): CitationEngineReport => {
+  const result = patch.result;
+  const raw = result.semantic.raw.outcome;
+  const tokenizer = raw._tag === "Shortcut" ? null : raw.result.extraction.tokenizer;
+  const extraction = CitationExtractionMeasurements.make({
+    tokenizer:
+      tokenizer === null ? null : { patternsChecked: tokenizer.patternsChecked, tokens: tokenizer.tokens.length },
+    semanticCitations: result.semantic.citations.length,
+    verifiedMentions: result.occurrences.mentions.length,
+    unverifiedCitations: result.occurrences.unverified.length,
+    unverifiedComponents: result.occurrences.unverifiedComponents.length,
+    unboundWarnings: result.occurrences.unboundWarnings.length,
+  });
+  return CitationEngineReport.make({
+    operation: "extract",
+    engineArtifact: patch.engineArtifact,
+    limits: patch.limits,
+    workDuration: patch.workDuration,
+    producedTextUtf16: reservedUnits,
+    extraction,
+  });
+});
 /** Admit before resolver work and retain one enclosing deadline and cumulative
  * text budget through verified occurrence production. Child extraction reuses
  * the existing parent admission Context rather than acquiring another permit.
@@ -101,25 +131,7 @@ const definition = {
     reservedUnits: number
   ): CitationSourceExtractionResult => {
     const result = patch.result;
-    const raw = result.semantic.raw.outcome;
-    const tokenizer = raw._tag === "Shortcut" ? null : raw.result.extraction.tokenizer;
-    const extraction = CitationExtractionMeasurements.make({
-      tokenizer:
-        tokenizer === null ? null : { patternsChecked: tokenizer.patternsChecked, tokens: tokenizer.tokens.length },
-      semanticCitations: result.semantic.citations.length,
-      verifiedMentions: result.occurrences.mentions.length,
-      unverifiedCitations: result.occurrences.unverified.length,
-      unverifiedComponents: result.occurrences.unverifiedComponents.length,
-      unboundWarnings: result.occurrences.unboundWarnings.length,
-    });
-    const report = CitationEngineReport.make({
-      operation: "extract",
-      engineArtifact: patch.engineArtifact,
-      limits: patch.limits,
-      workDuration: patch.workDuration,
-      producedTextUtf16: reservedUnits,
-      extraction,
-    });
+    const report = projectCitationSourceExtractionReport(patch, reservedUnits);
     const completed = CitationSourceExtractionResult.make({ ...result, report, reservedUnits });
     return { ...completed, source: result.source, semantic: result.semantic, occurrences: result.occurrences };
   },

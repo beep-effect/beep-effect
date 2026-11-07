@@ -11,6 +11,7 @@ import {
 } from "@beep/law-practice-domain/values";
 import {
   CitationEngineAbsoluteMaxima,
+  CitationExtractionDiagnostics,
   CitationSafetyLimitExceeded,
   CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
@@ -57,16 +58,6 @@ export class CitationOccurrenceProjectionFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationOccurrenceProjectionFailure.make({ reason });
-const UnverifiedReason = LiteralKit(["shortcut", "invalid-span", "native-point-layout"]).pipe(
-  $I.annoteSchema("UnverifiedReason", {
-    description: "Semantic objects retained explicitly when no canonical source occurrence can be asserted.",
-  })
-);
-const Unverified = S.Struct({ index: S.Natural, citation: Citation, reason: UnverifiedReason }).pipe(
-  $I.annoteSchema("Unverified", {
-    description: "Retained semantic value and original result index without occurrence authority.",
-  })
-);
 const Span = S.Tuple([S.Int, S.Int]).pipe(
   $I.annoteSchema("Span", { description: "Original Python point pair before canonical nonempty-range validation." })
 );
@@ -91,20 +82,10 @@ const Snapshot = S.Struct({
   })
 );
 const SnapshotJson = S.fromJsonString(Snapshot);
-const ComponentIssue = S.Struct({ index: S.Natural, name: S.tag("fullSpan"), reason: S.tag("invalid-span") }).pipe(
-  $I.annoteSchema("ComponentIssue", {
-    description: "An original full span that cannot issue canonical component evidence.",
-  })
-);
-const UnboundWarning = S.Struct({
-  previousModel: S.Natural,
-  currentModel: S.Natural,
-  reason: S.Literals(["unavailable-occurrence", "same-occurrence"]),
-}).pipe(
-  $I.annoteSchema("UnboundWarning", {
-    description: "Original warning event whose verified endpoint identities cannot form a valid document edge.",
-  })
-);
+const Unverified = CitationExtractionDiagnostics.fields.unverified.value;
+const UnverifiedReason = Unverified.fields.reason;
+const ComponentIssue = CitationExtractionDiagnostics.fields.unverifiedComponents.value;
+const UnboundWarning = CitationExtractionDiagnostics.fields.unboundWarnings.value;
 const sameSpan = S.toEquivalence(Span);
 const sameEntry = S.toEquivalence(CitationExtractionLoopEntry);
 const Input = S.Struct({ source: VerifiedSourceText, result: S.toType(CitationSemanticExtractionResult) }).pipe(
@@ -132,9 +113,7 @@ export class CitationOccurrenceProjectionResult extends S.Opaque<
 >()(
   S.Struct({
     mentions: S.Array(CitationMention).check(S.isMaxLength(CitationEngineAbsoluteMaxima.mentions)),
-    unverified: S.Array(Unverified).check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates)),
-    unverifiedComponents: S.Array(ComponentIssue).check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates)),
-    unboundWarnings: S.Array(UnboundWarning).check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates)),
+    ...CitationExtractionDiagnostics.fields,
     reservedUnits: S.Natural,
   }).pipe(
     $I.annoteSchema("CitationOccurrenceProjectionResult", {

@@ -265,7 +265,11 @@
     "packages/law-practice/server/test/CitationEngineFailure.test.ts",
     "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-admitted-resolver-operation.md",
-    "packages/law-practice/server/src/internal/Citation/ResolverOperation.ts"
+    "packages/law-practice/server/src/internal/Citation/ResolverOperation.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-extraction-result.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.evidence.ts",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.result.ts",
+    "packages/law-practice/use-cases/test/CitationEngineInput.test.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

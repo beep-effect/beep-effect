@@ -5,6 +5,7 @@ import {
   makeCitationSourceDocument,
   makeCitationSourcePairDocument,
 } from "@beep/law-practice-server/internal/Citation/SourceDocument";
+import { CitationEngineExtractionResult, CitationExtractionDiagnostics } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -71,6 +72,27 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             const closed: Effect.Effect<Effect.Success<typeof invocation>, CitationEngineFailure> = invocation;
             const result = yield* closed;
             expect(S.is(CitationDocument)(result.document)).toBe(true);
+            const output: CitationEngineExtractionResult = result.output;
+            expect(S.is(CitationEngineExtractionResult)(output)).toBe(true);
+            expect(output.citations).toEqual(result.semantic.citations);
+            expect(output.document).toEqual(result.document);
+            expect(output.source).toEqual(result.source);
+            expect(output.inputs).toEqual(result.inputs);
+            expect(output.report).toMatchObject({ operation: "extract", outcome: "completed", engineArtifact });
+            expect(output.report.workDuration).toEqual(result.workDuration);
+            expect(output.report.producedTextUtf16).toBe(result.reservedUnits);
+            expect(output.report.extraction).toMatchObject({
+              semanticCitations: 2,
+              verifiedMentions: 2,
+              unverifiedCitations: 0,
+            });
+            expect("raw" in output).toBe(false);
+            expect("semantic" in output).toBe(false);
+            const inconsistent = yield* S.decodeEffect(S.toType(CitationEngineExtractionResult))({
+              ...output,
+              citations: [],
+            }).pipe(Effect.flip);
+            expect(inconsistent._tag).toBe("SchemaError");
             expect(result.document.mentions).toHaveLength(2);
             expect(result.document.authorities).toHaveLength(1);
             expect(A.map(result.document.resolutions, (resolution) => resolution.status)).toEqual([
@@ -134,6 +156,14 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           expect(result.semantic.citations.length).toBeGreaterThan(0);
           expect(result.occurrences.unverified.length).toBe(result.semantic.citations.length);
           expect(result.document.mentions).toEqual([]);
+          expect(result.output.citations).toEqual(result.semantic.citations);
+          expect(result.output.diagnostics.unverified).toEqual(result.occurrences.unverified);
+          expect(result.output.report.extraction?.tokenizer).toBe(null);
+          expect(result.output.report.extraction?.unverifiedCitations).toBe(result.semantic.citations.length);
+          const diagnosticCodec = CitationExtractionDiagnostics.pipe(S.toCodecJson, S.fromJsonString);
+          const json = yield* S.encodeEffect(diagnosticCodec)(result.output.diagnostics);
+          const restoredDiagnostics = yield* S.decodeEffect(diagnosticCodec)(json);
+          expect(restoredDiagnostics).toEqual(result.output.diagnostics);
           expect(result.document.authorities).toEqual([]);
           const exits = yield* setup.observed.snapshot;
           expect(exits).toEqual({ spawned: 0, confirmed: 0 });

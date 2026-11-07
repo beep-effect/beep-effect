@@ -1549,6 +1549,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert source document composition and restore the private source extraction helper boundary together, retaining source observations, receipts and all acceptance requirements.
 
+### Own public extraction results and source evidence in server use cases, 2026-11-07
+
+Server use cases now own genuine source lineage and explicit unverified diagnostics. Connected extraction produces CitationEngineExtractionResult with source/engine identity coherence, all semantic citations and checked report counts. Four contract tests, canonical source regression and three final actual Bun/Node connected tests pass. Lint/types/build/blocking laws and scoped Fallow pass. Final four-operation service/Layer and every full-goal acceptance requirement remain open. See history/evidence/2026-11-07-public-extraction-result.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert public result production and restore the previous private source/diagnostic definitions together; retain all original source, native and restoration corpora.
+
 ### Preserve exact resolution safety diagnostics, 2026-11-07
 
 Resolution admission, callback/list/resource guards and projection now retain actual closed budget names through nested sanitizers using Effect Struct.pick. Thirty-one tests pass in 3.97s, including original 76 default contexts, receipt restoration and retained mutation/alias safety controls. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Generic table/set owner attribution, public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-resolution-limit-diagnostics.md.

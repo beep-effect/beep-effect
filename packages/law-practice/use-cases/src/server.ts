@@ -32,6 +32,13 @@ export {
   CitationOperationUnsupported,
   CitationPrerequisiteError,
 } from "./CitationEngine/CitationEngine.errors.ts";
+/** Verified citation source lineage and unverified occurrence diagnostics.
+ * @category models @since 0.0.0
+ */
+export {
+  CitationEngineSourceEvidence,
+  CitationExtractionDiagnostics,
+} from "./CitationEngine/CitationEngine.evidence.ts";
 /** Server-only raw source components and named modes; no callback request fields.
  * @category models
  * @since 0.0.0
@@ -62,11 +69,15 @@ export {
  * @since 0.0.0
  */
 export { CitationEngineOperation } from "./CitationEngine/CitationEngine.operations.ts";
+/** Completed citation operation diagnostics.
+ * @category models @since 0.0.0
+ */
+export { CitationEngineReport, CitationExtractionMeasurements } from "./CitationEngine/CitationEngine.report.ts";
 /** Server-only operation measurements, separate from citation semantics.
  * @category models
  * @since 0.0.0
  */
-export { CitationEngineReport, CitationExtractionMeasurements } from "./CitationEngine/CitationEngine.report.ts";
+export { CitationEngineExtractionResult } from "./CitationEngine/CitationEngine.result.ts";
 /** Server-only captured operation work and exact native Unicode layout.
  * @category services
  * @since 0.0.0

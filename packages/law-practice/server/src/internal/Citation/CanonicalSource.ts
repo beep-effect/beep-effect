@@ -2,7 +2,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSourceRole, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineSourceEvidence,
+  CitationSourceRole,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import {
   VerifiedSourceText,
@@ -57,20 +61,6 @@ export class CitationSourceDerivationModes extends S.Opaque<
 ) {}
 const Modes = S.toType(CitationSourceDerivationModes);
 const ModesJson = Modes.pipe(S.toCodecJson);
-type EvidenceFields = { readonly source: S.Codec<VerifiedSourceText>; readonly parent: typeof SourceTextIdentity };
-const EvidenceFields: EvidenceFields = { source: VerifiedSourceText, parent: SourceTextIdentity };
-/** @internal @category models @since 0.0.0 */
-export const CitationCanonicalSourceResult = S.TaggedUnion({
-  Unchanged: EvidenceFields,
-  Derived: { ...EvidenceFields, derivation: Sha256Hex },
-}).pipe(
-  $I.annoteSchema("CitationCanonicalSourceResult", {
-    description:
-      "An existing manifestation proof or a newly verified derived manifestation with its parent artifact lineage.",
-  })
-);
-/** @internal @category models @since 0.0.0 */
-export type CitationCanonicalSourceResult = typeof CitationCanonicalSourceResult.Type;
 const Derivation = S.fromJsonString(
   S.Tuple([S.tag("citation-source-derivation/v1"), SourceTextIdentity, Sha256Hex, Modes, SourceTextDigest])
 ).pipe(
@@ -90,13 +80,13 @@ const identityHash = Effect.fn("Citation.hashSourceManifestation")(function* (te
  */
 export const retainCitationCanonicalSource: (
   input: unknown
-) => Effect.Effect<CitationCanonicalSourceResult, CitationCanonicalSourceFailure> = Effect.fn(
+) => Effect.Effect<CitationEngineSourceEvidence, CitationCanonicalSourceFailure> = Effect.fn(
   "Citation.retainCanonicalSource"
-)(function* (input: unknown): Effect.fn.Return<CitationCanonicalSourceResult, CitationCanonicalSourceFailure> {
+)(function* (input: unknown): Effect.fn.Return<CitationEngineSourceEvidence, CitationCanonicalSourceFailure> {
   const source = yield* S.decodeUnknownEffect(VerifiedSourceText)(input).pipe(
     Effect.mapError(() => failed("invalid-input"))
   );
-  return CitationCanonicalSourceResult.cases.Unchanged.make({ source, parent: source.source });
+  return CitationEngineSourceEvidence.cases.Unchanged.make({ source, parent: source.source });
 });
 /** Derive text evidence for actual native tokenizer output. Composition must
  * itself invoke extraction from the authenticated parent text; this helper does
@@ -114,7 +104,7 @@ export const deriveCitationCanonicalSource: {
   ): (
     limits: CitationEngineLimits
   ) => Effect.Effect<
-    CitationCanonicalSourceResult,
+    CitationEngineSourceEvidence,
     CitationCanonicalSourceFailure | CitationPythonUnicodeFailure | CitationSafetyLimitExceeded,
     Digest.Digest | CitationTextBudget
   >;
@@ -125,7 +115,7 @@ export const deriveCitationCanonicalSource: {
     native: unknown,
     modesInput: unknown
   ): Effect.Effect<
-    CitationCanonicalSourceResult,
+    CitationEngineSourceEvidence,
     CitationCanonicalSourceFailure | CitationPythonUnicodeFailure | CitationSafetyLimitExceeded,
     Digest.Digest | CitationTextBudget
   >;
@@ -138,7 +128,7 @@ export const deriveCitationCanonicalSource: {
     native: unknown,
     modesInput: unknown
   ): Effect.fn.Return<
-    CitationCanonicalSourceResult,
+    CitationEngineSourceEvidence,
     CitationCanonicalSourceFailure | CitationPythonUnicodeFailure | CitationSafetyLimitExceeded,
     Digest.Digest | CitationTextBudget
   > {
@@ -176,6 +166,6 @@ export const deriveCitationCanonicalSource: {
         sourceText: output.text,
       })
     ).pipe(Effect.mapError(() => failed("unverifiable-text")));
-    return CitationCanonicalSourceResult.cases.Derived.make({ source, parent: parentIdentity, derivation });
+    return CitationEngineSourceEvidence.cases.Derived.make({ source, parent: parentIdentity, derivation });
   })
 );

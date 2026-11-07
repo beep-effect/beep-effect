@@ -53,8 +53,8 @@ const WorkDuration = S.DurationFromMillis.check(
 ).pipe(
   $I.annoteSchema("WorkDuration", { description: "Measured work duration; excluded from deterministic comparisons." })
 );
-/** Completed-operation diagnostics. Work duration covers source preparation and
- * extraction work; it excludes queue admission and outer-owner teardown. Limits
+/** Completed-operation diagnostics. Work duration covers the completed operation work after admission;
+ * it excludes queue admission and outer-owner teardown. Limits
  * are the captured policy committed by engineArtifact. Counts/versions/policy are
  * deterministic; workDuration is not semantic citation data or parity input.
  * Refusal/interruption reporting remains a separate engine integration duty.

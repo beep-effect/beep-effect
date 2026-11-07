@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSourceRole } from "@beep/law-practice-use-cases/server";
+import { CitationEngineSourceEvidence, CitationSourceRole } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
@@ -10,11 +10,7 @@ import { O } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  CitationCanonicalSourceResult,
-  deriveCitationCanonicalSource,
-  retainCitationCanonicalSource,
-} from "./CanonicalSource.ts";
+import { deriveCitationCanonicalSource, retainCitationCanonicalSource } from "./CanonicalSource.ts";
 import { CitationExtractionEntryInput } from "./ExtractionEntry.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationOccurrenceProjectionResult, makeCitationOccurrenceProjection } from "./OccurrenceProjection.ts";
@@ -78,7 +74,7 @@ export class CitationVerifiedExtractionResult extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    source: CitationCanonicalSourceResult,
+    source: CitationEngineSourceEvidence,
     inputs: S.Struct({ plain: S.NullOr(SourceTextIdentity), markup: S.NullOr(SourceTextIdentity) }),
     semantic: CitationSemanticExtractionResult,
     occurrences: CitationOccurrenceProjectionResult,

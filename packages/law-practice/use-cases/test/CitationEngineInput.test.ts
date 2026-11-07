@@ -4,8 +4,11 @@ import {
   CitationBuiltinCleanerName,
   CitationCleanerContainerKind,
   CitationEngineExtractionOptions,
+  CitationEngineExtractionResult,
+  CitationEngineSourceEvidence,
   CitationEngineSourceInput,
   CitationEngineSourcePairInput,
+  CitationExtractionDiagnostics,
   CitationSourceRole,
 } from "@beep/law-practice-use-cases/server";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -55,6 +58,12 @@ it.effect("retains exact raw Unicode and identity without granting a verified ca
     expect(source.source).toEqual(identity);
     expect(source.role).toBe("plain");
     expect(S.is(VerifiedSourceText)(source)).toBe(false);
+    const forged = yield* S.decodeUnknownEffect(CitationEngineSourceEvidence)({
+      _tag: "Unchanged",
+      source,
+      parent: identity,
+    }).pipe(Effect.flip);
+    expect(forged._tag).toBe("SchemaError");
     const pair = yield* S.decodeEffect(CitationEngineSourcePairInput)({
       plain: { source: identity, sourceText: "" },
       markup: { source: identity, sourceText: " A😀\n" },
@@ -70,6 +79,9 @@ it.effect("keeps raw source and mode contracts out of root and client surfaces",
   Effect.sync(() => {
     for (const name of [
       "CitationEngineSourceInput",
+      "CitationEngineSourceEvidence",
+      "CitationEngineExtractionResult",
+      "CitationExtractionDiagnostics",
       "CitationEngineSourcePairInput",
       "CitationEngineExtractionOptions",
       "CitationBuiltinCleanerName",
@@ -79,5 +91,23 @@ it.effect("keeps raw source and mode contracts out of root and client surfaces",
       expect(name in Root).toBe(false);
       expect(name in Public).toBe(false);
     }
+  })
+);
+
+it.effect("keeps unverified evidence separate from document and report contracts", () =>
+  Effect.gen(function* () {
+    const diagnostics = yield* S.decodeEffect(CitationExtractionDiagnostics)({
+      unverified: [],
+      unverifiedComponents: [{ index: 0, name: "fullSpan", reason: "invalid-span" }],
+      unboundWarnings: [{ previousModel: 1, currentModel: 2, reason: "unavailable-occurrence" }],
+    });
+    expect(diagnostics.unverifiedComponents).toHaveLength(1);
+    expect(diagnostics.unboundWarnings).toHaveLength(1);
+    expect(CitationEngineExtractionResult.fields.diagnostics).toBe(CitationExtractionDiagnostics);
+    const invalid = yield* S.decodeUnknownEffect(CitationExtractionDiagnostics)({
+      ...diagnostics,
+      unboundWarnings: [{ previousModel: 1, currentModel: 2, reason: "verified" }],
+    }).pipe(Effect.flip);
+    expect(invalid._tag).toBe("SchemaError");
   })
 );

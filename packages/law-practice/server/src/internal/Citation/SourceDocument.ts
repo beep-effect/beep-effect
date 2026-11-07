@@ -3,7 +3,12 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationDocument, CitationDocumentReceipt, FullCitation } from "@beep/law-practice-domain/values";
-import { CitationEngineReport, CitationInputError } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineExtractionResult,
+  CitationEngineReport,
+  CitationExtractionDiagnostics,
+  CitationInputError,
+} from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
@@ -20,6 +25,7 @@ import {
   ownCitationSourceExtraction,
   prepareCitationSourceExtraction,
   prepareCitationSourcePairExtraction,
+  projectCitationSourceExtractionReport,
 } from "./SourceExtraction.ts";
 import {
   CitationVerifiedExtractionConfiguration,
@@ -45,6 +51,7 @@ export class CitationExtractedDocumentResult extends S.Opaque<
     resourceBindings: S.Array(CitationResourceBinding),
     editions: S.Array(CitationAuthorityEdition),
     workDuration: CitationEngineReport.fields.workDuration,
+    output: CitationEngineExtractionResult,
   }).pipe(
     $I.annoteSchema("CitationExtractedDocumentResult", {
       description: "One complete source extraction/resolution with measured work and cumulative parent reservations.",
@@ -99,7 +106,7 @@ const prepareSource = (extract: typeof prepareCitationSourceExtraction) =>
         return { result, resolved, editions };
       })
     );
-    return { ...patch, workDuration };
+    return { ...patch, workDuration, limits, engineArtifact: owned.extraction.config.engineArtifact };
   });
 const project = (patch: Effect.Success<ReturnType<ReturnType<typeof prepareSource>>>, reservedUnits: number) =>
   CitationExtractedDocumentResult.make({
@@ -108,6 +115,18 @@ const project = (patch: Effect.Success<ReturnType<ReturnType<typeof prepareSourc
     editions: patch.editions,
     workDuration: patch.workDuration,
     reservedUnits,
+    output: CitationEngineExtractionResult.make({
+      source: patch.result.source,
+      inputs: patch.result.inputs,
+      citations: patch.result.semantic.citations,
+      document: patch.resolved.document,
+      diagnostics: CitationExtractionDiagnostics.make({
+        unverified: patch.result.occurrences.unverified,
+        unverifiedComponents: patch.result.occurrences.unverifiedComponents,
+        unboundWarnings: patch.result.occurrences.unboundWarnings,
+      }),
+      report: projectCitationSourceExtractionReport(patch, reservedUnits),
+    }),
   });
 const definition = {
   schema: S.toType(CitationVerifiedExtractionConfiguration),
