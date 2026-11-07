@@ -36,7 +36,7 @@ Use this command for execution-capable sessions:
 
 P1–P3 delivered: #2852 (origin canonicalization) and #2859 (roots list,
 registry, views) are on `main`. P4 Close runs in this docs-only re-final PR,
-which carries the completion pointer because #2859 merged under S11
+(#2893), which carries the completion pointer because #2859 merged under S11
 ([`history/evidence/2026-11-07-s11-merge-and-refinal.md`](./history/evidence/2026-11-07-s11-merge-and-refinal.md)).
 A packet-state PR adopts `completed-retained` after it merges.
 

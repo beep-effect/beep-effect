@@ -30,13 +30,17 @@
       },
       {
         "number": 2859,
+        "role": "supporting"
+      },
+      {
+        "number": 2893,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_fleet-root-registry-73053057134c/verdict.json",
+        "ref": ".beep/yeet/runs/docs_fleet-root-registry-refinal-cf51eeef5dbf/verdict.json",
         "gating": true
       }
     ]
@@ -107,6 +111,6 @@
   "provides": ["fleet/root-config", "fleet/registry"],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2859
+    "finalPullRequest": 2893
   }
 }
