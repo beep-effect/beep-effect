@@ -140,5 +140,13 @@
   "statusNote": "legacy status: v1-closed",
   "mission": "Create the next architecture-automation packet for proving and systemizing canonical slice creation. This initiative supersedes the prior repo architecture automation packet: its retained lessons and `fixture-lab/Specimen` are reference material only, not the active contract.",
   "lifecycle": "completed-retained",
-  "packetPath": "goals/canonical-slice-factory"
+  "packetPath": "goals/canonical-slice-factory",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/canonical-slice-factory",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "3eff0e3143809abadf60b3662adbf5666760798e",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

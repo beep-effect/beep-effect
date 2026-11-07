@@ -4,4 +4,4 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-export * from "./values/Claim/index.ts";
+export * from "./entities/Claim/index.ts";

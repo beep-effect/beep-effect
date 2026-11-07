@@ -48,19 +48,6 @@
     "goals/time-to-certainty/research/gate-order-handoff.json",
     "goals/time-to-certainty/research/economics-close.json"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/decisions.md",
-    "research/kpi-adoption-table.json",
-    "research/kpi-reading.json",
-    "research/kpi-reading.md",
-    "research/kpi-scripts-cache-baseline-request.json",
-    "research/kpi-verdict.md",
-    "research/p4-survey.md",
-    "research/s7-live-replay-evidence.md",
-    "research/scripts/w1_lever_query.sh",
-    "research/w1-lever-query.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -141,5 +128,13 @@
     "../../explorations/beep-ci-operational-ontology/research/SOURCES.md",
     "../../explorations/beep-ci-operational-ontology/research/auditor-run4-intake.md",
     "../../explorations/beep-ci-operational-ontology/research/kpi-measurement-rules.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/ciops-ontology-pipeline",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "10cd4796dab6dd4197297898be688c25bdaa2934",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

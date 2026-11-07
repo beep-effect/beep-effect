@@ -305,5 +305,12 @@
   "statusNote": "Implementation and PR closure shipped in merge commit f306e8ca5b; packet bookkeeping reconciled on 2026-07-14. Initiative status remains externally managed.",
   "lifecycle": "completed-retained",
   "provides": ["box/driver"],
-  "researchReports": ["research/box-sdk-inventory.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/box-driver",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "5dae56c53ed6837096c8f04ad8bd49eab441ce13",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }
