@@ -865,6 +865,45 @@ On 2026-11-02 the operator accepted one batch of rulings that unblocks the thirt
 | 2026-11-02 | 48-hour config freeze for the #1863/#1864/#1868 qualification windows: from 2026-11-02T03:10Z to 2026-11-04T03:10Z no agent or operator edits `~/.claude/settings.json`, `~/.codex/config.toml` or the Cursor config. The orchestrator announced the freeze; `beep models check` is the drift tripwire. | The #1868 ruling makes the shrunk 5-session windows conditional on the freeze ("under a 48-hour config freeze of `~/.claude/settings.json`, `~/.codex/config.toml` and the Cursor config (announced by the orchestrator; `beep models check` is the drift tripwire)"); #1863 and #1864 run "during the 48-hour config freeze". | The freeze ends by its clock. Lifting it early is a later Decision Log row, and any window that saw a config edit is discarded and re-run rather than counted. |
 | 2026-11-03 | [#1872](https://github.com/beep-effect/beep-effect/issues/1872): the cold remote read uses the existing agent-visible field `op://BEEP_SECRETS/BEEP_TURBO_AWS_BASELINE/AWS_BASELINE_READ_TOKEN` instead of a new operator copy of the `BEEP_CI` item. | Its SHA-256 equals SSM `/beep-ci/cache/read-only-token` (what the authorizer checks) and differs from the trusted-write token, so it is the approved read-only reference already on the agent route; the 2026-11-02 operator share is unnecessary. Proof: `history/receipts/2026-11-03-cold-remote-read.md` (REMOTE HIT for both trusted hashes from an empty cache). | Nothing was copied or shared, so there is nothing to revoke; a later row can require the `BEEP_CI` reference instead. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug repository-simplification-confidence`; add a `kind: decision` file there, never edit this block._
+
+### E-09 is met by the documented dormant desktop release route (#1859 closed), 2026-11-07
+
+The 2026-10-31 hosted-probe receipt and the 2026-11-02 ruling still listed E-09 open as an operator signing step. Its tracking issue #1859 closed on 2026-10-23 when PR #2165 (merge `21f823f36c`) selected the documented dormant route and recorded it, with its reversal, in the repository-simplification-residue SPEC Decision Log (2026-10-23 row).
+
+That satisfies E-09 as written. The 2026-10-09 E sweep and this packet's PLAN `rsc-e-github` row accept either a protected `professional-desktop-release` environment or a dormant route with a reconsideration condition. #1859's acceptance also allows "a documented dormant route is selected with reversal". The environment, its reviewer protection and the `professional-desktop-v*` tag policy exist (stage-4 GitHub audit row E-09). The dormant route is recorded.
+
+E-09 therefore leaves the open list. Signing is no longer a blocking operator hand. It becomes an optional activation step for when the operator wants a live signed release. No signed release, secret availability or updater behavior is claimed. E-13 and E-26 stay operator hands, and E-11, E-16, E-22, E-25 and E-28 still wait on them under the 2026-11-02 ruling.
+
+Lane `fix/cache-warm-split-1858`
+
+Reverse: Supply the Tauri signing references through professional-desktop-release, run and approve a disposable signed professional-desktop-v* tag, verify signatures, updater endpoint and version behavior, then record E-09 as met by that run instead.
+
+### F-CURSOR native activation qualified on the composer-2.5 seat, 2026-11-07
+
+Refs #1862. The 2026-11-02 operator ruling parked F-CURSOR on the Cursor launcher sign-in; `cursor-agent status` reports logged in, so the gate is met. The ruling is read as the expanded owner scope the F-CURSOR row asked for: a native run writes Cursor session state under `~/.cursor` (chats, projects, statsig), and no CLI flag isolates that state.
+
+The F-CURSOR row names no model. The Opus seat (`claude-opus-5-5-medium`) answers `ActionRequiredError` (usage limit, resets 2026-11-11), and setting a spend limit would spend money, so it is not set. The qualification therefore ran on `composer-2.5`, the manifest's `cursor.volume` role. That is a named role, not a same-provider substitution for an Opus pin. Every run passed `--sandbox enabled`, ran in a disposable scratch workspace, and carried no corpus, client material or secrets (D11). The prompts forbade git, sudo and pkexec, and the copied D21 shell guard denied a probe command containing `git` (D21).
+
+Side effect found and reverted: `--model` on argv persists into `~/.cursor/cli-config.json` and replaces the operator's interactive default. The four model fields were restored from the pre-run copy, after a backup (location in the receipt). Lanes that pass `--model` must restore or tolerate this. Evidence: `history/receipts/2026-11-07-native-activation.md`.
+
+Lane `docs/rsc-1862-native-activation`
+
+Reverse: Stop F-CURSOR native runs; delete the scratch workspace's ~/.cursor/projects/<scratch-slug>/ entry; rerun the three fixed prompts on claude-opus-5-5-medium after the 2026-11-11 quota reset if an Opus witness is wanted.
+
+### F-DOCKER --tools allowlist apply waits for a quiet window, 2026-11-07
+
+Refs #1862. The launcher sign-in gate looks met: Docker Hub credentials are present and the catalog resolves. The gateway on 127.0.0.1:8811 is one shared service. Codex, Claude, Grok and Junie bind to it, and about twelve live agent sessions were using it when this was recorded. A restart or a profile or unit change would cut tools out from under every one of them at once.
+
+This lane did only the read-only half. The live MCP tool listing returned 47 tools and 128,947 compact bytes, identical to the baseline. From the observed Claude and Codex invocations and the repo's PR and issue workflows it derived a 19-tool allowlist, about 64.8 KB and 49.7% fewer schema bytes. It also wrote down the backup, apply, validation and rollback commands. The apply (unit drop-in + `daemon-reload` + restart) is deferred to a quiet window with no live gateway clients, chosen by the orchestrator. F-DOCKER therefore does not yet meet its SPEC acceptance, and #1862 stays open for it. Evidence and exact commands: `history/receipts/2026-11-07-native-activation.md`.
+
+Lane `docs/rsc-1862-native-activation`
+
+Reverse: Drop the deferral and apply in any window (accepting a shared-gateway restart under live sessions), or withdraw the proposed allowlist and keep the 47-tool legacy --servers gateway.
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
