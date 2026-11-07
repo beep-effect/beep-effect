@@ -236,6 +236,14 @@ Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
 
 Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
 
+### Compose the documented recovery logging Effect, 2026-11-07
+
+Parent static and bounded runtime review found that the error-pattern handler discarded Console.log before returning a fallback. Return the logging Effect mapped to the same fallback. A regression extracts the actual Markdown fence, substitutes a local ValidationError operation, and requires exactly one log with the unchanged fallback. The original guide fails that assertion; no HTTP or retry branch is executed. Live local registered-worktree census found no competing committed or dirty target changes. Remote PR census remains unavailable under canonical API quota; publication and finality remain held pending normal remote checks. PM and ADHD remain separate.
+
+Lane `codex/audit-error-boundary`
+
+Reverse: Revert this checkpoint, the narrow example change and its fence regression if the recovery branch intentionally stops logging.
+
 ### Pin the notification sender citation to the verified source, 2026-11-07
 
 Read the current 99-line notification guide and checked bounded hook, worker and upstream source context. The URI override is forwarded before its environment name is removed, and desktop markup is escaped before delivery; those suspected discrepancies were rejected. The cited Ghostty v1.3.1 line 1578 handles environment setup, while the notification sender begins at line 1718. Pin that link to verified commit 332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28 and the actual sender. This is a source-citation repair, not proof of installed desktop behavior, focus, receipt visibility or clicks. No hooks, services or billing changed. P4 remains partial; PM and ADHD holds remain separate. Raw source and parent review receipts stay in the private archive.

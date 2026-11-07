@@ -83,4 +83,57 @@ it.layer(BunServices.layer)("Documented protocol error boundary", (it) => {
       );
     })
   );
+
+  it.effect(
+    "executes the recovery log in the actual error-pattern fence",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const sourcePath = ".patterns/error-handling.md";
+      const markdown = yield* fs.readFileString(path.join(repoRoot, sourcePath));
+      const fences = A.filter(collectMarkdownFences(sourcePath, markdown), (fence) =>
+        Str.includes("const handleSpecificErrors =")(fence.body)
+      );
+      expect(fences).toHaveLength(1);
+      const fence = A.getUnsafe(fences, 0);
+      const stubbed = Str.replace(
+        /^declare (const complexOperation:.*);$/m,
+        '$1 = () => Effect.fail({ _tag: "ValidationError", field: "fixture" });'
+      )(fence.body);
+      expect(Str.includes('field: "fixture"')(stubbed)).toBe(true);
+      const scratchRoot = path.join(repoRoot, ".beep");
+      yield* fs.makeDirectory(scratchRoot, { recursive: true });
+      const fixture = yield* fs.makeTempDirectoryScoped({
+        directory: scratchRoot,
+        prefix: "knowledge-error-log-",
+      });
+      const programPath = path.join(fixture, "recovery-log.ts");
+      yield* fs.writeFileString(
+        programPath,
+        A.join(
+          [
+            stubbed,
+            'import * as A from "effect/Array";',
+            'import { assert } from "@effect/vitest";',
+            "let captured: ReadonlyArray<ReadonlyArray<unknown>> = [];",
+            "const localConsole: Console.Console = { ...console, log: (...args) => { captured = A.append(captured, args); } };",
+            'const value = Effect.runSync(handleSpecificErrors("local-stub").pipe(Effect.provideService(Console.Console, localConsole)));',
+            'assert.strictEqual(value, "default value");',
+            'assert.deepEqual(captured, [["Validation failed for field: fixture"]]);',
+          ],
+          "\n"
+        )
+      );
+      const executablePath = yield* fs.realPath(programPath);
+      const child = yield* ChildProcess.make("bun", [executablePath], {
+        cwd: repoRoot,
+        stdin: "ignore",
+        stdout: "inherit",
+        stderr: "inherit",
+      });
+      const exitCode = yield* child.exitCode;
+      expect(exitCode, `${sourcePath}:${fence.line}`).toBe(0);
+    })
+  );
 });
