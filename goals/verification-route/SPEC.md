@@ -121,21 +121,25 @@ Slice 1 (cut line):
 
 Slice 2:
 
-- [ ] At least one refinement is enforced: its mutation fixtures and a 100%
-      replay recall are green and cited in the PR.
-- [ ] Layer 1 landed for that refinement: turbo task inputs, the root
+- [x] At least one refinement is enforced: its mutation fixtures and a 100%
+      replay recall are green and cited in the PR (`packet-markdown-out-of-build-check`,
+      `research/slice-2-replay.md`).
+- [x] Layer 1 landed for that refinement: turbo task inputs, the root
       `package.json` field projections written in the prepare phase and
       drift-checked, and the package-local `turbo.json` sweep; a dry-run fixture
       shows the biome catalog bump invalidates at most the lanes whose footprint
-      names `pkg:catalog`.
-- [ ] `yeet final-check` receipts carry the route section (selected, skipped,
+      names `pkg:catalog` (met: every lane still names it; a Biome bump stays global because
+      Biome is a root dependency, and a non-root catalog bump invalidates only its dependents,
+      `research/slice-2-layer1-dryrun.md`).
+- [x] `yeet final-check` receipts carry the route section (selected, skipped,
       reasons); the shadow sentinel row exists; enforcement is per refinement
       and revocable from the sentinel.
-- [ ] The proof-ledger shadow's resulting misses are attributed in the receipt
+- [x] The proof-ledger shadow's resulting misses are attributed in the receipt
       as key change, not disagreement.
-- [ ] Package-grain propagation reads the workspace graph at the requested head,
+- [x] Package-grain propagation reads the workspace graph at the requested head,
       not the checkout, before any lane is selected from affected packages (see
-      the 2026-10-31 Decision Log row).
+      the 2026-10-31 Decision Log row). Slice 2 selects no lane from affected packages
+      (decision `2026-11-07-propagation-stays-a-label-in-slice-2`).
 
 Slice 3:
 

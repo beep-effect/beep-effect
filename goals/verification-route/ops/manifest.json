@@ -6,7 +6,7 @@
     "title": "Verification Route",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-31",
+    "updated": "2026-11-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/verification-route",
@@ -64,7 +64,7 @@
     {
       "id": "P1",
       "name": "Slice 2: refinements, both layers, final-check",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

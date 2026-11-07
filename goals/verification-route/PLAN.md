@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (P0 slice 1 complete 2026-10-31: census and replay in `research/census-2026-10-31.md`; P1 next). Graduated 2026-10-28 from `explorations/verification-route`
+Status: `in-progress` (P0 slice 1 complete 2026-10-31; P1 slice 2 implemented 2026-11-07 on `feat/verification-route-slice-2`, design `research/slice-2-design.md`, replay `research/slice-2-replay.md`; P2 next after merge). Graduated 2026-10-28 from `explorations/verification-route`
 (16 rulings). Each slice is one PR through Yeet; phase ids match
 `ops/manifest.json`.
 
@@ -11,7 +11,7 @@ Status: `in-progress` (P0 slice 1 complete 2026-10-31: census and replay in `res
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Slice 1: schemas, route, census | complete | `ChangeAtom`/`CheckFootprint`/`Propagation` schemas, the total record at `unknown`, `classify`, `route`, the corpus fetch, `beep ci route plan|census|replay`. | Slice-1 acceptance rows in `SPEC.md` green; the census printed with the `unknown` share; PR merged. |
-| P1 Slice 2: refinements, both layers, final-check | pending | Refine in census rank with fixtures and recall; compile file/field-grain footprints to turbo inputs and root `package.json` projections; sweep package-local `turbo.json`; final-check shadow then enforced; sentinel row. | At least one refinement enforced; layer-1 fixture green under pinned turbo; receipts carry the route section; PR merged. |
+| P1 Slice 2: refinements, both layers, final-check | in-progress | Refine in census rank with fixtures and recall; compile file/field-grain footprints to turbo inputs and root `package.json` projections; sweep package-local `turbo.json`; final-check shadow then enforced; sentinel row. | At least one refinement enforced; layer-1 fixture green under pinned turbo; receipts carry the route section; PR merged. |
 | P2 Slice 3: hosted per lane | pending | Extend `HeavyAdmission` to per-lane `skip-satisfied` with the receipt in the job summary. | A real PR shows a routed-out lane completing `skip-satisfied`; required contexts unchanged; PR merged. |
 | P3 Yeet: PR to mergeable | pending | Each slice PR through `yeet publish`, `final-check`, `ready`, `monitor --until-ready`. | `merge-ready: yes`; zero unresolved review threads. |
 | P4 Close | pending | Closeout reflection, status flip, proposedCloseout on the final PR. | Reflection lints green; manifest, README and PLAN agree. |
@@ -62,17 +62,17 @@ work.
 
 ## P1 — Slice 2
 
-- [ ] Rank refinements from the census; first candidates by expectation:
+- [x] Rank refinements from the census; first candidates by expectation:
       `pkg:catalog`/`pkg:dep-version` vs `build`/`check`/`test`, `docs:markdown`
       vs everything but docgen/jsdoc, `src:test` vs `build`.
-- [ ] Mutation fixtures per claimed-absent kind on the production path.
-- [ ] Layer 1: task-input negations plus the root `package.json` field
+- [x] Mutation fixtures per claimed-absent kind on the production path.
+- [x] Layer 1: task-input negations plus the root `package.json` field
       projections written by the prepare phase (tracked generated files,
       drift-checked by the codegen lane); sweep the 21 package-local
       `turbo.json`; pin turbo 2.11.10 in the fixture.
-- [ ] final-check: route section in the receipt; shadow sentinel inbox row;
+- [x] final-check: route section in the receipt; shadow sentinel inbox row;
       enforcement flag per refinement, revocable.
-- [ ] Note the proof-ledger key change in the receipt.
+- [x] Note the proof-ledger key change in the receipt.
 
 ## P2 — Slice 3
 
