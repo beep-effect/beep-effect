@@ -795,7 +795,7 @@ describe("research library routes", () => {
           expect(LibraryHopPolicy.make({}).hop2Limit).toBe(400);
           const decisions = gate(
             A.makeBy(401, (i) => ({
-              source: web(`d-${Str.padStart(3, "0")(`${i}`)}`, `https://d-${Str.padStart(3, "0")(`${i}`)}.org/`),
+              source: web(`d-${Str.padStart(3, "0")(`${i}`)}`, `https://d-${Str.padStart(3, "0")(`${i}`)}.org/paper`),
               parents: ["p1"],
             })),
             LibraryHopPolicy.make({})

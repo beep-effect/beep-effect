@@ -557,6 +557,43 @@ const urlPathExtension = (url: string) =>
   );
 const isIpLiteral = (host: string) => Str.startsWith("[")(host) || /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host);
 
+const parseUrl = (url: string) => O.liftThrowable(() => new URL(url))();
+const hostMatches = (host: string, listed: ReadonlyArray<string>) =>
+  A.some(listed, (entry) => host === entry || Str.endsWith(`.${entry}`)(host));
+
+// Page chrome: social and consent hosts, X profiles (only /status/ links are posts), YouTube channel pages,
+// and legal or administration path segments.
+const isChrome = (url: string, host: string, policy: LibraryHopPolicy) =>
+  hostMatches(host, policy.chromeHosts) ||
+  O.match(parseUrl(url), {
+    onNone: () => false,
+    onSome: (parsed) => {
+      const segments = A.filter(Str.split(Str.toLowerCase(parsed.pathname), "/"), Str.isNonEmpty);
+      if (hostMatches(host, ["x.com"]) && !A.contains(segments, "status")) return true;
+      if (
+        hostMatches(host, ["youtube.com"]) &&
+        A.some(segments, (s) => Str.startsWith("@")(s) || s === "channel" || s === "c" || s === "user")
+      )
+        return true;
+      return A.some(segments, (segment) => A.contains(policy.chromePathSegments, segment));
+    },
+  });
+
+// Incomplete identifiers left by extraction: an empty query value (`?id=`) or a DOI without its suffix.
+const isFragmentIdentifier = (url: string, host: string) =>
+  O.match(parseUrl(url), {
+    onNone: () => true,
+    onSome: (parsed) =>
+      A.some(A.fromIterable(parsed.searchParams.values()), Str.isEmpty) ||
+      (hostMatches(host, ["doi.org"]) && !/^\/10\.\d{4,}\/\S+/.test(parsed.pathname)),
+  });
+
+const isSiteRoot = (url: string) =>
+  O.match(O.liftThrowable(() => new URL(url))(), {
+    onNone: () => false,
+    onSome: (parsed) => (parsed.pathname === "/" || parsed.pathname === "") && parsed.search === "",
+  });
+
 /**
  * Whether a URL names no readable content under the policy.
  *
@@ -587,10 +624,13 @@ export const libraryHopNonContent: {
   (url: string, policy: LibraryHopPolicy): boolean;
 } = dual(2, (url: string, policy: LibraryHopPolicy): boolean => {
   const host = urlHost(url);
+  // A host without a dot or with a wildcard is an extraction fragment (https://arxiv/, https://**/), and a
+  // bare site root names a site rather than a citable resource.
+  if (host === "" || !Str.includes(".")(host) || Str.includes("*")(host) || isSiteRoot(url)) return true;
+  if (isChrome(url, host, policy) || isFragmentIdentifier(url, host)) return true;
   if (
-    host !== "" &&
-    (isIpLiteral(host) ||
-      A.some(policy.nonContentHosts, (reserved) => host === reserved || Str.endsWith(`.${reserved}`)(host)))
+    isIpLiteral(host) ||
+    A.some(policy.nonContentHosts, (reserved) => host === reserved || Str.endsWith(`.${reserved}`)(host))
   )
     return true;
   return A.contains(policy.nonContentExtensions, urlPathExtension(url));
@@ -709,7 +749,12 @@ export const libraryHopGate: {
         source,
         parentIds,
         parents,
-        inDegree: A.filter(parents, routed).length,
+        // Citation, not navigation: a parent on the child's own site is a site-chrome link and does not count.
+        inDegree: A.filter(
+          parents,
+          (parent) =>
+            routed(parent) && librarySourceDomain(parent.canonicalUrl) !== librarySourceDomain(source.canonicalUrl)
+        ).length,
         intakeId: O.getOrElse(
           A.head(
             A.sort(

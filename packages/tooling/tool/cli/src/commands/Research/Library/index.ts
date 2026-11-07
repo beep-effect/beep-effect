@@ -10,7 +10,13 @@ export { LibraryBoxAcquireOptions, registerLibraryBoxSources } from "./Library.b
 export { libraryCommand } from "./Library.command.ts";
 export { LibraryError } from "./Library.errors.ts";
 export { libraryWebAdapter } from "./Library.firecrawl.ts";
-export { LibraryHopNonContentExtensions, LibraryHopNonContentHosts, LibraryHopPolicy } from "./Library.hopPolicy.ts";
+export {
+  LibraryHopChromeHosts,
+  LibraryHopChromePathSegments,
+  LibraryHopNonContentExtensions,
+  LibraryHopNonContentHosts,
+  LibraryHopPolicy,
+} from "./Library.hopPolicy.ts";
 export { libraryHopTotals } from "./Library.hopStatus.ts";
 export {
   LibraryHopDecision,

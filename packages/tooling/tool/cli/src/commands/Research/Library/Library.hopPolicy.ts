@@ -11,6 +11,67 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Research/Library/Library.hopPolicy");
 
 /**
+ * Social, profile, consent and brand-asset hosts whose hop-2 links are page chrome, not citations.
+ *
+ * **Details**
+ *
+ * Footer and header links repeat across many captured pages, so in-degree alone ranks them first.
+ * Each entry matches the host and its subdomains.
+ *
+ * **Example** (Read the chrome hosts)
+ *
+ * ```ts
+ * import { LibraryHopChromeHosts } from "@beep/repo-cli/commands/Research"
+ *
+ * console.log(LibraryHopChromeHosts.includes("linkedin.com")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const LibraryHopChromeHosts: ReadonlyArray<string> = [
+  "facebook.com",
+  "instagram.com",
+  "linkedin.com",
+  "twitter.com",
+  "tiktok.com",
+  "pinterest.com",
+  "threads.net",
+  "brandfetch.com",
+  "cookieyes.com",
+  "onetrust.com",
+];
+
+/**
+ * Path segments that mark legal, consent and site-administration pages.
+ *
+ * **Example** (Read the chrome path segments)
+ *
+ * ```ts
+ * import { LibraryHopChromePathSegments } from "@beep/repo-cli/commands/Research"
+ *
+ * console.log(LibraryHopChromePathSegments.includes("privacy")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const LibraryHopChromePathSegments: ReadonlyArray<string> = [
+  "privacy",
+  "privacy-policy",
+  "terms",
+  "terms-of-service",
+  "cookie-policy",
+  "cookies",
+  "legal",
+  "imprint",
+  "impressum",
+  "accessibility",
+  "careers",
+  "brand-assets",
+];
+
+/**
  * Reserved and placeholder host names whose hop-2 URLs carry no content.
  *
  * **Details**
@@ -119,6 +180,14 @@ export class LibraryHopPolicy extends S.Opaque<LibraryHopPolicy, { readonly bran
     nonContentHosts: S.Array(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(LibraryHopNonContentHosts)),
       S.withDecodingDefaultTypeKey(Effect.succeed(LibraryHopNonContentHosts))
+    ),
+    chromeHosts: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(LibraryHopChromeHosts)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(LibraryHopChromeHosts))
+    ),
+    chromePathSegments: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(LibraryHopChromePathSegments)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(LibraryHopChromePathSegments))
     ),
     nonContentExtensions: S.Array(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(LibraryHopNonContentExtensions)),
