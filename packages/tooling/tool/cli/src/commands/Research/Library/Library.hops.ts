@@ -636,8 +636,11 @@ export const libraryHopNonContent: {
   return A.contains(policy.nonContentExtensions, urlPathExtension(url));
 });
 
-const isGithub = (source: LibrarySource) => Str.startsWith("github-")(source.kind);
-const isArxiv = (source: LibrarySource) => Str.startsWith("arxiv:")(source.identity);
+// Kind and identity can lag the URL (an unclassified github.com or arxiv.org link), so the domain decides too.
+const isGithub = (source: LibrarySource) =>
+  Str.startsWith("github-")(source.kind) || hostMatches(urlHost(source.canonicalUrl), ["github.com"]);
+const isArxiv = (source: LibrarySource) =>
+  Str.startsWith("arxiv:")(source.identity) || hostMatches(urlHost(source.canonicalUrl), ["arxiv.org"]);
 
 /**
  * Inputs of {@link libraryHopGate}: packet concepts, policy and explicit on-demand selections.

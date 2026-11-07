@@ -555,6 +555,7 @@ describe("research library routes", () => {
       web("child-routed", "https://other.org/routed"),
       web("child-unrouted", "https://other.org/unrouted"),
       web("child-github", "https://github.com/acme/child", "github-repository"),
+      web("child-github-url", "https://github.com/acme"),
       web("child-of-github", "https://other.org/of-github"),
       web("2501.00001", "https://arxiv.org/abs/2501.00001", "paper"),
       ...A.map(A.range(1, 30), (n) =>
@@ -705,6 +706,8 @@ describe("research library routes", () => {
         Effect.sync(() => {
           expect(decide()("child-github")).toEqual([false, "github-not-transitive"]);
           expect(decide()("child-of-github")).toEqual([false, "github-not-transitive"]);
+          // A github.com link the classifier left as web is still GitHub.
+          expect(decide()("child-github-url")).toEqual([false, "github-not-transitive"]);
         })
       );
       it.effect("catalogues arXiv hop 2 and acquires it only on explicit demand", () =>
