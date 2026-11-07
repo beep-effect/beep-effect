@@ -946,44 +946,47 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect(
-    "logs a failed availability probe by tag and classification, never the vendor error text",
-    Effect.fnUntraced(function* () {
-      const logged: Array<{ readonly message: unknown; readonly annotations: unknown }> = [];
-      const recorder = Logger.make(({ fiber, message }) => {
-        logged.push({ message, annotations: fiber.getRef(References.CurrentLogAnnotations) });
-      });
-      const failing = makeFakeBox({
-        folders: {
-          getFolderItems: () =>
-            Promise.reject({
-              message: "Folder Client Matter 4471 is not visible to jane.doe@example.com",
-              responseInfo: { statusCode: 404, body: { message: "Client Matter 4471" } },
-            }),
-        },
-      });
-      const probe = yield* Effect.gen(function* () {
-        const availability = yield* DmsMirrorAvailability;
-        return yield* availability.probe;
-      }).pipe(provideScopedLayer(availabilityLayer(failing)), Effect.withLogger(recorder));
+  const vendorTextFailure = makeFakeBox({
+    folders: {
+      getFolderItems: () =>
+        Promise.reject({
+          message: "Folder Client Matter 4471 is not visible to jane.doe@example.com",
+          responseInfo: { statusCode: 404, body: { message: "Client Matter 4471" } },
+        }),
+    },
+  });
 
-      pipe(probe.connected, assertFalse);
-      const warnings = A.filter(logged, ({ message }) =>
-        Str.includes("availability probe failed")(Formatter.format(message))
-      );
-      expect(A.map(warnings, ({ annotations }) => annotations)).toEqual([
-        {
-          "documents.sync.disconnect_reason": "root-unreachable",
-          "documents.sync.failure": "DmsMirrorUnavailable",
-          "documents.sync.provider": "box",
-          "documents.sync.retryable": false,
-        },
-      ]);
-      const everything = Formatter.format(logged);
-      expect(everything).not.toContain("Client Matter");
-      expect(everything).not.toContain("jane.doe");
-    })
-  );
+  it.layer(Layer.fresh(availabilityLayer(vendorTextFailure)), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "logs a failed availability probe by tag and classification, never the vendor error text",
+      Effect.fnUntraced(function* () {
+        const logged: Array<{ readonly message: unknown; readonly annotations: unknown }> = [];
+        const recorder = Logger.make(({ fiber, message }) => {
+          logged.push({ message, annotations: fiber.getRef(References.CurrentLogAnnotations) });
+        });
+        const probe = yield* Effect.gen(function* () {
+          const availability = yield* DmsMirrorAvailability;
+          return yield* availability.probe;
+        }).pipe(Effect.withLogger(recorder));
+
+        pipe(probe.connected, assertFalse);
+        const warnings = A.filter(logged, ({ message }) =>
+          Str.includes("availability probe failed")(Formatter.format(message))
+        );
+        expect(A.map(warnings, ({ annotations }) => annotations)).toEqual([
+          {
+            "documents.sync.disconnect_reason": "root-unreachable",
+            "documents.sync.failure": "DmsMirrorUnavailable",
+            "documents.sync.provider": "box",
+            "documents.sync.retryable": false,
+          },
+        ]);
+        const everything = Formatter.format(logged);
+        expect(everything).not.toContain("Client Matter");
+        expect(everything).not.toContain("jane.doe");
+      })
+    );
+  });
 
   it.effect(
     "classifies availability probe failures from the Box status",

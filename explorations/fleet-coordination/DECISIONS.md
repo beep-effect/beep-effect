@@ -217,7 +217,7 @@ scan therefore cannot observe every PID, and its earlier phrasing — "degrade,
 don't throw" — was too weak, because it left open the option of degrading into a
 *dormant* verdict.
 
-Read in `block/buzz`'s own postmortem (`docs/welcome-kickoff-silent-failures.md`,
+Read in `block/buzz`'s own postmortem ([upstream kickoff postmortem](https://github.com/block/buzz/blob/a7ea86cdcf2aa3cbb1486baabc4c9d6aea8c576c/docs/welcome-kickoff-silent-failures.md),
 [`T1` addendum](./research/T1-prior-art.md)): the distinction the code was missing
 was between *"the agent crashed"* — a fact, worth announcing — and *"no intro
 yet"* — **not** a fact, but ignorance. Their conclusion: **"announcing ignorance

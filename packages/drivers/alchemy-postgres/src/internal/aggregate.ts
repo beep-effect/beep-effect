@@ -18,6 +18,7 @@ import { AcceptedResult, EventRow, encodeJson, InstanceRow, ScheduleRow } from "
 import { failureTagOf, orDieAs, rowsOf } from "./host.ts";
 import type * as Aggregate from "@alchemy.run/domain/Aggregate";
 import type * as DomainPlatform from "@alchemy.run/domain/Platform";
+import type { ProvenanceMapping } from "../AlchemyPostgres.config.ts";
 import type { ScheduleStatus } from "../AlchemyPostgres.schema.ts";
 import type { HostContext } from "./host.ts";
 
@@ -84,14 +85,47 @@ export const upcastRow =
     return { event: lifted, envelope: row.envelope };
   };
 
-/** A string field of one encoded request-context service. */
-const contextField = (context: Readonly<Record<string, unknown>>, key: string, field: string): string | null =>
+/** The `principal` and `source_kind` column values of one event row. */
+interface Provenance {
+  readonly principal: string | null;
+  readonly sourceKind: string | null;
+}
+
+const noProvenance: Provenance = { principal: null, sourceKind: null };
+
+/** A string field of an encoded context value; any other JSON value is NULL. */
+const stringField = (value: unknown, field: string): string | null =>
   pipe(
-    R.get(context, key),
+    O.some(value),
     O.filter(P.isObject),
-    O.flatMap((value) => R.get(value, field)),
+    O.flatMap((record) => R.get(record, field)),
     O.filter(P.isString),
     O.getOrNull
+  );
+
+/**
+ * The provenance of a stored context: the first mapping whose context key holds
+ * an object decides both columns, and no match leaves them NULL.
+ */
+const provenanceOf = (
+  mappings: ReadonlyArray<ProvenanceMapping>,
+  context: Readonly<Record<string, unknown>>
+): Provenance =>
+  pipe(
+    mappings,
+    A.findFirst((mapping) =>
+      pipe(
+        R.get(context, mapping.contextKey),
+        O.filter(P.isObject),
+        O.map(
+          (value): Provenance => ({
+            principal: stringField(value, mapping.principalField),
+            sourceKind: stringField(value, mapping.sourceKindField),
+          })
+        )
+      )
+    ),
+    O.getOrElse(constant(noProvenance))
   );
 
 const dueAt = (now: number) =>
@@ -105,6 +139,7 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
   Effect.sync((): DomainPlatform.AggregateStore => {
     const { config, modelName, now, sql, tables } = ctx;
     const name = kit.name;
+    const provenanceMappings = A.appendAll(O.toArray(config.provenance), config.provenanceMappings);
     const versions = eventVersionsOf(definition.definition.events);
     const schemaVersionOf = (tag: string) =>
       O.getOrElse(
@@ -198,14 +233,7 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
       context: Readonly<Record<string, unknown>>
     ) {
       const { _tag } = yield* decodeEventTag(stored.event);
-      const principal = O.match(config.provenance, {
-        onNone: () => null,
-        onSome: (mapping) => contextField(context, mapping.contextKey, mapping.principalField),
-      });
-      const sourceKind = O.match(config.provenance, {
-        onNone: () => null,
-        onSome: (mapping) => contextField(context, mapping.contextKey, mapping.sourceKindField),
-      });
+      const { principal, sourceKind } = provenanceOf(provenanceMappings, context);
       const event = yield* encodeJson(stored.event);
       const envelope = yield* encodeJson(stored.envelope);
       const encodedContext = yield* encodeJson(context);
