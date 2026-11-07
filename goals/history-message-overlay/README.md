@@ -14,8 +14,14 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
   and the July cutover folder archived to `$HOME/.local/state/beep/archive/beep-effect-cutover/`.
 - `--write` is deterministic (same notes commit from any prior ref state); a
   scratch-ref run matched 940/940 under `--check --require-published`.
-- Post-merge proof still owed: the first `History Notes Publish` run, then
-  `bun run beep history notes sync && bun run beep history notes --check --require-published`.
+- Post-merge proof (2026-11-07): `History Notes Publish` run 42339731476 on
+  `12ba0fe044` published `refs/notes/history` at `b40fd076d8`, the same commit
+  the pre-merge scratch `--write` produced. `sync` then `--check
+  --require-published`: 940 notes, 940 match. `git log 6f33208961` shows
+  `Notes (history):` under the original subject.
+- Re-final PR [#2858](https://github.com/beep-effect/beep-effect/pull/2858): #2785
+  merged before its readiness monitor recorded merge-ready, and its rendered lane
+  names tripped `knowledge:semantic-delta` on main; #2858 fixes both.
 - Reflection: [`history/reflections/2026-11-06-claude.md`](./history/reflections/2026-11-06-claude.md).
 
 ## Mission

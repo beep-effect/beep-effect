@@ -1,7 +1,7 @@
 ---
 title: "The write mode builds one parentless, fixed-identity notes commit via fast-import"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 pullRequest: 2785
 reversal: "Switch Git.replaceNotes to git notes add per row and drop the determinism guarantee"
 ---

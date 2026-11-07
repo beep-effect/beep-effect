@@ -1,7 +1,7 @@
 ---
 title: "No history rewrite; notes overlay instead"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 reversal: "Reopen explorations/git-history-rewrite at align; the July cutover scripts are archived under $HOME/.local/state/beep/archive/beep-effect-cutover/"
 ---
 

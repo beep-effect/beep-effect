@@ -54,7 +54,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 docs/history/commit-message-map.json (940 rows) tracked; @beep/git gains notesList and hashObject; beep history notes --check decodes the map, proves every key reachable from origin/main and compares published notes by blob id. Real-repo run: 940/940 reachable, ref not yet published. Next: slice 2 (--write, sync, bootstrap hooks).
 
-Lane `docs/git-history-rewrite-exploration` · PR #2785
+Lane `git-history-rewrite` · PR #2785
 
 Reverse: Revert the slice-1 commits on the branch
 
@@ -62,7 +62,7 @@ Reverse: Revert the slice-1 commits on the branch
 
 beep history notes --write and sync landed with @beep/git replaceNotes and configSet; History files at 100% coverage (scoped run), worktree hook tested; policy fingerprint regenerated for the new import. Next: slice 3 (post-merge publication workflow with fetch-depth 0 and a force-push of refs/notes/history).
 
-Lane `docs/git-history-rewrite-exploration` · PR #2785
+Lane `git-history-rewrite` · PR #2785
 
 Reverse: Revert the slice-2 commit on the branch
 
@@ -70,8 +70,16 @@ Reverse: Revert the slice-2 commit on the branch
 
 History Notes Publish (.github/workflows/history-notes-publish.yml) runs on main pushes that touch docs/history/commit-message-map.json and on dispatch: full-history checkout, --write, --check --require-published, then a force-push of refs/notes/history with the job token (contents: write, job-scoped). beep ci workflow-lint: clean. docs/history/README.md documents sync, publication and the blobless clone. The cutover folder moved to $HOME/.local/state/beep/archive/beep-effect-cutover/ and goals/legacy-drain has a checkpoint. Remaining acceptance needs main: the first workflow run publishing the ref, then --check against it.
 
-Lane `docs/git-history-rewrite-exploration` · PR #2785
+Lane `git-history-rewrite` · PR #2785
 
 Reverse: Delete .github/workflows/history-notes-publish.yml and restore the folder from the archive
+
+### Post-merge publication proven; #2858 re-finals the closeout, 2026-11-07
+
+History Notes Publish run 42339731476 on 12ba0fe044 published refs/notes/history at b40fd076d8 (identical to the pre-merge scratch write). sync plus check with require-published: 940 of 940 notes match. #2785 merged before its until-ready monitor recorded merge-ready, so completion refresh reported unsatisfied; #2858 fixes the 14 semantic-delta findings #2785 put on main (lane names rendered as docs/ paths, a bare upstream man-page path) and is the goal's final PR.
+
+Lane `git-history-rewrite` · PR #2858
+
+Reverse: Revert #2858; the overlay ref stays published and can be deleted with git push origin :refs/notes/history
 
 <!-- beep:decisions:end -->
