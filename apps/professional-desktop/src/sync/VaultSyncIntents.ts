@@ -52,6 +52,12 @@ class ReviewIntent extends S.Opaque<ReviewIntent, { readonly brand: unique symbo
     kind: S.tag("review"),
     ...intentFields,
     conflictId: SyncConflictId.annotateKey({ description: "Conflict the operator marked reviewed." }),
+    conflictKind: S.optionalKey(S.String).annotateKey({
+      description: "Kind of the conflict as listed when reviewed, to show its row while the list cannot load.",
+    }),
+    localRelPath: S.optionalKey(S.String).annotateKey({
+      description: "Local path of the conflict as listed when reviewed, to show its row while the list cannot load.",
+    }),
   }).pipe($I.annoteSchema("ReviewIntent", { description: "The operator marked one conflict reviewed." }))
 ) {}
 

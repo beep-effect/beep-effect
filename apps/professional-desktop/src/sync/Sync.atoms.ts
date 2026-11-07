@@ -120,6 +120,9 @@ class VaultSyncFailedState extends S.Opaque<VaultSyncFailedState, { readonly bra
   S.Struct({
     kind: S.tag("failed"),
     message: S.NonEmptyString,
+    conflictId: S.optionalKey(SyncConflictId).annotateKey({
+      description: "Conflict whose review the server refused: the message belongs on its row.",
+    }),
   }).pipe(
     $I.annoteSchema("VaultSyncFailedState", {
       description: "The latest vault sync action failed with an operator-safe message.",
@@ -196,6 +199,8 @@ class ReviewVaultSyncConflictCommand extends S.Opaque<
   S.Struct({
     kind: S.tag("review"),
     conflictId: SyncConflictId,
+    conflictKind: S.optionalKey(S.String),
+    localRelPath: S.optionalKey(S.String),
   }).pipe(
     $I.annoteSchema("ReviewVaultSyncConflictCommand", {
       description: "Request serialized review of one conflict in the owning workspace.",
@@ -478,11 +483,20 @@ const settleIntent = Effect.fnUntraced(function* (
     stateAtom,
     DeliveryOutcome.match(outcome, {
       Accepted: () => VaultSyncPanelState.cases.succeeded.make({ message: succeededMessage(intent) }),
-      Rejected: ({ message }) => VaultSyncPanelState.cases.failed.make({ message }),
+      Rejected: ({ message }) =>
+        VaultSyncPanelState.cases.failed.make(
+          VaultSyncIntent.match(intent, {
+            trigger: () => ({ message }),
+            review: ({ conflictId }) => ({ message, conflictId }),
+          })
+        ),
       Unreachable: () => VaultSyncPanelState.cases.queued.make({ message: queuedMessage(intent) }),
     })
   );
   yield* reactivity.invalidate([vaultSyncStatusKey(intent.workspaceId), vaultSyncConflictsKey(intent.workspaceId)]);
+  // The sidecar answered: a status watch that failed while it was gone does not re-subscribe on
+  // invalidation alone, so restart it; otherwise the panel keeps saying "unavailable" after replay.
+  registry.refresh(vaultSyncStatusAtom(intent.workspaceId));
   return true;
 });
 
@@ -543,15 +557,23 @@ const triggerIntent = Effect.fn("documents.vault_sync.trigger")(function* (
 
 const reviewIntent = Effect.fn("documents.vault_sync.review")(function* (
   workspaceId: WorkspaceIdentity.WorkspaceId,
-  conflictId: SyncConflictId,
+  command: ReviewVaultSyncConflictCommand,
   client: DesktopSyncClient["Service"],
   registry: AtomRegistry.AtomRegistry
 ) {
+  const { conflictId, conflictKind, localRelPath } = command;
   yield* Effect.annotateCurrentSpan({ "documents.vault_sync.conflict_id": conflictId });
   const intentId = yield* mintIntentId;
   const queuedAt = yield* Clock.currentTimeMillis;
   yield* submitIntent(
-    VaultSyncIntent.cases.review.make({ intentId, workspaceId, queuedAt, conflictId }),
+    VaultSyncIntent.cases.review.make({
+      intentId,
+      workspaceId,
+      queuedAt,
+      conflictId,
+      ...(conflictKind === undefined ? {} : { conflictKind }),
+      ...(localRelPath === undefined ? {} : { localRelPath }),
+    }),
     client,
     registry
   );
@@ -597,7 +619,7 @@ export const vaultSyncCommandAtoms = Atom.family((workspaceId: WorkspaceIdentity
 
       const operation = VaultSyncCommand.match(command, {
         trigger: () => triggerIntent(workspaceId, client, registry),
-        review: ({ conflictId }) => reviewIntent(workspaceId, conflictId, client, registry),
+        review: (review) => reviewIntent(workspaceId, review, client, registry),
         replay: () => replayIntents(workspaceId, client, registry),
       });
 

@@ -213,9 +213,7 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       const events = yield* Effect.fromOption(O.fromUndefinedOr(store.events)).pipe(
         Effect.flatMap((read) => read(own))
       );
-      const requested = A.filter(events, ({ event }) =>
-        S.is(S.Struct({ _tag: S.Literal("VaultSyncRequested") }))(event)
-      );
+      const requested = A.filter(events, ({ event }) => S.is(S.TaggedStruct("VaultSyncRequested", {}))(event));
       expect(requested).toHaveLength(2);
     }).pipe(TestClock.withLive)
   );

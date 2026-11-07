@@ -268,6 +268,14 @@ Lane `goals/vault-sync-domain` · PR #2886
 
 Reverse: Widen DestinationId in Values.ts back to a branded NonEmptyString and drop mintDestinationId and makeDestinationId
 
+### Offline intents queue in the renderer; the trigger carries a stable intent id, 2026-11-07
+
+The renderer records every vault-sync command (trigger, conflict review) as an intent in a localStorage-backed queue (`vaultSyncIntentQueueAtom`) before sending it, and shows its prediction at once (pass queued; conflict reads reviewed). An unreachable sidecar keeps the intent queued; a mounted replay loop delivers the queue oldest first every two seconds; a typed `VaultSyncActionError` drops the intent and reverts its prediction with the server message. `TriggerVaultSync` gains an optional `intentId` (`RequestToken`); the Api adapter uses it as the request id and sends `commandId: vault-sync-intent:<id>`, so the destination dedupes a replayed trigger. Review is already idempotent (one heal operation id per conflict). Prediction stays at panel level: the renderer holds legacy rows, not `SyncConflict` aggregate state, so `Aggregate.predict` is not used yet; revisit when the panel reads the alchemy Views directly.
+
+Lane `feat/vault-sync-offline-intents`
+
+Reverse: Drop the intentId payload key and the intent queue; commands go back to fire-and-report
+
 ### Offline intents target renderer to sidecar in a later PR, 2026-11-07
 
 D8 applies to renderer to sidecar. PR 3a includes no offline queue or frontend work.

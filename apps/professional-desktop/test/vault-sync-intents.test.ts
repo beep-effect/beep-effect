@@ -94,7 +94,9 @@ describe("vault sync intent queue", () => {
         queuedAt: 1,
         conflictId,
       });
-      const queue = [trigger, review].reduce(enqueueIntent, enqueueIntent([], trigger));
+      const queue = A.reduce([trigger, review], enqueueIntent([], trigger), (queue, intent) =>
+        enqueueIntent(queue, intent)
+      );
       const again = enqueueIntent(queue, VaultSyncIntent.cases.review.make({ ...review, intentId: "r-2" }));
       expect(A.map(again, ({ intentId }) => intentId)).toEqual(["t-1", "r-1"]);
       expect(triggerQueued(again, workspace)).toBe(true);

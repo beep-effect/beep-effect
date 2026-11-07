@@ -27,38 +27,66 @@ import {
   vaultSyncRetryConnectionAtoms,
   vaultSyncStatusAtom,
 } from "./Sync.atoms.ts";
-import { intentsOf, reviewQueued, triggerQueued, vaultSyncIntentQueueAtom } from "./VaultSyncIntents.ts";
+import {
+  intentsOf,
+  reviewQueued,
+  triggerQueued,
+  VaultSyncIntent,
+  vaultSyncIntentQueueAtom,
+} from "./VaultSyncIntents.ts";
+
+/** A queued review intent, as its pending row reads it. */
+type ReviewIntentRow = Extract<VaultSyncIntent, { readonly kind: "review" }>;
+
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 import type { JSX } from "react";
 
-const statusCounts = (status: VaultSyncStatus) => [
-  { key: "pending", label: "Pending", value: status.pendingItems },
-  { key: "current", label: "Current", value: status.currentItems },
-  { key: "error", label: "Errors", value: status.errorItems },
-  { key: "conflict", label: "Conflicts", value: status.conflictItems },
-  { key: "queued-ops", label: "Queued ops", value: status.queuedOperations },
-  { key: "failed-ops", label: "Failed ops", value: status.failedOperations },
-  { key: "open-conflicts", label: "Open conflicts", value: status.openConflicts },
+/** Local work not yet reported by the sidecar: shown beside the server's counts, never folded into them. */
+interface LocalWork {
+  readonly pendingReviews: number;
+  readonly waiting: number;
+}
+
+const withLocal = (value: number, local: number, label: string) =>
+  local > 0 ? `${value} (+${local} ${label})` : `${value}`;
+
+const statusCounts = (status: VaultSyncStatus, local: LocalWork) => [
+  { key: "pending", label: "Pending", value: `${status.pendingItems}` },
+  { key: "current", label: "Current", value: `${status.currentItems}` },
+  { key: "error", label: "Errors", value: `${status.errorItems}` },
+  { key: "conflict", label: "Conflicts", value: `${status.conflictItems}` },
+  { key: "queued-ops", label: "Queued ops", value: withLocal(status.queuedOperations, local.waiting, "waiting") },
+  { key: "failed-ops", label: "Failed ops", value: `${status.failedOperations}` },
+  {
+    key: "open-conflicts",
+    label: "Open conflicts",
+    value: withLocal(status.openConflicts, local.pendingReviews, "pending review"),
+  },
 ];
 
-const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.Element => (
+/** Box as the sidecar reports it, or the sidecar itself out of reach (queued work, or no status). */
+type Connection = "connected" | "disconnected" | "sidecar offline";
+
+const ConnectionBadge = ({ connection }: { readonly connection: Connection }): JSX.Element => (
   <span
     className={
-      connected
+      connection === "connected"
         ? "rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary"
         : "rounded-sm bg-warning/10 px-1.5 py-0.5 text-xs text-warning-text"
     }
     data-testid="vault-sync-connection"
   >
-    {connected ? "connected" : "disconnected"}
+    {connection}
   </span>
 );
 
 const VaultSyncStatusView = ({
   status,
   onRetry,
+  local,
 }: {
+  readonly local: LocalWork;
   readonly onRetry: () => void;
   readonly status: AsyncResult.AsyncResult<VaultSyncStatus, unknown>;
 }): JSX.Element =>
@@ -90,7 +118,7 @@ const VaultSyncStatusView = ({
     ),
     onSuccess: (success) => (
       <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1" data-testid="vault-sync-status">
-        {A.map(statusCounts(success.value), (entry) => (
+        {A.map(statusCounts(success.value, local), (entry) => (
           <div key={entry.key} className="flex items-center justify-between gap-2">
             <dt className="text-xs text-muted-foreground">{entry.label}</dt>
             <dd className="text-xs font-medium" data-testid={`vault-sync-count-${entry.key}`}>
@@ -209,12 +237,27 @@ const VaultSyncActionStatus = ({ state }: { readonly state: VaultSyncPanelState 
         {message}
       </span>
     ),
-    failed: ({ message }) => (
-      <span className="text-xs text-destructive" role="status" data-testid="vault-sync-error">
-        {message}
-      </span>
-    ),
+    // A refused review reports on its conflict row; this slot is for sync-level outcomes.
+    failed: ({ message, conflictId }) =>
+      conflictId === undefined ? (
+        <span className="text-xs text-destructive" role="status" data-testid="vault-sync-error">
+          {message}
+        </span>
+      ) : null,
   });
+
+/** A queued review whose conflict list cannot load: its row, rebuilt from the intent. */
+const PendingReviewRow = ({ intent }: { readonly intent: ReviewIntentRow }): JSX.Element => (
+  <li className="rounded-sm border border-warning/40 p-2" data-testid="vault-sync-conflict-row">
+    <div className="flex items-center justify-between gap-2">
+      <span className="font-medium">{intent.conflictKind ?? "conflict"}</span>
+      <span className="text-xs text-muted-foreground" data-testid="vault-sync-conflict-pending">
+        Reviewed, waiting to sync
+      </span>
+    </div>
+    <p className="mt-1 break-all text-xs text-muted-foreground">{intent.localRelPath ?? "(no local path)"}</p>
+  </li>
+);
 
 const VaultSyncConflictsList = ({
   conflicts,
@@ -222,8 +265,14 @@ const VaultSyncConflictsList = ({
   onReview,
   busy,
   pendingReview,
+  pendingReviews,
+  rejection,
 }: {
   readonly busy: boolean;
+  /** Queued reviews: their rows stay visible when the list itself cannot load. */
+  readonly pendingReviews: ReadonlyArray<ReviewIntentRow>;
+  /** The server's message for the conflict whose review it refused, if any. */
+  readonly rejection: O.Option<{ readonly conflictId: SyncConflict["id"]; readonly message: string }>;
   /** Whether a review of the conflict is queued: shown as predicted, reviewed. */
   readonly pendingReview: (conflict: SyncConflict) => boolean;
   readonly conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown>;
@@ -235,19 +284,32 @@ const VaultSyncConflictsList = ({
   // listing was actually unavailable.
   if (AsyncResult.isFailure(conflicts)) {
     return (
-      <div className="mt-3 flex items-center gap-2" role="alert" data-testid="vault-sync-conflicts-failed">
-        <p className="text-xs text-destructive">Open conflicts could not be loaded.</p>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={onRetry}
-          disabled={conflicts.waiting}
-          data-testid="vault-sync-conflicts-retry"
-        >
-          {conflicts.waiting ? "Retrying…" : "Retry"}
-        </Button>
-      </div>
+      <>
+        <div className="mt-3 flex items-center gap-2" role="alert" data-testid="vault-sync-conflicts-failed">
+          <p className="text-xs text-destructive">
+            {A.isReadonlyArrayNonEmpty(pendingReviews)
+              ? "Open conflicts could not be loaded. Showing reviews waiting to sync."
+              : "Open conflicts could not be loaded."}
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onRetry}
+            disabled={conflicts.waiting}
+            data-testid="vault-sync-conflicts-retry"
+          >
+            {conflicts.waiting ? "Retrying…" : "Retry"}
+          </Button>
+        </div>
+        {A.isReadonlyArrayNonEmpty(pendingReviews) ? (
+          <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
+            {A.map(pendingReviews, (intent) => (
+              <PendingReviewRow key={intent.intentId} intent={intent} />
+            ))}
+          </ul>
+        ) : null}
+      </>
     );
   }
   return AsyncResult.isSuccess(conflicts) && A.isReadonlyArrayNonEmpty(conflicts.value) ? (
@@ -279,6 +341,16 @@ const VaultSyncConflictsList = ({
           <p className="mt-1 text-xs text-muted-foreground">
             event {O.getOrElse(conflict.remoteEventId, () => "(none)")}
           </p>
+          {pipe(
+            rejection,
+            O.filter(({ conflictId }) => conflictId === conflict.id),
+            O.map(({ message }) => (
+              <p className="mt-1 text-xs text-destructive" role="alert" data-testid="vault-sync-conflict-error">
+                {message}
+              </p>
+            )),
+            O.getOrNull
+          )}
         </li>
       ))}
     </ul>
@@ -324,6 +396,17 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
   useAtomMount(vaultSyncIntentReplayAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
   const connected = AsyncResult.isSuccess(status) && status.value.connected;
+  const pendingReviews = A.filter(intentsOf(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID), VaultSyncIntent.guards.review);
+  // The sidecar is out of reach while work is queued against it or its status cannot be read.
+  const connection: Connection =
+    VaultSyncPanelState.guards.queued(panelState) || AsyncResult.isFailure(status)
+      ? "sidecar offline"
+      : connected
+        ? "connected"
+        : "disconnected";
+  const rejection = VaultSyncPanelState.guards.failed(panelState)
+    ? O.map(O.fromUndefinedOr(panelState.conflictId), (conflictId) => ({ conflictId, message: panelState.message }))
+    : O.none();
   // Box answered as not configured: a pass cannot run. An unreachable sidecar is not that: the
   // trigger is queued as an intent and replays when the sidecar is back.
   const unconfigured = AsyncResult.isSuccess(status) && !status.value.connected;
@@ -337,7 +420,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       className={
         floating
           ? "fixed bottom-4 left-4 z-40 max-h-96 w-80 overflow-y-auto rounded-md border bg-card p-3 text-sm shadow-sm"
-          : "mx-auto mt-6 max-h-viewport-inset w-sync-panel overflow-y-auto rounded-lg border bg-card p-5 text-sm shadow-sm"
+          : "mx-auto mt-6 mb-16 max-h-viewport-inset w-sync-panel overflow-y-auto rounded-lg border bg-card p-5 text-sm shadow-sm"
       }
       data-testid="vault-sync-panel"
     >
@@ -347,10 +430,14 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
           <span className="text-xs text-muted-foreground" data-testid="vault-sync-provider">
             {AsyncResult.isSuccess(status) ? status.value.provider : "box"}
           </span>
-          <ConnectionBadge connected={connected} />
+          <ConnectionBadge connection={connection} />
         </div>
       </div>
-      <VaultSyncStatusView status={status} onRetry={refreshStatus} />
+      <VaultSyncStatusView
+        status={status}
+        onRetry={refreshStatus}
+        local={{ waiting: queuedCount, pendingReviews: pendingReviews.length }}
+      />
       {AsyncResult.isSuccess(status) && !status.value.connected ? (
         <DisconnectedNote
           probedAt={status.value.probedAt}
@@ -367,7 +454,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
           disabled={busy || unconfigured || passQueued}
           data-testid="vault-sync-trigger"
         >
-          {syncing ? "Syncing" : passQueued ? "Sync queued" : "Sync now"}
+          {syncing ? "Requesting…" : passQueued ? "Sync queued" : "Sync now"}
         </Button>
         <VaultSyncActionStatus state={panelState} />
       </div>
@@ -379,12 +466,19 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       <VaultSyncConflictsList
         busy={busy}
         pendingReview={(conflict) => reviewQueued(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID, conflict.id)}
+        pendingReviews={pendingReviews}
+        rejection={rejection}
         conflicts={conflicts}
         onRetry={refreshConflicts}
         onReview={(conflict) =>
           runCommand(
             VaultSyncCommand.cases.review.make({
               conflictId: conflict.id,
+              conflictKind: conflict.conflictKind,
+              ...O.match(conflict.localRelPath, {
+                onNone: () => ({}),
+                onSome: (localRelPath) => ({ localRelPath }),
+              }),
             })
           )
         }
