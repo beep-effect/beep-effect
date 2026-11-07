@@ -29,6 +29,10 @@ const Receipt = S.Struct({ remoteId: V.RemoteItemId, name: S.String, parentRemot
 const Stored = S.Array(S.Struct({ fingerprint: S.String, result: S.NullOr(S.String) })).pipe(
   $I.annoteSchema("StoredBoxReceipt", { description: "Persisted intent fingerprint and optional acknowledged result." })
 );
+const encode = S.encodeEffect(S.fromJsonString(Receipt));
+const decode = S.decodeUnknownEffect(S.fromJsonString(Receipt));
+// Fingerprints contain only reference metadata, never bytes or credentials.
+const fingerprint = S.encodeEffect(S.fromJsonString(S.Unknown));
 // `operation` names the Box call; `stage` names where the adapter stopped it before or around that call.
 const unavailable = (operation: V.MirrorOperation, stage: MirrorFailureStage | null = null) =>
   BoxMirrorUnavailable.make({
@@ -100,8 +104,6 @@ export const BoxMirrorLive = BoxMirror.toLayer(
     yield* sql`CREATE TABLE IF NOT EXISTS documents_sync_box_receipt (
     operation_id text PRIMARY KEY, fingerprint text NOT NULL, result text
   )`.pipe(Effect.orDie);
-    const encode = S.encodeEffect(S.fromJsonString(Receipt));
-    const decode = S.decodeUnknownEffect(S.fromJsonString(Receipt));
     const rootId = Effect.gen(function* () {
       const probe = yield* availability.probe;
       return yield* Effect.fromOption(probe.rootRemoteId).pipe(Effect.mapError(() => unavailable("resolveRoot")));
@@ -166,8 +168,6 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       );
       return receipt;
     });
-    // Fingerprints contain only reference metadata, never bytes or credentials.
-    const fingerprint = S.encodeEffect(S.fromJsonString(S.Unknown));
     const run = Effect.fnUntraced(function* (
       verb: V.MirrorOperation,
       args: { readonly operationId: V.OperationId; readonly passId: string; readonly generation: number },
