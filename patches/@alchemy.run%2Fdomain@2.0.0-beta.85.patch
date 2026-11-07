@@ -24,3 +24,30 @@ index 7de9848ebc4cc661ccfb52f53a3ff3b087fb2cd7..bee9c92fd4ec9908c1bbe20b6e49ccdc
  };
  
  /**
+diff --git a/src/InMemory.ts b/src/InMemory.ts
+--- a/src/InMemory.ts
++++ b/src/InMemory.ts
+@@ -166,7 +166,10 @@
+       timers.set(key, armed);
+       if (options.manual) return Effect.void;
+       return Effect.forkDetach(
+-        Effect.sleep(Math.max(0, at - now())).pipe(Effect.andThen(fireDue)),
++        Effect.suspend(() => Effect.sleep(Math.max(0, at - now()))).pipe(
++          Effect.repeat({ until: () => now() >= at }),
++          Effect.andThen(fireDue),
++        ),
+       ).pipe(Effect.asVoid);
+     });
+ 
+diff --git a/lib/InMemory.js b/lib/InMemory.js
+--- a/lib/InMemory.js
++++ b/lib/InMemory.js
+@@ -76,7 +76,7 @@
+         timers.set(key, armed);
+         if (options.manual)
+             return Effect.void;
+-        return Effect.forkDetach(Effect.sleep(Math.max(0, at - now())).pipe(Effect.andThen(fireDue))).pipe(Effect.asVoid);
++        return Effect.forkDetach(Effect.suspend(() => Effect.sleep(Math.max(0, at - now()))).pipe(Effect.repeat({ until: () => now() >= at }), Effect.andThen(fireDue))).pipe(Effect.asVoid);
+     });
+     const workflows = InMemoryWorkflows.make({
+         now,
