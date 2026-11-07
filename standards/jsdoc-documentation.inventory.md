@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T16:54:06.930Z
+Generated: 2026-11-07T19:56:10.901Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 172 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3783 |
-| publicExports | 26987 |
+| publicModules | 3808 |
+| publicExports | 27099 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -126,7 +126,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 68 | `@beep/pdf-tools` | `packages/drivers/pdf-tools` | clean | 4 | 38 | 0 | 0 |
 | 69 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 6 | 54 | 0 | 0 |
 | 70 | `@beep/provenance` | `packages/foundation/modeling/provenance` | clean | 4 | 28 | 0 | 0 |
-| 71 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
+| 71 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 202 | 0 | 1 |
 | 72 | `@beep/runpod` | `packages/drivers/runpod` | clean | 7 | 204 | 0 | 0 |
 | 73 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 15 | 0 | 0 |
 | 74 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 14 | 0 | 0 |
@@ -170,7 +170,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 112 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
 | 113 | `@beep/tika` | `packages/drivers/tika` | clean | 8 | 33 | 0 | 0 |
 | 114 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 7 | 31 | 0 | 0 |
-| 115 | `@beep/alchemy-postgres` | `packages/drivers/alchemy-postgres` | clean | 8 | 44 | 0 | 0 |
+| 115 | `@beep/alchemy-postgres` | `packages/drivers/alchemy-postgres` | clean | 8 | 46 | 0 | 0 |
 | 116 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 34 | 210 | 0 | 0 |
 | 117 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
 | 118 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 13 | 109 | 0 | 0 |
@@ -193,7 +193,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 135 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
 | 136 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
 | 137 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 138 | `@beep/documents-domain` | `packages/documents/domain` | clean | 80 | 282 | 0 | 0 |
+| 138 | `@beep/documents-domain` | `packages/documents/domain` | clean | 83 | 309 | 0 | 0 |
 | 139 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
 | 140 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 178 | 838 | 0 | 0 |
 | 141 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
@@ -207,7 +207,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 149 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
 | 150 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
 | 151 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
-| 152 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 38 | 161 | 0 | 0 |
+| 152 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 40 | 170 | 0 | 0 |
 | 153 | `@beep/epistemic-config` | `packages/epistemic/config` | clean | 7 | 20 | 0 | 0 |
 | 154 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 34 | 99 | 0 | 0 |
 | 155 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 41 | 158 | 0 | 0 |
@@ -215,14 +215,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 157 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
 | 158 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
 | 159 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 160 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 533 | 4964 | 45 | 29 |
+| 160 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 547 | 5008 | 45 | 29 |
 | 161 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
 | 162 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
 | 163 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
 | 164 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
 | 165 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
 | 166 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 167 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 38 | 133 | 2 | 0 |
+| 167 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 43 | 158 | 2 | 0 |
 | 168 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
 | 169 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
 | 170 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 122 | 761 | 0 | 0 |
@@ -492,7 +492,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:606` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1127` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1130` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)

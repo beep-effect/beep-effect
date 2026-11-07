@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (goals/scripts-to-beep-cli PR 1, #2860)",
-      "reason": "Re-record this PR's root prepare swap to beep toolchain prune-tsgo-backups, the repo-cli changeset formatter dev dependencies and beep:check script, and the regenerated policy-fingerprint seals on top of main after #2881, #2859 and #2863 (97a7bb87f4); no command, input, output, env or cache flag changes and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (orchestrator, goals/vault-sync-api-pr)",
+      "reason": "Record PR 3c's @beep/mcp-kit and @beep/shared-tables dependency edges on @beep/documents-server on top of main after #2894; no command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/scripts-to-beep-cli/research/cache-baseline-review-pr1.md",
-        "sha256": "910deea915420b8f5e03f5a4a8e878bb62bdc35e9e03fb3d6215afec3d912540"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3c-main.md",
+        "sha256": "81478cddfdc3c247e3041f2260f33dbe79e47411c895c2530b9a0a5433e533de"
       }
     },
     "@beep/acp": {
@@ -336,11 +336,11 @@
       }
     },
     "@beep/documents-server": {
-      "reviewer": "Claude Opus 5.5 (goals/vs-saga PR 3b part 1)",
-      "reason": "Record the documents-server alchemy domain, alchemy-postgres and PGlite dependency edges on top of #2886's baseline. No command, input, output, env or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (orchestrator, goals/vault-sync-api-pr)",
+      "reason": "Record PR 3c's @beep/mcp-kit and @beep/shared-tables dependency edges on @beep/documents-server on top of main after #2894; no command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b1-domain.md",
-        "sha256": "2d421b2461d9cc0dbb2c21b9523290a502b94931ae1363b0ca9760b13531e837"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3c-main.md",
+        "sha256": "81478cddfdc3c247e3041f2260f33dbe79e47411c895c2530b9a0a5433e533de"
       }
     },
     "@beep/documents-tables": {
@@ -29121,10 +29121,12 @@
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/mcp-kit#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build"
@@ -29188,10 +29190,12 @@
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/mcp-kit#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build"
@@ -29241,10 +29245,12 @@
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/mcp-kit#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build"
@@ -29378,11 +29384,13 @@
           "@beep/documents-use-cases#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/mcp-kit#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
+          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit"
@@ -29597,10 +29605,12 @@
           "@beep/documents-use-cases#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/mcp-kit#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
+          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit"
@@ -29653,10 +29663,12 @@
           "@beep/documents-use-cases#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/mcp-kit#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
+          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
@@ -29717,10 +29729,12 @@
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/mcp-kit#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build"
@@ -29770,10 +29784,12 @@
           "@beep/documents-use-cases#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/mcp-kit#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build"
@@ -125578,7 +125594,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "3d167415d1c39e2d3ee2f662e5f60d13789b80de9049aab04b04d7d7b2bb5c5b"
+        "sha256": "e13fb983974b5cf924c610ef1f6ed1edf4ed5215df79993810353be295afe35a"
       }
     ]
   }

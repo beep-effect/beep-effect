@@ -13,3 +13,4 @@ export * from "./RenameDestination.command.ts";
 export * from "./ResolveDestinationRoot.command.ts";
 export * from "./ResumeDestination.command.ts";
 export * from "./SyncDestination.events.ts";
+export * from "./VaultSyncRequest.command.ts";

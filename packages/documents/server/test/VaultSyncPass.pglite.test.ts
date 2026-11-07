@@ -227,6 +227,15 @@ describe("VaultSyncPass SQL durability", () => {
         expect(skippedResult).toEqual({ operationsSucceeded: 0, conflicts: 0 });
         const after = yield* fixture.counts;
         expect(after).toEqual(before);
+        // A probe-only pass refreshes availability and runs no mirror verb.
+        const probing = yield* Context.get(runtime, VaultSyncPass).start("probe-pass", {
+          destinationId: failing,
+          probeOnly: true,
+        });
+        const probed = yield* probing.result.pipe(Effect.timeout("20 seconds"));
+        expect(probed).toEqual({ operationsSucceeded: 0, conflicts: 0 });
+        const afterProbe = yield* fixture.counts;
+        expect(afterProbe).toEqual(after);
       })
     );
   });

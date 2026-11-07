@@ -40,6 +40,14 @@ const DESKTOP_RPC_SESSION_TOKEN_ENV = "BEEP_DESKTOP_RPC_SESSION_TOKEN" as const;
 export const DesktopRpcSessionToken = Config.Redacted(DESKTOP_RPC_SESSION_TOKEN_ENV).pipe(Config.option);
 
 /**
+ * Required redacted session token, for clients such as the remote vault-sync CLI.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const DesktopRpcSessionTokenRequired = Config.Redacted(DESKTOP_RPC_SESSION_TOKEN_ENV);
+
+/**
  * Build the HTTP Authorization header value for a desktop RPC session token.
  *
  * @category auth

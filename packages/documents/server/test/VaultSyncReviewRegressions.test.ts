@@ -48,6 +48,7 @@ import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as References from "effect/References";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const RegressionTestLayer = DocumentsSyncFixtureLive.pipe(
@@ -777,7 +778,11 @@ it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
       const offline = yield* makeVaultSyncEngine().pipe(
         Effect.provideService(
           DmsMirrorAvailability,
-          DmsMirrorAvailability.of({ probe: disconnected, refresh: disconnected })
+          DmsMirrorAvailability.of({
+            changes: Stream.fromEffect(disconnected),
+            probe: disconnected,
+            refresh: disconnected,
+          })
         )
       );
       yield* offline.syncOnce(syncInput(root));

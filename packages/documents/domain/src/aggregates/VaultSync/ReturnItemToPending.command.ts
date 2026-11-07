@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import * as Domain from "@alchemy.run/domain";
+import * as S from "effect/Schema";
 import * as E from "./SyncItem.events.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
@@ -22,7 +23,8 @@ import * as V from "./Values.ts";
  */
 export class ReturnItemToPending extends Domain.Command("ReturnItemToPending", {
   target: V.ItemId,
-  input: { operationId: V.OperationId },
+  // A reviewed move or rename overrides the re-push type with its corrective operation.
+  input: { operationId: V.OperationId, type: S.optionalKey(V.OperationType) },
   events: [E.ItemReturnedToPending],
   rejects: [SyncRuleViolation],
 }) {}

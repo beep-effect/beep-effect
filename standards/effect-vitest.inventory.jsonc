@@ -4848,7 +4848,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native temporary directories and canonical-root realPath reads are the subject: the adapter reads upload bytes through the symlink/inode-bound vault file store and checks the queued digest, which MemoryFileSystem does not model. Owner: @beep/documents-server. Exit: retire when the vault file store reads through an injected filesystem that models realPath and inode identity."
+      "reason": "Real temporary vault files are the subject: BoxMirrorLive hashes the bytes it reads before each Box mutation, and the receipt test proves no second upload after a runtime restart. A MemoryFileSystem would replace that read path. Owner: @beep/documents-server. Exit: retire when the vault file store is injected and its digest reads are proven over MemoryFileSystem."
     },
     {
       "id": "EV010:packages/documents/server/test/DocumentIntake.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
