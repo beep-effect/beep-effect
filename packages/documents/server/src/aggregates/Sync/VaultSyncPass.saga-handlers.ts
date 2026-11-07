@@ -263,12 +263,15 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         }
         return planned;
       });
+      // The `ItemOperations` policy creates the operation from the item's event. After a host crash that
+      // delivery can stay leased to the dead host until the driver lease lapses (30 seconds by default), so
+      // the wait must outlast it, or a resumed pass dies before the policy runs.
       const awaitOperation = (operationId: V.OperationId) =>
         operations
           .state(operationId)
           .pipe(
             Effect.repeat({ until: (state) => state !== null, schedule: Schedule.spaced("10 millis") }),
-            Effect.timeout("10 seconds"),
+            Effect.timeout("2 minutes"),
             Effect.orDie
           );
       // An expired lease held by this pass is expired so the next lease takes a new epoch.
