@@ -429,6 +429,8 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         // A declaration or dependency change requires renewed qualification,
         // including specific new report inputs a handful of probes cannot see.
         const manifestText = yield* fs.readFileString(path.join(repo, "package.json"));
+        const rootManifest = yield* decodeManifest(manifestText);
+        expect(rootManifest.scripts["lint:effect-imports"]).toBe("bun run beep laws effect-imports --check");
         const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ workspaces: S.Array(S.String) })))(
           manifestText
         );
@@ -441,7 +443,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("4fccd6c5198374bf73b62e34a9840be10ea9c35365aa0a25d43a2945bc186a69");
+        expect(Hex.encode(bytes)).toBe("5add99c2ac1a56067775a2071fe3e6e0c765eda81a1d97273abb0bbce2797f59");
       })
     );
   });
