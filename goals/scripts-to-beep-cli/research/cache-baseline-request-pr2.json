@@ -1,5 +1,5 @@
 {
-  "previous": "09d8fe9908401780e861c3578f456e41f9f342df312d3ff81e9653bc13449b6e",
+  "previous": "6f4ca8ee32d450fb91d88640dec80a36b444fe272bd98892bdd52aebd82c559c",
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/scripts-to-beep-cli PR 2)",
     "reason": "Re-record the root lint:tracked-shell-allowlist script, its uncached //#lint:tracked-shell-allowlist Turbo task and the regenerated policy-fingerprint seals; no existing command, input, output, env or cache flag changes and no qualification is granted.",
