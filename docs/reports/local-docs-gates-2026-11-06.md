@@ -78,7 +78,10 @@ The inventory scores declarations from their own source file and analyzes
 re-export declarations syntactically. The actual Effect imports CLI handler
 forces `effectOnly: true`, bypassing semantic foundation export mapping. A
 qualification test binds that actual call-site option; default scanner options
-are not used as evidence for the CLI behavior.
+are not used as evidence for the CLI behavior. A narrow test seal covers the
+reviewed scanner/discovery implementations and requires explicit input-closure
+review when they change; ordinary application source and workspace membership
+are excluded from this seal.
 
 The additional guard queries names through existing discovery helpers and
 `Git.checkIgnore`, then inspects matched source/configuration paths and every
@@ -174,6 +177,14 @@ A separate representative attempt was invalidated by introduced EV006 in a new
 test's Option matcher. It was corrected to the canonical assertion on the
 original Option; the exact-file detector and full retained Effect Vitest command
 then passed without changing any inventory or baseline.
+
+## Method lessons
+
+Measure warm-cache behavior before accepting a skip optimization: a cold scan
+saving can hide slower repeated local checks. Run the actual Effect Vitest
+detector over changed tests in every touched package before expensive timing.
+Keep the runtime lane population and scanner input contracts explicit; static
+catalog counts and Git cleanliness alone did not establish either boundary.
 
 ## Historical four-lane method and acceptance
 

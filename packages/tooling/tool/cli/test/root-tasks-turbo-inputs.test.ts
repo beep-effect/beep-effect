@@ -469,6 +469,61 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
   );
 
   it.layer(PlatformLayer, { timeout: "30 seconds" })("report-only source input contract", (it) => {
+    it.effect("requires input-closure review when qualified scanner implementations change", () =>
+      Effect.gen(function* () {
+        const repo = yield* findRepoRoot();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const digest = yield* Digest.Digest;
+        // These are reviewed consumer implementations, never ordinary application
+        // sources or workspace membership. A changed seal requires input-closure
+        // review and controls before updating the expected value.
+        const consumers = [
+          Tuple.make(
+            "packages/foundation/capability/walker/src/Expand.ts",
+            "27393369d43732e128561717062b07d9a5862e7c21fa82ca10e5f3167bdcb93b"
+          ),
+          Tuple.make(
+            "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+            "f7175e1870f0c6c0eb0660b1384f52b3a3763684694191180823441430d11863"
+          ),
+          Tuple.make(
+            "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+            "ba71424c438ad763704deab9814761d4b97429d69bf6f439e0bb7c5f8abbf279"
+          ),
+          Tuple.make(
+            "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
+            "a233fd811b0d00f98032c13ba5a2346fc57b72e80c5656dc033ff6df063a137a"
+          ),
+          Tuple.make(
+            "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+            "45a81fdece8d90f8290b56c602fbbff4e10c68d9c92deca53f70b8fac4f1df56"
+          ),
+          Tuple.make(
+            "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
+            "0234ea9c2baec10ace9cd26bc64014b3dd957fda211c9fb066c90c128bd96c24"
+          ),
+          Tuple.make(
+            "packages/foundation/capability/walker/src/Descend.ts",
+            "0b116dc99e01c10ca9da12beb9862bd04863c1e7f7862c3eef383c145417188d"
+          ),
+          Tuple.make(
+            "packages/tooling/library/repo-utils/src/FsUtils.ts",
+            "137344232f545cdd140c568803cd367b8723fdeb1f47c468e7577ebaeda3161e"
+          ),
+          Tuple.make(
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "ed0556d6b78f97a61f848e66bb125516643945751419ced47594db3ee0672199"
+          ),
+        ];
+        for (const [file, expected] of consumers) {
+          const content = yield* fs.readFileString(path.join(repo, file));
+          const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(content));
+          expect(Hex.encode(bytes), `${file}: re-review report-only scanner input closure`).toBe(expected);
+        }
+      })
+    );
+
     it.effect("accepts ordinary future source and package additions within supported roots", () =>
       Effect.gen(function* () {
         const id = "@beep/repo-cli#lint:policy-fingerprint:fixture";
