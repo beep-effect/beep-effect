@@ -1315,3 +1315,7 @@ No inspection or protected trial was submitted. Independent adoption metadata
 work continued in an isolated source-bound checkout. Retaining immutable hosted
 source bindings and coordinating a short exact-source approval interval would
 avoid repeated static reads while preserving the final live-ref check.
+
+## Audit shared tracked discovery before promoting a single caller, 2026-11-07
+
+The entity-kit discovery fix exposed three additional cached root callers of scanTrackedTextFiles: retired Effect paths, retired IRI authorities and Markdown fences. Review the entire helper call-site family once, while separating EffectImports' tracked-plus-untracked semantics. Four metadata-only Markdown controls preserve task hashes across changed tracked membership. Extend the same temporary fresh boundary and runtime key declaration without claiming qualified adoption. Source, exact clients and raw observation digests are bound in tracked-scanner-discovery-key-review-2026-11-07.json.
