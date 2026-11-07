@@ -369,6 +369,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         { file: "heavy-admit.yml", job: "heavy" },
         { file: "cache-producer-inspect.yml", job: "inspect" },
         { file: "cache-producer-prepare.yml", job: "prepare" },
+        { file: "cache-local-observe.yml", job: "observe" },
         { file: "cache-producer.yml", job: "produce" },
       ]) {
         const workflowYaml = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
@@ -1856,6 +1857,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Coverage Artifact Migration",
         "cache-warm.yml:Warm Turbo cache",
         // Manual source inspection is operational evidence, not a required quality lane.
+        "cache-local-observe.yml:Observe local cache pilot",
+        "heavy.yml:Heavy / Observe local cache pilot",
         "cache-producer-inspect.yml:Inspect producer sources and tools",
         "heavy.yml:Heavy / Inspect producer sources and tools",
         // A candidate adapter build grants no producer or quality verdict authority.
@@ -1926,6 +1929,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         ["heavy-admit.yml", "heavy"],
         ["cache-producer-inspect.yml", "inspect"],
         ["cache-producer-prepare.yml", "prepare"],
+        ["cache-local-observe.yml", "observe"],
         ["cache-producer.yml", "produce"],
       ] as const;
       for (const [file, job] of callers) {
@@ -1988,12 +1992,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
         A.join(
           [
             "inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution &&",
+            "!inputs.local_pilot_observation &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
             "github.ref == 'refs/heads/main' &&",
@@ -2023,10 +2028,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       });
       const sandboxName = "Ensure native sandbox inspection dependency";
       const sandbox = stepByName(steps, sandboxName);
-      expect(sandbox.run).toContain("dnf install -y bubblewrap");
-      expect(sandbox.run).toContain("apt-get install -y --no-install-recommends bubblewrap");
-      expect(sandbox.run).toContain("test -x /usr/bin/bwrap");
-      expect(sandbox.run).toContain("/usr/bin/bwrap --version");
+      expect(sandbox.run).toBe("bash scripts/ci-cache-native-sandbox.sh");
+      const sandboxScript = yield* fs.readFileString(`${root}/scripts/ci-cache-native-sandbox.sh`);
+      expect(sandboxScript).toContain("dnf install -y bubblewrap");
+      expect(sandboxScript).toContain("apt-get install -y --no-install-recommends bubblewrap");
+      expect(sandboxScript).toContain("test -x /usr/bin/bwrap");
+      expect(sandboxScript).toContain("/usr/bin/bwrap --version");
       expect(stepIndexByName(steps, sandboxName)).toBeLessThan(
         stepIndexByName(steps, "Write bounded source inspection")
       );
@@ -2127,12 +2134,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "if"])).toBe(
         A.join(
           [
             "inputs.producer_preparation && !inputs.producer_inspection && !inputs.producer_execution &&",
+            "!inputs.local_pilot_observation &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
             "github.ref == 'refs/heads/main' &&",
@@ -2281,12 +2289,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution }}"
+        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toBe(
         A.join(
           [
             "inputs.producer_execution && !inputs.producer_inspection && !inputs.producer_preparation &&",
+            "!inputs.local_pilot_observation &&",
             "(inputs.producer_channel == 'stable' || inputs.producer_channel == 'canary') &&",
             "github.repository == 'beep-effect/beep-effect' &&",
             "github.event_name == 'workflow_dispatch' &&",
@@ -2360,7 +2369,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       expect(stepRun(steps, runName)).toContain("timeout --signal=TERM --kill-after=30s 50m");
       expect(stepRun(steps, runName)).toContain("cache producer-run");
-      expect(stepRun(steps, "Prepare fixed full-pilot inputs without credentials")).toContain("'selection':'full'");
+      expect(stepRun(steps, "Prepare fixed full-pilot inputs without credentials")).toBe(
+        "bash scripts/ci-cache-pilot-inputs.sh signed"
+      );
+      const inputScript = yield* fs.readFileString(`${root}/scripts/ci-cache-pilot-inputs.sh`);
+      expect(inputScript).toContain("'selection':'full'");
+      expect(inputScript).toContain("Signed execution remains restricted to identity lint.");
       expect(stepByName(steps, publishName).env).toEqual({
         R2_ACCESS_KEY_ID: "${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}",
         R2_SECRET_ACCESS_KEY: "${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}",
@@ -2404,9 +2418,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(stepByName(steps, "Remove only this trial's private files and worktrees").if).toBe(
         "always() && steps.private.outputs.root != ''"
       );
-      expect(stepRun(steps, "Remove only this trial's private files and worktrees")).toContain(
-        '"$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1"'
+      expect(stepRun(steps, "Remove only this trial's private files and worktrees")).toBe(
+        "bash scripts/ci-cache-pilot-cleanup.sh signed"
       );
+      const cleanupScript = yield* fs.readFileString(`${root}/scripts/ci-cache-pilot-cleanup.sh`);
+      expect(cleanupScript).toContain('"$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1"');
+      expect(cleanupScript).toContain('git worktree remove -- "$tree"');
+      expect(cleanupScript).not.toContain("--force");
     })
   );
 
@@ -2806,6 +2824,54 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(readFileString37).toBe("");
       const readFileString38 = yield* fs.readFileString(calls);
       expect(readFileString38).toContain(`show ${sha}:.github/workflows/heavy.yml`);
+    })
+  );
+  it.effect("keeps manual local observations separate from protected producers and quality verdicts", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const callerText = yield* fs.readFileString(`${root}/.github/workflows/cache-local-observe.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      const caller = parseWorkflowYaml(callerText);
+      expect(yamlAt(caller, ["on", "workflow_dispatch", "inputs", "computation", "options"])).toEqual([
+        "@beep/types#lint",
+        "@beep/identity#lint",
+      ]);
+      expect(yamlAt(caller, ["jobs", "observe", "secrets"])).toBeUndefined();
+      expect(yamlAt(caller, ["concurrency", "cancel-in-progress"])).toBe(false);
+      expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "local_pilot_observation", "default"])).toBe(false);
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "environment"])).toBeUndefined();
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "timeout-minutes"])).toBe(20);
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "if"])).toContain(
+        "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-local-observe.yml@refs/heads/main'"
+      );
+      const jobs = yield* workflowJobs(heavy);
+      expect(setupMonorepoInputs(jobs, "local-pilot-observe")).toEqual({
+        "turbo-remote-cache": "false",
+        "r2-enabled": "false",
+        "app-secrets": "false",
+      });
+      const localSteps = jobSteps(jobs, "local-pilot-observe");
+      expect(stepRun(localSteps, "Observe the existing local pilot")).toContain("15m");
+      expect(stepRun(localSteps, "Observe the existing local pilot")).toContain("cache pilot");
+      expect(stepRun(localSteps, "Project only bounded digest and count evidence")).toContain("-I -S -B");
+      expect(stepByName(localSteps, "Retain only the public summary for one day").with).toMatchObject({
+        "retention-days": 1,
+        path: "${{ steps.summary.outputs.path }}",
+      });
+      const local = yield* encodeJobsFixture(yamlAt(heavy, ["jobs", "local-pilot-observe"]));
+      for (const forbidden of [
+        "secrets.",
+        "producer-install",
+        "producer-run",
+        "producer-publish",
+        "BEEP_CACHE_PRODUCER_STORE",
+      ])
+        expect(local).not.toContain(forbidden);
+      for (const job of ["verify", "producer-inspect", "producer-prepare", "producer-execute"])
+        expect(yamlAt(heavy, ["jobs", job, "if"])).toContain("!inputs.local_pilot_observation");
     })
   );
 });

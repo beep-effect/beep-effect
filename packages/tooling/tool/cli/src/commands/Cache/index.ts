@@ -239,6 +239,7 @@ export { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
  * @since 0.0.0
  */
 export {
+  CacheLocalPilotSummary,
   CachePilotExecutionInterval,
   CachePilotLogInput,
   CachePilotMutation,
