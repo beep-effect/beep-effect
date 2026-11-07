@@ -673,7 +673,8 @@ export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(f
  * @since 0.0.0
  */
 export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(function* (
-  input: HeavyAdmissionReadInput
+  input: HeavyAdmissionReadInput,
+  readTimeout: Duration.Input = ROUTE_READ_TIMEOUT
 ) {
   if (input.eventName !== "pull_request") {
     return HeavyAdmissionRoute.make({ lanes: [], receipt: "route-not-applicable" });
@@ -725,7 +726,7 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
     // The route never blocks Heavy: a stall past the bound or any failure falls back to running
     // every lane, and the cause goes to stderr (stdout carries the admission JSON) so a route
     // that breaks on every PR stays visible in the job log.
-    Effect.timeout(ROUTE_READ_TIMEOUT),
+    Effect.timeout(readTimeout),
     Effect.tapCause((cause) =>
       Console.error(`verification route unavailable; every heavy lane runs: ${Cause.pretty(cause)}`)
     ),
