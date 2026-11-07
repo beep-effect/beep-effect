@@ -26,6 +26,13 @@ RUN="$HERE/vm-run.sh"
 EXT_ID="local.mcpb.beep-effect-contributors.beep-practice-gateway"
 v() { virsh -c "$CONN" "$@"; }
 
+# A beep-beginners (Milkman) proof run holds this lock from prepare to finish.
+# Its runner exports BEEP_VM_LOCK_HOLDER=milkman; everyone else waits.
+if [[ -f "$STATE/milkman.lock" && "${BEEP_VM_LOCK_HOLDER:-}" != milkman ]]; then
+  echo "a Milkman proof run holds $STATE/milkman.lock ($(cat "$STATE/milkman.lock")); try again after it finishes" >&2
+  exit 1
+fi
+
 wait_for_harness() {
   for _ in $(seq 1 60); do
     "$RUN" ssh 'Test-Path C:\harness-ready.txt' 2>/dev/null | grep -q True && return 0

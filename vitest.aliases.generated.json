@@ -2275,8 +2275,17 @@
     "./packages/drivers/alchemy-postgres/src/index.ts"
   ],
   "@beep/alchemy-postgres/*": ["./packages/drivers/alchemy-postgres/src/*"],
+  "@beep/repo-cli/commands/History": [
+    "./packages/tooling/tool/cli/src/commands/History/index.ts"
+  ],
+  "@beep/repo-cli/ChangesetChangelog": [
+    "./packages/tooling/tool/cli/src/ChangesetChangelog.ts"
+  ],
   "@beep/repo-cli/commands/Git": [
     "./packages/tooling/tool/cli/src/commands/Git/index.ts"
+  ],
+  "@beep/repo-cli/commands/Github": [
+    "./packages/tooling/tool/cli/src/commands/Github/index.ts"
   ],
   "@beep/repo-cli/commands/Toolchain": [
     "./packages/tooling/tool/cli/src/commands/Toolchain/index.ts"

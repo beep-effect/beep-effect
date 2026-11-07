@@ -450,6 +450,16 @@ else
   printf '%s' "${prepare_hash}" > "${prepare_stamp}"
 fi
 
+# ---------------------------------------------------------------------------
+# 4. Commit-message overlay (refs/notes/history)
+# ---------------------------------------------------------------------------
+# Adds the notes fetch refspec and display ref to this clone's config (each only
+# when absent) and fetches the ref, so `git log` shows the corrected messages.
+# Idempotent and never fatal: a VM without the ref or the network still boots.
+if ! bun run beep history notes sync; then
+  warn "history notes sync failed; git log will not show refs/notes/history until it runs."
+fi
+
 op_version=missing
 if [ -n "${op_path}" ]; then
   op_version="$("${op_path}" --version 2>/dev/null || echo missing)"

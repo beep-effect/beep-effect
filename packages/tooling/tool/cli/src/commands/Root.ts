@@ -27,6 +27,7 @@ import { gitCommand } from "./Git/index.ts";
 import { githubCommand } from "./Github/index.ts";
 import { goalsCommand } from "./Goals/index.ts";
 import { harnessLedgerCommand } from "./HarnessLedger/index.ts";
+import { historyCommand } from "./History/index.ts";
 import { holdsCommand } from "./Holds/index.ts";
 import { imageCommand } from "./Image/index.ts";
 import { kbCommand } from "./Kb/index.ts";
@@ -101,6 +102,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     githubCommand,
     goalsCommand as Command.Command<"goals", {}, {}, never, never>,
     harnessLedgerCommand,
+    historyCommand,
     holdsCommand,
     kbCommand,
     refsCommand,
