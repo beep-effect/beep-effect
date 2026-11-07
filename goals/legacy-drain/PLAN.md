@@ -71,7 +71,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 SPEC.md's line that beep-effect-cutover is archived is done: on 2026-11-06 goals/history-message-overlay tracked the reviewed commit-message map at docs/history/ and moved the whole folder (1.3 MB: census, cutover, research) to $HOME/.local/state/beep/archive/beep-effect-cutover/. Nothing was deleted.
 
-Lane `docs/git-history-rewrite-exploration` · PR #2785
+Lane `git-history-rewrite` · PR #2785
 
 Reverse: mv $HOME/.local/state/beep/archive/beep-effect-cutover $HOME/YeeBois/projects/beep-effect-cutover
 
