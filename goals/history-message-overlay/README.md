@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,6 +19,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
   the pre-merge scratch `--write` produced. `sync` then `--check
   --require-published`: 940 notes, 940 match. `git log 6f33208961` shows
   `Notes (history):` under the original subject.
+- Completed 2026-11-07: completion verified on final PR #2858, adopted as
+  `completed-retained`.
 - Re-final PR [#2858](https://github.com/beep-effect/beep-effect/pull/2858): #2785
   merged before its readiness monitor recorded merge-ready, and its rendered lane
   names tripped `knowledge:semantic-delta` on main; #2858 fixes both.
