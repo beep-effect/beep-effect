@@ -10,8 +10,7 @@ import {
 } from "./AnnotationSpan.ts";
 import { makeCitationStyleTagBalancer } from "./AnnotationStyle.ts";
 import { CitationXmlBalance } from "./XmlWorker.ts";
-import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
-import type { CitationAnnotationReplacement } from "./AnnotationAssembly.ts";
+import type { CitationAnnotationReplacement, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 /** Capture the existing XML and style capabilities within one operation. The

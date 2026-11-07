@@ -1,14 +1,18 @@
 import * as Root from "@beep/law-practice-use-cases";
 import * as Public from "@beep/law-practice-use-cases/public";
 import {
+  CitationAnnotationMode,
+  CitationAnnotationReplacement,
   CitationBuiltinCleanerName,
   CitationCleanerContainerKind,
+  CitationEngineAnnotationInput,
   CitationEngineExtractionOptions,
   CitationEngineExtractionResult,
   CitationEngineSourceEvidence,
   CitationEngineSourceInput,
   CitationEngineSourcePairInput,
   CitationExtractionDiagnostics,
+  CitationPythonUnicodeStorage,
   CitationSourceRole,
 } from "@beep/law-practice-use-cases/server";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -73,12 +77,30 @@ it.effect("retains exact raw Unicode and identity without granting a verified ca
     expect(pair.markup?.sourceText).toBe(" A😀\n");
     expect(pair.cleanSteps).toEqual([]);
     expect(S.is(VerifiedSourceText)(pair.plain)).toBe(false);
+    const emptyWord = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array() });
+    const annotation = yield* S.decodeEffect(CitationEngineAnnotationInput)({
+      plain: { source: identity, sourceText: " A😀\n" },
+      replacements: [CitationAnnotationReplacement.make({ start: -2, end: 200, before: emptyWord, after: emptyWord })],
+    });
+    expect(annotation.mode).toBe("unchecked");
+    expect(annotation.replacements[0]?.start).toBe(-2);
+    expect(annotation.replacements[0]?.end).toBe(200);
+    expect(CitationAnnotationMode.literals).toEqual(["unchecked", "skip", "wrap"]);
+    const callableAnnotation = yield* S.decodeUnknownEffect(CitationEngineAnnotationInput)({
+      ...annotation,
+      replacements: [() => "replacement"],
+    }).pipe(Effect.flip);
+    expect(callableAnnotation._tag).toBe("SchemaError");
   })
 );
 it.effect("keeps raw source and mode contracts out of root and client surfaces", () =>
   Effect.sync(() => {
     for (const name of [
       "CitationEngineSourceInput",
+      "CitationAnnotationMode",
+      "CitationAnnotationReplacement",
+      "CitationEngineAnnotationInput",
+      "CitationEngineAnnotationResult",
       "CitationEngineSourceEvidence",
       "CitationEngineExtractionResult",
       "CitationExtractionDiagnostics",

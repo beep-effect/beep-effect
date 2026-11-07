@@ -2,16 +2,17 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationAnnotationReplacement,
-  makeCitationAnnotationAssembly,
-} from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
+import { makeCitationAnnotationAssembly } from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
 import { prepareCitationAnnotations } from "@beep/law-practice-server/internal/Citation/AnnotationPreparation";
 import { CitationAnnotationSpanProcessor } from "@beep/law-practice-server/internal/Citation/AnnotationSpan";
 import { CitationAnnotationTemplateFailure } from "@beep/law-practice-server/internal/Citation/AnnotationTemplate";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { CitationXmlBalance } from "@beep/law-practice-server/internal/Citation/XmlWorker";
-import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import {
+  CitationAnnotationReplacement,
+  CitationPythonUnicodeStorage,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

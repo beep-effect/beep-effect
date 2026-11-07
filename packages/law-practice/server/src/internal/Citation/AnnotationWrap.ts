@@ -17,8 +17,11 @@ import { CitationPythonSliceBounds } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
 import { CitationRegexOperation } from "./RegexPolicy.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
-import type { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
-import type { CitationAnnotationReplacement } from "./AnnotationAssembly.ts";
+import type {
+  CitationAnnotationReplacement,
+  CitationEngineLimits,
+  CitationPythonUnicodeStorage,
+} from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const pattern = { width: 1, bytes: new TextEncoder().encode("(<[^>]+>)") };

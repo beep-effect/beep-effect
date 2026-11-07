@@ -2,9 +2,8 @@
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
-  CitationPythonUnicodeStorage,
+  CitationAnnotationReplacement,
   CitationSafetyLimitExceeded,
   CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
@@ -12,7 +11,6 @@ import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { captureCitationAnnotationReservation } from "./AnnotationBudget.ts";
 import {
   CitationAnnotationCallbackFailure,
@@ -25,28 +23,9 @@ import {
   normalizeCitationPythonSlice,
   sliceCitationPythonStorage,
 } from "./PythonUnicode.ts";
-import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonSliceLayout, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
-const $I = $LawPracticeServerId.create("internal/Citation/AnnotationAssembly");
-/** Prepared primitive annotation. Positions use Python points; no source proof is issued.
- * @internal @category models @since 0.0.0
- */
-export class CitationAnnotationReplacement extends S.Opaque<
-  CitationAnnotationReplacement,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    start: S.Int,
-    end: S.Int,
-    before: CitationPythonUnicodeStorage,
-    after: CitationPythonUnicodeStorage,
-  }).pipe(
-    $I.annoteSchema("CitationAnnotationReplacement", {
-      description: "Native primitive annotation tuple after source-defined sorting and offset preparation.",
-    })
-  )
-) {}
 const length = (value: CitationPythonUnicodeStorage) => value.bytes.length / value.width;
 /** Capture the enclosing operation's budget. The caller owns validated immutable
  * native inputs, source-defined tuple sorting and offset mapping. Without a captured span processor this executes unchecked concatenation.

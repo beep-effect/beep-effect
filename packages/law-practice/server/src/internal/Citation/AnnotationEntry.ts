@@ -4,17 +4,18 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationAnnotationMode,
+  CitationAnnotationReplacement,
   CitationEngineAbsoluteMaxima,
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
-import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { captureCitationOperationChildren } from "./Admission.ts";
-import { CitationAnnotationReplacement, makeCitationAnnotationAssembly } from "./AnnotationAssembly.ts";
+import { makeCitationAnnotationAssembly } from "./AnnotationAssembly.ts";
 import {
   captureCitationAnnotationReservation,
   citationAnnotationSafety,
@@ -38,14 +39,6 @@ import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { makeCitationSpanOffsets } from "./SpanOffsets.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/AnnotationEntry");
-/** @internal @category models @since 0.0.0 */
-export const CitationAnnotationMode = LiteralKit(["unchecked", "skip", "wrap"]).pipe(
-  $I.annoteSchema("CitationAnnotationMode", {
-    description: "Original markup policy, validated before reading other request components.",
-  })
-);
-/** @internal @category models @since 0.0.0 */
-export type CitationAnnotationMode = typeof CitationAnnotationMode.Type;
 /** @internal @category errors @since 0.0.0 */
 export class CitationAnnotationEntryFailure extends S.TaggedError<
   CitationAnnotationEntryFailure,
@@ -79,7 +72,7 @@ export class CitationAnnotationEntryConfiguration extends S.Opaque<
 ) {}
 const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array() });
 const ModeProbe = S.Struct({
-  mode: CitationAnnotationMode.pipe(S.withDecodingDefaultKey(Effect.succeed("unchecked"))),
+  mode: CitationAnnotationMode.pipe(S.withDecodingDefaultKey(Effect.succeed<CitationAnnotationMode>("unchecked"))),
 }).pipe(
   $I.annoteSchema("ModeProbe", {
     description: "Validate the original mode before inspecting potentially ignored fields.",

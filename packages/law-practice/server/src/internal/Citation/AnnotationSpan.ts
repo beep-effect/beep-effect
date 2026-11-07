@@ -17,7 +17,7 @@ import {
 import { CitationXmlKernelFailure } from "./XmlBalanceKernel.ts";
 import { CitationXmlBalance } from "./XmlWorker.ts";
 import { CitationXmlWorkerFailure } from "./XmlWorkerProtocol.ts";
-import type { CitationAnnotationReplacement } from "./AnnotationAssembly.ts";
+import type { CitationAnnotationReplacement } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/AnnotationSpan");

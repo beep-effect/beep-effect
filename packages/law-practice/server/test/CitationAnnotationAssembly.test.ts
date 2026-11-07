@@ -1,8 +1,5 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationAnnotationReplacement,
-  makeCitationAnnotationAssembly,
-} from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
+import { makeCitationAnnotationAssembly } from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
 import {
   prepareCitationAnnotationSourceMap,
   prepareCitationAnnotations,
@@ -13,7 +10,11 @@ import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Ci
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { CitationSpanDiffStep, makeCitationSpanOffsets } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import {
+  CitationAnnotationReplacement,
+  CitationPythonUnicodeStorage,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";

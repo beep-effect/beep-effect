@@ -4,10 +4,12 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { Citation, CitationDocument } from "@beep/law-practice-domain/values";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import * as S from "effect/Schema";
 import { CitationEngineSourceEvidence, CitationExtractionDiagnostics } from "./CitationEngine.evidence.ts";
 import { CitationEngineAbsoluteMaxima } from "./CitationEngine.limits.ts";
 import { CitationEngineReport } from "./CitationEngine.report.ts";
+import { CitationPythonUnicodeStorage } from "./CitationEngine.runtime.ts";
 
 const $I = $LawPracticeUseCasesId.create("CitationEngine/CitationEngine.result");
 const Inputs = S.Struct({ plain: S.NullOr(SourceTextIdentity), markup: S.NullOr(SourceTextIdentity) }).pipe(
@@ -68,6 +70,43 @@ export class CitationEngineExtractionResult extends S.Opaque<
       $I.annoteSchema("CitationEngineExtractionResult", {
         description:
           "Atomic semantic, verified document/evidence and separate extraction diagnostics from one operation.",
+      })
+    )
+) {}
+
+const AnnotationEvidence: {
+  readonly source: S.Codec<VerifiedSourceText>;
+  readonly companion: S.Codec<VerifiedSourceText | null>;
+} = { source: VerifiedSourceText, companion: S.NullOr(VerifiedSourceText) };
+/** Completed annotation retains the selected and companion source capabilities,
+ * exact native output and separate captured-policy/work report. Output text is
+ * rendered content; it does not assert a new verified source manifestation.
+ * **Example** (Inspect lossless annotation output)
+ * ```ts
+ * import { CitationEngineAnnotationResult } from "@beep/law-practice-use-cases/server"
+ * console.log(CitationEngineAnnotationResult.fields.text !== undefined) // true
+ * ```
+ * @category models @since 0.0.0
+ */
+export class CitationEngineAnnotationResult extends S.Opaque<
+  CitationEngineAnnotationResult,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    ...AnnotationEvidence,
+    text: CitationPythonUnicodeStorage,
+    report: CitationEngineReport,
+  })
+    .check(
+      S.makeFilter(
+        ({ report }) => report.operation === "annotate",
+        $I.annote("AnnotationReport", { description: "Annotation results retain only their own operation report." })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("CitationEngineAnnotationResult", {
+        description:
+          "Genuine annotation input evidence, exact native rendered output and separate successful-operation report.",
       })
     )
 ) {}

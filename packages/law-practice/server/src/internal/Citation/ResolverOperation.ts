@@ -3,19 +3,17 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationMention } from "@beep/law-practice-domain/values";
-import { CitationEngineLimits, CitationInputError } from "@beep/law-practice-use-cases/server";
+import { CitationInputError } from "@beep/law-practice-use-cases/server";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
-import { Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "./Admission.ts";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
-import { CitationRegexOperation, decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { makeCitationResolverBoundary } from "./RegisteredResolver.ts";
-import { snapshotCitationValue } from "./Snapshot.ts";
+import { captureCitationOperationPolicy } from "./Snapshot.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResolverOperation");
-const LimitsJson = CitationEngineLimits.pipe(S.toCodecJson, S.fromJsonString);
 const SourceProof: S.Codec<VerifiedSourceText> = VerifiedSourceText;
 const Request = S.Struct({
   verifiedSource: SourceProof,
@@ -38,9 +36,7 @@ const RequestType = S.toType(Request);
 export const makeCitationResolverOperation = Effect.fn("Citation.makeResolverOperation")(
   function* (policy: unknown, artifact: unknown) {
     const invalid = () => CitationInputError.make({ operation: "resolve" });
-    const decoded = yield* decodeCitationRegexPolicy(policy, invalid);
-    const limits = yield* snapshotCitationValue(LimitsJson, decoded, invalid);
-    const engineArtifact = yield* S.decodeUnknownEffect(Sha256Hex)(artifact).pipe(Effect.mapError(invalid));
+    const { limits, engineArtifact } = yield* captureCitationOperationPolicy(policy, artifact, invalid);
     const admission = yield* CitationOperationAdmission;
     const resolver = yield* makeCitationResolverBoundary();
     const timing = yield* makeCitationRegexTiming(limits, true);

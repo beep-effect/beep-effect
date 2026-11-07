@@ -1,7 +1,4 @@
-import {
-  CitationAnnotationReplacement,
-  makeCitationAnnotationAssembly,
-} from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
+import { makeCitationAnnotationAssembly } from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
 import {
   CitationAnnotationAnnotator,
   CitationAnnotationCallbackFailure,
@@ -10,6 +7,7 @@ import {
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import {
+  CitationAnnotationReplacement,
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
   CitationTextBudget,

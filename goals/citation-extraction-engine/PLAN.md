@@ -1549,6 +1549,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert source document composition and restore the private source extraction helper boundary together, retaining source observations, receipts and all acceptance requirements.
 
+### Own annotation contracts and reported source operation, 2026-11-07
+
+Server use cases own annotation mode/replacement/input/result schemas; native stages reuse them without aliases. Reported annotation preserves genuine proofs, exact native output and measured admitted work. Twelve final annotation/resolver tests, eleven regressions and four contract tests pass; lint/types/declarations/laws/Fallow pass with zero introduced findings. Shared Schema policy capture removes duplicated installer code. Final service/Layer and all goal acceptance remain open. See history/evidence/2026-11-07-public-annotation-operation.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert reported annotation composition and restore the previous private tuple/mode definitions together, retaining original corpora and every unfinished acceptance requirement.
+
 ### Own public extraction results and source evidence in server use cases, 2026-11-07
 
 Server use cases now own genuine source lineage and explicit unverified diagnostics. Connected extraction produces CitationEngineExtractionResult with source/engine identity coherence, all semantic citations and checked report counts. Four contract tests, canonical source regression and three final actual Bun/Node connected tests pass. Lint/types/build/blocking laws and scoped Fallow pass. Final four-operation service/Layer and every full-goal acceptance requirement remain open. See history/evidence/2026-11-07-public-extraction-result.md.

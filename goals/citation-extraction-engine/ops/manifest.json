@@ -269,7 +269,11 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-07-public-extraction-result.md",
     "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.evidence.ts",
     "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.result.ts",
-    "packages/law-practice/use-cases/test/CitationEngineInput.test.ts"
+    "packages/law-practice/use-cases/test/CitationEngineInput.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-annotation-operation.md",
+    "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.annotation.ts",
+    "packages/law-practice/server/src/internal/Citation/AnnotationOperation.ts",
+    "packages/law-practice/server/src/internal/Citation/Snapshot.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

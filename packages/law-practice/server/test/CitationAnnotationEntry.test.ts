@@ -1,5 +1,4 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationAnnotationReplacement } from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
 import {
   CitationAnnotationAnnotator,
   CitationAnnotationCallbackResult,
@@ -8,7 +7,7 @@ import {
   CitationAnnotationOffsetUpdater,
   makeCitationAnnotationEntry,
 } from "@beep/law-practice-server/internal/Citation/AnnotationEntry";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import { CitationAnnotationReplacement, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";

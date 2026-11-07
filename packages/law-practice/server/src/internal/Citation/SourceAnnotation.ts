@@ -3,12 +3,14 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationAnnotationMode,
+  CitationEngineAnnotationResult,
+  CitationEngineReport,
   CitationInputError,
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -17,7 +19,6 @@ import * as Str from "effect/String";
 import { captureCitationAnnotationReservation, failCitationAnnotationUnicode } from "./AnnotationBudget.ts";
 import {
   CitationAnnotationEntryConfiguration,
-  CitationAnnotationMode,
   ownCitationAnnotationEntry,
   ownCitationAnnotationReplacements,
   prepareCitationAnnotationEntry,
@@ -29,6 +30,7 @@ import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy
 import { snapshotCitationValue } from "./Snapshot.ts";
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceAnnotation");
@@ -50,11 +52,13 @@ const Markup = S.Struct({ markup: S.NullOr(Slot).pipe(S.withDecodingDefaultKey(E
 const Plain = S.Struct({ plain: Slot }).pipe(
   $I.annoteSchema("Plain", { description: "Raw plain text; ignored when a captured supplied updater selects markup." })
 );
-type EvidenceFields = {
+const EvidenceFields: {
   readonly source: S.Codec<VerifiedSourceText>;
   readonly companion: S.Codec<VerifiedSourceText | null>;
+} = {
+  source: CitationEngineAnnotationResult.fields.source,
+  companion: CitationEngineAnnotationResult.fields.companion,
 };
-const EvidenceFields: EvidenceFields = { source: VerifiedSourceText, companion: S.NullOr(VerifiedSourceText) };
 /** Runtime source capabilities remain genuine verifier output, separate from
  * rendered native text. This is a private composition result, not a wire codec.
  * @internal @category models @since 0.0.0
@@ -67,6 +71,7 @@ export class CitationSourceAnnotationResult extends S.Opaque<
     ...EvidenceFields,
     text: CitationPythonUnicodeStorage,
     reservedUnits: S.Natural,
+    workDuration: CitationEngineReport.fields.workDuration,
   }).pipe(
     $I.annoteSchema("CitationSourceAnnotationResult", {
       description: "Verified selected source, optional companion and completed annotation output.",
@@ -147,15 +152,20 @@ const prepare = Effect.fn("Citation.annotateResolvedSource")(function* (
   owned: Effect.Success<ReturnType<typeof own>>,
   raw: unknown
 ) {
-  const request = yield* captureRequest(limits, owned, raw);
-  const sources = yield* resolveSources(owned, request);
-  const native = yield* nativeSources(limits, sources);
-  const text = yield* prepareCitationAnnotationEntry(limits, runtime, owned.annotation, {
-    mode: request.mode,
-    ...native,
-    replacements: request.replacements,
-  });
-  return { source: sources.source, companion: sources.companion, text };
+  const [workDuration, result] = yield* Effect.timed(
+    Effect.gen(function* () {
+      const request = yield* captureRequest(limits, owned, raw);
+      const sources = yield* resolveSources(owned, request);
+      const native = yield* nativeSources(limits, sources);
+      const text = yield* prepareCitationAnnotationEntry(limits, runtime, owned.annotation, {
+        mode: request.mode,
+        ...native,
+        replacements: request.replacements,
+      });
+      return { source: sources.source, companion: sources.companion, text };
+    })
+  );
+  return { ...result, workDuration };
 });
 const install = makeCitationMetadataStage({
   method: "annotate",

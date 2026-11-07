@@ -2,13 +2,12 @@
  * Free Law Project eyecite 2.7.6 annotate.py, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationAnnotationReplacement, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import { CitationAnnotationReplacement } from "./AnnotationAssembly.ts";
 import { prepareCitationForwardHtmlMap } from "./HtmlGeometryPreparation.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { makeCitationSpanOffsets } from "./SpanOffsets.ts";

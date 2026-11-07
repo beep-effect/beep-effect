@@ -6,6 +6,14 @@
  * @since 0.0.0
  */
 
+/** Server-only native annotation tuples and named raw-source modes.
+ * @category models @since 0.0.0
+ */
+export {
+  CitationAnnotationMode,
+  CitationAnnotationReplacement,
+  CitationEngineAnnotationInput,
+} from "./CitationEngine/CitationEngine.annotation.ts";
 /** Server-only captured cleaner port and runtime capabilities; not raw request callbacks.
  * @category services
  * @since 0.0.0
@@ -77,7 +85,10 @@ export { CitationEngineReport, CitationExtractionMeasurements } from "./Citation
  * @category models
  * @since 0.0.0
  */
-export { CitationEngineExtractionResult } from "./CitationEngine/CitationEngine.result.ts";
+export {
+  CitationEngineAnnotationResult,
+  CitationEngineExtractionResult,
+} from "./CitationEngine/CitationEngine.result.ts";
 /** Server-only captured operation work and exact native Unicode layout.
  * @category services
  * @since 0.0.0

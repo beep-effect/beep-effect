@@ -1,17 +1,23 @@
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
-import { CitationAnnotationReplacement } from "@beep/law-practice-server/internal/Citation/AnnotationAssembly";
 import {
   CitationAnnotationAnnotator,
   CitationAnnotationCallbackResult,
 } from "@beep/law-practice-server/internal/Citation/AnnotationCallback";
 import { CitationAnnotationOffsetUpdater } from "@beep/law-practice-server/internal/Citation/AnnotationEntry";
+import { makeCitationAnnotationOperation } from "@beep/law-practice-server/internal/Citation/AnnotationOperation";
 import { makeCitationSourceAnnotation } from "@beep/law-practice-server/internal/Citation/SourceAnnotation";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import {
+  CitationAnnotationReplacement,
+  CitationEngineAnnotationResult,
+  CitationPythonUnicodeStorage,
+} from "@beep/law-practice-use-cases/server";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -83,11 +89,22 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("verified ra
               })
             ),
           });
-          const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
-            Effect.provideService(SourceTextResolver, resolver),
-            Effect.provideContext(setup.provided)
-          );
-          const result = yield* entry.annotate(request);
+          const artifact = Sha256Hex.make(Str.repeat(64)("a"));
+          const policy = { ...setup.limits };
+          const entry = yield* makeCitationAnnotationOperation(
+            policy,
+            setup.runtime,
+            setup.configuration,
+            artifact
+          ).pipe(Effect.provideService(SourceTextResolver, resolver), Effect.provideContext(setup.provided));
+          expect(Reflect.set(policy, "producedTextUtf16", 1)).toBe(true);
+          const invocation = entry.annotate({ ...request, engineArtifact: "ignored", limits: null });
+          const closed: Effect.Effect<CitationEngineAnnotationResult, CitationEngineFailure> = invocation;
+          const result = yield* closed;
+          expect(S.is(CitationEngineAnnotationResult)(result)).toBe(true);
+          expect(result.report).toMatchObject({ operation: "annotate", engineArtifact: artifact, extraction: null });
+          expect(result.report.limits.producedTextUtf16).toBe(setup.limits.producedTextUtf16);
+          expect(result.report.producedTextUtf16).toBeGreaterThan(0);
           expect(result.text).toEqual(word("[foo <i>1 U.S. 1</i> bar]"));
           expect(S.is(VerifiedSourceText)(result.source)).toBe(true);
           expect(result.source.source).toEqual(markup.source);
