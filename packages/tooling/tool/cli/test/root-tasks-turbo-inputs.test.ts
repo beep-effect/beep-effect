@@ -13,6 +13,7 @@ import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -538,7 +539,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           "packages/{..,safe}",
           "packages/future\n",
         ])
-          expect(O.isNone(workspaceRootDomains([pattern]))).toBe(true);
+          assertNone(workspaceRootDomains([pattern]));
       })
     );
 
