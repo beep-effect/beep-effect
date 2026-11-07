@@ -37,10 +37,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Slice 2 implemented 2026-11-07 (lane `verification-route-s2`): taxonomy refinement, the first
-enforced refinement (packet markdown and commits out of build and check, recall 100%), the
-catalog-free root `package.json` projection in turbo's global inputs, and the final-check route
-section. Next: P2 Slice 3, hosted per-lane `skip-satisfied`.
+P1 Slice 2 merged 2026-11-07 (#2856). P2 Slice 3 merged 2026-11-07 in two PRs, because `heavy.yml` is
+called at `@main`: #2879 adds the per-lane route outputs to `beep ci admission` and the optional
+`heavy.yml` inputs, and #2884 wires `check.yml` and `heavy-admit.yml` to pass them. A Heavy lane the
+enforced route excludes now starts, writes the route receipt to its job summary and succeeds.
+Hosted proof: #2885 (packet markdown only), where Heavy / Build and Heavy / Check completed
+`skip-satisfied` with the receipt in their job summaries. Closeout is proposed on #2885
+(`completed-retained`); the reflection is `history/reflections/2026-11-07-claude.md`.
 
 ## Latest Evidence
 
