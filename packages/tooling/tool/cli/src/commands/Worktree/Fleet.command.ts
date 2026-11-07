@@ -54,6 +54,7 @@ import {
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import { FleetScanOptions } from "./Worktree.schemas.ts";
 import type { SessionLedgerRow } from "../Session/Session.schemas.ts";
+import type { PrRepository } from "../Yeet/internal/Provenance.ts";
 import type { ConfiguredFleetRoots } from "./internal/FleetRoots.schemas.ts";
 import type {
   FleetCheckout,
@@ -457,9 +458,38 @@ const resolveRepository = Effect.fn("Fleet.resolveRepository")(function* () {
 const printJson = (value: unknown, what: string) =>
   printCommandJson(value).pipe(Effect.mapError(WorktreeCommandError.new(`Failed to print the ${what} as JSON.`)));
 
-const runWorktreeFleetJoin = Effect.fn("Fleet.runWorktreeFleetJoin")(function* (json: boolean) {
-  const repository = yield* resolveRepository();
-  const join = yield* loadFleetJoin(FleetScanOptions.make({}), repository);
+/**
+ * Print the `fleet --join` view: the roots header, the registry summary and
+ * one compact row per checkout, or the joined rows as JSON.
+ *
+ * **Details**
+ *
+ * The command resolves `options` and `repository` from the invoking
+ * checkout; tests pass a fixture fleet and repository directly.
+ *
+ * **Example** (Build the join view)
+ *
+ * ```ts
+ * import { FleetScanOptions, printFleetJoin } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * const view = printFleetJoin(FleetScanOptions.make({}), { host: "github.com", owner: "o", name: "r" }, false)
+ * console.log(Effect.isEffect(view)) // true
+ * ```
+ *
+ * @param options - Scan options; discovery roots resolve from them.
+ * @param repository - The repository keying the registry and session ledger.
+ * @param json - Print the joined rows as JSON instead of text.
+ * @returns An effect that prints the view.
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const printFleetJoin = Effect.fn("Fleet.printFleetJoin")(function* (
+  options: FleetScanOptions,
+  repository: PrRepository,
+  json: boolean
+) {
+  const join = yield* loadFleetJoin(options, repository);
   const rows = joinFleetRows({ checkouts: join.snapshot.checkouts, registry: join.registry, ledger: join.ledger });
   if (json) {
     const encoded = yield* encodeJoinedRows(rows).pipe(
@@ -508,14 +538,38 @@ const absoluteCheckout = Effect.fn("Fleet.absoluteCheckout")(function* (checkout
 
 const DEFAULT_DESCRIBE_LEDGER_ROWS = 5;
 
-const runWorktreeFleetDescribe = Effect.fn("Fleet.runWorktreeFleetDescribe")(function* (
-  checkout: string,
-  ledgerRows: number,
-  json: boolean
+/**
+ * Print the `fleet describe <checkout>` expansion of one joined row.
+ *
+ * **Example** (Build the description view)
+ *
+ * ```ts
+ * import { FleetScanOptions, printFleetCheckoutDescription } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * const view = printFleetCheckoutDescription(
+ *   FleetScanOptions.make({}),
+ *   { host: "github.com", owner: "o", name: "r" },
+ *   { checkout: "/p/beep-effect0", ledgerRows: 5, json: false }
+ * )
+ * console.log(Effect.isEffect(view)) // true
+ * ```
+ *
+ * @param options - Scan options; discovery roots resolve from them.
+ * @param repository - The repository keying the registry and session ledger.
+ * @param request - The checkout to expand, how many ledger rows to include, and whether to print JSON.
+ * @returns An effect that prints the description, failing when the fleet has no such checkout.
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const printFleetCheckoutDescription = Effect.fn("Fleet.printFleetCheckoutDescription")(function* (
+  options: FleetScanOptions,
+  repository: PrRepository,
+  request: { readonly checkout: string; readonly ledgerRows: number; readonly json: boolean }
 ) {
-  const target = yield* absoluteCheckout(checkout);
-  const repository = yield* resolveRepository();
-  const join = yield* loadFleetJoin(FleetScanOptions.make({}), repository);
+  const { ledgerRows, json } = request;
+  const target = yield* absoluteCheckout(request.checkout);
+  const join = yield* loadFleetJoin(options, repository);
   const description = describeFleetCheckout({
     checkouts: join.snapshot.checkouts,
     registry: join.registry,
@@ -547,20 +601,52 @@ const derivedOwningSeat = Effect.fn("Fleet.derivedOwningSeat")(function* (checko
   return O.getOrNull(O.filter(seat, (value) => value !== checkout));
 });
 
-/** Registration options decoded from the CLI flags. */
-type RegisterOptions = {
-  readonly checkout: string;
-  readonly role: FleetSeatRole;
-  readonly owningSeat: O.Option<string>;
-  readonly retentionExempt: boolean;
-};
-
-const runWorktreeFleetRegister = Effect.fn("Fleet.runWorktreeFleetRegister")(function* (options: RegisterOptions) {
+/**
+ * Author one checkout's registry row (`fleet register`).
+ *
+ * **Details**
+ *
+ * The checkout must be one the fleet discovers. The owning seat is the
+ * `owningSeat` request, else the row's current value, else derived from
+ * `git rev-parse --git-common-dir`; an existing retention exemption is kept.
+ *
+ * **Example** (Build the registration)
+ *
+ * ```ts
+ * import { FleetScanOptions, registerFleetCheckout } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const register = registerFleetCheckout(FleetScanOptions.make({}), { host: "github.com", owner: "o", name: "r" }, {
+ *   checkout: "/p/beep/seats/main",
+ *   role: "main",
+ *   owningSeat: O.none(),
+ *   retentionExempt: false,
+ * })
+ * console.log(Effect.isEffect(register)) // true
+ * ```
+ *
+ * @param scan - Scan options; discovery roots resolve from them.
+ * @param repository - The repository keying the registry.
+ * @param options - The checkout, its seat role, an optional owning seat and the retention exemption flag.
+ * @returns An effect that writes the row and prints a confirmation.
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const registerFleetCheckout = Effect.fn("Fleet.registerFleetCheckout")(function* (
+  scan: FleetScanOptions,
+  repository: PrRepository,
+  options: {
+    readonly checkout: string;
+    readonly role: FleetSeatRole;
+    readonly owningSeat: O.Option<string>;
+    readonly retentionExempt: boolean;
+  }
+) {
   const target = yield* absoluteCheckout(options.checkout);
-  const repository = yield* resolveRepository();
   const mirror = yield* FleetMirrorService;
   const store = yield* FleetRegistryStore;
-  const known = yield* mirror.listCheckouts();
+  const known = yield* mirror.listCheckouts(scan);
   if (!A.contains(known, target)) {
     return yield* WorktreeCommandError.make({
       message: `No fleet checkout at ${target}; register only a checkout the fleet discovers.`,
@@ -605,7 +691,12 @@ const worktreeFleetDescribeCommand = Command.make(
     json: jsonFlagWith("Render the checkout description as JSON"),
   },
   Effect.fn(function* ({ checkout, ledgerRows, json }) {
-    yield* runWorktreeFleetDescribe(checkout, ledgerRows, json).pipe(reportFleetError("worktree fleet describe"));
+    yield* resolveRepository().pipe(
+      Effect.flatMap((repository) =>
+        printFleetCheckoutDescription(FleetScanOptions.make({}), repository, { checkout, ledgerRows, json })
+      ),
+      reportFleetError("worktree fleet describe")
+    );
   })
 ).pipe(
   Command.withDescription(
@@ -629,7 +720,10 @@ const worktreeFleetRegisterCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ checkout, role, owningSeat, retentionExempt }) {
-    yield* runWorktreeFleetRegister({ checkout, role, owningSeat, retentionExempt }).pipe(
+    yield* resolveRepository().pipe(
+      Effect.flatMap((repository) =>
+        registerFleetCheckout(FleetScanOptions.make({}), repository, { checkout, role, owningSeat, retentionExempt })
+      ),
       reportFleetError("worktree fleet register")
     );
   })
@@ -668,7 +762,13 @@ export const worktreeFleetCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ json, join }) {
-    yield* (join ? runWorktreeFleetJoin(json) : runWorktreeFleet(json)).pipe(reportFleetError("worktree fleet"));
+    yield* (
+      join
+        ? resolveRepository().pipe(
+            Effect.flatMap((repository) => printFleetJoin(FleetScanOptions.make({}), repository, json))
+          )
+        : runWorktreeFleet(json)
+    ).pipe(reportFleetError("worktree fleet"));
   })
 ).pipe(
   Command.withDescription(
