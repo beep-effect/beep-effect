@@ -46,12 +46,12 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
-import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
+import * as TestClock from "effect/testing/TestClock";
 
 const TOKEN = "launch-token-for-tests";
 const bearer = { authorization: `Bearer ${TOKEN}` };
@@ -138,11 +138,11 @@ const hosted = (kind: V.TransportKind) => {
 
 // Views are projected asynchronously: re-read until the destination appears.
 const settled = <E>(get: Effect.Effect<{ readonly destination: { readonly _tag: string } } | null, E>) =>
+  // No clock wait: each read is an in-process RPC round trip that lets projection fibers run.
   get.pipe(
     Effect.repeat({
       until: (state) => state?.destination._tag === "Registered",
-      schedule: Schedule.spaced("10 millis"),
-      times: 300,
+      times: 5000,
     })
   );
 
@@ -214,7 +214,7 @@ const drain = Effect.fn("drain")(function* (next: Effect.Effect<string | null>) 
 });
 
 describe("vault-sync production session adapters", () => {
-  it.live("launch token is required and the route, not a header, fixes the transport kind", () =>
+  it.effect("launch token is required and the route, not a header, fixes the transport kind", () =>
     Effect.gen(function* () {
       const context = yield* Layer.build(
         layerVaultSyncLaunchTokenResolver("http").pipe(
@@ -234,10 +234,10 @@ describe("vault-sync production session adapters", () => {
       expect(request.sourceKind).toBe("http");
       expect(request.correlationId).toBe("corr-1");
       expect(request.principal).toEqual({ kind: "User", userId: 7 });
-    })
+    }).pipe(TestClock.withLive)
   );
 
-  it.live("local operator needs no credential but still reads live membership", () =>
+  it.effect("local operator needs no credential but still reads live membership", () =>
     Effect.gen(function* () {
       const context = yield* Layer.build(
         VaultSyncSessionLive.pipe(
@@ -257,10 +257,10 @@ describe("vault-sync production session adapters", () => {
       expect(status?.destination._tag).toBe("Registered");
       const request = yield* Context.get(context, V.SessionResolver).resolve(Headers.empty);
       expect(request.sourceKind).toBe("cli");
-    })
+    }).pipe(TestClock.withLive)
   );
 
-  it.live("live membership: member reads, diagnostics need owner, soft delete and foreign keys deny", () =>
+  it.effect("live membership: member reads, diagnostics need owner, soft delete and foreign keys deny", () =>
     Effect.gen(function* () {
       const context = yield* Layer.build(hosted("http"));
       yield* register.pipe(Effect.provideContext(context));
@@ -286,10 +286,10 @@ describe("vault-sync production session adapters", () => {
       yield* revoke.pipe(Effect.provideContext(context));
       const revoked = yield* Effect.flip(client.VaultSyncStatus.get(own, call));
       expect(revoked._tag).toBe("ScopeDenied");
-    })
+    }).pipe(TestClock.withLive)
   );
 
-  it.live("public pass and probe initiators start durable workflows only for authorized callers", () =>
+  it.effect("public pass and probe initiators start durable workflows only for authorized callers", () =>
     Effect.gen(function* () {
       const starts = yield* Ref.make<ReadonlyArray<string>>([]);
       const model = InitiatorModel.layer(Layer.merge(VaultSyncRequestsLive, recordingPass)).pipe(
@@ -325,12 +325,12 @@ describe("vault-sync production session adapters", () => {
       yield* client.PauseDestination(own, {}, call);
       const paused = yield* Effect.flip(client.RequestVaultSync(own, { requestId: "r3" }, call));
       expect(paused._tag).toBe("SyncRuleViolation");
-    })
+    }).pipe(TestClock.withLive)
   );
 });
 
 describe("revocation barrier over real transports", () => {
-  it.live("HTTP SSE watch: no frame after revocation commits, then a typed denial ends the stream", () =>
+  it.effect("HTTP SSE watch: no frame after revocation commits, then a typed denial ends the stream", () =>
     Effect.gen(function* () {
       const { app, context } = yield* webApp("http");
       yield* grant("member").pipe(Effect.provideContext(context));
@@ -354,10 +354,10 @@ describe("revocation barrier over real transports", () => {
       const after = yield* drain(sse.next);
       expect(A.filter(after, Str.includes("root-after-barrier"))).toEqual([]);
       expect(A.join(after, "\n")).toContain("ScopeDenied");
-    })
+    }).pipe(TestClock.withLive)
   );
 
-  it.live("HTTP SSE watch: an idle subscription closes with a typed denial after revocation", () =>
+  it.effect("HTTP SSE watch: an idle subscription closes with a typed denial after revocation", () =>
     Effect.gen(function* () {
       const { app, context } = yield* webApp("http");
       yield* grant("member").pipe(Effect.provideContext(context));
@@ -369,10 +369,10 @@ describe("revocation barrier over real transports", () => {
       yield* revoke.pipe(Effect.provideContext(context));
       const rest = yield* drain(sse.next);
       expect(A.join(rest, "\n")).toContain("ScopeDenied");
-    })
+    }).pipe(TestClock.withLive)
   );
 
-  it.live("HTTP history: a foreign or revoked reader receives no history page or marker", () =>
+  it.effect("HTTP history: a foreign or revoked reader receives no history page or marker", () =>
     Effect.gen(function* () {
       const { app, context } = yield* webApp("http");
       yield* grant("member").pipe(Effect.provideContext(context));
@@ -389,10 +389,10 @@ describe("revocation barrier over real transports", () => {
       expect(revokedList.status).toBe(403);
       const body = yield* Effect.promise(() => revokedList.json());
       expect(body).toEqual({ _tag: "ScopeDenied" });
-    })
+    }).pipe(TestClock.withLive)
   );
 
-  it.live("gated RPC stream (remote CLI protocol): revocation fails the watch with no later frame", () =>
+  it.effect("gated RPC stream (remote CLI protocol): revocation fails the watch with no later frame", () =>
     Effect.gen(function* () {
       const { context, fetch } = yield* webApp("http");
       yield* grant("member").pipe(Effect.provideContext(context));
@@ -431,10 +431,10 @@ describe("revocation barrier over real transports", () => {
       const leaked = yield* Ref.get(afterBarrier);
       expect(delivered).toBe(1);
       expect(leaked).toBe(0);
-    })
+    }).pipe(TestClock.withLive)
   );
 
-  it.live("MCP Views-only adapter: a read is allowed before revocation and denied after it", () =>
+  it.effect("MCP Views-only adapter: a read is allowed before revocation and denied after it", () =>
     Effect.gen(function* () {
       const base = hosted("mcp");
       const context = yield* Layer.build(base);
@@ -467,12 +467,12 @@ describe("revocation barrier over real transports", () => {
         arguments: { target: own, input: { requestId: "x" } },
       }).pipe(Effect.exit);
       expect(commandTool._tag === "Failure" || commandTool.value.isError === true).toBe(true);
-    })
+    }).pipe(TestClock.withLive)
   );
 });
 
 describe("remote CLI over the gated sidecar endpoint", () => {
-  it.live("presents the launch token; without it the generated command is rejected", () =>
+  it.effect("presents the launch token; without it the generated command is rejected", () =>
     Effect.gen(function* () {
       const { context, fetch } = yield* webApp("http");
       yield* grant("member").pipe(Effect.provideContext(context));
@@ -492,6 +492,6 @@ describe("remote CLI over the gated sidecar endpoint", () => {
       expect(anonymous._tag).toBe("CallRejected");
       const guessed = yield* Effect.flip(run(bearer, ["vault-sync-status", "get", "--key", foreign]));
       expect(guessed._tag).toBe("CallRejected");
-    })
+    }).pipe(TestClock.withLive)
   );
 });

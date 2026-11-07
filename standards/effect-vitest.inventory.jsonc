@@ -4762,6 +4762,28 @@
       "reason": "The parity test traverses the actual packages/agents source; a seeded memory filesystem would replace the source subject and erase real checkout provenance and read failures. Owner: @beep/agents-domain. Exit: retire when the parity check runs as a lint over the committed sources."
     },
     {
+      "id": "EV010:packages/documents/server/test/BoxMirror.pglite.test.ts:11:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/BoxMirror.pglite.test.ts",
+      "line": 11,
+      "endLine": 11,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Real temporary vault files are the subject: BoxMirrorLive hashes the bytes it reads before each Box mutation, and the receipt test proves no second upload after a runtime restart. A MemoryFileSystem would replace that read path. Owner: @beep/documents-server. Exit: retire when the vault file store is injected and its digest reads are proven over MemoryFileSystem."
+    },
+    {
       "id": "EV010:packages/documents/server/test/DocumentIntake.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",

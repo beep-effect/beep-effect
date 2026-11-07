@@ -17,33 +17,10 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as Result from "effect/Result";
 
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer, DmsMirrorFixtureLayer);
 describe("BoxMirror durable intent receipts", () => {
   layer(infrastructure, { timeout: "20 seconds", excludeTestServices: true, concurrent: false })("adapter", (it) => {
-    it.effect("probe refreshes provider availability without a Box mutation", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped();
-        const fixture = yield* DmsMirrorFixtureHandle;
-        const before = yield* fixture.counts;
-        const context = yield* Layer.build(
-          BoxMirrorLive.pipe(
-            Layer.provide(
-              Layer.mergeAll(
-                Layer.succeed(VaultSyncRoot, { resolve: Effect.fn("fixture.root")(() => Effect.succeed(root)) }),
-                Layer.succeed(BoxMirrorEvidence, { lookup: Effect.fn("fixture.evidence")(() => Effect.succeedNone) })
-              )
-            )
-          )
-        );
-        const result = yield* Context.get(context, BoxMirror).probe({ destinationId: V.DestinationId.make("adapter") });
-        expect(result).toEqual({ connected: true });
-        const after = yield* fixture.counts;
-        expect(after.uploadFile).toBe(before.uploadFile);
-      })
-    );
     for (const outcome of ["completed", "stale", "uncertain"]) {
       it.effect(outcome, () =>
         Effect.gen(function* () {
@@ -75,14 +52,16 @@ describe("BoxMirror durable intent receipts", () => {
             )
           );
           const mirror = Context.get(context, BoxMirror);
-          const first = yield* Effect.result(mirror.uploadFile(args));
-          const second = yield* Effect.result(mirror.uploadFile({ ...args, passId: "another-runtime" }));
+          const retried = { ...args, passId: "another-runtime" };
           if (outcome === "completed") {
-            expect(Result.isSuccess(first)).toBe(true);
+            const first = yield* mirror.uploadFile(args);
+            const second = yield* mirror.uploadFile(retried);
             expect(second).toEqual(first);
           } else {
-            expect(Result.isFailure(first)).toBe(true);
-            expect(Result.isFailure(second)).toBe(true);
+            const first = yield* Effect.flip(mirror.uploadFile(args));
+            const second = yield* Effect.flip(mirror.uploadFile(retried));
+            expect(first._tag).toBe("BoxMirrorUnavailable");
+            expect(second._tag).toBe("BoxMirrorUnavailable");
           }
           const counts = yield* fixture.counts;
           expect(counts.uploadFile - before.uploadFile).toBe(outcome === "stale" ? 0 : 1);
@@ -112,5 +91,27 @@ describe("BoxMirror durable intent receipts", () => {
         })
       );
     }
+    it.effect("probe refreshes provider availability without a Box mutation", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const fixture = yield* DmsMirrorFixtureHandle;
+        const before = yield* fixture.counts;
+        const context = yield* Layer.build(
+          BoxMirrorLive.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(VaultSyncRoot, { resolve: Effect.fn("fixture.root")(() => Effect.succeed(root)) }),
+                Layer.succeed(BoxMirrorEvidence, { lookup: Effect.fn("fixture.evidence")(() => Effect.succeedNone) })
+              )
+            )
+          )
+        );
+        const result = yield* Context.get(context, BoxMirror).probe({ destinationId: V.DestinationId.make("adapter") });
+        expect(result).toEqual({ connected: true });
+        const after = yield* fixture.counts;
+        expect(after.uploadFile).toBe(before.uploadFile);
+      })
+    );
   });
 });

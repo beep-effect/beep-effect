@@ -16,6 +16,7 @@ import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
+import * as TestClock from "effect/testing/TestClock";
 
 it("derives a CLI without internal command targets", () => {
   const command = vaultSyncCli({ headers: {} });
@@ -63,7 +64,7 @@ const recordingPass = VaultSyncPass.toLayer<never, Starts, never>(
   })
 );
 
-it.live("routes each public request to one pass or probe run keyed by its request id", () =>
+it.effect("routes each public request to one pass or probe run keyed by its request id", () =>
   Effect.gen(function* () {
     const starts = yield* Ref.make<ReadonlyArray<string>>([]);
     const context = yield* Layer.build(
@@ -84,5 +85,5 @@ it.live("routes each public request to one pass or probe run keyed by its reques
       "pass:vault-routing/VaultSyncRequested/r1",
       "probe:vault-routing/DestinationProbeRequested/p1",
     ]);
-  })
+  }).pipe(TestClock.withLive)
 );

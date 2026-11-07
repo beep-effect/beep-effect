@@ -25,6 +25,7 @@ import * as RpcTest from "effect/rpc/RpcTest";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
+import * as TestClock from "effect/testing/TestClock";
 
 const TOKEN = "compat-launch-token";
 const own = V.DestinationId.make("compat-destination");
@@ -140,7 +141,7 @@ const workspaceId = 1 as never;
 const headers = { headers: { authorization: `Bearer ${TOKEN}` } };
 
 describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
-  it.live("denies every legacy RPC without a live membership, then serves the legacy wire", () =>
+  it.effect("denies every legacy RPC without a live membership, then serves the legacy wire", () =>
     Effect.gen(function* () {
       const { client, refreshed, sql } = yield* setup;
       const denied = yield* Effect.flip(client.GetVaultSyncStatus({ workspaceId, forceProbe: false }, headers));
@@ -175,6 +176,6 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       yield* sql`UPDATE shared_membership SET deleted_at = 1`;
       const revoked = yield* Effect.flip(client.TriggerVaultSync({ workspaceId }, headers));
       expect(revoked._tag).toBe("VaultSyncActionError");
-    })
+    }).pipe(TestClock.withLive)
   );
 });
