@@ -143,7 +143,7 @@ Higher sources outrank lower sources when they conflict.
   implementing session's calls.
 - **Rule 5's clamp already exists and must not be weakened.** `TierGateShape`
   (`TierGate.ts`, 626 lines) declares `evaluate`/`recordOutcome`;
-  `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
+  `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
   (507 lines, `makeGovernedTierGate` at `:238`, `evaluate` at `:342`)
   implements it write-ahead and fail-closed. This packet adds the declaration
   half; it does not restructure the gate.

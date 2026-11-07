@@ -51,7 +51,7 @@ Higher sources outrank lower sources when they conflict.
 - New packages `packages/execution-authority/{domain,use-cases,server,tables,config}`,
   created only with `bun run beep create-package`.
 - The execution modules in `packages/epistemic/{domain,use-cases,server,tables}`,
-  which move out, and `packages/epistemic/config`, which is retired.
+  which move out, and `@beep/epistemic-config`, which is retired.
 - `packages/_internal/db-admin`: the rename migration, its down-migration, the
   name-pinned tests and the schema composition.
 - `apps/professional-desktop`: imports, `src/runtime/Layer.ts`,

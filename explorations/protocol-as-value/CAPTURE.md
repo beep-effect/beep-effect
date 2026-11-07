@@ -47,10 +47,10 @@ by git hashes."
   of "programs live in the same value universe as data."
 - Act II — the audit: beep-effect independently built the
   journal/register/fold/digest stack FIVE times, plus exhibit A:
-  1. Execution ledger — `packages/epistemic/domain/src/values/ExecutionRecord/`
+  1. Execution ledger — `packages/execution-authority/domain/src/entities/ExecutionRecord/`
      (hash-chained write-ahead decisions, seal = SHA-256 over versioned
      canonical JSON, verify = recompute every seal)
-  2. Governed tier gate — `packages/epistemic/server/src/GovernedTierGate/`
+  2. Governed tier gate — `packages/execution-authority/server/src/GovernedTierGate/`
      ("no record, no action"; closed literal-domain refusals; free text is a
      payload-smuggling channel)
   3. Goal-packet event core — `packages/tooling/tool/cli/src/commands/Goals/PacketCore/`

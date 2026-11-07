@@ -62,7 +62,7 @@ Grounding facts gathered before the grill (orchestrator, read-only):
   `packages/drivers/gov-legal-mcp`, `packages/law-practice/server` (run by `apps/practice-kg-mcp`),
   and the HTTP sidecar `apps/professional-desktop/server/OntologyMcpTransport.ts`.
 - `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` reads `McpServerClient` and the
-  `mcp-session-id` header to build `McpCallerIdentity`; `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
+  `mcp-session-id` header to build `McpCallerIdentity`; `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
   keys per-session grant state and hash chains on that session id. The 2026-07-28 adapter creates
   no session id; `McpRequestContext` carries `clientId`, `protocolVersion`, `clientCapabilities`,
   `clientInfo`, `requestMetadata`, `inputResponses`, and `requestState`.
