@@ -13,6 +13,7 @@ import {
   LibraryIntakeFile,
   LibraryIntakeRoot,
   LibraryMineBatchError,
+  LibraryMineLaunchPaths,
   LibraryMineOptions,
   LibraryMinePrivateRouteError,
   LibraryMineReceipt,
@@ -27,6 +28,9 @@ import {
   LibrarySource,
   LibraryTriageOutput,
   libraryHopGate,
+  libraryMineArgv,
+  libraryMineProfile,
+  libraryMineProfileServes,
   loadCatalog,
   mineLibraryRead,
   mineLibrarySynthesize,
@@ -318,6 +322,28 @@ const triageAll = Effect.fn("test.triageAll")(function* (root: string, repo: str
 });
 
 describe("research library mine", () => {
+  it("pins the codex-sol T2 fallback to gpt-6.1-sol medium in a read-only sandbox", () => {
+    const profile = libraryMineProfile("codex-sol");
+    const argv = libraryMineArgv(
+      profile,
+      LibraryMineLaunchPaths.make({
+        cwd: "/s",
+        schemaPath: "/s/t2.json",
+        outputPath: "/s/a.json",
+        promptPath: "/s/p.md",
+      })
+    );
+    expect([profile.model, profile.effort, profile.route, profile.externalLane]).toEqual([
+      "gpt-6.1-sol",
+      "medium",
+      "codex-cli",
+      false,
+    ]);
+    expect([libraryMineProfileServes(profile, "t2"), libraryMineProfileServes(profile, "t1")]).toEqual([true, false]);
+    expect(A.take(argv, 6)).toEqual(["codex", "exec", "-m", "gpt-6.1-sol", "-c", 'model_reasoning_effort="medium"']);
+    expect(A.contains(argv, "read-only")).toBe(true);
+  });
+
   it.effect("decodes a legacy ModelRun row without argv", () =>
     Effect.gen(function* () {
       const legacyRow = {

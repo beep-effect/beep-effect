@@ -137,7 +137,7 @@ export const LibraryAffirmativeCitoRelation = LiteralKit([
  * @category models
  * @since 0.0.0
  */
-export const LibraryMineProfileId = LiteralKit(["codex-luna", "junie", "claude", "cursor"]).pipe(
+export const LibraryMineProfileId = LiteralKit(["codex-luna", "codex-sol", "junie", "claude", "cursor"]).pipe(
   $I.annoteSchema("LibraryMineProfileId", { description: "Runner profile that launches a tier job." })
 );
 /**

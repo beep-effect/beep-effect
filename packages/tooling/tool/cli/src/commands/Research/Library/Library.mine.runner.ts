@@ -80,6 +80,18 @@ const profiles = {
     transport: "stdin",
     outputFile: true,
   }),
+  // Step 2 of the Claude fallback chain (AGENTS.md): Codex GPT-6.1 Sol medium for T2 reads.
+  "codex-sol": LibraryMineProfile.make({
+    id: "codex-sol",
+    tiers: ["t2"],
+    command: "codex",
+    model: "gpt-6.1-sol",
+    effort: "medium",
+    route: "codex-cli",
+    externalLane: false,
+    transport: "stdin",
+    outputFile: true,
+  }),
   junie: LibraryMineProfile.make({
     id: "junie",
     tiers: ["t2"],
@@ -178,7 +190,7 @@ export const libraryMineArgv: {
   2,
   (profile: LibraryMineProfile, paths: LibraryMineLaunchPaths): ReadonlyArray<string> =>
     Match.value(profile.id).pipe(
-      Match.when("codex-luna", () => [
+      Match.when(Match.is("codex-luna", "codex-sol"), () => [
         "codex",
         "exec",
         "-m",
