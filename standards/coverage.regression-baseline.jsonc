@@ -7,8 +7,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T21:04:03.757Z",
-  "git_sha": "5faa14d215d5fb0cb38af4075ec252b132b538c3",
+  "generated_at": "2026-11-07T23:40:52.407Z",
+  "git_sha": "bc1d8715ecaf2c0241d1de428fb43699a16e12d9",
   "command": "bun run coverage -- --filter=@beep/professional-desktop --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
@@ -33522,6 +33522,54 @@
             "statements": 2,
             "branches": 0,
             "functions": 2
+          }
+        },
+        "apps/professional-desktop/src/sync/VaultSyncIntent.atoms.ts": {
+          "lines": 97.91,
+          "statements": 95.15,
+          "branches": 82.5,
+          "functions": 91.93,
+          "uncovered": {
+            "lines": 3,
+            "statements": 8,
+            "branches": 7,
+            "functions": 5
+          }
+        },
+        "apps/professional-desktop/src/sync/VaultSyncIntent.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/professional-desktop/src/sync/VaultSyncIntent.prediction.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 75,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "apps/professional-desktop/src/sync/VaultSyncIntent.transport.ts": {
+          "lines": 86.48,
+          "statements": 86.84,
+          "branches": 75,
+          "functions": 68.75,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 2,
+            "functions": 5
           }
         }
       }
