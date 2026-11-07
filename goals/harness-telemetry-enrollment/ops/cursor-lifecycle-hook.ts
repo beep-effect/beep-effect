@@ -8,6 +8,7 @@ import { constants } from "node:fs";
 import * as Fs from "node:fs/promises";
 import { userInfo } from "node:os";
 import { basename, dirname, isAbsolute } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   CursorLifecyclePolicy,
@@ -60,7 +61,7 @@ const EnrolledReceiver = S.Struct(Struct.omit(CursorLifecyclePolicy.fields, ["ha
  */
 export class CursorCallbackEnrollment extends S.Opaque<CursorCallbackEnrollment, { readonly brand: unique symbol }>()(
   S.Struct({
-    version: S.tag("cursor-callback-enrollment/v1"),
+    version: S.tag("cursor-callback-enrollment/v2"),
     state: S.Literals(["paused", "active"]),
     expiresAtMillis: S.Natural,
     receiver: EnrolledReceiver,
@@ -68,6 +69,8 @@ export class CursorCallbackEnrollment extends S.Opaque<CursorCallbackEnrollment,
     intake: TranscriptIntakeConfig,
     callbackExecutable: S.NonEmptyString.check(S.isMaxLength(4096)),
     callbackSha256: CursorLifecyclePolicy.fields.runtimeSha256,
+    leaseDevice: S.String.check(S.isPattern(/^[0-9]+$/)),
+    leaseInode: S.String.check(S.isPattern(/^[0-9]+$/)),
   }).pipe(
     $I.annoteSchema("CursorCallbackEnrollment", {
       description: "Owner policy and expiry, never callback JSON or an inferred native identity.",
@@ -94,7 +97,7 @@ const failure = (reason: CursorCallbackError["reason"]) => CursorCallbackError.m
 const io = <A>(run: () => Promise<A>, reason: CursorCallbackError["reason"] = "enrollment") =>
   Effect.tryPromise({ try: run, catch: () => failure(reason) });
 const decodeEnrollment = S.decodeEffect(S.fromJsonString(CursorCallbackEnrollment), { onExcessProperty: "error" });
-const existingLock = S.is(S.Struct({ code: S.tag("EEXIST") }));
+const sqliteBusy = S.is(S.Struct({ errcode: S.tag(5) }));
 const decodeHash = S.decodeUnknownEffect(Sha256Hex);
 const hashBytes = Effect.fnUntraced(function* (bytes: Uint8Array) {
   const digest = yield* Digest.Digest;
@@ -226,7 +229,7 @@ const qualifyEnrollment = Effect.fnUntraced(function* (e: CursorCallbackEnrollme
       const before = yield* io(() => file.stat({ bigint: true }));
       if (!before.isFile() || (before.mode & 0o022n) !== 0n || before.size > 268435456n)
         return yield* failure("enrollment");
-      const bytes = yield* readBoundedFile(file, 268435456);
+      const bytes = yield* readBoundedFile(file, Number(before.size));
       const after = yield* io(() => file.stat({ bigint: true }));
       if ((yield* hashBytes(bytes)) !== e.callbackSha256 || !sameFile(before, after))
         return yield* failure("enrollment");
@@ -235,23 +238,76 @@ const qualifyEnrollment = Effect.fnUntraced(function* (e: CursorCallbackEnrollme
   );
   return CursorLifecyclePolicy.make({ ...e.receiver, hashSalt });
 });
-const acquireLease = Effect.fnUntraced(function* (root: Effect.Success<ReturnType<typeof rootAnchor>>) {
+const closeLeaseDatabase = (database: DatabaseSync) =>
+  Effect.try({
+    try: () => database.close(),
+    catch: () => failure("cleanup"),
+  }).pipe(Effect.orDie);
+const acquireLease = Effect.fnUntraced(function* (
+  root: Effect.Success<ReturnType<typeof rootAnchor>>,
+  enrollment: CursorCallbackEnrollment
+) {
   yield* requireRoot(root);
   const path = `${root.path}/callback.lock`;
-  const file = yield* Effect.tryPromise({
-    try: () => Fs.open(path, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600),
-    catch: (e) => failure(existingLock(e) ? "busy" : "enrollment"),
-  });
+  const file = yield* io(() => Fs.open(path, constants.O_RDWR | constants.O_NOFOLLOW | constants.O_NONBLOCK));
   const stat = yield* io(() => file.stat({ bigint: true })).pipe(
     Effect.onError(() => io(() => file.close(), "cleanup").pipe(Effect.orDie))
   );
-  return { path, file, stat };
+  if (
+    !ownedFile(stat, root.uid, 0) ||
+    stat.dev.toString() !== enrollment.leaseDevice ||
+    stat.ino.toString() !== enrollment.leaseInode
+  ) {
+    yield* io(() => file.close(), "cleanup");
+    return yield* failure("enrollment");
+  }
+  // The persistent empty inode carries only SQLite's kernel lock, never callback data.
+  // Pin the already-open no-follow descriptor; a crash releases the OS lock automatically.
+  const database = yield* Effect.try({
+    try: () => new DatabaseSync(`/proc/self/fd/${file.fd}`, { allowExtension: false }),
+    catch: () => failure("enrollment"),
+  }).pipe(Effect.onError(() => io(() => file.close(), "cleanup").pipe(Effect.orDie)));
+  const lease = { path, file, stat, database };
+  return yield* Effect.gen(function* () {
+    yield* requireLease(root, lease);
+    yield* Effect.try({
+      try: () => database.exec("PRAGMA busy_timeout=0;BEGIN IMMEDIATE"),
+      catch: (error) => failure(sqliteBusy(error) ? "busy" : "enrollment"),
+    });
+    yield* requireLease(root, lease, true);
+    return lease;
+  }).pipe(
+    Effect.onError(() =>
+      closeLeaseDatabase(database).pipe(Effect.ensuring(io(() => file.close(), "cleanup").pipe(Effect.orDie)))
+    )
+  );
+});
+const requireLease = Effect.fnUntraced(function* (
+  root: Effect.Success<ReturnType<typeof rootAnchor>>,
+  lease: {
+    readonly path: string;
+    readonly file: FileHandle;
+    readonly stat: BigIntStats;
+    readonly database: DatabaseSync;
+  },
+  held = false
+) {
+  yield* requireRoot(root);
+  const current = yield* io(() => Fs.lstat(lease.path, { bigint: true }));
+  const descriptor = yield* io(() => lease.file.stat({ bigint: true }));
+  if (!sameFile(lease.stat, current) || !sameFile(lease.stat, descriptor)) return yield* failure("enrollment");
+  if (held && lease.database.isTransaction !== true) return yield* failure("enrollment");
 });
 const releaseLease = Effect.fnUntraced(function* (lease: Effect.Success<ReturnType<typeof acquireLease>>) {
   const current = yield* io(() => Fs.lstat(lease.path, { bigint: true }), "cleanup").pipe(Effect.result);
-  yield* io(() => lease.file.close(), "cleanup");
+  yield* Effect.try({ try: () => lease.database.exec("ROLLBACK"), catch: () => failure("cleanup") }).pipe(
+    Effect.ensuring(
+      closeLeaseDatabase(lease.database).pipe(
+        Effect.ensuring(io(() => lease.file.close(), "cleanup").pipe(Effect.orDie))
+      )
+    )
+  );
   if (Result.isFailure(current) || !sameFile(lease.stat, current.success)) return yield* failure("cleanup");
-  yield* io(() => Fs.unlink(lease.path), "cleanup");
 });
 const projectInput = Effect.fnUntraced(function* (input: Stream.Stream<Uint8Array, unknown>) {
   const body = yield* input.pipe(
@@ -290,9 +346,9 @@ const callbackAt = Effect.fn("CursorCallback.consume")(function* (
       const enrollment = yield* readEnrollment(root);
       const policy = yield* qualifyEnrollment(enrollment);
       return yield* Effect.acquireUseRelease(
-        acquireLease(root),
-        Effect.fnUntraced(function* () {
-          yield* requireRoot(root);
+        acquireLease(root, enrollment),
+        Effect.fnUntraced(function* (lease) {
+          yield* requireLease(root, lease, true);
           const journalPath = `${root.path}/journal.sqlite`;
           const before = yield* io(() => Fs.lstat(journalPath, { bigint: true }));
           if (!ownedFile(before, root.uid, enrollment.intake.maxDatabasePages * 4096))
@@ -306,6 +362,7 @@ const callbackAt = Effect.fn("CursorCallback.consume")(function* (
               const bridge = yield* receiver(policy).pipe(
                 Effect.provideService(CursorLifecycleRuntime, { journal, control })
               );
+              yield* requireLease(root, lease, true);
               const listener = yield* bridge.open();
               const forwarding = yield* Effect.forkChild(forwardCursorLifecycleHook(listener.socketPath, projected));
               const receipt = yield* listener.accept;
@@ -315,7 +372,7 @@ const callbackAt = Effect.fn("CursorCallback.consume")(function* (
             })
           ).pipe(Effect.provide(SqliteClient.layer({ filename: journalPath, disableWAL: true, busyTimeout: 0 })));
           const receipt = yield* work.pipe(Effect.mapError(() => failure("callback")));
-          yield* requireRoot(root);
+          yield* requireLease(root, lease, true);
           const after = yield* io(() => Fs.lstat(journalPath, { bigint: true }));
           if (
             !ownedFile(after, root.uid, enrollment.intake.maxDatabasePages * 4096) ||
