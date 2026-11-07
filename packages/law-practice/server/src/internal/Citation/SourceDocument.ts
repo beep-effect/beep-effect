@@ -2,24 +2,21 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationDocument, CitationDocumentReceipt, FullCitation } from "@beep/law-practice-domain/values";
+import { CitationDocument, CitationDocumentReceipt } from "@beep/law-practice-domain/values";
 import {
   CitationEngineExtractionResult,
   CitationEngineReport,
   CitationExtractionDiagnostics,
   CitationInputError,
 } from "@beep/law-practice-use-cases/server";
-import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as HashSet from "effect/HashSet";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
 import { failCitationExtractionBoundary } from "./EngineFailure.ts";
-import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { makeCitationRegisteredResolver } from "./RegisteredResolver.ts";
+import { makeCitationResolutionEditions } from "./ResolutionEditions.ts";
 import { CitationResourceBinding } from "./ResourceIdentity.ts";
 import {
   ownCitationSourceExtraction,
@@ -64,25 +61,8 @@ const own = Effect.fn("Citation.ownSourceDocument")(function* (
 ) {
   const extraction = yield* ownCitationSourceExtraction(limits, configuration);
   const resolver = yield* makeCitationRegisteredResolver();
-  const editions = yield* CitationFrozenEditions;
+  const editions = yield* makeCitationResolutionEditions();
   return { extraction, resolver, editions };
-});
-const editionNames = Effect.fn("Citation.sourceDocumentEditionNames")(function* (
-  owned: Effect.Success<ReturnType<typeof own>>,
-  result: CitationVerifiedExtractionResult
-) {
-  let seen = HashSet.empty<string>();
-  const output = A.empty<CitationAuthorityEdition>();
-  for (const mention of result.occurrences.mentions) {
-    const citation = mention.citation;
-    if (!S.is(FullCitation)(citation) || O.isNone(citation.publication.selectedEdition)) continue;
-    const reference = citation.publication.selectedEdition.value;
-    if (HashSet.has(seen, reference)) continue;
-    const edition = yield* owned.editions.lookup(reference, citation.type);
-    output.push(CitationAuthorityEdition.make({ edition: reference, shortName: edition.value.short_name }));
-    seen = HashSet.add(seen, reference);
-  }
-  return output;
 });
 const prepareSource = (extract: typeof prepareCitationSourceExtraction) =>
   Effect.fn("Citation.extractResolvedDocument")(function* (
@@ -95,7 +75,7 @@ const prepareSource = (extract: typeof prepareCitationSourceExtraction) =>
       Effect.gen(function* () {
         const prepared = yield* extract(limits, runtime, owned.extraction, raw);
         const result = prepared.result;
-        const editions = yield* editionNames(owned, result);
+        const editions = yield* owned.editions.forMentions(result.occurrences.mentions);
         const resolved = yield* owned.resolver.resolve({
           verifiedSource: result.source.source,
           engineArtifact: owned.extraction.config.engineArtifact,
@@ -103,10 +83,10 @@ const prepareSource = (extract: typeof prepareCitationSourceExtraction) =>
           editions,
           limits,
         });
-        return { result, resolved, editions };
+        return { result, resolved, editions, limits: prepared.limits, engineArtifact: prepared.engineArtifact };
       })
     );
-    return { ...patch, workDuration, limits, engineArtifact: owned.extraction.config.engineArtifact };
+    return { ...patch, workDuration };
   });
 const project = (patch: Effect.Success<ReturnType<ReturnType<typeof prepareSource>>>, reservedUnits: number) =>
   CitationExtractedDocumentResult.make({

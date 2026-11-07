@@ -12,6 +12,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
@@ -122,6 +123,11 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             expect(restored).toEqual(result.document);
             expect(result.source.parent).toEqual(markup === null ? proof.source : markup.source);
             expect(resolves).toBe(markup === null ? 1 : 2);
+            const originalDeadline = Duration.toMillis(result.output.report.limits.extractDeadline);
+            expect(Reflect.set(result.output.report.limits.extractDeadline.value, "millis", 1)).toBe(true);
+            const afterReportMutation = yield* closed;
+            expect(Duration.toMillis(afterReportMutation.output.report.limits.extractDeadline)).toBe(originalDeadline);
+            expect(afterReportMutation.output.document).toEqual(result.output.document);
             yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
           }),
         { timeout: 180000 }

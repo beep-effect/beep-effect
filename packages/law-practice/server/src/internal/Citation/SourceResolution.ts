@@ -1,0 +1,161 @@
+/** Raw-source resolution through canonical evidence and original dispatch.
+ * @internal @packageDocumentation @since 0.0.0
+ */
+import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationDocument, CitationDocumentReceipt } from "@beep/law-practice-domain/values";
+import {
+  CitationEngineReport,
+  CitationEngineResolutionInput,
+  CitationEngineResolutionResult,
+  CitationInputError,
+  CitationPrerequisiteError,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
+import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
+import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { CitationOperationAdmission } from "./Admission.ts";
+import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
+import { restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
+import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationResolverBoundary } from "./RegisteredResolver.ts";
+import { makeCitationResolutionEditions } from "./ResolutionEditions.ts";
+import { CitationResourceBinding } from "./ResourceIdentity.ts";
+import { captureCitationOperationPolicy, snapshotCitationValue } from "./Snapshot.ts";
+import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
+import { makeCitationTextBudget } from "./TextBudget.ts";
+import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+
+const $I = $LawPracticeServerId.create("internal/Citation/SourceResolution");
+const SourceEvidenceField: { readonly source: S.Codec<VerifiedSourceText> } = {
+  source: CitationEngineResolutionResult.fields.source,
+};
+/** Complete internal restoration evidence and public resolution projection.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationSourceResolutionResult extends S.Opaque<
+  CitationSourceResolutionResult,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    ...SourceEvidenceField,
+    document: CitationDocument,
+    receipt: CitationDocumentReceipt,
+    resourceBindings: S.Array(CitationResourceBinding),
+    editions: S.Array(CitationAuthorityEdition),
+    output: CitationEngineResolutionResult,
+  }).pipe(
+    $I.annoteSchema("CitationSourceResolutionResult", {
+      description:
+        "Completed raw-source resolution with genuine evidence, original restoration bindings and public result.",
+    })
+  )
+) {}
+const InputType = S.toType(CitationEngineResolutionInput);
+const InputJson = CitationEngineResolutionInput.pipe(S.toCodecJson, S.fromJsonString);
+/** Capture dependencies and admit before source resolution. Snapshot receipts
+ * before asynchronous source work, then reverify anchors and engine-bound IDs.
+ * Derive edition spellings from the captured frozen service, never the request.
+ * Original resolver output/receipt/bindings remain available beside public
+ * output for trusted restoration adapters. Returned resolve has R=never.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolution")(
+  function* (policy: unknown, artifact: unknown) {
+    const invalid = () => CitationInputError.make({ operation: "resolve" });
+    const evidenceFailure = () =>
+      CitationPrerequisiteError.make({ operation: "resolve", dependency: "source-evidence" });
+    const vocabularyFailure = () =>
+      CitationPrerequisiteError.make({ operation: "resolve", dependency: "court-reporter-vocabulary" });
+    const { limits, engineArtifact } = yield* captureCitationOperationPolicy(policy, artifact, invalid);
+    const admission = yield* CitationOperationAdmission;
+    const digest = yield* Digest.Digest;
+    const evidence = yield* makeCitationSourceEvidence(limits);
+    const editions = yield* makeCitationResolutionEditions();
+    const resolver = yield* makeCitationResolverBoundary();
+    const timing = yield* makeCitationRegexTiming(limits, true);
+    const capture = Effect.fn("Citation.captureSourceResolutionInput")(function* (raw: unknown) {
+      if (P.isObject(raw) && P.isString(raw.sourceText) && Str.length(raw.sourceText) > limits.sourceUtf16)
+        return yield* CitationSafetyLimitExceeded.make({ operation: "resolve", limit: "sourceUtf16" });
+      if (P.isObject(raw) && A.isArray(raw.mentions) && raw.mentions.length > limits.mentions)
+        return yield* CitationSafetyLimitExceeded.make({ operation: "resolve", limit: "mentions" });
+      const decoded = yield* S.decodeUnknownEffect(InputType)(raw).pipe(Effect.mapError(invalid));
+      if (decoded.mentions.length > limits.mentions)
+        return yield* CitationSafetyLimitExceeded.make({ operation: "resolve", limit: "mentions" });
+      if (Str.length(decoded.sourceText) > limits.sourceUtf16)
+        return yield* CitationSafetyLimitExceeded.make({ operation: "resolve", limit: "sourceUtf16" });
+      return yield* snapshotCitationValue(InputJson, decoded, invalid);
+    });
+    const prepare = Effect.fn("Citation.resolveRawSource")(
+      function* (raw: unknown) {
+        const request = yield* capture(raw);
+        const source = yield* evidence.resolve(request);
+        const mentions = yield* Effect.forEach(
+          request.mentions,
+          (mention) =>
+            restoreCitationMentionAgainstVerifiedSource(mention, source, engineArtifact).pipe(
+              Effect.mapError(evidenceFailure)
+            ),
+          { concurrency: 1 }
+        );
+        const selected = yield* editions.forMentions(mentions).pipe(Effect.mapError(vocabularyFailure));
+        const resolved = yield* resolver.resolve({
+          verifiedSource: source,
+          mentions,
+          editions: selected,
+          limits,
+          engineArtifact,
+        });
+        return { ...resolved, source, editions: selected };
+      },
+      Effect.provideService(Digest.Digest, digest)
+    );
+    return {
+      resolve: Effect.fn("Citation.resolveSourceBoundary")(
+        (raw: unknown) =>
+          admission
+            .run(
+              "resolve",
+              Effect.scoped(
+                Effect.gen(function* () {
+                  const budget = yield* makeCitationTextBudget(limits);
+                  const [workDuration, result] = yield* Effect.timed(
+                    prepare(raw).pipe(Effect.provideService(CitationTextBudget, budget))
+                  );
+                  const producedTextUtf16 = yield* budget.snapshot;
+                  const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
+                  const report = CitationEngineReport.make({
+                    operation: "resolve",
+                    engineArtifact,
+                    limits: reportPolicy.limits,
+                    workDuration,
+                    producedTextUtf16,
+                    extraction: null,
+                  });
+                  return CitationSourceResolutionResult.make({
+                    ...result,
+                    output: CitationEngineResolutionResult.make({
+                      source: result.source,
+                      document: result.document,
+                      report,
+                    }),
+                  });
+                })
+              )
+            )
+            .pipe(
+              Effect.catchTags({
+                CitationAdmissionFailure: () => Effect.fail(invalid()),
+                CitationSafetyLimitExceeded: timing.failSafety,
+              })
+            ),
+        timing.timed
+      ),
+    };
+  },
+  Effect.provideService(CitationRegexOperation, "resolve")
+);

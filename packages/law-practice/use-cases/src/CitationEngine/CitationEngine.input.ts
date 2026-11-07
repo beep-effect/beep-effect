@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
+import { CitationMentionReceipt } from "@beep/law-practice-domain/values";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
@@ -169,6 +170,33 @@ export class CitationEngineSourcePairInput extends S.Opaque<
   }).pipe(
     $I.annoteSchema("CitationEngineSourcePairInput", {
       description: "Server-only primitive source pair and named modes; decoding alone grants no source proof.",
+    })
+  )
+) {}
+
+/** Raw source and structural mention receipts for re-verification before legal
+ * resolution. Receipts never grant source authority; the engine verifies the
+ * source, anchors and mention IDs against its captured implementation identity.
+ * Frozen edition spellings and policy are obtained from installed services.
+ * **Example** (Inspect resolver evidence input)
+ * ```ts
+ * import { CitationEngineResolutionInput } from "@beep/law-practice-use-cases/server"
+ * console.log(CitationEngineResolutionInput.fields.mentions !== undefined) // true
+ * ```
+ * @category models @since 0.0.0
+ */
+export class CitationEngineResolutionInput extends S.Opaque<
+  CitationEngineResolutionInput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    source: CitationEngineSourceInput.fields.source,
+    sourceText: CitationEngineSourceInput.fields.sourceText,
+    mentions: S.Array(CitationMentionReceipt).check(S.isMaxLength(CitationEngineAbsoluteMaxima.mentions)),
+  }).pipe(
+    $I.annoteSchema("CitationEngineResolutionInput", {
+      description:
+        "Raw canonical source and bounded structural occurrence receipts; no caller policy, vocabulary or proof authority.",
     })
   )
 ) {}

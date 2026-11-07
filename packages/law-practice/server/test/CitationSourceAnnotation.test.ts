@@ -11,10 +11,12 @@ import {
   CitationEngineAnnotationResult,
   CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
+import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -81,9 +83,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("verified ra
           };
           let calls = 0;
           const resolver = SourceTextResolver.of({
-            resolve: Effect.fn("SourceAnnotationTest.pair")(() =>
+            resolve: Effect.fn("SourceAnnotationTest.pair")((lookup) =>
               Effect.sync(() => {
-                const proof = calls++ === 0 ? plain : markup;
+                const proof = S.toEquivalence(SourceTextIdentity)(lookup.identity, plain.source) ? plain : markup;
+                calls++;
                 request.markup.sourceText = "changed during plain resolution";
                 return ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText });
               })
@@ -110,6 +113,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("verified ra
           expect(result.source.source).toEqual(markup.source);
           expect(result.companion?.source).toEqual(plain.source);
           expect(calls).toBe(2);
+          const originalDeadline = Duration.toMillis(result.report.limits.annotateDeadline);
+          expect(Reflect.set(result.report.limits.annotateDeadline.value, "millis", 1)).toBe(true);
+          const afterReportMutation = yield* entry.annotate({
+            plain: { source: plain.source, sourceText: plain.sourceText },
+            markup: { source: markup.source, sourceText: markup.sourceText },
+            replacements: request.replacements,
+          });
+          expect(Duration.toMillis(afterReportMutation.report.limits.annotateDeadline)).toBe(originalDeadline);
+          expect(afterReportMutation.text).toEqual(result.text);
           const exits = yield* setup.observed.snapshot;
           expect(exits.spawned).toBeGreaterThan(0);
           expect(exits.confirmed).toBe(exits.spawned);

@@ -8,6 +8,7 @@ import {
   CitationEngineAnnotationInput,
   CitationEngineExtractionOptions,
   CitationEngineExtractionResult,
+  CitationEngineResolutionInput,
   CitationEngineSourceEvidence,
   CitationEngineSourceInput,
   CitationEngineSourcePairInput,
@@ -62,6 +63,14 @@ it.effect("retains exact raw Unicode and identity without granting a verified ca
     expect(source.source).toEqual(identity);
     expect(source.role).toBe("plain");
     expect(S.is(VerifiedSourceText)(source)).toBe(false);
+    const resolution = yield* S.decodeEffect(CitationEngineResolutionInput)({
+      source: identity,
+      sourceText: " A😀\n",
+      mentions: [],
+    });
+    expect(resolution.mentions).toEqual([]);
+    expect(S.is(VerifiedSourceText)(resolution)).toBe(false);
+
     const forged = yield* S.decodeUnknownEffect(CitationEngineSourceEvidence)({
       _tag: "Unchanged",
       source,
@@ -97,6 +106,8 @@ it.effect("keeps raw source and mode contracts out of root and client surfaces",
   Effect.sync(() => {
     for (const name of [
       "CitationEngineSourceInput",
+      "CitationEngineResolutionInput",
+      "CitationEngineResolutionResult",
       "CitationAnnotationMode",
       "CitationAnnotationReplacement",
       "CitationEngineAnnotationInput",

@@ -28,6 +28,7 @@ export const makeCitationAnnotationOperation = Effect.fn("Citation.makeAnnotatio
   return {
     annotate: Effect.fn("Citation.annotateReported")(function* (raw: unknown) {
       const result = yield* stage.annotate(raw);
+      const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
       return CitationEngineAnnotationResult.make({
         source: result.source,
         companion: result.companion,
@@ -35,7 +36,7 @@ export const makeCitationAnnotationOperation = Effect.fn("Citation.makeAnnotatio
         report: CitationEngineReport.make({
           operation: "annotate",
           engineArtifact,
-          limits,
+          limits: reportPolicy.limits,
           producedTextUtf16: result.reservedUnits,
           workDuration: result.workDuration,
           extraction: null,

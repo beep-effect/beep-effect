@@ -55,6 +55,7 @@ export {
   CitationBuiltinCleanerName,
   CitationCleanerContainerKind,
   CitationEngineExtractionOptions,
+  CitationEngineResolutionInput,
   CitationEngineSourceInput,
   CitationEngineSourcePairInput,
   CitationSourceRole,
@@ -88,6 +89,7 @@ export { CitationEngineReport, CitationExtractionMeasurements } from "./Citation
 export {
   CitationEngineAnnotationResult,
   CitationEngineExtractionResult,
+  CitationEngineResolutionResult,
 } from "./CitationEngine/CitationEngine.result.ts";
 /** Server-only captured operation work and exact native Unicode layout.
  * @category services

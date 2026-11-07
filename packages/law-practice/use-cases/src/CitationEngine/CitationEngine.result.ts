@@ -110,3 +110,36 @@ export class CitationEngineAnnotationResult extends S.Opaque<
       })
     )
 ) {}
+
+const ResolutionEvidence: { readonly source: S.Codec<VerifiedSourceText> } = { source: VerifiedSourceText };
+/** Resolved document and genuine raw-source capability with a separate measured
+ * operation report. Unresolved and ambiguous meanings remain document data.
+ * **Example** (Inspect resolution output)
+ * ```ts
+ * import { CitationEngineResolutionResult } from "@beep/law-practice-use-cases/server"
+ * console.log(CitationEngineResolutionResult.fields.document !== undefined) // true
+ * ```
+ * @category models @since 0.0.0
+ */
+export class CitationEngineResolutionResult extends S.Opaque<
+  CitationEngineResolutionResult,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ ...ResolutionEvidence, document: CitationDocument, report: CitationEngineReport })
+    .check(
+      S.makeFilter(
+        ({ source, document, report }) =>
+          report.operation === "resolve" &&
+          sameSource(source.source, document.source) &&
+          document.engineArtifact === report.engineArtifact,
+        $I.annote("ResolutionIdentity", {
+          description: "Resolution output retains its verified source, captured engine and resolve operation report.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("CitationEngineResolutionResult", {
+        description: "Reverified source, completed resolution document and separate captured-policy/work report.",
+      })
+    )
+) {}

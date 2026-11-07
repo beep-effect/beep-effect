@@ -3,12 +3,17 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineReport, CitationExtractionMeasurements } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineReport,
+  CitationExtractionMeasurements,
+  CitationInputError,
+} from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { ownCitationSemanticExtraction } from "./SemanticExtraction.ts";
+import { captureCitationOperationPolicy } from "./Snapshot.ts";
 import { makeCitationSourceRequestAdapter } from "./SourceRequest.ts";
 import {
   CitationVerifiedExtractionConfiguration,
@@ -73,7 +78,10 @@ const prepareSource = (method: keyof Effect.Success<ReturnType<typeof makeCitati
         return yield* extractPrepared(limits, runtime, owned, request);
       })
     );
-    return { result, workDuration, limits, engineArtifact: owned.config.engineArtifact };
+    const reportPolicy = yield* captureCitationOperationPolicy(limits, owned.config.engineArtifact, () =>
+      CitationInputError.make({ operation: "extract" })
+    );
+    return { result, workDuration, ...reportPolicy };
   });
 /** Resolve and extract within the existing admitted parent's Scope and budget.
  * @internal @category operations @since 0.0.0

@@ -1549,6 +1549,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert source document composition and restore the private source extraction helper boundary together, retaining source observations, receipts and all acceptance requirements.
 
+### Detach returned report deadlines from installed operation policy, 2026-11-07
+
+A focused test reproduced mutation of a report deadline changing the next raw-resolution policy report. Scalar fields already copied correctly. Resolution/annotation/standalone extraction now snapshot report policy through the existing Schema codec; connected extraction reuses the detached inner policy. Seventeen final resolver/extraction/annotation/timing tests pass, including Bun/Node repeated calls, exact restoration and unchanged output after report mutation. Full ownership laws remain open. See history/evidence/2026-11-07-public-source-resolution.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the per-report Schema policy snapshot and its mutation controls together; doing so reopens the demonstrated nested deadline alias and must not be described as captured-authority proof.
+
 ### Own annotation contracts and reported source operation, 2026-11-07
 
 Server use cases own annotation mode/replacement/input/result schemas; native stages reuse them without aliases. Reported annotation preserves genuine proofs, exact native output and measured admitted work. Twelve final annotation/resolver tests, eleven regressions and four contract tests pass; lint/types/declarations/laws/Fallow pass with zero introduced findings. Shared Schema policy capture removes duplicated installer code. Final service/Layer and all goal acceptance remain open. See history/evidence/2026-11-07-public-annotation-operation.md.
@@ -1572,5 +1580,13 @@ Resolution admission, callback/list/resource guards and projection now retain ac
 Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional private limit metadata and its producers/translators together, retaining source corpora and exact-category regression evidence without weakening any acceptance requirement.
+
+### Resolve raw sources through verified receipt snapshots and frozen editions, 2026-11-07
+
+Raw-source resolution snapshots receipts before source work, reverifies source/anchors/engine IDs and shares captured frozen edition selection with extraction. Six final resolver tests, nine-test resolver/Bun/Node replay and four contracts pass, including exact receipt restoration and mutation/refusal recovery. Lint/types/declarations/laws/Fallow pass with zero introduced findings. Cleaner composition, final service/Layer and all full acceptance duties remain open. See history/evidence/2026-11-07-public-source-resolution.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert SourceResolution and public resolution contracts together, restoring the former extraction-local edition selector and retaining all original restoration/parity corpora.
 
 <!-- beep:decisions:end -->
