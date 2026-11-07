@@ -275,6 +275,22 @@ describe("Vault filesystem boundary empty observations", () => {
   });
   it.layer(Layer.fresh(testLayer(() => ({}))), { timeout: "10 seconds" })((it) => {
     it.effect(
+      "skips symbolic links without following them",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const files = yield* makeVaultSyncFileStore();
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-symlink-" });
+        const outside = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-outside-" });
+        yield* fs.writeFileString(path.join(outside, "secret.txt"), "outside the vault");
+        yield* fs.symlink(path.join(outside, "secret.txt"), path.join(root, "link.txt"));
+        yield* fs.writeFileString(path.join(root, "kept.txt"), "inside");
+        const canonicalRoot = yield* fs.realPath(root);
+        const observation = yield* files.scan(canonicalRoot);
+        expect(A.map(observation.files, (file) => file.relPath)).toEqual(["kept.txt"]);
+      })
+    );
+    it.effect(
       "observes an empty file when its descriptor read reaches EOF",
       Effect.fnUntraced(function* () {
         const { scan } = yield* scanWith("");

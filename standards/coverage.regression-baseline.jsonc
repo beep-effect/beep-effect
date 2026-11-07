@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T11:48:50.869Z",
-  "git_sha": "7011ed8360976167f3a4738b3a9ce5b783860d7b",
-  "command": "bun run coverage -- --filter=@beep/documents-server --filter=@beep/documents-use-cases --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-07T12:18:27.705Z",
+  "git_sha": "802a6e68c484f7e0b6320a3c1b78ce19b85678c9",
+  "command": "bun run coverage -- --filter=@beep/documents-server --filter=@beep/documents-use-cases --filter=@beep/documents-domain --filter=@beep/professional-desktop --filter=@beep/db-admin --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -31712,18 +31712,6 @@
             "functions": 5
           }
         },
-        "apps/professional-desktop/src/sync/VaultSyncOrchestrator.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 20,
-            "statements": 20,
-            "branches": 0,
-            "functions": 10
-          }
-        },
         "apps/professional-desktop/src/sync/VaultSyncPanel.tsx": {
           "lines": 85.71,
           "statements": 86,
@@ -31854,6 +31842,30 @@
             "statements": 15,
             "branches": 2,
             "functions": 15
+          }
+        },
+        "apps/professional-desktop/src/runtime/SessionToken.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/professional-desktop/src/sync/VaultSyncSession.ts": {
+          "lines": 83.33,
+          "statements": 71.42,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
           }
         }
       }

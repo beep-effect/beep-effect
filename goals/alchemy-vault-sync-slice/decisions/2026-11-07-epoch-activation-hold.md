@@ -5,3 +5,9 @@ reversal: "Replace this hold only after the epoch guard, legacy writer deletion,
 ---
 
 The offline importer and pre-admission backup are implementation prerequisites. They do not activate a writer epoch. The existing executable predates any epoch-aware startup check, so adding only a new startup condition cannot prove that an older executable refuses the migrated store. Production cutover must include a database-level stale-writer refusal and the startup compatibility boundary, plus a tested post-admission reversal that retains accepted events. Until these exist, keep legacy application composition and do not claim D7 cutover acceptance.
+
+Released the same day on `goals/vault-sync-cutover`: the database fence and startup state machine
+(`2026-11-07-enforce-the-single-writer-with-a-persisted-epoch-and-a-database-fence.md`), the tested
+post-admission reversal (`2026-11-07-reverse-an-admitted-store-from-the-current-projection-not-the-pre-cutover-backup.md`)
+and the legacy writer deletion landed in the same cutover change, with the pre-admission restore
+retained from the earlier commit.

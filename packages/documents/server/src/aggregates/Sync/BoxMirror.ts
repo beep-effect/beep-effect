@@ -13,6 +13,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -75,6 +76,27 @@ export class BoxMirrorEvidence extends Context.Service<
     }) => Effect.Effect<O.Option<typeof Receipt.Type>, BoxMirrorUnavailable>;
   }
 >()($I`BoxMirrorEvidence`) {}
+
+/**
+ * Production {@link BoxMirrorEvidence} while the provider cannot prove an interrupted outcome.
+ *
+ * **Details**
+ *
+ * It always answers no evidence, so an interrupted upload stays held instead
+ * of being sent again. Replace it once Box offers verified version or digest
+ * lookup.
+ *
+ * **Example** (Inspect the layer)
+ * ```ts
+ * import { BoxMirrorNoEvidenceLive } from "@beep/documents-server/aggregates/Sync";
+ * void BoxMirrorNoEvidenceLive;
+ * ```
+ * @category adapters
+ * @since 0.0.0
+ */
+export const BoxMirrorNoEvidenceLive = Layer.succeed(BoxMirrorEvidence, {
+  lookup: Effect.fn("BoxMirrorEvidence.none")(() => Effect.succeedNone),
+});
 
 /**
  * Adapts a destination-scoped DmsMirrorBox or DmsMirrorFixture with durable mutation receipts.

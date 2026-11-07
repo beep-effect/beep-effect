@@ -3,7 +3,9 @@ import * as NodeURL from "node:url";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   DmsMirrorFixtureHandle,
+  ensureLegacyBoxDestination,
   ensureVaultSyncOwnerMembership,
+  LegacySyncReadModel,
   readSyncWriterEpoch,
   VaultSyncMembershipLive,
   VaultSyncMirrorRoot,
@@ -23,7 +25,7 @@ import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { BunServices } from "@effect/platform-bun";
 import { describe, expect, layer } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -232,6 +234,35 @@ describe("documents vault sync runtime", () => {
         expect(Number(joined[0]?.item_id)).toBeGreaterThan(57);
         const counts = yield* Context.get(context, DmsMirrorFixtureHandle).counts;
         expect(counts.uploadFile).toBe(1);
+
+        // The read model serves every legacy reader over the projected rows.
+        const reads = Context.get(context, LegacySyncReadModel);
+        const items = yield* reads.items(workspaceId);
+        expect(A.map(items, (item) => item.localRelPath).sort()).toEqual(["fresh.txt", "legacy.txt"]);
+        const succeeded = yield* reads.operationsByStatus(workspaceId, "succeeded");
+        expect(A.map(succeeded, (operation) => operation.targetRelPath)).toContain("fresh.txt");
+        const conflict = yield* reads.conflict(Documents.SyncConflictId.make(88));
+        assertSome(
+          O.map(conflict, (row) => row.resolutionStatus),
+          "reviewed"
+        );
+        const noConflict = yield* reads.conflict(Documents.SyncConflictId.make(999));
+        assertNone(noConflict);
+        const cursor = yield* reads.cursor(workspaceId);
+        assertSome(
+          O.map(cursor, (row) => row.workspaceId),
+          workspaceId
+        );
+        const noCursor = yield* reads.cursor(WorkspaceIdentity.WorkspaceId.make(4));
+        assertNone(noCursor);
+
+        // The bootstrap registers a workspace destination once; the imported one is kept.
+        const bootstrap = Effect.provide(Layer.merge(hostingFor(root), Layer.succeedContext(context)));
+        const imported = yield* ensureLegacyBoxDestination(3).pipe(bootstrap);
+        expect(imported).toBe("legacy-box-workspace-3");
+        const created = yield* ensureLegacyBoxDestination(5).pipe(bootstrap);
+        const recreated = yield* ensureLegacyBoxDestination(5).pipe(bootstrap);
+        expect(recreated).toBe(created);
 
         // The legacy writer is fenced while the Model owns the store.
         const legacy = yield* sql`UPDATE documents_sync_item SET last_error = 'old build'`.pipe(Effect.flip);

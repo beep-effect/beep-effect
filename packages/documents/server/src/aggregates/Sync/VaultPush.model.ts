@@ -22,11 +22,10 @@ const SyncOperationType = DomainSyncOperation.SyncOperationType;
  * **Example** (Classify a provider echo)
  *
  * ```ts
- * import { EchoClass } from "./VaultPush.model.ts"
+ * import { EchoClass } from "@beep/documents-server/aggregates/Sync"
  * EchoClass.is.content("content") // true
  * ```
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -38,7 +37,6 @@ export const EchoClass = LiteralKit(["content", "moved", "renamed"]).pipe(
 );
 /**
  * Runtime echo class represented by {@link EchoClass}.
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -50,11 +48,10 @@ export type EchoClass = typeof EchoClass.Type;
  * **Example** (Classify a provider echo)
  *
  * ```ts
- * import { echoClassForOperation } from "./VaultPush.model.ts"
+ * import { echoClassForOperation } from "@beep/documents-server/aggregates/Sync"
  * echoClassForOperation("uploadFile") // "content"
  * ```
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -73,12 +70,11 @@ export const echoClassForOperation = (operationType: DomainSyncOperation.SyncOpe
  * **Example** (Classify a provider echo)
  *
  * ```ts
- * import { echoClassForEvent } from "./VaultPush.model.ts"
+ * import { echoClassForEvent } from "@beep/documents-server/aggregates/Sync"
  * import * as O from "effect/Option"
  * O.isNone(echoClassForEvent("deleted")) // true
  * ```
  *
- * @internal
  * @category models
  * @since 0.0.0
  */

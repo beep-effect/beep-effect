@@ -26,6 +26,7 @@ export * from "./SyncAdmission.service.ts";
 export * from "./SyncCutover.service.ts";
 export * from "./SyncGenesis.service.ts";
 export * from "./SyncWriterEpoch.service.ts";
+export * from "./VaultPush.model.ts";
 export * from "./VaultSync.file-store.ts";
 export * from "./VaultSyncApi.ts";
 export * from "./VaultSyncMcp.ts";

@@ -201,6 +201,7 @@ export const LegacySyncProjections = Layer.mergeAll(
           const o = state.observation;
           const pushed = event._tag === "ItemPushed";
           yield* write("item", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
+            workspace_id: o.workspaceId,
             content_digest: o.digest,
             content_size_bytes: o.contentSizeBytes ?? null,
             item_kind: o.kind,
@@ -233,7 +234,7 @@ export const LegacySyncProjections = Layer.mergeAll(
   ),
   LegacySyncOperation.toLayer(
     Effect.gen(function* () {
-      const { genesis, write, path, identity } = yield* store;
+      const { genesis, write, path, identity, sql } = yield* store;
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
           if (event._tag === "OperationGenesisImported") {
@@ -243,7 +244,13 @@ export const LegacySyncProjections = Layer.mergeAll(
           if (state === null) continue;
           const input = state.input;
           const item = yield* identity("item", input.itemId);
+          // The operation belongs to its item's workspace; the item row is projected first.
+          const owner = yield* sql`SELECT workspace_id FROM documents_sync_item WHERE id = ${item}`.pipe(
+            Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ workspace_id: S.Int })))),
+            Effect.orDie
+          );
           yield* write("operation", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
+            ...(A.isReadonlyArrayNonEmpty(owner) ? { workspace_id: owner[0].workspace_id } : {}),
             sync_item_id: item,
             operation_type: input.type === "ensureFolder" ? "createFolder" : input.type,
             status: state.status === "retrying" ? "queued" : state.status === "superseded" ? "failed" : state.status,
@@ -274,6 +281,7 @@ export const LegacySyncProjections = Layer.mergeAll(
           const record = event.record;
           const item = record.itemId === null ? null : yield* identity("item", record.itemId);
           yield* write("conflict", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
+            workspace_id: record.workspaceId,
             sync_item_id: item,
             remote_event_id: record.remoteEventId,
             remote_payload: yield* S.encodeEffect(S.fromJsonString(S.Struct({ evidence: S.String })))({
@@ -317,6 +325,7 @@ export const LegacySyncProjections = Layer.mergeAll(
               ? selected[0].public_id
               : `documents_sync_cursor_a${bytesToHex(sha256(new TextEncoder().encode(source.id)))}`;
           yield* write("cursor", publicId, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
+            workspace_id: state.workspaceId,
             stream_position: state.cursor,
             ...(event._tag === "CursorAdvanced" && event.lastEventId !== undefined
               ? { last_event_id: event.lastEventId }

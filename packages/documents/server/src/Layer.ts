@@ -22,8 +22,8 @@ import { DocumentsServerLayer, DocumentsServerLlmLayer } from "./aggregates/Docu
 import {
   BOX_MIRROR_DEFAULT_ROOT_NAME,
   BOX_MIRROR_ROOT_NAME_ENV,
-  BoxMirrorEvidence,
   BoxMirrorLive,
+  BoxMirrorNoEvidenceLive,
   DmsMirrorFixtureLayer,
   ensureSyncCutover,
   LegacySyncAuditLive,
@@ -113,11 +113,6 @@ export const VaultSyncMirrorRootLayer = Layer.effect(
   )
 );
 
-// The provider cannot yet prove an interrupted upload's outcome, so absent evidence holds it.
-const NoBoxMirrorEvidence = Layer.succeed(BoxMirrorEvidence, {
-  lookup: Effect.fn("BoxMirrorEvidence.none")(() => Effect.succeedNone),
-});
-
 // Genesis sends carry their import principal in this request context; the driver stamps it on events.
 const platformConfig = AlchemyPostgresConfig.make({
   provenance: O.some(
@@ -133,7 +128,7 @@ const ModelHost = VaultSyncPassModel.layer(
   Layer.mergeAll(VaultSyncPolicies, VaultSyncRequestsLive, VaultSyncPassLive, LegacySyncProjections)
 ).pipe(
   Layer.provide(BoxMirrorLive),
-  Layer.provide(Layer.mergeAll(LegacySyncAuditLive, NoBoxMirrorEvidence, VaultSyncRootFromWorkspaceLive)),
+  Layer.provide(Layer.mergeAll(LegacySyncAuditLive, BoxMirrorNoEvidenceLive, VaultSyncRootFromWorkspaceLive)),
   Layer.provide(AlchemyPostgres.layer(platformConfig)),
   // A store whose event tables cannot be created is not a recoverable sync state.
   Layer.orDie
