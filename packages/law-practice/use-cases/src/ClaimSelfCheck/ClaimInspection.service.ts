@@ -73,7 +73,9 @@ export const ClaimInspectionLive: Layer.Layer<ClaimInspection, never, UsptoClaim
 
 /**
  * Bind one supplied inspection operation to the same failure-preserving published acquisition path.
- * @example
+ *
+ * **Example** (Bind inspection to published acquisition)
+ *
  * ```ts
  * import { claimInspectionService } from "@beep/law-practice-use-cases/ClaimSelfCheck"
  * console.log(typeof claimInspectionService) // function
