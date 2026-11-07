@@ -861,12 +861,13 @@ const probeDisconnectReason = (error: MirrorProbeFailure): DmsMirrorDisconnectRe
     : DmsMirrorDisconnectReason.Enum["probe-failed"];
 
 /**
- * BoxError fields are sanitized at the driver boundary, so the mirror failure
- * diagnostic (reason literal, status, code) is safe to log verbatim; a schema
- * failure here can only be a malformed folder id.
+ * Whether a probe failure may clear on retry. The failure's `reason` text is
+ * never logged: it is built from vendor error text, which can name folders and
+ * accounts. The tag, the status classification (`disconnect_reason`) and this
+ * flag are the whole diagnostic; a schema failure is a malformed folder id.
  */
-const probeFailureDetail = (error: MirrorProbeFailure): string =>
-  P.isTagged(error, "DmsMirrorUnavailable") ? error.reason : "mirror root id decoding failed";
+const probeFailureRetryable = (error: MirrorProbeFailure): boolean =>
+  P.isTagged(error, "DmsMirrorUnavailable") && error.retryable;
 
 /**
  * Availability layer probing the Box mirror adapter.
@@ -910,7 +911,8 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
             return Effect.logWarning("Box mirror availability probe failed").pipe(
               Effect.annotateLogs({
                 "documents.sync.disconnect_reason": disconnectReason,
-                "documents.sync.failure": probeFailureDetail(error),
+                "documents.sync.failure": error._tag,
+                "documents.sync.retryable": probeFailureRetryable(error),
                 "documents.sync.provider": "box",
               }),
               Effect.as(

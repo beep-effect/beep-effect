@@ -15,7 +15,7 @@ const kinds = [
   ["node", "identities and state on Node"],
 ] as const;
 
-it.layer(citationTokenizerTestLayer, { excludeTestServices: true, timeout: 60_000 })(
+it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: false, timeout: "5 seconds" })(
   "original connected extraction loop",
   (it) => {
     for (const [kind, label] of kinds) {
