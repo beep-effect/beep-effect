@@ -8,7 +8,7 @@ Outcome: the configured reference root holds `effect` and `effect-tsgo`,
 indexed by graft in workspace mode with a nightly `claude-opus-5` deep refresh,
 and every beep checkout (clones and worktrees) reaches it through
 `.repos/effect`, `.repos/effect-tsgo`, and `.repos/effect-workspace`, provisioned
-from a checked-in `scripts/references.json`.
+from a checked-in `packages/tooling/policy-pack/repo-configs/data/references.json`.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -24,7 +24,7 @@ Read those first, then `AGENTS.md`, `CLAUDE.md`, the `graft` skill, and
 
 Scope:
 
-- In: `scripts/references.json`, `scripts/setup-effect-ref.sh`,
+- In: `packages/tooling/policy-pack/repo-configs/data/references.json`, `scripts/setup-effect-ref.sh`,
   `packages/tooling/tool/cli/src/commands/Refs/**`, the `linkReferences` step in
   `commands/Worktree/Worktree.command.ts`, their tests, `.claude/settings.json`
   permissions, the R13 docs sweep, and this packet. The operator move (PLAN S4)
@@ -54,7 +54,7 @@ Workflow:
 
 Acceptance:
 
-- [ ] `scripts/references.json` decodes; provisioner is idempotent and creates
+- [ ] `packages/tooling/policy-pack/repo-configs/data/references.json` decodes; provisioner is idempotent and creates
       the three links; `beep worktree new` creates them too.
 - [ ] `beep refs plan` is read-only; `install-timer` renders 03:30 units with
       `--refresh` and `--uninstall`.

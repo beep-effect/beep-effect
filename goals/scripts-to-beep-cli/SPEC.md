@@ -40,13 +40,13 @@ Higher sources outrank lower sources when they conflict.
 | `scripts/ci-change-profile.sh` | `beep ci change-profile <base>` (prints the same `eval`-able assignments) |
 | `scripts/ci-runner-resources.sh` | `beep ci runner-resources <lane> -- <command>` |
 | `scripts/ci-prune-apt-sources.sh` | `beep ci prune-apt` |
-| `scripts/github-app/create-*.ts` + manifests | `beep github app mint <app>` over `@beep/github`; manifests move to the command's policy data |
-| `scripts/prune-tsgo-backups.mjs` | `beep toolchain prune-tsgo-backups` (root `prepare` calls it) |
-| `scripts/regenerate-merge-driver.sh` | `beep git merge-driver regenerate` (the `check.yml` assertion updates) |
-| `scripts/changeset-changelog.cjs` | `@beep/repo-cli` changeset changelog formatter referenced from `.changeset/config.json` |
-| `scripts/test-gitleaks-observation-digest.py` | vitest in the owning package (`python-free-repo` triage row) |
-| `scripts/knowledge-refs-rewrite.rules.json`, `scripts/references.json` | policy data under `packages/tooling/policy-pack/repo-configs` |
-| `scripts/systemd/*` | installed by `beep` (the unit text becomes a rendered template in the owning command) |
+| the two GitHub App `create-*.ts` registration scripts + manifests (retired) | `beep github app mint <app>` over `@beep/github`; manifests move to the command's policy data |
+| `prune-tsgo-backups.mjs` (retired) | `beep toolchain prune-tsgo-backups` in `packages/tooling/tool/cli/src/commands/Toolchain/` (root `prepare` calls it) |
+| `regenerate-merge-driver.sh` (retired) | `beep git merge-driver regenerate` (the `check.yml` assertion updates) |
+| `changeset-changelog.cjs` (retired) | `packages/tooling/tool/cli/src/ChangesetChangelog.ts`, referenced from `.changeset/config.json` |
+| `test-gitleaks-observation-digest.py` (retired) | `packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts` (`python-free-repo` triage row) |
+| `knowledge-refs-rewrite.rules.json`, `references.json` (moved) | `packages/tooling/policy-pack/repo-configs/data/` |
+| the `agent-runs.slice` systemd units (retired) | `beep quality scheduler slice [--install]`, rendered from `packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts` |
 | `scripts/cloud/bootstrap.sh`, `scripts/cloud/fetch.sh` | `bootstrap.sh` stays as the one exception; `fetch.sh` folds into it or into the compiled binary fetch |
 
 New: a `release`/`main` workflow step that runs `bun build --compile` on the beep CLI and
@@ -149,7 +149,7 @@ Workspace exports resolve to src, so `bun run beep` works during `prepare` witho
 
 Lane `goals/scripts-to-beep-cli`
 
-Reverse: Restore node scripts/prune-tsgo-backups.mjs in package.json prepare
+Reverse: Restore the former prune-tsgo-backups.mjs node script in package.json prepare (from git history)
 
 ### tracked-shell-allowlist exempts packet evidence, infra/ and two named fixtures, 2026-11-07
 
