@@ -9,8 +9,10 @@ import * as Effect from "effect/Effect";
 import * as H from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 
 const decodeEvidence = S.decodeEffect(V.RemoteEvidence);
 const decodeDestinationId = S.decodeUnknownEffect(V.DestinationId);
@@ -334,5 +336,281 @@ describe("review corrections (I14)", () => {
     assertNone(V.reviewCorrection({ record: V.ConflictRecord.make(legacy), item }));
     assertNone(V.reviewCorrection({ record: { ...record, itemId: null }, item }));
     assertNone(V.reviewCorrection({ record, item: { ...item, remoteId: null } }));
+  });
+});
+
+describe("restricted genesis transitions", () => {
+  const common = {
+    id: 91,
+    org_id: 1,
+    workspace_id: 3,
+    provider: "box",
+    row_version: 37,
+    schema_version: "0.1.0",
+    source: "Migration",
+    created_at: 1,
+    updated_at: 2,
+    created_by_principal: { actor: "creator" },
+    updated_by_principal: { actor: "updater" },
+    deleted_at: null,
+    deleted_by_principal: null,
+  };
+  const itemRecord = V.ItemRecord.make({
+    observation: V.ItemObservation.make({
+      destinationId: destination,
+      workspaceId: 3,
+      path: input.path,
+      kind: "file",
+      digest: "current",
+      generation: 7,
+      operationId: id,
+      type: "uploadFile",
+      parentRequired: false,
+    }),
+    remoteId: null,
+    status: "error",
+    slots: H.empty(),
+  });
+  const operationRecord = V.OperationRecord.make({
+    input,
+    status: "failed",
+    attempts: 4,
+    leaseEpoch: 0,
+    holder: null,
+    expiresAt: 0,
+    retryAt: 0,
+  });
+  const conflictId = V.ConflictId.make("documents_sync_conflict_agenesis");
+  const conflictRecord = V.ConflictRecord.make({
+    publicId: conflictId,
+    destinationId: destination,
+    workspaceId: 3,
+    remoteEventId: "historical",
+    itemId: null,
+    evidence: "synthetic",
+    reviewed: false,
+  });
+  const destinationRecord = V.SyncDestination.definition.evolve.DestinationRegistered(
+    V.SyncDestination.definition.initial,
+    V.DestinationRegistered.make({ orgId: 7, workspaceId: 3, name: "synthetic" }),
+    { ...envelope, id: destination }
+  );
+  it("hydrates every aggregate and snapshot while rejecting another import into a populated stream", () => {
+    const itemRow = V.LegacyItemRow.make({
+      ...common,
+      public_id: itemId,
+      entity_type: "documents_sync_item",
+      content_digest: "current",
+      content_size_bytes: null,
+      item_kind: "file",
+      last_error: "old error",
+      last_pushed_digest: "old",
+      last_pushed_generation: 2,
+      local_generation: 7,
+      local_rel_path: input.path,
+      remote_id: null,
+      remote_name: null,
+      remote_parent_id: null,
+      sync_state: "error",
+    });
+    const operationRow = V.LegacyOperationRow.make({
+      ...common,
+      public_id: id,
+      entity_type: "documents_sync_operation",
+      attempt_count: 4,
+      idempotency_key: "old key",
+      input_content_digest: null,
+      input_generation: 1,
+      last_error: "old failure",
+      operation_type: "uploadFile",
+      status: "failed",
+      sync_item_id: 91,
+      target_name: "file.txt",
+      target_parent_rel_path: null,
+      target_rel_path: input.path,
+    });
+    const conflictRow = V.LegacyConflictRow.make({
+      ...common,
+      public_id: conflictId,
+      entity_type: "documents_sync_conflict",
+      conflict_kind: "remoteUnknown",
+      local_rel_path: null,
+      remote_event_id: null,
+      remote_id: null,
+      remote_payload: { old: "payload" },
+      resolution_status: "open",
+      sync_item_id: null,
+    });
+    const i = V.ImportItemGenesis.make({ importId: "genesis-v1", row: itemRow, record: itemRecord });
+    const o = V.ImportOperationGenesis.make({ importId: "genesis-v1", row: operationRow, record: operationRecord });
+    const c = V.ImportConflictGenesis.make({ importId: "genesis-v1", row: conflictRow, record: conflictRecord });
+    const d = V.ImportDestinationGenesis.make({ importId: "genesis-v1", record: destinationRecord });
+    const ie = V.ItemGenesisImported.make(Struct.omit(i, ["_tag"]));
+    const oe = V.OperationGenesisImported.make(Struct.omit(o, ["_tag"]));
+    const ce = V.ConflictGenesisImported.make(Struct.omit(c, ["_tag"]));
+    const de = V.DestinationGenesisImported.make(Struct.omit(d, ["_tag"]));
+    expect(V.SyncItem.definition.decide.ImportItemGenesis(null, i, { ...ctx, id: itemId })).toEqual([ie]);
+    expect(V.SyncOperation.definition.decide.ImportOperationGenesis(null, o, ctx)).toEqual([oe]);
+    expect(V.SyncConflict.definition.decide.ImportConflictGenesis(null, c, { ...ctx, id: conflictId })).toEqual([ce]);
+    expect(
+      V.SyncDestination.definition.decide.ImportDestinationGenesis({ _tag: "Unregistered" }, d, {
+        ...ctx,
+        id: destination,
+      })
+    ).toEqual([de]);
+    expect(V.SyncItem.definition.decide.ImportItemGenesis(itemRecord, i, { ...ctx, id: itemId })).toMatchObject({
+      rule: "genesis-requires-empty-stream",
+    });
+    expect(V.SyncOperation.definition.decide.ImportOperationGenesis(operationRecord, o, ctx)).toMatchObject({
+      rule: "genesis-requires-empty-stream",
+    });
+    expect(
+      V.SyncConflict.definition.decide.ImportConflictGenesis(conflictRecord, c, { ...ctx, id: conflictId })
+    ).toMatchObject({ rule: "genesis-requires-empty-stream" });
+    expect(
+      V.SyncDestination.definition.decide.ImportDestinationGenesis(destinationRecord, d, { ...ctx, id: destination })
+    ).toMatchObject({ rule: "genesis-requires-empty-stream" });
+    expect(V.SyncItem.definition.evolve.ItemGenesisImported(null, ie, { ...envelope, id: itemId })).toEqual(itemRecord);
+    expect(V.SyncOperation.definition.evolve.OperationGenesisImported(null, oe, envelope)).toEqual(operationRecord);
+    expect(V.SyncConflict.definition.evolve.ConflictGenesisImported(null, ce, { ...envelope, id: conflictId })).toEqual(
+      conflictRecord
+    );
+    expect(
+      V.SyncDestination.definition.evolve.DestinationGenesisImported({ _tag: "Unregistered" }, de, {
+        ...envelope,
+        id: destination,
+      })
+    ).toEqual(destinationRecord);
+    const ic = { key: V.SyncItem.ref(itemId), state: undefined, at: ctx.now, source: V.SyncItem.ref(itemId), envelope };
+    const oc = {
+      key: V.SyncOperation.ref(id),
+      state: undefined,
+      at: ctx.now,
+      source: V.SyncOperation.ref(id),
+      envelope,
+    };
+    const dc = {
+      key: V.SyncDestination.ref(destination),
+      state: undefined,
+      at: ctx.now,
+      source: V.SyncDestination.ref(destination),
+      envelope,
+    };
+    const SyncItemSnapshotItemGenesisImportedFold = V.SyncItemSnapshot.definition.evolve?.ItemGenesisImported;
+    if (!P.isFunction(SyncItemSnapshotItemGenesisImportedFold))
+      return expect.unreachable("Expected a direct event fold");
+
+    expect(SyncItemSnapshotItemGenesisImportedFold(null, ie, ic)).toEqual(itemRecord);
+    const SyncOperationSnapshotOperationGenesisImportedFold =
+      V.SyncOperationSnapshot.definition.evolve?.OperationGenesisImported;
+    if (!P.isFunction(SyncOperationSnapshotOperationGenesisImportedFold))
+      return expect.unreachable("Expected a direct event fold");
+
+    expect(SyncOperationSnapshotOperationGenesisImportedFold(null, oe, oc)).toEqual(operationRecord);
+    const SyncDestinationSnapshotDestinationGenesisImportedFold =
+      V.SyncDestinationSnapshot.definition.evolve?.DestinationGenesisImported;
+    if (!P.isFunction(SyncDestinationSnapshotDestinationGenesisImportedFold))
+      return expect.unreachable("Expected a direct event fold");
+
+    expect(SyncDestinationSnapshotDestinationGenesisImportedFold({ _tag: "Unregistered" }, de, dc)).toEqual(
+      destinationRecord
+    );
+  });
+  it("retains cursor rows, pauses duplicate admission, and folds only the explicitly selected position", () => {
+    const row = V.LegacyCursorRow.make({
+      ...common,
+      entity_type: "documents_sync_cursor",
+      public_id: "documents_sync_cursor_asynthetic",
+      last_error: "old poll error",
+      last_event_id: null,
+      status: "error",
+      stream_position: "opaque",
+    });
+    const command = V.ImportCursorGenesis.make({ importId: "genesis-v1", row, selected: true, paused: false });
+    const event = V.CursorGenesisImported.make(Struct.omit(command, ["_tag"]));
+    expect(
+      V.SyncDestination.definition.decide.ImportCursorGenesis({ _tag: "Unregistered" }, command, {
+        ...ctx,
+        id: destination,
+      })
+    ).toMatchObject({ rule: "not-registered" });
+    expect(
+      V.SyncDestination.definition.decide.ImportCursorGenesis(destinationRecord, command, { ...ctx, id: destination })
+    ).toEqual([event]);
+    expect(
+      V.SyncDestination.definition.evolve.CursorGenesisImported({ _tag: "Unregistered" }, event, {
+        ...envelope,
+        id: destination,
+      })
+    ).toEqual({ _tag: "Unregistered" });
+    // The legacy free text maps onto the closed literal; the event keeps the row verbatim.
+    expect(
+      V.SyncDestination.definition.evolve.CursorGenesisImported(destinationRecord, event, {
+        ...envelope,
+        id: destination,
+      })
+    ).toMatchObject({ cursor: "opaque", cursorError: "pollEvents" });
+    expect(event.row.last_error).toBe("old poll error");
+    const duplicate = V.CursorGenesisImported.make({
+      ...Struct.omit(command, ["_tag"]),
+      selected: false,
+      paused: true,
+    });
+    const SyncDestinationSnapshotCursorGenesisImportedFold =
+      V.SyncDestinationSnapshot.definition.evolve?.CursorGenesisImported;
+    if (!P.isFunction(SyncDestinationSnapshotCursorGenesisImportedFold))
+      return expect.unreachable("Expected a direct event fold");
+
+    expect(
+      SyncDestinationSnapshotCursorGenesisImportedFold(destinationRecord, duplicate, {
+        key: V.SyncDestination.ref(destination),
+        state: undefined,
+        at: ctx.now,
+        source: V.SyncDestination.ref(destination),
+        envelope,
+      })
+    ).toMatchObject({ paused: true, cursor: null });
+    const unreviewed = V.ConflictGenesisImported.make({
+      importId: "v1",
+      row: V.LegacyConflictRow.make({
+        ...common,
+        entity_type: "documents_sync_conflict",
+        public_id: conflictId,
+        conflict_kind: "remoteUnknown",
+        local_rel_path: null,
+        remote_event_id: null,
+        remote_id: null,
+        remote_payload: {},
+        resolution_status: "open",
+        sync_item_id: null,
+      }),
+      record: conflictRecord,
+    });
+    const OpenConflictsConflictGenesisImportedFold = V.OpenConflicts.definition.evolve?.ConflictGenesisImported;
+    if (!P.isFunction(OpenConflictsConflictGenesisImportedFold))
+      return expect.unreachable("Expected a direct event fold");
+
+    const state = OpenConflictsConflictGenesisImportedFold(H.empty(), unreviewed, {
+      key: V.SyncDestination.ref(destination),
+      state: undefined,
+      at: ctx.now,
+      source: V.SyncConflict.ref(conflictId),
+      envelope,
+    });
+    if (state === null) return expect.unreachable("Expected conflict collection");
+    expect(H.size(state)).toBe(1);
+    const reviewed = V.ConflictGenesisImported.make({
+      ...unreviewed,
+      record: V.ConflictRecord.make({ ...conflictRecord, reviewed: true }),
+    });
+    expect(
+      OpenConflictsConflictGenesisImportedFold(H.empty(), reviewed, {
+        key: V.SyncDestination.ref(destination),
+        state: undefined,
+        at: ctx.now,
+        source: V.SyncConflict.ref(conflictId),
+        envelope,
+      })
+    ).toEqual(H.empty());
   });
 });

@@ -1,20 +1,21 @@
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
-import { DmsMirrorFixtureHandle } from "@beep/documents-server/aggregates/Sync";
-import { DocumentsSyncFixtureLive } from "@beep/documents-server/layer";
-import { SyncOnceInput, VaultSyncEngine, VaultSyncStatusInput } from "@beep/documents-use-cases/aggregates/Sync/server";
-import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { makeVaultSyncFileStore } from "@beep/documents-server/aggregates/Sync";
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Formatter from "effect/Formatter";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as References from "effect/References";
 import * as Str from "effect/String";
 
 type FileSystemFault = (fs: FileSystem.FileSystem) => Partial<FileSystem.FileSystem>;
@@ -218,21 +219,23 @@ const cases: ReadonlyArray<{
   },
 ];
 
-const testLayer = (fault: FileSystemFault) => {
-  const faultFileSystem = Layer.effect(
+const testLayer = (fault: FileSystemFault) =>
+  Layer.effect(
     FileSystem.FileSystem,
     Effect.map(FileSystem.FileSystem, (fs) => FileSystem.FileSystem.of({ ...fs, ...fault(fs) }))
-  ).pipe(Layer.provide(BunFileSystem.layer));
-  return DocumentsSyncFixtureLive.pipe(
-    Layer.provide(faultFileSystem),
-    Layer.provide(BunPath.layer),
-    Layer.provideMerge(BunFileSystem.layer),
-    Layer.provideMerge(BunPath.layer)
-  );
-};
+  ).pipe(Layer.provide(BunFileSystem.layer), Layer.provideMerge(BunPath.layer));
 
-const input = (vaultRootPath: string) =>
-  SyncOnceInput.make({ vaultRootPath, workspaceId: WorkspaceIdentity.WorkspaceId.make(31) });
+/** Scan a fresh vault holding one target file through the faulted filesystem. */
+const scanWith = Effect.fnUntraced(function* (contents: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const files = yield* makeVaultSyncFileStore();
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-file-store-" });
+  const target = path.join(root, targetName);
+  yield* fs.writeFileString(target, contents);
+  const canonicalRoot = yield* fs.realPath(root);
+  return { scan: files.scan(canonicalRoot), target };
+});
 
 describe("Vault filesystem boundary failures", () => {
   for (const testCase of cases) {
@@ -241,20 +244,12 @@ describe("Vault filesystem boundary failures", () => {
         testCase.name,
         Effect.fnUntraced(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const engine = yield* VaultSyncEngine;
-          const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-file-failure-" });
-          const target = path.join(root, targetName);
-          yield* fs.writeFileString(target, "private content");
-          const error = yield* Effect.flip(engine.syncOnce(input(root)));
+          const { scan, target } = yield* scanWith("private content");
+          const error = yield* Effect.flip(scan);
           expect(error).toMatchObject({ _tag: "VaultScanFailed", reason: expect.stringContaining(testCase.reason) });
           testCase.verify?.();
           const readFileString1 = yield* fs.readFileString(target);
           expect(readFileString1).toBe("private content");
-          expect(
-            (yield* engine.status(VaultSyncStatusInput.make({ workspaceId: WorkspaceIdentity.WorkspaceId.make(31) })))
-              .queuedOperations
-          ).toBe(0);
         })
       );
     });
@@ -272,38 +267,62 @@ const nonRegularEntry: FileSystemFault = (fs) => ({
 describe("Vault filesystem boundary empty observations", () => {
   it.layer(Layer.fresh(testLayer(nonRegularEntry)), { timeout: "10 seconds" })((it) => {
     it.effect(
-      "ignores non-regular directory entries without uploading them",
+      "ignores non-regular directory entries without observing them",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const engine = yield* VaultSyncEngine;
-        const mirror = yield* DmsMirrorFixtureHandle;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-nonregular-" });
-        yield* fs.writeFileString(path.join(root, targetName), "not a regular entry");
-        const status = yield* engine.syncOnce(input(root));
-        expect(status.currentItems).toBe(0);
-        expect((yield* mirror.counts).uploadFile).toBe(0);
-        expect((yield* mirror.snapshotTree)[targetName]).toBeUndefined();
+        const { scan } = yield* scanWith("not a regular entry");
+        const observation = yield* scan;
+        expect(observation.files).toEqual([]);
+        expect(observation.folders).toEqual([]);
       })
     );
   });
   it.layer(Layer.fresh(testLayer(() => ({}))), { timeout: "10 seconds" })((it) => {
     it.effect(
-      "mirrors an empty file when its descriptor read reaches EOF",
+      "skips symbolic links without following them and logs them by depth only",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const engine = yield* VaultSyncEngine;
-        const mirror = yield* DmsMirrorFixtureHandle;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-empty-" });
-        yield* fs.writeFileString(path.join(root, targetName), "");
-        const status = yield* engine.syncOnce(input(root));
-        expect(status.currentItems).toBe(1);
-        expect(status.failedOperations).toBe(0);
-        expect((yield* mirror.counts).uploadFile).toBe(1);
+        const files = yield* makeVaultSyncFileStore();
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-symlink-" });
+        const outside = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-outside-" });
+        yield* fs.writeFileString(path.join(outside, "secret.txt"), "outside the vault");
+        yield* fs.symlink(path.join(outside, "secret.txt"), path.join(root, "link.txt"));
+        yield* fs.symlink(path.join(root, "missing.txt"), path.join(root, "dangling.txt"));
+        yield* fs.writeFileString(path.join(root, "kept.txt"), "inside");
+        const canonicalRoot = yield* fs.realPath(root);
+        const logged: Array<{ readonly message: unknown; readonly annotations: unknown }> = [];
+        const recorder = Logger.make(({ fiber, message }) => {
+          logged.push({ message, annotations: fiber.getRef(References.CurrentLogAnnotations) });
+        });
+        const observation = yield* files
+          .scan(canonicalRoot)
+          .pipe(Effect.withLogger(recorder), Effect.provideService(References.MinimumLogLevel, "Debug"));
+        expect(A.map(observation.files, (file) => file.relPath)).toEqual(["kept.txt"]);
+        // Each skipped link is logged by depth only: no vault path, no entry name.
+        const skipped = A.filter(logged, ({ message }) => Str.includes("skipped a symlink")(Formatter.format(message)));
+        expect(A.map(skipped, ({ annotations }) => annotations)).toEqual([
+          { "documents.vault_sync.depth": 1 },
+          { "documents.vault_sync.depth": 1 },
+        ]);
+        const everything = Formatter.format(logged);
+        expect(everything).not.toContain(root);
+        expect(everything).not.toContain("link.txt");
+        expect(everything).not.toContain("dangling.txt");
+      })
+    );
+    it.effect(
+      "observes an empty file when its descriptor read reaches EOF",
+      Effect.fnUntraced(function* () {
+        const { scan } = yield* scanWith("");
+        const observation = yield* scan;
+        expect(observation.files).toHaveLength(1);
         assertSome(
-          (yield* mirror.snapshotTree)[targetName]?.contentDigest ?? O.none(),
+          O.map(A.head(observation.files), (file) => file.digest),
           DocumentContentDigest.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        );
+        assertSome(
+          O.map(A.head(observation.files), (file) => file.sizeBytes),
+          0
         );
       })
     );

@@ -4873,50 +4873,6 @@
       "reason": "The committed legacy documents_sync_* migration DDL is the subject: the test reads it from the checkout so the projections write the real legacy tables, and seeding MemoryFileSystem with a copy would fabricate that provenance. Owner: @beep/documents-server. Exit: retire when db-admin exports the baseline DDL as a module the test can import."
     },
     {
-      "id": "EV010:packages/documents/server/test/VaultSyncDrift.test.ts:33:@effect/platform-bun/BunFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/documents-server",
-      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
-      "line": 33,
-      "endLine": 33,
-      "symbol": "@effect/platform-bun/BunFileSystem",
-      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The drift cases share the documents-server native fixture: materialized bytes and atomic updates in scoped temporary directories. Owner: @beep/documents-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
-    },
-    {
-      "id": "EV010:packages/documents/server/test/VaultSyncEngine.test.ts:26:@effect/platform-bun/BunFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/documents-server",
-      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
-      "line": 26,
-      "endLine": 26,
-      "symbol": "@effect/platform-bun/BunFileSystem",
-      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native filesystem behavior is the subject: materialized bytes, symlink and root-boundary protection, procfs fallback and atomic updates in the vault sync engine. Owner: @beep/documents-server. Exit: retire when MemoryFileSystem models symlinks and procfs and the engine cases move to it."
-    },
-    {
       "id": "EV010:packages/documents/server/test/VaultSyncFileStoreFailures.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -4959,28 +4915,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native temporary vault directories are the subject: the saga scan resolves the canonical root with realPath and the adapter re-reads bytes through the symlink/inode-bound file store across a runtime teardown, which MemoryFileSystem does not model. Owner: @beep/documents-server. Exit: retire when the vault file store reads through an injected filesystem that models realPath and inode identity."
-    },
-    {
-      "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:34:@effect/platform-bun/BunFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/documents-server",
-      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
-      "line": 34,
-      "endLine": 34,
-      "symbol": "@effect/platform-bun/BunFileSystem",
-      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native filesystem behavior is the subject: materialized bytes, symlink and root-boundary protection and atomic updates in the vault sync review regressions. Owner: @beep/documents-server. Exit: retire when MemoryFileSystem models symlinks and the regression cases move to it."
     },
     {
       "id": "EV010:packages/drivers/acp/test/integration/client.integration.test.ts:6:@effect/platform-node/NodeServices@0#1",
@@ -6828,6 +6762,226 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "These resolver integration tests load the authenticated committed frozen-edition bundle and source-bound callback fixtures from disk. A MemoryFileSystem without those independent assets changes the subject; the real filesystem is scoped by it.layer and performs no application writes."
+    },
+    {
+      "id": "EV002:packages/documents/server/test/SyncCutoverAdmission.pglite.test.ts:106:provide@64#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/SyncCutoverAdmission.pglite.test.ts",
+      "line": 106,
+      "endLine": 106,
+      "symbol": "provide",
+      "occurrence": "v2:13eb77f99af18bf2cabc8c0bfc679286b9d4eb84ee3e2be0bbe2704f088f2fee",
+      "class": "unresolved-layer-provide",
+      "evidence": "Effect.provide(runtime)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The case provides a Context it built itself with Layer.build or buildWithScope, so it can close that runtime and rebuild another over the same PGlite store (restart, replay or reversal); a shared it.layer would hide the rebuild under test. Owner: @beep/documents-server. Exit: retire when EV002 recognises a Context built inside the case."
+    },
+    {
+      "id": "EV002:packages/documents/server/test/SyncCutoverAdmission.pglite.test.ts:108:provide@61#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/SyncCutoverAdmission.pglite.test.ts",
+      "line": 108,
+      "endLine": 108,
+      "symbol": "provide",
+      "occurrence": "v2:e37bd1acf7c3310db18c61b45c417cb6d8aa2421a9d061b620cb31c5248f2e72",
+      "class": "unresolved-layer-provide",
+      "evidence": "Effect.provide(runtime)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The case provides a Context it built itself with Layer.build or buildWithScope, so it can close that runtime and rebuild another over the same PGlite store (restart, replay or reversal); a shared it.layer would hide the rebuild under test. Owner: @beep/documents-server. Exit: retire when EV002 recognises a Context built inside the case."
+    },
+    {
+      "id": "EV002:packages/documents/server/test/SyncCutoverAdmission.pglite.test.ts:226:provide@70#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/SyncCutoverAdmission.pglite.test.ts",
+      "line": 226,
+      "endLine": 226,
+      "symbol": "provide",
+      "occurrence": "v2:69eb812cf04e274aac1300edaee64958b3f573801a26f68c9956a52e8fcc40b7",
+      "class": "unresolved-layer-provide",
+      "evidence": "Effect.provide(context)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The case provides a Context it built itself with Layer.build or buildWithScope, so it can close that runtime and rebuild another over the same PGlite store (restart, replay or reversal); a shared it.layer would hide the rebuild under test. Owner: @beep/documents-server. Exit: retire when EV002 recognises a Context built inside the case."
+    },
+    {
+      "id": "EV002:packages/documents/server/test/VaultSyncRuntime.pglite.test.ts:260:provide@26#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/VaultSyncRuntime.pglite.test.ts",
+      "line": 260,
+      "endLine": 260,
+      "symbol": "provide",
+      "occurrence": "v2:8cd23c3dc49c0e50245b9d582d1e106c03c03a958f1ce16b700bc4c322848745",
+      "class": "unresolved-layer-provide",
+      "evidence": "Effect.provide(Layer.merge(hostingFor(root), Layer.succeedContext(context)))",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The case provides a Context it built itself with Layer.build or buildWithScope, so it can close that runtime and rebuild another over the same PGlite store (restart, replay or reversal); a shared it.layer would hide the rebuild under test. Owner: @beep/documents-server. Exit: retire when EV002 recognises a Context built inside the case."
+    },
+    {
+      "id": "EV010:packages/_internal/db-admin/test/integration/SharedMembershipMigration.pglite.test.ts:5:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/db-admin",
+      "file": "packages/_internal/db-admin/test/integration/SharedMembershipMigration.pglite.test.ts",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The migration proof reads the committed down.sql beside the drizzle folder from the real filesystem; MemoryFileSystem would test a copy, not the shipped file. Owner: @beep/db-admin. Exit: retire when db-admin exposes its migration files as data."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/SyncCutover.pglite.test.ts:4:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/SyncCutover.pglite.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The suite needs the real Bun FileSystem and Path: PGlite data, the db-admin migration SQL and temporary vault trees read by the production file store with its canonical-root and inode checks, which MemoryFileSystem cannot back. Owner: @beep/documents-server. Exit: retire when the platform-resource provenance review accepts PGlite-backed suites."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/SyncCutoverAdmission.pglite.test.ts:26:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/SyncCutoverAdmission.pglite.test.ts",
+      "line": 26,
+      "endLine": 26,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The suite needs the real Bun FileSystem and Path: PGlite data, the db-admin migration SQL and temporary vault trees read by the production file store with its canonical-root and inode checks, which MemoryFileSystem cannot back. Owner: @beep/documents-server. Exit: retire when the platform-resource provenance review accepts PGlite-backed suites."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/SyncGenesis.pglite.test.ts:18:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/SyncGenesis.pglite.test.ts",
+      "line": 18,
+      "endLine": 18,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The suite needs the real Bun FileSystem and Path: PGlite data, the db-admin migration SQL and temporary vault trees read by the production file store with its canonical-root and inode checks, which MemoryFileSystem cannot back. Owner: @beep/documents-server. Exit: retire when the platform-resource provenance review accepts PGlite-backed suites."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/VaultSyncHosting.pglite.test.ts:22:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/VaultSyncHosting.pglite.test.ts",
+      "line": 22,
+      "endLine": 22,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The suite needs the real Bun FileSystem and Path: PGlite data, the db-admin migration SQL and temporary vault trees read by the production file store with its canonical-root and inode checks, which MemoryFileSystem cannot back. Owner: @beep/documents-server. Exit: retire when the platform-resource provenance review accepts PGlite-backed suites."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/VaultSyncProcessCrash.test.ts:2:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/VaultSyncProcessCrash.test.ts",
+      "line": 2,
+      "endLine": 2,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The suite needs the real Bun FileSystem and Path: PGlite data, the db-admin migration SQL and temporary vault trees read by the production file store with its canonical-root and inode checks, which MemoryFileSystem cannot back. Owner: @beep/documents-server. Exit: retire when the platform-resource provenance review accepts PGlite-backed suites."
     },
     {
       "id": "EV010:packages/law-practice/server/test/CitationResourceObjects.test.ts:36:@effect/platform-bun/BunFileSystem@0#1",
