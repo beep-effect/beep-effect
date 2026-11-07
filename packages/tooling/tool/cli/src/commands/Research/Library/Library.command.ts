@@ -373,7 +373,7 @@ const mineRead = Command.make(
   "read",
   {
     ...mineFlags,
-    profile: Flag.Literals("profile", ["junie", "claude", "codex-sol", "cursor"]).pipe(
+    profile: Flag.Literals("profile", ["junie", "claude", "codex-sol", "proxy-sol", "proxy-opus", "cursor"]).pipe(
       Flag.withDefault("junie"),
       Flag.withDescription("Runner profile; junie and cursor never receive private-partition artifacts")
     ),

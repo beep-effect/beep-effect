@@ -7,6 +7,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -17,6 +18,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -110,6 +112,31 @@ const profiles = {
     model: "claude-opus-5-5",
     effort: "medium",
     route: "claude-code",
+    externalLane: false,
+    transport: "stdin",
+    outputFile: false,
+  }),
+  // The approved proxy-workflow binding of codex.heavy: CLIProxyAPI fails over across every admitted
+  // ChatGPT login, so a single exhausted Codex CLI account does not stop the batch.
+  "proxy-sol": LibraryMineProfile.make({
+    id: "proxy-sol",
+    tiers: ["t2"],
+    command: "claude",
+    model: "gpt-6.1-sol(medium)",
+    effort: "medium",
+    route: "proxy-workflow",
+    externalLane: false,
+    transport: "stdin",
+    outputFile: false,
+  }),
+  // child.heavy through the proxy: claude-opus-5-5 across every admitted Claude login, not only the CLI's.
+  "proxy-opus": LibraryMineProfile.make({
+    id: "proxy-opus",
+    tiers: ["t2"],
+    command: "claude",
+    model: "claude-opus-5-5",
+    effort: "medium",
+    route: "proxy-workflow",
     externalLane: false,
     transport: "stdin",
     outputFile: false,
@@ -222,6 +249,22 @@ export const libraryMineArgv: {
         "--strict-mcp-config",
         "--no-session-persistence",
       ]),
+      Match.when(Match.is("proxy-sol", "proxy-opus"), () => [
+        "claude",
+        "-p",
+        "--model",
+        profile.model,
+        "--settings",
+        `{"effortLevel":"${profile.effort}"}`,
+        "--output-format",
+        "text",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--mcp-config",
+        '{"mcpServers":{}}',
+        "--no-session-persistence",
+      ]),
       Match.when("junie", () => [
         "junie",
         `--model=${profile.model}`,
@@ -303,6 +346,33 @@ export class LibraryMineRunner extends Context.Service<
 const quotaPattern = /quota|rate.?limit|\b429\b|usage.?limit|exceeded/i;
 const runnerFailure = (message: string) => LibraryMineRunnerError.make({ quota: false, message });
 
+const PROXY_BASE_URL = "http://127.0.0.1:8317";
+
+// Inherited Anthropic host credentials outrank ANTHROPIC_AUTH_TOKEN and break proxy routing, so the
+// proxy profile launches with a minimal environment instead of extending the parent's.
+const launchEnvironment = Effect.fnUntraced(function* (profile: LibraryMineProfile, fs: FileSystem.FileSystem) {
+  if (profile.route !== "proxy-workflow") return { extendEnv: true } as const;
+  const home = yield* Config.String("HOME").pipe(Effect.mapError(() => runnerFailure("HOME is not set.")));
+  const path = yield* Config.String("PATH").pipe(
+    Config.withDefault("/usr/bin:/bin"),
+    Effect.mapError(() => runnerFailure("PATH could not be read."))
+  );
+  const token = yield* fs
+    .readFileString(`${home}/.cli-proxy-api/client-token`)
+    .pipe(Effect.mapError(() => runnerFailure("The local proxy client token is unavailable.")));
+  return {
+    extendEnv: false,
+    env: {
+      HOME: home,
+      PATH: `${home}/.local/bin:${path}`,
+      TERM: "dumb",
+      ANTHROPIC_BASE_URL: PROXY_BASE_URL,
+      ANTHROPIC_AUTH_TOKEN: Redacted.make(Str.trim(token)),
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: "gpt-6-luna",
+    },
+  } as const;
+});
+
 const makeLiveRunner = Effect.fn("LibraryMineRunner.make")(function* () {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const fs = yield* FileSystem.FileSystem;
@@ -315,9 +385,10 @@ const makeLiveRunner = Effect.fn("LibraryMineRunner.make")(function* () {
         : "ignore";
     const collected = yield* Effect.scoped(
       Effect.gen(function* () {
+        const environment = yield* launchEnvironment(request.profile, fs);
         const handle = yield* ChildProcess.make(command, args, {
           cwd: request.cwd,
-          extendEnv: true,
+          ...environment,
           stdin,
           stdout: "pipe",
           stderr: "pipe",
