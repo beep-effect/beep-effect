@@ -19,6 +19,11 @@ export * from "./isCodecDataFirst.ts";
  * @since 0.0.0
  * @category utilities
  */
+export * from "./optionalDefect.ts";
+/**
+ * @since 0.0.0
+ * @category utilities
+ */
 export * from "./toEquivalence.ts";
 /**
  * @since 0.0.0

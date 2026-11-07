@@ -531,13 +531,16 @@
         "@beep/documents-use-cases": "workspace:^",
         "@beep/editor": "workspace:^",
         "@beep/epistemic-client": "workspace:^",
-        "@beep/epistemic-config": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-server": "workspace:^",
         "@beep/epistemic-tables": "workspace:^",
         "@beep/epistemic-ui": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/epistemics": "workspace:^",
+        "@beep/execution-authority-config": "workspace:^",
+        "@beep/execution-authority-domain": "workspace:^",
+        "@beep/execution-authority-server": "workspace:^",
+        "@beep/execution-authority-use-cases": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/graph-3d": "workspace:^",
         "@beep/identity": "workspace:^",
@@ -700,6 +703,7 @@
         "@beep/architecture-lab-tables": "workspace:^",
         "@beep/documents-tables": "workspace:^",
         "@beep/epistemic-tables": "workspace:^",
+        "@beep/execution-authority-tables": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/law-practice-tables": "workspace:^",
         "@beep/postgres": "workspace:^",
@@ -710,11 +714,13 @@
       "devDependencies": {
         "@beep/documents-domain": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
+        "@beep/execution-authority-domain": "workspace:^",
         "@beep/law-practice-domain": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
+        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
@@ -2138,22 +2144,6 @@
         "bun-types": "catalog:",
       },
     },
-    "packages/epistemic/config": {
-      "name": "@beep/epistemic-config",
-      "version": "0.0.2",
-      "dependencies": {
-        "@beep/epistemic-domain": "workspace:^",
-        "@beep/identity": "workspace:^",
-        "effect": "catalog:",
-      },
-      "devDependencies": {
-        "@beep/test-runner": "workspace:^",
-        "@beep/test-utils": "workspace:^",
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
-      },
-    },
     "packages/epistemic/domain": {
       "name": "@beep/epistemic-domain",
       "version": "0.0.2",
@@ -2181,15 +2171,12 @@
       "name": "@beep/epistemic-server",
       "version": "0.0.2",
       "dependencies": {
-        "@beep/api-transport": "workspace:^",
-        "@beep/epistemic-config": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-tables": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/epistemics": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
-        "@beep/mcp-kit": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/provenance": "workspace:^",
@@ -2286,6 +2273,101 @@
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/execution-authority/config": {
+      "name": "@beep/execution-authority-config",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/execution-authority-domain": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/execution-authority/domain": {
+      "name": "@beep/execution-authority-domain",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/epistemics": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@noble/hashes": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/execution-authority/server": {
+      "name": "@beep/execution-authority-server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/api-transport": "workspace:^",
+        "@beep/execution-authority-config": "workspace:^",
+        "@beep/execution-authority-domain": "workspace:^",
+        "@beep/execution-authority-tables": "workspace:^",
+        "@beep/execution-authority-use-cases": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
+        "@beep/postgres": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "drizzle-orm": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@electric-sql/pglite": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/execution-authority/tables": {
+      "name": "@beep/execution-authority-tables",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/execution-authority-domain": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "drizzle-orm": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/execution-authority/use-cases": {
+      "name": "@beep/execution-authority-use-cases",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/execution-authority-domain": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -4918,8 +5000,6 @@
 
     "@beep/epistemic-client": ["@beep/epistemic-client@workspace:packages/epistemic/client"],
 
-    "@beep/epistemic-config": ["@beep/epistemic-config@workspace:packages/epistemic/config"],
-
     "@beep/epistemic-domain": ["@beep/epistemic-domain@workspace:packages/epistemic/domain"],
 
     "@beep/epistemic-server": ["@beep/epistemic-server@workspace:packages/epistemic/server"],
@@ -4931,6 +5011,16 @@
     "@beep/epistemic-use-cases": ["@beep/epistemic-use-cases@workspace:packages/epistemic/use-cases"],
 
     "@beep/epistemics": ["@beep/epistemics@workspace:packages/foundation/modeling/epistemics"],
+
+    "@beep/execution-authority-config": ["@beep/execution-authority-config@workspace:packages/execution-authority/config"],
+
+    "@beep/execution-authority-domain": ["@beep/execution-authority-domain@workspace:packages/execution-authority/domain"],
+
+    "@beep/execution-authority-server": ["@beep/execution-authority-server@workspace:packages/execution-authority/server"],
+
+    "@beep/execution-authority-tables": ["@beep/execution-authority-tables@workspace:packages/execution-authority/tables"],
+
+    "@beep/execution-authority-use-cases": ["@beep/execution-authority-use-cases@workspace:packages/execution-authority/use-cases"],
 
     "@beep/exiftool": ["@beep/exiftool@workspace:packages/drivers/exiftool"],
 
@@ -9782,7 +9872,6 @@
 
     "js-yaml/argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 
-
     "json-bigint/bignumber.js": ["bignumber.js@9.3.1", "", {}, "sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ=="],
 
     "jsonld-context-parser/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
@@ -10718,7 +10807,6 @@
     "gcp-metadata/gaxios/node-fetch": ["node-fetch@3.3.2", "", { "dependencies": { "data-uri-to-buffer": "^4.0.0", "fetch-blob": "^3.1.4", "formdata-polyfill": "^4.0.10" } }, "sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA=="],
 
     "google-auth-library/gaxios/node-fetch": ["node-fetch@3.3.2", "", { "dependencies": { "data-uri-to-buffer": "^4.0.0", "fetch-blob": "^3.1.4", "formdata-polyfill": "^4.0.10" } }, "sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA=="],
-
 
     "jsonld-context-parser/@types/node/undici-types": ["undici-types@5.26.5", "", {}, "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="],
 

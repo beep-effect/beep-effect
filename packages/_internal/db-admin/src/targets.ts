@@ -10,8 +10,8 @@ import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.ts"
 import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.ts";
 import { EpistemicContradictionTriageMigrationTarget } from "./migrations/EpistemicContradictionTriage.ts";
 import { EpistemicEdgeMigrationTarget } from "./migrations/EpistemicEdge.ts";
-import { EpistemicExecutionLedgerMigrationTarget } from "./migrations/EpistemicExecutionLedger.ts";
 import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.ts";
+import { ExecutionAuthorityLedgerMigrationTarget } from "./migrations/ExecutionAuthorityLedger.ts";
 import { LawPracticeCandorGateMigrationTarget } from "./migrations/LawPracticeCandorGate.ts";
 import { LawPracticeLegalPositionMigrationTarget } from "./migrations/LawPracticeLegalPosition.ts";
 import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.ts";
@@ -28,8 +28,8 @@ export {
   DocumentsSyncMigrationTarget,
   EpistemicContradictionTriageMigrationTarget,
   EpistemicEdgeMigrationTarget,
-  EpistemicExecutionLedgerMigrationTarget,
   EpistemicUsageMigrationTarget,
+  ExecutionAuthorityLedgerMigrationTarget,
   LawPracticeCandorGateMigrationTarget,
   LawPracticeLegalPositionMigrationTarget,
   WorkspaceThreadMigrationTarget,
@@ -44,7 +44,7 @@ export {
  * import { DbAdminMigrationTargets } from "@beep/db-admin/targets"
  *
  * const targetNames = DbAdminMigrationTargets.map((target) => target.name)
- * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync", "epistemic-edge", "epistemic-execution-ledger"]
+ * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync", "epistemic-edge", "execution-authority-ledger"]
  * ```
  *
  * @category configuration
@@ -57,7 +57,7 @@ export const DbAdminMigrationTargets = [
   DocumentsSyncMigrationTarget,
   EpistemicEdgeMigrationTarget,
   EpistemicContradictionTriageMigrationTarget,
-  EpistemicExecutionLedgerMigrationTarget,
+  ExecutionAuthorityLedgerMigrationTarget,
   LawPracticeCandorGateMigrationTarget,
   LawPracticeLegalPositionMigrationTarget,
 ] as const;
@@ -76,7 +76,7 @@ export const DbAdminMigrationTargets = [
  *     Effect.map((targets) => targets.map((target) => target.name))
  *   )
  * )
- * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync", "epistemic-edge", "epistemic-execution-ledger"]
+ * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync", "epistemic-edge", "execution-authority-ledger"]
  * ```
  *
  * @effects

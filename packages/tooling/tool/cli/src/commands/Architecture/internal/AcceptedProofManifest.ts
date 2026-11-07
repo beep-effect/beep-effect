@@ -737,7 +737,7 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/src/migrations/EpistemicExecutionLedger.ts",
+    path: "packages/_internal/db-admin/src/migrations/ExecutionAuthorityLedger.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({
@@ -881,7 +881,7 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
+    path: "packages/_internal/db-admin/test/integration/ExecutionAuthorityLedgerMigration.pglite.test.ts",
     writer: "template",
   }),
 ];

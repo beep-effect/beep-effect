@@ -206,6 +206,54 @@ Lane `docs/execution-authority-home-exploration`
 
 Reverse: Promote the helper to a foundation package
 
+### Behavior proof is a committed observable-state recording, diffed pre and post move, 2026-11-07
+
+execution-authority-recording.pglite.test.ts drives the real desktop MCP transport over a migrated PGlite ledger: one allowed and one egress-denied publish. It records the sidecar bind host, verdict chains with verification results, outcome settlements, information_schema column pins, constraints and triggers. With EXECUTION_AUTHORITY_RECORDING_OUT set it writes JSON. research/recordings/pre-move.json (taken on cf46c70048) and post-move.json are identical after mapping the declared epistemic_execution_ prefix to execution_authority_.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Delete apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts and the recordings
+
+### No desktop runtime Layer change: main.ts already composes ExecutionLedgerDrizzle, 2026-11-07
+
+EpistemicServerDrizzleLive no longer provides ExecutionLedger. apps/professional-desktop/src/runtime/Layer.ts only Layer.provides it to the contradiction QA seed, whose output never included the ledger, and server/main.ts already provides ExecutionLedgerDrizzle beside PgliteDrizzleLive to the governed MCP transport. Typecheck of @beep/professional-desktop and the four desktop integration suites confirm it.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Merge ExecutionLedgerDrizzle back into EpistemicServerDrizzleLive
+
+### ExecutionRecord lives under entities/; grants, grant sets and verdicts under values/, 2026-11-07
+
+SPEC Constraints classify decision and outcome records as entities. Domain and tables therefore export ./entities/ExecutionRecord and ./values/{ExecutionGrant,GrantSet,ExecutionVerdict}. Use-cases and server keep the epistemic concept folders (ExecutionLedger, GovernedTierGate, GovernedEgress), so the move stays a relocation. $I composer paths follow the new file paths. No test pins an execution identifier (RESEARCH section 6).
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Move entities/ExecutionRecord back under values/ in domain and tables and update the export maps
+
+### Promote optionalDefect to @beep/schema SchemaUtils instead of copying it, 2026-11-07
+
+Search result (2026-11-07): no foundation helper combines `S.Defect` with `SchemaUtils.alwaysEquivalent` and `Effect.succeedNone`. The only equivalent is `law-practice/use-cases/src/internal/DefectCause.ts`, which another slice cannot import. A first copy into `@beep/execution-authority-use-cases` tripped the Fallow audit duplication gate (introduced clone `dup:f67f335a`, 6 lines). Following this decision's recorded reversal, the helper moves to `@beep/schema/SchemaUtils/optionalDefect`. Its two consumers, `EdgeAuthority.errors.ts` and `ExecutionLedger.errors.ts`, call `SchemaUtils.optionalDefect`, and the epistemic internal copy is deleted. The law-practice `DefectCause` takes no description argument and stays out of scope.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Restore packages/epistemic/use-cases/src/internal/OptionalDefect.ts and an internal copy in @beep/execution-authority-use-cases, then drop SchemaUtils.optionalDefect
+
+### Rename migration covers named NOT NULL constraints; guard body unchanged; down.sql sits beside migration.sql, 2026-11-07
+
+The forward migration renames both tables, every constraint through one DO block (PostgreSQL 18 names NOT NULL constraints, which ALTER TABLE RENAME leaves alone; the block is a single line, safe for the LegacyStatementBoundary splitter), the four triggers and the guard function. The function body and its RAISE text are unchanged, so behavior stays byte-identical. down.sql is the exact inverse. The drizzle migrator and the desktop bundler read only migration.sql, so down.sql is never applied automatically. ExecutionAuthorityLedgerMigration.pglite.test.ts seeds a pre-move database with an allowed-denied-allowed chain and two outcomes, migrates it forward, verifies the chain and outcome bindings, runs down.sql and checks that the old names and row counts are back. The db-admin target is renamed to execution-authority-ledger with schemaName execution_authority.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Run drizzle/20261107032821_execution_authority_rename/down.sql, then delete the folder and re-sync the desktop bundle
+
+### Config symbols, span names and log subsystems take the slice name; digest prefixes stay frozen, 2026-11-07
+
+EpistemicConfig, EpistemicServerConfig and the rest become ExecutionAuthority*. Spans Epistemic.{ExecutionLedger,GovernedTierGate,GovernedEgress}.* become ExecutionAuthority.*, and log subsystems become execution_authority_governed_*, because the instrumentation catalog keys span names by owning package. Hash and digest inputs stay byte-identical: the three epistemic-*/v1 labels and the run-key prefixes epistemic-run/ and epistemic-egress/. Each now carries a comment explaining why.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Restore the Epistemic* config symbols, the Epistemic.* span names and the epistemic_governed_* subsystem annotations
+
 ### Config follows its domain; the desktop composes the ledger; one atomic PR, 2026-11-07
 
 06-configuration-boundaries.md, 01-hexagonal-vertical-slices.md and the same-PR rule in 11-evolution-and-deprecation.md fix these. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (settled-by-doctrine).

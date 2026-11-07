@@ -28,27 +28,6 @@ export * from "./ContradictionTriage/index.ts";
  */
 export * from "./EdgeAuthority/index.ts";
 /**
- * Execution ledger server adapter exports.
- *
- * @category repositories
- * @since 0.0.0
- */
-export * from "./ExecutionLedger/index.ts";
-/**
- * Governed egress exports.
- *
- * @category services
- * @since 0.0.0
- */
-export * from "./GovernedEgress/index.ts";
-/**
- * Governed tier gate exports.
- *
- * @category services
- * @since 0.0.0
- */
-export * from "./GovernedTierGate/index.ts";
-/**
  * Epistemic server layer exports.
  *
  * @category layers

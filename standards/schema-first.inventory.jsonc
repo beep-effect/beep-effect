@@ -412,14 +412,6 @@
       "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
     },
     {
-      "file": "packages/epistemic/server/src/GovernedEgress/GovernedEgress.layer.ts",
-      "symbol": "GovernedEgressLiveOptions",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/epistemic-server",
-      "reason": "Mixed governed-egress layer wiring: baseFetch is a live transport function, while grant is already schema-backed by GovernedEgressOptions; the options are assembled in-process and never decoded or persisted."
-    },
-    {
       "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -490,22 +482,30 @@
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
     },
     {
-      "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 53,
-      "owner": "@beep/epistemic-tables",
-      "reason": "Fixed-fixture suite: physical table and column pins, insert/select round-trips of an allowed decision, a denied decision, an outcome and a sealed pair, plus the converter failure paths (an unencodable record, a corrupted row on each ledger boundary, and the empty-message fromSchema fallback). Schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/epistemic-domain value models; the table converters only project them across the persistence boundary."
-    },
-    {
       "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
       "symbol": "EvidenceSourceHighlightArbitrary",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/epistemic-use-cases",
       "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) for the RPC highlight protocol; it is a generator value, not an object schema."
+    },
+    {
+      "file": "packages/execution-authority/server/src/GovernedEgress/GovernedEgress.layer.ts",
+      "symbol": "GovernedEgressLiveOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/execution-authority-server",
+      "reason": "Mixed governed-egress layer wiring: baseFetch is a live transport function, while grant is already schema-backed by GovernedEgressOptions; the options are assembled in-process and never decoded or persisted."
+    },
+    {
+      "file": "packages/execution-authority/tables/test/ExecutionRecordTables.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 53,
+      "owner": "@beep/execution-authority-tables",
+      "reason": "Fixed-fixture suite: physical table and column pins, insert/select round-trips of an allowed decision, a denied decision, an outcome and a sealed pair, plus the converter failure paths (an unencodable record, a corrupted row on each ledger boundary, and the empty-message fromSchema fallback). Schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/execution-authority-domain entity models; the table converters only project them across the persistence boundary."
     },
     {
       "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
