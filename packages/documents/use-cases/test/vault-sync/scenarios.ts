@@ -21,7 +21,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type * as Platform from "@alchemy.run/domain/Platform";
 
-const destination = V.DestinationId.make("vault-main");
+const destination = V.DestinationId.make("documents_sync_destination_avaultmain");
 const itemId = (n: string) => V.ItemId.make(`documents_sync_item_a${n}`);
 const opId = (n: string) => V.OperationId.make(`documents_sync_operation_a${Str.toLowerCase(n)}`);
 const path = V.VaultRelPath.make("folder/file.txt");
@@ -71,7 +71,7 @@ export const scenarios = <E>({
         Effect.gen(function* () {
           const names = yield* V.DestinationNameReservation;
           const destinations = yield* V.SyncDestination;
-          const key = V.ReservationKey.make("1:beep-vault");
+          const key = V.reservationKey({ orgId: 1, name: "beep-vault" });
           yield* names.send(
             key,
             V.ClaimDestinationName.make({
@@ -84,7 +84,7 @@ export const scenarios = <E>({
               key,
               V.ClaimDestinationName.make({
                 claim: {
-                  destinationId: V.DestinationId.make("other"),
+                  destinationId: V.DestinationId.make("documents_sync_destination_other1"),
                   orgId: 1,
                   workspaceId: 2,
                   name: "beep-vault",
@@ -95,7 +95,7 @@ export const scenarios = <E>({
             .pipe(Effect.flip);
           expect(rejected.rule).toBe("name-held");
           yield* names.send(
-            V.ReservationKey.make("1:renamed"),
+            V.reservationKey({ orgId: 1, name: "renamed" }),
             V.ClaimDestinationName.make({
               claim: {
                 destinationId: destination,
@@ -117,8 +117,8 @@ export const scenarios = <E>({
           Effect.gen(function* () {
             const names = yield* V.DestinationNameReservation;
             const destinations = yield* V.SyncDestination;
-            const id = V.DestinationId.make("vault-race");
-            const old = V.ReservationKey.make("1:raceold");
+            const id = V.DestinationId.make("documents_sync_destination_avaultrace");
+            const old = V.reservationKey({ orgId: 1, name: "raceold" });
             yield* names.send(
               old,
               V.ClaimDestinationName.make({
@@ -126,7 +126,7 @@ export const scenarios = <E>({
               })
             );
             yield* eventually(destinations.state(id), (s) => s._tag === "Registered");
-            const rejected = V.ReservationKey.make("1:racenew");
+            const rejected = V.reservationKey({ orgId: 1, name: "racenew" });
             yield* names.send(
               rejected,
               V.ClaimDestinationName.make({
@@ -141,7 +141,7 @@ export const scenarios = <E>({
               })
             );
             yield* eventually(destinations.state(id), (s) => s._tag === "Registered" && s.name === "RACEOLD");
-            const otherOrg = V.ReservationKey.make("2:foreign");
+            const otherOrg = V.reservationKey({ orgId: 2, name: "foreign" });
             yield* names.send(
               otherOrg,
               V.ClaimDestinationName.make({
@@ -392,6 +392,61 @@ export const scenarios = <E>({
           })
       );
 
+      it.effect("a reviewed remote rename of a tracked item takes the corrective slot (I14)", () =>
+        Effect.gen(function* () {
+          const items = yield* V.SyncItem;
+          const ops = yield* V.SyncOperation;
+          const conflicts = yield* V.SyncConflict;
+          const registry = yield* V.ConflictEventRegistry;
+          const renamed = itemId("renamed");
+          yield* items.send(
+            renamed,
+            V.ObserveItem.make({ observation: { ...observe("renamed"), parentRequired: false } })
+          );
+          yield* eventually(ops.state(opId("renamed")), (s) => s !== null);
+          yield* items.send(
+            renamed,
+            V.MarkItemPushed.make({
+              remoteId: V.RemoteItemId.make("remote-renamed"),
+              generation: 1,
+              operationId: opId("renamed"),
+            })
+          );
+          const record = V.ConflictRecord.make({
+            publicId: V.ConflictId.make("documents_sync_conflict_arenamed"),
+            destinationId: destination,
+            workspaceId: 1,
+            remoteEventId: "event-renamed",
+            itemId: renamed,
+            evidence: "remote rename",
+            kind: "remoteRename",
+            reviewed: false,
+          });
+          yield* registry.send(destination, V.RecordConflict.make({ record }));
+          yield* eventually(conflicts.state(record.publicId), (s) => s !== null);
+          const item = yield* eventually(items.state(renamed), (s) => s?.remoteId !== null);
+          const correction = yield* Effect.fromOption(V.reviewCorrection({ record, item }));
+          expect(correction.input.type).toBe("renameItem");
+          yield* conflicts.send(
+            record.publicId,
+            V.ReviewConflict.make({
+              remoteEventId: record.remoteEventId,
+              workspaceId: 1,
+              destinationId: destination,
+              healOperationId: opId("renamedheal"),
+              correction,
+            })
+          );
+          yield* eventually(conflicts.state(record.publicId), (s) => s?.reviewed === true);
+          const slotted = yield* eventually(items.state(renamed), (s) => H.has(s?.slots ?? H.empty(), "renameItem"));
+          expect(slotted === null ? null : O.getOrNull(H.get(slotted.slots, "renameItem"))).toBe(
+            correction.operationId
+          );
+          const queued = yield* ops.state(correction.operationId);
+          expect(queued).toMatchObject({ status: "queued", input: { type: "renameItem", generation: 2 } });
+        })
+      );
+
       it.effect("terminal failures mark the item error and reconnect revives only failed operations", () =>
         Effect.gen(function* () {
           const items = yield* V.SyncItem;
@@ -477,8 +532,8 @@ export const scenarios = <E>({
         Effect.gen(function* () {
           const names = yield* V.DestinationNameReservation;
           const destinations = yield* V.SyncDestination;
-          const existing = V.DestinationId.make("vault-race");
-          const duplicate = V.ReservationKey.make("1:duplicate");
+          const existing = V.DestinationId.make("documents_sync_destination_avaultrace");
+          const duplicate = V.reservationKey({ orgId: 1, name: "duplicate" });
           yield* names.send(
             duplicate,
             V.ClaimDestinationName.make({
@@ -486,8 +541,8 @@ export const scenarios = <E>({
             })
           );
           yield* eventually(names.state(duplicate), (s) => s === null);
-          const absent = V.DestinationId.make("vault-absent");
-          const missing = V.ReservationKey.make("1:missing");
+          const absent = V.DestinationId.make("documents_sync_destination_avaultabsent");
+          const missing = V.reservationKey({ orgId: 1, name: "missing" });
           yield* names.send(
             missing,
             V.ClaimDestinationName.make({
@@ -503,7 +558,7 @@ export const scenarios = <E>({
           yield* eventually(names.state(missing), (s) => s === null);
           const unchanged = yield* destinations.state(absent);
           expect(unchanged).toEqual({ _tag: "Unregistered" });
-          const old = V.ReservationKey.make("1:raceold");
+          const old = V.reservationKey({ orgId: 1, name: "raceold" });
           const claim = V.NameClaim.make({
             destinationId: existing,
             orgId: 1,
@@ -538,7 +593,7 @@ export const scenarios = <E>({
         Effect.gen(function* () {
           const destinations = yield* V.SyncDestination;
           const queue = yield* V.OperationQueue;
-          const id = V.DestinationId.make("empty-recovery");
+          const id = V.DestinationId.make("documents_sync_destination_aemptyrecovery");
           const ref = V.SyncDestination.ref(id);
           yield* destinations.send(id, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "empty" }));
           const receipt = yield* destinations.send(id, V.ResumeDestination.make({}));

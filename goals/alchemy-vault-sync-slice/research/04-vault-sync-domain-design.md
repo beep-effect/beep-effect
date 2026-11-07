@@ -19,10 +19,25 @@ never bytes. Names normalize with Effect String trim/toLowerCase.
 | SyncOperation | Absent / Present: stable public id, item, destination, type, input generation/digest/path, status, attempts, lease, retry time | QueueOperation/OperationQueued or OperationRetargeted; SquashOperation/OperationSquashed; LeaseOperation/OperationLeased; ExpireLease/OperationLeaseExpired; CompleteOperation/OperationSucceeded; FailOperation/OperationRetryScheduled or OperationFailed; RetryOperation/OperationRequeued; SupersedeOperation/OperationSuperseded; ReviveOperation/OperationRevived | SyncRuleViolation |
 | SyncConflict | one record per existing public conflict id | RecordConflict/ConflictRecorded; ReviewConflict/ConflictReviewed | SyncRuleViolation |
 
-DestinationNameReservation is keyed by orgId:normalizedName. Its policy claims
-before registration/rename and releases the previous claim after the destination
-commit. A repeated claim by the same destination is a no-op. Rename requests carry
+DestinationNameReservation is keyed by `orgId:sha256hex(normalizedName)`, where
+the normalized name is trimmed and lowercased. Every key is built by the one
+`reservationKey` helper in `Values.ts`, and the `ReservationKey` schema admits
+only an integer, a colon and a 64-character lowercase hex digest. Destination
+names therefore never reach `domain.id`, `domain.stream`, driver spans or
+`SyncRuleViolation.evidence` (PII audit F2). The claim's name and previous name
+stay in the reservation state and event payload, which the kernel does not put
+on spans. Its policy claims before registration/rename and releases the previous
+claim after the destination commit. A repeated claim by the same destination is a no-op. Rename requests carry
 the prior name; the destination rejects a stale prior name.
+
+DestinationId is an opaque minted id: the fixed prefix
+`documents_sync_destination_` followed by a CUID, checked by the schema's
+template pattern. It is the SyncDestination aggregate id, the View key, a URL
+segment and a saga key, so decode rejects any other string, including a
+destination name (PII audit F3). `mintDestinationId` draws a fresh CUID and
+`makeDestinationId` wraps an existing one. The cutover genesis (PR 3b2) must
+mint one id per destination with `mintDestinationId` and must never derive it
+from the destination name or the vault path.
 
 ConflictEventRegistry reserves remoteEventId on one stream per destination. Its policy
 records SyncConflict on the existing public conflict id. Thus dedupe is atomic at

@@ -35,6 +35,7 @@ import { DesktopRpcSessionToken } from "@/runtime/SessionToken";
  */
 export const desktopVaultSyncRequest = S.decodeEffect(V.VaultSyncRequest)({
   principal: { kind: "User", userId: 1 },
+  principalKey: "User:1",
   actorSourceKind: "User",
   sourceKind: "sidecar",
   orgId: 1,

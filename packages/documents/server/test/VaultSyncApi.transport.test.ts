@@ -55,8 +55,8 @@ import * as TestClock from "effect/testing/TestClock";
 
 const TOKEN = "launch-token-for-tests";
 const bearer = { authorization: `Bearer ${TOKEN}` };
-const own = V.DestinationId.make("own-destination");
-const foreign = V.DestinationId.make("foreign-destination");
+const own = V.DestinationId.make("documents_sync_destination_aown");
+const foreign = V.DestinationId.make("documents_sync_destination_aforeign");
 
 const cliPlatform = BunChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(FileSystem.layerNoop({}), Path.layer, Stdio.layerTest({}), BunTerminal.layer))
@@ -96,6 +96,7 @@ const binding = Layer.effect(
   Effect.map(
     S.decodeEffect(V.VaultSyncRequest)({
       principal: { kind: "User", userId: 7 },
+      principalKey: "User:7",
       actorSourceKind: "User",
       sourceKind: "sidecar",
       orgId: 1,
@@ -234,6 +235,13 @@ describe("vault-sync production session adapters", () => {
       expect(request.sourceKind).toBe("http");
       expect(request.correlationId).toBe("corr-1");
       expect(request.principal).toEqual({ kind: "User", userId: 7 });
+      expect(request.principalKey).toBe("User:7");
+      // D17 F6: a header that is not a bounded token is replaced by a minted one.
+      const unbounded = yield* resolver.resolve(
+        Headers.fromInput({ ...bearer, "x-correlation-id": "clients/acme/matter brief.docx" })
+      );
+      expect(unbounded.correlationId).not.toContain("acme");
+      expect(S.is(V.RequestToken)(unbounded.correlationId)).toBe(true);
     }).pipe(TestClock.withLive)
   );
 
@@ -275,7 +283,9 @@ describe("vault-sync production session adapters", () => {
       expect(diagnostics._tag).toBe("ScopeDenied");
       yield* expectDenied(client.VaultSyncStatus.get(foreign, call));
       yield* expectDenied(client.OpenConflicts.get(foreign, call));
-      yield* expectDenied(client.VaultSyncStatus.get(V.DestinationId.make("never-registered"), call));
+      yield* expectDenied(
+        client.VaultSyncStatus.get(V.DestinationId.make("documents_sync_destination_aneverregistered"), call)
+      );
       yield* expectDenied(client.DestinationList.get(V.WorkspaceKey.make("2:2"), call));
       yield* expectDenied(client.DestinationList.get(V.WorkspaceKey.make("1:2"), call));
       const unauthenticated = yield* Effect.flip(client.VaultSyncStatus.get(own));

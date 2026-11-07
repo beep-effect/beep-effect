@@ -256,6 +256,12 @@ Reverse: Drop the four documents_sync_*_writer_fence triggers, the fence functio
 
 The offline importer and pre-admission backup are implementation prerequisites. They do not activate a writer epoch. The existing executable predates any epoch-aware startup check, so adding only a new startup condition cannot prove that an older executable refuses the migrated store. Production cutover must include a database-level stale-writer refusal and the startup compatibility boundary, plus a tested post-admission reversal that retains accepted events. Until these exist, keep legacy application composition and do not claim D7 cutover acceptance.
 
+Released the same day on `goals/vault-sync-cutover`: the database fence and startup state machine
+(`2026-11-07-enforce-the-single-writer-with-a-persisted-epoch-and-a-database-fence.md`), the tested
+post-admission reversal (`2026-11-07-reverse-an-admitted-store-from-the-current-projection-not-the-pre-cutover-backup.md`)
+and the legacy writer deletion landed in the same cutover change, with the pre-admission restore
+retained from the earlier commit.
+
 Reverse: Replace this hold only after the epoch guard, legacy writer deletion, and pre/post-admission reversal tests pass in the same cutover change.
 
 ### Fold the remote cursor into the destination aggregate, 2026-11-07
@@ -269,6 +275,22 @@ Reverse: Introduce a separately versioned cursor aggregate if account-wide polli
 Use the configured mirror root name, default beep-vault, and orgId from legacy rows. The cursor folds into this destination because its scope is workspace plus provider.
 
 Reverse: Change genesis mapping before import; no data is imported in PR 3a
+
+### Hash destination names in reservation keys, 2026-11-07
+
+PII audit F2: the kernel always records aggregate ids and streams on spans, so an orgId:name key leaked destination names into domain.id, domain.stream, driver spans and SyncRuleViolation evidence. ReservationKey is now orgId:sha256hex(trimmed, lowercased name), built only by reservationKey in aggregates/VaultSync/Values.ts with a synchronous @noble/hashes SHA-256 (the PartyKey precedent), so pure decide and policy code hash in place. The schema admits only an integer, a colon and a 64-character lowercase hex digest. The name stays in reservation state and event payloads, which the kernel never puts on spans.
+
+Lane `goals/vault-sync-domain` · PR #2886
+
+Reverse: Restore the orgId:normalizedName key in Values.ts reservationKey and widen the ReservationKey schema back to NonEmptyString; replay any stored reservation streams under the old ids
+
+### Mint opaque destination ids, 2026-11-07
+
+PII audit F3: DestinationId is the SyncDestination aggregate id, View key, URL segment and saga key, and accepted any non-empty string such as a destination name. It is now the fixed prefix documents_sync_destination_ plus a CUID (the PublicEntityId format), checked by a template-literal pattern, so decode rejects names. mintDestinationId draws a fresh CUID; makeDestinationId wraps an existing one. The id lives in Values.ts without the frozen entity kit, since a destination has no SQL row id. The cutover genesis in PR 3b2 must mint one id per destination and never derive it from a name or path.
+
+Lane `goals/vault-sync-domain` · PR #2886
+
+Reverse: Widen DestinationId in Values.ts back to a branded NonEmptyString and drop mintDestinationId and makeDestinationId
 
 ### Mount the PR 3c Api on the sidecar and provision desktop membership at startup, 2026-11-07
 

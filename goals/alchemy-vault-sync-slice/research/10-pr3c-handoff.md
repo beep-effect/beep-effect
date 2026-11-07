@@ -124,3 +124,62 @@ All pass:
 MCP route authenticates the same way; behaviour is unchanged and the ontology
 MCP integration test passes. `RpcSessionAuth.ts` adds
 `DesktopRpcSessionTokenRequired` for the remote CLI.
+
+## Stack fixes on `goals/vs-api` (2026-11-07)
+
+Branch `goals/vs-api` was cut from `a6eee3aafb9`. It merges `goals/vs-saga`, so it
+carries #2886's opaque `DestinationId`, hashed reservation keys and the 3b1 fixes.
+
+- **Opaque ids in 3c code.** Every 3c fixture now uses a minted
+  `documents_sync_destination_<cuid>` id. The security test's foreign-key HTTP
+  guess now sends a well-formed foreign id, so the 403 comes from the scope
+  check, not from id decoding.
+- **D17 F5.** `RequestToken` (`^[A-Za-z0-9_-]{1,64}$`) is the schema of
+  `requestId` on `RequestVaultSync`, `ProbeDestination` and both request events.
+  A domain test rejects paths, spaces, empty strings and 65 characters.
+- **D17 F6.** The session adapter keeps `x-correlation-id` only when it is a
+  `RequestToken`. Otherwise it mints `corr_<time>_<random>`, which no longer
+  includes `sessionRef` or a colon. The transport test shows a path-like header
+  replaced by a minted token.
+- **D17 F8.** The v1 context has a string `principalKey` (`User:<id>`, built by
+  `principalKeyOf` for every principal kind). The adapter always derives it
+  from the bound principal. `VaultSyncProvenance.pglite.test.ts` sends a
+  Session-gated command through the Api over the real driver with
+  `principalField: "principalKey"` and reads the event row: `principal =
+  "User:5"`, `source_kind = "http"`. The 3b2 host must mount that mapping.
+- **I14 correction restored.** `reviewCorrection({ record, item })` (a schema
+  `Fn`) derives a corrective `moveItem`/`renameItem` for a reviewed remote move
+  or rename of a tracked item that has a remote id. Its operation id is stable
+  per conflict and its generation is the item's plus one. The legacy RPC review
+  reads the item from the authorized status View and sends the correction.
+  `ConflictReviews` queues it, gives the tracked item the corrective slot
+  (`ReturnItemToPending` accepts an optional `type`), then closes the review.
+  `VaultSyncRpcs.api.test.ts` reproduces the old engine. When the RPC is
+  reverted to `correction: null`, it fails with `uploadFileVersion` instead of
+  `moveItem`. A use-cases scenario covers rename, and domain tests cover the
+  edit, untracked and no-remote-id cases.
+- **Status completion signal.** A new streaming RPC, `WatchVaultSyncStatus`, is
+  served by forwarding the gated `VaultSyncStatus.watch` delivery stream, so
+  every frame is authorized live. Each frame is mapped to the legacy status
+  shape. The desktop `vaultSyncStatusAtom` subscribes to it and keeps its
+  reactivity key. The legacy handler answers one final frame. The server test
+  denies the stream without membership, then sees the pending count go from 0
+  to 1 after an item is observed. The desktop atom test sees the
+  accepted-then-finished frames on one subscription.
+- **Hygiene.** Template strings replace concatenation in the four View
+  validators (a new biome rule after the main merge). The request events carry
+  the same `schemaVersion` fallow-ignore as their siblings. `VaultSyncSession`'s
+  scope has a separate conflict-scope helper, which keeps fallow cognitive at or
+  below 8. The unused `desktopVaultSyncRequest` export is now module-private.
+- **Cache policy.** The documents-server mcp-kit and shared-tables edges are
+  recorded through `cache-baseline-request-pr3c-saga.json`, which supersedes the
+  refused `cache-baseline-request-pr3c.json`. Policy reports 0 blocking findings.
+
+Verification on this branch: package-verify (lint, audit, docgen) passes for
+documents-domain, documents-use-cases, documents-server and professional-desktop.
+The coverage gate is ok for the three documents packages: domain 56, use-cases 78
+and server 196 tests under coverage. The desktop sync atoms test has 3 tests and the
+other desktop tests pass. Fallow dead-code, health and audit exit 0. Effect Vitest
+reports introduced=0. Entity-kit freeze reports 0 findings. tsconfig-sync reports no
+drift. Docs oxlint is clean on the touched sources. The scoped schema-first scan
+exits 0.

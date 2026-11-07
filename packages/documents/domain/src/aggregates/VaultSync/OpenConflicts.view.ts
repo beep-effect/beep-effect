@@ -26,7 +26,7 @@ import { SyncDestination } from "./SyncDestination.aggregate.ts";
 export class OpenConflicts extends Domain.View("OpenConflicts", {
   middleware: [Session],
   rejects: [ScopeDenied],
-  validate: (request) => authorizeVaultSync("OpenConflicts." + request.mode, { key: request.key }),
+  validate: (request) => authorizeVaultSync(`OpenConflicts.${request.mode}`, { key: request.key }),
   from: [SyncConflict],
   key: SyncDestination,
   state: S.HashMap(S.String, ConflictRecord),

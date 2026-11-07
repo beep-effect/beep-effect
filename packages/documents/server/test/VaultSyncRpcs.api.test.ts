@@ -15,23 +15,26 @@ import { VaultSyncModel, VaultSyncPolicies } from "@beep/documents-use-cases/agg
 import { VaultSyncRpcs } from "@beep/documents-use-cases/public";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as RpcTest from "effect/rpc/RpcTest";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 
 const TOKEN = "compat-launch-token";
-const own = V.DestinationId.make("compat-destination");
+const own = V.DestinationId.make("documents_sync_destination_acompat");
 const conflictId = V.ConflictId.make("documents_sync_conflict_c1");
 
-const decodeLegacyRow = S.decodeEffect(SyncConflict)({
+const legacyRowInput = {
   conflictKind: "remoteEdit",
   createdAt: 1,
   createdByPrincipal: { kind: "System", component: "Runtime" },
@@ -52,13 +55,20 @@ const decodeLegacyRow = S.decodeEffect(SyncConflict)({
   updatedAt: 1,
   updatedByPrincipal: { kind: "System", component: "Runtime" },
   workspaceId: 1,
-});
+} as const;
+const moveId = V.ConflictId.make("documents_sync_conflict_m1");
+// One decode of both legacy rows: the open edit (41) and the open remote move (43).
+const decodeLegacyRows = S.decodeEffect(S.Tuple([SyncConflict, SyncConflict]))([
+  legacyRowInput,
+  { ...legacyRowInput, id: 43, publicId: moveId, conflictKind: "remoteMove", remoteEventId: "event-m1" },
+]);
 
 const binding = Layer.effect(
   VaultSyncSessionBinding,
   Effect.map(
     S.decodeEffect(V.VaultSyncRequest)({
       principal: { kind: "User", userId: 7 },
+      principalKey: "User:7",
       actorSourceKind: "User",
       sourceKind: "sidecar",
       orgId: 1,
@@ -72,8 +82,8 @@ const binding = Layer.effect(
 
 const probe = DmsMirrorProbe.make({ connected: true, provider: "box" });
 
-const setup = Effect.gen(function* () {
-  const legacyRow = yield* decodeLegacyRow;
+const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: ReadonlyArray<SyncConflict> = []) {
+  const [legacyRow] = yield* decodeLegacyRows;
   // A legacy row with no matching authorized View record must never be returned.
   const unrelatedRow = SyncConflict.make({
     ...legacyRow,
@@ -97,7 +107,7 @@ const setup = Effect.gen(function* () {
     LegacySyncReadModel.of({
       items: Effect.fn("legacy.items")(() => Effect.succeed([])),
       operationsByStatus: Effect.fn("legacy.operations")(() => Effect.succeed([])),
-      openConflicts: Effect.fn("legacy.openConflicts")(() => Effect.succeed([legacyRow, unrelatedRow])),
+      openConflicts: Effect.fn("legacy.openConflicts")(() => Effect.succeed([legacyRow, unrelatedRow, ...extraRows])),
       conflict: Effect.fn("legacy.conflict")(() => Effect.succeedNone),
       cursor: Effect.fn("legacy.cursor")(() => Effect.succeedNone),
     })
@@ -146,7 +156,7 @@ const headers = { headers: { authorization: `Bearer ${TOKEN}` } };
 describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
   it.effect("denies every legacy RPC without a live membership, then serves the legacy wire", () =>
     Effect.gen(function* () {
-      const { client, refreshed, sql } = yield* setup;
+      const { client, refreshed, sql } = yield* setup();
       const denied = yield* Effect.flip(client.GetVaultSyncStatus({ workspaceId, forceProbe: false }, headers));
       expect(denied._tag).toBe("VaultSyncActionError");
       yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
@@ -179,6 +189,126 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       yield* sql`UPDATE shared_membership SET deleted_at = 1`;
       const revoked = yield* Effect.flip(client.TriggerVaultSync({ workspaceId }, headers));
       expect(revoked._tag).toBe("VaultSyncActionError");
+    }).pipe(TestClock.withLive)
+  );
+
+  it.effect("reviewing a remote move queues the corrective move before the review closes (I14)", () =>
+    Effect.gen(function* () {
+      const [, moveRow] = yield* decodeLegacyRows;
+      const { client, context, sql } = yield* setup([moveRow]);
+      yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
+      const items = Context.get(context, V.SyncItem);
+      const itemId = V.ItemId.make("documents_sync_item_amoved");
+      const pushOperation = V.OperationId.make("documents_sync_operation_amovedpush");
+      const path = V.VaultRelPath.make("matters/synthetic/file.txt");
+      yield* items.send(
+        itemId,
+        V.ObserveItem.make({
+          observation: {
+            destinationId: own,
+            workspaceId: 1,
+            path,
+            kind: "file",
+            digest: "d1",
+            generation: 1,
+            operationId: pushOperation,
+            type: "uploadFile",
+            parentRequired: true,
+          },
+        })
+      );
+      yield* items.send(
+        itemId,
+        V.MarkItemPushed.make({
+          remoteId: V.RemoteItemId.make("remote-moved"),
+          generation: 1,
+          operationId: pushOperation,
+        })
+      );
+      const registry = Context.get(context, V.ConflictEventRegistry);
+      yield* registry.send(
+        own,
+        V.RecordConflict.make({
+          record: V.ConflictRecord.make({
+            publicId: moveId,
+            destinationId: own,
+            workspaceId: 1,
+            remoteEventId: "event-m1",
+            itemId,
+            evidence: "remote move",
+            kind: "remoteMove",
+            remoteId: V.RemoteItemId.make("remote-moved"),
+            reviewed: false,
+          }),
+        })
+      );
+      // Wait until the View shows both the pushed item and the open move conflict.
+      yield* client
+        .ListVaultSyncConflicts({ workspaceId }, headers)
+        .pipe(
+          Effect.retry({ schedule: Schedule.spaced("10 millis"), times: 300 }),
+          Effect.repeat({ until: (rows) => A.length(rows) === 2, schedule: Schedule.spaced("10 millis"), times: 300 })
+        );
+      const reviewed = yield* client.MarkVaultSyncConflictReviewed({ conflictId: 43 as never, workspaceId }, headers);
+      expect(reviewed.resolutionStatus).toBe("reviewed");
+      const conflicts = Context.get(context, V.SyncConflict);
+      const closed = yield* conflicts.state(moveId).pipe(
+        Effect.repeat({
+          until: (state) => state?.reviewed === true,
+          schedule: Schedule.spaced("10 millis"),
+          times: 300,
+        })
+      );
+      expect(closed?.reviewed).toBe(true);
+      const item = yield* items.state(itemId);
+      const slot = item === null ? undefined : A.fromIterable(item.slots)[0];
+      expect(slot?.[0]).toBe("moveItem");
+      const operations = Context.get(context, V.SyncOperation);
+      const correction = slot === undefined ? null : yield* operations.state(slot[1]);
+      expect(correction?.status).toBe("queued");
+      expect(correction?.input).toMatchObject({ type: "moveItem", path, itemId, generation: 2 });
+    }).pipe(TestClock.withLive)
+  );
+
+  it.effect("streams status frames through the Api gate and updates when the View changes", () =>
+    Effect.gen(function* () {
+      const { client, context, sql } = yield* setup();
+      const denied = yield* client.WatchVaultSyncStatus({ workspaceId }, headers).pipe(Stream.runDrain, Effect.flip);
+      expect(denied._tag).toBe("VaultSyncActionError");
+      yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
+      const frames = yield* Ref.make<ReadonlyArray<number>>([]);
+      const watching = yield* client.WatchVaultSyncStatus({ workspaceId }, headers).pipe(
+        Stream.tap((frame) => Ref.update(frames, A.append(frame.pendingItems))),
+        Stream.takeUntil((frame) => frame.pendingItems === 1),
+        Stream.runDrain,
+        Effect.retry({ schedule: Schedule.spaced("10 millis"), times: 300 }),
+        Effect.forkChild
+      );
+      const items = Context.get(context, V.SyncItem);
+      yield* Ref.get(frames).pipe(
+        Effect.repeat({ until: (seen) => A.isReadonlyArrayNonEmpty(seen), schedule: Schedule.spaced("10 millis") }),
+        Effect.timeout("10 seconds")
+      );
+      yield* items.send(
+        V.ItemId.make("documents_sync_item_awatched"),
+        V.ObserveItem.make({
+          observation: {
+            destinationId: own,
+            workspaceId: 1,
+            path: V.VaultRelPath.make("watched.txt"),
+            kind: "file",
+            digest: "d1",
+            generation: 1,
+            operationId: V.OperationId.make("documents_sync_operation_awatched"),
+            type: "uploadFile",
+            parentRequired: false,
+          },
+        })
+      );
+      yield* Fiber.join(watching).pipe(Effect.timeout("10 seconds"));
+      const seen = yield* Ref.get(frames);
+      expect(seen[0]).toBe(0);
+      assertSome(A.last(seen), 1);
     }).pipe(TestClock.withLive)
   );
 });

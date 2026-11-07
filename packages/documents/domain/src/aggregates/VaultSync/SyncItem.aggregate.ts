@@ -14,6 +14,10 @@ import * as C from "./SyncItem.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 
+const repushType = (s: C.ItemRecord): V.OperationType => {
+  if (s.observation.kind === "folder") return "ensureFolder";
+  return s.remoteId === null ? "uploadFile" : "uploadFileVersion";
+};
 const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "item state" });
 const observed = (s: C.ItemState, e: { readonly observation: C.ItemObservation }): C.ItemRecord =>
   C.ItemRecord.make({
@@ -26,6 +30,14 @@ const observed = (s: C.ItemState, e: { readonly observation: C.ItemObservation }
       e.observation.operationId
     ),
   });
+const sameItemScope = (s: C.ItemRecord, o: C.ItemObservation): boolean =>
+  s.observation.destinationId === o.destinationId && s.observation.workspaceId === o.workspaceId;
+const slotHeldByOther = (s: C.ItemRecord, o: C.ItemObservation): boolean =>
+  O.exists(H.get(s.slots, o.type), (id) => id !== o.operationId);
+const replaceItemKind = (s: C.ItemRecord, o: C.ItemObservation) =>
+  H.some(s.slots, (id) => id === o.operationId)
+    ? refused("operation-slot-held")
+    : [C.ItemKindReplaced.make({ observation: o, previousSlots: s.slots })];
 /**
  * SyncItem vault sync contract.
  *
@@ -58,15 +70,10 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
     ObserveItem: (s, c) => {
       const o = c.observation;
       if (s === null) return [C.ItemTracked.make(Struct.omit(c, ["_tag"]))];
-      if (s.observation.destinationId !== o.destinationId || s.observation.workspaceId !== o.workspaceId)
-        return refused("item-scope");
+      if (!sameItemScope(s, o)) return refused("item-scope");
       if (o.generation <= s.observation.generation) return [];
-      if (s.observation.kind !== o.kind && H.some(s.slots, (id) => id === o.operationId))
-        return refused("operation-slot-held");
-      if (s.observation.kind !== o.kind)
-        return [C.ItemKindReplaced.make({ observation: c.observation, previousSlots: s.slots })];
-      const slot = H.get(s.slots, o.type);
-      if (O.isSome(slot) && slot.value !== o.operationId) return refused("operation-slot-held");
+      if (s.observation.kind !== o.kind) return replaceItemKind(s, o);
+      if (slotHeldByOther(s, o)) return refused("operation-slot-held");
       return s.observation.path !== o.path
         ? [C.ItemMoved.make(Struct.omit(c, ["_tag"]))]
         : [C.ItemEdited.make(Struct.omit(c, ["_tag"]))];
@@ -94,12 +101,7 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
                 ...s.observation,
                 operationId: c.operationId,
                 generation: s.observation.generation + 1,
-                type:
-                  s.observation.kind === "folder"
-                    ? "ensureFolder"
-                    : s.remoteId === null
-                      ? "uploadFile"
-                      : "uploadFileVersion",
+                type: c.type ?? repushType(s),
               },
             }),
           ],

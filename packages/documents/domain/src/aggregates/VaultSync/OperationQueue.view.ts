@@ -27,7 +27,7 @@ import * as V from "./Values.ts";
 export class OperationQueue extends Domain.View("OperationQueue", {
   middleware: [Session],
   rejects: [ScopeDenied],
-  validate: (request) => authorizeVaultSync("OperationQueue." + request.mode, { key: request.key }),
+  validate: (request) => authorizeVaultSync(`OperationQueue.${request.mode}`, { key: request.key }),
   from: [SyncOperationSnapshot],
   key: SyncDestination,
   state: S.HashMap(V.OperationId, OperationState),

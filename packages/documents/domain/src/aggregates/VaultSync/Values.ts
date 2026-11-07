@@ -6,13 +6,21 @@
  */
 import { $DocumentsDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Cuid, cuid } from "@beep/schema/Cuid";
+import { Sha256Hex } from "@beep/schema/Sha256";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import { SyncConflictId, SyncItemId, SyncOperationId } from "@beep/shared-domain/identity/Documents";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 export { RemoteItemId, SyncItemKind, VaultRelPath } from "../../values/Sync/Sync.values.ts";
 
 const utf8 = new TextEncoder();
+const destinationIdPrefix = "documents_sync_destination_";
 const $I = $DocumentsDomainId.create("aggregates/VaultSync/Values");
 /**
  * ItemId vault sync contract.
@@ -72,19 +80,31 @@ export const ConflictId = PublicEntityId.factory(SyncConflictId);
  */
 export type ConflictId = typeof ConflictId.Type;
 /**
- * DestinationId vault sync contract.
+ * Opaque minted vault sync destination identity.
  *
- * **Example** (Inspect contract)
+ * **Details**
+ *
+ * A destination id is the fixed prefix `documents_sync_destination_` followed by
+ * a CUID. Decoding rejects any other string, so a user-entered destination name
+ * can never become an aggregate id, View key, URL segment or saga key. New ids
+ * come from {@link mintDestinationId}; the cutover genesis mints one per
+ * destination.
+ *
+ * **Example** (Validate an opaque destination id)
  * ```ts
  * import { DestinationId } from "@beep/documents-domain/aggregates/VaultSync";
- * void DestinationId;
+ * import * as S from "effect/Schema";
+ * console.log(S.is(DestinationId)("documents_sync_destination_a1")); // true
+ * console.log(S.is(DestinationId)("vault")); // false
  * ```
  * @category aggregates
  * @since 0.0.0
  */
-export const DestinationId = S.NonEmptyString.pipe(
+export const DestinationId = S.TemplateLiteral([destinationIdPrefix, Cuid]).pipe(
   S.brand("SyncDestinationId"),
-  $I.annoteSchema("DestinationId", { description: "Stable vault sync destination identity." })
+  $I.annoteSchema("DestinationId", {
+    description: "Opaque minted vault sync destination identity: a fixed prefix and a CUID.",
+  })
 );
 /**
  * Runtime value accepted by {@link DestinationId}.
@@ -94,19 +114,82 @@ export const DestinationId = S.NonEmptyString.pipe(
  */
 export type DestinationId = typeof DestinationId.Type;
 /**
- * ReservationKey vault sync contract.
+ * Build a destination id from an existing CUID.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a destination id from a CUID)
  * ```ts
- * import { ReservationKey } from "@beep/documents-domain/aggregates/VaultSync";
- * void ReservationKey;
+ * import { makeDestinationId } from "@beep/documents-domain/aggregates/VaultSync";
+ * import { Cuid } from "@beep/schema/Cuid";
+ * console.log(makeDestinationId(Cuid.make("a1"))); // "documents_sync_destination_a1"
  * ```
  * @category aggregates
  * @since 0.0.0
  */
-export const ReservationKey = S.NonEmptyString.pipe(
+export const makeDestinationId = (id: Cuid): DestinationId => DestinationId.make(`${destinationIdPrefix}${id}`);
+/**
+ * Mint a fresh destination id from the CUID generator.
+ *
+ * **Example** (Mint a destination id)
+ * ```ts
+ * import { mintDestinationId } from "@beep/documents-domain/aggregates/VaultSync";
+ * const program = mintDestinationId;
+ * void program;
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const mintDestinationId = Effect.map(cuid, makeDestinationId);
+/**
+ * Bounded caller-supplied token: one to 64 ASCII letters, digits, `_` or `-`.
+ *
+ * **Details**
+ *
+ * Request ids and correlation ids reach saga keys, workflow execution ids, lease
+ * holders and command ids, which telemetry always records. Only this opaque
+ * token shape may take that path, so a caller cannot smuggle a path, a name or
+ * free text into a span attribute (D17 F5, F6).
+ *
+ * **Example** (Validate a request token)
+ * ```ts
+ * import { RequestToken } from "@beep/documents-domain/aggregates/VaultSync";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(RequestToken)("pass_01")); // true
+ * console.log(S.is(RequestToken)("clients/acme.docx")); // false
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const RequestToken = S.String.check(S.isPattern(/^[A-Za-z0-9_-]{1,64}$/)).pipe(
+  $I.annoteSchema("RequestToken", { description: "Bounded opaque caller-supplied request or correlation token." })
+);
+/**
+ * Runtime value accepted by {@link RequestToken}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export type RequestToken = typeof RequestToken.Type;
+/**
+ * Org-qualified destination name reservation key.
+ *
+ * **Details**
+ *
+ * The key is `${orgId}:${sha256hex(normalizedName)}`. The name is hashed so it
+ * never reaches `domain.id`, `domain.stream`, driver spans or rejection
+ * evidence. Build keys only through {@link reservationKey}.
+ *
+ * **Example** (Validate a reservation key)
+ * ```ts
+ * import { ReservationKey } from "@beep/documents-domain/aggregates/VaultSync";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(ReservationKey)("1:vault")); // false
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const ReservationKey = S.TemplateLiteral([S.Int, ":", Sha256Hex]).pipe(
   S.brand("DestinationNameReservationKey"),
-  $I.annoteSchema("ReservationKey", { description: "Org-qualified normalized destination name." })
+  $I.annoteSchema("ReservationKey", { description: "Org id and the SHA-256 hex of the normalized destination name." })
 );
 /**
  * Runtime value accepted by {@link ReservationKey}.
@@ -115,6 +198,37 @@ export const ReservationKey = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type ReservationKey = typeof ReservationKey.Type;
+/**
+ * Normalize a destination name for uniqueness: trimmed and lowercased.
+ *
+ * **Example** (Normalize a destination name)
+ * ```ts
+ * import { normalizeDestinationName } from "@beep/documents-domain/aggregates/VaultSync";
+ * console.log(normalizeDestinationName(" Vault ")); // "vault"
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const normalizeDestinationName: (name: string) => string = flow(Str.trim, Str.toLowerCase);
+/**
+ * Build the reservation key for one org and destination name.
+ *
+ * **Details**
+ *
+ * Synchronous and deterministic, so pure decide and policy code can call it.
+ * It accepts any value carrying `orgId` and `name`, such as a `NameClaim` or a
+ * registered destination state.
+ *
+ * **Example** (Key a destination name)
+ * ```ts
+ * import { reservationKey } from "@beep/documents-domain/aggregates/VaultSync";
+ * console.log(reservationKey({ orgId: 1, name: " Vault " }) === reservationKey({ orgId: 1, name: "vault" })); // true
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const reservationKey = ({ orgId, name }: { readonly orgId: number; readonly name: string }): ReservationKey =>
+  ReservationKey.make(`${orgId}:${bytesToHex(sha256(utf8ToBytes(normalizeDestinationName(name))))}`);
 /**
  * OrgKey vault sync contract.
  *

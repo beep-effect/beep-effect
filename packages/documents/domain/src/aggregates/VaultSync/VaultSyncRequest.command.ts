@@ -3,11 +3,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-file unused-class-member -- the @beep/alchemy-postgres driver reads the static `schemaVersion` reflectively to version stored events (D12). Owner: @beep/documents-domain. Exit: delete when alchemy ships a kernel event-version slot and the driver stops reading the static.
 import * as Domain from "@alchemy.run/domain";
-import * as S from "effect/Schema";
 import { Session } from "./Session.middleware.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
-import { DestinationId } from "./Values.ts";
+import { DestinationId, RequestToken } from "./Values.ts";
 /**
  * Durable request to run an explicitly identified destination workflow.
  *
@@ -19,7 +19,7 @@ import { DestinationId } from "./Values.ts";
  * @category aggregates
  * @since 0.0.0
  */
-export class VaultSyncRequested extends Domain.Event("VaultSyncRequested", { requestId: S.NonEmptyString }) {
+export class VaultSyncRequested extends Domain.Event("VaultSyncRequested", { requestId: RequestToken }) {
   static readonly schemaVersion = 1;
 }
 /**
@@ -34,7 +34,7 @@ export class VaultSyncRequested extends Domain.Event("VaultSyncRequested", { req
  * @since 0.0.0
  */
 export class DestinationProbeRequested extends Domain.Event("DestinationProbeRequested", {
-  requestId: S.NonEmptyString,
+  requestId: RequestToken,
 }) {
   static readonly schemaVersion = 1;
 }
@@ -51,7 +51,7 @@ export class DestinationProbeRequested extends Domain.Event("DestinationProbeReq
  */
 export class RequestVaultSync extends Domain.Command("RequestVaultSync", {
   target: DestinationId,
-  input: { requestId: S.NonEmptyString },
+  input: { requestId: RequestToken },
   events: [VaultSyncRequested],
   rejects: [SyncRuleViolation],
   middleware: [Session],
@@ -69,7 +69,7 @@ export class RequestVaultSync extends Domain.Command("RequestVaultSync", {
  */
 export class ProbeDestination extends Domain.Command("ProbeDestination", {
   target: DestinationId,
-  input: { requestId: S.NonEmptyString },
+  input: { requestId: RequestToken },
   events: [DestinationProbeRequested],
   rejects: [SyncRuleViolation],
   middleware: [Session],

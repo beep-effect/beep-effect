@@ -3,27 +3,16 @@
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3",
   "scope": [
-    "@beep/db-admin#build",
-    "@beep/db-admin#check",
-    "@beep/db-admin#lint:deprecated-apis",
-    "@beep/db-admin#test",
-    "@beep/db-admin#test:property",
-    "@beep/documents-server#build",
-    "@beep/documents-server#check",
-    "@beep/documents-server#lint:deprecated-apis",
-    "@beep/documents-server#test",
-    "@beep/documents-use-cases#build",
-    "@beep/documents-use-cases#check",
-    "@beep/documents-use-cases#lint:deprecated-apis",
-    "@beep/documents-use-cases#test"
+    "@beep/identity#lint",
+    "@beep/types#lint"
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover PR 3b2)",
-      "reason": "Restore this branch's dependency-edge records after merging PR 3c and record the new @beep/db-admin -> @beep/shared-tables edge. No command, input, output, env or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Restore the @beep/postgres dev-dependency edge record for @beep/alchemy-postgres on top of #2881's re-recorded baseline; re-stamp the root turbo.json source review row. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-api.md",
-        "sha256": "cbfc9b87b0bdda3d62bb97323bf5147e919d789d42d3417d71b3f2ed42861908"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b-main.md",
+        "sha256": "54c4e0290bd5f7e9967b8a95f609040f65cdb19ba2fe63de416450c06701213d"
       }
     },
     "@beep/acp": {
@@ -291,11 +280,11 @@
       }
     },
     "@beep/db-admin": {
-      "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover PR 3b2)",
-      "reason": "Restore this branch's dependency-edge records after merging PR 3c and record the new @beep/db-admin -> @beep/shared-tables edge. No command, input, output, env or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
+      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-api.md",
-        "sha256": "cbfc9b87b0bdda3d62bb97323bf5147e919d789d42d3417d71b3f2ed42861908"
+        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
+        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
       }
     },
     "@beep/discord": {
@@ -347,11 +336,11 @@
       }
     },
     "@beep/documents-server": {
-      "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover PR 3b2)",
-      "reason": "Restore this branch's dependency-edge records after merging PR 3c and record the new @beep/db-admin -> @beep/shared-tables edge. No command, input, output, env or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/vs-api PR 3c)",
+      "reason": "Record the documents-server mcp-kit and shared-tables dependency edges on top of the PR 3b part 1 baseline. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-api.md",
-        "sha256": "cbfc9b87b0bdda3d62bb97323bf5147e919d789d42d3417d71b3f2ed42861908"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3c-saga.md",
+        "sha256": "c50ae11d3cd92d5db2cce2b07bad3c054e8c631548592263819f0a2c44d59d74"
       }
     },
     "@beep/documents-tables": {
@@ -363,11 +352,11 @@
       }
     },
     "@beep/documents-use-cases": {
-      "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover PR 3b2)",
-      "reason": "Restore this branch's dependency-edge records after merging PR 3c and record the new @beep/db-admin -> @beep/shared-tables edge. No command, input, output, env or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (orchestrator; PR 3a GPT-6.1 Sol self-review applied)",
+      "reason": "Review the alchemy domain dependency and documents use-case PGlite/driver test dependency edges only; no cache posture or qualification change.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-api.md",
-        "sha256": "cbfc9b87b0bdda3d62bb97323bf5147e919d789d42d3417d71b3f2ed42861908"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3a.md",
+        "sha256": "aeb57f11e58aa293888a4af16fc0eafa9ceb85b0d54330e015fdff591213fd94"
       }
     },
     "@beep/drizzle": {
@@ -24746,7 +24735,6 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
-          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -24813,7 +24801,6 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
-          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -24866,7 +24853,6 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
-          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -25004,7 +24990,6 @@
           "@beep/law-practice-tables#transit",
           "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
-          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
@@ -25222,7 +25207,6 @@
           "@beep/law-practice-domain#transit",
           "@beep/law-practice-tables#transit",
           "@beep/postgres#transit",
-          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
@@ -25278,7 +25262,6 @@
           "@beep/law-practice-domain#transit",
           "@beep/law-practice-tables#transit",
           "@beep/postgres#transit",
-          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
@@ -25342,7 +25325,6 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
-          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -25395,7 +25377,6 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
-          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -25448,7 +25429,6 @@
           "@beep/law-practice-domain#transit",
           "@beep/law-practice-tables#transit",
           "@beep/postgres#transit",
-          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",

@@ -10,6 +10,7 @@ import { Principal } from "@beep/shared-domain/entity/Principal";
 import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
 import * as Context from "effect/Context";
 import * as S from "effect/Schema";
+import { RequestToken } from "./Values.ts";
 import type * as Effect from "effect/Effect";
 import type * as Headers from "effect/http/Headers";
 
@@ -35,6 +36,56 @@ export const TransportKind = LiteralKit(["http", "cli", "mcp", "sidecar"]).pipe(
  */
 export type TransportKind = typeof TransportKind.Type;
 /**
+ * Flat string form of a principal: its kind and its own id, such as `User:1`.
+ *
+ * **Details**
+ *
+ * The Postgres driver copies only string context fields into its `principal`
+ * provenance column, so the request context carries this key beside the
+ * structured principal (D17 F8). Build it with {@link principalKeyOf}.
+ *
+ * **Example** (Validate a principal key)
+ * ```ts
+ * import { PrincipalKey } from "@beep/documents-domain/aggregates/VaultSync";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(PrincipalKey)("User:1")); // true
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const PrincipalKey = S.String.check(
+  S.isPattern(/^(User|ServiceAccount|Agent|ConnectorAccount|System):[A-Za-z0-9_-]{1,64}$/)
+).pipe($I.annoteSchema("PrincipalKey", { description: "Principal kind and id as one provenance string." }));
+/**
+ * Runtime value accepted by {@link PrincipalKey}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export type PrincipalKey = typeof PrincipalKey.Type;
+/**
+ * Derive the provenance key of a principal.
+ *
+ * **Example** (Key a user principal)
+ * ```ts
+ * import { principalKeyOf } from "@beep/documents-domain/aggregates/VaultSync";
+ * import { Principal } from "@beep/shared-domain/entity/Principal";
+ * import * as S from "effect/Schema";
+ * const principal = S.decodeUnknownSync(Principal)({ kind: "User", userId: 1 });
+ * console.log(principalKeyOf(principal)); // "User:1"
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const principalKeyOf = (principal: Principal): PrincipalKey =>
+  `${principal.kind}:${Principal.match(principal, {
+    User: (p) => `${p.userId}`,
+    ServiceAccount: (p) => `${p.serviceAccountId}`,
+    Agent: (p) => `${p.agentVersionId}`,
+    ConnectorAccount: (p) => `${p.connectorAccountId}`,
+    System: (p) => p.component,
+  })}`;
+/**
  * Persisted identity and requested scope; this value contains no grant or credential.
  *
  * **Example** (Inspect contract)
@@ -52,7 +103,8 @@ export class VaultSyncRequest extends S.Opaque<VaultSyncRequest, { readonly bran
     actorSourceKind: SourceKind,
     orgId: S.Int,
     workspaceId: S.Int,
-    correlationId: S.NonEmptyString,
+    principalKey: PrincipalKey,
+    correlationId: RequestToken,
     sessionRef: S.NonEmptyString,
   }).pipe($I.annoteSchema("VaultSyncRequest", { description: "Non-secret v1 initiating request context." }))
 ) {}

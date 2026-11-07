@@ -1,4 +1,4 @@
-import { VaultSyncActionError } from "@beep/documents-use-cases/public";
+import { VaultSyncActionError, VaultSyncStatus } from "@beep/documents-use-cases/public";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
@@ -10,8 +10,10 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as Reactivity from "effect/reactivity/Reactivity";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import {
   DesktopSyncClient,
@@ -19,6 +21,7 @@ import {
   VaultSyncPanelState,
   vaultSyncCommandAtoms,
   vaultSyncPanelStateAtoms,
+  vaultSyncStatusAtom,
 } from "@/sync/Sync.atoms";
 
 const workspaceA = WorkspaceIdentity.WorkspaceId.make(1);
@@ -126,6 +129,64 @@ describe("vault sync command atoms", () => {
       const finalState = registry.get(vaultSyncPanelStateAtoms(workspaceA));
       expect(VaultSyncPanelState.guards.failed(finalState) ? finalState.message : "").toBe("Review failed safely.");
       yield* AtomRegistry.getResult(registry, action);
+    })
+  );
+});
+
+describe("vault sync status subscription", () => {
+  it.effect(
+    "updates the status atom from the watch stream when the pass finishes",
+    Effect.fnUntraced(function* () {
+      const decode = S.decodeUnknownEffect(VaultSyncStatus);
+      const status = (pendingItems: number, currentItems: number) =>
+        decode({
+          conflictItems: 0,
+          connected: true,
+          disconnectReason: null,
+          currentItems,
+          cursorPosition: null,
+          errorItems: 0,
+          failedOperations: 0,
+          openConflicts: 0,
+          pendingItems,
+          probedAt: null,
+          provider: "box",
+          queuedOperations: 0,
+        });
+      const accepted = yield* status(2, 0);
+      const finished = yield* status(0, 2);
+      const finish = yield* Deferred.make<void>();
+      const calls = yield* Ref.make<ReadonlyArray<string>>([]);
+      const client = DesktopSyncClient.of(((tag: string) =>
+        tag === "WatchVaultSyncStatus"
+          ? Stream.concat(
+              Stream.make(accepted),
+              Stream.fromEffect(
+                Effect.gen(function* () {
+                  yield* Deferred.await(finish);
+                  return finished;
+                })
+              )
+            ).pipe(Stream.tap(() => Ref.update(calls, A.append(tag))))
+          : Effect.die(`unexpected vault sync RPC: ${tag}`)) as unknown as DesktopSyncClient["Service"]);
+      const registry = yield* Effect.acquireRelease(
+        Effect.sync(() => registryWithClient(client)),
+        (registry) => Effect.sync(() => registry.dispose())
+      );
+      const atom = vaultSyncStatusAtom(workspaceA);
+      registry.mount(atom);
+      const reaches = (wanted: VaultSyncStatus) =>
+        AtomRegistry.toStream(registry, atom).pipe(
+          Stream.filter((result) => AsyncResult.isSuccess(result) && result.value.currentItems === wanted.currentItems),
+          Stream.take(1),
+          Stream.runDrain
+        );
+      yield* reaches(accepted);
+      yield* Deferred.succeed(finish, undefined);
+      yield* reaches(finished);
+      const seen = yield* Ref.get(calls);
+      // One subscription delivered both frames; no status re-read was issued.
+      expect(seen).toEqual(["WatchVaultSyncStatus", "WatchVaultSyncStatus"]);
     })
   );
 });

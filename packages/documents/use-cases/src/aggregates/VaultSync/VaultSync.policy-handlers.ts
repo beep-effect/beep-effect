@@ -9,7 +9,6 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as Str from "effect/String";
 import {
   ConflictRegistration,
   ConflictReviews,
@@ -65,8 +64,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
             onSuccess: () => Effect.succeed(true),
             onFailure: Effect.fnUntraced(function* () {
               const current = yield* destinations.state(c.destinationId);
-              const currentKey =
-                current._tag === "Registered" ? `${current.orgId}:${Str.toLowerCase(Str.trim(current.name))}` : null;
+              const currentKey = current._tag === "Registered" ? V.reservationKey(current) : null;
               if (currentKey !== source.id)
                 yield* claims.send(source.id, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
                   commandId: `${envelope.stream}:${envelope.seq}:release-rejected`,
@@ -76,7 +74,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
           })
         );
         if (!accepted || c.previousName === null) return;
-        const old = V.ReservationKey.make(`${c.orgId}:${Str.toLowerCase(Str.trim(c.previousName))}`);
+        const old = V.reservationKey({ orgId: c.orgId, name: c.previousName });
         if (old !== source.id)
           yield* claims.send(old, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
             commandId: `${envelope.stream}:${envelope.seq}:release`,
@@ -121,11 +119,19 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const items = yield* V.SyncItem;
       return Effect.fn(function* ({ event, source, envelope }) {
         if (event.correction !== null) {
-          yield* operations.send(
-            event.correction.operationId,
-            V.QueueOperation.make({ input: event.correction.input }),
-            { commandId: `${envelope.stream}:${envelope.seq}:correct` }
-          );
+          // I14: the corrective move or rename is queued before the review closes.
+          const correction = event.correction;
+          yield* operations.send(correction.operationId, V.QueueOperation.make({ input: correction.input }), {
+            commandId: `${envelope.stream}:${envelope.seq}:correct`,
+          });
+          // A tracked item takes the correction as its slot so the next pass pumps it.
+          const tracked = yield* items.state(correction.input.itemId);
+          if (tracked !== null)
+            yield* items.send(
+              correction.input.itemId,
+              V.ReturnItemToPending.make({ operationId: correction.operationId, type: correction.input.type }),
+              { commandId: `${envelope.stream}:${envelope.seq}:correct-slot` }
+            );
         } else if (event.record.itemId !== null) {
           yield* items.send(event.record.itemId, V.ReturnItemToPending.make({ operationId: event.healOperationId }), {
             commandId: `${envelope.stream}:${envelope.seq}:heal`,

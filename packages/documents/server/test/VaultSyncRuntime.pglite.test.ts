@@ -63,6 +63,7 @@ const binding = Layer.effect(
   Effect.map(
     S.decodeEffect(V.VaultSyncRequest)({
       principal: { kind: "User", userId: 7 },
+      principalKey: "User:7",
       actorSourceKind: "User",
       sourceKind: "sidecar",
       orgId: 1,

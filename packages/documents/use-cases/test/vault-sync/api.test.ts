@@ -74,7 +74,7 @@ it.effect("routes each public request to one pass or probe run keyed by its requ
       )
     );
     const destinations = Context.get(context, V.SyncDestination);
-    const id = V.DestinationId.make("vault-routing");
+    const id = V.DestinationId.make("documents_sync_destination_avaultrouting");
     yield* destinations.send(id, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "vault" }));
     yield* destinations.send(id, V.RequestVaultSync.make({ requestId: "r1" }));
     yield* destinations.send(id, V.ProbeDestination.make({ requestId: "p1" }));
@@ -82,8 +82,8 @@ it.effect("routes each public request to one pass or probe run keyed by its requ
       Effect.repeat({ until: (value) => value.length >= 2, schedule: Schedule.spaced("5 millis"), times: 400 })
     );
     expect(A.sort(started, Order.String)).toEqual([
-      "pass:vault-routing/VaultSyncRequested/r1",
-      "probe:vault-routing/DestinationProbeRequested/p1",
+      "pass:documents_sync_destination_avaultrouting/VaultSyncRequested/r1",
+      "probe:documents_sync_destination_avaultrouting/DestinationProbeRequested/p1",
     ]);
   }).pipe(TestClock.withLive)
 );

@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 
+import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   LegacySyncConflict,
   LegacySyncCursor,
@@ -19,11 +20,11 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import { markSyncModelWriter } from "./SyncWriterEpoch.service.ts";
-import type * as V from "@beep/documents-domain/aggregates/VaultSync";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/LegacySync.projection");
 const IdRows = S.NonEmptyArray(S.Struct({ id: S.Int }));
@@ -176,6 +177,89 @@ const store = Effect.gen(function* () {
   });
   return { sql, path, identity, write, genesis };
 });
+const remoteCleared = {
+  remote_name: null,
+  remote_parent_id: null,
+  last_pushed_digest: null,
+  last_pushed_generation: null,
+  last_error: null,
+};
+const itemSyncStates: Readonly<Record<string, string>> = { synced: "current", drifted: "conflict" };
+const operationStatuses: Readonly<Record<string, string>> = { retrying: "queued", superseded: "failed" };
+const encodeEvidence = S.encodeEffect(S.fromJsonString(S.Struct({ evidence: S.String })));
+const cursorPublicId = (destinationId: string) =>
+  `documents_sync_cursor_a${bytesToHex(sha256(new TextEncoder().encode(destinationId)))}`;
+const pushedColumns = (event: V.ItemPushed, digest: string | null, basename: string) => ({
+  remote_name: event.remoteName ?? basename,
+  remote_parent_id: event.remoteParentId ?? null,
+  last_pushed_digest: digest,
+  last_pushed_generation: event.generation,
+  last_error: null,
+});
+const itemEventColumns = (event: { readonly _tag: string }, digest: string | null, basename: string) => {
+  if (S.is(V.ItemPushed)(event)) return pushedColumns(event, digest, basename);
+  return event._tag === "ItemKindReplaced" ? remoteCleared : {};
+};
+const itemColumns = (state: V.ItemRecord, event: { readonly _tag: string }, basename: string) => {
+  const o = state.observation;
+  return {
+    workspace_id: o.workspaceId,
+    content_digest: o.digest,
+    content_size_bytes: o.contentSizeBytes ?? null,
+    item_kind: o.kind,
+    local_generation: o.generation,
+    local_rel_path: o.path,
+    remote_id: state.remoteId,
+    sync_state: itemSyncStates[state.status] ?? state.status,
+    ...itemEventColumns(event, o.digest, basename),
+  };
+};
+const operationErrorColumns = (event: { readonly _tag: string }) =>
+  S.is(V.OperationFailed)(event) || S.is(V.OperationSuperseded)(event) ? { last_error: event.reason } : {};
+const operationColumns = (
+  state: V.OperationRecord,
+  event: { readonly _tag: string },
+  item: number,
+  path: Path.Path
+) => {
+  const input = state.input;
+  const parent = path.dirname(input.path);
+  return {
+    sync_item_id: item,
+    operation_type: input.type === "ensureFolder" ? "createFolder" : input.type,
+    status: operationStatuses[state.status] ?? state.status,
+    attempt_count: state.attempts,
+    idempotency_key: input.idempotencyKey,
+    input_content_digest: input.digest,
+    input_generation: input.generation,
+    target_rel_path: input.path,
+    target_parent_rel_path: parent === "." ? null : parent,
+    target_name: path.basename(input.path),
+    ...operationErrorColumns(event),
+  };
+};
+const conflictColumns = (record: V.ConflictRecord, item: number | null, payload: string) => ({
+  workspace_id: record.workspaceId,
+  sync_item_id: item,
+  remote_event_id: record.remoteEventId,
+  remote_payload: payload,
+  remote_id: record.remoteId ?? null,
+  local_rel_path: record.path ?? null,
+  conflict_kind: record.kind ?? "remoteUnknown",
+  resolution_status: record.reviewed ? "reviewed" : "open",
+});
+const cursorColumns = (
+  state: { readonly workspaceId: number; readonly cursor: string; readonly cursorError: string | null },
+  event: { readonly _tag: string }
+) => ({
+  workspace_id: state.workspaceId,
+  stream_position: state.cursor,
+  ...(S.is(V.CursorAdvanced)(event) && event.lastEventId !== undefined ? { last_event_id: event.lastEventId } : {}),
+  last_error: state.cursorError,
+  status: state.cursorError === null ? "active" : "error",
+});
+const SelectionRows = S.Array(S.Struct({ public_id: S.NullOr(S.String), paused: S.Boolean }));
+const OwnerRows = S.Array(S.Struct({ workspace_id: S.Int }));
 /**
  * Writes derived rows with D14 numeric references and transactional delivery checkpoints.
  *
@@ -198,36 +282,8 @@ export const LegacySyncProjections = Layer.mergeAll(
             continue;
           }
           if (state === null) continue;
-          const o = state.observation;
-          const pushed = event._tag === "ItemPushed";
-          yield* write("item", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
-            workspace_id: o.workspaceId,
-            content_digest: o.digest,
-            content_size_bytes: o.contentSizeBytes ?? null,
-            item_kind: o.kind,
-            local_generation: o.generation,
-            local_rel_path: o.path,
-            remote_id: state.remoteId,
-            ...(event._tag === "ItemKindReplaced"
-              ? {
-                  remote_name: null,
-                  remote_parent_id: null,
-                  last_pushed_digest: null,
-                  last_pushed_generation: null,
-                  last_error: null,
-                }
-              : {}),
-            ...(pushed
-              ? {
-                  remote_name: event.remoteName ?? path.basename(o.path),
-                  remote_parent_id: event.remoteParentId ?? null,
-                }
-              : {}),
-            sync_state: state.status === "synced" ? "current" : state.status === "drifted" ? "conflict" : state.status,
-            ...(pushed
-              ? { last_pushed_digest: o.digest, last_pushed_generation: event.generation, last_error: null }
-              : {}),
-          });
+          const columns = itemColumns(state, event, path.basename(state.observation.path));
+          yield* write("item", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), columns);
         }
       });
     })
@@ -235,6 +291,14 @@ export const LegacySyncProjections = Layer.mergeAll(
   LegacySyncOperation.toLayer(
     Effect.gen(function* () {
       const { genesis, write, path, identity, sql } = yield* store;
+      // The operation belongs to its item's workspace; the item row is projected first.
+      const itemWorkspace = Effect.fnUntraced(function* (item: number) {
+        const owner = yield* sql`SELECT workspace_id FROM documents_sync_item WHERE id = ${item}`.pipe(
+          Effect.flatMap(S.decodeUnknownEffect(OwnerRows)),
+          Effect.orDie
+        );
+        return A.isReadonlyArrayNonEmpty(owner) ? { workspace_id: owner[0].workspace_id } : {};
+      });
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
           if (event._tag === "OperationGenesisImported") {
@@ -242,29 +306,17 @@ export const LegacySyncProjections = Layer.mergeAll(
             continue;
           }
           if (state === null) continue;
-          const input = state.input;
-          const item = yield* identity("item", input.itemId);
-          // The operation belongs to its item's workspace; the item row is projected first.
-          const owner = yield* sql`SELECT workspace_id FROM documents_sync_item WHERE id = ${item}`.pipe(
-            Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ workspace_id: S.Int })))),
-            Effect.orDie
+          const item = yield* identity("item", state.input.itemId);
+          const owner = yield* itemWorkspace(item);
+          const columns = { ...owner, ...operationColumns(state, event, item, path) };
+          yield* write(
+            "operation",
+            source.id,
+            envelope.stream,
+            envelope.seq,
+            DateTime.toEpochMillis(envelope.at),
+            columns
           );
-          yield* write("operation", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
-            ...(A.isReadonlyArrayNonEmpty(owner) ? { workspace_id: owner[0].workspace_id } : {}),
-            sync_item_id: item,
-            operation_type: input.type === "ensureFolder" ? "createFolder" : input.type,
-            status: state.status === "retrying" ? "queued" : state.status === "superseded" ? "failed" : state.status,
-            attempt_count: state.attempts,
-            idempotency_key: input.idempotencyKey,
-            input_content_digest: input.digest,
-            input_generation: input.generation,
-            target_rel_path: input.path,
-            target_parent_rel_path: path.dirname(input.path) === "." ? null : path.dirname(input.path),
-            target_name: path.basename(input.path),
-            ...(event._tag === "OperationFailed" || event._tag === "OperationSuperseded"
-              ? { last_error: event.reason }
-              : {}),
-          });
         }
       });
     })
@@ -280,18 +332,16 @@ export const LegacySyncProjections = Layer.mergeAll(
           }
           const record = event.record;
           const item = record.itemId === null ? null : yield* identity("item", record.itemId);
-          yield* write("conflict", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
-            workspace_id: record.workspaceId,
-            sync_item_id: item,
-            remote_event_id: record.remoteEventId,
-            remote_payload: yield* S.encodeEffect(S.fromJsonString(S.Struct({ evidence: S.String })))({
-              evidence: record.evidence,
-            }).pipe(Effect.orDie),
-            remote_id: record.remoteId ?? null,
-            local_rel_path: record.path ?? null,
-            conflict_kind: record.kind ?? "remoteUnknown",
-            resolution_status: record.reviewed ? "reviewed" : "open",
-          });
+          const payload = yield* encodeEvidence({ evidence: record.evidence }).pipe(Effect.orDie);
+          const columns = conflictColumns(record, item, payload);
+          yield* write(
+            "conflict",
+            source.id,
+            envelope.stream,
+            envelope.seq,
+            DateTime.toEpochMillis(envelope.at),
+            columns
+          );
         }
       });
     })
@@ -299,40 +349,41 @@ export const LegacySyncProjections = Layer.mergeAll(
   LegacySyncCursor.toLayer(
     Effect.gen(function* () {
       const { genesis, write, sql } = yield* store;
+      const importCursor = Effect.fnUntraced(function* (
+        destinationId: string,
+        event: V.CursorGenesisImported,
+        envelope: { readonly stream: string; readonly seq: number }
+      ) {
+        yield* genesis("cursor", event.row, envelope.stream, envelope.seq);
+        yield* sql`INSERT INTO documents_sync_cursor_selection (destination_id,public_id,paused)
+          VALUES (${destinationId},${event.selected ? event.row.public_id : null},${event.paused})
+          ON CONFLICT(destination_id) DO UPDATE SET public_id=EXCLUDED.public_id,paused=EXCLUDED.paused`.pipe(
+          Effect.orDie
+        );
+      });
+      // A paused or unselected imported cursor keeps its row; otherwise the selected or derived id is written.
+      const selectedCursor = Effect.fnUntraced(function* (destinationId: string) {
+        const rows = yield* sql`SELECT public_id,paused FROM documents_sync_cursor_selection
+          WHERE destination_id=${destinationId}`.pipe(
+          Effect.flatMap(S.decodeUnknownEffect(SelectionRows)),
+          Effect.orDie
+        );
+        if (!A.isReadonlyArrayNonEmpty(rows)) return O.some(cursorPublicId(destinationId));
+        return rows[0].paused ? O.none() : O.fromNullOr(rows[0].public_id);
+      });
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
           if (event._tag === "CursorGenesisImported") {
-            yield* genesis("cursor", event.row, envelope.stream, envelope.seq);
-            yield* sql`INSERT INTO documents_sync_cursor_selection (destination_id,public_id,paused)
-              VALUES (${source.id},${event.selected ? event.row.public_id : null},${event.paused})
-              ON CONFLICT(destination_id) DO UPDATE SET public_id=EXCLUDED.public_id,paused=EXCLUDED.paused`.pipe(
-              Effect.orDie
-            );
+            yield* importCursor(source.id, event, envelope);
             continue;
           }
           if (event._tag !== "CursorAdvanced" && event._tag !== "CursorFailed") continue;
-          if (state === null || state._tag !== "Registered" || state.cursor === null) continue;
-          const selected =
-            yield* sql`SELECT public_id,paused FROM documents_sync_cursor_selection WHERE destination_id=${source.id}`.pipe(
-              Effect.flatMap(
-                S.decodeUnknownEffect(S.Array(S.Struct({ public_id: S.NullOr(S.String), paused: S.Boolean })))
-              ),
-              Effect.orDie
-            );
-          if (A.isReadonlyArrayNonEmpty(selected) && (selected[0].paused || selected[0].public_id === null)) continue;
-          const publicId =
-            A.isReadonlyArrayNonEmpty(selected) && selected[0].public_id !== null
-              ? selected[0].public_id
-              : `documents_sync_cursor_a${bytesToHex(sha256(new TextEncoder().encode(source.id)))}`;
-          yield* write("cursor", publicId, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
-            workspace_id: state.workspaceId,
-            stream_position: state.cursor,
-            ...(event._tag === "CursorAdvanced" && event.lastEventId !== undefined
-              ? { last_event_id: event.lastEventId }
-              : {}),
-            last_error: state.cursorError,
-            status: state.cursorError === null ? "active" : "error",
-          });
+          if (state?._tag !== "Registered" || state.cursor === null) continue;
+          const publicId = yield* selectedCursor(source.id);
+          if (O.isNone(publicId)) continue;
+          const at = DateTime.toEpochMillis(envelope.at);
+          const columns = cursorColumns({ ...state, cursor: state.cursor }, event);
+          yield* write("cursor", publicId.value, envelope.stream, envelope.seq, at, columns);
         }
       });
     })

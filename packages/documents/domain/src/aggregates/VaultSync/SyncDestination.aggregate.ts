@@ -15,13 +15,23 @@ import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 
 const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "destination state" });
+const sameOwner = (
+  s: { readonly orgId: number; readonly workspaceId: number },
+  c: { readonly orgId: number; readonly workspaceId: number }
+): boolean => s.orgId === c.orgId && s.workspaceId === c.workspaceId;
+const cursorAdvanced = (position: string, lastEventId: string | undefined) =>
+  C.CursorAdvanced.make({ position, ...(lastEventId === undefined ? {} : { lastEventId }) });
+const pollOutcome = (c: C.RecordDestinationPoll) => {
+  if (c.error !== null) return [C.CursorFailed.make({ reason: c.error })];
+  return c.position === null ? refused("poll-result") : [cursorAdvanced(c.position, c.lastEventId)];
+};
 /**
  * SyncDestination vault sync contract.
  *
  * **Example** (Address one aggregate stream)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
- * const ref=V.SyncDestination.ref(V.DestinationId.make("vault"));
+ * const ref=V.SyncDestination.ref(V.DestinationId.make("documents_sync_destination_avault"));
  * console.log(ref.id);
  * ```
  * @category aggregates
@@ -68,34 +78,18 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
         : s.orgId === c.orgId && s.workspaceId === c.workspaceId && s.name === c.name
           ? []
           : refused("already-registered"),
-    RenameDestination: (s, c) =>
-      s._tag !== "Registered"
-        ? refused("not-registered")
-        : s.orgId !== c.orgId || s.workspaceId !== c.workspaceId
-          ? refused("destination-scope")
-          : s.name === c.name
-            ? []
-            : s.name !== c.previousName
-              ? refused("stale-name")
-              : [C.DestinationRenamed.make(Struct.omit(c, ["_tag"]))],
+    RenameDestination: (s, c) => {
+      if (s._tag !== "Registered") return refused("not-registered");
+      if (!sameOwner(s, c)) return refused("destination-scope");
+      if (s.name === c.name) return [];
+      return s.name === c.previousName ? [C.DestinationRenamed.make(Struct.omit(c, ["_tag"]))] : refused("stale-name");
+    },
     ResolveDestinationRoot: (s, c) =>
       s._tag === "Registered" ? [C.RootFolderResolved.make(Struct.omit(c, ["_tag"]))] : refused("not-registered"),
     PauseDestination: (s) =>
       s._tag === "Registered" ? (s.paused ? [] : [C.DestinationPaused.make({})]) : refused("not-registered"),
     ResumeDestination: (s) => (s._tag === "Registered" ? [C.DestinationConnected.make({})] : refused("not-registered")),
-    RecordDestinationPoll: (s, c) =>
-      s._tag !== "Registered"
-        ? refused("not-registered")
-        : c.error !== null
-          ? [C.CursorFailed.make({ reason: c.error })]
-          : c.position !== null
-            ? [
-                C.CursorAdvanced.make({
-                  position: c.position,
-                  ...(c.lastEventId === undefined ? {} : { lastEventId: c.lastEventId }),
-                }),
-              ]
-            : refused("poll-result"),
+    RecordDestinationPoll: (s, c) => (s._tag === "Registered" ? pollOutcome(c) : refused("not-registered")),
     ClaimItemPath: (s, c) => {
       if (s._tag !== "Registered") return refused("not-registered");
       const owner = H.get(s.paths, c.path);

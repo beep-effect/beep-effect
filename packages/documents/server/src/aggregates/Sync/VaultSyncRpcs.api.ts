@@ -12,15 +12,18 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as H from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { LegacySyncReadModel } from "./LegacySync.query.ts";
 import { VaultSyncDeliveryClient } from "./VaultSyncApi.ts";
+import type * as View from "@alchemy.run/domain/View";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type * as Headers from "effect/http/Headers";
 
@@ -51,6 +54,7 @@ const valuesOf = <K, A>(map: H.HashMap<K, A> | null): ReadonlyArray<A> =>
 const keysOf = <K, A>(map: H.HashMap<K, A> | null): ReadonlyArray<K> =>
   map === null ? [] : map.pipe(H.keys, A.fromIterable);
 
+type StatusView = View.StateOf<typeof V.VaultSyncStatus>;
 const counts = (status: {
   readonly items: H.HashMap<V.ItemId, V.ItemState>;
   readonly operations: H.HashMap<V.OperationId, V.OperationState>;
@@ -127,12 +131,12 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
       const n = yield* Random.nextInt;
       return `${at}-${n}`;
     });
-    const status = Effect.fn("VaultSyncRpcsApi.status")(function* (
+    const statusOf = Effect.fn("VaultSyncRpcsApi.statusOf")(function* (
       destinationId: V.DestinationId,
       headers: Headers.Input,
+      view: StatusView | null,
       refresh: boolean
     ) {
-      const view = yield* client.VaultSyncStatus.get(destinationId, { headers });
       const open = yield* client.OpenConflicts.get(destinationId, { headers });
       const probe = yield* refresh ? availability.refresh : availability.probe;
       const state = view ?? { destination: { _tag: "Unregistered" as const }, items: H.empty(), operations: H.empty() };
@@ -146,6 +150,23 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
         provider: BOX,
       });
     });
+    const status = Effect.fn("VaultSyncRpcsApi.status")(function* (
+      destinationId: V.DestinationId,
+      headers: Headers.Input,
+      refresh: boolean
+    ) {
+      const view = yield* client.VaultSyncStatus.get(destinationId, { headers });
+      return yield* statusOf(destinationId, headers, view, refresh);
+    });
+    // Every frame passes the same live delivery gate as the other View subscriptions.
+    const watchStatus = (workspaceId: number, headers: Headers.Input) =>
+      Stream.unwrap(
+        Effect.map(destinationOf(workspaceId, headers), (destinationId) =>
+          client.VaultSyncStatus.watch(destinationId, { headers }).pipe(
+            Stream.mapEffect((frame) => statusOf(destinationId, headers, frame.state, false))
+          )
+        )
+      );
     const openRows = Effect.fn("VaultSyncRpcsApi.openRows")(function* (
       workspaceId: WorkspaceIdentity.WorkspaceId,
       headers: Headers.Input
@@ -165,6 +186,8 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
       );
     });
     return VaultSyncRpcs.of({
+      WatchVaultSyncStatus: ({ workspaceId }, { headers }) =>
+        watchStatus(workspaceId, headers).pipe(Stream.catch(flow(dropped("WatchVaultSyncStatus"), Stream.fromEffect))),
       TriggerVaultSync: Effect.fn("VaultSyncRpcsApi.trigger")(
         function* ({ workspaceId }, { headers }) {
           const destinationId = yield* destinationOf(workspaceId, headers);
@@ -200,13 +223,16 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
           const healOperationId = yield* S.decodeEffect(V.OperationId)(
             Str.replace(CONFLICT_PREFIX, OPERATION_PREFIX)(record.publicId)
           );
+          // A reviewed remote move or rename re-asserts the local path (I14).
+          const view = yield* client.VaultSyncStatus.get(record.destinationId, { headers });
+          const item = record.itemId === null || view === null ? null : O.getOrNull(H.get(view.items, record.itemId));
           yield* client.ReviewConflict(
             record.publicId,
             {
               remoteEventId: record.remoteEventId,
               workspaceId: record.workspaceId,
               destinationId: record.destinationId,
-              correction: null,
+              correction: O.getOrNull(V.reviewCorrection({ record, item })),
               healOperationId,
             },
             { headers }
