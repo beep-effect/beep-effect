@@ -1701,6 +1701,14 @@ Lane `feat/citation-default-owners` · PR #2847
 
 Reverse: Remove the new replay only if its projection is unsound; preserve original cases and report any failing source outcome without changing its expectation.
 
+### Replay original ambiguity and markup-name families with their actual options, 2026-11-07
+
+Add all 11 builtin disambiguation and 32 markup/name inputs, preserving remove_ambiguous and original cleaners. Full integration now schedules 193 inputs and 234 attribute assertions per runtime, including final partial groups. Sixteen focused tests pass in 171.44 seconds; three count and two attribute events receive complete local proof, bringing completed cases to 17. General protocols, alternate tokenizers, safety and scaling, and full hosted acceptance remain open. See history/evidence/2026-11-07-canonical-markup-ambiguity.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the five new explicit bindings if their source linkage or target proof is invalid, preserving every original input and unqualified full-corpus duty.
+
 ### Replay public resolution groups and require explicit identity ownership, 2026-11-07
 
 The public resolver replays all thirty original default operation groups across ninety-four mentions. This exposed omitted short-case selected editions, now authenticated as case editions, and an absent missing-page identity owner. The Layer now explicitly requires the existing identity factory at installation. Test identity values are controlled; production allocation and exact native hash proof remain open. Fourteen public/private regression tests pass; no source expectation or semantic waiver changes. See history/evidence/2026-11-07-public-resolution-groups.md.

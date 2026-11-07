@@ -13,13 +13,18 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         () => replayCitationCanonicalExtraction(kind, 0, 2),
         { timeout: 180000 }
       );
-      for (const family of ["law", "journal", "tax"] as const) {
+      for (const family of ["law", "journal", "tax", "ambiguous", "markup"] as const) {
         it.effect(
           `replays the original ${family} entry on ${kind}`,
           () => replayCitationCanonicalExtraction(kind, 0, 1, family),
           { timeout: 180000 }
         );
       }
+      it.effect(
+        `removes the original unresolved Johnson ambiguity on ${kind}`,
+        () => replayCitationCanonicalExtraction(kind, 10, 1, "ambiguous"),
+        { timeout: 180000 }
+      );
     }
   }
 );

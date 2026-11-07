@@ -62,6 +62,7 @@ const Input = S.Struct({
   kwargs: S.Struct({
     plain_text: S.optionalKey(S.String),
     markup_text: S.optionalKey(S.String),
+    remove_ambiguous: S.optionalKey(S.Boolean),
     clean_steps: S.Literals(["html", "inline_whitespace", "all_whitespace"]).pipe(S.Array, S.optionalKey),
   }),
   tokenizer: S.Struct({ tokenizer: S.tag("Tokenizer") }),
@@ -100,6 +101,8 @@ const families = {
   law: { method: "test_find_law_citations", count: 10 },
   journal: { method: "test_find_journal_citations", count: 6 },
   tax: { method: "test_find_tc_citations", count: 4 },
+  ambiguous: { method: "test_disambiguate_citations", count: 11 },
+  markup: { method: "test_markup_plaintiff_and_antecedent_guesses", count: 32 },
 } as const;
 /** Select original builtin count assertions, retaining one row per invocation.
  * The parallel attribute assertions and other tokenizer implementations remain
@@ -168,7 +171,7 @@ export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionT
       plain: html ? null : source,
       markup: html ? source : null,
       cleanSteps: row.input.kwargs.clean_steps ?? [],
-      removeAmbiguous: false,
+      removeAmbiguous: row.input.kwargs.remove_ambiguous ?? false,
       container: "list",
     });
     const result = yield* engine.extract(input);

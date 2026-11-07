@@ -323,7 +323,8 @@
     "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
-    "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts"
+    "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-markup-ambiguity.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

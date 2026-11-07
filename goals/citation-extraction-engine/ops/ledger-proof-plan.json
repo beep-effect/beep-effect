@@ -139,18 +139,18 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
-        "evidenceSha256": "cbf37c5ec07176f6c0b211460d6e2b951000d163f2ccd04877b781d1bbf18443",
+        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
             "name": "replays original basic and whitespace cases on",
-            "sha256": "6cb4a75e1d28e7dc78366ed17484e86096f088a16f793e66eeb7016f36df94d7"
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
           }
         ],
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "0996f650a110dfdc2ebc6870586b59bfb5a01554ddfe0a2e8799c884b8f630e2"
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -202,18 +202,18 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
-        "evidenceSha256": "cbf37c5ec07176f6c0b211460d6e2b951000d163f2ccd04877b781d1bbf18443",
+        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
             "name": "replays the original",
-            "sha256": "6cb4a75e1d28e7dc78366ed17484e86096f088a16f793e66eeb7016f36df94d7"
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
           }
         ],
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "0996f650a110dfdc2ebc6870586b59bfb5a01554ddfe0a2e8799c884b8f630e2"
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -257,7 +257,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
-        "evidenceSha256": "cbf37c5ec07176f6c0b211460d6e2b951000d163f2ccd04877b781d1bbf18443",
+        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
@@ -268,7 +268,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "0996f650a110dfdc2ebc6870586b59bfb5a01554ddfe0a2e8799c884b8f630e2"
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -316,18 +316,18 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
-        "evidenceSha256": "764db2749c080d02580d602ec43ca022db05e62f3201b7f3939c3ebe691c6229",
+        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
             "name": "replays original basic and whitespace cases on",
-            "sha256": "6cb4a75e1d28e7dc78366ed17484e86096f088a16f793e66eeb7016f36df94d7"
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
           }
         ],
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "0996f650a110dfdc2ebc6870586b59bfb5a01554ddfe0a2e8799c884b8f630e2"
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -379,18 +379,18 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
-        "evidenceSha256": "764db2749c080d02580d602ec43ca022db05e62f3201b7f3939c3ebe691c6229",
+        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
             "name": "replays the original",
-            "sha256": "6cb4a75e1d28e7dc78366ed17484e86096f088a16f793e66eeb7016f36df94d7"
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
           }
         ],
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "0996f650a110dfdc2ebc6870586b59bfb5a01554ddfe0a2e8799c884b8f630e2"
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -434,7 +434,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
-        "evidenceSha256": "764db2749c080d02580d602ec43ca022db05e62f3201b7f3939c3ebe691c6229",
+        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
@@ -445,7 +445,129 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "0996f650a110dfdc2ebc6870586b59bfb5a01554ddfe0a2e8799c884b8f630e2"
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_disambiguate_citations::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "7c2945d8fb4730b05a6ba92fdfda5bc35f5bdb3ca0099f5e44b1f002cfdb4626"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_markup_plaintiff_and_antecedent_guesses::tests/test_FindTest.py:76:20:caseDeclaration::1",
+          "observationSha256": "a787d18d214ca2e2d7ebb61c54f4f440b1676e9beec1518bff784129cdf99392"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_disambiguate_citations::tests/test_FindTest.py:84:24:caseDeclaration::1",
+          "observationSha256": "ade99b5b1a7772096b3ed13bd5843f119c7dff474f265780f4e57ac35214cb22"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_markup_plaintiff_and_antecedent_guesses::tests/test_FindTest.py:84:24:caseDeclaration::1",
+          "observationSha256": "b588df2e17030f77e5d225725f42c8f078336ce9ab94ec5558b8a2e77ba37279"
+        }
+      ],
+      "rationale": "Complete local replay of these exact original default-tokenizer assertions, preserving original ambiguity and HTML cleaning arguments. All parent/general obligations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-markup-ambiguity.md",
+        "evidenceSha256": "822d38abbd4b15a958621d2f6ff095690d5880ecdaebc1dd45ba42923cf3a7c1",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "replays the original",
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
+            "sha256": "2d1fad4abb4a15b162bc976508cdf71f714eae5048148f418704f14f047d1d62"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAttributes.fixtures.ts",
+            "sha256": "2590d5d219785fcfc7bee1701b4576d95355834162cce2821b7d28c03bced96b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceCorrection.ts",
+            "sha256": "a43388e766b205322187af1e086fcf93ca59f43c336f9c8d09c92a8f462353d7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/MetadataYear.ts",
+            "sha256": "2d813cb269af571dcd71ad7c6d72733a8e78eded1a5b3e1504875ede6ce46c87"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_disambiguate_citations::tests/test_FindTest.py:76:20:caseDeclaration::31",
+          "observationSha256": "6e6c2391c403ea0df796c73fd3cd9f497fcad8e643d734a4453c89cbe04b6d89"
+        }
+      ],
+      "rationale": "Complete local replay of these exact original default-tokenizer assertions, preserving original ambiguity and HTML cleaning arguments. All parent/general obligations remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-markup-ambiguity.md",
+        "evidenceSha256": "822d38abbd4b15a958621d2f6ff095690d5880ecdaebc1dd45ba42923cf3a7c1",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
+            "name": "removes the original unresolved Johnson ambiguity on",
+            "sha256": "f33a2199a0649229f7bc7a3c6f61f7b715e15b09159ed53d8a68eba6d5da4000"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
+            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",

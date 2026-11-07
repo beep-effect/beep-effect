@@ -39,3 +39,8 @@ all other tokenizer implementations, source/donor accounting, representation
 laws, safety/scaling and lifecycle requirements remain open. Server lint/types
 and the scoped Fallow audit pass with zero introduced findings. Full hosted
 acceptance is not claimed.
+
+The existing proof was replayed with the expanded source families: all sixteen
+tests pass in 171.44 seconds. References are refreshed to that tested version.
+See 2026-11-07-canonical-markup-ambiguity.md for the additional five cases and
+current scheduled corpus size.

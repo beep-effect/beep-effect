@@ -45,3 +45,8 @@ version; see 2026-11-07-canonical-attribute-proof.md for the additional criteria
 The six parallel attribute assertions now have their own explicit bindings in
 the newer attribute receipt. Parent capabilities and general model protocols
 remain open.
+
+The existing proof was replayed with the expanded source families: all sixteen
+tests pass in 171.44 seconds. References are refreshed to that tested version.
+See 2026-11-07-canonical-markup-ambiguity.md for the additional five cases and
+current scheduled corpus size.
