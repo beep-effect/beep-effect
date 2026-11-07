@@ -12,12 +12,14 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { acquireLibrary } from "./Library.acquire.ts";
-import { importLibraryResult } from "./Library.import.ts";
-import { inventoryLibrary } from "./Library.inventory.ts";
+import { LibraryBoxLive } from "./Library.box.ts";
+import { LibraryFirecrawlLive } from "./Library.firecrawl.ts";
+import { importLibraryRoutedResult } from "./Library.importMethods.ts";
 import { migrateLibrary } from "./Library.migrate.ts";
 import { renderLibraryOntology } from "./Library.ontology.ts";
 import { qualifyLibrary } from "./Library.qualify.ts";
 import { renderLibrary } from "./Library.render.ts";
+import { acquireLibraryBox, inventoryLibraryWithHops, libraryHopReport } from "./Library.routes.ts";
 import { LibraryInventoryOptions } from "./Library.schemas.ts";
 import { libraryStatus } from "./Library.status.ts";
 import { verifyLibrary } from "./Library.verify.ts";
@@ -31,15 +33,17 @@ type Provided<A> = Effect.Effect<Effect.Success<A>, Effect.Error<A>>;
  * @since 0.0.0
  */
 export type ResearchLibraryRequirements =
-  | Effect.Services<ReturnType<typeof inventoryLibrary>>
+  | Effect.Services<ReturnType<typeof inventoryLibraryWithHops>>
   | Effect.Services<ReturnType<typeof qualifyLibrary>>
   | Effect.Services<ReturnType<typeof acquireLibrary>>
-  | Effect.Services<ReturnType<typeof importLibraryResult>>
+  | Effect.Services<ReturnType<typeof importLibraryRoutedResult>>
   | Effect.Services<ReturnType<typeof verifyLibrary>>
   | Effect.Services<ReturnType<typeof renderLibrary>>
   | Effect.Services<ReturnType<typeof renderLibraryOntology>>
   | Effect.Services<ReturnType<typeof libraryStatus>>
-  | Effect.Services<ReturnType<typeof migrateLibrary>>;
+  | Effect.Services<ReturnType<typeof migrateLibrary>>
+  | Effect.Services<ReturnType<typeof acquireLibraryBox>>
+  | Effect.Services<ReturnType<typeof libraryHopReport>>;
 
 /**
  * Service contract for maintained library operations.
@@ -61,12 +65,12 @@ export class ResearchLibrary extends Context.Service<
     readonly inventory: (
       root: string,
       options: LibraryInventoryOptions
-    ) => Provided<ReturnType<typeof inventoryLibrary>>;
+    ) => Provided<ReturnType<typeof inventoryLibraryWithHops>>;
     readonly qualify: (...args: Parameters<typeof qualifyLibrary>) => Provided<ReturnType<typeof qualifyLibrary>>;
     readonly acquire: (...args: Parameters<typeof acquireLibrary>) => Provided<ReturnType<typeof acquireLibrary>>;
     readonly importResult: (
-      ...args: Parameters<typeof importLibraryResult>
-    ) => Provided<ReturnType<typeof importLibraryResult>>;
+      ...args: Parameters<typeof importLibraryRoutedResult>
+    ) => Provided<ReturnType<typeof importLibraryRoutedResult>>;
     readonly verify: (...args: Parameters<typeof verifyLibrary>) => Provided<ReturnType<typeof verifyLibrary>>;
     readonly render: (...args: Parameters<typeof renderLibrary>) => Provided<ReturnType<typeof renderLibrary>>;
     readonly renderOntology: (
@@ -74,6 +78,10 @@ export class ResearchLibrary extends Context.Service<
     ) => Provided<ReturnType<typeof renderLibraryOntology>>;
     readonly migrate: (...args: Parameters<typeof migrateLibrary>) => Provided<ReturnType<typeof migrateLibrary>>;
     readonly status: (...args: Parameters<typeof libraryStatus>) => Provided<ReturnType<typeof libraryStatus>>;
+    readonly acquireBox: (
+      ...args: Parameters<typeof acquireLibraryBox>
+    ) => Provided<ReturnType<typeof acquireLibraryBox>>;
+    readonly hops: (...args: Parameters<typeof libraryHopReport>) => Provided<ReturnType<typeof libraryHopReport>>;
   }
 >()($I`ResearchLibrary`) {}
 
@@ -81,7 +89,7 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
   const runtimeContext = yield* Effect.context<ResearchLibraryRequirements>();
   return ResearchLibrary.of({
     inventory: Effect.fn("ResearchLibrary.inventory")((root, options) =>
-      inventoryLibrary(LibraryInventoryOptions.make({ ...options, libraryRoot: root })).pipe(
+      inventoryLibraryWithHops(LibraryInventoryOptions.make({ ...options, libraryRoot: root })).pipe(
         Effect.provide(runtimeContext)
       )
     ),
@@ -92,7 +100,7 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
       acquireLibrary(...args).pipe(Effect.provide(runtimeContext))
     ),
     importResult: Effect.fn("ResearchLibrary.importResult")((...args) =>
-      importLibraryResult(...args).pipe(Effect.provide(runtimeContext))
+      importLibraryRoutedResult(...args).pipe(Effect.provide(runtimeContext))
     ),
     verify: Effect.fn("ResearchLibrary.verify")((...args) =>
       verifyLibrary(...args).pipe(Effect.provide(runtimeContext))
@@ -108,6 +116,12 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
     ),
     status: Effect.fn("ResearchLibrary.status")((...args) =>
       libraryStatus(...args).pipe(Effect.provide(runtimeContext))
+    ),
+    acquireBox: Effect.fn("ResearchLibrary.acquireBox")((...args) =>
+      acquireLibraryBox(...args).pipe(Effect.provide(runtimeContext))
+    ),
+    hops: Effect.fn("ResearchLibrary.hops")((...args) =>
+      libraryHopReport(...args).pipe(Effect.provide(runtimeContext))
     ),
   });
 });
@@ -125,5 +139,11 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
  * @since 0.0.0
  */
 export const ResearchLibraryLive = Layer.effect(ResearchLibrary, makeResearchLibrary()).pipe(
-  Layer.provide([N3TurtleCodecLive, ShaclValidationServiceLive, OxigraphSparqlQueryServiceLive])
+  Layer.provide([
+    N3TurtleCodecLive,
+    ShaclValidationServiceLive,
+    OxigraphSparqlQueryServiceLive,
+    LibraryFirecrawlLive,
+    LibraryBoxLive,
+  ])
 );
