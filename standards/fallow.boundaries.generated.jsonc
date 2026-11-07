@@ -2108,18 +2108,22 @@
       {
         "from": "@beep/documents-use-cases",
         "allow": [
+          "@beep/alchemy-postgres",
           "@beep/documents-domain",
           "@beep/documents-use-cases",
           "@beep/identity",
+          "@beep/pglite",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
+          "@beep/alchemy-postgres",
           "@beep/documents-domain",
           "@beep/documents-use-cases",
           "@beep/identity",
+          "@beep/pglite",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
