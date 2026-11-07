@@ -1605,6 +1605,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert only the documentation tag/lead normalization; this reopens the observed hosted since/blank findings and does not change runtime semantics.
 
+### Replay public resolution groups and require explicit identity ownership, 2026-11-07
+
+The public resolver replays all thirty original default operation groups across ninety-four mentions. This exposed omitted short-case selected editions, now authenticated as case editions, and an absent missing-page identity owner. The Layer now explicitly requires the existing identity factory at installation. Test identity values are controlled; production allocation and exact native hash proof remain open. Fourteen public/private regression tests pass; no source expectation or semantic waiver changes. See history/evidence/2026-11-07-public-resolution-groups.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the trusted short-case edition selection and required identity dependency together with their public regression; retain the original expected groups and unfinished production identity obligations.
+
 ### Resolve raw sources through verified receipt snapshots and frozen editions, 2026-11-07
 
 Raw-source resolution snapshots receipts before source work, reverifies source/anchors/engine IDs and shares captured frozen edition selection with extraction. Six final resolver tests, nine-test resolver/Bun/Node replay and four contracts pass, including exact receipt restoration and mutation/refusal recovery. Lint/types/declarations/laws/Fallow pass with zero introduced findings. Cleaner composition, final service/Layer and all full acceptance duties remain open. See history/evidence/2026-11-07-public-source-resolution.md.

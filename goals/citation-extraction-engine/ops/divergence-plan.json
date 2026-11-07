@@ -420,7 +420,10 @@
         "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
         "packages/law-practice/server/test/CitationEngineCorpus.fixtures.ts",
         "packages/law-practice/server/test/CitationEngineCorpus.test.ts",
-        "packages/law-practice/server/test/integration/CitationEngineCorpus.test.ts"
+        "packages/law-practice/server/test/integration/CitationEngineCorpus.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-public-resolution-groups.md",
+        "packages/law-practice/server/test/CitationEngineResolution.test.ts",
+        "packages/law-practice/server/test/CitationResolve.fixtures.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -777,7 +780,10 @@
         "packages/law-practice/server/src/internal/Citation/HtmlTagGeometry.ts",
         "packages/law-practice/server/test/CitationSpanOffsets.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/span-offsets.json",
-        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-05-html-tag-geometry.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-public-resolution-groups.md",
+        "packages/law-practice/server/test/CitationEngineResolution.test.ts",
+        "packages/law-practice/server/test/CitationResolve.fixtures.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

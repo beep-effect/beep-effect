@@ -288,7 +288,10 @@
     "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
     "packages/law-practice/server/test/CitationEngineCorpus.fixtures.ts",
     "packages/law-practice/server/test/CitationEngineCorpus.test.ts",
-    "packages/law-practice/server/test/integration/CitationEngineCorpus.test.ts"
+    "packages/law-practice/server/test/integration/CitationEngineCorpus.test.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-public-resolution-groups.md",
+    "packages/law-practice/server/test/CitationEngineResolution.test.ts",
+    "packages/law-practice/server/test/CitationResolve.fixtures.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

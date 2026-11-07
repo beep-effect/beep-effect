@@ -10,6 +10,7 @@ import * as S from "effect/Schema";
 import { CitationAnnotationEntryConfiguration } from "../internal/Citation/AnnotationEntry.ts";
 import { failCitationAnnotationBoundary } from "../internal/Citation/AnnotationFailure.ts";
 import { makeCitationAnnotationOperation } from "../internal/Citation/AnnotationOperation.ts";
+import { CitationMissingPageIdentityFactory } from "../internal/Citation/CallbackRuntimeIndex.ts";
 import { failCitationExtractionBoundary } from "../internal/Citation/EngineFailure.ts";
 import { CitationNativeProcessAdmission } from "../internal/Citation/NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "../internal/Citation/NativeProcess.ts";
@@ -22,7 +23,8 @@ import { CitationVerifiedExtractionConfiguration } from "../internal/Citation/Ve
 const $I = $LawPracticeServerId.create("CitationEngine/CitationEngine.layer");
 /** Trusted server configuration assembled from authenticated parser/helper/
  * vocabulary assets and an implementation artifact producer. Host layers supply
- * coherent shared admission, native transport, cleaner/value and source services.
+ * coherent shared admission, native transport, cleaner/value, source and
+ * missing-page semantic-object identity services.
  * These are installation inputs; runtime requests cannot replace them.
  * **Example** (Inspect explicit configuration ownership)
  * ```ts
@@ -60,6 +62,9 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
   // A host-provided shared owner is required, so private stage fallbacks cannot
   // silently create a second total native capacity in this composition.
   yield* CitationNativeProcessAdmission;
+  // Null-page case hashing uses semantic-object identity. Require the trusted
+  // owner at installation instead of refusing a valid citation on first use.
+  yield* CitationMissingPageIdentityFactory;
   const cleaner = yield* makeCitationSourceCleaning(limits, engineArtifact);
   const extraction = yield* makeCitationSourcePairDocument(
     limits,
@@ -85,7 +90,8 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
   });
 });
 /** Build the four real admitted operations with captured dependencies. The host
- * supplies source/vocabulary and coherent runtime services through Effect Layer
+ * supplies source/vocabulary, missing-page object identity and coherent runtime
+ * services through Effect Layer
  * composition; returned methods require no later caller Context. Configuration
  * is acquired when the Layer builds. Canonical retained-document/general-host
  * qualification, complete deployment attestation and final parity remain open.

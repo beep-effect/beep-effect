@@ -49,7 +49,8 @@ const artifact = Sha256Hex.make(Str.repeat(64)("a"));
  * @since 0.0.0
  */
 export const prepareCitationResolutionContext = Effect.fn("ResolveTest.prepare")(function* (
-  row: CitationResolutionContext
+  row: CitationResolutionContext,
+  engineArtifact: Sha256Hex = artifact
 ) {
   const digest = SourceTextDigest.make(
     `sha256:${yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(row.text))}`
@@ -77,7 +78,7 @@ export const prepareCitationResolutionContext = Effect.fn("ResolveTest.prepare")
       return yield* makeCitationMention({
         citation: mention.citation,
         anchor,
-        engineArtifact: artifact,
+        engineArtifact,
         components: [],
         footnote: O.none(),
         signal: O.none(),
@@ -87,5 +88,5 @@ export const prepareCitationResolutionContext = Effect.fn("ResolveTest.prepare")
     })
   );
   const policy = yield* defaultCitationEnginePolicy;
-  return { verifiedSource, mentions, editions: row.editions, engineArtifact: artifact, limits: policy.limits };
+  return { verifiedSource, mentions, editions: row.editions, engineArtifact, limits: policy.limits };
 });
