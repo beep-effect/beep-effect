@@ -1602,15 +1602,16 @@ describe("ciLaneStepsForTesting", () => {
     }
   });
 
-  it("builds the property lane with the 400-run floor, fixed seed, and cache-partitioning env", () => {
+  it("builds the property lane with the 400-run floor, fixed seed, continue-on-failure, and cache-partitioning env", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "property", prShapeOptions));
     expect(step.command).toBe("bunx");
     expect([...step.args]).toEqual([
       "turbo",
       "run",
       "test:property",
-      ...expectedTurboCacheArgs(["--concurrency=4", "--affected", "--summarize"]),
+      ...expectedTurboCacheArgs(["--concurrency=4", "--continue=dependencies-successful", "--affected", "--summarize"]),
       "--concurrency=4",
+      "--continue=dependencies-successful",
       "--affected",
       "--summarize",
     ]);

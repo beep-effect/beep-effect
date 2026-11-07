@@ -3,6 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -11,11 +12,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import { CitationMetadataStringFields } from "./MetadataComposition.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { concatCitationPythonRanges, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationResourceCitationCorrectionInput, makeCitationResourceCorrection } from "./ResourceCorrection.ts";
-import { CitationTextBudget, makeCitationTextBudget } from "./TextBudget.ts";
+import { makeCitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Rendering");

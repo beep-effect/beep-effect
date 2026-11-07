@@ -11,6 +11,13 @@ STATE="${VM_STATE:-$HOME/VMs/practice-gateway}"
 CONN="qemu:///session"
 v() { virsh -c "$CONN" "$@"; }
 
+# A beep-beginners (Milkman) proof run holds this lock from prepare to finish.
+# Its runner exports BEEP_VM_LOCK_HOLDER=milkman; everyone else waits.
+if [[ -f "$STATE/milkman.lock" && "${BEEP_VM_LOCK_HOLDER:-}" != milkman ]]; then
+  echo "a Milkman proof run holds $STATE/milkman.lock ($(cat "$STATE/milkman.lock")); try again after it finishes" >&2
+  exit 1
+fi
+
 [[ "$(v domstate "$NAME")" == "shut off" ]] || { echo "shut $NAME down first" >&2; exit 1; }
 DISK="$STATE/disk.qcow2"
 NVRAM="$(v dumpxml "$NAME" | sed -n 's:.*<nvram[^>]*>\(.*\)</nvram>.*:\1:p')"

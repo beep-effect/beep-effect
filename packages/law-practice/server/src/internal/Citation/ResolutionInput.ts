@@ -6,7 +6,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationMention, CitationMentionReceipt } from "@beep/law-practice-domain/values";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import { CitationEngineLimits, CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
@@ -77,7 +77,7 @@ export class CitationResolutionInputFailure extends S.TaggedError<
   { readonly brand: unique symbol }
 >($I`CitationResolutionInputFailure`)(
   "CitationResolutionInputFailure",
-  { reason: Reason },
+  { reason: Reason, limit: S.optionalKey(CitationSafetyBudget) },
   $I.annoteError<CitationResolutionInputFailure>("CitationResolutionInputFailure", {
     description: "Resolution input verification failed without caller data or nested causes.",
   })
@@ -95,6 +95,10 @@ export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")
 ): Effect.fn.Return<PreparedCitationResolution, CitationResolutionInputFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(InputType)(input).pipe(Effect.mapError(invalid));
   const source = decoded.verifiedSource;
+  if (A.length(decoded.mentions) > decoded.limits.mentions)
+    return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded", limit: "mentions" });
+  if (Str.length(source.sourceText) > decoded.limits.sourceUtf16)
+    return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded", limit: "sourceUtf16" });
   const json = yield* S.encodeEffect(Json)({
     source: source.source,
     engineArtifact: decoded.engineArtifact,
@@ -105,11 +109,6 @@ export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")
   const snapshot = yield* S.decodeEffect(Json)(json).pipe(Effect.mapError(invalid));
   const editions = HashMap.fromIterable(A.map(snapshot.editions, (edition) => Tuple.make(edition.edition, edition)));
   if (HashMap.size(editions) !== A.length(snapshot.editions)) return yield* invalid();
-  if (
-    A.length(snapshot.mentions) > snapshot.limits.mentions ||
-    Str.length(source.sourceText) > snapshot.limits.sourceUtf16
-  )
-    return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded" });
   const mentions = yield* Effect.forEach(
     snapshot.mentions,
     (mention) =>

@@ -1,14 +1,15 @@
 import { readCitationByteFrames } from "@beep/law-practice-server/internal/Citation/ByteFrames";
+import { preflightCitationNativeJson } from "@beep/law-practice-server/internal/Citation/NativeJson";
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { callCitationRegexRpc } from "@beep/law-practice-server/internal/Citation/RegexWorkerClient";
 import {
   CitationRegexMatchMode,
+  CitationRegexWorkerFailure,
   CitationRegexWorkerJob,
   decodeCitationRegexJob,
   encodeCitationRegexJob,
   makeCitationRegexJobPreparation,
   preflightCitationRegexJob,
-  preflightCitationRegexJson,
   readCitationRegexFrames,
 } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
 import {
@@ -435,8 +436,9 @@ it.effect("keeps escaped delimiters inside JSON strings and rejects an unmatched
     const text = yield* encodeDelimiterMessage({
       message: 'quote " slash \\ } : {',
     });
-    yield* preflightCitationRegexJson(utf8.encode(text), 1);
-    const failure = yield* preflightCitationRegexJson(utf8.encode("}"), 1).pipe(Effect.flip);
+    const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" });
+    yield* preflightCitationNativeJson(utf8.encode(text), 1, invalid);
+    const failure = yield* preflightCitationNativeJson(utf8.encode("}"), 1, invalid).pipe(Effect.flip);
     expect(failure).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
   })
 );

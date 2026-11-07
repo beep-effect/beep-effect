@@ -5,7 +5,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationEngineLimits,
+  CitationPythonUnicodeStorage,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -43,27 +47,6 @@ const Text = S.String.check(S.isMaxLength(maximum)).pipe(
     description: "Already-owned JavaScript Unicode text, bounded by the absolute intermediate ceiling.",
   })
 );
-const Bytes = S.Uint8Array.check(S.isMaxLength(maximum * 4)).pipe(
-  $I.annoteSchema("Bytes", {
-    description: "Immutable adapter-owned bytes, bounded by the derived native Unicode storage ceiling.",
-  })
-);
-/**
- * Exact little-endian canonical Python Unicode storage. This preserves adjacent
- * surrogate code points that a JavaScript string cannot distinguish from a
- * supplementary scalar. The receiver validates words, width and UTF-16 size.
- * @internal @category models @since 0.0.0
- */
-export class CitationPythonUnicodeStorage extends S.Opaque<
-  CitationPythonUnicodeStorage,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({ width: S.Literals([1, 2, 4]), bytes: Bytes }).pipe(
-    $I.annoteSchema("CitationPythonUnicodeStorage", {
-      description: "Explicit canonical one/two/four-byte source code-point storage; not a source-identity receipt.",
-    })
-  )
-) {}
 const CitationPythonUnicodeStorageType = S.toType(CitationPythonUnicodeStorage);
 
 /**
@@ -192,7 +175,9 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
       Effect.provideService(Clock.Clock, clock)
     );
   const byteHash = Effect.fn("Citation.pythonByteHash")(function* (input: unknown) {
-    const bytes = yield* S.decodeUnknownEffect(Bytes)(input).pipe(Effect.mapError(invalidInput));
+    const bytes = yield* S.decodeUnknownEffect(CitationPythonUnicodeStorage.fields.bytes)(input).pipe(
+      Effect.mapError(invalidInput)
+    );
     let index = 0;
     return yield* hash(bytes.length, () => readByte(bytes, index++));
   });

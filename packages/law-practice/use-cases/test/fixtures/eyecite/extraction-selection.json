@@ -1,0 +1,6052 @@
+{
+  "cases": [
+    {
+      "disambiguated": [],
+      "id": 0,
+      "input": [],
+      "name": "empty",
+      "sameList": true,
+      "selected": [],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 1,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullCaseCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 2,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullCaseCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 3,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullCaseCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 4,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullCaseCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 5,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullCaseCitation:IdCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 6,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullCaseCitation:SupraCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0],
+      "id": 7,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullCaseCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 8,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullCaseCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 9,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullLawCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 10,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullLawCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 11,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullLawCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 12,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullLawCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 13,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullLawCitation:IdCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 14,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullLawCitation:SupraCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0],
+      "id": 15,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullLawCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 16,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullLawCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 17,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullJournalCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 18,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullJournalCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 19,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullJournalCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 20,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullJournalCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 21,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullJournalCitation:IdCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 22,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullJournalCitation:SupraCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0],
+      "id": 23,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullJournalCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 24,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:FullJournalCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 25,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ShortCaseCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 26,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ShortCaseCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 27,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ShortCaseCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 28,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ShortCaseCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 29,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ShortCaseCitation:IdCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0],
+      "id": 30,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ShortCaseCitation:SupraCitation",
+      "sameList": false,
+      "selected": [0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0],
+      "id": 31,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ShortCaseCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 32,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ShortCaseCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 33,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:IdCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 34,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:IdCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 35,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:IdCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 36,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:IdCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 37,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:IdCitation:IdCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 38,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:IdCitation:SupraCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0],
+      "id": 39,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:IdCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 40,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:IdCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 41,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:SupraCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 42,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:SupraCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 43,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:SupraCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 44,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:SupraCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 45,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:SupraCitation:IdCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 46,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:SupraCitation:SupraCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0],
+      "id": 47,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:SupraCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 48,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:SupraCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [1],
+      "id": 49,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ReferenceCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 50,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ReferenceCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 51,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ReferenceCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 52,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ReferenceCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 53,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ReferenceCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 54,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ReferenceCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 55,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ReferenceCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 56,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:ReferenceCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 57,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:UnknownCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 58,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:UnknownCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 59,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:UnknownCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 60,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:UnknownCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 61,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:UnknownCitation:IdCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 62,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:UnknownCitation:SupraCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0],
+      "id": 63,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:UnknownCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 64,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 6]
+        }
+      ],
+      "name": "overlap:UnknownCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [1],
+      "id": 65,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullCaseCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 66,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullCaseCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 67,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullCaseCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 68,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullCaseCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 69,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullCaseCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 70,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullCaseCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 71,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullCaseCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 72,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullCaseCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 73,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullLawCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 74,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullLawCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 75,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullLawCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 76,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullLawCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 77,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullLawCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 78,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullLawCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 79,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullLawCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 80,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullLawCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 81,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullJournalCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 82,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullJournalCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 83,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullJournalCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 84,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullJournalCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 85,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullJournalCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 86,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullJournalCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 87,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullJournalCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 88,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:FullJournalCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 89,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ShortCaseCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 90,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ShortCaseCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 91,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ShortCaseCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 92,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ShortCaseCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 93,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ShortCaseCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 94,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ShortCaseCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 95,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ShortCaseCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 96,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": true,
+          "id": 0,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ShortCaseCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 97,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:IdCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 98,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:IdCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 99,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:IdCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 100,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:IdCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 101,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:IdCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 102,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:IdCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 103,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:IdCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 104,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:IdCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 105,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:SupraCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 106,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:SupraCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 107,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:SupraCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 108,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:SupraCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 109,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:SupraCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 110,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:SupraCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 111,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:SupraCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 112,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:SupraCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 113,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ReferenceCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 114,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ReferenceCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 115,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ReferenceCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 116,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ReferenceCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 117,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ReferenceCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 118,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ReferenceCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 119,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ReferenceCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 120,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:ReferenceCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 121,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:UnknownCitation:FullCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 122,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:UnknownCitation:FullLawCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 123,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:UnknownCitation:FullJournalCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 124,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:UnknownCitation:ShortCaseCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 125,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:UnknownCitation:IdCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 126,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:UnknownCitation:SupraCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 127,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:UnknownCitation:ReferenceCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 128,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "duplicate:UnknownCitation:UnknownCitation",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 129,
+      "input": [
+        {
+          "fullSpan": [0, 2],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [2, 4],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        }
+      ],
+      "name": "boundaries:(0, 2, 2, 4)",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1],
+      "id": 130,
+      "input": [
+        {
+          "fullSpan": [0, 0],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [0, 0]
+        },
+        {
+          "fullSpan": [0, 0],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [0, 0]
+        }
+      ],
+      "name": "boundaries:(0, 0, 0, 0)",
+      "sameList": false,
+      "selected": [1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 131,
+      "input": [
+        {
+          "fullSpan": [-2, 1],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [-2, 1]
+        },
+        {
+          "fullSpan": [0, 3],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [0, 3]
+        }
+      ],
+      "name": "boundaries:(-2, 1, 0, 3)",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [1, 0],
+      "id": 132,
+      "input": [
+        {
+          "fullSpan": [4, 2],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [4, 2]
+        },
+        {
+          "fullSpan": [1, 6],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [1, 6]
+        }
+      ],
+      "name": "boundaries:(4, 2, 1, 6)",
+      "sameList": false,
+      "selected": [1, 0],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 133,
+      "input": [
+        {
+          "fullSpan": [0, 6],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [0, 6]
+        },
+        {
+          "fullSpan": [2, 3],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 3]
+        }
+      ],
+      "name": "boundaries:(0, 6, 2, 3)",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 134,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 4]
+        },
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [1, 2]
+        }
+      ],
+      "name": "stable-full-span-tie",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [2, 1],
+      "id": 135,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [1, 2]
+        },
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 4]
+        },
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 2,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [1, 2]
+        }
+      ],
+      "name": "last-value-first-slot",
+      "sameList": false,
+      "selected": [2, 1],
+      "warnings": [[2, 1]]
+    },
+    {
+      "disambiguated": [2],
+      "id": 136,
+      "input": [
+        {
+          "fullSpan": [0, 8],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 9],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [2, 4]
+        },
+        {
+          "fullSpan": [2, 10],
+          "hasEdition": false,
+          "id": 2,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [4, 6]
+        }
+      ],
+      "name": "reference-chain",
+      "sameList": false,
+      "selected": [2],
+      "warnings": []
+    },
+    {
+      "disambiguated": [1, 3, 4, 5, 6, 7],
+      "id": 137,
+      "input": [
+        {
+          "fullSpan": [0, 2],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "FullCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [4, 6],
+          "hasEdition": true,
+          "id": 1,
+          "kind": "FullLawCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [4, 6]
+        },
+        {
+          "fullSpan": [8, 10],
+          "hasEdition": false,
+          "id": 2,
+          "kind": "FullJournalCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [8, 10]
+        },
+        {
+          "fullSpan": [12, 14],
+          "hasEdition": true,
+          "id": 3,
+          "kind": "ShortCaseCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [12, 14]
+        },
+        {
+          "fullSpan": [16, 18],
+          "hasEdition": false,
+          "id": 4,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [16, 18]
+        },
+        {
+          "fullSpan": [20, 22],
+          "hasEdition": false,
+          "id": 5,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [20, 22]
+        },
+        {
+          "fullSpan": [24, 26],
+          "hasEdition": false,
+          "id": 6,
+          "kind": "ReferenceCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [24, 26]
+        },
+        {
+          "fullSpan": [28, 30],
+          "hasEdition": false,
+          "id": 7,
+          "kind": "UnknownCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [28, 30]
+        }
+      ],
+      "name": "mixed-edition-presence",
+      "sameList": false,
+      "selected": [0, 1, 2, 3, 4, 5, 6, 7],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 138,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:138",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 139,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "",
+            "width": 1
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:139",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 140,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "78",
+            "width": 1
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:140",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 141,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "636f6e7461696e7320782068657265",
+            "width": 1
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:141",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 142,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "6e6f206d61746368",
+            "width": 1
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:142",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 143,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "e90000004c75000000f6010078000000",
+            "width": 4
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "4c75000000f60100",
+            "width": 4
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:143",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 144,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "00f60100",
+            "width": 4
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "3dd800de",
+            "width": 2
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:144",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 145,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "3dd800de",
+            "width": 2
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "00f60100",
+            "width": 4
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:145",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": [[0, 1]]
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 146,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "3dd800de",
+            "width": 2
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "3dd8",
+            "width": 2
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:146",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": []
+    },
+    {
+      "disambiguated": [0, 1],
+      "id": 147,
+      "input": [
+        {
+          "fullSpan": [0, 9],
+          "hasEdition": false,
+          "id": 0,
+          "kind": "IdCitation",
+          "matched": {
+            "bytes": "78",
+            "width": 1
+          },
+          "parenthetical": {
+            "bytes": "616261626162",
+            "width": 1
+          },
+          "span": [0, 2]
+        },
+        {
+          "fullSpan": [1, 8],
+          "hasEdition": false,
+          "id": 1,
+          "kind": "SupraCitation",
+          "matched": {
+            "bytes": "61626162",
+            "width": 1
+          },
+          "parenthetical": null,
+          "span": [3, 5]
+        }
+      ],
+      "name": "parenthetical:147",
+      "sameList": false,
+      "selected": [0, 1],
+      "warnings": []
+    }
+  ],
+  "formatter": "Version: 2.5.6",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "parallel": [
+    {
+      "after": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": null,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 0,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": 1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    },
+    {
+      "after": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      },
+      "before": {
+        "defendant": {
+          "bytes": "446566",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 10,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "43757272656e74",
+          "width": 1
+        },
+        "year": 1999,
+        "yearText": {
+          "bytes": "31393939",
+          "width": 1
+        }
+      },
+      "previous": {
+        "defendant": {
+          "bytes": "",
+          "width": 1
+        },
+        "editionPresent": true,
+        "fullSpanEnd": 9,
+        "fullSpanStart": -1,
+        "plaintiff": {
+          "bytes": "5072696f72",
+          "width": 1
+        },
+        "year": 2000,
+        "yearText": {
+          "bytes": "32303030",
+          "width": 1
+        }
+      }
+    }
+  ],
+  "producerSha256": "b5ed0e1b3f65abc1e926d4c5e04c9c81ea791125e59ff4b59c1fa3ae4a5a3512",
+  "python": "3.11.15",
+  "schemaVersion": "citation-extraction-selection/v1",
+  "scope": "Direct unchanged built-in filtering, disambiguation and parallel methods; projected selection facts retain original object IDs. No full engine or mutable-host proof.",
+  "sources": {
+    "find.py": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d",
+    "helpers.py": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297",
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+  },
+  "versions": {
+    "courts-db": "0.10.22",
+    "eyecite": "2.7.6",
+    "regex": "2023.12.25",
+    "reporters-db": "3.2.53"
+  }
+}

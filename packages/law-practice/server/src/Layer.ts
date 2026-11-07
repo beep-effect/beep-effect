@@ -89,3 +89,14 @@ export const LawPracticeServerLive: Layer.Layer<
   Layer.provide(GuardedLangExtractLayer),
   Layer.provide(EpistemicServerLive)
 );
+
+/** Explicit citation engine configuration and captured live operation Layer.
+ * **Example** (Inspect the citation Layer factory)
+ * ```ts
+ * import { CitationEngineLive } from "@beep/law-practice-server/layer"
+ * console.log(typeof CitationEngineLive) // "function"
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export { CitationEngineConfiguration, CitationEngineLive } from "./CitationEngine/CitationEngine.layer.ts";

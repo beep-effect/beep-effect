@@ -1,86 +1,13 @@
-import { $LawPracticeServerId } from "@beep/identity/packages";
 import { makeCitationHtmlTagGeometry } from "@beep/law-practice-server/internal/Citation/HtmlTagGeometry";
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
-import {
-  CitationSpanDiffStep,
-  CitationSpanOffsetEntry,
-  CitationSpanOffsetSide,
-  makeCitationSpanOffsets,
-} from "@beep/law-practice-server/internal/Citation/SpanOffsets";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
+import { makeCitationSpanOffsets } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as S from "effect/Schema";
-import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
+import { readCitationSpanOffsetsCorpus as load } from "./CitationSpanOffsets.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
-import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
-
-const $I = $LawPracticeServerId.create("test/CitationSpanOffsets");
-const Native = CitationNativeUnicodeHex;
-const Tag = S.Struct({ text: Native, start: S.Natural, end: S.Natural });
-const Corpus = S.fromJsonString(
-  S.Struct({
-    schemaVersion: S.tag("citation-span-offsets/v1"),
-    oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
-    oracleTree: S.tag("a35a58fac03400f71a93a93485b77f1d56f2b02f"),
-    python: S.tag("3.11.15"),
-    dmp: S.tag("2.0.1"),
-    producerSha256: S.tag("056e2cead2d863ed14ac2b08a1c4e8f2974c6bc8162d1e5cfb982dea05bff955"),
-    maps: S.Array(
-      S.Struct({
-        id: S.Natural,
-        before: Native,
-        after: Native,
-        error: S.Null,
-        steps: S.Array(CitationSpanDiffStep),
-        entries: S.Array(CitationSpanOffsetEntry),
-        queries: S.Array(
-          S.Struct({
-            position: S.Int,
-            side: CitationSpanOffsetSide,
-            value: S.NullOr(S.Int),
-            error: S.NullOr(S.Literals(["IndexError"])),
-          })
-        ),
-      })
-    ).check(S.isBetweenLength(68, 68)),
-    documents: S.Array(
-      S.Struct({
-        plain: Native,
-        forwardMap: S.Natural,
-        backwardMap: S.Natural,
-        tags: S.Array(Tag),
-        queries: S.Array(S.Struct({ position: S.Int, tags: S.Array(Tag) })),
-        conversions: S.Array(S.Struct({ tag: Tag, text: Native, start: S.Int, end: S.Int })),
-      })
-    ).check(S.isBetweenLength(14, 14)),
-  })
-).pipe(
-  $I.annoteSchema("Corpus", {
-    description:
-      "Original constructor entries, all bisect observations and real HTML document geometry; diff generation is not target-qualified.",
-  })
-);
-const load = Effect.fn("SpanOffsetsTest.load")(function* () {
-  const corpus = yield* readCitationOracleFixture(
-    "span-offsets",
-    "d1f8800ef9c6b3730348c0f634d92d9e6c473a822ab72b8c933d57a67f030fd5"
-  ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
-  const limits = (yield* defaultCitationEnginePolicy).limits;
-  const input = yield* makeCitationRegexInput(limits);
-  const plans = yield* Effect.forEach(
-    corpus.maps,
-    Effect.fn("SpanOffsetsTest.preparePlan")(function* (row) {
-      const before = yield* input.prepareUnicode(row.before, () => Effect.void);
-      const after = yield* input.prepareUnicode(row.after, () => Effect.void);
-      return { before: before.layout, after: after.layout, steps: row.steps };
-    })
-  );
-  return { corpus, limits, plans };
-});
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff offsets and HTML geometry", (it) => {
   it.effect("preserves every original constructor entry and left/right lookup", () =>
@@ -102,7 +29,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
           count++;
         }
       }
-      expect(count).toBe(2222);
+      expect(count).toBe(2492);
     })
   );
   it.effect("finds unique emphasis matches and converts native spans from prepared original plans", () =>
@@ -131,8 +58,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
           conversions++;
         }
       }
-      expect(queries).toBe(312);
-      expect(conversions).toBe(14);
+      expect(queries).toBe(362);
+      expect(conversions).toBe(17);
     })
   );
   it.effect("preflights input/step budgets and owns map state after installation", () =>

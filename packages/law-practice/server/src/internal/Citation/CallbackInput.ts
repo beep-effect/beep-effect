@@ -2,14 +2,12 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import * as Effect from "effect/Effect";
-import { CitationCallbackFailure } from "./CallbackResource.ts";
+import { copyCitationCallbackFailure } from "./CallbackResource.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
 
-/** Verify once and translate only the closed input-failure reason.
+/** Verify once and preserve closed input-failure and actual budget metadata.
  * @internal @category operations @since 0.0.0
  */
 export const prepareCitationCallbackInput = Effect.fn("Citation.prepareCallbackInput")(function* (input: unknown) {
-  return yield* prepareCitationResolution(input).pipe(
-    Effect.mapError((error) => CitationCallbackFailure.make({ reason: error.reason }))
-  );
+  return yield* prepareCitationResolution(input).pipe(Effect.mapError(copyCitationCallbackFailure));
 });

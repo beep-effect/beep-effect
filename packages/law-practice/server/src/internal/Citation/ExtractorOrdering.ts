@@ -71,8 +71,8 @@ const fail = (reason: typeof Reason.Type) => CitationExtractorOrderingFailure.ma
 const invalidBindings = () => fail("invalid-bindings");
 const missing = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 const setFailure = (failure: CitationRuntimeDictionaryFailure) =>
-  failure.reason === "limit-exceeded"
-    ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternEvaluations" })
+  failure.reason === "limit-exceeded" && failure.limit !== undefined
+    ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: failure.limit })
     : fail("set-failed");
 
 /** Capture decoded trusted hash metadata and construct the source unfiltered
@@ -114,6 +114,8 @@ export const makeCitationExtractorOrdering = Effect.fn("Citation.makeExtractorOr
   const initial = yield* makeCitationRuntimeSet({
     entries: limits.patterns,
     iterations: limits.patternEvaluations,
+    entryLimit: "patterns",
+    iterationLimit: "patternEvaluations",
   }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison), Effect.mapError(setFailure));
   for (const id of unfiltered) {
     const key = yield* keyFor(id);

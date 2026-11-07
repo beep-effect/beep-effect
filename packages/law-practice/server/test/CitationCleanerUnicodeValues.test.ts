@@ -1,8 +1,8 @@
 import * as NodeURL from "node:url";
-import { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { makeCitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
+import { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";

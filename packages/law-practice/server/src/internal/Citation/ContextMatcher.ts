@@ -2,14 +2,13 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexSourceFlags } from "./RegexEngine.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
