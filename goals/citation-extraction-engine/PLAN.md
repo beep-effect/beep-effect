@@ -1683,6 +1683,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional private limit metadata and its producers/translators together, retaining source corpora and exact-category regression evidence without weakening any acceptance requirement.
 
+### Qualify all original edition-year assertions against authenticated production data, 2026-11-07
+
+Replay all eight original Edition.includes_year assertions through the existing production inference service using authenticated frozen editions and the captured Effect TestClock date. The retained test passes in 6.08 seconds; lint/types and Fallow pass. Bind only these exact original model-method cases as complete, without claiming whole-document extraction or a parent model capability. See history/evidence/2026-11-07-canonical-edition-years.md.
+
+Reverse: Preserve the original source calendar, actual edition references and assertion operands if date inference changes.
+
 ### Qualify original extraction observations through the public engine, 2026-11-07
 
 The focused public CitationEngine Layer replay now passes on Bun and Node across seven original documents and all eight canonical families, with independent kind/component and Unicode/HTML span comparisons. The unchanged full 36-document corpus is registered in hosted integration. Resolution completion is not independent group parity; metadata, retained-host, laws, safety and all source/donor obligations remain open. See history/evidence/2026-11-07-public-engine-corpus.md.

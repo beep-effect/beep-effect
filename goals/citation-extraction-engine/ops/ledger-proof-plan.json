@@ -646,6 +646,73 @@
           }
         ]
       }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::1",
+          "observationSha256": "a02fffe2e3e894cf82fb532fc2357d6595c787ac5ab7132e7ae0655778df99da"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::2",
+          "observationSha256": "c8160843d7f449729795abdc1e1080c73f58a138f92ec7b31b2b9706f2e562b2"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::3",
+          "observationSha256": "13d3ce3350d46d462eba8e00ee7ac1daeb7d737001ac94546a5ec0b24b1bc225"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::4",
+          "observationSha256": "16a86ac05ab05cf0213e14e6e9300aa4d0c136bad3ac5d68c2ea961ea37902ec"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::5",
+          "observationSha256": "817e3e1e36d5c07096264fbc287311419399633658d86e49b9da99fbc29c6ad7"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::6",
+          "observationSha256": "e308ed81dea952ad5e3017c15271fdfda4e139ffe5381d41f6f2f99dd67d04af"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::7",
+          "observationSha256": "13cdc8e38ad5c3b98dbeaa8c27d73b73527e6bdbd04c2be25af236dec00b0f15"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_date_in_editions::tests/test_FindTest.py:980:12:caseDeclaration::8",
+          "observationSha256": "98bbd779893a5ec01f99440faa0e32d8d91c964b89172bbbf3c3d1aefea973b5"
+        }
+      ],
+      "rationale": "Complete local replay of these exact original includes_year model-method assertions with authenticated edition payloads and the captured source calendar. This is the whole original assertion, not full document extraction or general model completion.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalEditionYears.test.ts",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-edition-years.md",
+        "evidenceSha256": "0f712c3553246426dfddb2c23f174b917696707fc249732f2ec5dd7cb81f5f7b",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalEditionYears.test.ts",
+            "name": "replays all eight original includes-year comparisons with authenticated edition payloads",
+            "sha256": "7258fcac305c7a7bbeced9f4f3875a2717ca986e9aa3880f514db468cf8c7917"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationFrozenEditions.fixtures.ts",
+            "sha256": "d5f7903a33c9f5715592de35f66423b6cd87dcae9177d00d7e76f25eb2b74fea"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/EditionInference.ts",
+            "sha256": "99425deda040da1e6102c0a625a5030c71a8554102610dab488ac7a9bca14539"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/FrozenEditions.ts",
+            "sha256": "5a75fd7614cb807528b3b8c097cb9be8b010f0635a5c4c7430f163bb7c8a152f"
+          }
+        ]
+      }
     }
   ]
 }
