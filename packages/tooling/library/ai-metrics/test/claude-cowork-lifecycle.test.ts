@@ -194,6 +194,63 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
 });
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
+  it.effect("bounded startup qualification does not consume the configured post-readiness listen window", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const startup = yield* Deferred.make<void>();
+      const ready = yield* Deferred.make<string, CoworkLifecycleError>();
+      let delayed = false;
+      const policy = CoworkLifecyclePolicy.make({ ...f.policy, listenMillis: 3000 });
+      const guarded = FileSystem.FileSystem.of({
+        ...fs,
+        open: Effect.fn("CoworkLifecycleTest.delayedInterpreter")((path, options) =>
+          fs.open(path, options).pipe(
+            Effect.map((file) =>
+              path !== policy.pythonExecutable
+                ? file
+                : {
+                    ...file,
+                    readAlloc: Effect.fn("CoworkLifecycleTest.delayedRead")((size) => {
+                      if (delayed) return file.readAlloc(size);
+                      delayed = true;
+                      return Deferred.succeed(startup, undefined).pipe(
+                        Effect.andThen(Effect.sleep("3 seconds")),
+                        Effect.andThen(file.readAlloc(size))
+                      );
+                    }),
+                  }
+            )
+          )
+        ),
+      });
+      const receiver = yield* makeCoworkLifecycleFixtureReceiver(policy).pipe(
+        Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
+      );
+      const receiving = yield* Effect.forkChild(
+        receiver.open().pipe(
+          Effect.tapError((error) => Deferred.fail(ready, error)),
+          Effect.flatMap((opened) => Deferred.succeed(ready, opened.socketPath).pipe(Effect.andThen(opened.accept))),
+          Effect.result,
+          Effect.provideService(FileSystem.FileSystem, guarded)
+        )
+      );
+      yield* Deferred.await(startup).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+      yield* TestClock.adjust("3 seconds");
+      const path = yield* Deferred.await(ready).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+      yield* TestClock.adjust("2500 millis");
+      const body = yield* encode(start);
+      const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
+      const projected = yield* coworkLifecycleFixtureCodecs.encodeEnvelope(
+        coworkLifecycleFixtureCodecs.makeEnvelope({ callback, occurrenceId: "late-in-configured-window" })
+      );
+      yield* f.ancestor.send(path, projected).pipe(TestClock.withLive);
+      const result = yield* Fiber.join(receiving).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+      const receipt = yield* Effect.fromResult(result);
+      expect(receipt.accepted).toBe(1);
+      expect((yield* f.journal.stats).pages).toBe(1);
+    })
+  );
   it.effect(
     "a stalled journal acknowledgement expires without a commit or durable ACK and removes the owned listener",
     () =>
@@ -239,7 +296,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         expect((yield* f.journal.stats).pages).toBe(0);
       })
   );
-  for (const fault of ["cwd", "runtime", "app-pid", "app-generation"]) {
+  for (const fault of ["cwd", "runtime", "app-pid", "app-generation", "startup-timeout", "listen-timeout"]) {
     it.effect(
       `synthetic observed Cowork ${fault} mismatch refuses without durable ACK and releases its helper port`,
       () =>
@@ -270,10 +327,13 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
             },
             callback: envelope,
           });
-          const output = Stream.concat(
-            Stream.fromEffect(Deferred.await(policySeen)).pipe(Stream.drain),
-            Stream.make(new TextEncoder().encode(`${ready}\n${observed}\n`))
-          );
+          const response =
+            fault === "startup-timeout"
+              ? Stream.never
+              : fault === "listen-timeout"
+                ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
+                : Stream.make(new TextEncoder().encode(`${ready}\n${observed}\n`));
+          const output = Stream.concat(Stream.fromEffect(Deferred.await(policySeen)).pipe(Stream.drain), response);
           const spawner = ChildProcessSpawner.make((command) =>
             Effect.gen(function* () {
               const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
@@ -316,12 +376,23 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
           const receiver = yield* makeCoworkLifecycleFixtureReceiver(f.policy).pipe(
             Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
           );
-          const result = yield* receiver.open().pipe(
-            Effect.flatMap((opened) => opened.accept),
-            Effect.result,
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          const running = yield* Effect.forkChild(
+            receiver.open().pipe(
+              Effect.flatMap((opened) => opened.accept),
+              Effect.result,
+              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+            )
           );
-          assertFailure(result, CoworkLifecycleError.make({ reason: "callback" }));
+          yield* Deferred.await(policySeen).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+          if (fault === "startup-timeout") yield* TestClock.adjust("10 seconds");
+          if (fault === "listen-timeout") yield* TestClock.adjust("32 seconds");
+          const result = yield* Fiber.join(running).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+          assertFailure(
+            result,
+            CoworkLifecycleError.make({
+              reason: fault === "startup-timeout" || fault === "listen-timeout" ? "transport" : "callback",
+            })
+          );
           expect(policyFrames).toBe(1);
           expect(acknowledgements).toBe(0);
           expect(releases).toBe(1);

@@ -97,49 +97,60 @@ export const makeLifecycleBridge = Effect.fn("AiMetrics.lifecycle.bridge")(funct
     const ready = yield* Deferred.make<void, CursorLifecycleError>();
     const work = Effect.scoped(
       Effect.gen(function* () {
-        yield* qualifySource(policy, sourceContract, helperSource);
-        yield* qualifyInterpreter(policy);
-        const input = yield* Queue.unbounded<Uint8Array>();
-        const encodedPolicy = yield* encodeJsonValue(publicPolicy);
-        yield* Queue.offer(input, new TextEncoder().encode(`${encodedPolicy}\n`));
-        const child = yield* ChildProcess.make(policy.pythonExecutable, ["-I", "-B", "-c", helperSource, socketPath], {
-          extendEnv: false,
-          stdin: Stream.fromQueue(input),
-          stderr: "ignore",
-          killSignal: socketPathOverride === undefined ? "SIGKILL" : "SIGTERM",
-          forceKillAfter: socketPathOverride === undefined ? undefined : 200,
-        });
-        let outputBytes = 0;
-        const next = yield* child.stdout.pipe(
-          Stream.mapEffect((chunk) => {
-            outputBytes += chunk.byteLength;
-            return outputBytes > 16384 ? Effect.fail(failure("kernel-binding")) : Effect.succeed(chunk);
-          }),
-          Stream.decodeText(),
-          Stream.splitLines,
-          Stream.rechunk(1),
-          Stream.toPull
-        );
-        const readiness = yield* next;
-        yield* decodeReady(readiness[0]).pipe(Effect.mapError(() => failure("kernel-binding")));
-        yield* Deferred.succeed(ready, undefined);
-        const message = yield* next;
-        const batch = yield* makeBatch(message[0]);
-        const receipt = yield* journal
-          .acceptBatch(batch)
-          .pipe(
-            Effect.timeoutOrElse({ duration: acknowledgementMillis, orElse: () => Effect.fail(failure("transport")) })
+        const { child, next } = yield* Effect.gen(function* () {
+          yield* qualifySource(policy, sourceContract, helperSource);
+          yield* qualifyInterpreter(policy);
+          const input = yield* Queue.unbounded<Uint8Array>();
+          const encodedPolicy = yield* encodeJsonValue(publicPolicy);
+          yield* Queue.offer(input, new TextEncoder().encode(`${encodedPolicy}\n`));
+          const child = yield* ChildProcess.make(
+            policy.pythonExecutable,
+            ["-I", "-B", "-c", helperSource, socketPath],
+            {
+              extendEnv: false,
+              stdin: Stream.fromQueue(input),
+              stderr: "ignore",
+              killSignal: socketPathOverride === undefined ? "SIGKILL" : "SIGTERM",
+              forceKillAfter: socketPathOverride === undefined ? undefined : 200,
+            }
           );
-        const acknowledgement = yield* encodeJsonValue({
-          receiptId: receipt.page.receiptId,
-          accepted: receipt.accepted,
-          rejected: receipt.rejected,
-        });
-        yield* Queue.offer(input, new TextEncoder().encode(`${acknowledgement}\n`));
-        if ((yield* child.exitCode) !== 0) return yield* failure("transport");
-        return receipt;
+          let outputBytes = 0;
+          const next = yield* child.stdout.pipe(
+            Stream.mapEffect((chunk) => {
+              outputBytes += chunk.byteLength;
+              return outputBytes > 16384 ? Effect.fail(failure("kernel-binding")) : Effect.succeed(chunk);
+            }),
+            Stream.decodeText(),
+            Stream.splitLines,
+            Stream.rechunk(1),
+            Stream.toPull
+          );
+          const readiness = yield* next;
+          yield* decodeReady(readiness[0]).pipe(Effect.mapError(() => failure("kernel-binding")));
+          return { child, next };
+        }).pipe(Effect.timeoutOrElse({ duration: 10000, orElse: () => Effect.fail(failure("transport")) }));
+        // Qualification and helper startup have their own bound. The full receive/commit
+        // budget starts only after readiness, so hashing cannot shorten the listen window.
+        return yield* Effect.gen(function* () {
+          yield* Deferred.succeed(ready, undefined);
+          const message = yield* next;
+          const batch = yield* makeBatch(message[0]);
+          const receipt = yield* journal
+            .acceptBatch(batch)
+            .pipe(
+              Effect.timeoutOrElse({ duration: acknowledgementMillis, orElse: () => Effect.fail(failure("transport")) })
+            );
+          const acknowledgement = yield* encodeJsonValue({
+            receiptId: receipt.page.receiptId,
+            accepted: receipt.accepted,
+            rejected: receipt.rejected,
+          });
+          yield* Queue.offer(input, new TextEncoder().encode(`${acknowledgement}\n`));
+          if ((yield* child.exitCode) !== 0) return yield* failure("transport");
+          return receipt;
+        }).pipe(Effect.timeoutOrElse({ duration: lifetimeMillis, orElse: () => Effect.fail(failure("transport")) }));
       })
-    ).pipe(Effect.timeoutOrElse({ duration: lifetimeMillis, orElse: () => Effect.fail(failure("transport")) }));
+    );
     const running = yield* Effect.forkChild(
       control.run(work).pipe(
         Effect.mapError(normalizeLifecycleFailure),
