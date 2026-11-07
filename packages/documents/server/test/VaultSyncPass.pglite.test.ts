@@ -16,6 +16,7 @@ import { VaultSyncPass, VaultSyncPassModel, VaultSyncPolicies } from "@beep/docu
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { BunServices } from "@effect/platform-bun";
 import { describe, expect, layer } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -27,6 +28,7 @@ import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as Scope from "effect/Scope";
+import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
 class PassScenario extends Domain.Model("VaultSync", {
@@ -60,7 +62,7 @@ describe("VaultSyncPass SQL durability", () => {
           yield* fs.makeDirectory(path.join(root, "folder"));
           yield* fs.writeFileString(path.join(root, "a.txt"), "synthetic root file");
           yield* fs.writeFileString(path.join(root, "folder", "file.txt"), "synthetic fixture");
-          const destinationId = V.DestinationId.make(`vault-${phase}`);
+          const destinationId = V.DestinationId.make(`documents_sync_destination_a${Str.replaceAll("-", "")(phase)}`);
           const reached = yield* Ref.make(false);
           const rootLayer = Layer.succeed(VaultSyncRoot, { resolve: Effect.fn("fixture")(() => Effect.succeed(root)) });
           const adapters = BoxMirrorLive.pipe(
@@ -167,11 +169,65 @@ describe("VaultSyncPass SQL durability", () => {
           const ackRows = yield* sql`SELECT seq FROM alchemy_aggregate_event
             WHERE model='VaultSync' AND aggregate='SyncItem' AND id=${fileId} AND tag='ItemPushed'`;
           expect(ackRows).toHaveLength(1);
+          // D17 F1: command ids carry opaque ids only, never a vault path.
+          const commandIds = yield* sql<{ readonly command_id: string }>`SELECT command_id
+            FROM alchemy_aggregate_event WHERE model='VaultSync' AND command_id LIKE ${`${phase}/%`}`;
+          expect(commandIds.length).toBeGreaterThan(0);
+          const leaked = A.filter(commandIds, (row) =>
+            A.some(["file.txt", "a.txt", "folder"], (part) => Str.includes(part)(row.command_id))
+          );
+          expect(leaked).toEqual([]);
           const again = yield* Context.get(fresh, VaultSyncPass).start(phase, { destinationId });
           const repeated = yield* again.result;
           expect(repeated).toEqual(result);
         })
       );
     }
+    it.effect("records push and poll failures, and skips a paused destination without Box calls", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixtures = yield* DmsMirrorFixtureLayer.pipe(Layer.fresh, Layer.build);
+        const fixture = Context.get(fixtures, DmsMirrorFixtureHandle);
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* fs.writeFileString(path.join(root, "a.txt"), "synthetic failing file");
+        const rootLayer = Layer.succeed(VaultSyncRoot, { resolve: Effect.fn("fixture")(() => Effect.succeed(root)) });
+        const adapters = BoxMirrorLive.pipe(
+          Layer.provide(Layer.succeedContext(fixtures)),
+          Layer.provide(
+            Layer.mergeAll(
+              rootLayer,
+              Layer.succeed(BoxMirrorEvidence, { lookup: Effect.fn("fixture")(() => Effect.succeedNone) })
+            )
+          )
+        );
+        const runtime = yield* PassScenario.layer(Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive)).pipe(
+          Layer.provide(adapters),
+          Layer.provide(rootLayer),
+          Layer.provide(AlchemyPostgres.layer()),
+          Layer.fresh,
+          Layer.build
+        );
+        const destinations = Context.get(runtime, V.SyncDestination);
+        const failing = V.DestinationId.make("documents_sync_destination_afailing");
+        yield* destinations.send(failing, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "failing" }));
+        yield* fixture.failNext("uploadFile", false);
+        yield* fixture.failNext("pollEvents", true);
+        const failed = yield* Context.get(runtime, VaultSyncPass).start("failing-pass", { destinationId: failing });
+        const failedResult = yield* failed.result.pipe(Effect.timeout("20 seconds"));
+        expect(failedResult).toEqual({ operationsSucceeded: 0, conflicts: 0 });
+        const state = yield* destinations.state(failing);
+        expect(state._tag === "Registered" ? state.cursorError : null).not.toBeNull();
+        const paused = V.DestinationId.make("documents_sync_destination_apaused");
+        yield* destinations.send(paused, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "paused" }));
+        yield* destinations.send(paused, V.PauseDestination.make({}));
+        const before = yield* fixture.counts;
+        const skipped = yield* Context.get(runtime, VaultSyncPass).start("paused-pass", { destinationId: paused });
+        const skippedResult = yield* skipped.result.pipe(Effect.timeout("20 seconds"));
+        expect(skippedResult).toEqual({ operationsSucceeded: 0, conflicts: 0 });
+        const after = yield* fixture.counts;
+        expect(after).toEqual(before);
+      })
+    );
   });
 });

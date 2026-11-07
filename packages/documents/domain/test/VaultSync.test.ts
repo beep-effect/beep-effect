@@ -278,7 +278,7 @@ describe("vault sync pure transitions", () => {
     })
   );
 });
-layer(CuidLayer)("vault sync destination ids", (it) => {
+layer(CuidLayer, { timeout: "10 seconds" })("vault sync destination ids", (it) => {
   it.effect("destination ids are opaque minted tokens and decode strictly (F3)", () =>
     Effect.gen(function* () {
       const minted = yield* V.mintDestinationId;

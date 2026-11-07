@@ -10,14 +10,16 @@ import { BoxMirror } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { BunServices } from "@effect/platform-bun";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as Result from "effect/Result";
 
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer, DmsMirrorFixtureLayer);
 describe("BoxMirror durable intent receipts", () => {
@@ -33,7 +35,7 @@ describe("BoxMirror durable intent receipts", () => {
           const fixture = yield* DmsMirrorFixtureHandle;
           const before = yield* fixture.counts;
           const args = {
-            destinationId: V.DestinationId.make("adapter"),
+            destinationId: V.DestinationId.make("documents_sync_destination_aadapter"),
             operationId: V.OperationId.make(`documents_sync_operation_a${outcome}`),
             passId: "first",
             generation: 1,
@@ -53,14 +55,14 @@ describe("BoxMirror durable intent receipts", () => {
             )
           );
           const mirror = Context.get(context, BoxMirror);
-          const first = yield* Effect.result(mirror.uploadFile(args));
-          const second = yield* Effect.result(mirror.uploadFile({ ...args, passId: "another-runtime" }));
+          const first = yield* Effect.exit(mirror.uploadFile(args));
+          const second = yield* Effect.exit(mirror.uploadFile({ ...args, passId: "another-runtime" }));
           if (outcome === "completed") {
-            expect(Result.isSuccess(first)).toBe(true);
+            pipe(first, Exit.isSuccess, assertTrue);
             expect(second).toEqual(first);
           } else {
-            expect(Result.isFailure(first)).toBe(true);
-            expect(Result.isFailure(second)).toBe(true);
+            pipe(first, Exit.isFailure, assertTrue);
+            pipe(second, Exit.isFailure, assertTrue);
           }
           const counts = yield* fixture.counts;
           expect(counts.uploadFile - before.uploadFile).toBe(outcome === "stale" ? 0 : 1);
