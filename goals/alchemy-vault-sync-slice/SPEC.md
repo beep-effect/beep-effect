@@ -170,6 +170,42 @@ Lane `alchemy-postgres-views worktree`
 
 Reverse: Add fault-injection seams for the listed host/view/aggregate/projection fallbacks and raise the floor back in a baseline-only PR
 
+### Fold the remote cursor into the destination aggregate, 2026-11-07
+
+The current cursor scope is one workspace plus provider, so its position and poll failure state belong to SyncDestination. A failed poll preserves the last durable position.
+
+Reverse: Introduce a separately versioned cursor aggregate if account-wide polling becomes independent
+
+### Genesis creates one Box destination per legacy workspace, 2026-11-07
+
+Use the configured mirror root name, default beep-vault, and orgId from legacy rows. The cursor folds into this destination because its scope is workspace plus provider.
+
+Reverse: Change genesis mapping before import; no data is imported in PR 3a
+
+### Offline intents target renderer to sidecar in a later PR, 2026-11-07
+
+D8 applies to renderer to sidecar. PR 3a includes no offline queue or frontend work.
+
+Reverse: Expand the offline transport scope in the frontend PR
+
+### Preserve operation ids and schedule lease expiry and retry, 2026-11-07
+
+Existing public operation ids are stable. Retarget and squash are events. Leases carry holder, attempt token and expiresAt; non-rejecting scheduled commands implement expiry and retry backoff. Terminal failure and supersession are separate facts.
+
+Reverse: Introduce a versioned operation protocol and upcasters before changing identity
+
+### Reserve org-qualified destination names before registration and rename, 2026-11-07
+
+beta.85 has no Unique primitive. DestinationNameReservation uses orgId:normalizedName and rejects another destination. Policy order is claim, register or rename, then release the prior claim.
+
+Reverse: Replace the reservation aggregate when the pinned kernel provides Unique
+
+### Reserve remote event identities before recording public conflict streams, 2026-11-07
+
+ConflictEventRegistry is keyed by destination and atomically reserves remoteEventId. Its idempotent policy records SyncConflict at the existing public id. This preserves D14 while enforcing I8; review intent queues correction before the conflict closes. Lease expiry additionally uses a monotonic leaseEpoch separate from the resettable retry budget.
+
+Reverse: Replace the registry with a native uniqueness primitive while retaining conflict stream ids
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
