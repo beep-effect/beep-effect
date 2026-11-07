@@ -24,6 +24,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import { ArchiveRecord, RetentionReason } from "./Archive.schemas.ts";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Goals/Goals.schemas");
@@ -1798,6 +1799,8 @@ export class GoalManifest extends S.Opaque<GoalManifest, { readonly brand: uniqu
     opsScripts: S.Array(GoalOpsScript).pipe(S.optionalKey),
     researchReports: S.Array(S.String).pipe(S.optionalKey),
     researchReferences: S.Array(S.String).pipe(S.optionalKey),
+    archive: S.optionalKey(ArchiveRecord),
+    retentionReason: S.optionalKey(RetentionReason),
     provides: CapabilitySlugList,
     requires: CapabilitySlugList,
   })

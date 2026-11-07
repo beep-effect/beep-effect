@@ -33,7 +33,6 @@
       // vendored target is missing here. `skills-lock.json` is written only by
       // `beep skills`, whose rendering is the canonical byte form.
       "!.claude/skills/grill-me",
-      "!.claude/skills/oracle",
       "!.claude/skills/portless",
       "!.claude/skills/shadcn",
       "!.claude/skills/teach",

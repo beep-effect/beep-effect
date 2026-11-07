@@ -320,9 +320,6 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
     false,
     [block("qa-judge", onlyRoles(["qa.judge"]), false)]
   ),
-  target("repo.skills.oracle", "repo", ".claude/skills/oracle/SKILL.md", false, [
-    block("codex-heavy", onlyRoles(["codex.heavy"]), false),
-  ]),
 
   // ── Home doctrine (R7 + home sweep) ───────────────────────────────────────
   target("home.claude.doctrine", "home", "$HOME/.claude/CLAUDE.md", true, [
