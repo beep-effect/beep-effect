@@ -442,7 +442,8 @@
         "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
         "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
         "packages/law-practice/server/test/CitationCanonicalAnnotation.test.ts",
-        "packages/law-practice/use-cases/src/internal/citationOracleLedgers.ts"
+        "packages/law-practice/use-cases/src/internal/citationOracleLedgers.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-default-engine-corpus.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

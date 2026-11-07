@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
-import { buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
+import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationSemanticDocument } from "./CitationSemanticExtraction.fixtures.ts";
@@ -22,7 +22,8 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
 const sameSource = S.toEquivalence(SourceTextIdentity);
-/** Full and focused modes install every production pattern/helper. Only the
+/** Full and focused modes construct production owners through the default public
+ * Layer and install every production pattern/helper. Only the
  * replay document set differs. Compare source kinds/components, represented
  * metadata, candidate/selected editions, plain text and canonical spans
  * independently; document resolution is not claimed here as an
@@ -39,7 +40,7 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
   const registered = yield* Ref.make<ReadonlyArray<VerifiedSourceText>>([]);
   const resolver = SourceTextResolver.of({
     resolve: Effect.fn("EngineCorpusTest.resolve")(function* (request) {
-      const state = yield* setup.operation.snapshot;
+      const state = yield* operation.snapshot;
       expect(state).toMatchObject({ active: 1, queued: 0 });
       const sources = yield* Ref.get(registered);
       const proof = yield* Effect.fromOption(
@@ -49,7 +50,7 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
       return ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText });
     }),
   });
-  const { engine } = yield* buildCitationEngineFixture(installed, resolver);
+  const { engine, operation, admission } = yield* buildCitationDefaultEngineFixture(installed, resolver);
   const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   const register = Effect.fn("EngineCorpusTest.register")(function* (text: string) {
     const proof = yield* citationFixtureSourceProof(text);
@@ -106,5 +107,5 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
   for (const row of rows) yield* replayRow(row);
   expect(rows).toHaveLength(full ? 36 : 7);
   expect(HashSet.size(families)).toBe(8);
-  yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
+  yield* assertCitationWorkerCompositionObserved(operation, admission, setup.observed.snapshot);
 });

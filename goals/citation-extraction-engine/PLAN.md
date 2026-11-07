@@ -1597,6 +1597,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the per-report Schema policy snapshot and its mutation controls together; doing so reopens the demonstrated nested deadline alias and must not be described as captured-authority proof.
 
+### Exercise the default production Layer in the original extraction corpus, 2026-11-07
+
+The focused seven-document replay and hosted full 36-document Bun/Node replay now build the default public Layer. Resolver admission and final quiescence checks inspect the default owners, not the separately preassembled fixture owners. Original expectations and comparison scope remain unchanged. Full hosted replay and production identity remain unqualified; see history/evidence/2026-11-07-default-engine-corpus.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Restore the configured Layer only if default assembly cannot preserve the source observations; record the failure rather than change expectations.
+
 ### Implement source-derived builtin annotation diff in the existing worker, 2026-11-07
 
 Explicit useDmp=false selects CPython 3.11.15 SequenceMatcher semantics in the existing admitted Effect RPC diff child. All 4231 independent step observations, source bounds controls, 22 acknowledged Bun/Node child exits and public annotation outcomes pass. Nineteen canonical builtin SpanUpdater maps match all 328 queries. The lone-surrogate public source case remains a prerequisite refusal with native exact-string coverage; no fidelity waiver. Compact source rows, exact replay and eight corruption controls are retained. Focused package/type/declaration/law/Fallow gates pass without new findings or suppression. See history/evidence/2026-11-07-builtin-annotation-diff.md.
