@@ -59,6 +59,7 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type { NativeTraceBatch } from "@beep/repo-ai-metrics/native-trace";
 import type { ObservationControl } from "@beep/repo-ai-metrics/observation-control";
+import type { PlatformError } from "effect/PlatformError";
 
 const isPolicy = S.is(CoworkLifecyclePolicy);
 const json = S.fromJsonString(S.Unknown);
@@ -199,7 +200,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       const f = yield* fixture();
       const fs = yield* FileSystem.FileSystem;
       const startup = yield* Deferred.make<void>();
-      const ready = yield* Deferred.make<string, CoworkLifecycleError>();
+      const ready = yield* Deferred.make<string, CoworkLifecycleError | PlatformError>();
       let delayed = false;
       const policy = CoworkLifecyclePolicy.make({ ...f.policy, listenMillis: 3000 });
       const guarded = FileSystem.FileSystem.of({
