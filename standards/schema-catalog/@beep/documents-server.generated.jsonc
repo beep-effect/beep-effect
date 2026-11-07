@@ -6,6 +6,7 @@
   "entries": [
     {"file":"packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts","symbol":"FilingDecisionLlmConfigValue","kind":"struct-const","owner":"@beep/documents-server","identity":"FilingDecisionLlmConfigValue","description":"Resolved configuration value for LLM-backed document filing."},
     {"file":"packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts","symbol":"FilingTextExtractionInput","kind":"struct-const","owner":"@beep/documents-server","identity":"FilingTextExtractionInput","description":"Input supplied to the optional filing text-extraction seam."},
+    {"file":"packages/documents/server/src/aggregates/Sync/BoxMirror.ts","symbol":"BoxMirrorLive","kind":"codec","owner":"@beep/documents-server"},
     {"file":"packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts","symbol":"BoxMirrorConfigValue","kind":"struct-const","owner":"@beep/documents-server","identity":"BoxMirrorConfigValue","description":"Resolved configuration value for the Box DMS mirror adapter."},
     {"file":"packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts","symbol":"DmsMirrorFixtureCounts","kind":"struct-const","owner":"@beep/documents-server","identity":"DmsMirrorFixtureCounts","description":"Per-verb call counts observed by the fixture since construction."},
     {"file":"packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts","symbol":"DmsMirrorFixtureNode","kind":"struct-const","owner":"@beep/documents-server","identity":"DmsMirrorFixtureNode","description":"One node of the fixture's synthetic remote tree keyed by mirror-root-relative path."},
@@ -19,6 +20,7 @@
     {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"ObservedFolder","kind":"struct-const","owner":"@beep/documents-server","identity":"ObservedFolder","description":"A visible directory within the canonical vault root."},
     {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"VaultScanFileState","kind":"struct-const","owner":"@beep/documents-server","identity":"VaultScanFileState","description":"Tracked paths and unused move candidates for one local file reconciliation pass."},
     {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"VaultScanObservation","kind":"struct-const","owner":"@beep/documents-server","identity":"VaultScanObservation","description":"Files and folders observed by a safe vault scan."},
-    {"file":"packages/documents/server/src/aggregates/Sync/VaultSync.config.ts","symbol":"VaultSyncConfigValue","kind":"struct-const","owner":"@beep/documents-server","identity":"VaultSyncConfigValue","description":"Resolved configuration value for the vault sync engine."}
+    {"file":"packages/documents/server/src/aggregates/Sync/VaultSync.config.ts","symbol":"VaultSyncConfigValue","kind":"struct-const","owner":"@beep/documents-server","identity":"VaultSyncConfigValue","description":"Resolved configuration value for the vault sync engine."},
+    {"file":"packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts","symbol":"VaultSyncPassLive","kind":"struct-const","owner":"@beep/documents-server"}
   ]
 }

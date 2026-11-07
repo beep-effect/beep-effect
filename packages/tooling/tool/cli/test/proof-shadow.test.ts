@@ -211,6 +211,7 @@ describe("proof shadow mode", () => {
         lane("quality:coverage", "passed", O.some("digest-a")),
         lane("quality:check", "failed", O.some("digest-b")),
         lane("fallow:audit", "reused", O.some("digest-c")),
+        lane("lint:effect-vitest", "skipped", O.none()),
         lane("quality:docgen", "not-run-early-stop", O.none()),
         QualityTaskLaneRun.make({
           id: "quality:lint",

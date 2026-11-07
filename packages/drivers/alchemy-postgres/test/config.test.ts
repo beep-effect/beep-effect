@@ -2,13 +2,15 @@ import {
   AlchemyPostgresConfig,
   AlchemyPostgresError,
   AlchemyPostgresOperation,
-  AlchemyPostgresUnsupported,
   ProvenanceMapping,
+  ProvenanceMappings,
 } from "@beep/alchemy-postgres";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 describe("AlchemyPostgresConfig", () => {
   it.effect("fills constructor defaults", () =>
@@ -18,6 +20,7 @@ describe("AlchemyPostgresConfig", () => {
       expect(config.pollMillis).toBe(250);
       expect(config.deliveryBatchSize).toBe(100);
       assertNone(config.provenance);
+      expect(config.provenanceMappings).toEqual([]);
     })
   );
 
@@ -31,6 +34,43 @@ describe("AlchemyPostgresConfig", () => {
       const config = AlchemyPostgresConfig.make({ tablePrefix: "vault_", provenance: O.some(mapping) });
       expect(config.tablePrefix).toBe("vault_");
       expect(O.getOrThrow(config.provenance).contextKey).toBe("Documents/CurrentActor");
+    })
+  );
+});
+
+describe("provenance mappings", () => {
+  const actor = { contextKey: "Documents/CurrentActor", principalField: "principal", sourceKindField: "sourceKind" };
+  const session = {
+    contextKey: "Session/RequestContext",
+    principalField: "principalKey",
+    sourceKindField: "sourceKind",
+  };
+
+  it.effect("decodes one mapping per distinct context key", () =>
+    Effect.sync(() => {
+      const decoded = S.decodeResult(ProvenanceMappings)([actor, session]);
+      expect(Result.isSuccess(decoded)).toBe(true);
+    })
+  );
+
+  it.effect("rejects two mappings for the same context key", () =>
+    Effect.sync(() => {
+      const decoded = S.decodeResult(ProvenanceMappings)([actor, { ...session, contextKey: actor.contextKey }]);
+      expect(Result.isFailure(decoded)).toBe(true);
+    })
+  );
+
+  it.effect("rejects a config whose single mapping repeats a listed context key", () =>
+    Effect.sync(() => {
+      const mapping = ProvenanceMapping.make(actor);
+      expect(() =>
+        AlchemyPostgresConfig.make({ provenance: O.some(mapping), provenanceMappings: [mapping] })
+      ).toThrow();
+      const config = AlchemyPostgresConfig.make({
+        provenance: O.some(mapping),
+        provenanceMappings: [ProvenanceMapping.make(session)],
+      });
+      expect(config.provenanceMappings.length).toBe(1);
     })
   );
 });
@@ -53,18 +93,6 @@ describe("AlchemyPostgresError", () => {
       const error = AlchemyPostgresError.fromUnknown("listen");
       assertNone(error.table);
       assertNone(error.message);
-    })
-  );
-});
-
-describe("AlchemyPostgresUnsupported", () => {
-  it.effect("names the concept, the definition and when support lands", () =>
-    Effect.sync(() => {
-      const error = AlchemyPostgresUnsupported.make({ concept: "view", definition: "Statement" });
-      expect(error._tag).toBe("AlchemyPostgresUnsupported");
-      expect(error.message).toBe(
-        "view Statement cannot be hosted: @beep/alchemy-postgres does not support views until PR 2b"
-      );
     })
   );
 });

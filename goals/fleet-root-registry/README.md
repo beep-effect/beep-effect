@@ -34,10 +34,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement and P2 Verify complete (2026-11-06). P3 Yeet and P4 Close run
-in the final PR #2859 (supporting fix #2852), which carries the closeout
-reflection and proposes `completed-retained`; a packet-state PR adopts it
-after the merge.
+P1–P3 delivered: #2852 (origin canonicalization) and #2859 (roots list,
+registry, views) are on `main`. P4 Close runs in this docs-only re-final PR,
+(#2893), which carries the completion pointer because #2859 merged under S11
+([`history/evidence/2026-11-07-s11-merge-and-refinal.md`](./history/evidence/2026-11-07-s11-merge-and-refinal.md)).
+A packet-state PR adopts `completed-retained` after it merges.
 
 ## Latest Evidence
 

@@ -162,6 +162,72 @@ Lane `goals/alchemy-vault-sync-slice`
 
 Reverse: Re-point the spikes and driver at the reference checkout once the trio is bumped to a release that matches it (a named goal task per D11)
 
+### Driver coverage floor follows measured totals; InMemory fallbacks stay, 2026-11-07
+
+PR 2b measures @beep/alchemy-postgres at L/S/B/F 96.88/96.04/90.21/92.26 against the floor 98.36/97.72/86.95/95.53 set by #2831. The remaining units are fallbacks copied from Domain.InMemory and upstream Backfill (source or consumer gone from the model, scanner kick, relay fan-out, stored-job rebuilds, generation and duplicate guards, a schedule cancelled between due query and fire) that only run under faults, races or very large histories. Deleting faithful fallbacks to satisfy a number would make the driver diverge from the reference, so the floor for lines, statements and functions moves to the measured totals in a baseline-only PR first; branches stay at 86.95.
+
+Lane `alchemy-postgres-views worktree`
+
+Reverse: Add fault-injection seams for the listed host/view/aggregate/projection fallbacks and raise the floor back in a baseline-only PR
+
+### Fold the remote cursor into the destination aggregate, 2026-11-07
+
+The current cursor scope is one workspace plus provider, so its position and poll failure state belong to SyncDestination. A failed poll preserves the last durable position.
+
+Reverse: Introduce a separately versioned cursor aggregate if account-wide polling becomes independent
+
+### Genesis creates one Box destination per legacy workspace, 2026-11-07
+
+Use the configured mirror root name, default beep-vault, and orgId from legacy rows. The cursor folds into this destination because its scope is workspace plus provider.
+
+Reverse: Change genesis mapping before import; no data is imported in PR 3a
+
+### Hash destination names in reservation keys, 2026-11-07
+
+PII audit F2: the kernel always records aggregate ids and streams on spans, so an orgId:name key leaked destination names into domain.id, domain.stream, driver spans and SyncRuleViolation evidence. ReservationKey is now orgId:sha256hex(trimmed, lowercased name), built only by reservationKey in aggregates/VaultSync/Values.ts with a synchronous @noble/hashes SHA-256 (the PartyKey precedent), so pure decide and policy code hash in place. The schema admits only an integer, a colon and a 64-character lowercase hex digest. The name stays in reservation state and event payloads, which the kernel never puts on spans.
+
+Lane `goals/vault-sync-domain` · PR #2886
+
+Reverse: Restore the orgId:normalizedName key in Values.ts reservationKey and widen the ReservationKey schema back to NonEmptyString; replay any stored reservation streams under the old ids
+
+### Mint opaque destination ids, 2026-11-07
+
+PII audit F3: DestinationId is the SyncDestination aggregate id, View key, URL segment and saga key, and accepted any non-empty string such as a destination name. It is now the fixed prefix documents_sync_destination_ plus a CUID (the PublicEntityId format), checked by a template-literal pattern, so decode rejects names. mintDestinationId draws a fresh CUID; makeDestinationId wraps an existing one. The id lives in Values.ts without the frozen entity kit, since a destination has no SQL row id. The cutover genesis in PR 3b2 must mint one id per destination and never derive it from a name or path.
+
+Lane `goals/vault-sync-domain` · PR #2886
+
+Reverse: Widen DestinationId in Values.ts back to a branded NonEmptyString and drop mintDestinationId and makeDestinationId
+
+### Offline intents target renderer to sidecar in a later PR, 2026-11-07
+
+D8 applies to renderer to sidecar. PR 3a includes no offline queue or frontend work.
+
+Reverse: Expand the offline transport scope in the frontend PR
+
+### Preserve operation ids and schedule lease expiry and retry, 2026-11-07
+
+Existing public operation ids are stable. Retarget and squash are events. Leases carry holder, attempt token and expiresAt; non-rejecting scheduled commands implement expiry and retry backoff. Terminal failure and supersession are separate facts.
+
+Reverse: Introduce a versioned operation protocol and upcasters before changing identity
+
+### Reserve org-qualified destination names before registration and rename, 2026-11-07
+
+beta.85 has no Unique primitive. DestinationNameReservation is keyed by `orgId:sha256hex(normalizedName)` (see the "Hash destination names in reservation keys" decision) and rejects another destination. Policy order is claim, register or rename, then release the prior claim.
+
+Reverse: Replace the reservation aggregate when the pinned kernel provides Unique
+
+### Reserve remote event identities before recording public conflict streams, 2026-11-07
+
+ConflictEventRegistry is keyed by destination and atomically reserves remoteEventId. Its idempotent policy records SyncConflict at the existing public id. This preserves D14 while enforcing I8; review intent queues correction before the conflict closes. Lease expiry additionally uses a monotonic leaseEpoch separate from the resettable retry budget.
+
+Reverse: Replace the registry with a native uniqueness primitive while retaining conflict stream ids
+
+### Hold uncertain Box mutations behind durable intent receipts, 2026-11-07
+
+Commit an operation intent before calling Box and the acknowledgement before returning. An interrupted intent is looked up through BoxMirrorEvidence; insufficient evidence holds the operation without another Box mutation. The existing DmsMirrorBox port has no authoritative version or digest lookup, so the safe production lookup result is absent until that capability is provided. No fixture proves provider idempotency. Runtime composition must scope the existing Box mirror and root configuration to one destination.
+
+Reverse: Use verified provider idempotency while retaining receipt identities
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

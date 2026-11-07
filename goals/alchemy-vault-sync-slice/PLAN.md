@@ -55,4 +55,20 @@ Lane `alchemy-postgres-driver worktree`
 
 Reverse: Revert the PR 2a squash commit; no stored data exists yet
 
+### PR 2b: views, projections, streams, Backfill catch-up, upcasting, Cluster engine, real Postgres, 2026-11-07
+
+AlchemyPostgres.layer now provides Platform plus WorkflowEngine (effect/cluster ClusterWorkflowEngine over a SQL SingleRunner and Digest.layerWebCrypto), the same surface as Domain.InMemory. Views, projections and streams are hosted with InMemory's semantics; ModelHost.start/history run upstream Backfill over Postgres-backed Storage (advisory-locked KV) and Jobs. Upcasting: event classes may declare static schemaVersion (default 1) and static upcast(fromVersion, json), applied one version at a time on read. Saga crash-and-resume passes on PGlite. The conformance suite passes on Domain.InMemory and PGlite (79 tests) and on real Postgres 17 (32 integration scenarios, run against a throwaway container); the real-Postgres run found that @effect/sql-pg decodes int8 as native bigint, now accepted by the Int8 schema. Found along the way: in beta.85 Domain.InMemory, reading a view key before its first delivery keeps it out of the backfill directory, so a consumer added later skips that key; candidate for the D16 upstream offer.
+
+Lane `alchemy-postgres-views worktree`
+
+Reverse: Revert the PR 2b squash commit; driver tables are created idempotently and no product data uses them yet
+
+### PR 2b merged; PR 3a vault-sync domain, 2026-11-07
+
+PR 2b (#2863) merged 2026-11-07 as 97a7bb87f4: views, projections, streams, Backfill catch-up, upcasting at read, the Cluster workflow engine, real-Postgres integration, and an explicit-clock InMemory conformance suite. PR 3a lands the vault-sync domain: SyncDestination (with the folded cursor), DestinationNameReservation, SyncItem, SyncOperation (stable ids, lease with expiry and retry Deadlines), SyncConflict with a per-destination remote-event registry; the VaultSyncStatus, OpenConflicts, DestinationList and OperationQueue Views; the BoxMirror ExternalSystem contract; eight Policies. Tests run on Domain.InMemory and the @beep/alchemy-postgres PGlite layer. The saga, projections into the legacy tables, genesis, cutover and the Api follow in PR 3b and 3c.
+
+Lane `vault-sync-domain worktree`
+
+Reverse: Revert the PR 3a squash commit; no product data uses the new aggregates yet
+
 <!-- beep:decisions:end -->
