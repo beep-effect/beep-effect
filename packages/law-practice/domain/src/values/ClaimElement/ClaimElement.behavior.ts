@@ -15,6 +15,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
+import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -28,6 +29,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.ts";
+import { compileClaimClauseRoles } from "./ClaimClauseRole.behavior.ts";
+import { ClaimBoundRolePlan, ClaimRoleDecomposition } from "./ClaimClauseRole.model.ts";
+import { projectClaimRoleTerms } from "./ClaimClauseRole.projection.ts";
+import { compileClaimSourceElements } from "./ClaimClauseRole.structure.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
 import { ClaimInputDecomposition } from "./ClaimElement.inspection.model.ts";
@@ -39,12 +44,15 @@ import {
   isExplicitAbbreviatedHead,
   isPluralityReferenceHead,
   isSingleModifiedHead,
+  isSourcePrefixAbbreviatedHead,
   pluralityReferenceContent,
 } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
+import type { ClaimClauseRolePlan, ClaimSourceElementPlan } from "./ClaimClauseRole.model.ts";
 import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
 import type { ClaimInputCollection } from "./ClaimElement.input.model.ts";
 import type { ClaimElement, ClaimElementKind, ClaimTerm } from "./ClaimElement.model.ts";
+import type { ClaimLexicalEvidence, ClaimLexicalToken, PreparedClaimInspection } from "./ClaimLexicalEvidence.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimElement.behavior");
 
@@ -996,14 +1004,23 @@ const relationalNominalPlan = (
 };
 type LexicalGrammar = {
   readonly plan: NominalPlanner;
+  readonly functionalAt: (span: Span) => boolean;
+  readonly refineTerms: (span: Span, terms: ReadonlyArray<EncodedTerm>) => ReadonlyArray<EncodedTerm>;
   readonly ignoreAt: (
     tokens: ReadonlyArray<Span>,
     index: number,
     quotations: ReadonlyArray<Span>
   ) => O.Option<InspectionSourceRole>;
 };
-const strictLexicalGrammar: LexicalGrammar = { plan: legacyNominalPlan, ignoreAt: () => O.none() };
+const strictLexicalGrammar: LexicalGrammar = {
+  plan: legacyNominalPlan,
+  functionalAt: () => false,
+  ignoreAt: () => O.none(),
+  refineTerms: (_span, terms) => terms,
+};
 const inspectionLexicalGrammar: LexicalGrammar = {
+  functionalAt: () => false,
+  refineTerms: (_span, terms) => terms,
   plan: (tokens, index, headStart, quotations) =>
     O.getOrElse(possessiveNominalPlan(tokens, index, headStart, quotations), () =>
       O.getOrElse(relationalNominalPlan(tokens, headStart, quotations), () =>
@@ -1128,7 +1145,10 @@ const termsIn =
     });
     const tokens = tokensIn(entitySpan);
     const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan), grammar);
-    return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
+    return grammar.refineTerms(
+      entitySpan,
+      A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())))
+    );
   };
 
 const elementOf =
@@ -1140,7 +1160,8 @@ const elementOf =
       anchor: anchorOf(span),
       kind:
         kind !== "preamble-subject" &&
-        (A.some(tokens, (_, index) => isPredicateToken(tokens, index)) ||
+        (grammar.functionalAt(span) ||
+          A.some(tokens, (_, index) => isPredicateToken(tokens, index)) ||
           O.isSome(
             Str.match(
               /\b(?:that|which|wherein|configured|adapted|coupled|connected|mounted|attached|wired|facing|having|includes|comprises|is|are|extends|extending|for)\b/iu
@@ -1178,7 +1199,8 @@ const legacyAntecedentStrategy: AntecedentStrategy = {
 const antecedentEdges = (
   elements: ReadonlyArray<EncodedElement>,
   ancestors: ReadonlyArray<EncodedElement> = [],
-  strategy: AntecedentStrategy = legacyAntecedentStrategy
+  strategy: AntecedentStrategy = legacyAntecedentStrategy,
+  abbreviation: typeof isExplicitAbbreviatedHead = isExplicitAbbreviatedHead
 ): ReadonlyArray<EncodedEdge> => {
   const located = A.flatMap(A.appendAll(elements, ancestors), (element: EncodedElement) =>
     A.map(element.terms, (term) => ({
@@ -1241,7 +1263,7 @@ const antecedentEdges = (
               )
           );
       const exact = A.filter(eligible, ({ term }) => term.head === referring.term.head);
-      const abbreviated = A.filter(eligible, ({ term }) => isExplicitAbbreviatedHead(referring.term.head)(term.head));
+      const abbreviated = A.filter(eligible, ({ term }) => abbreviation(referring.term.head)(term.head));
       const counted = A.filter(eligible, ({ term }) => isCountedHead(referring.term.head)(term.head));
       const modified = A.filter(eligible, ({ term }) => isSingleModifiedHead(referring.term.head)(term.head));
       // A unique exact earlier mention is a structural back-reference, even if its
@@ -1588,38 +1610,57 @@ type StructuralReferenceStrategy = (
 ) => ReadonlyArray<EncodedEdge>;
 const legacyStructuralReferences: StructuralReferenceStrategy = (elements, ancestors) =>
   antecedentEdges(elements, ancestors);
-const inspectionStructuralReferences: StructuralReferenceStrategy = (
-  elements,
-  ancestors,
-  parents,
-  ancestorBindings
-) => {
-  // Foreign referring edges are evidence for binding an ancestor's owner only.
-  // The returned reference list is still produced for current elements alone.
-  const baseline = A.appendAll(antecedentEdges(elements, ancestors), ancestorBindings());
-  const { strategy, facts } = ownershipStrategy(elements, ancestors, baseline);
-  const references = antecedentEdges(elements, ancestors, strategy);
-  const dependencies = A.getSomes(
-    A.map(
-      A.filter(facts, (fact) => fact.reason === "part-location"),
-      (fact): O.Option<EncodedEdge> => {
-        const introduced = A.findFirst(
-          ownershipMentions(ancestors),
-          ({ path, term }) => mentionKey(path, term) === fact.owner && isIntroducingDeterminer(term.determiner)
-        );
-        const dependent = A.findFirst(elements, (element) =>
-          O.exists(A.head(element.terms), (term) => mentionKey(element.path, term) === fact.part)
-        );
-        return O.flatMap(O.all([introduced, dependent]), ([owner, element]) =>
-          O.exists(claimOfMention(owner.path), (number) => A.contains(parents, number))
-            ? O.some({ kind: "depends-on-element", dependent: element.path, ancestor: owner.path })
-            : O.none()
-        );
-      }
-    )
-  );
-  return A.appendAll(references, dependencies);
-};
+const inspectionStructuralReferencesFor =
+  (
+    abbreviation: typeof isExplicitAbbreviatedHead,
+    donorAllowed: (path: string, term: EncodedTerm) => boolean = () => true
+  ): StructuralReferenceStrategy =>
+  (elements, ancestors, parents, ancestorBindings) => {
+    // Foreign referring edges are evidence for binding an ancestor's owner only.
+    // The returned reference list is still produced for current elements alone.
+    const baseline = A.appendAll(
+      antecedentEdges(
+        elements,
+        ancestors,
+        { ...legacyAntecedentStrategy, allows: (_path, _term, path, term) => donorAllowed(path, term) },
+        abbreviation
+      ),
+      ancestorBindings()
+    );
+    const { strategy, facts } = ownershipStrategy(elements, ancestors, baseline);
+    const references = antecedentEdges(
+      elements,
+      ancestors,
+      {
+        ...strategy,
+        allows: (path, term, candidatePath, candidate) =>
+          donorAllowed(candidatePath, candidate) && strategy.allows(path, term, candidatePath, candidate),
+      },
+      abbreviation
+    );
+    const dependencies = A.getSomes(
+      A.map(
+        A.filter(facts, (fact) => fact.reason === "part-location"),
+        (fact): O.Option<EncodedEdge> => {
+          const introduced = A.findFirst(
+            ownershipMentions(ancestors),
+            ({ path, term }) => mentionKey(path, term) === fact.owner && isIntroducingDeterminer(term.determiner)
+          );
+          const dependent = A.findFirst(elements, (element) =>
+            O.exists(A.head(element.terms), (term) => mentionKey(element.path, term) === fact.part)
+          );
+          return O.flatMap(O.all([introduced, dependent]), ([owner, element]) =>
+            O.exists(claimOfMention(owner.path), (number) => A.contains(parents, number))
+              ? O.some({ kind: "depends-on-element", dependent: element.path, ancestor: owner.path })
+              : O.none()
+          );
+        }
+      )
+    );
+    return A.appendAll(references, dependencies);
+  };
+
+const inspectionStructuralReferences = inspectionStructuralReferencesFor(isExplicitAbbreviatedHead);
 
 const functionalEdges = (elements: ReadonlyArray<EncodedElement>): ReadonlyArray<EncodedEdge> =>
   A.map(
@@ -1842,12 +1883,12 @@ const colonNodesOf = (root: string, segments: ReadonlyArray<Span>): ReadonlyArra
     return ColonScopeState.make({ nodes, stack: endsWithColon(header) ? A.append(stack, nodes.length - 1) : stack });
   }).nodes;
 const scopedElementOf =
-  (claimText: string, root: string) =>
+  (claimText: string, root: string, grammar: LexicalGrammar = inspectionLexicalGrammar) =>
   (node: ColonScopeNode): EncodedElement => {
     const element = elementOf(
       claimText,
       node.parent === root ? "limitation" : "sub-limitation",
-      inspectionLexicalGrammar
+      grammar
     )(node.path, node.header);
     return node.group
       ? {
@@ -1857,27 +1898,31 @@ const scopedElementOf =
         }
       : element;
   };
-const inspectionTreeInput: typeof treeInput = (claim, parts) => {
-  const root = `${claim.claimNumber}`;
-  const segments = A.filter(
-    bodySegments(claim, parts.body, splitInspectionBody),
-    (span) => !transparentColonFrame(span)
-  );
-  const nodes = colonNodesOf(root, segments);
-  const elements = A.prepend(
-    A.map(nodes, scopedElementOf(claim.claimText, root)),
-    elementOf(
-      claim.claimText,
-      "preamble-subject",
-      inspectionLexicalGrammar
-    )(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
-  );
-  return assembleTree(
-    claim,
-    elements,
-    A.map(nodes, ({ path, parent }): EncodedEdge => ({ kind: "part-of", child: path, parent }))
-  );
-};
+const inspectionTreeInputFor =
+  (grammar: LexicalGrammar): typeof treeInput =>
+  (claim, parts) => {
+    const root = `${claim.claimNumber}`;
+    const segments = A.filter(
+      bodySegments(claim, parts.body, splitInspectionBody),
+      (span) => !transparentColonFrame(span)
+    );
+    const nodes = colonNodesOf(root, segments);
+    const elements = A.prepend(
+      A.map(nodes, scopedElementOf(claim.claimText, root, grammar)),
+      elementOf(
+        claim.claimText,
+        "preamble-subject",
+        grammar
+      )(root, pipe(parts.preamble, trimSpan, dropSuffix([","]), trimSpan))
+    );
+    return assembleTree(
+      claim,
+      elements,
+      A.map(nodes, ({ path, parent }): EncodedEdge => ({ kind: "part-of", child: path, parent }))
+    );
+  };
+
+const inspectionTreeInput = inspectionTreeInputFor(inspectionLexicalGrammar);
 
 const decodeTree = S.decodeEffect(ClaimElementTree);
 
@@ -2167,6 +2212,23 @@ export const decomposeClaim: {
   ) satisfies ClaimElementDecomposer
 );
 
+const inputDecomposition =
+  (
+    claims: ReadonlyArray<PatentClaim>,
+    construct: typeof inspectionTreeInput,
+    resolve: StructuralReferenceStrategy = inspectionStructuralReferences
+  ) =>
+  (qualification: ClaimInputQualification): Effect.Effect<ClaimInputDecomposition> => {
+    if (!ClaimInputQualification.guards["context-ready"](qualification))
+      return Effect.succeed(ClaimInputDecomposition.cases.unchecked.make({ qualification }));
+    return decomposeInContext(qualification.claim, claims, construct, resolve).pipe(
+      Effect.map((tree) => ClaimInputDecomposition.cases.decomposed.make({ qualification, tree })),
+      Effect.catchTag("ClaimDecompositionError", (cause) =>
+        Effect.succeed(ClaimInputDecomposition.cases["decomposition-failed"].make({ qualification, cause }))
+      )
+    );
+  };
+
 /**
  * Decompose every eligible source record while retaining every unchecked record.
  *
@@ -2193,15 +2255,214 @@ export const decomposeClaimInput = Effect.fn("ClaimElement.decomposeClaimInput")
 ): Effect.fn.Return<ReadonlyArray<ClaimInputDecomposition>> {
   const qualifications = yield* qualifyClaimInput(input);
   const claims = A.map(A.filter(qualifications, ClaimInputQualification.guards["context-ready"]), ({ claim }) => claim);
-  return yield* Effect.forEach(qualifications, (qualification): Effect.Effect<ClaimInputDecomposition> => {
-    if (!ClaimInputQualification.guards["context-ready"](qualification)) {
-      return Effect.succeed(ClaimInputDecomposition.cases.unchecked.make({ qualification }));
-    }
-    return decomposeInContext(qualification.claim, claims, inspectionTreeInput, inspectionStructuralReferences).pipe(
-      Effect.map((tree) => ClaimInputDecomposition.cases.decomposed.make({ qualification, tree })),
-      Effect.catchTag("ClaimDecompositionError", (cause) =>
-        Effect.succeed(ClaimInputDecomposition.cases["decomposition-failed"].make({ qualification, cause }))
+  return yield* Effect.forEach(qualifications, inputDecomposition(claims, inspectionTreeInput));
+});
+
+const sourcePlanFor = (
+  claim: PatentClaim,
+  plan: ClaimClauseRolePlan,
+  tokens: ReadonlyArray<ClaimLexicalToken>
+): O.Option<ClaimSourceElementPlan> => {
+  const parts = locateParts(claim);
+  if (O.isNone(parts)) return O.none();
+  const preamble = pipe(parts.value.preamble, trimSpan, dropSuffix([",", ":", ";"]), trimSpan);
+  return compileClaimSourceElements(
+    claim,
+    plan,
+    tokens,
+    TextAnchor.make(anchorOf(preamble)),
+    TextAnchor.make(anchorOf(parts.value.body))
+  );
+};
+const sourceCoreKey = (anchor: typeof TextAnchor.Encoded): string => `${anchor.startChar}:${anchor.endChar}`;
+
+const sourcePathLetterWidth = (siblings: number, charge: (amount: number) => boolean): number => {
+  let value = siblings;
+  let letters = 1;
+  while (value >= 26) {
+    if (!charge(2)) return -1;
+    value = Math.floor(value / 26) - 1;
+    letters++;
+  }
+  return letters;
+};
+const sourceElementPaths = (
+  structural: ClaimSourceElementPlan,
+  rootPath: string,
+  charge: (amount: number) => boolean
+): O.Option<HashMap.HashMap<number, string>> => {
+  let paths = HashMap.empty<number, string>();
+  let siblingCounts = HashMap.empty<number, number>();
+  for (const element of structural.elements) {
+    const parent = O.flatMap(element.parent, (ordinal) => HashMap.get(paths, ordinal));
+    const key = O.getOrElse(element.parent, () => 0);
+    const siblings = O.getOrElse(HashMap.get(siblingCounts, key), () => 0);
+    const letters = sourcePathLetterWidth(siblings, charge);
+    if (letters < 0) return O.none();
+    if (
+      !charge(
+        O.getOrElse(
+          O.map(parent, (path) => path.length),
+          () => rootPath.length
+        ) +
+          letters * letters +
+          4
+      )
+    )
+      return O.none();
+    const path = O.match(parent, { onNone: () => rootPath, onSome: (value) => `${value}.${letterSegment(siblings)}` });
+    paths = HashMap.set(paths, element.ordinal, path);
+    siblingCounts = HashMap.set(siblingCounts, key, siblings + 1);
+  }
+  // Pay the added successful Option carrier before allocation; no source allowance is restored.
+  return charge(1) ? O.some(paths) : O.none();
+};
+const projectedClaimInput = (
+  claim: PatentClaim,
+  structural: ClaimSourceElementPlan
+): O.Option<{
+  readonly input: ReturnType<typeof inspectionTreeInput>;
+  readonly opaqueNonDonors: HashSet.HashSet<string>;
+}> => {
+  let remaining = structural.remainingWork;
+  const charge = (amount: number): boolean => {
+    remaining -= amount;
+    return remaining >= 0;
+  };
+  // The sole private caller immediately supplies the immutable result of
+  // sourcePlanFor, whose compiler has already completed global ownership/DAG
+  // validation under this same remaining allowance. Projection charges only
+  // its actual path/term construction; external plans never enter this seam.
+  if (!charge(structural.elements.length * 16 + structural.roles.nominals.length + 32)) return O.none();
+  const rootPath = `${claim.claimNumber}`;
+  const paths = sourceElementPaths(structural, rootPath, charge);
+  if (O.isNone(paths)) return O.none();
+  const terms = O.all(A.map(structural.elements, (element) => projectClaimRoleTerms(element, charge)));
+  if (O.isNone(terms)) return O.none();
+  const elements = A.map(
+    structural.elements,
+    (element, index): EncodedElement => ({
+      path: O.getOrThrow(HashMap.get(paths.value, element.ordinal)),
+      anchor: element.extent,
+      kind: element.kind,
+      terms: O.getOrThrow(A.get(terms.value, index)),
+    })
+  );
+  const containment = A.flatMap(structural.elements, (element) =>
+    O.match(element.parent, {
+      onNone: () => [],
+      onSome: (ordinal): ReadonlyArray<EncodedEdge> => [
+        {
+          kind: "part-of",
+          child: O.getOrThrow(HashMap.get(paths.value, element.ordinal)),
+          parent: O.getOrThrow(HashMap.get(paths.value, ordinal)),
+        },
+      ],
+    })
+  );
+  let opaqueNonDonors = HashSet.empty<string>();
+  for (const selection of structural.roles.opaqueSelections) {
+    // Registry storage belongs to this successful immutable source projection.
+    // All public anchors/quotes were globally validated against this source.
+    // The immutable per-claim input registry therefore makes coordinates an
+    // exact source-core identity; a foreign quote cannot enter this seam.
+    if (!charge(selection.core.quote.length * 2 + 12)) return O.none();
+    opaqueNonDonors = HashSet.add(opaqueNonDonors, sourceCoreKey(selection.core));
+  }
+  return remaining >= 0 && A.isArrayNonEmpty(elements)
+    ? O.some({ input: assembleTree(claim, elements, containment), opaqueNonDonors })
+    : O.none();
+};
+const boundedSourceEvidence = (
+  prepared: PreparedClaimInspection,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+): ReadonlyArray<ClaimLexicalEvidence> => (evidence.length * prepared.qualifications.length <= 262_144 ? evidence : []);
+
+/**
+ * Decompose prepared records with atomic source roles, preserving unavailable records.
+ *
+ * **Example** (Retain decomposition while enhanced evidence is absent)
+ *
+ * ```ts
+ * import { ClaimInputCollection, ClaimInputRecord, prepareClaimInspection, decomposePreparedClaimRoles } from "@beep/law-practice-domain/values/ClaimElement"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const text = "A system comprising a sensor."
+ * const input = ClaimInputCollection.make({ sourceKey: "example", records: [ClaimInputRecord.cases.text.make({ sourceOrdinal: 1, numberText: O.some("1"), sourceText: text, canonicalText: text })] })
+ * const program = Effect.gen(function* () {
+ *   const prepared = yield* prepareClaimInspection(input)
+ *   const result = yield* decomposePreparedClaimRoles(prepared, [])
+ *   return { records: result.decompositions.length, enhancedPlans: result.plans.length }
+ * })
+ * Effect.runPromise(program).then(console.log) // { records: 1, enhancedPlans: 0 }
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePreparedRoles")(function* (
+  prepared: PreparedClaimInspection,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+) {
+  const claims = A.map(
+    A.filter(prepared.qualifications, ClaimInputQualification.guards["context-ready"]),
+    ({ claim }) => claim
+  );
+  let inputs = HashMap.empty<
+    number,
+    { readonly input: ReturnType<typeof inspectionTreeInput>; readonly opaqueNonDonors: HashSet.HashSet<string> }
+  >();
+  const plans = A.empty<ClaimBoundRolePlan>();
+  const boundedEvidence = boundedSourceEvidence(prepared, evidence);
+  for (const qualification of prepared.qualifications) {
+    if (!ClaimInputQualification.guards["context-ready"](qualification)) continue;
+    const claim = qualification.claim;
+    const facts = A.filter(
+      boundedEvidence,
+      (fact) =>
+        fact.sourceKey === prepared.input.sourceKey &&
+        fact.sourceOrdinal === qualification.record.sourceOrdinal &&
+        fact.qualifiedText === claim.claimText
+    );
+    const plan = O.flatMap(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
+      compileClaimClauseRoles(claim, fact)
+    );
+    const structure = O.flatMap(plan, (value) =>
+      O.flatMap(A.head(facts), (fact) =>
+        fact.status === "aligned" ? sourcePlanFor(claim, value, fact.tokens) : O.none()
       )
     );
-  });
+    const candidate = O.flatMap(structure, (value) => projectedClaimInput(claim, value));
+    if (O.isNone(structure) || O.isNone(candidate)) continue;
+    inputs = HashMap.set(inputs, claim.claimNumber, candidate.value);
+    plans.push(
+      ClaimBoundRolePlan.make({
+        claimNumber: claim.claimNumber,
+        plan: structure.value.roles,
+        sourcePlan: structure.value,
+      })
+    );
+  }
+  const construct: typeof inspectionTreeInput = (claim, parts) =>
+    O.getOrElse(
+      O.map(HashMap.get(inputs, claim.claimNumber), (projected) => projected.input),
+      () => inspectionTreeInput(claim, parts)
+    );
+  const enhancedRoots = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => `${claimNumber}`));
+  const sourceAbbreviation: typeof isExplicitAbbreviatedHead = (head) => (candidate) =>
+    isExplicitAbbreviatedHead(head)(candidate) || isSourcePrefixAbbreviatedHead(head)(candidate);
+  const resolve: StructuralReferenceStrategy = (elements, ancestors, parents, ancestorBindings) =>
+    inspectionStructuralReferencesFor(
+      O.exists(A.head(elements), ({ path }) => HashSet.has(enhancedRoots, path))
+        ? sourceAbbreviation
+        : isExplicitAbbreviatedHead,
+      (path, term) =>
+        !O.exists(
+          O.flatMap(claimOfMention(path), (number) => HashMap.get(inputs, number)),
+          (projected) => HashSet.has(projected.opaqueNonDonors, sourceCoreKey(term.anchor))
+        )
+    )(elements, ancestors, parents, ancestorBindings);
+  const decompositions = yield* Effect.forEach(prepared.qualifications, inputDecomposition(claims, construct, resolve));
+  return ClaimRoleDecomposition.make({ decompositions, plans });
 });

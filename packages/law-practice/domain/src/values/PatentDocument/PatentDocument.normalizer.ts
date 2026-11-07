@@ -10,7 +10,7 @@ import { Heading, Ol, renderPlainTextBlock } from "@beep/md";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { constant, flow, pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
@@ -30,8 +30,13 @@ import {
   PatentApplicationSection,
   PatentClaim,
   PatentClaims,
-  PatentClaimTransition,
 } from "./PatentDocument.model.ts";
+import {
+  parseClaimTransition,
+  transitionFromClaimText,
+  transitionPattern,
+  trimClaimTransitionPreamble,
+} from "./PatentDocument.transition.ts";
 import type { Block, Document } from "@beep/md";
 import type { ClaimInputCollection } from "../ClaimElement/ClaimElement.input.model.ts";
 import type { PatentApplicationSectionRole } from "./PatentDocument.model.ts";
@@ -41,8 +46,6 @@ const decodeUnknownPatentClaims = S.decodeUnknownEffect(PatentClaims);
 
 const $I = $LawPracticeDomainId.create("values/PatentDocument/PatentDocument.normalizer");
 const claimBlockPattern = /(?:^|\n)[\t ]*(\d+)\.[\t ]+(.+?)(?=\n[\t ]*\d+\.[\t ]+|\s*$)/gsu;
-const transitionPattern =
-  /\b(consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/giu;
 const claimReferenceMarkerPattern = /\bclaims?\b/iu;
 const claimReferencePattern = /(\d+)(?:\s*(?:-|–|—|through|thru|to)\s*(\d+))?/giu;
 // Only the contiguous claim-number expression belongs to the dependency list.
@@ -53,10 +56,7 @@ const parentClaimExpressionPattern =
 // a self/forward parent. Require an explicit descriptive boundary or the end.
 const parentClaimBoundaryPattern =
   /^(?:\s*(?:above\b\s*)?[,;:]?\s*(?:and\s+)?(?:(?:wherein|where|in\s+which|(?:(?:is|being)\s+)?characteri[sz]ed|comprising|comprises|comprised|including|includes|having)\b|(?:for|in)\b(?!\s+(?:claims?\b|\d))|(?:said|the)\s+(?!claims?\b)[\p{L}])|\s*(?:above\b\s*)?(?:[,;:]?\s*and\b\s*)?[.,;:]?\s*$)/iu;
-const ambiguousLexicalTransition = LiteralKit(["including", "having"]);
-const isAmbiguousLexicalTransition = S.is(ambiguousLexicalTransition);
 const isOrderedList = S.is(Ol);
-const ambiguousTransitionPrefixPattern = /\b(?:by|for|of|without)\s*$/iu;
 const MAX_PARENT_CLAIM_RANGE_CARDINALITY = 1024;
 
 const ClaimNumberFromString = S.FiniteFromString.pipe(S.decodeTo(PosInt));
@@ -343,72 +343,6 @@ const collectSectionDrafts = (document: Document): SectionDraftState =>
   );
 
 const parseClaimNumber = (value: string): O.Option<PosInt> => decodeClaimNumberFromStringOption(value);
-const parseClaimTransition: (value: string) => PatentClaimTransition = flow(
-  Str.toLowerCase,
-  Str.replace(/^(?:(?:(?:is|being)\s+)?characteri[sz]ed .+|in which(?: method)?|where)$/u, "wherein"),
-  Str.replace(/^(?:comprises|comprised of)$/u, "comprising"),
-  Str.replace(/^includes$/u, "including"),
-  // A source comma can introduce an implicit dependent limitation; the source
-  // remains unchanged while the existing transition field records its role.
-  Str.replace(/^,$/u, "wherein"),
-  S.decodeUnknownOption(PatentClaimTransition),
-  O.getOrThrow
-);
-
-const byMatchIndex = Order.mapInput(Num.Order, (match: RegExpMatchArray) =>
-  O.getOrElse(O.fromUndefinedOr(match.index), constant(0))
-);
-
-const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> => {
-  const matches = A.filter(A.fromIterable(Str.matchAll(transitionPattern)(claimText)), (match) => {
-    const transition = pipe(A.get(match, 0), O.getOrThrow, Str.toLowerCase);
-    const index = O.getOrElse(O.fromUndefinedOr(match.index), constant(0));
-    return (
-      !isAmbiguousLexicalTransition(transition) ||
-      O.isNone(Str.match(ambiguousTransitionPrefixPattern)(Str.slice(0, index)(claimText)))
-    );
-  });
-  const implicit = () =>
-    A.findFirst(A.fromIterable(Str.matchAll(/,(?=\s+(?:the|said|each|an?|operating)\b)/giu)(claimText)), (match) => {
-      const index = O.getOrElse(O.fromUndefinedOr(match.index), constant(0));
-      return (
-        O.isSome(
-          Str.match(/\bclaims?\s+\d+(?:(?:\s*,\s*|\s+(?:and|or|to|through)\s+)\d+)*\s*$/iu)(
-            Str.slice(0, index)(claimText)
-          )
-        ) &&
-        O.isSome(
-          Str.match(/\b(?:being|is|are|operating|operative|corresponding|performing)\b/iu)(
-            Str.slice(index + 1)(claimText)
-          )
-        )
-      );
-    });
-  // An eligible source comma competes with later lexical transitions: whichever starts
-  // first splits the claim, so a component "includes" cannot swallow the dependent limitation.
-  const first = pipe(A.getSomes([A.head(matches), implicit()]), A.sort(byMatchIndex), A.head);
-  const subject = first.pipe(
-    O.map((match) => Str.slice(0, match.index)(claimText)),
-    O.flatMap(
-      Str.match(/^(?:(?:an?|the)\s+)?(.+?)(?=\s+(?:for|of|with|according|as|to|designed|intended)\b|\s*\(\d|[,;:]|$)/iu)
-    ),
-    O.flatMap(A.get(1)),
-    O.map(flow(Str.trim, Str.toLowerCase))
-  );
-  const defining = A.findFirst(matches, (match) => {
-    const prefix = pipe(Str.slice(0, match.index)(claimText), Str.trim, Str.toLowerCase);
-    return (
-      O.isSome(Str.match(/^(?:(?:is|being)\s+)?characteri[sz]ed\b/iu)(match[0])) &&
-      (O.isSome(Str.match(/[,;]$/u)(prefix)) ||
-        O.exists(subject, (value) => Str.endsWith(` said ${value}`)(prefix) || Str.endsWith(` the ${value}`)(prefix)))
-    );
-  });
-  return O.exists(first, (match) => O.isSome(Str.match(/^(?:wherein|having|including)$/iu)(match[0]))) &&
-    O.isSome(defining)
-    ? defining
-    : first;
-};
-
 const isPriorClaimNumber = (currentClaimNumber: PosInt, candidate: PosInt): boolean =>
   Num.isLessThan(candidate, currentClaimNumber);
 
@@ -503,12 +437,7 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
   );
   const transition = parseClaimTransition(transitionMatch[0]);
   const transitionStart = pipe(O.fromUndefinedOr(transitionMatch.index), O.getOrThrow);
-  const preamble = pipe(
-    Str.slice(0, transitionStart)(claimText),
-    Str.trim,
-    Str.replace(/,?\s+further$/iu, ""),
-    Str.trim
-  );
+  const preamble = trimClaimTransitionPreamble(Str.slice(0, transitionStart)(claimText));
   const body = Str.trim(Str.slice(transitionStart + transitionMatch[0].length)(claimText));
   const bodyReference = Str.match(
     /\b(?:according to|as (?:recited|claimed|set forth) in|of)\s+claims?\s+\d+(?:\s*(?:-|–|—|through|to|and|or|,)\s*\d+)*/iu

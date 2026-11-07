@@ -1,0 +1,94 @@
+{
+  "familyId": "12447956-root-7",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "confidenceScope": "Structural labels and unsupported-source classifications only; positive-source eligibility is provisional.",
+  "verdict": "unresolved",
+  "reviewedClaimNumbers": [
+    7,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "resolvedClaimNumbers": [],
+  "resolvedLabelSetVerdict": "not-applicable-no-resolved-trees",
+  "familyCoverage": "unresolved",
+  "findings": [],
+  "unresolved": [
+    {
+      "claimNumber": 7,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 11,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 12,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 13,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 14,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 15,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 16,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 17,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 18,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    }
+  ],
+  "sourceEligibility": "provisional-pending-per-claim-quote-version-audit",
+  "audit": {
+    "resolvedTrees": 0,
+    "elements": 0,
+    "terms": 0,
+    "typedEdges": 0,
+    "allProposedElementAndTermUtf16SlicesVerified": true,
+    "allSelectedClaimsMatchNativeXml": true,
+    "claimsXmlSha256Matches": true,
+    "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending",
+    "positiveSourceCertification": "not-claimed"
+  },
+  "rationale": [
+    "All nine selected claims have intended characterized in that transitions outside PatentClaimTransition. Root7 earlier having a lid modifies an already described end-cap feature; using it as the main transition would hide source limitations and replace the stated boundary. Empty expected.json correctly records unresolved structural coverage, not a clean family.",
+    "Natural-language dependencies verified:11->7,12->11,13/14/15->7,16->12,17->16,18->17. Claim7 is the independent root. All selected native claim strings match prescribed source XML normalization.",
+    "Retained office action GSU9LW9JPPOPPY5 mentions selected7 and11-18, with end-cap tip/state/region/skirt passages. This is provisional association evidence only. Root7 has no exact original comparison; first OCR comparison reports17 source claims versus18 native claims, which requires source-version audit rather than assuming dates establish qualification."
+  ],
+  "sourceQualification": "This is structural-only review. Native XML supplies the exact label text; retained original comparisons are corroboration only. Dates and no-intervening-CLM assertions do not establish per-claim in-force correspondence or eliminate renumbering/version contradictions. Separate stronger source audit is pending; no source-certified positive acceptance is claimed.",
+  "independence": "No decomposer/policy implementation, rule fixtures, predictions or live reports read/run; no network. Helpers checked source normalization, hashes, existing selected UTF16 slices and opening inventories only.",
+  "acceptanceScope": "All unresolved claims remain visible in frozen coverage denominators. Structural acceptance of a resolved subset is not complete-family coverage, positive-source certification, attorney adjudication or corpus completion. Root schema/span checks remain separate."
+}

@@ -1,0 +1,156 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for changing a vehicle wheel held to the vehicle by nuts and retainer cleats comprising:
+<claim-text>using a mobile robot for removal and replacement of the wheel nuts and retainer cleats in combination with the use of a mobile mechanical wheel handler to grip and remove the wheel and to bring a replacement wheel into position before replacement of the wheel nuts and cleats by the robot.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. A method as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the vehicle handler is an operator driven vehicle fitted with wheel gripper jaws.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. A method as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref> or <claim-ref idref="CLM-00002">claim 2</claim-ref>, further comprising the step of laser scanning the wheel to identify the positions of the wheel nuts and retainer cleats and controlling operation of the robot in accordance with the positions so determined.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. A method as claimed in <claim-ref idref="CLM-00003">claim 3</claim-ref> wherein the robot moves nut and cleat removal tools sequentially to the determined positions of the nuts and cleats and manipulates those tools for removal and replacement of the nuts and cleats.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. A method as claimed in any one of the preceding claims wherein on removal each nut and cleat is deposited by the robot at an individual storage location unique to that nut or cleat and for replacement each nut and cleat is retrieved by the robot from the respective storage location.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A method as claimed in <claim-ref idref="CLM-00005">claim 5</claim-ref> wherein the storage locations for the nuts and cleats are provided by one or more storage nests.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A method for changing a vehicle wheel held to the vehicle by nuts and retainer cleats, comprising:
+<claim-text>laser scanning the wheel to identify the positions of the wheel nuts and retainer cleats;</claim-text>
+<claim-text>operating a mobile robot to remove the wheel nuts and retainer cleats;</claim-text>
+<claim-text>operating a mechanical wheel handler to remove the wheel and to replace it with a replacement wheel; and</claim-text>
+<claim-text>operating the mobile robot to replace the wheel retainer cleats and the nuts.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A method as claimed in <claim-ref idref="CLM-00007">claim 7</claim-ref> wherein the wheel handler is an operator driven vehicle fitted with wheel gripper jaws.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. A method as claimed in <claim-ref idref="CLM-00007">claim 7</claim-ref> or <claim-ref idref="CLM-00008">claim 8</claim-ref> wherein the laser scanning is performed by the mobile robot operating to manipulate a laser scanner tool.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A method as claimed in <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the mobile robot removes the wheel nuts and retainer cleats by manipulation of one or more removal tools in accordance with the positions of the nuts and cleats determined by the laser scanning.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method as claimed in <claim-ref idref="CLM-00010">claim 10</claim-ref> wherein the one or more removal tools comprise a nut runner for operation in the removal and replacement of the nuts and a cleat gripper to grip the wheel cleats for removal and replacement of the cleats.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A method as claimed in <claim-ref idref="CLM-00011">claim 11</claim-ref> wherein the nut runner and the wheel cleat gripper are incorporated into a single removal tool.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A method as claimed in any one of <claim-ref idref="CLM-00007">claims 7</claim-ref> to <claim-ref idref="CLM-00012">12</claim-ref> wherein on removal each nut and cleat is deposited by operation of the robot and respective removal tool at an individual storage location unique to that nut or cleat and for replacement each nut and cleat is retrieved by the robot from that individual storage location.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. A method as claimed in <claim-ref idref="CLM-00013">claim 13</claim-ref> wherein the storage locations for the nuts and cleats are provided by one or more storage nests.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. A method as claimed in <claim-ref idref="CLM-00014">claim 14</claim-ref> wherein the nut storage locations are provided by a nut nest placed on the wheel hub by the robot prior to removal of the nuts and cleats.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A method as claimed in <claim-ref idref="CLM-00015">claim 15</claim-ref> wherein the nut nest remains on the wheel hub during removal of the wheel and replacement by a replacement wheel by operation of the wheel handler.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A method as claimed in any one of <claim-ref idref="CLM-00014">claims 14</claim-ref> to <claim-ref idref="CLM-00016">16</claim-ref> wherein the cleat storage locations are provided by a cleat nest positioned by the robot on the ground adjacent the wheel.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. A method as claimed in <claim-ref idref="CLM-00017">claim 17</claim-ref> wherein the cleat nest is positioned on the ground by the robot after the nuts have been removed and placed on the nut storage nest.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A method as claimed in any one <claim-ref idref="CLM-00014">claims 14</claim-ref> to <claim-ref idref="CLM-00018">18</claim-ref> wherein the nut and cleat storage locations are provided by a combined nut and cleat storage nest placed on the wheel hub by the robot prior to removal of the nuts and cleats.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A method as claimed in <claim-ref idref="CLM-00019">claim 19</claim-ref> wherein the nut and cleat storage nest remains on the wheel hub during removal of the wheel and replacement with a replacement wheel by operation of the wheel handler.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. A method as claimed in any one of the preceding claims wherein the robot is mounted on a self-propelled and steerable vehicle.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. A method as claimed in <claim-ref idref="CLM-00010">claim 10</claim-ref> wherein the one or more removal tools comprises a ring gripper tool to remove a spacer ring or rings.</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. A method as claimed in any one of <claim-ref idref="CLM-00007">claims 7</claim-ref> to <claim-ref idref="CLM-00022">22</claim-ref> wherein buffing of the hubs of the vehicle which is performed by a buffing tool manipulated by the robot.</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. Robotic apparatus comprising:
+<claim-text>a moveable vehicle;</claim-text>
+<claim-text>a robot carried by the vehicle and comprising a tool manipulator;</claim-text>
+<claim-text>a scanner tool manipulable by the tool manipulator and operable by the robot to identify a set of features at locations within a target range from the vehicle; and</claim-text>
+<claim-text>a specific task tool manipulable by the tool manipulator and operable by the robot repetitively to perform a specific task at a plurality of said locations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. Apparatus as claimed in <claim-ref idref="CLM-00024">claim 24</claim-ref>, further comprising a scanner tool holder to hold the scanner tool when not in use and the tool manipulator is operable to pick up the scanner tool and operate that tool to identify said set of features and then return it to the scanner tool holder.</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. Apparatus as claimed in claimed in <claim-ref idref="CLM-00025">claim 25</claim-ref> wherein the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text><b>27</b>. Apparatus as claimed in any one of <claim-ref idref="CLM-00024">claims 24</claim-ref> to <b>26</b> wherein the scanner tool is a laser scanner tool.</claim-text>
+</claim>
+<claim id="CLM-00028" num="00028">
+<claim-text><b>28</b>. Apparatus as claimed in any one of <claim-ref idref="CLM-00024">claims 24</claim-ref> to <b>27</b>, further comprising a specific task tool holder to hold the specific task tool when not in use and the tool manipulator is operable after the scanner tool has identified said set of features to pick up the specific task tool and move it sequentially to said plurality of locations for performance of said specific task at each of said plurality of locations.</claim-text>
+</claim>
+<claim id="CLM-00029" num="00029">
+<claim-text><b>29</b>. Apparatus as claimed in <claim-ref idref="CLM-00028">claim 28</claim-ref> wherein the specific task tool holder is mounted on the vehicle or on a trolley attachable to the vehicle.</claim-text>
+</claim>
+<claim id="CLM-00030" num="00030">
+<claim-text><b>30</b>. Apparatus as claimed in any one of <claim-ref idref="CLM-00024">claims 24</claim-ref> to <b>29</b> wherein the specific task tool is a nut runner to engage and rotate nuts.</claim-text>
+</claim>
+<claim id="CLM-00031" num="00031">
+<claim-text><b>31</b>. Apparatus as claimed in <claim-ref idref="CLM-00030">claim 30</claim-ref> wherein the nut runner has a nut engagement head and a multiple speed head driver to rotate the head at differing speeds and torques.</claim-text>
+</claim>
+<claim id="CLM-00032" num="00032">
+<claim-text><b>32</b>. Apparatus as claimed in <claim-ref idref="CLM-00031">claim 31</claim-ref> wherein the multiple speed head driver comprises a drive spindle connected to the nut engagement head and high and low speed drive motors selectively coupleable to the spindle.</claim-text>
+</claim>
+<claim id="CLM-00033" num="00033">
+<claim-text><b>33</b>. Apparatus as claimed in any one of <claim-ref idref="CLM-00024">claims 24</claim-ref> to <b>32</b> wherein the specific task tool is one of a plurality of such tools manipulable by the tool manipulator and operable by the robot so as each to perform a different specific task at a respective plurality of said locations.</claim-text>
+</claim>
+<claim id="CLM-00034" num="00034">
+<claim-text><b>34</b>. Apparatus as claimed in <claim-ref idref="CLM-00033">claim 33</claim-ref> wherein there is a specific task tool storage holder for each of the specific task tools and the tool manipulator is operable selectively to pick up and manipulate the specific task tools sequentially to perform respective specific tasks at respective selected locations and then return the specific task tools to the respective holders.</claim-text>
+</claim>
+<claim id="CLM-00035" num="00035">
+<claim-text><b>35</b>. Apparatus as claimed in <claim-ref idref="CLM-00033">claim 33</claim-ref> or <claim-ref idref="CLM-00034">claim 34</claim-ref> for robotically performing specific tasks required in a vehicle wheel changing operation, wherein one of the specific task tools comprises a wheel cleat gripper to grip wheel retainer cleats for removal and replacement of the cleats.</claim-text>
+</claim>
+<claim id="CLM-00036" num="00036">
+<claim-text><b>36</b>. Robotic apparatus for robotically performing specific tasks required in a vehicle wheel changing operation, comprising a moveable vehicle positionable in the vicinity of a vehicle wheel to be removed;
+<claim-text>a robot carried by the vehicle and comprising a tool manipulator;</claim-text>
+<claim-text>a laser scanner tool manipulable by the tool manipulator and operable by the robot to identify a set of wheel retainer nuts and wheel retainer cleats on the wheel and to determine the locations of the nuts and cleats; and</claim-text>
+<claim-text>one or more specific task tools manipulable by the tool manipulator and operable by the robot to remove the nuts and cleats from the wheel.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00037" num="00037">
+<claim-text><b>37</b>. Apparatus as claimed in <claim-ref idref="CLM-00036">claim 36</claim-ref> wherein said one or more specific task tools comprise a nut runner to engage and rotate the nuts and a wheel cleat gripper to grip the wheel retainer cleats for removal and replacement of the cleats.</claim-text>
+</claim>
+<claim id="CLM-00038" num="00038">
+<claim-text><b>38</b>. Robotic apparatus as claimed in <claim-ref idref="CLM-00037">claim 37</claim-ref> wherein the nut runner and wheel cleat gripper are incorporated into a single specific task tool.</claim-text>
+</claim>
+<claim id="CLM-00039" num="00039">
+<claim-text><b>39</b>. Robotic apparatus as claimed in <claim-ref idref="CLM-00037">claim 37</claim-ref> wherein the nut runner is incorporated in a first specific task tool and the wheel cleat gripper is incorporated in a second specific task tool operable sequentially after the operation of the nut runner tool.</claim-text>
+</claim>
+<claim id="CLM-00040" num="00040">
+<claim-text><b>40</b>. Robotic apparatus as claimed in any one of <claim-ref idref="CLM-00036">claims 36</claim-ref> to <b>39</b>, wherein the vehicle is self propelled and steerable.</claim-text>
+</claim>
+<claim id="CLM-00041" num="00041">
+<claim-text><b>41</b>. A location sensing system for detecting the locations of wheel retaining nuts and/or cleats on a vehicle wheel, comprising;
+<claim-text>a laser distance measuring device; and</claim-text>
+<claim-text>a manipulator to move the laser distance measuring device in a two way scan to identify the plane of the wheel rim and an arcuate scan to identify the angular orientations of the nuts and/or cleats.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00042" num="00042">
+<claim-text><b>42</b>. A system as claimed in <claim-ref idref="CLM-00041">claim 41</claim-ref> wherein said manipulator is operable by a robot also operable to perform nut and/or cleat removal and replacement activities to facilitate a wheel change.</claim-text>
+</claim>
+<claim id="CLM-00043" num="00043">
+<claim-text><b>43</b>. A system as claimed in <claim-ref idref="CLM-00042">claim 42</claim-ref> wherein the robot has a control unit to receive signals from the laser distance measuring device indicative of the locations of the wheel nuts and/or cleats and subsequently to control the robot to perform the nut and/or cleat removal and replacement activities.</claim-text>
+</claim>
+<claim id="CLM-00044" num="00044">
+<claim-text><b>44</b>. A system as claimed in <claim-ref idref="CLM-00042">claim 42</claim-ref> or <claim-ref idref="CLM-00043">claim 43</claim-ref> the robot is mounted on a robot vehicle positionable adjacent said wheel.</claim-text>
+</claim>
+<claim id="CLM-00045" num="00045">
+<claim-text><b>45</b>. A system as claimed in <claim-ref idref="CLM-00044">claim 44</claim-ref> wherein the robot vehicle is self propelled and steerable. </claim-text>
+</claim>
+</claims>

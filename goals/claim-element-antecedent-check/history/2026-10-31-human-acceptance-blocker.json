@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "claim-human-acceptance-blocker/v1",
+  "date": "2026-10-31",
+  "auditedSourceCommit": "198172f36a4bb424a6361156e40f94f0e084b5f1",
+  "condition": "Actual attorney review unavailable, explicitly confirmed by the operator; no required human verdicts supplied.",
+  "consecutiveGoalTurnsWithSameCondition": 3,
+  "auditTurns": [
+    {
+      "retainedWorkCommit": "2e0417f68b",
+      "work": "Allowed authority/denominator hardening; operator unavailable answer received."
+    },
+    {
+      "retainedWorkCommit": "198172f36a",
+      "work": "Durable reference/addendum import completed; actual human evidence still unavailable."
+    },
+    {
+      "retainedWorkCommit": "198172f36a",
+      "work": "Current full-scope human-gate audit; independent pre-gate work ready, no human evidence."
+    }
+  ],
+  "executionState": "blocked-on-actual-attorney-evidence",
+  "goalComplete": false,
+  "operatorPauseRequested": false,
+  "repositoryPacketLifecycle": "active; unfinished retained initiative",
+  "historicalFilesByteCompared": 212,
+  "runtimeFilesHashVerified": 20,
+  "allowedXmlSourcesHashVerified": 200,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "positiveStrictMatches": 31,
+  "positiveSelectedClaims": 538,
+  "allowedCheckedClaims": 3108,
+  "allowedSourceClaims": 3184,
+  "allowedAdjudicatedClaims": 0,
+  "adjudicatedFalsePositiveRate": null,
+  "adjudicatedInterval": null,
+  "files": [
+    {
+      "path": "goals/claim-element-antecedent-check/SPEC.md",
+      "sha256": "d3e7ff926d37bb130c10b33a2513fbd265a7dd1d0fcafdac31a00131b0e65d9b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/PLAN.md",
+      "sha256": "359b7e6572395a3044c24ebdccd7dab4ea9b690f5f7cdcfd4712df3c1964d874"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/GOAL.md",
+      "sha256": "3719172df9682bd9be5fd66ea25fbb449c6d2f55af29427613e833a4e5701da9"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md",
+      "sha256": "3f15ef22a499d68a77f27294948ea0517e634ca8caed10661d1757227e0a90fe"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-reference-review-import-audit.json",
+      "sha256": "ba5c0020c418dc42d7a2d5529f657f3168d2639d0f9b22f288a6407c0d44b034"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-reference-review-import-receipt.json",
+      "sha256": "e1c98feb210d317d3b5166099801d9fe8c83f4485e798111be8656f41c47bc34"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-adjudication-authority-receipt.json",
+      "sha256": "83dad84c2cde0ee488e8e514e3c8e21fb83eb3efd2b0aa48be02e0ebe267f95b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-allowed-v13-coverage.json",
+      "sha256": "6abb26c03b4b87492852143b2b65ffad8779c075c609ef204c02fcd017fd85a2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v13-summary.json",
+      "sha256": "78fe878d7f7e6d7ab0d31be73aeb625914eaae61ccb0226e308491be1f1a5c2e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-v13-retention.json",
+      "sha256": "8eca52174351d6981cf24dc2f2e71e5926767fe3a0cff8cff69f8334ea31d960"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/packet.json",
+      "sha256": "0417c781fc706510a2200a5bb84b18eadf40acbdcdb289ea006d81d824caac96"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "sha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/addendum.json",
+      "sha256": "ee7d67cfef9b72ab31956b503fd5c616b686b7a871af14211967cfaf51da7ccd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "sha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/allowed-review-v2/packet.json",
+      "sha256": "d9ff710faa56ad482660fd1cb50d285025309bee0961e192b8703bc2d6ea2eae"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/allowed-review-v2/index.html",
+      "sha256": "b69c655fe6fdd3f3136851b6b1d06588784ff0e16d94c4cc03a8e878d96925bb"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-human-acceptance-blocker.md",
+      "sha256": "6b35d40bf658f235cc6ff955bc24da0137890646534fec9e38336b56e6c3e504"
+    }
+  ]
+}

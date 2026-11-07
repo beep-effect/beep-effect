@@ -933,6 +933,8 @@
     {"name":"Citation.writeCallbackCitation","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.writeFulls","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.xmlWorkerProgram","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"ClaimInspection.intrinsicQuery","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"ClaimInspection.translateIntrinsicResult","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"ClaimInspectionLocal.publicInputsUnavailable","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"ClaimSelfCheckLocal.publicClaimsUnavailable","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"ContactCardSource.cards","owner":"@beep/law-practice-server","family":"slice","conforms":true},

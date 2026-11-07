@@ -1,0 +1,52 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12267381-root-1",
+  "role": "supplemental-source-clarification-reviewer",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "status": "supplemental evidence; source remains held; not an acceptance round",
+  "priorCriticReceiptUnchanged": true,
+  "pdfEvidence": {
+    "documentIdentifier": "FNHIZYSWPPOPPY2",
+    "sha256": "207ea5fc80c85fde2c744e840592873b043a0a30ee9cc5756aea5eebe4507616",
+    "pdfPagesInspected": [1, 2, 3, 4, 5, 6],
+    "printedPages": [3, 4, 5, 6, 7, 8],
+    "purpose": "Independent visual original corroboration only."
+  },
+  "quotes": [
+    {
+      "claimNumber": 2,
+      "nativeQuote": "Method according to claim 1 characterized in that wherein at the start of the installation phase",
+      "originalQuote": "Method according to claim 1 characterized in that wherein at the start of the installation phase",
+      "originalRendering": "PDF1 visibly strikes characterized in that and inserts/underlines wherein. Thus visually accepted original phrase is Method according to claim1 wherein at the start of the installation phase; raw native XML retains both transitions."
+    },
+    {
+      "claimNumber": 3,
+      "nativeQuote": "Method according to claim 1 wherein",
+      "originalQuote": "Method according to claim 1 or 2 characterized in that wherein",
+      "originalRendering": "PDF2 strikes or2 and characterized in that."
+    },
+    {
+      "claimNumber": 4,
+      "nativeQuote": "Method according to claim 1, wherein",
+      "originalQuote": "Method according to claim 1, 2 or 3 characterized in that wherein",
+      "originalRendering": "PDF2 strikes2or3 and characterized in that."
+    },
+    {
+      "claimNumber": 5,
+      "nativeQuote": "Method according to claim 1 wherein",
+      "originalQuote": "Method according to any of the preceding claims characterized in that claim 1 wherein",
+      "originalRendering": "PDF3 strikes old range/transition and inserts underlined claim1wherein."
+    }
+  ],
+  "resolved": [
+    "Marked original PDF2 visibly deletes or2 from3 and2or3 from4, retaining dependency1.",
+    "Marked original PDF3 deletes any of preceding claims in5 and inserts claim1.",
+    "Complete selected1-11 original amendment bodies are readable."
+  ],
+  "remainsHeld": [
+    "Raw native claim2 retains deleted transition words characterized in that before wherein. This is source-fidelity/deletion contamination rather than unresolved choice of dependency alternatives."
+  ],
+  "quotationConvention": "Original quotes transcribe the visible amendment including old and new words where relevant; originalRendering explicitly distinguishes deletions/insertions. Mathematical originals use readable Unicode/subscript notation; raw native quotes are exact canonical claims.json substrings checked against raw native XML where the fidelity conflict occurs.",
+  "independence": "No native source/provenance/expected/critic changes, new acceptance round, network, secrets, git or delegation. No attorney agreement claimed."
+}

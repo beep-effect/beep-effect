@@ -1,0 +1,1279 @@
+[
+  {
+    "claimNumber": 24,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "24",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 17,
+          "quote": "Robotic apparatus"
+        },
+        "terms": []
+      },
+      {
+        "path": "24.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 48,
+          "quote": "a moveable vehicle"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 48,
+              "quote": "a moveable vehicle"
+            },
+            "determiner": "a",
+            "head": "moveable vehicle"
+          }
+        ]
+      },
+      {
+        "path": "24.b",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 50,
+          "endChar": 114,
+          "quote": "a robot carried by the vehicle and comprising a tool manipulator"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 50,
+              "endChar": 57,
+              "quote": "a robot"
+            },
+            "determiner": "a",
+            "head": "robot"
+          },
+          {
+            "anchor": {
+              "startChar": 69,
+              "endChar": 80,
+              "quote": "the vehicle"
+            },
+            "determiner": "the",
+            "head": "vehicle"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 114,
+              "quote": "a tool manipulator"
+            },
+            "determiner": "a",
+            "head": "tool manipulator"
+          }
+        ]
+      },
+      {
+        "path": "24.c",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 116,
+          "endChar": 274,
+          "quote": "a scanner tool manipulable by the tool manipulator and operable by the robot to identify a set of features at locations within a target range from the vehicle"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 142,
+              "quote": "a scanner tool manipulable"
+            },
+            "determiner": "a",
+            "head": "scanner tool manipulable"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 166,
+              "quote": "the tool manipulator"
+            },
+            "determiner": "the",
+            "head": "tool manipulator"
+          },
+          {
+            "anchor": {
+              "startChar": 183,
+              "endChar": 192,
+              "quote": "the robot"
+            },
+            "determiner": "the",
+            "head": "robot"
+          },
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 210,
+              "quote": "a set"
+            },
+            "determiner": "a",
+            "head": "set"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 257,
+              "quote": "a target range"
+            },
+            "determiner": "a",
+            "head": "target range"
+          },
+          {
+            "anchor": {
+              "startChar": 263,
+              "endChar": 274,
+              "quote": "the vehicle"
+            },
+            "determiner": "the",
+            "head": "vehicle"
+          }
+        ]
+      },
+      {
+        "path": "24.d",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 280,
+          "endChar": 435,
+          "quote": "a specific task tool manipulable by the tool manipulator and operable by the robot repetitively to perform a specific task at a plurality of said locations"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 280,
+              "endChar": 312,
+              "quote": "a specific task tool manipulable"
+            },
+            "determiner": "a",
+            "head": "specific task tool manipulable"
+          },
+          {
+            "anchor": {
+              "startChar": 316,
+              "endChar": 336,
+              "quote": "the tool manipulator"
+            },
+            "determiner": "the",
+            "head": "tool manipulator"
+          },
+          {
+            "anchor": {
+              "startChar": 353,
+              "endChar": 375,
+              "quote": "the robot repetitively"
+            },
+            "determiner": "the",
+            "head": "robot repetitively"
+          },
+          {
+            "anchor": {
+              "startChar": 387,
+              "endChar": 402,
+              "quote": "a specific task"
+            },
+            "determiner": "a",
+            "head": "specific task"
+          },
+          {
+            "anchor": {
+              "startChar": 421,
+              "endChar": 435,
+              "quote": "said locations"
+            },
+            "determiner": "said",
+            "head": "locations"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "24.a",
+        "parent": "24"
+      },
+      {
+        "kind": "part-of",
+        "child": "24.b",
+        "parent": "24"
+      },
+      {
+        "kind": "part-of",
+        "child": "24.c",
+        "parent": "24"
+      },
+      {
+        "kind": "part-of",
+        "child": "24.d",
+        "parent": "24"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.c",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 166,
+            "quote": "the tool manipulator"
+          }
+        },
+        "introducing": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 96,
+            "endChar": 114,
+            "quote": "a tool manipulator"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.c",
+          "anchor": {
+            "startChar": 183,
+            "endChar": 192,
+            "quote": "the robot"
+          }
+        },
+        "introducing": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 50,
+            "endChar": 57,
+            "quote": "a robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.d",
+          "anchor": {
+            "startChar": 316,
+            "endChar": 336,
+            "quote": "the tool manipulator"
+          }
+        },
+        "introducing": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 96,
+            "endChar": 114,
+            "quote": "a tool manipulator"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 25,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "25",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "Apparatus as claimed in claim 24, further"
+        },
+        "terms": []
+      },
+      {
+        "path": "25.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 53,
+          "endChar": 281,
+          "quote": "a scanner tool holder to hold the scanner tool when not in use and the tool manipulator is operable to pick up the scanner tool and operate that tool to identify said set of features and then return it to the scanner tool holder"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 74,
+              "quote": "a scanner tool holder"
+            },
+            "determiner": "a",
+            "head": "scanner tool holder"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 99,
+              "quote": "the scanner tool"
+            },
+            "determiner": "the",
+            "head": "scanner tool"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 140,
+              "quote": "the tool manipulator"
+            },
+            "determiner": "the",
+            "head": "tool manipulator"
+          },
+          {
+            "anchor": {
+              "startChar": 164,
+              "endChar": 180,
+              "quote": "the scanner tool"
+            },
+            "determiner": "the",
+            "head": "scanner tool"
+          },
+          {
+            "anchor": {
+              "startChar": 215,
+              "endChar": 223,
+              "quote": "said set"
+            },
+            "determiner": "said",
+            "head": "set"
+          },
+          {
+            "anchor": {
+              "startChar": 258,
+              "endChar": 281,
+              "quote": "the scanner tool holder"
+            },
+            "determiner": "the",
+            "head": "scanner tool holder"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "25.a",
+        "parent": "25"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "25",
+        "ancestor": "24"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a",
+          "anchor": {
+            "startChar": 258,
+            "endChar": 281,
+            "quote": "the scanner tool holder"
+          }
+        },
+        "introducing": {
+          "path": "25.a",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 74,
+            "quote": "a scanner tool holder"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 26,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "26",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "Apparatus as claimed in claimed in claim 25"
+        },
+        "terms": []
+      },
+      {
+        "path": "26.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 52,
+          "endChar": 135,
+          "quote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 52,
+              "endChar": 75,
+              "quote": "the scanner tool holder"
+            },
+            "determiner": "the",
+            "head": "scanner tool holder"
+          },
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 93,
+              "quote": "the vehicle"
+            },
+            "determiner": "the",
+            "head": "vehicle"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 120,
+              "quote": "a trolley attachable"
+            },
+            "determiner": "a",
+            "head": "trolley attachable"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 135,
+              "quote": "the vehicle"
+            },
+            "determiner": "the",
+            "head": "vehicle"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "26.a",
+        "parent": "26"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "26",
+        "ancestor": "25"
+      }
+    ]
+  },
+  {
+    "claimNumber": 27,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "27",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 50,
+          "quote": "Apparatus as claimed in any one of claims 24 to 26"
+        },
+        "terms": []
+      },
+      {
+        "path": "27.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 59,
+          "endChar": 99,
+          "quote": "the scanner tool is a laser scanner tool"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 75,
+              "quote": "the scanner tool"
+            },
+            "determiner": "the",
+            "head": "scanner tool"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 99,
+              "quote": "a laser scanner tool"
+            },
+            "determiner": "a",
+            "head": "laser scanner tool"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "27.a",
+        "parent": "27"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "27",
+        "ancestor": "24"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "27",
+        "ancestor": "25"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "27",
+        "ancestor": "26"
+      }
+    ]
+  },
+  {
+    "claimNumber": 28,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "28",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 59,
+          "quote": "Apparatus as claimed in any one of claims 24 to 27, further"
+        },
+        "terms": []
+      },
+      {
+        "path": "28.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 71,
+          "endChar": 408,
+          "quote": "a specific task tool holder to hold the specific task tool when not in use and the tool manipulator is operable after the scanner tool has identified said set of features to pick up the specific task tool and move it sequentially to said plurality of locations for performance of said specific task at each of said plurality of locations"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 71,
+              "endChar": 98,
+              "quote": "a specific task tool holder"
+            },
+            "determiner": "a",
+            "head": "specific task tool holder"
+          },
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 129,
+              "quote": "the specific task tool"
+            },
+            "determiner": "the",
+            "head": "specific task tool"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 170,
+              "quote": "the tool manipulator"
+            },
+            "determiner": "the",
+            "head": "tool manipulator"
+          },
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 205,
+              "quote": "the scanner tool"
+            },
+            "determiner": "the",
+            "head": "scanner tool"
+          },
+          {
+            "anchor": {
+              "startChar": 221,
+              "endChar": 229,
+              "quote": "said set"
+            },
+            "determiner": "said",
+            "head": "set"
+          },
+          {
+            "anchor": {
+              "startChar": 253,
+              "endChar": 275,
+              "quote": "the specific task tool"
+            },
+            "determiner": "the",
+            "head": "specific task tool"
+          },
+          {
+            "anchor": {
+              "startChar": 304,
+              "endChar": 331,
+              "quote": "said plurality of locations"
+            },
+            "determiner": "said",
+            "head": "locations"
+          },
+          {
+            "anchor": {
+              "startChar": 351,
+              "endChar": 369,
+              "quote": "said specific task"
+            },
+            "determiner": "said",
+            "head": "specific task"
+          },
+          {
+            "anchor": {
+              "startChar": 381,
+              "endChar": 408,
+              "quote": "said plurality of locations"
+            },
+            "determiner": "said",
+            "head": "locations"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "28.a",
+        "parent": "28"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "28",
+        "ancestor": "24"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "28",
+        "ancestor": "25"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "28",
+        "ancestor": "26"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "28",
+        "ancestor": "27"
+      }
+    ]
+  },
+  {
+    "claimNumber": 29,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "29",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "Apparatus as claimed in claim 28"
+        },
+        "terms": []
+      },
+      {
+        "path": "29.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 138,
+          "quote": "the specific task tool holder is mounted on the vehicle or on a trolley attachable to the vehicle"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 70,
+              "quote": "the specific task tool holder"
+            },
+            "determiner": "the",
+            "head": "specific task tool holder"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 96,
+              "quote": "the vehicle"
+            },
+            "determiner": "the",
+            "head": "vehicle"
+          },
+          {
+            "anchor": {
+              "startChar": 103,
+              "endChar": 123,
+              "quote": "a trolley attachable"
+            },
+            "determiner": "a",
+            "head": "trolley attachable"
+          },
+          {
+            "anchor": {
+              "startChar": 127,
+              "endChar": 138,
+              "quote": "the vehicle"
+            },
+            "determiner": "the",
+            "head": "vehicle"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "29.a",
+        "parent": "29"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "29",
+        "ancestor": "28"
+      }
+    ]
+  },
+  {
+    "claimNumber": 30,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "30",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 50,
+          "quote": "Apparatus as claimed in any one of claims 24 to 29"
+        },
+        "terms": []
+      },
+      {
+        "path": "30.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 59,
+          "endChar": 123,
+          "quote": "the specific task tool is a nut runner to engage and rotate nuts"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 81,
+              "quote": "the specific task tool"
+            },
+            "determiner": "the",
+            "head": "specific task tool"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 97,
+              "quote": "a nut runner"
+            },
+            "determiner": "a",
+            "head": "nut runner"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "30.a",
+        "parent": "30"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "30",
+        "ancestor": "24"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "30",
+        "ancestor": "25"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "30",
+        "ancestor": "26"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "30",
+        "ancestor": "27"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "30",
+        "ancestor": "28"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "30",
+        "ancestor": "29"
+      }
+    ]
+  },
+  {
+    "claimNumber": 31,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "31",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "Apparatus as claimed in claim 30"
+        },
+        "terms": []
+      },
+      {
+        "path": "31.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 165,
+          "quote": "the nut runner has a nut engagement head and a multiple speed head driver to rotate the head at differing speeds and torques"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 55,
+              "quote": "the nut runner"
+            },
+            "determiner": "the",
+            "head": "nut runner"
+          },
+          {
+            "anchor": {
+              "startChar": 60,
+              "endChar": 81,
+              "quote": "a nut engagement head"
+            },
+            "determiner": "a",
+            "head": "nut engagement head"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 114,
+              "quote": "a multiple speed head driver"
+            },
+            "determiner": "a",
+            "head": "multiple speed head driver"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 133,
+              "quote": "the head"
+            },
+            "determiner": "the",
+            "head": "head"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "31.a",
+        "parent": "31"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "31",
+        "ancestor": "30"
+      }
+    ]
+  },
+  {
+    "claimNumber": 32,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "32",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "Apparatus as claimed in claim 31"
+        },
+        "terms": []
+      },
+      {
+        "path": "32.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 208,
+          "quote": "the multiple speed head driver comprises a drive spindle connected to the nut engagement head and high and low speed drive motors selectively coupleable to the spindle"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 71,
+              "quote": "the multiple speed head driver"
+            },
+            "determiner": "the",
+            "head": "multiple speed head driver"
+          },
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 97,
+              "quote": "a drive spindle"
+            },
+            "determiner": "a",
+            "head": "drive spindle"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 134,
+              "quote": "the nut engagement head"
+            },
+            "determiner": "the",
+            "head": "nut engagement head"
+          },
+          {
+            "anchor": {
+              "startChar": 197,
+              "endChar": 208,
+              "quote": "the spindle"
+            },
+            "determiner": "the",
+            "head": "spindle"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "32.a",
+        "parent": "32"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "32",
+        "ancestor": "31"
+      }
+    ]
+  },
+  {
+    "claimNumber": 33,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "33",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 50,
+          "quote": "Apparatus as claimed in any one of claims 24 to 32"
+        },
+        "terms": []
+      },
+      {
+        "path": "33.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 59,
+          "endChar": 271,
+          "quote": "the specific task tool is one of a plurality of such tools manipulable by the tool manipulator and operable by the robot so as each to perform a different specific task at a respective plurality of said locations"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 81,
+              "quote": "the specific task tool"
+            },
+            "determiner": "the",
+            "head": "specific task tool"
+          },
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 153,
+              "quote": "the tool manipulator"
+            },
+            "determiner": "the",
+            "head": "tool manipulator"
+          },
+          {
+            "anchor": {
+              "startChar": 170,
+              "endChar": 179,
+              "quote": "the robot"
+            },
+            "determiner": "the",
+            "head": "robot"
+          },
+          {
+            "anchor": {
+              "startChar": 202,
+              "endChar": 227,
+              "quote": "a different specific task"
+            },
+            "determiner": "a",
+            "head": "different specific task"
+          },
+          {
+            "anchor": {
+              "startChar": 231,
+              "endChar": 253,
+              "quote": "a respective plurality"
+            },
+            "determiner": "a",
+            "head": "respective plurality"
+          },
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 271,
+              "quote": "said locations"
+            },
+            "determiner": "said",
+            "head": "locations"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "33.a",
+        "parent": "33"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "24"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "25"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "26"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "27"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "28"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "29"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "30"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "31"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "32"
+      }
+    ]
+  },
+  {
+    "claimNumber": 34,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "34",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "Apparatus as claimed in claim 33"
+        },
+        "terms": []
+      },
+      {
+        "path": "34.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 369,
+          "quote": "there is a specific task tool storage holder for each of the specific task tools and the tool manipulator is operable selectively to pick up and manipulate the specific task tools sequentially to perform respective specific tasks at respective selected locations and then return the specific task tools to the respective holders"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 50,
+              "endChar": 85,
+              "quote": "a specific task tool storage holder"
+            },
+            "determiner": "a",
+            "head": "specific task tool storage holder"
+          },
+          {
+            "anchor": {
+              "startChar": 98,
+              "endChar": 121,
+              "quote": "the specific task tools"
+            },
+            "determiner": "the",
+            "head": "specific task tools"
+          },
+          {
+            "anchor": {
+              "startChar": 126,
+              "endChar": 146,
+              "quote": "the tool manipulator"
+            },
+            "determiner": "the",
+            "head": "tool manipulator"
+          },
+          {
+            "anchor": {
+              "startChar": 197,
+              "endChar": 233,
+              "quote": "the specific task tools sequentially"
+            },
+            "determiner": "the",
+            "head": "specific task tools sequentially"
+          },
+          {
+            "anchor": {
+              "startChar": 320,
+              "endChar": 343,
+              "quote": "the specific task tools"
+            },
+            "determiner": "the",
+            "head": "specific task tools"
+          },
+          {
+            "anchor": {
+              "startChar": 347,
+              "endChar": 369,
+              "quote": "the respective holders"
+            },
+            "determiner": "the",
+            "head": "respective holders"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "34.a",
+        "parent": "34"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "34",
+        "ancestor": "33"
+      }
+    ]
+  },
+  {
+    "claimNumber": 35,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "35",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 133,
+          "quote": "Apparatus as claimed in claim 33 or claim 34 for robotically performing specific tasks required in a vehicle wheel changing operation"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 114,
+              "quote": "a vehicle wheel"
+            },
+            "determiner": "a",
+            "head": "vehicle wheel"
+          }
+        ]
+      },
+      {
+        "path": "35.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 143,
+          "endChar": 277,
+          "quote": "one of the specific task tools comprises a wheel cleat gripper to grip wheel retainer cleats for removal and replacement of the cleats"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 173,
+              "quote": "the specific task tools"
+            },
+            "determiner": "the",
+            "head": "specific task tools"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 205,
+              "quote": "a wheel cleat gripper"
+            },
+            "determiner": "a",
+            "head": "wheel cleat gripper"
+          },
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 277,
+              "quote": "the cleats"
+            },
+            "determiner": "the",
+            "head": "cleats"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "35.a",
+        "parent": "35"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "35",
+        "ancestor": "33"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "35",
+        "ancestor": "34"
+      }
+    ]
+  }
+]

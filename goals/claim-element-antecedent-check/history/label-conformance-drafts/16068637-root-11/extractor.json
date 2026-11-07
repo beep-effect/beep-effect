@@ -1,0 +1,47 @@
+{
+  "familyId": "16068637-root-11",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "confidenceScope": "Resolved P2 labels and explicit source-coverage classification only; attorney and critic pending.",
+  "resolvedClaimNumbers": [
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "unresolved": [
+    {
+      "claimNumber": 16,
+      "reason": "Intended transition includes: is not a PatentClaimTransition literal. Later wherein is an incidental body constituent; do not move preceding steps into preamble.",
+      "sourceQuote": "for joining workpieces, includes:"
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Office action K2XMF4F4RXEAPX2 dated 2019-11-14 rejects claims 1-16 and explicitly cites selected root 11 and claims 12,14,16. Publication US20190039119A1 dated 2019-02-07 precedes it. Positive association is explicit.",
+    "Natural-language dependencies match XML:12->11,13->11,14->11,15->14,16->11. Claims13,15 supply family context rather than specifically cited positive grounds.",
+    "Original corroboration matches selected13-16 exactly apart from whitespace; selected11-12 are not exact corroboration matches. Native XML is the text authority; retained inventory asserts no intervening CLM amendment. Attorney in-force review pending.",
+    "Claim12 source has literal {circle around (1)} and {circle around (2)}. Do not replace with glyphs. Its second colon yields no extra P2 nesting; And: remains at end of the preceding sub-limitation.",
+    "P2 truncation retained: A friction stops before self-piercing; a wedge stops before shaped; the rotary stops before driving; a positioning stops before protruding. These labels do not purport to resolve mechanical semantics.",
+    "Claim16 remains unresolved, so this family is incomplete even though claims11-15 have reference trees."
+  ],
+  "rationale": "Root11 has two limitations; second ends in colon and absorbs five remaining sub-limitations. Claim12 has one colon-ended limitation and six absorbed sub-limitations. Claims13-15 each have one limitation. Local antecedent edges are only explicitly listed unique exact-head earlier introductions.",
+  "independence": "Manual selection of element spans, term surfaces/heads and edge pairs. No decomposer/policy, existing rule fixtures or predictions read/run. Helpers only locate manual quotes and verify spans/endpoints.",
+  "familyStatus": "unresolved",
+  "sourceChecks": {
+    "selectedClaimsMatchNativeXml": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  }
+}
