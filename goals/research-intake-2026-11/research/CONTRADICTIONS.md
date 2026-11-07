@@ -13,9 +13,12 @@ against affirmative ones; examples cite public sources only.
 
 ### G1. Does ontology grounding beat retrieval at a matched context budget?
 
-- **Packets:** `goals/agent-outcome-experiments` (40 negative / 220
-  affirmative), `goals/verification-route` (20 / 121),
-  `explorations/semantic-agent-graph-stack`.
+- **Packets:** `goals/agent-outcome-experiments` (the experiment design),
+  `goals/legal-document-intake` (its ClaimGate is where answer validity is
+  checked), `explorations/semantic-agent-graph-stack`. The topic router also
+  sent G1 rows to `goals/verification-route`, but that packet builds CI
+  verification footprints and checks no answers, so the recommendation does not
+  belong there.
 - **Disagreement:** several captures report that injecting an ontology or a
   knowledge graph improves agent answers over RAG, but the strongest one
   (arXiv 2604.00555) injects about 2,800–3,200 tokens of structure against about
@@ -61,7 +64,7 @@ against affirmative ones; examples cite public sources only.
 arXiv 2609.17107 reports completion separately from correctness, its Table II
 contradicts the later summary, its token comparison uses different successful
 subsets per backend, and its repair loop can edit SELECT/GROUP BY but not a wrong
-retrieval condition. The captured paper is enough: `goals/verification-route`
+retrieval condition. The captured paper is enough: `goals/agent-outcome-experiments`
 should treat its numbers as upper bounds on completion, not on answer validity.
 
 ### R2. Policy-as-code versus evidence-graph compliance
@@ -110,7 +113,7 @@ quote) and harness receipts are in [`deep-research/`](./deep-research/).
 | G3 | [skill-edit regressions](./deep-research/G3-skill-edit-regressions.md) | 8 | 8 | 1 | Skill and prompt edits do not reliably preserve mastered behavior; aggregate gains coexist with item-level breakage. |
 
 These results are evidence, not acceptance changes. The owning packets
-(`agent-outcome-experiments`, `verification-route`, `effect-native-legal-eval`,
+(`agent-outcome-experiments`, `legal-document-intake`, `effect-native-legal-eval`,
 `citation-extraction-engine`, `uspto-prosecution-read`,
 `coding-agent-effectiveness-evidence-loop`, `agent-rating-critique-fixes`,
 `agent-pool-doctrine`) carry routing amendments that point here.

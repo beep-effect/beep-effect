@@ -1,11 +1,11 @@
 ---
-title: "research-intake-2026-11 routed 213 affirmative findings here"
+title: "research-intake-2026-11 routed 214 affirmative findings here"
 date: 2026-11-07
 lane: "feat/research-intake-2026-11"
 reversal: "Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl"
 ---
 
-The research-intake-2026-11 intake routed 368 findings to this packet (213 affirmative, 23 critiques or disputes; 87 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 371 findings to this packet (214 affirmative, 23 critiques or disputes; 88 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://github.com/beep-effect/beep-effect/blob/main/docs/ROADMAP.md — The stated agent workflow feeds reflection back into later implementation packets, establishing a recurring improvement loop.
 - citesAsEvidence: https://arxiv.org/abs/2609.30123 — The reported benchmark results support testing compiled skill execution against native document-following agents. Gains vary substantially by task: LiveMath improves by 31.4–38.0 percentage points, wh

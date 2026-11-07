@@ -5,7 +5,7 @@ lane: "feat/research-intake-2026-11"
 reversal: "Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl"
 ---
 
-The research-intake-2026-11 intake routed 181 findings to this packet (64 affirmative, 7 critiques or disputes; 147 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 183 findings to this packet (64 affirmative, 7 critiques or disputes; 149 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - supports: https://www.steptoe.com/en/news-publications/step-into-ip-blog/the-weekly-inference-cocounsel-verification-citations.html — Cross-model adversarial review of citation checks, which matches separate-reviewer-session doctrine.
 - supports: https://governedautonomy.org/standards/imda-agentic-ai/ — IMDA recommends issuing and tracking all agent identities and permissions from a centralised registry.

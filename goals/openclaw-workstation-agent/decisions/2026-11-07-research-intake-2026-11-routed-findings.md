@@ -1,11 +1,11 @@
 ---
-title: "research-intake-2026-11 routed 65 affirmative findings here"
+title: "research-intake-2026-11 routed 66 affirmative findings here"
 date: 2026-11-07
 lane: "feat/research-intake-2026-11"
 reversal: "Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl"
 ---
 
-The research-intake-2026-11 intake routed 200 findings to this packet (65 affirmative, 2 critiques or disputes; 200 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+The research-intake-2026-11 intake routed 232 findings to this packet (66 affirmative, 2 critiques or disputes; 232 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
 
 - citesAsEvidence: https://arxiv.org/abs/2610.33489 — Ecosystem-scale audit of the OpenClaw ClawHub registry confirming 627 malicious skills.
 - citesAsEvidence: https://aiwiki.ai/wiki/agent_skills/raw — Real malicious-skill campaign on the OpenClaw registry; a threat case for any OpenClaw skill intake.
