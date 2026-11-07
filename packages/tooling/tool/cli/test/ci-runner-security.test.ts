@@ -2449,8 +2449,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(gate.run).toContain('",${ROUTE_SKIPS}," == *",${LANE_ID},"*');
       expect(gate.run).toContain("### Verification route: skip-satisfied");
       expect(gate.run).not.toContain("${{ inputs.route_");
-      expect(gate.run.indexOf("ROUTE_SKIPS")).toBeLessThan(gate.run.indexOf("goals_only"));
-      expect(gate.run.indexOf("ADMITTED")).toBeLessThan(gate.run.indexOf("ROUTE_SKIPS"));
+      const script = gate.run ?? "";
+      const admitted = pipe(script, Str.indexOf("ADMITTED"), O.getOrThrow);
+      const route = pipe(script, Str.indexOf("ROUTE_SKIPS"), O.getOrThrow);
+      const goals = pipe(script, Str.indexOf("goals_only"), O.getOrThrow);
+      expect(route).toBeLessThan(goals);
+      expect(admitted).toBeLessThan(route);
     })
   );
   it.effect("keeps coverage comparison separate from Heavy and validates same-run producer artifacts", () =>

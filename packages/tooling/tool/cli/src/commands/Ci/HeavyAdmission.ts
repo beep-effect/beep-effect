@@ -677,7 +677,11 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
     const path = yield* Effect.fromOption(input.eventPath);
     const text = yield* fs.readFileString(path);
     const payload = yield* decodeGhPullRequestEventPayload(text);
-    const branch = yield* safeBranch(branchOfBase(O.getOrElse(input.base, () => payload.pull_request.base.ref)));
+    const branch = yield* input.base.pipe(
+      O.getOrElse(() => payload.pull_request.base.ref),
+      branchOfBase,
+      safeBranch
+    );
     const git = yield* Git;
     const base = yield* git.mergeBase(input.cwd, `origin/${branch}`, "HEAD");
     const classifier = yield* ChangeClassifier;

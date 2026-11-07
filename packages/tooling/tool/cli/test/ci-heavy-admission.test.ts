@@ -83,7 +83,19 @@ const provideFailingDiff =
       provideScopedLayer(Git.layerTest({ changedFiles: () => Effect.fail(error) })),
       provideSpawner(gitSpawner([]))
     );
-const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
+const platform = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  TestConsole.layer,
+  Layer.succeed(
+    ChangeClassifier,
+    ChangeClassifier.of({
+      classify: Effect.fn("ChangeClassifier.classify")(() =>
+        Effect.fail(RouteError.new("classify", "Fixture classifier is unavailable."))
+      ),
+    })
+  )
+);
 const lastLine = (lines: ReadonlyArray<string>): string => O.getOrElse(A.last(lines), () => "");
 const runAdmissionCommand = Command.runWith(ciAdmissionCommand, { version: "0.0.0" });
 const temporary = Effect.fn("admissionTest.temporary")(function* <V, E, R>(
@@ -696,14 +708,15 @@ it.layer(platform, { timeout: "30 seconds" })("hosted admission route", (layerIt
               Effect.provideService(
                 ChangeClassifier,
                 ChangeClassifier.of({
-                  classify: (input) => {
+                  classify: Effect.fn("ChangeClassifier.classify")(function* (input) {
                     calls++;
                     expect(input.base).toBe("merge-base");
                     expect(input.head).toBe("HEAD");
-                    return row.failed
-                      ? Effect.fail(RouteError.make({ reason: "classify", message: "fixture classifier failure" }))
-                      : Effect.succeed(change);
-                  },
+                    if (row.failed) {
+                      return yield* RouteError.make({ reason: "classify", message: "fixture classifier failure" });
+                    }
+                    return change;
+                  }),
                 })
               )
             );
@@ -720,7 +733,7 @@ it.layer(platform, { timeout: "30 seconds" })("hosted admission route", (layerIt
               if (row.revoked)
                 expect(A.filter(route.lanes, (lane) => lane.decision === "shadow-skipped")).toHaveLength(2);
               if (row.skips !== "") {
-                const receipt = yield* S.decodeUnknownEffect(UnknownJson)(route.receipt);
+                const receipt = yield* S.decodeEffect(UnknownJson)(route.receipt);
                 expect(receipt).toMatchObject({
                   footprintDigest: expect.stringMatching(/^[a-f0-9]{64}$/u),
                   atoms: expect.arrayContaining([

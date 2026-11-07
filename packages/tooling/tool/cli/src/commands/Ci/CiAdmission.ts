@@ -45,6 +45,7 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { ChangeClassifier } from "./Route.service.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiAdmission");
 
@@ -139,6 +140,7 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
   | ActionOutputs
   | Digest.Digest
   | SecureRandom.SecureRandom
+  | ChangeClassifier
 > {
   const rawEventName = yield* Effect.fromOption(input.eventName, () =>
     CiCommandError.make({ message: "ci admission needs an event name: set GITHUB_EVENT_NAME or pass --event-name." })
@@ -151,7 +153,7 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
   );
   const route = yield* readHeavyAdmissionRoute(
     HeavyAdmissionReadInput.make({ eventName, eventPath: input.eventPath, base: input.base, cwd: input.cwd })
-  ).pipe(Effect.provide(ChangeClassifierLive));
+  );
   const admission = HeavyAdmission.make({ ...decideHeavyAdmission(event), route });
   yield* input.json
     ? HeavyAdmissionJson.encode(admission).pipe(
@@ -260,5 +262,6 @@ export const ciAdmissionCommand = Command.make(
     )
 ).pipe(
   Command.withDescription("Decide heavy-matrix admission for the current GitHub event"),
-  Command.provide(CiRunnerOutputsLive)
+  Command.provide(CiRunnerOutputsLive),
+  Command.provide(ChangeClassifierLive)
 );
