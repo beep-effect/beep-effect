@@ -31,6 +31,14 @@ const entities = ["item", "operation", "conflict", "cursor"] as const;
 /**
  * The fixed backup id the startup state machine imports from.
  *
+ * **Example** (Name the cutover backup)
+ *
+ * ```ts
+ * import { SyncCutoverBackupId } from "@beep/documents-server/aggregates/Sync"
+ *
+ * console.log(SyncCutoverBackupId) // "vault-sync-cutover-v1"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -303,6 +311,9 @@ export const ensureSyncCutover = Effect.fn($I`ensureSyncCutover`)(function* (opt
 
 const HighWater = S.Tuple([S.Struct({ events: S.Int })]);
 const Ids = S.Array(S.Struct({ id: S.Int }));
+const decodePresence = S.decodeUnknownEffect(S.Tuple([S.Struct({ present: S.Boolean })]));
+const decodePendingReceipts = S.decodeUnknownEffect(S.Tuple([S.Struct({ pending: S.Int })]));
+const encodeRequeuedIds = S.encodeEffect(S.Int.pipe(S.Array, S.fromJsonString));
 
 /**
  * Returns an admitted store to the legacy writer without losing accepted work.
@@ -340,11 +351,11 @@ export const reverseSyncCutover = Effect.fn($I`reverseSyncCutover`)(function* (m
       s.epoch === "model" ? Effect.succeed(s) : Effect.fail(SyncCutoverRejected.make({ reason: "not-admitted" })),
   });
   const receipts = yield* sql`SELECT to_regclass('documents_sync_box_receipt') IS NOT NULL AS present`.pipe(
-    Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ present: S.Boolean })])))
+    Effect.flatMap(decodePresence)
   );
   const uncertain = receipts[0].present
     ? yield* sql`SELECT count(*)::int AS pending FROM documents_sync_box_receipt WHERE result IS NULL`.pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ pending: S.Int })]))),
+        Effect.flatMap(decodePendingReceipts),
         Effect.map((rows) => rows[0].pending)
       )
     : 0;
@@ -360,13 +371,12 @@ export const reverseSyncCutover = Effect.fn($I`reverseSyncCutover`)(function* (m
       yield* markSyncCutoverWriter;
       yield* Effect.forEach(
         entities,
-        (entity) =>
-          Effect.gen(function* () {
-            const table = `documents_sync_${entity}`;
-            yield* sql`LOCK TABLE ${sql(table)} IN ACCESS EXCLUSIVE MODE`;
-            yield* sql`DROP TABLE IF EXISTS ${sql(`${table}_reversal_backup`)}`;
-            yield* sql`CREATE TABLE ${sql(`${table}_reversal_backup`)} AS TABLE ${sql(table)}`;
-          }),
+        Effect.fnUntraced(function* (entity) {
+          const table = `documents_sync_${entity}`;
+          yield* sql`LOCK TABLE ${sql(table)} IN ACCESS EXCLUSIVE MODE`;
+          yield* sql`DROP TABLE IF EXISTS ${sql(`${table}_reversal_backup`)}`;
+          yield* sql`CREATE TABLE ${sql(`${table}_reversal_backup`)} AS TABLE ${sql(table)}`;
+        }),
         { discard: true }
       );
       const differences = yield* diffSyncCutoverSnapshot("reversal_backup");
@@ -388,7 +398,7 @@ export const reverseSyncCutover = Effect.fn($I`reverseSyncCutover`)(function* (m
         { discard: true }
       );
       const ids = A.map(leased, (row) => row.id);
-      const encoded = yield* S.encodeEffect(S.Int.pipe(S.Array, S.fromJsonString))(ids);
+      const encoded = yield* encodeRequeuedIds(ids);
       yield* sql`CREATE TABLE IF NOT EXISTS documents_sync_cutover_reversal (
         generation integer PRIMARY KEY, events integer NOT NULL, requeued jsonb NOT NULL, reversed_at bigint NOT NULL)`;
       yield* sql`INSERT INTO documents_sync_cutover_reversal (generation, events, requeued, reversed_at)

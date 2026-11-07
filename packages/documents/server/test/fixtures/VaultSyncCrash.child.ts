@@ -36,10 +36,9 @@ class CrashModel extends Domain.Model("VaultSyncCrash", {
   ],
   sagas: [U.VaultSyncPass],
 }) {}
+const decodeArgs = S.decodeUnknownEffect(S.Tuple([S.String, S.String, S.String, S.Literals(["crash", "resume"])]));
 const main = Effect.gen(function* () {
-  const [_dataDir, root, ledger, mode] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.String, S.String, S.String, S.Literals(["crash", "resume"])])
-  )(process.argv.slice(2));
+  const [_dataDir, root, ledger, mode] = yield* decodeArgs(process.argv.slice(2));
   const fs = yield* FileSystem.FileSystem;
   const sql = yield* SqlClient.SqlClient;
   const fixture = yield* Layer.build(DmsMirrorFixtureLayer);

@@ -75,12 +75,11 @@ export class VaultSyncMirrorRoot extends Context.Service<VaultSyncMirrorRoot, { 
   $I`VaultSyncMirrorRoot`
 ) {}
 
-const systemPrincipal = S.encodeEffect(S.fromJsonString(SystemPrincipal))(
-  SystemPrincipal.make({ component: "Sync", kind: "System" })
-).pipe(Effect.orDie);
-const migrationPrincipal = S.encodeEffect(S.fromJsonString(SystemPrincipal))(
-  SystemPrincipal.make({ component: "Migration", kind: "System" })
-).pipe(Effect.orDie);
+const encodePrincipal = S.encodeEffect(S.fromJsonString(SystemPrincipal));
+const systemPrincipal = encodePrincipal(SystemPrincipal.make({ component: "Sync", kind: "System" })).pipe(Effect.orDie);
+const migrationPrincipal = encodePrincipal(SystemPrincipal.make({ component: "Migration", kind: "System" })).pipe(
+  Effect.orDie
+);
 
 const EventProvenance = S.Array(S.Struct({ principal: S.NullOr(S.String), source_kind: S.NullOr(S.String) }));
 const Ownership = S.Array(S.Struct({ workspace_id: S.Int }));
@@ -310,9 +309,7 @@ export const ensureVaultSyncOwnerMembership = Effect.fn($I`ensureVaultSyncOwnerM
   orgId: number
 ) {
   const sql = yield* SqlClient.SqlClient;
-  const principal = yield* S.encodeEffect(S.fromJsonString(SystemPrincipal))(
-    SystemPrincipal.make({ component: "Runtime", kind: "System" })
-  );
+  const principal = yield* encodePrincipal(SystemPrincipal.make({ component: "Runtime", kind: "System" }));
   const publicId = `shared_membership_a${bytesToHex(sha256(new TextEncoder().encode(`owner/${orgId}/${userId}`)))}`;
   const at = yield* Clock.currentTimeMillis;
   yield* sql`INSERT INTO shared_membership (created_at, updated_at, created_by_principal, updated_by_principal,

@@ -27,6 +27,8 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { markSyncModelWriter } from "./SyncWriterEpoch.service.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/LegacySync.projection");
+const decodeRowVersions = S.decodeUnknownEffect(S.Array(S.Struct({ row_version: S.Int })));
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 const IdRows = S.NonEmptyArray(S.Struct({ id: S.Int }));
 // The legacy readers decode `entity_type` as the identity's entity type, not the table name.
 const entityTypes = {
@@ -112,7 +114,7 @@ const store = Effect.gen(function* () {
           const meta = yield* audit.resolve(stream, seq);
           const table = `documents_sync_${entity}`;
           const existing = yield* sql`SELECT row_version FROM ${sql(table)} WHERE id=${id}`.pipe(
-            Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ row_version: S.Int }))))
+            Effect.flatMap(decodeRowVersions)
           );
           // The source checkpoint makes a single increment safe on redelivery; imported
           // row versions are compatibility state and must never reset to source seq.
@@ -161,11 +163,9 @@ const store = Effect.gen(function* () {
           // JSON values must be serialized for SqlClient's generic insert helper.
           const stored = {
             ...row,
-            created_by_principal: yield* S.encodeEffect(S.fromJsonString(S.Unknown))(row.created_by_principal),
-            updated_by_principal: yield* S.encodeEffect(S.fromJsonString(S.Unknown))(row.updated_by_principal),
-            ...("remote_payload" in row
-              ? { remote_payload: yield* S.encodeEffect(S.fromJsonString(S.Unknown))(row.remote_payload) }
-              : {}),
+            created_by_principal: yield* encodeJsonValue(row.created_by_principal),
+            updated_by_principal: yield* encodeJsonValue(row.updated_by_principal),
+            ...("remote_payload" in row ? { remote_payload: yield* encodeJsonValue(row.remote_payload) } : {}),
           };
           yield* sql`SELECT setval(pg_get_serial_sequence('documents_sync_legacy_identity','id'),
         GREATEST((SELECT COALESCE(MAX(id),1) FROM documents_sync_legacy_identity),

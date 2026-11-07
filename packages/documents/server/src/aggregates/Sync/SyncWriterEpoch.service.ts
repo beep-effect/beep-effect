@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/SyncWriterEpoch.service");
+const decodePresence = S.decodeUnknownEffect(S.Tuple([S.Struct({ present: S.Boolean })]));
 
 /**
  * Lifecycle of the store's single writer.
@@ -144,6 +145,14 @@ const Rows = S.Array(S.Struct({ epoch: SyncWriterEpoch, generation: S.Int, impor
  * The fence trigger reads it with `current_setting`. Older executables never
  * set it, so every statement they issue against a migrated store is refused.
  *
+ * **Example** (Read the writer setting name)
+ *
+ * ```ts
+ * import { SyncWriterSetting } from "@beep/documents-server/aggregates/Sync"
+ *
+ * console.log(SyncWriterSetting) // "beep.documents_sync_writer"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -235,7 +244,7 @@ export const installSyncWriterFence = Effect.gen(function* () {
 export const readSyncWriterEpoch = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
   const exists = yield* sql`SELECT to_regclass('documents_sync_writer_epoch') IS NOT NULL AS present`.pipe(
-    Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ present: S.Boolean })])))
+    Effect.flatMap(decodePresence)
   );
   if (!exists[0].present) return O.none<SyncWriterEpochState>();
   const rows = yield* sql`SELECT epoch, generation, import_id FROM documents_sync_writer_epoch`.pipe(

@@ -302,9 +302,10 @@ const importConflicts = Effect.fnUntraced(function* (ctx: GenesisContext) {
       .pipe(Effect.provideService(V.GenesisProvenance, options.provenance));
   }
 });
+const encodeSnapshot = S.encodeEffect(S.fromJsonString(SyncGenesisSnapshot));
 const genesisContext = Effect.fnUntraced(function* (snapshot: SyncGenesisSnapshot, mirrorRootName: string) {
   const audit = yield* LegacySyncAudit;
-  const encoded = yield* S.encodeEffect(S.fromJsonString(SyncGenesisSnapshot))(snapshot);
+  const encoded = yield* encodeSnapshot(snapshot);
   const importId = `v1-${bytesToHex(sha256(new TextEncoder().encode(`${mirrorRootName}\n${encoded}`)))}`;
   const workspaces = workspaceRowsOf(snapshot);
   const destinationIds = yield* workspaces.pipe(H.keys, bindDestinations);
