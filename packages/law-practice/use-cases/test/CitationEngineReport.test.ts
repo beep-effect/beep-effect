@@ -4,7 +4,9 @@ import { CitationEngineReport, CitationExtractionMeasurements } from "@beep/law-
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -70,4 +72,19 @@ it.effect("rejects impossible operation, policy usage and timing combinations", 
     expect("CitationExtractionMeasurements" in Root).toBe(false);
     expect("CitationExtractionMeasurements" in Public).toBe(false);
   })
+);
+
+const PropertyType = S.toType(CitationExtractionMeasurements);
+const PropertyJson = CitationExtractionMeasurements.pipe(S.toCodecJson, S.fromJsonString);
+const propertyEquivalent = S.toEquivalence(PropertyType);
+it.effect.prop(
+  "preserves extraction measurements including skipped versus executed tokenizers through JSON",
+  { value: Arbitrary.schema(PropertyType) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(PropertyJson)(value);
+      const decoded = yield* S.decodeEffect(PropertyJson)(encoded);
+      expect(propertyEquivalent(value, decoded)).toBe(true);
+    }),
+  { arbitrary: fcRuns(100) }
 );

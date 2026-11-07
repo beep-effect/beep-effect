@@ -17,7 +17,9 @@ import {
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -247,3 +249,18 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("native anno
     })
   );
 });
+
+const PropertyType = S.toType(CitationAnnotationReplacement);
+const PropertyJson = CitationAnnotationReplacement.pipe(S.toCodecJson, S.fromJsonString);
+const propertyEquivalent = S.toEquivalence(PropertyType);
+it.effect.prop(
+  "preserves annotation replacement Unicode and offset fields through JSON",
+  { value: Arbitrary.schema(PropertyType) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(PropertyJson)(value);
+      const decoded = yield* S.decodeEffect(PropertyJson)(encoded);
+      expect(propertyEquivalent(value, decoded)).toBe(true);
+    }),
+  { arbitrary: fcRuns(100) }
+);

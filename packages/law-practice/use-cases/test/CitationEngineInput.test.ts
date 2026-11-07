@@ -21,7 +21,9 @@ import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -159,4 +161,19 @@ it.effect("keeps unverified evidence separate from document and report contracts
     }).pipe(Effect.flip);
     expect(invalid._tag).toBe("SchemaError");
   })
+);
+
+const PropertyType = S.toType(CitationEngineExtractionOptions);
+const PropertyJson = CitationEngineExtractionOptions.pipe(S.toCodecJson, S.fromJsonString);
+const propertyEquivalent = S.toEquivalence(PropertyType);
+it.effect.prop(
+  "preserves extraction options including absent versus empty cleaner lists through JSON",
+  { value: Arbitrary.schema(PropertyType) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(PropertyJson)(value);
+      const decoded = yield* S.decodeEffect(PropertyJson)(encoded);
+      expect(propertyEquivalent(value, decoded)).toBe(true);
+    }),
+  { arbitrary: fcRuns(100) }
 );

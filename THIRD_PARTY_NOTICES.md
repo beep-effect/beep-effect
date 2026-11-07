@@ -285,7 +285,7 @@ SOFTWARE.
 Upstream: <https://github.com/medelman17/eyecite-ts>
 
 Pinned commit: `34133d03143ea65861f48a5ed0eb32c931581666`.
-Affected material: citation-engine donor baseline logs. No donor runtime dependency is introduced.
+Affected material: citation-engine donor baseline logs and the U.S. Reports Bluebook layout reference fixture and schema transformation in `packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts`. The three constructed layout observations come from `src/utils/bluebook.ts` at the pinned commit. No donor runtime dependency is introduced.
 
 MIT License
 
@@ -314,7 +314,7 @@ SOFTWARE.
 Upstream: <https://github.com/beshkenadze/eyecite-js>
 
 Pinned commit: `53a49f2412da668aaf262e5f92584c2c3781043b`.
-Affected material: citation-engine donor baseline logs. No donor runtime dependency is introduced.
+Affected material: citation-engine donor baseline logs and the U.S. Reports Bluebook layout reference fixture and schema transformation in `packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts`. The three constructed layout observations come from `src/utils/bluebook.ts` at the pinned commit. No donor runtime dependency is introduced.
 
 BSD 2-Clause License
 

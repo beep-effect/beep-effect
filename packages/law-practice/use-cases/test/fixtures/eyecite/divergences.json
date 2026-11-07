@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "0abd39dc0ba46bf6dc16ca8b02ec8344512eba053ef4152b3a68bb5f2c2afd1a",
+  "planSha256": "c082c331ac0f2928a22a90f07bf1b22b7122f4c5abf9e83084c632240cccffda",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -988,7 +988,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationExtractionShortcut.test.ts",
-          "sha256": "156f61e365f5e185209d8b046af8a43e75258f99f12e1c52aa7aebb45594a9f9"
+          "sha256": "30898498b09c3f1204d35f81c307acca7dc0e81ce9acc77d71f36131b68b2206"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationExtractionEntry.test.ts",
@@ -1072,7 +1072,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticProjection.test.ts",
-          "sha256": "172b0debe04536e775384a3565eb51bfa4ba110ea85806b444deab817affed86"
+          "sha256": "e1024168ee4e25e139da54a217e56365475d7060a44f31071963fff245f53788"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-extraction.md",
@@ -1104,7 +1104,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
-          "sha256": "bd8d671f1c07b6c3212d5ca1bdc1e6f08632907c37c525a9a04d3b70cec22681"
+          "sha256": "5e1e6b4f4d0a326817faa2fb850f9d311323bcca65d5e71074309b101a0bcad0"
         },
         {
           "path": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts",
@@ -1228,7 +1228,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationAssembly.test.ts",
-          "sha256": "66fa35b34f8cf1f863040c1541f27874fccba16c289ab95bf551bca21d34ac84"
+          "sha256": "82f47a5d9acc659258a4305d3d7305e3ff843854e2c1d463866531bbec224323"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/annotation-assembly.json",
@@ -1308,7 +1308,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/XmlWorker.ts",
-          "sha256": "e960c958d0a52be4cebedcdffbd1b90e4fc00f55a957aeea1fc9ad19355ced54"
+          "sha256": "48b478f2516cae0db962d325d930f585103c151a9b2358db0aab94f424e081f4"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/XmlWorkerProgram.ts",
@@ -1472,7 +1472,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceEvidence.test.ts",
-          "sha256": "113a128bbeb5fe9d3da77e59d45074f36759505d4bdf8baebe83c8e3a8dd7f3f"
+          "sha256": "4d768a868e93350b12d875bfac112106517bd75fb025402610bf02e6e602f76f"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-admitted-annotation-entry.md",
@@ -1492,7 +1492,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SourceAnnotation.ts",
-          "sha256": "539a81dcc9ec21e4495010e857a2f84524d6beb8d7e2e05df7b6a7edc01b94f1"
+          "sha256": "2895b2890c643896f110277ad1a40b1ada5695eb556fbd9a54cbae7428b2a086"
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceAnnotation.test.ts",
@@ -1500,7 +1500,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceAnnotationTiming.test.ts",
-          "sha256": "5ba63a5ee6eaf33e6561e1e948796bfabedc0beff565777e5c9877aef3752f2d"
+          "sha256": "83b8931f33304ef791636f75cfa5782ed92f4b7edacf3a9e69c3cc37020fd7d4"
         },
         {
           "path": "packages/law-practice/server/test/CitationAnnotationEntry.fixtures.ts",
@@ -1528,7 +1528,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceDocument.test.ts",
-          "sha256": "2025c091455dd20a06658dc13e315bf89abcc73032c449ea0304bdf19f61baf1"
+          "sha256": "28f180b7968c6952a83c64c788412ac986b3a0bd68eb6f68d54ed395a66d60b8"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-resolution-limit-diagnostics.md",
@@ -1560,7 +1560,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
-          "sha256": "b1426603e3752010a3e179a2647715122d9172418681a0a310a946ce688b81da"
+          "sha256": "ede6af16fc8e00ba5041dddad0f37564b8360d18901b6822cc47496a82fb31aa"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-extraction-method-boundary.md",
@@ -1600,7 +1600,7 @@
         },
         {
           "path": "packages/law-practice/use-cases/test/CitationEngineInput.test.ts",
-          "sha256": "4f7c8b6c39cf27a2d86bc3f96b6b3910ea041ce48049f271603080e9ec8710b8"
+          "sha256": "821408b844aa46dd593b372afe302f6c063826e7d2235f2c510cfa7e9af16967"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-public-annotation-operation.md",
@@ -1652,11 +1652,11 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineLayer.test.ts",
-          "sha256": "8d8663403ec747bbbef2d573b773d3e516b4b48f25a962c013c4e80f69e15b5e"
+          "sha256": "c06aa9ba77074cc01d4cc2d4a5199dc5b838cc33d10df3c796f235582d6266fe"
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceCleaning.test.ts",
-          "sha256": "cd4d5151dc0ea94c305b61092d48c812a0bec17d66712d882942e1e16cf0cb68"
+          "sha256": "ede59d3c1b8586e8611bdcdf62152d36eaa4b7298c641293290f0ac6f518196a"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-public-engine-corpus.md",
@@ -1704,7 +1704,27 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticVocabulary.fixtures.ts",
-          "sha256": "0add4f712e10d620242a66b2f8331206b5643a7dc7fd0aed12a57dab45dd6950"
+          "sha256": "5758c9fa3f799be2becc46042f5ed87c7a6fe1075db629a3f8f7bad28dac7478"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-bluebook-codecs.md",
+          "sha256": "8be2d426e21b250361d354962ec6cd6ba58ded5b95c3a02000d6d55c2f750879"
+        },
+        {
+          "path": "packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts",
+          "sha256": "c55850954ff7655f28b00aaee3cb3a78dccf98ad43a9fc65953eb101953dc8e1"
+        },
+        {
+          "path": "packages/law-practice/domain/test/CitationBluebook.test.ts",
+          "sha256": "bc8b5e20a791ecfb8a6b2ba1c9a778268da4459dd56f8941ac0d2ee037b7b864"
+        },
+        {
+          "path": "packages/law-practice/domain/test/dtslint/CitationBluebook.test-d.ts",
+          "sha256": "70a9e44242956c5994d2569cd240a60016e1a7d08144c317e1089ae3d475b6d9"
+        },
+        {
+          "path": "packages/law-practice/domain/test/fixtures/bluebook-layout.json",
+          "sha256": "7f44910000ef91905c5e1acbf9bdfdba456dadf21ebc1968c363fa7a7978dd68"
         }
       ],
       "workflowState": "audit",
@@ -1997,7 +2017,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
-          "sha256": "eaba0b9dc7ab8ad873270b1cd2baee7cef7f35c1c777d8ab12ac76d7300a2da6"
+          "sha256": "41312891ca26e60db8aeddccbd941026cbb8d49058dd8d4cf646def3bc3f8a8a"
         },
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/literal-cleaners.json",
@@ -2313,7 +2333,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
-          "sha256": "7048521add117677c36796a71493c4bae95d988ee00798c791fc853fede0e00d"
+          "sha256": "a36794b5a1a746253450eb994e12fd4e74c5ca1f4ccb8ff3c72086fa6ebb1a37"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-unicode-dictionary.md",

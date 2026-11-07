@@ -4,6 +4,7 @@ import { projectCitationExtractionSelection } from "@beep/law-practice-server/in
 import { getCitationExtractionShortcut } from "@beep/law-practice-server/internal/Citation/ExtractionShortcut";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -49,7 +50,8 @@ it.layer(citationTokenizerTestLayer)("original extraction shortcut", (it) => {
       const first = yield* Effect.fromOption(getCitationExtractionShortcut("eyecite"));
       for (const row of corpus.cases) {
         const found = getCitationExtractionShortcut(row.plain);
-        expect(O.isSome(found)).toBe(row.shortcut);
+        if (row.shortcut) assertSome(found, first);
+        else assertNone(found);
         if (O.isNone(found)) continue;
         expect(found.value).toBe(first);
         expect(found.value).toHaveLength(1);

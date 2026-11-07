@@ -1509,6 +1509,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert XML transport and restore the original HTML process block together; preserve all source corpora, physical retirement requirements and open acceptance duties.
 
+### Add supported Bluebook codecs and repair hosted lint findings, 2026-11-07
+
+Two Effect Schema transformations provide a declared lossless U.S. Reports case profile with exact FullCitation.Type input and total supported reconstruction/rendering. Independent pinned donor layout observations, source replay, seven corruption controls, two 100-example properties and compile-only inline call proofs qualify this initial profile without completing Bluebook scope. Hosted lint repairs hoist compiled schemas, use the existing typed Option helper, add eight schema law properties, isolate simulated clocks and retain two explicitly reviewed real-filesystem exceptions. No source/donor dispositions or final proof rows are promoted.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the supported profile and its independent layout evidence together; retain every unfinished source/donor and whole-engine obligation.
+
 ### Bind table capacity failures to engine budgets, 2026-11-07
 
 Existing dictionary/set owners now bind capacity/work refusals to actual engine ceilings without guessing categories for unbound guards. Resolution, cleaner registry, extractor ordering and edition deduplication preserve those bindings. Fifty-one regression tests pass in 4.74s and seven final capacity/extractor/edition controls in 2.86s. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Complete public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-table-capacity-bindings.md.

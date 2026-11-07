@@ -24,6 +24,8 @@ import {
 import { CitationXmlWorkerStartup, prepareCitationXmlRpc } from "./XmlWorkerRpc.ts";
 import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 
+const XmlWorkerStartupJson = S.fromJsonString(CitationXmlWorkerStartup);
+
 const $I = $LawPracticeServerId.create("internal/Citation/XmlWorker");
 /** Capture per-operation text authority, policy, native lifetime and explicit
  * runtime. Inputs are immutable adapter-owned native values through preflight;
@@ -42,7 +44,7 @@ export const makeCitationXmlWorker = Effect.fn("Citation.makeXmlWorker")(functio
   const assetPath = yield* path
     .fromFileUrl(new URL("../../../assets/citation-xml/kernel.wasm", import.meta.url))
     .pipe(Effect.mapError(invalid));
-  const argument = yield* S.encodeEffect(S.fromJsonString(CitationXmlWorkerStartup))(
+  const argument = yield* S.encodeEffect(XmlWorkerStartupJson)(
     CitationXmlWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath })
   ).pipe(Effect.mapError(invalid));
   const owner = yield* makeCitationMarkupWorker(limits, runtime, argument, "annotate", failure);

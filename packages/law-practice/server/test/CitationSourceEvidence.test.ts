@@ -95,44 +95,46 @@ it.layer(citationTokenizerTestLayer)("operation-neutral canonical source evidenc
       expect("cause" in stale).toBe(false);
     })
   );
-  it.effect("captures annotation timing while the canonical resolver is pending", () =>
-    Effect.gen(function* () {
-      const proof = yield* citationFixtureSourceProof("Alpha");
-      const defaults = (yield* defaultCitationEnginePolicy).limits;
-      const entered = yield* Deferred.make<void>();
-      const done = yield* Ref.make(false);
-      const resolver = SourceTextResolver.of({
-        resolve: Effect.fn("SourceEvidenceTest.block")(() =>
-          Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never))
-        ),
-      });
-      const installed = yield* makeCitationSourceEvidence({
-        ...defaults,
-        extractDeadline: Duration.millis(1),
-        annotateDeadline: Duration.millis(50),
-      }).pipe(
-        Effect.provideService(SourceTextResolver, resolver),
-        Effect.provideService(CitationRegexOperation, "annotate")
-      );
-      const pending = yield* installed
-        .resolve({ source: proof.source, sourceText: "Alpha" })
-        .pipe(
-          Effect.provideService(CitationRegexOperation, "extract"),
-          Effect.flip,
-          Effect.ensuring(Ref.set(done, true)),
-          Effect.forkChild
+  it.layer(TestClock.layer())("isolated clock: 98", (it) => {
+    it.effect("captures annotation timing while the canonical resolver is pending", () =>
+      Effect.gen(function* () {
+        const proof = yield* citationFixtureSourceProof("Alpha");
+        const defaults = (yield* defaultCitationEnginePolicy).limits;
+        const entered = yield* Deferred.make<void>();
+        const done = yield* Ref.make(false);
+        const resolver = SourceTextResolver.of({
+          resolve: Effect.fn("SourceEvidenceTest.block")(() =>
+            Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never))
+          ),
+        });
+        const installed = yield* makeCitationSourceEvidence({
+          ...defaults,
+          extractDeadline: Duration.millis(1),
+          annotateDeadline: Duration.millis(50),
+        }).pipe(
+          Effect.provideService(SourceTextResolver, resolver),
+          Effect.provideService(CitationRegexOperation, "annotate")
         );
-      yield* Deferred.await(entered);
-      yield* TestClock.adjust(Duration.millis(1));
-      const early = yield* Ref.get(done);
-      expect(early).toBe(false);
-      yield* TestClock.adjust(Duration.millis(49));
-      const error = yield* Fiber.join(pending);
-      expect(error).toMatchObject({
-        _tag: "CitationSafetyLimitExceeded",
-        operation: "annotate",
-        limit: "annotateDeadline",
-      });
-    })
-  );
+        const pending = yield* installed
+          .resolve({ source: proof.source, sourceText: "Alpha" })
+          .pipe(
+            Effect.provideService(CitationRegexOperation, "extract"),
+            Effect.flip,
+            Effect.ensuring(Ref.set(done, true)),
+            Effect.forkChild
+          );
+        yield* Deferred.await(entered);
+        yield* TestClock.adjust(Duration.millis(1));
+        const early = yield* Ref.get(done);
+        expect(early).toBe(false);
+        yield* TestClock.adjust(Duration.millis(49));
+        const error = yield* Fiber.join(pending);
+        expect(error).toMatchObject({
+          _tag: "CitationSafetyLimitExceeded",
+          operation: "annotate",
+          limit: "annotateDeadline",
+        });
+      })
+    );
+  });
 });

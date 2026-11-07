@@ -6,7 +6,10 @@ import { makeCitationSemanticProjection } from "@beep/law-practice-server/intern
 import { makeCitationSemanticVocabulary } from "@beep/law-practice-server/internal/Citation/SemanticVocabulary";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -315,8 +318,24 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic ci
         const decoded = yield* S.decodeEffect(CitationShortCaseMetadata)(raw);
         const encoded = yield* S.encodeEffect(CitationShortCaseMetadata)(decoded);
         expect(encoded).toEqual(raw);
-        expect(O.isSome(decoded.plaintiff)).toBe("plaintiff" in raw);
+        if ("plaintiff" in raw) assertSome(decoded.plaintiff, raw.plaintiff);
+        else assertNone(decoded.plaintiff);
       }
     })
   );
 });
+
+const PropertyType = S.toType(CitationShortCaseMetadata);
+const PropertyJson = CitationShortCaseMetadata.pipe(S.toCodecJson, S.fromJsonString);
+const propertyEquivalent = S.toEquivalence(PropertyType);
+it.effect.prop(
+  "preserves short-case metadata absence and literal content through JSON",
+  { value: Arbitrary.schema(PropertyType) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(PropertyJson)(value);
+      const decoded = yield* S.decodeEffect(PropertyJson)(encoded);
+      expect(propertyEquivalent(value, decoded)).toBe(true);
+    }),
+  { arbitrary: fcRuns(100) }
+);

@@ -11,9 +11,9 @@ import {
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { O as OptionUtils } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { captureCitationAnnotationReservation, failCitationAnnotationUnicode } from "./AnnotationBudget.ts";
@@ -144,7 +144,7 @@ const nativeSources = Effect.fn("Citation.prepareAnnotationNativeSources")(funct
   });
   const plain = yield* word(sources.plain);
   const source = yield* word(sources.markup);
-  return R.getSomes({ plain, source });
+  return OptionUtils.getSomesStruct({ plain, source });
 });
 const prepare = Effect.fn("Citation.annotateResolvedSource")(function* (
   limits: CitationEngineLimits,

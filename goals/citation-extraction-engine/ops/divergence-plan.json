@@ -427,7 +427,12 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-07-public-semantic-metadata.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-07-verified-pincite-components.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-07-public-vocabulary-identities.md",
-        "packages/law-practice/server/test/CitationSemanticVocabulary.fixtures.ts"
+        "packages/law-practice/server/test/CitationSemanticVocabulary.fixtures.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-bluebook-codecs.md",
+        "packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts",
+        "packages/law-practice/domain/test/CitationBluebook.test.ts",
+        "packages/law-practice/domain/test/dtslint/CitationBluebook.test-d.ts",
+        "packages/law-practice/domain/test/fixtures/bluebook-layout.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

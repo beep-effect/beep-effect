@@ -10,6 +10,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineLimits, CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
+import { O as OptionUtils } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Context from "effect/Context";
@@ -17,7 +18,6 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
@@ -206,7 +206,7 @@ const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-i
 export const citationRuntimeDictionaryLimitFailure = (limit?: CitationSafetyBudget) =>
   CitationRuntimeDictionaryFailure.make({
     reason: "limit-exceeded",
-    ...R.getSomes({ limit: O.fromUndefinedOr(limit) }),
+    ...OptionUtils.getSomesStruct({ limit: O.fromUndefinedOr(limit) }),
   });
 const exceeded = citationRuntimeDictionaryLimitFailure;
 const freshFailure = (failure: CitationRuntimeDictionaryFailure) =>

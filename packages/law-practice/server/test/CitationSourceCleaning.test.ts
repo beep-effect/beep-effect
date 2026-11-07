@@ -15,6 +15,7 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -120,7 +121,7 @@ it.layer(BunCrypto.layer)("verified source cleaner", (it) => {
       const stage = yield* install();
       const result = yield* stage.clean({ source: proof.source, sourceText: proof.sourceText, plan: "custom" });
       expect(result.value).toBe(output);
-      expect(O.isNone(result.text)).toBe(true);
+      assertNone(result.text);
       const retained = yield* h.values.getHost(result.value);
       expect(O.getOrThrow(retained)).toBe(host);
       expect(result.report.producedTextUtf16).toBe(4);

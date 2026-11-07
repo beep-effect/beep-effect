@@ -15,6 +15,8 @@ import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import type { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import type { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 
+const VocabularyMappingJson = S.fromJsonString(CitationOracleVocabularyMapping);
+
 type Unicode = Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>;
 type Original = Pick<
   Effect.Success<
@@ -33,7 +35,7 @@ export const makeCitationVocabularyAssertion = Effect.fn("SemanticVocabularyTest
     "vocabulary-mapping",
     "b5aca44dc69f05b82c41decf327863a52c151eeb231bdb4df96e5cf7e85351c5"
   );
-  const mapping = yield* S.decodeEffect(S.fromJsonString(CitationOracleVocabularyMapping))(raw);
+  const mapping = yield* S.decodeEffect(VocabularyMappingJson)(raw);
   const editions = HashMap.fromIterable<string, (typeof mapping.editions)[number]>(
     A.map(mapping.editions, (row) => Tuple.make(row.artifactSha256, row))
   );

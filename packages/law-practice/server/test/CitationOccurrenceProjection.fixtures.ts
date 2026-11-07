@@ -23,6 +23,8 @@ import type { installCitationDocumentExtractionFixture } from "./CitationDocumen
 
 type Installed = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>;
 type SourceRow = Installed["corpus"]["cases"][number];
+const SemanticExtractionType = S.toType(CitationSemanticExtractionResult);
+
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const otherArtifact = Sha256Hex.make(Str.repeat(64)("b"));
 /** Authenticated fixture input stands in for the upstream source resolver. */
@@ -61,7 +63,7 @@ const replaceModelAt = Effect.fnUntraced(function* (
   modelId: number,
   transform: (model: CitationExtractionLoopModel) => unknown
 ) {
-  const result = yield* S.decodeUnknownEffect(S.toType(CitationSemanticExtractionResult))(input);
+  const result = yield* S.decodeUnknownEffect(SemanticExtractionType)(input);
   if (result.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Document branch");
   const document = result.raw.outcome.result;
   const loop = document.extraction.extraction;

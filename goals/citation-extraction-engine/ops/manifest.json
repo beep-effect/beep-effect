@@ -296,7 +296,12 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-07-verified-pincite-components.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-archive-consumer-ci-repair.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-public-vocabulary-identities.md",
-    "packages/law-practice/server/test/CitationSemanticVocabulary.fixtures.ts"
+    "packages/law-practice/server/test/CitationSemanticVocabulary.fixtures.ts",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-bluebook-codecs.md",
+    "packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts",
+    "packages/law-practice/domain/test/CitationBluebook.test.ts",
+    "packages/law-practice/domain/test/dtslint/CitationBluebook.test-d.ts",
+    "packages/law-practice/domain/test/fixtures/bluebook-layout.json"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -392,7 +397,8 @@
     "python3 goals/citation-extraction-engine/ops/verify-extraction-shortcut.py --self-test",
     "python3 goals/citation-extraction-engine/ops/verify-semantic-editions.py --self-test",
     "python3 goals/citation-extraction-engine/ops/export-parser-catalog.py --check",
-    "python3 goals/citation-extraction-engine/ops/export-helper-configurations.py --check"
+    "python3 goals/citation-extraction-engine/ops/export-helper-configurations.py --check",
+    "python3 goals/citation-extraction-engine/ops/verify-bluebook-layout.py --self-test"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -801,6 +807,14 @@
     {
       "path": "ops/export-helper-configurations.py",
       "purpose": "Project/check all source-sealed static helper configurations without fixture cases or frozen calendar cutoffs."
+    },
+    {
+      "path": "ops/probe-bluebook-layout.mjs",
+      "purpose": "Observe three constructed supported U.S. Reports layouts in the unchanged pinned eyecite-ts formatter; not extraction or complete donor qualification."
+    },
+    {
+      "path": "ops/verify-bluebook-layout.py",
+      "purpose": "Authenticate the separately observed layout fixture and producer, reject seven corruptions and optionally replay the pinned donor."
     }
   ]
 }

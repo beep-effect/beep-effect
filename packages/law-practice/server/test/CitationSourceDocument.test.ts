@@ -8,8 +8,10 @@ import {
 import { CitationEngineExtractionResult, CitationExtractionDiagnostics } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -21,6 +23,8 @@ import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtu
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
+
+const ExtractionResultType = S.toType(CitationEngineExtractionResult);
 
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
   "connected verified citation document",
@@ -89,7 +93,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             });
             expect("raw" in output).toBe(false);
             expect("semantic" in output).toBe(false);
-            const inconsistent = yield* S.decodeEffect(S.toType(CitationEngineExtractionResult))({
+            const inconsistent = yield* S.decodeEffect(ExtractionResultType)({
               ...output,
               citations: [],
             }).pipe(Effect.flip);
@@ -176,4 +180,19 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         })
     );
   }
+);
+
+const PropertyType = S.toType(CitationExtractionDiagnostics);
+const PropertyJson = CitationExtractionDiagnostics.pipe(S.toCodecJson, S.fromJsonString);
+const propertyEquivalent = S.toEquivalence(PropertyType);
+it.effect.prop(
+  "preserves extraction diagnostic classifications through JSON",
+  { value: Arbitrary.schema(PropertyType) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(PropertyJson)(value);
+      const decoded = yield* S.decodeEffect(PropertyJson)(encoded);
+      expect(propertyEquivalent(value, decoded)).toBe(true);
+    }),
+  { arbitrary: fcRuns(100) }
 );
