@@ -161,7 +161,8 @@ const timeBasis = (span: NativeTraceMetadata) => {
 const spanName = (span: NativeTraceMetadata) => {
   if (O.isSome(span.fixtureSurface)) return `fixture.${span.fixtureSurface.value}.${Str.toLowerCase(span.kind)}`;
   if (O.isSome(span.managedController)) return "managed.controller.canary";
-  if (O.isSome(span.nativeLifecycle)) return `cursor.${span.nativeLifecycle.value.kind}`;
+  if (O.isSome(span.nativeLifecycle))
+    return `${span.nativeLifecycle.value.harness === "cursor" ? "cursor" : "claude.cowork"}.${span.nativeLifecycle.value.kind}`;
   return `agent.${Str.toLowerCase(span.kind)}`;
 };
 const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) => [
@@ -178,8 +179,21 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
     text("ai_metrics.controller_elapsed_nanos", controller.elapsedNanos),
   ]),
   ...A.flatMap(O.toArray(span.nativeLifecycle), (event) => [
-    text("ai_metrics.harness", "cursor"),
+    text("ai_metrics.harness", event.harness),
     text("ai_metrics.lifecycle.kind", event.kind),
+    ...(event.harness === "claude-desktop"
+      ? [
+          text("ai_metrics.surface", event.surface),
+          text("ai_metrics.lifecycle.engine_binding", event.engineBinding),
+          text("ai_metrics.lifecycle.app_script_binding", event.appScriptBinding),
+          text("ai_metrics.lifecycle.callback_script_binding", event.callbackScriptBinding),
+          text("ai_metrics.lifecycle.occurrence_id", event.occurrenceHash),
+          text("ai_metrics.lifecycle.enrollment_id", event.enrollmentId),
+          ...O.toArray(
+            O.map(event.reportedSource, (value) => text("ai_metrics.lifecycle.native_reported_source", value))
+          ),
+        ]
+      : []),
     text("ai_metrics.lifecycle.assurance", event.assurance),
     text("ai_metrics.lifecycle.source_timestamp", event.sourceTimestamp),
     text("ai_metrics.lifecycle.runtime_instance_id", event.runtimeInstanceId),
