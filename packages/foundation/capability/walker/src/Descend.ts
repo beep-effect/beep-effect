@@ -16,7 +16,7 @@
  */
 
 import { $WalkerId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as LiteralKit from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -36,7 +36,7 @@ import type { GlobPattern } from "@beep/glob/GlobPattern";
 
 const $I = $WalkerId.create("Descend");
 
-const OnUnreadable = LiteralKit(["fail", "skip", "record"]).pipe(
+const OnUnreadable = LiteralKit.LiteralKit(["fail", "skip", "record"]).pipe(
   $I.annoteSchema("OnUnreadable", { description: "How unreadable traversal directories are handled." })
 );
 type OnUnreadable = typeof OnUnreadable.Type;
@@ -66,13 +66,19 @@ export const OnUnreadableArray = OnUnreadable.pick(["fail", "skip"]);
 export type OnUnreadableArray = typeof OnUnreadableArray.Type;
 const OnUnreadableRecord = OnUnreadable.pick(["record"]);
 
-const DescendErrorReason = LiteralKit(["unreadableDirectory", "depthExceeded"]).pipe(
+const OnStatError = LiteralKit.LiteralKit(["skip", "fail"]).pipe(
+  $I.annoteSchema("OnStatError", { description: "Whether non-NotFound stat failures are skipped or fail descent." })
+);
+type OnStatError = typeof OnStatError.Type;
+
+const DescendErrorReason = LiteralKit.LiteralKit(["unreadableDirectory", "depthExceeded", "statFailed"]).pipe(
   $I.annoteSchema("DescendErrorReason", { description: "Why downward traversal failed." })
 );
 const DescendFailure = DescendErrorReason.mapMembers(
-  ([unreadable, depth]) =>
+  ([unreadable, depth, stat]) =>
     [
       S.Struct({ reason: unreadable }),
+      S.Struct({ reason: stat }),
       S.Struct({
         reason: depth,
         limit: S.Option(S.Finite).pipe(
@@ -124,6 +130,19 @@ const descendOptionFields = {
   followSymlinks: S.optionalKey(S.Boolean).pipe(
     $I.annoteKey("DescendOptions.followSymlinks", {
       description: "Whether symlinked directories are followed with per-branch cycle safety.",
+    })
+  ),
+  /**
+   * Whether a failed stat is skipped (the default) or fails typed with
+   * `reason: "statFailed"` and its original filesystem cause. `NotFound`
+   * remains zero matches in either mode. Independent of `onUnreadable`,
+   * which governs directory reads and symlink real-path resolution. Strict
+   * mode stats every listed entry before matching or directory pruning; it
+   * still never descends into pruned or unreachable directories.
+   */
+  onStatError: S.optionalKey(OnStatError).pipe(
+    $I.annoteKey("DescendOptions.onStatError", {
+      description: "Whether non-NotFound stat failures are skipped (default) or fail typed.",
     })
   ),
   /** Hard cap on directory depth below the pattern's literal prefix. Defaults to 256. */
@@ -377,8 +396,8 @@ export declare namespace DescendResult {
 
 /**
  * Typed failure raised by `descend`: a directory mid-walk was unreadable
- * (under `onUnreadable: "fail"`), or the walk descended past `maxDepth`. Depth
- * exhaustion is a typed failure, never a truncation — silent truncation
+ * (under `onUnreadable: "fail"`), a stat failed under `onStatError: "fail"`,
+ * or the walk descended past `maxDepth`. Depth exhaustion is a typed failure, never a truncation — silent truncation
  * silently changes match semantics.
  *
  * **Example** (Report an unreadable directory)
@@ -399,17 +418,21 @@ export class DescendError extends S.TaggedError<DescendError, { readonly brand: 
   {
     /** The glob pattern's source text. */
     pattern: S.String.pipe($I.annoteKey("DescendError.pattern", { description: "The glob pattern's source text." })),
-    /** Why the walk failed: a directory could not be read, or the walk went past `maxDepth`. */
+    /** Why the walk failed: directory read, strict stat, or depth exhaustion. */
     reason: DescendErrorReason.pipe(
       $I.annoteKey("DescendError.reason", {
-        description: "Why the walk failed: a directory could not be read, or the walk went past `maxDepth`.",
+        description: "Why the walk failed: directory read, strict stat, or depth exhaustion.",
       })
     ),
-    /** The offending directory, relative to `cwd` (`""` is the walk's base). */
+    /** The offending path, relative to `cwd` (`""` is the walk's base). */
     path: S.String.pipe(
       $I.annoteKey("DescendError.path", {
-        description: 'The offending directory, relative to `cwd` (`""` is the walk\'s base).',
+        description: 'The offending path, relative to `cwd` (`""` is the walk\'s base).',
       })
+    ),
+    /** The original filesystem stat failure, present for `"statFailed"`. */
+    cause: S.optionalKey(S.instanceOf(PlatformError.PlatformError)).pipe(
+      $I.annoteKey("DescendError.cause", { description: "The original filesystem failure for strict stat errors." })
     ),
     /** The depth cap, present when `reason` is `"depthExceeded"`. */
     limit: S.optionalKey(S.Finite).pipe(
@@ -418,7 +441,7 @@ export class DescendError extends S.TaggedError<DescendError, { readonly brand: 
   },
   $I.annoteError<DescendError>("DescendError", {
     description:
-      'Typed failure raised by `descend`: a directory mid-walk was unreadable (under `onUnreadable: "fail"`), or the walk descended past `maxDepth`. Depth exhaustion is a typed failure, never a truncation — silent truncation silently changes match semantics.',
+      "Typed failure raised by `descend`: a directory mid-walk was unreadable, a strict stat failed, or the walk descended past `maxDepth`. Depth exhaustion is a typed failure, never a truncation — silent truncation silently changes match semantics.",
   })
 ) {
   /**
@@ -443,6 +466,7 @@ export class DescendError extends S.TaggedError<DescendError, { readonly brand: 
   override get message(): string {
     const failure: DescendFailure = DescendErrorReason.match(this.reason, {
       unreadableDirectory: (reason) => DescendFailure.cases.unreadableDirectory.make({ reason }),
+      statFailed: (reason) => DescendFailure.cases.statFailed.make({ reason }),
       depthExceeded: (reason) =>
         DescendFailure.cases.depthExceeded.make({ reason, limit: O.fromNullishOr(this.limit) }),
     });
@@ -450,6 +474,7 @@ export class DescendError extends S.TaggedError<DescendError, { readonly brand: 
     const pattern = quoteJson(this.pattern);
     return DescendFailure.match(failure, {
       unreadableDirectory: () => `glob descent for ${pattern} could not read ${where}`,
+      statFailed: () => `glob descent for ${pattern} could not stat ${where}`,
       depthExceeded: ({ limit }) =>
         `glob descent for ${pattern} descended past ${O.getOrElse(limit, () => "the depth cap")} levels below ${where}`,
     });
@@ -515,6 +540,7 @@ type DescendSettings = {
   readonly maxDepth: number;
   readonly prune: HashSet.HashSet<string>;
   readonly onUnreadable: OnUnreadable;
+  readonly onStatError: OnStatError;
   readonly followSymlinks: boolean;
   /** Populated only under "record"; `finish` decides the return shape. */
   readonly unreadable: Array<UnreadableDirectory>;
@@ -535,6 +561,7 @@ const settingsOf = (pattern: GlobPattern, options: DescendAnyOptions): DescendSe
   maxDepth: options.maxDepth ?? 256,
   prune: HashSet.fromIterable(options.prune ?? DEFAULT_PRUNE),
   onUnreadable: options.onUnreadable ?? "fail",
+  onStatError: options.onStatError ?? "skip",
   followSymlinks: options.followSymlinks ?? false,
   unreadable: [],
 });
@@ -542,12 +569,19 @@ const settingsOf = (pattern: GlobPattern, options: DescendAnyOptions): DescendSe
 const isFileKind = (kind: FileSystem.File.Info["type"]): boolean => kind === "File";
 const isDirectoryKind = (kind: FileSystem.File.Info["type"]): boolean => kind === "Directory";
 
-/** The stat-resolved type of `absolute`, or None when missing, dangling or unstatable. */
-const typeOf = Effect.fnUntraced(function* (absolute: string) {
+/** The stat-resolved type; missing stays empty, other failures follow the explicit stat policy. */
+const typeOf = Effect.fnUntraced(function* (settings: DescendSettings, absolute: string, relative: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.stat(absolute).pipe(
     Effect.map((info) => info.type),
-    Effect.option
+    Effect.asSome,
+    Effect.catch((cause) =>
+      cause.reason._tag === "NotFound" || OnStatError.is.skip(settings.onStatError)
+        ? Effect.succeedNone
+        : Effect.fail(
+            DescendError.make({ pattern: settings.pattern.source, reason: "statFailed", path: relative, cause })
+          )
+    )
   );
 });
 
@@ -629,7 +663,7 @@ const finish = (settings: DescendSettings, matches: ReadonlyArray<string>): Read
 const literalMatches = Effect.fnUntraced(function* (settings: DescendSettings, literal: string) {
   const path = yield* Path.Path;
   if (escapesCwd(literal)) return A.empty<string>();
-  const typeOf1 = yield* typeOf(path.join(settings.cwd, literal));
+  const typeOf1 = yield* typeOf(settings, path.join(settings.cwd, literal), literal);
   return O.exists(typeOf1, isFileKind) ? A.of(literal) : A.empty<string>();
 });
 
@@ -650,7 +684,7 @@ const resolveBase = Effect.fnUntraced(function* (settings: DescendSettings) {
   const base = settings.pattern.negated ? "" : Str.replace(/\/+$/, "")(settings.pattern.enumerationPrefix);
   if (escapesCwd(base)) return O.none<DescendFrame>();
   const absolute = base === "" ? settings.cwd : path.join(settings.cwd, base);
-  const typeOf2 = yield* typeOf(absolute);
+  const typeOf2 = yield* typeOf(settings, absolute, base);
   if (!O.exists(typeOf2, isDirectoryKind)) return O.none<DescendFrame>();
   if (!settings.followSymlinks)
     return O.some<DescendFrame>({ relative: base, absolute, depth: 0, ancestors: NO_ANCESTORS });
@@ -721,7 +755,9 @@ const isDescendable = (settings: DescendSettings, entry: string, relative: strin
  * Classify one directory entry: a matching file yields its path, a
  * descendable directory yields its frame, anything else yields None. An
  * entry the pattern can neither match nor descend through (by
- * `GlobPattern.mayMatchBelow`) is skipped before any `stat`. Prune
+ * `GlobPattern.mayMatchBelow`) is skipped before `stat` under the default
+ * policy. Strict stat mode probes every listed entry before matching or
+ * pruning, so a failure cannot hide behind its name or suffix. Prune
  * suppresses DIRECTORIES only, per the option's contract — a FILE named
  * `.git` (a submodule or worktree gitlink) stays matchable.
  */
@@ -729,10 +765,10 @@ const classifyEntry = Effect.fnUntraced(function* (settings: DescendSettings, fr
   const relative = frame.relative === "" ? entry : `${frame.relative}/${entry}`;
   const file = settings.pattern.matches(relative);
   const directory = isDescendable(settings, entry, relative);
-  if (!file && !directory) return O.none<string | DescendFrame>();
+  if (!file && !directory && OnStatError.is.skip(settings.onStatError)) return O.none<string | DescendFrame>();
   const path = yield* Path.Path;
   const absolute = path.join(frame.absolute, entry);
-  const kind = yield* typeOf(absolute);
+  const kind = yield* typeOf(settings, absolute, relative);
   if (file && O.exists(kind, isFileKind)) return O.some<string | DescendFrame>(relative);
   if (!directory || !O.exists(kind, isDirectoryKind)) return O.none<string | DescendFrame>();
   return yield* enqueueChild(settings, frame, entry, relative, absolute);
@@ -799,8 +835,10 @@ const descendImpl: (
  * its documented root" holds lexically always, and physically only while
  * `followSymlinks` is off: under it, a link whose target lives outside `cwd`
  * is descended, exactly as `@actions/glob` follows links out of the tree.
- * Only an unreadable directory mid-walk
- * (under the default `onUnreadable: "fail"`) or a walk past `maxDepth` fails,
+ * Stat failures are skipped by default; `onStatError: "fail"` preserves
+ * non-`NotFound` failures as `"statFailed"` with the original filesystem cause.
+ * An unreadable directory mid-walk
+ * (under the default `onUnreadable: "fail"`) or a walk past `maxDepth` also fails,
  * typed as {@link DescendError}.
  *
  * Only files match. A symlink counts when it stat-resolves to a file

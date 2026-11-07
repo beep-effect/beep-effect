@@ -5,40 +5,23 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import * as Getter from "effect/SchemaGetter";
+import { descendErrorSample, unreadableDirectorySample } from "./support/arbitraries.ts";
 
 const runs = { arbitrary: fcRuns(100) };
 
-// instanceOf has no built-in generator. Supply a generation-only link while
-// retaining the public schema's actual encoder, decoder and equivalence.
-const ReasonSample = S.Literals(["PermissionDenied", "Unknown", "NotFound"]);
-const directorySchema = UnreadableDirectory.mapFields((fields) => ({
+const resultSchema = DescendResult.mapFields((fields) => ({
   ...fields,
-  cause: fields.cause.annotate({
-    toCodecArbitrary: () =>
-      S.link<PlatformError.PlatformError>()(ReasonSample, {
-        decode: Getter.transform((reason) =>
-          PlatformError.systemError({
-            _tag: reason,
-            module: "FileSystem",
-            method: "readDirectory",
-            pathOrDescriptor: "/generated",
-          })
-        ),
-        encode: Getter.forbiddenEncoding,
-      }),
-  }),
+  unreadable: S.Array(unreadableDirectorySample),
 }));
-const resultSchema = DescendResult.mapFields((fields) => ({ ...fields, unreadable: S.Array(directorySchema) }));
 
 describe("descent schemas", () => {
   it.effect.prop(
     "DescendError: decode(encode(x)) equals x and decoding never fails",
-    [Arbitrary.schema(DescendError)],
-    ([value]) =>
+    [Arbitrary.schema(descendErrorSample)],
+    ([sample]) =>
       Effect.gen(function* () {
+        const value = DescendError.make(sample);
         const encoded = yield* S.encodeEffect(DescendError)(value);
         const decoded = yield* S.decodeEffect(DescendError)(encoded);
         assertTrue(S.toEquivalence(DescendError)(decoded, value));
@@ -50,7 +33,7 @@ describe("descent schemas", () => {
   );
   it.effect.prop(
     "UnreadableDirectory: decode(encode(x)) preserves path and original cause",
-    [Arbitrary.schema(directorySchema)],
+    [Arbitrary.schema(unreadableDirectorySample)],
     ([sample]) =>
       Effect.gen(function* () {
         const value = UnreadableDirectory.make(sample);
