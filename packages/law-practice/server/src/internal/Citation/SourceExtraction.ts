@@ -32,7 +32,10 @@ export class CitationSourceExtractionResult extends S.Opaque<
     })
   )
 ) {}
-const own = Effect.fn("Citation.ownSourceExtraction")(function* (
+/** Capture source/semantic dependencies for one admitted parent operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const ownCitationSourceExtraction = Effect.fn("Citation.ownSourceExtraction")(function* (
   limits: CitationEngineLimits,
   configuration: CitationVerifiedExtractionConfiguration
 ) {
@@ -44,6 +47,7 @@ const own = Effect.fn("Citation.ownSourceExtraction")(function* (
   });
   return { source, config, children: semantic.children };
 });
+const own = ownCitationSourceExtraction;
 const extractPrepared = Effect.fn("Citation.extractPreparedSource")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
@@ -70,8 +74,16 @@ const prepareSource = (method: keyof Effect.Success<ReturnType<typeof makeCitati
     );
     return { result, workDuration, limits, engineArtifact: owned.config.engineArtifact };
   });
-const prepare = prepareSource("prepare");
-const preparePair = prepareSource("preparePair");
+/** Resolve and extract within the existing admitted parent's Scope and budget.
+ * @internal @category operations @since 0.0.0
+ */
+export const prepareCitationSourceExtraction = prepareSource("prepare");
+/** Prepare independently verified plain/markup slots under the same parent.
+ * @internal @category operations @since 0.0.0
+ */
+export const prepareCitationSourcePairExtraction = prepareSource("preparePair");
+const prepare = prepareCitationSourceExtraction;
+const preparePair = prepareCitationSourcePairExtraction;
 /** Admit before resolver work and retain one enclosing deadline and cumulative
  * text budget through verified occurrence production. Child extraction reuses
  * the existing parent admission Context rather than acquiring another permit.

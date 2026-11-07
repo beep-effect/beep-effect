@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "3c6b72d081dc1a0ed0238b8ea47c8d8df40fe65cd13fbaf020124a1c76fde982",
+  "planSha256": "a7b32348d8ef6ca31ab2a019fcb3f8090a03e17e4f7531a049eb8798caaec26e",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1517,6 +1517,18 @@
         {
           "path": "packages/law-practice/server/test/CitationAnnotationFailure.test.ts",
           "sha256": "4cee90f9fcda1d0e582521a92a77365ba94550c791e74621afb8ab5dfffe7281"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-connected-source-document.md",
+          "sha256": "4a70cc3e0973c147868b88956e6515b8030fcd73abb01f1ae90f2d8891408d6b"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/SourceDocument.ts",
+          "sha256": "b010abb3ffc4ad04dbf58d37b501b801c87320c1893d5cf7e2046be694a45d79"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationSourceDocument.test.ts",
+          "sha256": "341e4a7cfce74604785c3ddeea344ba7b39a9795a6e47b96ccb6ff09443af987"
         }
       ],
       "workflowState": "audit",

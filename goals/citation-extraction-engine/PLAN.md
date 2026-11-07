@@ -1509,4 +1509,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert XML transport and restore the original HTML process block together; preserve all source corpora, physical retirement requirements and open acceptance duties.
 
+### Connect verified extraction and document resolution, 2026-11-07
+
+One admitted operation now connects canonical source resolution, native semantic extraction, verified occurrences, authenticated edition spelling and registered default resolution. Three actual Bun/Node/shortcut tests pass in 33.68s, including independent plain/markup lineage, exact original spans/grouping and complete receipt restoration. Lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Public Engine/Layer, complete failure boundaries and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-connected-source-document.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert source document composition and restore the private source extraction helper boundary together, retaining source observations, receipts and all acceptance requirements.
+
 <!-- beep:decisions:end -->
