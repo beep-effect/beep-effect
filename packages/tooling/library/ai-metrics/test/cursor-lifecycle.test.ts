@@ -485,6 +485,53 @@ for (const scenario of [
 }
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
+  for (const scenario of [
+    { name: "non-root ancestor", directory: "/usr", patch: { uid: O.some(123456) } },
+    { name: "missing ancestor owner", directory: "/usr", patch: { uid: O.none<number>() } },
+    { name: "group-writable ancestor", directory: "/usr", patch: { mode: 0o40775 } },
+    { name: "world-writable root", directory: "/", patch: { mode: 0o40757 } },
+  ]) {
+    it.effect(`interpreter ${scenario.name} refuses before opening the executable or spawning`, () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const inspected: string[] = [];
+        let opened = 0;
+        let dispatches = 0;
+        const guarded = FileSystem.FileSystem.of({
+          ...fs,
+          stat: Effect.fn("CursorLifecycleTest.ancestorStat")((path) =>
+            fs.stat(path).pipe(
+              Effect.map((info) => {
+                inspected.push(path);
+                return path === scenario.directory ? { ...info, ...scenario.patch } : info;
+              })
+            )
+          ),
+          open: Effect.fn("CursorLifecycleTest.ancestorOpen")((path, options) => {
+            if (path === f.policy.pythonExecutable) opened++;
+            return fs.open(path, options);
+          }),
+        });
+        const result = yield* f.deliver(start).pipe(
+          Effect.provideService(FileSystem.FileSystem, guarded),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, {
+            ...spawner,
+            spawn: (...args) => {
+              dispatches++;
+              return spawner.spawn(...args);
+            },
+          })
+        );
+        assertFailure(result.result, CursorLifecycleError.make({ reason: "enrollment" }));
+        expect(inspected).toEqual(scenario.directory === "/" ? ["/"] : ["/", "/usr"]);
+        expect(opened).toBe(0);
+        expect(dispatches).toBe(0);
+        expect((yield* f.journal.stats).pages).toBe(0);
+      })
+    );
+  }
   for (const fault of ["canonical", "owner", "writable", "size", "digest", "changed", "growth"]) {
     it.effect(`interpreter ${fault} enrollment refuses before helper dispatch and durable admission`, () =>
       Effect.gen(function* () {

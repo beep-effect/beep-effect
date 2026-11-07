@@ -22,6 +22,7 @@ import {
   isLifecycleError,
 } from "./cursor-lifecycle-schemas.ts";
 import { cursorPeerSource } from "./cursor-peer-source.ts";
+import { qualifyInterpreterAncestors } from "./interpreter-path.ts";
 import { hashObservationPayload } from "./native-trace-wire.ts";
 import type { makeNativeIntakeJournal } from "../native-intake.ts";
 import type { ObservationControl } from "../observation-control.ts";
@@ -69,8 +70,9 @@ const qualifySource = Effect.fnUntraced(function* (
 const qualifyInterpreter = Effect.fnUntraced(function* (policy: CursorLifecyclePolicy) {
   const fs = yield* FileSystem.FileSystem;
   // The fixed Python interpreter is root-owned and not writable by this UID.
-  // Parent canonicality plus noFollow closes the final-component path gap.
+  // Canonicality and a root-owned nonwritable parent chain prevent same-UID replacement.
   if ((yield* fs.realPath(policy.pythonExecutable)) !== policy.pythonExecutable) return yield* failure("enrollment");
+  yield* qualifyInterpreterAncestors(policy.pythonExecutable);
   const python = yield* fs.open(policy.pythonExecutable, { noFollow: true });
   const before = yield* python.stat;
   if (
