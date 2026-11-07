@@ -256,8 +256,8 @@ reader, raw event tool, watch tool or command tool.
 Reuse Effect MCP and the repo's sanitized tooling registration pattern:
 `packages/drivers/m365-mcp/src/Server.ts:8-15,70-96,123-130` uses
 `@beep/mcp-kit` and `effect/ai/McpServer`.
-Search included McpServer and effect/unstable/ai usages; the existing source
-uses the dedicated `effect/ai/*` leaves. Register read-only tool annotations
+Search included McpServer usages and the retired AI module path; the existing
+source uses the dedicated `effect/ai/*` leaves. Register read-only tool annotations
 and client-safe typed failures. HTTP MCP forwards the call's credentials;
 stdio, if added, uses an enrolled identity per process, never an anonymous
 System principal. Protocol registration follows the existing MCP kit.
