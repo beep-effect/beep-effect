@@ -2,14 +2,13 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import * as NodeURL from "node:url";
-import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationXmlWorker } from "@beep/law-practice-server/internal/Citation/XmlWorker";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { citationBunTestExecutable, makeCitationNodeTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
+import { makeCitationBundledTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   setupCitationMetadataRuntime,
@@ -22,19 +21,18 @@ export const makeCitationXmlTestRuntime = Effect.fn("XmlWorkerTest.runtime")(fun
 ) {
   const fs = yield* FileSystem.FileSystem;
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-xml-worker-" });
-  const runtime =
-    kind === "node"
-      ? yield* makeCitationNodeTestRuntime(
-          NodeURL.fileURLToPath(new URL("../src/internal/Citation/XmlWorker.node.entry.ts", import.meta.url)),
-          cwd
-        )
-      : CitationNativeProcessRuntime.make({
-          kind,
-          executable: yield* citationBunTestExecutable,
-          cwd,
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/XmlWorker.entry.ts", import.meta.url)),
-        });
-  return runtime;
+  return yield* makeCitationBundledTestRuntime(
+    kind,
+    NodeURL.fileURLToPath(
+      new URL(
+        kind === "node"
+          ? "../src/internal/Citation/XmlWorker.node.entry.ts"
+          : "../src/internal/Citation/XmlWorker.entry.ts",
+        import.meta.url
+      )
+    ),
+    cwd
+  );
 });
 /** @internal @category testing @since 0.0.0 */
 export const installCitationXmlWorker = Effect.fn("XmlWorkerTest.install")(function* (kind: CitationNativeRuntimeKind) {

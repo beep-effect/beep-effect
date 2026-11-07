@@ -1697,6 +1697,18 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Remove the public replay entrypoints while retaining original oracle observations and unresolved acceptance obligations.
 
+### Qualify original resolution assertions through the default public engine, 2026-11-07
+
+Bind all 23 original formatted resource-map and seven reference-index equality assertions to the existing 30 operation snapshots. Both runtime configurations pass the final public default-engine replay, with real admission and cleanup checks retained. Validate all 94 original input models and finite conditions for all 45 source resource groups; preserve optional authority examples without treating them as resource-key capabilities. Only these 30 resolver-boundary cases are completed; parser, outer helper, general model/hash and whole-engine obligations remain open. See history/evidence/2026-11-07-canonical-resolution-assertions.md.
+
+Reverse: Retain exact original operands, complete source-input matching and scoped label conditions if resolution representation changes.
+
+### Remove repeated Bun XML module startup from native qualification fixtures, 2026-11-07
+
+Reuse the existing scoped worker bundler for the Bun XML test entry, matching the established regex/HTML and Node fixture strategy. All eight selected callback/XML/default-resolution tests pass; Bun markup callback time is 9.30 seconds versus the earlier 90.35-second diagnostic sample, with unchanged 120-second limits. The samples are not a controlled benchmark and hosted acceptance remains required. No production worker or callback algorithm changes. See history/evidence/2026-11-07-bun-xml-startup.md.
+
+Reverse: Retain the actual Bun entrypoint and all source outcomes, byte limits and physical-exit assertions if startup packaging changes.
+
 ### Repair hosted JSDoc since tags without weakening the ratchet, 2026-11-07
 
 Hosted job 128250296967 reports nine missing since tags plus one leading/trailing blank. Public comments now separate category/since tags, and the mode alias has a lead description. The actual repository tag/shape parser passes 86 focused export comments. Main ce87ff21b2 is merged at 0ef0edc00a. Full hosted ratchet remains pending; baselines/thresholds unchanged. See history/evidence/2026-11-07-public-source-resolution.md.

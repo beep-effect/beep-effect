@@ -12,8 +12,9 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Tuple from "effect/Tuple";
+import { makeCitationCanonicalResolutionComparison } from "./CitationCanonicalResolution.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
-import { buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
+import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { assertCitationWorkerCompositionReleased } from "./CitationRegexWorker.fixtures.ts";
 import { prepareCitationResolutionContext } from "./CitationResolve.fixtures.ts";
 import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
@@ -25,11 +26,12 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
   (it) => {
     for (const kind of ["bun", "node"] as const) {
       it.effect(
-        `matches all 30 pinned operation groups using authenticated configuration on ${kind}`,
+        `matches all 30 original resolution assertions using authenticated default configuration on ${kind}`,
         () =>
           Effect.gen(function* () {
             const installed = yield* installCitationDefaultConfigurationFixture(kind);
             const current = yield* Ref.make(O.none<VerifiedSourceText>());
+            const currentOperation = yield* Ref.make(O.none<typeof installed.setup.operation>());
             const resolver = SourceTextResolver.of({
               resolve: Effect.fn("EngineResolutionTest.source")(function* (request) {
                 const selected = yield* Ref.get(current);
@@ -37,12 +39,18 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
                   SourceTextResolverError.new("source-unavailable", "resolution witness not installed")
                 );
                 expect(request.identity).toEqual(proof.source);
-                const state = yield* installed.setup.operation.snapshot;
+                const owner = yield* Ref.get(currentOperation);
+                const operation = yield* Effect.fromOption(owner, () =>
+                  SourceTextResolverError.new("source-unavailable", "resolution admission witness not installed")
+                );
+                const state = yield* operation.snapshot;
                 expect(state).toMatchObject({ active: 1, queued: 0 });
                 return ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText });
               }),
             });
-            const { engine } = yield* buildCitationEngineFixture(installed, resolver);
+            const { engine, operation, admission } = yield* buildCitationDefaultEngineFixture(installed, resolver);
+            yield* Ref.set(currentOperation, O.some(operation));
+            const canonical = yield* makeCitationCanonicalResolutionComparison();
             const observations = yield* loadResolutionOperationContexts;
             expect(observations.contexts).toHaveLength(30);
             expect(observations.sourceSiteIds).toHaveLength(2);
@@ -69,16 +77,18 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               );
               if (row.context.outcome.status !== "value") return yield* Effect.die("expected original groups");
               expect(groups, row.context.name).toEqual(row.context.outcome.groups);
+              yield* canonical.compare(
+                row.context.name,
+                row.sourceCitationModels,
+                row.sourceResolutionGroups,
+                result.document
+              );
               expect(result.source.source).toEqual(input.verifiedSource.source);
               expect(result.document.mentions).toEqual(input.mentions);
               expect(result.report).toMatchObject({ operation: "resolve", engineArtifact: installed.engineArtifact });
             }
-            yield* assertCitationWorkerCompositionReleased(
-              installed.setup.operation,
-              installed.setup.admission,
-              installed.setup.observed.snapshot,
-              0
-            );
+            yield* canonical.verify;
+            yield* assertCitationWorkerCompositionReleased(operation, admission, installed.setup.observed.snapshot, 0);
           }),
         { timeout: 180000 }
       );

@@ -1684,7 +1684,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineResolution.test.ts",
-          "sha256": "d1ec24a9508f3d7a06deb7a1f6b805487f94afd41742ec836e6d3b5fa0da704d"
+          "sha256": "146b73eecf0ded29474afe9e12a5cc9d9b604a9b95acf80abe8ec7b43fa80437"
         },
         {
           "path": "packages/law-practice/server/test/CitationResolve.fixtures.ts",
@@ -1752,7 +1752,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
-          "sha256": "c66473c5953eb200ea655b70627d07aad5e30b703253e72d2a3ca31b56c2ba6c"
+          "sha256": "86b2a9e94e6ad9dbbc5de9d13a95201d177e0d35076f5faff83f5144019ff47a"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
@@ -2646,7 +2646,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
-          "sha256": "6f958a0ab692e04216ab4b0ca3abe98a3a85a4a16730ea4262a48ebbc4843e3c"
+          "sha256": "31bd7ab57c8a45c8e0a9185c307608b9b51f04f60dbd25e7c7a77d4e3340ab24"
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts",
@@ -3009,7 +3009,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineResolution.test.ts",
-          "sha256": "d1ec24a9508f3d7a06deb7a1f6b805487f94afd41742ec836e6d3b5fa0da704d"
+          "sha256": "146b73eecf0ded29474afe9e12a5cc9d9b604a9b95acf80abe8ec7b43fa80437"
         },
         {
           "path": "packages/law-practice/server/test/CitationResolve.fixtures.ts",

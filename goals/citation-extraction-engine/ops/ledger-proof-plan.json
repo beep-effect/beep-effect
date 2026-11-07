@@ -713,6 +713,173 @@
           }
         ]
       }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_ambigous_short_cite::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "fe6db8145b8867cae12d79e5d7f58d84e9e75ae1cc22c56a2d0faf14455fb6dd"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_complex_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "3cc8ad93ffc25fca3975ce56ebc1f4ee079f13eae10e87a490605378584a629d"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "08ebd1f5043799147c4fb0dfe3dc77040efd3a5a3a8b136ec73661e55d36c89d"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::2",
+          "observationSha256": "6aaf8728b3f7429466aa169a4a8b311f833e57124071efb500e7eef517600286"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::3",
+          "observationSha256": "74e28bb16f038d293eab10dcf7dfccb6c631449470d3678a3932aa6ee121ed78"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::4",
+          "observationSha256": "633aa4f322f65f4f28413ac9f3a3982b02b1d2c0f6b2a70b36cd5d5e48d25a3e"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_full_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::5",
+          "observationSha256": "866b21f79c1edd5d1a424acb660a2afcd9fa6406e7f57ade5f88c6b1dd5eea22"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "b8256c58f871e9ce651b5148885795dac8c06422dcc8f0ad07a9db8655260ea9"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::2",
+          "observationSha256": "e48eb262909485582c76ebafcbafe18e83b400b6c4e6499c162c6ddb82c1c716"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::3",
+          "observationSha256": "f31196b20c19300060945d7a1fd90800fcaf780687d1e73a2bc675c57ab2e8af"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::4",
+          "observationSha256": "cca12d7bdf3c000de6c066a7e94b03f8fd273a62d8e4a7779095d58bdc67feea"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::5",
+          "observationSha256": "de4e005903b2d09f784ee49871bb9f493c2c58db1a9278a43de0535e0cb9a545"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_id_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::6",
+          "observationSha256": "07053d88a15f056f170d2c72b615df479ef4d802c6630137e186885b49b6488b"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_issue_167::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "fc69cbc73603ad599aa5f31cbb72b8fd632db40862da3f7e894fadd79fc394d8"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_non_case_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "237b8070e23a95a76f12d6a655bf7929ccf83155125077e2d463c4b545b1bcee"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::1",
+          "observationSha256": "e7193e526bafcdd0722c088ce7437ebb7f28b6b5dcbf0897ef2123e5ef66efb3"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::2",
+          "observationSha256": "3d93e4dad1e4e4fa86e6dab6b3138146068d3a830a22b1ba09853ea7d95623b1"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::3",
+          "observationSha256": "2e513b1fc2990eae031c69afa310818ef3048db9dbec77036760c62727228d94"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::4",
+          "observationSha256": "92a12e9fbcb1c3ef72c9cd4c1f3329fbeb56deb26ea602356a8f44d578f88dd1"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::5",
+          "observationSha256": "47edd5edc57352addab8fcd61f92120836253e56495bc19b43c2983ae051019d"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::6",
+          "observationSha256": "ac3e97d16249920a4546703a194142e981b8dafb4962faad39fa81becc182b11"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_reference_resolution::tests/test_ResolveTest.py:89:8:caseDeclaration::7",
+          "observationSha256": "d5d7068e180893811babf3a83383024f83410c4795241eca1d5e86b641c15732"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "547247e1c21824f1e1c96353215b5051d8e2f75d87e6c4d8cc85634791073162"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::2",
+          "observationSha256": "1495a48ae888cb380314f74e060d9a7a6a769f2696eb6d37353d33fdaa27cc9c"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::3",
+          "observationSha256": "a8b207141dc56684f88f1fc8c52ce16f4b3fa47c4913d71aa3f5c653568396e0"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::4",
+          "observationSha256": "ba7a7852831db69ab04eecd3c0293467622e538b6b3c5a2ae835fd6c7453ce66"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::5",
+          "observationSha256": "99ba7d91b738ba4afb01abea5ed778e83e9a657f5ba55ac6449474dd09bc6e4c"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_short_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::6",
+          "observationSha256": "c4928c735e76a7716682403bcb6fc63cdbf91ee76e43736354edfc332d32d9c4"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_supra_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::1",
+          "observationSha256": "153be8fdf61f9a2876c8819edc4d2896a26b742cca4e7122a71af2a56d56a7ba"
+        },
+        {
+          "id": "tests.test_ResolveTest.ResolveTest.test_supra_resolution::tests/test_ResolveTest.py:30:8:caseDeclaration::2",
+          "observationSha256": "cbb99f1a67c3b743925e98865dc700c42fc2fbee193f852b21e8273cca9efe84"
+        }
+      ],
+      "rationale": "Complete resolver-boundary replay of 23 original formatted resource-map and seven reference-index equality assertions through the default public engine. Complete source inputs and finite label adaptation conditions are verified. Parser assertions, outer helper calls, native hash/identity and general model laws remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationAnnotationCallback.test.ts test/CitationXmlWorker.test.ts test/CitationEngineResolution.test.ts --reporter=json --outputFile=../../../.beep/citation-xml-bundled-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "resolve",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-resolution-assertions.md",
+        "evidenceSha256": "93f0546f10b8b8d11bebb16462f5cc7e529180f81f64f818db803ed78b511e6f",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationEngineResolution.test.ts",
+            "name": "matches all 30 original resolution assertions using authenticated default configuration on",
+            "sha256": "146b73eecf0ded29474afe9e12a5cc9d9b604a9b95acf80abe8ec7b43fa80437"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalResolution.fixtures.ts",
+            "sha256": "613f7aeb4372df3763e579c60fa0e31619213b4653e3a251f136cb9ebd697d74"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationResolve.operations.ts",
+            "sha256": "90cd1d6bfd2e75bf31be17a702a552a9d9507cf50e229088a59def95e0f28e5f"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationResolve.fixtures.ts",
+            "sha256": "4e1eace98e3f3c7a008808fc9b92c2d2e227191e5e22d21bf932affeb31e68f2"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
+            "sha256": "31bd7ab57c8a45c8e0a9185c307608b9b51f04f60dbd25e7c7a77d4e3340ab24"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationXmlWorker.fixtures.ts",
+            "sha256": "d42cfb0fd711bef1aae94cc362e2ba93e0134ebdff1d7084a42f75dead0664b0"
+          }
+        ]
+      }
     }
   ]
 }
