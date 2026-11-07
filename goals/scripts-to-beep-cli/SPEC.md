@@ -123,7 +123,7 @@ Reverse: Compile src/bin-main.ts with native externals and fix its eager DuckDB 
 
 #2850 (e9187a295fe) added `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh` and `ci-cache-local-summary.py` (with a Python test) under scripts/ after PR 1 branched. SPEC acceptance requires scripts/ to hold only `cloud/bootstrap.sh` and the tracked-shell law rejects them, so PR 2 ports each to a `beep ci` subcommand with identical behaviour, moves the Python test to vitest, and switches heavy.yml to `bun --no-env-file run beep ci <command>`. Every call runs after `setup-monorepo-ci`, and the pinned CI binary predates the new commands, so they run from the checkout; `cache-sandbox` and `cache-pilot-cleanup` are also registered in the bootstrap set, so a later pin bump can move them onto the binary. Their workflow semantics stay owned by the cache-pilot lane.
 
-Lane `goals/scripts-to-beep-cli-p2`
+Lane `scripts-to-beep-cli-p2`
 
 Reverse: Restore the four scripts/ci-cache-* files and their heavy.yml calls from #2850
 
@@ -147,7 +147,7 @@ Reverse: Delete the publish workflow and restore the shell steps from git histor
 
 check.yml calls heavy.yml as a reusable workflow pinned to @main, so a PR's own heavy.yml edits take effect only after merge. #2906 deleted the scripts that main's heavy.yml calls and every Heavy lane failed at its first step (`scripts/ci-change-profile.sh: No such file`, then `goals_only: unbound variable`; run 42418724321). #2906 therefore keeps the seven scripts that heavy.yml@main references (`ci-change-profile.sh`, `ci-runner-resources.sh`, `ci-prune-apt-sources.sh`, `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh`, `ci-cache-local-summary.py`) while it switches every workflow to the pinned binary. The tracked-shell law allowlists those exact files, with the removal condition 'deleted by PR 3'. PR 3, opened after #2906 makes the binary-calling heavy.yml the @main copy, deletes them and their allowlist entries and is the goal's final PR carrying proposedCloseout.
 
-Lane `goals/scripts-to-beep-cli-p2` · PR #2906
+Lane `scripts-to-beep-cli-p2` · PR #2906
 
 Reverse: Delete the seven scripts in #2906 and accept red Heavy lanes until it merges
 

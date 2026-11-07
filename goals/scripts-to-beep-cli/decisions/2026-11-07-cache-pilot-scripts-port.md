@@ -1,7 +1,7 @@
 ---
 title: "Port the #2850 cache-pilot scripts into beep ci commands in PR 2"
 date: 2026-11-07
-lane: "goals/scripts-to-beep-cli-p2"
+lane: "scripts-to-beep-cli-p2"
 reversal: "Restore the four scripts/ci-cache-* files and their heavy.yml calls from #2850"
 ---
 

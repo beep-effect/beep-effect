@@ -1,7 +1,7 @@
 ---
 title: "Delete the scripts heavy.yml@main still calls in a third PR"
 date: 2026-11-07
-lane: "goals/scripts-to-beep-cli-p2"
+lane: "scripts-to-beep-cli-p2"
 pullRequest: 2906
 reversal: "Delete the seven scripts in #2906 and accept red Heavy lanes until it merges"
 ---
