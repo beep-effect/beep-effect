@@ -1,7 +1,7 @@
 ---
 title: "Dedicated refs/notes/history delivered by bootstrap sync"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 reversal: "Delete refs/notes/history on origin and drop the fetch refspec and notes.displayRef via the sync command"
 ---
 

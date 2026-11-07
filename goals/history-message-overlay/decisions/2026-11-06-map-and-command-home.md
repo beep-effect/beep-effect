@@ -1,7 +1,7 @@
 ---
 title: "Map at docs/history/, command as new beep history family"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 reversal: "Move the map file and re-point the command; no SHAs depend on the location"
 ---
 

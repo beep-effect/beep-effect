@@ -6,21 +6,27 @@ import {
   FLEET_LIVENESS_WINDOW_SECONDS,
   FleetCheckout,
   FleetContestedPath,
+  FleetEpochTarget,
   FleetLivenessReadings,
+  FleetScanCoverage,
+  FleetSnapshot,
   linkReferences,
   parseMergeTreeConflictNames,
   parseProcStatStartTime,
   rankContestedPaths,
+  renderFleetSnapshot,
   statusFactsFromEntries,
   transcriptProjectDirName,
 } from "@beep/repo-cli/commands/Worktree";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import { fixture, ReferenceFixture, referenceFixtureLayer, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 
 const FRESH_SECONDS = 30;
@@ -492,3 +498,35 @@ esac
   }, testPlatform),
   30000
 );
+
+describe("renderFleetSnapshot", () => {
+  it.effect("prints each report line alone, without the forEach index", () =>
+    Effect.gen(function* () {
+      yield* renderFleetSnapshot(
+        FleetSnapshot.make({
+          fleetRoot: "/fleet",
+          originUrl: "git@example.test:acme/fleet.git",
+          scannedAt: "1970-01-01T00:00:00.000Z",
+          target: FleetEpochTarget.make({ ref: "main", sha: null, materialized: false }),
+          coverage: FleetScanCoverage.make({
+            clonesDiscovered: 0,
+            checkoutsDiscovered: 0,
+            checkoutsDegraded: 0,
+            processesScanned: 0,
+            processesUnreadable: 0,
+          }),
+          checkouts: [],
+          contestedPaths: [],
+        })
+      );
+      const lines = yield* TestConsole.logLines;
+      expect(lines).toEqual([
+        "Fleet root: /fleet",
+        "Origin:     git@example.test:acme/fleet.git",
+        "Target:     main @ unknown (remote unresolved — signals 2 and 3 read unknown)",
+        "Coverage:   0 clone(s), 0 checkout(s), 0 degraded; processes: 0 scanned, 0 unreadable",
+        "No checkouts sharing this origin were found under the fleet root.",
+      ]);
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+});

@@ -425,6 +425,10 @@ const initializeJournalTables = Effect.fnUntraced(function* (sql: SqlClient.SqlC
         sequence INTEGER PRIMARY KEY AUTOINCREMENT, launch_id TEXT NOT NULL, phase INTEGER NOT NULL CHECK(phase BETWEEN 0 AND 3),
         payload TEXT NOT NULL, payload_bytes INTEGER NOT NULL CHECK(payload_bytes>0), digest TEXT NOT NULL,
         recorded_at INTEGER NOT NULL, evidence_epoch INTEGER NOT NULL, UNIQUE(launch_id,phase))`;
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_availability_snapshots (
+        snapshot_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL,
+        payload_bytes INTEGER NOT NULL, evidence_epoch INTEGER NOT NULL
+      )`;
       yield* sql`CREATE TABLE IF NOT EXISTS observation_page_dispositions (receipt_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)`;
       yield* sql`CREATE TABLE IF NOT EXISTS observation_source_cursors (source_key TEXT PRIMARY KEY, payload TEXT NOT NULL, receipt_id TEXT NOT NULL)`;
       yield* sql`CREATE TABLE IF NOT EXISTS observation_schedule_cursor (singleton INTEGER PRIMARY KEY CHECK(singleton=1), source_id TEXT NOT NULL)`;
@@ -462,7 +466,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
         yield* configureJournalDatabase(sql, config);
         yield* initializeJournalTables(sql, configJson);
         const stats = safe(
-          sql`SELECT COUNT(*) AS pages, COALESCE(SUM(payload_bytes),0) + (SELECT COALESCE(SUM(payload_bytes),0) FROM observation_launch_facts) AS "payloadBytes", COALESCE(SUM(frames),0) AS frames FROM observation_intake_pages`.pipe(
+          sql`SELECT COUNT(*) AS pages, COALESCE(SUM(payload_bytes),0) + (SELECT COALESCE(SUM(payload_bytes),0) FROM observation_launch_facts) + (SELECT COALESCE(SUM(payload_bytes),0) FROM observation_availability_snapshots) AS "payloadBytes", COALESCE(SUM(frames),0) AS frames FROM observation_intake_pages`.pipe(
             Effect.flatMap(S.decodeUnknownEffect(singleStats)),
             Effect.map((rows) => rows[0])
           )

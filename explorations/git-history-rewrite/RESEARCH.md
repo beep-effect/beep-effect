@@ -35,7 +35,7 @@ heads and tags, so fresh clones would shrink.
 
 Sources: <https://github.com/newren/git-filter-repo> and its `COPYING`
 (<https://raw.githubusercontent.com/newren/git-filter-repo/main/COPYING>), and
-the manual page (`docs/man1/git-filter-repo.1` on the `docs` branch, read
+the manual page (`newren/git-filter-repo:docs/man1/git-filter-repo.1` on the `docs` branch, read
 2026-11-06).
 
 - License: MIT for the tool and most files; dual-usable under git.git's GPL
