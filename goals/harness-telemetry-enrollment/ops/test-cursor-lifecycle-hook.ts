@@ -128,10 +128,8 @@ const results=[];function next(){if(results.length===repeat){process.stdout.writ
 const child=spawn(bun,["--no-env-file",root+"/bridge.ts",root,bun],{cwd:${literal(process.cwd())},env:{PATH:"/usr/bin:/bin",TMPDIR:root},stdio:["pipe","pipe","pipe"]});
 let out="",err="";child.stdout.on("data",b=>out+=b);child.stderr.on("data",b=>err+=b);child.on("close",code=>{results.push({code,stdout:out,stderr:err});next();});child.stdin.end(body);}next();})();`;
 const fixture = Effect.fn("CursorCallbackTest.fixture")(function* () {
-  const parent = `${Os.homedir()}/.local/state/beep`;
-  yield* io(() => Fs.mkdir(parent, { recursive: true, mode: 0o700 }));
   const root = yield* Effect.acquireRelease(
-    io(() => Fs.mkdtemp(`${parent}/ce-`)),
+    io(() => Fs.mkdtemp(`${Os.tmpdir()}/ce-`)),
     (root) => io(() => Fs.rm(root, { recursive: true, force: true })).pipe(Effect.orDie)
   );
   yield* io(() => Fs.chmod(root, 0o700));
