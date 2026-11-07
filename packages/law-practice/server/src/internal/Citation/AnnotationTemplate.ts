@@ -79,7 +79,7 @@ const canonicalGroupName = Effect.fn("Citation.canonicalTemplateGroupName")(func
 });
 const reference = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([92, 49]) });
 const decodedBytes = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array(A.makeBy(256, (i) => i)) });
-/** Compile the original rf"{before}\\1{after}" as one template, including
+/** Compile the original `rf"{before}\\1{after}"` as one template, including
  * cross-boundary escape/digit interactions. Inputs are immutable native values.
  * This intentionally specializes CPython's parser to the helper's one group;
  * Effect String replacement has JavaScript semantics and cannot supply this law.
