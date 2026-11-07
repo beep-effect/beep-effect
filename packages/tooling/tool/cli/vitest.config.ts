@@ -51,6 +51,7 @@ class MeasuredSequencer extends BaseSequencer {
  * - env writes: `process.env.<NAME> =`, `delete process.env.<NAME>`
  */
 const isolatedSuites = [
+  "test/bin-ci-entry.test.ts",
   "test/bun-runtime-version.test.ts",
   "test/cache-acceptance.test.ts",
   "test/cache-conformance-command.test.ts",
@@ -60,6 +61,7 @@ const isolatedSuites = [
   "test/cache-runtime.test.ts",
   "test/catalog-shard-scope.test.ts",
   "test/catalog-usage.test.ts",
+  "test/changeset-changelog.test.ts",
   "test/check-census-command.test.ts",
   "test/ci-command.test.ts",
   "test/ci-coverage-config.test.ts",
@@ -81,11 +83,13 @@ const isolatedSuites = [
   "test/effect-imports.test.ts",
   "test/effect-vitest-contract.test.ts",
   "test/effect-vitest-detectors.test.ts",
+  "test/exit-drain.test.ts",
   "test/explore-check.test.ts",
   "test/explore-graduate-plan.test.ts",
   "test/explore-graduate-write.test.ts",
   "test/files-command.test.ts",
   "test/frozen-grant-set.test.ts",
+  "test/github-app-mint-serve.test.ts",
   "test/goals-bootstrap-plan.test.ts",
   "test/goals-completion-evidence.test.ts",
   "test/goals-completion-observation.test.ts",
