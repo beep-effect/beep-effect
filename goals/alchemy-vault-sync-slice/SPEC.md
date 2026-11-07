@@ -188,6 +188,12 @@ D8 applies to renderer to sidecar. PR 3a includes no offline queue or frontend w
 
 Reverse: Expand the offline transport scope in the frontend PR
 
+### Pre-admission backup retains SQL rows and sequence positions, 2026-11-07
+
+Part 2 lands backupSyncTables and restoreSyncTables before any writer deletion. The first snapshot is immutable per import id, copies every table column, and retains serial last_value and is_called. Repeated restoration is a no-op. This is exclusively a pre-admission reversal; it must not restore a stale snapshot after new commands have been accepted.
+
+Reverse: Restore the verified offline snapshot before admitting commands; retain backup tables for diagnosis.
+
 ### Preserve operation ids and schedule lease expiry and retry, 2026-11-07
 
 Existing public operation ids are stable. Retarget and squash are events. Leases carry holder, attempt token and expiresAt; non-rejecting scheduled commands implement expiry and retry backoff. Terminal failure and supersession are separate facts.
