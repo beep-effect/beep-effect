@@ -41,7 +41,8 @@
     "research/corpus/RECEIPTS.json",
     "research/corpus/hosted-runs.ndjson.gz",
     "research/slice-2-design.md",
-    "research/slice-2-layer1-dryrun.md"
+    "research/slice-2-layer1-dryrun.md",
+    "research/slice-2-replay.md"
   ],
   "agentLaunchers": [
     {
