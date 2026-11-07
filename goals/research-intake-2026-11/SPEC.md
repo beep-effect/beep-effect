@@ -216,6 +216,14 @@ Lane `feat/research-intake-2026-11`
 
 Reverse: The tainted library is kept at ~/.cache/beep/library-tainted-hop0-2026-11-07; swap it back into place to undo the restore
 
+### MAP gated candidates re-evaluated against the intake catalog: both stay gated, one trigger re-pointed, 2026-11-07
+
+epistemic-library-model-promotion (move the finding and evidence model into packages/epistemic/domain once a second consumer exists): no second code consumer of LibraryFinding exists outside packages/tooling/tool/cli, and every epistemic goal the routed findings name (epistemic-claim-lifecycle-gate, provenance-shared-claim-kernel and five siblings) is completed-retained. Stays gated; the trigger is unchanged. legal-ontology-pile-deep-read (T2 reads of the 449-PDF pile): its trigger packets legal-ontology-landscape, lynx-lkg-ontology-grounding and legal-patent-kg-deepening have all graduated, so the trigger as written can never fire. T1 on the pile selected 379 PDFs; their topic ids name legal-ontology-landscape 127 times, legal-patent-kg-deepening 91, the completed patent-document-schema 71 and the active legal-document-intake 66. Stays gated, with the trigger re-pointed: fire when goals/legal-document-intake, or a live successor of the graduated legal ontology explorations, names the pile in its plan. The 379 T1 selections are the ready worklist.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Restore the original trigger text in the exploration MAP; nothing was implemented
+
 ### mine runs tiers as spawned runners with output schemas, span-checked findings and argv on ModelRun, 2026-11-07
 
 Port of the academia T1/T2/T3 scripts (codex exec with an output schema per job) into research library mine: mine triage (T1, gpt-6-luna), mine read (T2, Junie claude-opus-5-5 while JetBrains credits remain, then claude-opus-5-5), mine synthesize (T3, imports session-authored synthesis). Each job spawns a configured runner, validates the JSON result against a schema, rejects any finding whose span is not verbatim in the bound capture text, and records a LibraryModelRun carrying model, effort, route and the exact launch argv (new additive field, decoding default empty so existing catalogs decode). Private-partition artifacts never route to Junie or Cursor runners. Rejected: keeping the runners as packet scripts (the academia packet lost them) and an MCP-driven runner (not reproducible from argv).
