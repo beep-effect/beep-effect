@@ -343,8 +343,18 @@ const makeLiveRunner = Effect.fn("LibraryMineRunner.make")(function* () {
     const [stdout, stderr, exitCode] = collected;
     if (exitCode !== 0) {
       const tail = Str.slice(-2000)(stderr);
+      // Junie reports quota exhaustion only in the log file its stderr names, so read that log's tail too.
+      const logPath = O.flatMap(O.fromNullishOr(/log file: (\S+\.log)/.exec(tail)), (match) =>
+        O.fromNullishOr(match[1])
+      );
+      const logTail = O.isSome(logPath)
+        ? yield* fs.readFileString(logPath.value).pipe(
+            Effect.map(Str.slice(-20000)),
+            Effect.orElseSucceed(() => "")
+          )
+        : "";
       return yield* LibraryMineRunnerError.make({
-        quota: quotaPattern.test(tail),
+        quota: quotaPattern.test(tail) || quotaPattern.test(logTail),
         message: `${command} exited ${exitCode}: ${sanitizeLibraryDiagnostic(tail)}`,
       });
     }
