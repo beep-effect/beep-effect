@@ -321,6 +321,38 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
   return { policy, journal, control, namespaceId, deliver, runtime };
 });
 
+const syntheticHelperOutput = Effect.fnUntraced(function* (fault: string, policy: CursorLifecyclePolicy) {
+  const ready = yield* encode({ ready: fault === "ready" ? false : true });
+  const observed = yield* encode({
+    peer: {
+      peerPid: 1,
+      peerStartTicks: "1",
+      runtimePid: 1,
+      runtimeStartTicks: "1",
+      runtimeSha256: fault === "digest" ? id : policy.runtimeSha256,
+      cwd: fault === "cwd" ? "/synthetic-wrong-root" : policy.workspace,
+      uid: 1000,
+    },
+    callback: start,
+  });
+  const lines = fault === "overflow" ? Str.repeat(16385)("x") : `${ready}\n${fault === "observed" ? "{}" : observed}\n`;
+  return fault === "timeout"
+    ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
+    : Stream.make(new TextEncoder().encode(lines));
+});
+const projectMissingRuntimeInode = (stat: FileSystem.File.Info, fault: string) =>
+  fault === "missing-inodes" ? { ...stat, ino: O.none() } : stat;
+const projectSourceRuntimeStat = (stat: FileSystem.File.Info, fault: string, observations: number) => {
+  if (fault === "oversized-source") return { ...stat, size: ByteSize.bytes(268435457) };
+  if (fault === "changed-source" && observations > 1) return { ...stat, size: ByteSize.bytes(1) };
+  return projectMissingRuntimeInode(stat, fault);
+};
+const projectCopiedRuntimeStat = (stat: FileSystem.File.Info, fault: string) => {
+  if (fault === "missing-owner") return { ...stat, uid: O.none() };
+  if (fault === "wrong-owner") return { ...stat, uid: O.map(stat.uid, (owner) => owner + 1) };
+  return projectMissingRuntimeInode(stat, fault);
+};
+
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
   for (const fault of ["canonical", "owner", "writable", "size", "digest", "changed", "growth"]) {
     it.effect(`interpreter ${fault} enrollment refuses before helper dispatch and durable admission`, () =>
@@ -402,25 +434,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         let acknowledgements = 0;
         let policyFrames = 0;
         const policyObserved = yield* Deferred.make<void>();
-        const ready = yield* encode({ ready: fault === "ready" ? false : true });
-        const observed = yield* encode({
-          peer: {
-            peerPid: 1,
-            peerStartTicks: "1",
-            runtimePid: 1,
-            runtimeStartTicks: "1",
-            runtimeSha256: fault === "digest" ? id : f.policy.runtimeSha256,
-            cwd: fault === "cwd" ? "/synthetic-wrong-root" : f.policy.workspace,
-            uid: 1000,
-          },
-          callback: start,
-        });
-        const lines =
-          fault === "overflow" ? Str.repeat(16385)("x") : `${ready}\n${fault === "observed" ? "{}" : observed}\n`;
-        const output =
-          fault === "timeout"
-            ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
-            : Stream.make(new TextEncoder().encode(lines));
+        const output = yield* syntheticHelperOutput(fault, f.policy);
         const gatedOutput = Stream.concat(Stream.fromEffect(Deferred.await(policyObserved)).pipe(Stream.drain), output);
         const synthetic = ChildProcessSpawner.make((command) =>
           Effect.gen(function* () {
@@ -691,13 +705,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
               Effect.map((stat) => {
                 if (path === source) {
                   sourceStats++;
-                  if (fault === "oversized-source") return { ...stat, size: ByteSize.bytes(268435457) };
-                  if (fault === "changed-source" && sourceStats > 1) return { ...stat, size: ByteSize.bytes(1) };
+                  return projectSourceRuntimeStat(stat, fault, sourceStats);
                 }
-                if (path !== source && fault === "missing-owner") return { ...stat, uid: O.none() };
-                if (path !== source && fault === "wrong-owner")
-                  return { ...stat, uid: O.map(stat.uid, (owner) => owner + 1) };
-                return fault === "missing-inodes" ? { ...stat, ino: O.none() } : stat;
+                return projectCopiedRuntimeStat(stat, fault);
               })
             ),
           readFile: (path) =>
