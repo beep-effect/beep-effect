@@ -440,6 +440,29 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
   });
 });
 
+// The writer lock admits one writer at a time, so a process may reuse the catalog it last wrote while the
+// canonical file still carries the same modification time and size. Any other writer changes them.
+interface WrittenCatalog {
+  readonly catalog: LibraryCatalog;
+  readonly fingerprint: string;
+  readonly root: string;
+}
+let lastWrittenCatalog: O.Option<WrittenCatalog> = O.none();
+
+const catalogFingerprint = Effect.fnUntraced(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const info = yield* fs.stat(path.join(root, "catalog/library.json")).pipe(Effect.option);
+  return O.map(
+    info,
+    (stat) =>
+      `${O.getOrElse(
+        O.map(stat.mtime, (date) => date.getTime()),
+        () => -1
+      )}:${stat.size}`
+  );
+});
+
 /**
  * Serialize catalog mutations under an exclusive directory lock.
  * **Details**
@@ -465,6 +488,25 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
   const path = yield* Path.Path;
   yield* fs.makeDirectory(root, { recursive: true }).pipe(mapFailure("Cannot create library root."));
   const lock = path.join(root, ".writer-lock");
+  const writeCatalog = Effect.fnUntraced(function* (catalog: LibraryCatalog) {
+    const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
+    const bytes = new TextEncoder().encode(encoded);
+    const hash = yield* hashBytes(bytes);
+    yield* saveImmutable(root, `catalog/history/${hash}.json`, bytes);
+    const temporary = path.join(lock, "catalog.next.json");
+    yield* fs.writeFile(temporary, bytes, { flag: "wx" }).pipe(mapFailure("Cannot stage library catalog."));
+    yield* fs
+      .makeDirectory(path.join(root, "catalog"), { recursive: true })
+      .pipe(mapFailure("Cannot create canonical catalog directory."));
+    yield* fs
+      .rename(temporary, path.join(root, "catalog/library.json"))
+      .pipe(mapFailure("Cannot replace library catalog atomically."));
+    const after = yield* catalogFingerprint(root);
+    lastWrittenCatalog = migrateLegacyIdentities
+      ? O.map(after, (fingerprint) => ({ root, fingerprint, catalog }))
+      : O.none();
+    return catalog;
+  });
   return yield* Effect.acquireUseRelease(
     fs
       .makeDirectory(lock)
@@ -474,6 +516,17 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
         )
       ),
     Effect.fnUntraced(function* () {
+      const before = yield* catalogFingerprint(root);
+      const reusable = O.filter(
+        lastWrittenCatalog,
+        (written) =>
+          migrateLegacyIdentities && written.root === root && O.isSome(before) && written.fingerprint === before.value
+      );
+      if (O.isSome(reusable)) {
+        // The cached catalog was migrated and its artifacts admitted when it was written.
+        const catalog = yield* update(reusable.value.catalog);
+        return yield* writeCatalog(catalog);
+      }
       const loadedCatalog = yield* loadCatalog(root);
       const migrated = migrateLegacyIdentities ? yield* migrateCatalogIdentities(loadedCatalog) : loadedCatalog;
       const artifacts = migrateLegacyIdentities
@@ -500,19 +553,7 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
       yield* Effect.forEach(artifacts, migrateArtifact);
       const catalog = yield* update(migrated);
       if (migrateLegacyIdentities === false && catalog === migrated) return catalog;
-      const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
-      const bytes = new TextEncoder().encode(encoded);
-      const hash = yield* hashBytes(bytes);
-      yield* saveImmutable(root, `catalog/history/${hash}.json`, bytes);
-      const temporary = path.join(lock, "catalog.next.json");
-      yield* fs.writeFile(temporary, bytes, { flag: "wx" }).pipe(mapFailure("Cannot stage library catalog."));
-      yield* fs
-        .makeDirectory(path.join(root, "catalog"), { recursive: true })
-        .pipe(mapFailure("Cannot create canonical catalog directory."));
-      yield* fs
-        .rename(temporary, path.join(root, "catalog/library.json"))
-        .pipe(mapFailure("Cannot replace library catalog atomically."));
-      return catalog;
+      return yield* writeCatalog(catalog);
     }),
     () => fs.remove(lock, { recursive: true }).pipe(Effect.orDie)
   );
