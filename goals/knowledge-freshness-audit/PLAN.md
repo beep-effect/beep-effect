@@ -236,9 +236,29 @@ Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
 
 Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
 
+### Correct the pinned Effect actor send guard guidance, 2026-11-07
+
+Reverse: Revert the guide correction if a later pinned implementation removes the runtime guard
+
+### Count distinct classes in coverage examples, 2026-11-07
+
+Parent review found that OPTIONAL and UNION can yield several rows per class. Correct both label and definition coverage examples to count distinct total and covered class identities. Preserve the blank-node exclusion, both definition properties and existing targets. Static cardinality counterexamples and primary SPARQL syntax review support the correction; no ontology or endpoint query was executed. PM and ADHD remain separate.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Revert this checkpoint and its two coverage example corrections if class-based coverage is no longer the intended metric.
+
 ### Isolate each model-refusal test scenario, 2026-11-07
 
 Reverse: Restore grouped cases only after they fit the unchanged timeout under package verification
+
+### Qualify the retired-module guide's deliberate exceptions, 2026-11-07
+
+Parent review revalidated T52 kfa-t52-001 against its frozen file, blob and line hashes. Reject a contradiction inferred solely from the historical fingerprint exemption: the current fingerprint file has no literal retired prefix. Confirm the narrower omission against the actual retirement law: its implementation, model and regression fixtures deliberately retain retired strings and are explicitly allowlisted. Describe the guide as the canonical mapping and include those existing exceptions. Preserve the allowlist, vendor patches, historical fingerprints and dated migration facts. Twenty open PRs had no target overlap. This is bounded documentation reconciliation, not full T52/P4 acceptance or runtime proof; PM and ADHD remain separately held, and no spending is admitted.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Restore the two guide paragraphs and remove this checkpoint; retain the private original report and review evidence.
 
 ### Pin the notification sender citation to the verified source, 2026-11-07
 
@@ -255,5 +275,17 @@ Reverse: Revert the wording clarification; retain the original source and parent
 ### Partition independent CI profile scenarios, 2026-11-07
 
 Reverse: Restore the combined scenario only after package verification fits its unchanged deadline
+
+### Protect class coverage examples with real query regressions, 2026-11-07
+
+Reuse the already-declared public Oxigraph SPARQL service and MarkdownDocument/MarkdownFence APIs in a repo-cli regression. Execute both actual checklist query fences over six small in-memory synthetic fixtures: multiple language values, values shared across classes, no annotations, both definition properties, excluded blank-node classes and empty data. The corrected guide passes six cases; the original accepted-main guide fails two and passes four. Restore the corrected owned file byte-for-byte after the negative control. No dependency, installation, endpoint, driver source or real ontology asset is added. This closes the precise local standing-query regression gap, not campaign-wide acceptance or hosted proof. Earlier failed harness attempts remain private; PM and ADHD remain separate.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Revert this regression and checkpoint if the public query consumer contract changes; preserve the original-versus-corrected cardinality evidence.
+
+### Scope timer network waits to research services, 2026-11-07
+
+Reverse: Restore the prior paragraph only if both service renderers add the documented wait
 
 <!-- beep:decisions:end -->
