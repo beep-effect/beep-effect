@@ -31,7 +31,7 @@ import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.t
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
 import { ClaimInputDecomposition } from "./ClaimElement.inspection.model.ts";
-import { ClaimTermDeterminer } from "./ClaimElement.model.ts";
+import { ClaimTermDeterminer, claimTermDeterminerSurfaces } from "./ClaimElement.model.ts";
 import { ClaimElementTree } from "./ClaimElement.tree.model.ts";
 import {
   isCountedHead,
@@ -172,8 +172,11 @@ export type ClaimElementDecomposer = (
   claims: PatentClaims
 ) => Effect.Effect<ClaimElementTree, ClaimDecompositionError>;
 
-/** A run of claim text and its absolute offset into `claimText`. */
-type Span = { readonly start: number; readonly text: string };
+/**
+ * A run of claim text and its absolute offset into `claimText`. Scanner tokens
+ * also record whether only whitespace separates them from the previous token.
+ */
+type Span = { readonly start: number; readonly text: string; readonly spacedBefore?: boolean };
 
 // Inspection-only construction state. Public tree and PatentClaim shapes stay unchanged.
 class ColonHeaderSpan extends S.Opaque<ColonHeaderSpan, { readonly brand: unique symbol }>()(
@@ -381,6 +384,18 @@ const romanSegment = (value: number): string =>
 // Unpaired marks retain ordinary scanning and never suppress the remaining source.
 const quotedPhrasePattern = /“[^”]*”|"(?:\\.|[^"\\])*"|‘(?:[^’]|’(?=[\p{L}\p{N}]))*’/gu;
 const tokenPattern = /[\p{L}\p{N}]+(?:[-’'/][\p{L}\p{N}]+)*|[“”"‘’]|[,;:.()[\]]/gu;
+// Tokens with whether pure whitespace precedes each; dropped symbols such as `+` do not.
+const tokensIn = (span: Span): ReadonlyArray<Span> => {
+  const tokens = matchesIn(tokenPattern)(span);
+  return A.map(tokens, (token, index) => {
+    const gapStart = O.match(A.get(tokens, index - 1), {
+      onNone: constant(span.start),
+      onSome: ({ start, text }) => start + Str.length(text),
+    });
+    const gap = Str.slice(gapStart - span.start, token.start - span.start)(span.text);
+    return { ...token, spacedBefore: O.isSome(Str.match(/^\s+$/u)(gap)) };
+  });
+};
 const digitsPattern = /^[0-9]+$/u;
 const punctuation = HashSet.make(",", ";", ":", ".", "(", ")", "[", "]");
 const boundaryWords = HashSet.fromIterable(
@@ -459,22 +474,6 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
   );
 };
 
-// Longest surface first, so "a plurality of" wins over "a".
-const determinerSurfaces: ReadonlyArray<readonly [ReadonlyArray<string>, ClaimTermDeterminer]> = [
-  [["at", "least", "one"], "at-least-one"],
-  [["one", "or", "more"], "at-least-one"],
-  [["a", "plurality", "of"], "plurality-of"],
-  [["plurality", "of"], "plurality-of"],
-  [["an"], "an"],
-  [["a"], "a"],
-  [["the"], "the"],
-  [["said"], "said"],
-  // Preserve unsupported possessives as spans; the policy abstains explicitly.
-  [["each"], "bare"],
-  [["its"], "bare"],
-  [["their"], "bare"],
-];
-
 const quantifierSurfaces: ReadonlyArray<ReadonlyArray<string>> = [
   ["at", "least", "one"],
   ["one", "or", "more"],
@@ -489,13 +488,24 @@ const surfaceAt =
       O.exists(A.get(tokens, index + offset), ({ text }) => Str.toLowerCase(text) === word)
     );
 
+// A determiner surface ends at whitespace: "a+b" and "the+x" open no
+// determiner, matching the quote check of `ClaimTerm`.
+const spacedAfter = (tokens: ReadonlyArray<Span>, index: number, width: number): boolean =>
+  A.every(
+    A.range(index + 1, index + width),
+    (next) => !O.exists(A.get(tokens, next), ({ spacedBefore }) => spacedBefore === false)
+  );
+
 const determinerAt = (
   tokens: ReadonlyArray<Span>,
   index: number
 ): O.Option<{ readonly determiner: ClaimTermDeterminer; readonly start: number; readonly width: number }> =>
   O.flatMap(A.get(tokens, index), ({ start }) =>
     O.map(
-      A.findFirst(determinerSurfaces, ([words]) => surfaceAt(tokens, index)(words)),
+      A.findFirst(
+        claimTermDeterminerSurfaces,
+        ([words]) => surfaceAt(tokens, index)(words) && spacedAfter(tokens, index, A.length(words))
+      ),
       ([words, determiner]) => ({ determiner, start, width: A.length(words) })
     )
   );
@@ -1116,7 +1126,7 @@ const termsIn =
       onNone: () => span,
       onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(span.text.length))),
     });
-    const tokens = matchesIn(tokenPattern)(entitySpan);
+    const tokens = tokensIn(entitySpan);
     const step = scanStep(claimText, tokens, matchesIn(quotedPhrasePattern)(entitySpan), grammar);
     return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
   };
@@ -1124,7 +1134,7 @@ const termsIn =
 const elementOf =
   (claimText: string, kind: ClaimElementKind, grammar: LexicalGrammar = strictLexicalGrammar) =>
   (path: string, span: Span): EncodedElement => {
-    const tokens = matchesIn(tokenPattern)(span);
+    const tokens = tokensIn(span);
     return {
       path,
       anchor: anchorOf(span),
