@@ -2,25 +2,25 @@ import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownFence } from "@beep/markdown/MarkdownFence";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import * as Rdf from "@beep/rdf/Rdf";
-import { findRepoRoot } from "@beep/repo-utils";
 import { SparqlQueryRequest, SparqlQueryService, SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { it } from "@beep/test-runner";
-import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 
 const isSelect = S.is(SparqlSelectResult);
+const guideTexts = import.meta.glob<string>("../../../../../.claude/skills/_shared/quality-checklist.md", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+});
 
 const a = Rdf.makeNamedNode("https://example.test/a");
 const b = Rdf.makeNamedNode("https://example.test/b");
@@ -79,49 +79,44 @@ const cases = [
   { name: "empty dataset", dataset: Rdf.makeDataset([]), total: "0", covered: "0" },
 ];
 
-it.layer(Layer.mergeAll(BunServices.layer, OxigraphSparqlQueryServiceLive), { timeout: "30 seconds" })(
-  "Documented class coverage",
-  (it) => {
-    A.forEach(cases, (testCase) => {
-      it.effect(
-        testCase.name,
-        Effect.fnUntraced(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const repoRoot = yield* findRepoRoot();
-          const sourcePath = ".claude/skills/_shared/quality-checklist.md";
-          const markdown = yield* fs.readFileString(path.join(repoRoot, sourcePath));
-          const document = yield* MarkdownDocument.parse(markdown);
-          const fences = A.filter(MarkdownFence.fences(document), (fence) => Str.includes("AS ?total")(fence.value));
-          expect(fences).toHaveLength(2);
-          const sparql = yield* SparqlQueryService;
-          yield* Effect.forEach(
-            [
-              { field: "labeled", selector: "AS ?labeled" },
-              { field: "defined", selector: "AS ?defined" },
-            ],
-            Effect.fnUntraced(function* (target) {
-              const matches = A.filter(fences, (fence) => Str.includes(target.selector)(fence.value));
-              expect(matches).toHaveLength(1);
-              const fence = A.getUnsafe(matches, 0);
-              const result = yield* sparql.execute(
-                SparqlQueryRequest.make({
-                  dataset: testCase.dataset,
-                  profile: "select",
-                  query: fence.value,
-                })
-              );
-              assertTrue(isSelect(result));
-              const selected = result;
-              expect(selected.rows, `${sourcePath}:${fence.line}`).toHaveLength(1);
-              const row = A.getUnsafe(selected.rows, 0);
-              assertSome(pipe(R.get(row, "total"), O.map(Struct.get("value"))), testCase.total);
-              assertSome(pipe(R.get(row, target.field), O.map(Struct.get("value"))), testCase.covered);
-            }),
-            { discard: true, concurrency: 1 }
-          );
-        })
-      );
-    });
-  }
-);
+it.layer(OxigraphSparqlQueryServiceLive, { timeout: "30 seconds" })("Documented class coverage", (it) => {
+  A.forEach(cases, (testCase) => {
+    it.effect(
+      testCase.name,
+      Effect.fnUntraced(function* () {
+        const sourcePath = ".claude/skills/_shared/quality-checklist.md";
+        const markdown = R.values(guideTexts);
+        expect(markdown).toHaveLength(1);
+        const document = yield* MarkdownDocument.parse(A.getUnsafe(markdown, 0));
+        const fences = A.filter(MarkdownFence.fences(document), (fence) => Str.includes("AS ?total")(fence.value));
+        expect(fences).toHaveLength(2);
+        const sparql = yield* SparqlQueryService;
+        yield* Effect.forEach(
+          [
+            { field: "labeled", selector: "AS ?labeled" },
+            { field: "defined", selector: "AS ?defined" },
+          ],
+          Effect.fnUntraced(function* (target) {
+            const matches = A.filter(fences, (fence) => Str.includes(target.selector)(fence.value));
+            expect(matches).toHaveLength(1);
+            const fence = A.getUnsafe(matches, 0);
+            const result = yield* sparql.execute(
+              SparqlQueryRequest.make({
+                dataset: testCase.dataset,
+                profile: "select",
+                query: fence.value,
+              })
+            );
+            assertTrue(isSelect(result));
+            const selected = result;
+            expect(selected.rows, `${sourcePath}:${fence.line}`).toHaveLength(1);
+            const row = A.getUnsafe(selected.rows, 0);
+            assertSome(pipe(R.get(row, "total"), O.map(Struct.get("value"))), testCase.total);
+            assertSome(pipe(R.get(row, target.field), O.map(Struct.get("value"))), testCase.covered);
+          }),
+          { discard: true, concurrency: 1 }
+        );
+      })
+    );
+  });
+});
