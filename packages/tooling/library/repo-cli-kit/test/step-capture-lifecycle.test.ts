@@ -798,6 +798,7 @@ BunRuntime.runMain(
 });
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
+const decodeOutputBound = S.decodeEffect(OutputBound);
 
 describe("StepExec bounded output fold", () => {
   const bound = OutputBound.make({ maxChars: 4, truncatedNotice: "!" });
@@ -838,9 +839,59 @@ describe("StepExec bounded output fold", () => {
     })
   );
 
+  vitestIt.each([
+    { label: "one overflowing chunk", maxChars: 4, chunks: ["abcdefghi"], text: "ab!hi", truncated: true },
+    { label: "rolling tail", maxChars: 4, chunks: ["abcd", "ef", "ghi"], text: "ab!hi", truncated: true },
+    {
+      label: "empty chunks",
+      maxChars: 4,
+      chunks: ["", "ab", "", "cdef", "", "ghi", ""],
+      text: "ab!hi",
+      truncated: true,
+    },
+    { label: "odd budget", maxChars: 5, chunks: ["abcdefghi"], text: "ab!ghi", truncated: true },
+    { label: "one character", maxChars: 1, chunks: ["abc", "defghi"], text: "!i", truncated: true },
+    { label: "zero characters", maxChars: 0, chunks: ["abc", "defghi"], text: "!", truncated: true },
+    { label: "short capture", maxChars: 4, chunks: ["a", "bc"], text: "abc", truncated: false },
+    { label: "exact cap and empty chunk", maxChars: 4, chunks: ["abcd", ""], text: "abcd", truncated: false },
+    { label: "empty capture", maxChars: 4, chunks: [], text: "", truncated: false },
+  ])("keeps bounded edges across $label", ({ maxChars, chunks, text, truncated }) => {
+    const edges = boundedChunkReducer(OutputBound.make({ maxChars, truncatedNotice: "!", retention: "head-tail" }));
+    const actual = A.reduce(chunks, emptyBoundedOutput, edges);
+    expect(actual).toEqual(BoundedOutput.make({ text, truncated }));
+    expect(Str.length(actual.text)).toBeLessThanOrEqual(maxChars + 1);
+  });
+
+  vitestIt.effect(
+    "decodes legacy bounds with unchanged head-only retention",
+    Effect.fnUntraced(function* () {
+      const legacy = yield* decodeOutputBound({ maxChars: 4, truncatedNotice: "!" });
+      expect(legacy.retention).toBe("head");
+      expect(boundedChunkReducer(legacy)(emptyBoundedOutput, "abcdef").text).toBe("abcd!");
+    })
+  );
+
+  vitestIt.effect(
+    "retains a final diagnostic through the actual repo-run stream bound",
+    Effect.fnUntraced(function* () {
+      const footer = "\nFAIL fixture:42";
+      const result = yield* collectBoundedText(repoRunOutputBound)(
+        Stream.fromIterable([encode("START"), encode(Str.repeat(repoRunOutputBound.maxChars)("x")), encode(footer)])
+      );
+      expect(result.truncated).toBe(true);
+      assertTrue(Str.startsWith("START")(result.text));
+      assertTrue(Str.endsWith(footer)(result.text));
+      expect(Str.length(result.text)).toBe(
+        repoRunOutputBound.maxChars + Str.length(repoRunOutputBound.truncatedNotice)
+      );
+    })
+  );
+
   vitestIt("exposes the divergent repo-run and quality bounds", () => {
     expect(repoRunOutputBound.maxChars).toBe(512 * 1024);
     expect(qualityStepOutputBound.maxChars).toBe(8 * 1024 * 1024);
+    expect(repoRunOutputBound.retention).toBe("head-tail");
+    expect(qualityStepOutputBound.retention).toBe("head");
     expect(repoRunOutputBound.truncatedNotice).toContain("[repo-run]");
     expect(qualityStepOutputBound.truncatedNotice).toContain("[beep-cli]");
   });

@@ -2606,3 +2606,17 @@ checking absence in both inventories. Keep raw digest, source, complete group,
 resource-bound and artifact-authentication checks unchanged. A missing detail
 section with a present target group must still refuse. Do not manufacture a
 file-level pass or relabel older evidence from a different dependency profile.
+
+### Bounded output hid the failed-test footer, 2026-11-07
+
+PR #2850 unit-d job 128316306058 failed in law-practice-server, but the repo-run
+capture stopped at its 524288-character prefix before the final failure summary.
+The older job 128292107919 had the same diagnostic loss. Preserve both raw
+receipts privately; the actual assertion cause remains unknown. Add an opt-in
+head-and-tail retention policy to the existing shared output fold, keeping the
+repo-run character budget unchanged and the default head-only policy for other
+callers. Existing prefix behavior, legacy decoding, chunk partitioning and final
+footer retention receive hosted controls. Do not rerun the unchanged failed
+source merely to obtain the same truncated prefix; accepted diagnostic changes
+are a prerequisite for the next observation. No test failure is waived by this
+logging repair and no local quality suite was run.
