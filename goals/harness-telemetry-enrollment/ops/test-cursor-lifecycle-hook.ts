@@ -36,8 +36,10 @@ const {DatabaseSync}=await import("node:sqlite");
 const file=await fs.open(process.argv[1],"r+");
 const db=new DatabaseSync("/proc/self/fd/"+file.fd,{allowExtension:false});
 db.exec("PRAGMA busy_timeout=0;BEGIN IMMEDIATE");
+if(db.isTransaction!==true)process.exit(2);
 process.stdout.write("ready\\n");
-setInterval(()=>{},1000);
+// Both resources stay strongly reachable for the entire owned holder lifetime.
+setInterval(()=>{if(db.isTransaction!==true||file.fd<0)process.exit(2);},100);
 `;
 const holdLease = Effect.fn("CursorCallbackTest.holdLease")(function* (root: string) {
   const ready = yield* Deferred.make<void, "lease-holder">();
@@ -60,7 +62,10 @@ const holdLease = Effect.fn("CursorCallbackTest.holdLease")(function* (root: str
     stopLeaseHolder
   );
   yield* ready.pipe(Deferred.await, Effect.timeout("5 seconds"), TestClock.withLive);
-  return { crash: stopLeaseHolder(child) };
+  return {
+    crash: stopLeaseHolder(child),
+    alive: Effect.sync(() => child.exitCode === null && child.signalCode === null),
+  };
 });
 // Resolve only the public test runtime; enrollment still binds its exact executable and digest.
 const bun = process.versions.bun
@@ -336,8 +341,12 @@ it.effect(
       Effect.gen(function* () {
         const f = yield* fixture();
         const holder = yield* holdLease(f.root);
+        const initiallyAlive = yield* holder.alive;
+        expect(initiallyAlive).toBe(true);
         const before = yield* io(() => Fs.lstat(`${f.root}/callback.lock`, { bigint: true }));
         const locked = yield* f.run();
+        const stillAlive = yield* holder.alive;
+        expect(stillAlive).toBe(true);
         expect(locked[0].code).toBe(1);
         expect(locked[0].stderr).toBe("busy");
         expect((yield* io(() => Fs.stat(`${f.root}/journal.sqlite`))).size).toBe(0);

@@ -274,7 +274,7 @@ const acquireLease = Effect.fnUntraced(function* (
       try: () => database.exec("PRAGMA busy_timeout=0;BEGIN IMMEDIATE"),
       catch: (error) => failure(sqliteBusy(error) ? "busy" : "enrollment"),
     });
-    yield* requireLease(root, lease);
+    yield* requireLease(root, lease, true);
     return lease;
   }).pipe(
     Effect.onError(() =>
@@ -284,12 +284,19 @@ const acquireLease = Effect.fnUntraced(function* (
 });
 const requireLease = Effect.fnUntraced(function* (
   root: Effect.Success<ReturnType<typeof rootAnchor>>,
-  lease: { readonly path: string; readonly file: FileHandle; readonly stat: BigIntStats }
+  lease: {
+    readonly path: string;
+    readonly file: FileHandle;
+    readonly stat: BigIntStats;
+    readonly database: DatabaseSync;
+  },
+  held = false
 ) {
   yield* requireRoot(root);
   const current = yield* io(() => Fs.lstat(lease.path, { bigint: true }));
   const descriptor = yield* io(() => lease.file.stat({ bigint: true }));
   if (!sameFile(lease.stat, current) || !sameFile(lease.stat, descriptor)) return yield* failure("enrollment");
+  if (held && lease.database.isTransaction !== true) return yield* failure("enrollment");
 });
 const releaseLease = Effect.fnUntraced(function* (lease: Effect.Success<ReturnType<typeof acquireLease>>) {
   const current = yield* io(() => Fs.lstat(lease.path, { bigint: true }), "cleanup").pipe(Effect.result);
@@ -341,7 +348,7 @@ const callbackAt = Effect.fn("CursorCallback.consume")(function* (
       return yield* Effect.acquireUseRelease(
         acquireLease(root, enrollment),
         Effect.fnUntraced(function* (lease) {
-          yield* requireLease(root, lease);
+          yield* requireLease(root, lease, true);
           const journalPath = `${root.path}/journal.sqlite`;
           const before = yield* io(() => Fs.lstat(journalPath, { bigint: true }));
           if (!ownedFile(before, root.uid, enrollment.intake.maxDatabasePages * 4096))
@@ -355,7 +362,7 @@ const callbackAt = Effect.fn("CursorCallback.consume")(function* (
               const bridge = yield* receiver(policy).pipe(
                 Effect.provideService(CursorLifecycleRuntime, { journal, control })
               );
-              yield* requireLease(root, lease);
+              yield* requireLease(root, lease, true);
               const listener = yield* bridge.open();
               const forwarding = yield* Effect.forkChild(forwardCursorLifecycleHook(listener.socketPath, projected));
               const receipt = yield* listener.accept;
@@ -365,7 +372,7 @@ const callbackAt = Effect.fn("CursorCallback.consume")(function* (
             })
           ).pipe(Effect.provide(SqliteClient.layer({ filename: journalPath, disableWAL: true, busyTimeout: 0 })));
           const receipt = yield* work.pipe(Effect.mapError(() => failure("callback")));
-          yield* requireLease(root, lease);
+          yield* requireLease(root, lease, true);
           const after = yield* io(() => Fs.lstat(journalPath, { bigint: true }));
           if (
             !ownedFile(after, root.uid, enrollment.intake.maxDatabasePages * 4096) ||
