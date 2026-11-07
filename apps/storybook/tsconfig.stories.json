@@ -22,7 +22,6 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "pretty": false,
     "rootDir": "../..",
     "sourceMap": false,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.stories.tsbuildinfo",

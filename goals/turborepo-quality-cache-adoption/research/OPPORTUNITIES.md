@@ -1308,3 +1308,7 @@ Heavy / Check job 128225577677 on #2826 executed merge 5541cb724 with accepted b
 ### Controlled Storybook resolution comparison, 2026-11-07
 
 The earlier cached-failure/fresh-success jobs differed in two declared configuration inputs across the reviewed 693-path build dependency set. They are not a matched experiment. On draft PR #2827, temporarily remove only the candidate schema source aliases and request plain compiler diagnostics; retain all prerequisite source, dependency, workflow and cache permissions. The original resolution configuration otherwise matches accepted main. Use existing hosted CI, retain the candidate successful Check log, and join actual prerequisite hashes/origins and runtime/source identities before attributing the result. Restore the candidate after this bounded comparison; a non-reproduction remains unresolved. No local compiler or quality suite, new job, capacity or credential is introduced.
+
+### Prefer executed merge identity over the event base field, 2026-11-07
+
+The original-resolution control passed, but its actual checkout merged into d8f335ca while the event still carried b0c9bab1. The saved candidate ran on b0c9bab1. Their manifests, lockfiles and prerequisite hashes differ, so branch-only matched native plans do not establish a matched hosted experiment. Withdraw the unproven aliases, retain source-bound observations, and require an executed-merge/workflow/profile join for full qualification. This does not resolve the historical cause or grant reuse.
