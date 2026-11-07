@@ -929,9 +929,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["commit", "-m", "baseline"]);
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
 
-      assert.strictEqual(profile("pull_request").goals_only, "false");
-      assert.strictEqual(profile("pull_request").docs_only, "false");
-      assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
+      // Compare both classifiers once per unchanged fixture state; reuse the
+      // result for field assertions instead of starting the full CLI again.
+      const baselineProfile = profile("pull_request");
+      assert.strictEqual(baselineProfile.goals_only, "false");
+      assert.strictEqual(baselineProfile.docs_only, "false");
+      assert.strictEqual(baselineProfile.desktop_rust_relevant, "false");
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
       git(["add", "."]);
       git(["commit", "-m", "goals-only"]);
@@ -956,8 +959,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       git(["add", "."]);
       git(["commit", "-m", "generated packet scaffolding"]);
-      assert.strictEqual(profile("pull_request").goals_only, "true");
-      assert.strictEqual(profile("pull_request").docs_only, "true");
+      const scaffoldingProfile = profile("pull_request");
+      assert.strictEqual(scaffoldingProfile.goals_only, "true");
+      assert.strictEqual(scaffoldingProfile.docs_only, "true");
       const metadataHead = git(["rev-parse", "HEAD"]);
 
       for (const directory of ["docs", "designs", "history", "research"] as const) {
@@ -969,10 +973,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         );
         git(["add", "."]);
         git(["commit", "-m", `nested ${directory} markdown fixture`]);
-        assert.strictEqual(profile("pull_request").goals_only, "false");
+        const fixtureProfile = profile("pull_request");
+        assert.strictEqual(fixtureProfile.goals_only, "false");
         // Heavy admission's path rule counts markdown outside the code roots
         // as documentation, wherever it sits.
-        assert.strictEqual(profile("pull_request").docs_only, "true");
+        assert.strictEqual(fixtureProfile.docs_only, "true");
       }
 
       // Documentation outside packet prose is docs-only, never goals-only; the
@@ -989,8 +994,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       git(["add", "."]);
       git(["commit", "-m", "documentation only"]);
-      assert.strictEqual(profile("pull_request").goals_only, "false");
-      assert.strictEqual(profile("pull_request").docs_only, "true");
+      const docsProfile = profile("pull_request");
+      assert.strictEqual(docsProfile.goals_only, "false");
+      assert.strictEqual(docsProfile.docs_only, "true");
       assert.strictEqual(profile("push").docs_only, "false");
       yield* fs.makeDirectory(path.join(tempRoot, "packages", "demo"), { recursive: true });
       yield* fs.writeFileString(path.join(tempRoot, "packages", "demo", "README.md"), "# package readme\n");
@@ -1013,15 +1019,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "scripts", "verify.sh"), "exit 0\n");
       git(["add", "."]);
       git(["commit", "-m", "goal executable"]);
-      assert.strictEqual(profile("pull_request").goals_only, "false");
-      assert.strictEqual(profile("pull_request").docs_only, "false");
+      const executableProfile = profile("pull_request");
+      assert.strictEqual(executableProfile.goals_only, "false");
+      assert.strictEqual(executableProfile.docs_only, "false");
 
       yield* fs.makeDirectory(path.join(tempRoot, "src"));
       yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
       git(["add", "."]);
       git(["commit", "-m", "mixed"]);
-      assert.strictEqual(profile("pull_request").goals_only, "false");
-      assert.strictEqual(profile("pull_request").docs_only, "false");
+      const mixedProfile = profile("pull_request");
+      assert.strictEqual(mixedProfile.goals_only, "false");
+      assert.strictEqual(mixedProfile.docs_only, "false");
       assert.strictEqual(profile("push").goals_only, "false");
     })
   );
