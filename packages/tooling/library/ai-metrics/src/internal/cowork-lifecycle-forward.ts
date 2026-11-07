@@ -3,6 +3,8 @@ import * as Effect from "effect/Effect";
 import { CoworkLifecycleCodecs } from "./cowork-lifecycle-schemas.ts";
 import { failure } from "./cursor-lifecycle-schemas.ts";
 import { exchangeLifecycle, validateLifecycleCallbackInput } from "./lifecycle-exchange.ts";
+
+const callbackFailure = (_error: unknown) => failure("callback");
 /** Internal injected-selector boundary; production reads only its own inherited public selector. */
 export const prepareCoworkCallback = Effect.fn("AiMetrics.coworkLifecycle.prepare")(function* (
   socketPath: string,
@@ -12,10 +14,10 @@ export const prepareCoworkCallback = Effect.fn("AiMetrics.coworkLifecycle.prepar
 ) {
   if (selector !== "local-agent") return yield* failure("callback");
   yield* validateLifecycleCallbackInput(socketPath, body);
-  const callback = yield* CoworkLifecycleCodecs.decodeCallback(body).pipe(Effect.mapError(() => failure("callback")));
+  const callback = yield* CoworkLifecycleCodecs.decodeCallback(body).pipe(Effect.mapError(callbackFailure));
   const projected = yield* CoworkLifecycleCodecs.encodeEnvelope(
     CoworkLifecycleCodecs.makeEnvelope({ callback, occurrenceId })
-  ).pipe(Effect.mapError(() => failure("callback")));
+  ).pipe(Effect.mapError(callbackFailure));
   // The prepared send retains this occurrence identity for explicit transport retry/readback; never a model retry.
   return { send: exchangeLifecycle(socketPath, projected, 1200) };
 });

@@ -39,6 +39,7 @@ import {
 } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
@@ -46,10 +47,12 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -189,8 +192,143 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
   return { policy, journal, control, namespaceId, ancestor, deliver: makeDelivery(policy, journal, control, ancestor) };
 });
 
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
+  it.effect(
+    "fixed public pins permit inert construction but synthetic source enrollment still refuses before dispatch",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const policy = CoworkLifecyclePolicy.make({
+          ...f.policy,
+          runtimeSha256: Sha256Hex.make("eb224419e344575faa4a1f39b290b649425a10cd5ee2ef1d003480cd9ae57eb0"),
+          appSha256: Sha256Hex.make("ac20c2f43a7ad4cc49320575d6904a3c176e76d5bd4afa5a2a8863fdbd5b3e40"),
+        });
+        const receiver = yield* makeCoworkLifecycleReceiver(policy).pipe(
+          Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
+        );
+        const refused = yield* receiver.open().pipe(Effect.result);
+        assertFailure(refused, CoworkLifecycleError.make({ reason: "enrollment" }));
+        const wrongApp = yield* makeCoworkLifecycleReceiver(
+          CoworkLifecyclePolicy.make({ ...policy, appSha256: id })
+        ).pipe(Effect.result);
+        assertFailure(wrongApp, CoworkLifecycleError.make({ reason: "enrollment" }));
+        expect((yield* f.journal.stats).pages).toBe(0);
+      })
+  );
+  for (const fault of ["cwd", "runtime", "app-pid", "app-generation"]) {
+    it.effect(
+      `synthetic observed Cowork ${fault} mismatch refuses without durable ACK and releases its helper port`,
+      () =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          const policySeen = yield* Deferred.make<void>();
+          let policyFrames = 0;
+          let acknowledgements = 0;
+          let releases = 0;
+          const body = yield* encode(start);
+          const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
+          const envelope = coworkLifecycleFixtureCodecs.makeEnvelope({
+            callback,
+            occurrenceId: "synthetic-mismatch-occurrence",
+          });
+          const ready = yield* encode({ ready: true });
+          const observed = yield* encode({
+            peer: {
+              peerPid: 1,
+              peerStartTicks: "1",
+              runtimePid: 1,
+              runtimeStartTicks: "1",
+              uid: 1000,
+              cwd: fault === "cwd" ? "/synthetic-wrong-root" : f.policy.workspace,
+              runtimeSha256: fault === "runtime" ? id : f.policy.runtimeSha256,
+              appPid: fault === "app-pid" ? f.policy.appPid + 1 : f.policy.appPid,
+              appStartTicks: fault === "app-generation" ? "not-the-enrolled-generation" : f.policy.appStartTicks,
+            },
+            callback: envelope,
+          });
+          const output = Stream.concat(
+            Stream.fromEffect(Deferred.await(policySeen)).pipe(Stream.drain),
+            Stream.make(new TextEncoder().encode(`${ready}\n${observed}\n`))
+          );
+          const spawner = ChildProcessSpawner.make((command) =>
+            Effect.gen(function* () {
+              const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
+              if (!Stream.isStream(input)) return yield* Effect.die("synthetic input stream missing");
+              yield* Effect.forkScoped(
+                Stream.runForEach(input, (chunk) => {
+                  if (!(chunk instanceof Uint8Array)) return Effect.die("synthetic input chunk invalid");
+                  if (Str.includes("receiptId")(new TextDecoder().decode(chunk)))
+                    return Effect.sync(() => {
+                      acknowledgements++;
+                    });
+                  return Effect.sync(() => {
+                    policyFrames++;
+                  }).pipe(Effect.andThen(Deferred.succeed(policySeen, undefined)));
+                })
+              );
+              return yield* Effect.acquireRelease(
+                Effect.succeed(
+                  ChildProcessSpawner.makeHandle({
+                    all: output,
+                    stdout: output,
+                    stderr: Stream.empty,
+                    stdin: Sink.drain,
+                    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+                    isRunning: Effect.succeed(false),
+                    kill: () => Effect.void,
+                    getInputFd: () => Sink.drain,
+                    getOutputFd: () => Stream.empty,
+                    pid: ChildProcessSpawner.ProcessId(1),
+                    unref: Effect.succeed(Effect.void),
+                  })
+                ),
+                () =>
+                  Effect.sync(() => {
+                    releases++;
+                  })
+              );
+            })
+          );
+          const receiver = yield* makeCoworkLifecycleFixtureReceiver(f.policy).pipe(
+            Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
+          );
+          const result = yield* receiver.open().pipe(
+            Effect.flatMap((opened) => opened.accept),
+            Effect.result,
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          );
+          assertFailure(result, CoworkLifecycleError.make({ reason: "callback" }));
+          expect(policyFrames).toBe(1);
+          expect(acknowledgements).toBe(0);
+          expect(releases).toBe(1);
+          expect((yield* f.journal.stats).pages).toBe(0);
+        })
+    );
+  }
+});
+
 it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), { memoMap: Layer.makeMemoMapUnsafe() })(
   (it) => {
+    it.effect("owned ancestor refuses callback injection and oversized commands before an ACK request", () =>
+      Effect.gen(function* () {
+        const ancestor = yield* coworkAncestorFixture;
+        const server = yield* makeLifecycleAckServer("{}", false);
+        for (const body of ["{}\nforged", Str.repeat(4097)("é")]) {
+          const result = yield* ancestor.send(server.path, body).pipe(Effect.result);
+          assertFailure(result, CoworkLifecycleError.make({ reason: "transport" }));
+        }
+        const oversized = yield* ancestor
+          .runScript(Str.repeat(17000)("x"), server.path, "{}", "local-agent")
+          .pipe(Effect.result);
+        assertFailure(oversized, CoworkLifecycleError.make({ reason: "transport" }));
+        const received = yield* server.received;
+        expect(received).toBe("");
+        const absent = yield* ancestor.send(`${server.path}-absent`, "{}");
+        expect(absent).toBe("\n");
+        yield* ancestor.close;
+        yield* ancestor.closed;
+      })
+    );
     for (const kind of ["valid", "malformed", "oversized"]) {
       it.effect(`production Cowork preparation projects metadata and validates ${kind} synthetic ACK`, () =>
         Effect.gen(function* () {

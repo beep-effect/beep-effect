@@ -57,6 +57,7 @@
     {"name":"AiMetrics.cursorLifecycle.forward","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.cursorLifecycle.make","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.cursorLifecycle.open","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
+    {"name":"AiMetrics.cursorLifecycle.projectInput","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.decodeObservationInventory","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.decryptEncryptedRawArchiveEnvelope","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.delivery.attempt","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
