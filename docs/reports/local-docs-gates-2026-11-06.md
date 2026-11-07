@@ -178,6 +178,33 @@ test's Option matcher. It was corrected to the canonical assertion on the
 original Option; the exact-file detector and full retained Effect Vitest command
 then passed without changing any inventory or baseline.
 
+The strict-discovery source `720d6c40d17b8a6796b20117fbe1df7e82231529`
+was also rejected as a default-on optimization. Its single cold pair observed
+**404.558 → 132.724 seconds** (271.834 seconds, 67.193%), with 25 equivalent
+retained passes, two reasoned skips and 20 → 17 cold Turbo tasks. This busy-host
+observation is not a generalized speed guarantee: one-minute load rose from
+29.48 to 56.75 during baseline and fell to 29.57 during candidate on 64 logical
+CPUs; five-minute load also differed materially.
+
+Its three alternating warm pairs produced baseline times 26.623, 27.564 and
+25.053 seconds, versus candidate 45.797, 36.919 and 38.049 seconds. The medians
+**26.623 → 38.049 seconds** regress by **11.425 seconds (42.914%)**, exceeding
+the unchanged five-second allowance. Baseline selected tasks were genuine local
+hits. All retained outcomes passed, but this functional proof does not waive the
+performance rejection.
+
+Warm wall time outside the union of timed lane spans was 0.978–1.073 seconds
+for baseline versus 8.788–9.461 seconds for candidate, almost entirely at the
+scheduling edge. This is not a dedicated guard timer. Review found the initial
+full filesystem/tree proof only supplied an admission boolean: every actual
+skip already performed the entire proof again. A distinct scheduling revision
+uses only shared-root/tier/environment admission up front and retains all full
+per-skip checks. A generator may restore an initially dirty source to the pinned
+tree, but a skip then requires a fresh complete current-state proof. Controls
+cover that restoration, later source mutations, mutation between selected
+lanes, mixed checkouts, opt-out and failed base reads. This revision still needs
+its own unchanged cold and warm qualification.
+
 ## Method lessons
 
 Measure warm-cache behavior before accepting a skip optimization: a cold scan

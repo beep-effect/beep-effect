@@ -2418,14 +2418,17 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
   }).pipe(Effect.orElseSucceed(thunkFalse));
 });
 
-const cleanReportOnlyWaves = Effect.fnUntraced(function* (lanes: ReadonlyArray<GithubCheckWaveLane>) {
+// Admission only schedules possible skips; each lane still proves its complete
+// current input identity before omitting its subprocess.
+const reportOnlyWavesCandidate = (lanes: ReadonlyArray<GithubCheckWaveLane>): boolean => {
+  if (configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "0")) return false;
   const repoRoot = O.map(A.head(lanes), (lane) => lane.step.cwd);
-  return O.isSome(repoRoot) &&
+  return (
+    O.isSome(repoRoot) &&
     A.every(lanes, (lane) => lane.step.cwd === repoRoot.value) &&
     A.some(lanes, (lane) => lane.tier === "cheap-gates" && S.is(ReportOnlyInertLaneId)(lane.id))
-    ? yield* cleanReportOnlyDiff(repoRoot.value)
-    : false;
-});
+  );
+};
 
 const shouldSkipReportLane = Effect.fnUntraced(function* (lane: GithubCheckWaveLane, reportOnly: boolean) {
   return (
@@ -2798,7 +2801,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
   // One virtual-tree hash identifies every reusable lane up front; each wave
   // then refreshes it once (see advanceGithubCheckLaneProofs).
   const allLanes = A.flatMap(waves, (wave) => wave.lanes);
-  const reportOnly = yield* cleanReportOnlyWaves(allLanes);
+  const reportOnly = reportOnlyWavesCandidate(allLanes);
   let session = yield* prepareLaneProofSession(allLanes, laneProofMode).pipe(
     QualityTaskConfigurationError.mapError("Failed to prepare the lane-proof session.")
   );

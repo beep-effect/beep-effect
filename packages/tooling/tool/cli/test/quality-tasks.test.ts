@@ -3398,29 +3398,46 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         })
       );
 
-      for (const control of ["all selected", "retained generator", "mixed checkouts"] as const) {
+      for (const control of [
+        "all selected",
+        "restored generator",
+        "retained generator",
+        "between selected",
+        "mixed checkouts",
+        "opt-out",
+        "missing base",
+      ] as const) {
         it.effect(`revalidates report-only selection for ${control}`, () =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-revalidation-" });
             yield* initializeReportOnlyRepository(root);
+            yield* fs.writeFileString(path.join(root, "source.ts"), "export const baseline = true;\n");
+            yield* runGit(root, ["add", "source.ts"]);
+            yield* runGit(root, ["commit", "-m", "tracked source base"]);
+            yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
             yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
             yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
             yield* runGit(root, ["add", "."]);
             yield* runGit(root, ["commit", "-m", "clean report"]);
+            if (control === "restored generator") {
+              yield* fs.writeFileString(path.join(root, "source.ts"), "initially dirty\n");
+            }
             const other = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-other-" });
-            const lanes = [
-              reportLane(
-                control === "mixed checkouts" ? other : root,
-                "retained:generator",
-                control === "retained generator" ? "echo changed > source.ts" : "exit 0"
-              ),
-              ...A.map(ReportOnlyInertLaneId.literals, (id) => reportLane(root, id)),
-            ];
-            // The first lane's root must be the eligible tree for this mixed-root
-            // control to catch accidental use of only the first checkout.
-            const ordered = control === "mixed checkouts" ? [...A.drop(lanes, 1), O.getOrThrow(A.head(lanes))] : lanes;
+            const command = Match.value(control).pipe(
+              Match.when("restored generator", () => "git restore --worktree -- source.ts"),
+              Match.whenOr("retained generator", "between selected", () => "echo changed > source.ts"),
+              Match.when("missing base", () => "git update-ref -d refs/remotes/origin/main"),
+              Match.orElse(() => "exit 0")
+            );
+            const generator = reportLane(control === "mixed checkouts" ? other : root, "retained:generator", command);
+            const selected = A.map(ReportOnlyInertLaneId.literals, (id) => reportLane(root, id));
+            const ordered = Match.value(control).pipe(
+              Match.when("mixed checkouts", () => [...selected, generator]),
+              Match.when("between selected", () => [O.getOrThrow(A.head(selected)), generator, ...A.drop(selected, 1)]),
+              Match.orElse(() => [generator, ...selected])
+            );
             const run = collectGithubCheckLaneWavesForTesting(
               "reports",
               [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: ordered })],
@@ -3429,12 +3446,19 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const result = yield* withEnvVarEffect(
               "BEEP_YEET_PROOF_BASE",
               undefined,
-              withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
+              withEnvVarEffect(
+                "BEEP_YEET_LANE_PROOF_MODE",
+                "off",
+                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", control === "opt-out" ? "0" : "1", run)
+              )
             );
             const opted = A.filter(result.laneReport.lanes, (lane) => S.is(ReportOnlyInertLaneId)(lane.id));
-            expect(A.map(opted, (lane) => lane.status)).toEqual(
-              A.replicate(control === "all selected" ? "skipped" : "failed", 2)
+            const statuses = Match.value(control).pipe(
+              Match.whenOr("all selected", "restored generator", () => ["skipped", "skipped"]),
+              Match.when("between selected", () => ["skipped", "failed"]),
+              Match.orElse(() => ["failed", "failed"])
             );
+            expect(A.map(opted, (lane) => lane.status)).toEqual(statuses);
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
         );
       }
