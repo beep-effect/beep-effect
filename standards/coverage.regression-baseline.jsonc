@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-06T17:35:48.798Z",
-  "git_sha": "dacbd1a55ad3d0fcf99363d0e55fe6c6dbe71074",
-  "command": "bun run coverage:baseline:write",
+  "generated_at": "2026-11-07T12:22:57.676Z",
+  "git_sha": "97a7bb87f4450c9eab0b328c820df6d50a2fa722",
+  "command": "bun run coverage -- --filter=@beep/alchemy-postgres --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -1647,6 +1647,18 @@
             "statements": 4,
             "branches": 1,
             "functions": 4
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         }
       }

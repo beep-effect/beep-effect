@@ -2282,5 +2282,8 @@
     "./packages/tooling/tool/cli/src/commands/History/index.ts"
   ],
   "@beep/firecrawl": ["./packages/drivers/firecrawl/src/index.ts"],
-  "@beep/firecrawl/*": ["./packages/drivers/firecrawl/src/*"]
+  "@beep/firecrawl/*": ["./packages/drivers/firecrawl/src/*"],
+  "@beep/alchemy-postgres/internal/*": [
+    "./packages/drivers/alchemy-postgres/src/internal/*"
+  ]
 }

@@ -1378,6 +1378,7 @@
         "allow": [
           "@beep/alchemy-postgres",
           "@beep/identity",
+          "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
@@ -1386,6 +1387,7 @@
         "allowTypeOnly": [
           "@beep/alchemy-postgres",
           "@beep/identity",
+          "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
