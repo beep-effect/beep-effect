@@ -50,6 +50,7 @@ import {
   KnowledgeOperationalError,
   KnowledgeProbeBootError,
 } from "./Knowledge.errors.ts";
+import { deriveKnowledgePackages, matchKnowledgeEntrypoint } from "./Knowledge.packages.ts";
 import {
   decodeKnowledgeUtf8,
   isKnowledgeArchivalPath,
@@ -97,6 +98,7 @@ import type {
   KnowledgeFindingSeverity,
   KnowledgeRewriteRule,
 } from "./Knowledge.schemas.ts";
+import type { KnowledgeWorkspacePackage } from "./KnowledgeDoctor.schemas.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
@@ -495,6 +497,58 @@ const commandOccurrence = (
       )
     : O.none();
 
+const negativePackageClaimPrefix = (prefix: string): boolean =>
+  /\b(?:not|no|never|without|remove|drop|avoid|proposed|planned|if|whether|could|would|might)\b[^.;|]*$/iu.test(prefix);
+
+// Positive export claims require document-supported ownership and a real target.
+const verifiedPackageExportColumns = (
+  lineText: string,
+  packages: ReadonlyArray<KnowledgeWorkspacePackage>,
+  documentPackages: ReadonlyArray<KnowledgeWorkspacePackage>,
+  entries: ReadonlyArray<KnowledgeTrackedEntry>
+): HashSet.HashSet<number> => {
+  const spans = knowledgeInlineSpans(lineText);
+  const localOwners = A.filter(packages, (pkg) =>
+    A.some(spans, ({ span }) => span === pkg.name || (Str.isNonEmpty(pkg.root) && Str.startsWith(`${pkg.root}/`)(span)))
+  );
+  const localNamesPackage = A.some(spans, ({ span }) => /^@beep\/[^/]+$/u.test(span));
+  const owners = A.isReadonlyArrayNonEmpty(localOwners) || localNamesPackage ? localOwners : documentPackages;
+  return HashSet.fromIterable(
+    A.getSomes(
+      A.map(spans, (inline) => {
+        const after = Str.slice(inline.column - 1)(lineText);
+        const before = Str.slice(0, inline.column - 1)(lineText);
+        const affirmative = O.fromNullishOr(
+          /^`[^`]+`\s+(?:is\s+a\s+)?(?:concept\s+subpath|package)\s+export(?=\s*(?:[),.;|]|$))/u.exec(after)
+        );
+        if (!Str.startsWith("./")(inline.span) || O.isNone(affirmative) || negativePackageClaimPrefix(before))
+          return O.none();
+        const suffix = Str.slice(Str.length(O.getOrElse(A.head(affirmative.value), () => "")))(after);
+        const cellSuffix = O.getOrElse(A.head(Str.split("|")(suffix)), () => suffix);
+        if (
+          /\?|\b(?:not|never|if|whether|could|would|might|planned|proposed|removed|hypothetical)\b/iu.test(cellSuffix)
+        )
+          return O.none();
+        if (A.isReadonlyArrayNonEmpty(localOwners) && localOwners.length !== 1) return O.none();
+        const matches = A.filter(owners, (pkg) => O.isSome(matchKnowledgeEntrypoint(pkg.entrypoints, inline.span)));
+        if (matches.length !== 1) return O.none();
+        return O.flatMap(A.head(matches), (pkg) =>
+          O.flatMap(matchKnowledgeEntrypoint(pkg.entrypoints, inline.span), (entry) =>
+            O.flatMap(entry.target, (target) =>
+              (Str.isEmpty(pkg.root) || Str.startsWith(`${pkg.root}/`)(target)) &&
+              !/[\\*?#]/u.test(target) &&
+              A.some(entries, (tracked) => tracked.path === target && isRegularBlob(tracked)) &&
+              !A.some(entries, (tracked) => !isRegularBlob(tracked) && Str.startsWith(`${tracked.path}/`)(target))
+                ? O.some(inline.column)
+                : O.none()
+            )
+          )
+        );
+      })
+    )
+  );
+};
+
 /**
  * A broken tracked-path candidate from one inline code span, unless Git proves the exact span is a
  * local branch, remote-tracking branch, or tag name.
@@ -520,9 +574,12 @@ const inlinePathCandidate = (
   documentPath: string,
   documentId: string,
   entries: ReadonlyArray<KnowledgeTrackedEntry>,
-  gitRefNames: HashSet.HashSet<string>
+  gitRefNames: HashSet.HashSet<string>,
+  packageExports: HashSet.HashSet<number>
 ): O.Option<KnowledgeFindingCandidate> =>
-  isKnowledgeCommandSpan(inline.span) || HashSet.has(gitRefNames, inline.span)
+  isKnowledgeCommandSpan(inline.span) ||
+  HashSet.has(gitRefNames, inline.span) ||
+  HashSet.has(packageExports, inline.column)
     ? O.none()
     : O.map(brokenPathAt(inline.span, documentPath, entries), (repoPath) =>
         missingPathCandidate(documentId, documentPath, repoPath, lineNumber, inline.column)
@@ -534,7 +591,8 @@ const extractLineFindings = (
   documentPath: string,
   documentId: string,
   entries: ReadonlyArray<KnowledgeTrackedEntry>,
-  gitRefNames: HashSet.HashSet<string>
+  gitRefNames: HashSet.HashSet<string>,
+  packageExports: HashSet.HashSet<number>
 ): readonly [ReadonlyArray<KnowledgeFindingCandidate>, ReadonlyArray<KnowledgeCommandOccurrence>] => {
   const inlines = knowledgeInlineSpans(lineText);
   const candidates = A.appendAll(
@@ -545,7 +603,7 @@ const extractLineFindings = (
     ),
     A.getSomes(
       A.map(inlines, (inline) =>
-        inlinePathCandidate(inline, lineNumber, documentPath, documentId, entries, gitRefNames)
+        inlinePathCandidate(inline, lineNumber, documentPath, documentId, entries, gitRefNames, packageExports)
       )
     )
   );
@@ -560,13 +618,29 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   oracle: KnowledgeArchiveOracle,
   entry: KnowledgeTrackedEntry,
   documentId: string,
-  gitRefNames: HashSet.HashSet<string>
+  gitRefNames: HashSet.HashSet<string>,
+  packages: ReadonlyArray<KnowledgeWorkspacePackage>
 ) {
   const text = yield* oracle.readBytes(entry.path).pipe(Effect.flatMap((bytes) => decodeUtf8(bytes, entry.path)));
+  const lines = knowledgeDocumentLines(text);
+  const documentNames = HashSet.fromIterable(
+    A.flatMap(lines, (line) =>
+      line.prose
+        ? A.map(
+            A.filter(
+              knowledgeInlineSpans(line.text),
+              (span) => !negativePackageClaimPrefix(Str.slice(0, span.column - 1)(line.text))
+            ),
+            ({ span }) => span
+          )
+        : []
+    )
+  );
+  const documentPackages = A.filter(packages, (pkg) => HashSet.has(documentNames, pkg.name));
   let candidates = A.empty<KnowledgeFindingCandidate>();
   let commands = A.empty<KnowledgeCommandOccurrence>();
 
-  for (const line of knowledgeDocumentLines(text)) {
+  for (const line of lines) {
     if (!line.prose) {
       continue;
     }
@@ -576,7 +650,8 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
       entry.path,
       documentId,
       oracle.trackedEntries,
-      gitRefNames
+      gitRefNames,
+      verifiedPackageExportColumns(line.text, packages, documentPackages, oracle.trackedEntries)
     );
     candidates = A.appendAll(candidates, extracted[0]);
     commands = A.appendAll(commands, extracted[1]);
@@ -676,10 +751,14 @@ const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide
     A.filter((entry) => isRegularBlob(entry) && isScannerMarkdownPath(entry.path)),
     A.sort(Order.mapInput(Order.String, (entry: KnowledgeTrackedEntry) => entry.path))
   );
+  const packages = yield* deriveKnowledgePackages(
+    { ...oracle, commit: "archive", treeish: "archive" },
+    HashSet.fromIterable(A.map(A.filter(oracle.trackedEntries, isRegularBlob), (entry) => entry.path))
+  );
   let candidates = A.empty<KnowledgeFindingCandidate>();
   let commands = A.empty<KnowledgeCommandOccurrence>();
   for (const entry of documents) {
-    const extracted = yield* extractDocument(oracle, entry, documentId(entry), gitRefNames);
+    const extracted = yield* extractDocument(oracle, entry, documentId(entry), gitRefNames, packages);
     candidates = A.appendAll(candidates, extracted.candidates);
     commands = A.appendAll(commands, extracted.commands);
   }
