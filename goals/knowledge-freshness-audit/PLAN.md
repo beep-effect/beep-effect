@@ -248,6 +248,14 @@ Lane `codex/audit-timer-guidance`
 
 Reverse: Revert this checkpoint and its two coverage example corrections if class-based coverage is no longer the intended metric.
 
+### Qualify the retired-module guide's deliberate exceptions, 2026-11-07
+
+Parent review revalidated T52 kfa-t52-001 against its frozen file, blob and line hashes. Reject a contradiction inferred solely from the historical fingerprint exemption: the current fingerprint file has no literal retired prefix. Confirm the narrower omission against the actual retirement law: its implementation, model and regression fixtures deliberately retain retired strings and are explicitly allowlisted. Describe the guide as the canonical mapping and include those existing exceptions. Preserve the allowlist, vendor patches, historical fingerprints and dated migration facts. Twenty open PRs had no target overlap. This is bounded documentation reconciliation, not full T52/P4 acceptance or runtime proof; PM and ADHD remain separately held, and no spending is admitted.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Restore the two guide paragraphs and remove this checkpoint; retain the private original report and review evidence.
+
 ### Pin the notification sender citation to the verified source, 2026-11-07
 
 Read the current 99-line notification guide and checked bounded hook, worker and upstream source context. The URI override is forwarded before its environment name is removed, and desktop markup is escaped before delivery; those suspected discrepancies were rejected. The cited Ghostty v1.3.1 line 1578 handles environment setup, while the notification sender begins at line 1718. Pin that link to verified commit 332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28 and the actual sender. This is a source-citation repair, not proof of installed desktop behavior, focus, receipt visibility or clicks. No hooks, services or billing changed. P4 remains partial; PM and ADHD holds remain separate. Raw source and parent review receipts stay in the private archive.
