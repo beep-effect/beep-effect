@@ -212,7 +212,7 @@ Reverse: Introduce a versioned operation protocol and upcasters before changing 
 
 ### Reserve org-qualified destination names before registration and rename, 2026-11-07
 
-beta.85 has no Unique primitive. DestinationNameReservation uses orgId:normalizedName and rejects another destination. Policy order is claim, register or rename, then release the prior claim.
+beta.85 has no Unique primitive. DestinationNameReservation is keyed by `orgId:sha256hex(normalizedName)` (see the "Hash destination names in reservation keys" decision) and rejects another destination. Policy order is claim, register or rename, then release the prior claim.
 
 Reverse: Replace the reservation aggregate when the pinned kernel provides Unique
 

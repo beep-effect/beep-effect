@@ -20,6 +20,58 @@ import {
   OperationFailures,
 } from "./VaultSync.policy.ts";
 
+// Every `send` fails only with the command's declared `SyncRuleViolation`. A permanent refusal re-raised as a
+// defect would redeliver the committed event forever, so each handler either records the refusal or keeps
+// `Effect.orDie` only where the refusal is impossible by construction, with the reason beside it.
+
+// An item's operation slots. The caller mints operation ids, so a replayed or corrupted observation can
+// name an id another item already holds, or one whose operation has left `queued`; `QueueOperation` then
+// refuses with `not-retargetable` on every redelivery (`operation-key` cannot occur: the key is the
+// target). That refusal becomes a terminal item failure: the item shows `error` while its slot keeps the
+// operation id visible. Such a slot can name another item's operation, so supersession skips operations
+// the item does not own; an operation never changes owner, so the read cannot go stale.
+const itemOperationSlots = Effect.gen(function* () {
+  const operations = yield* V.SyncOperation;
+  const items = yield* V.SyncItem;
+  const supersede = Effect.fnUntraced(function* (
+    itemId: V.ItemId,
+    id: V.OperationId,
+    reason: V.SupersedeReason,
+    commandId: string
+  ) {
+    const current = yield* operations.state(id);
+    if (O.exists(O.fromNullOr(current), (record) => record.input.itemId === itemId))
+      yield* operations.send(id, V.SupersedeOperation.make({ reason }), { commandId });
+  });
+  const queue = Effect.fnUntraced(function* (itemId: V.ItemId, o: V.ItemObservation, commandId: string) {
+    yield* operations
+      .send(
+        o.operationId,
+        V.QueueOperation.make({
+          input: {
+            destinationId: o.destinationId,
+            itemId,
+            type: o.type,
+            path: o.path,
+            digest: o.digest,
+            generation: o.generation,
+            parentRequired: o.parentRequired,
+            idempotencyKey: o.operationId,
+          },
+        }),
+        { commandId }
+      )
+      .pipe(
+        Effect.catchTag("SyncRuleViolation", () =>
+          items.send(itemId, V.MarkItemPushFailed.make({ terminal: true, generation: o.generation }), {
+            commandId: `${commandId}:refused`,
+          })
+        )
+      );
+  });
+  return { supersede, queue } as const;
+});
+
 /**
  * Pure aggregate-dispatch handlers; no Box or filesystem adapter is called here.
  *
@@ -39,6 +91,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
         yield* conflicts.send(event.record.publicId, V.ConfirmConflict.make({ record: event.record }), {
           commandId: `${envelope.stream}:${envelope.seq}:record`,
         });
+        // `conflict-id` is impossible: the target is the record's own public id.
       }, Effect.orDie);
     })
   ),
@@ -79,36 +132,25 @@ export const VaultSyncPolicies = Layer.mergeAll(
           yield* claims.send(old, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
             commandId: `${envelope.stream}:${envelope.seq}:release`,
           });
+        // `ReleaseDestinationName` never refuses: a claim held by another destination is left untouched.
       }, Effect.orDie);
     })
   ),
   ItemOperations.toLayer(
     Effect.gen(function* () {
-      const operations = yield* V.SyncOperation;
+      const slots = yield* itemOperationSlots;
       return Effect.fn(function* ({ event, source, envelope }) {
         if (event._tag === "ItemKindReplaced")
-          for (const [, id] of event.previousSlots) {
-            yield* operations.send(id, V.SupersedeOperation.make({ reason: "kind-replaced" }), {
-              commandId: `${envelope.stream}:${envelope.seq}:supersede:${id}`,
-            });
-          }
-        const o = event.observation;
-        yield* operations.send(
-          o.operationId,
-          V.QueueOperation.make({
-            input: {
-              destinationId: o.destinationId,
-              itemId: source.id,
-              type: o.type,
-              path: o.path,
-              digest: o.digest,
-              generation: o.generation,
-              parentRequired: o.parentRequired,
-              idempotencyKey: o.operationId,
-            },
-          }),
-          { commandId: `${envelope.stream}:${envelope.seq}:queue` }
-        );
+          for (const [, id] of event.previousSlots)
+            yield* slots.supersede(
+              source.id,
+              id,
+              "kind-replaced",
+              `${envelope.stream}:${envelope.seq}:supersede:${id}`
+            );
+        yield* slots.queue(source.id, event.observation, `${envelope.stream}:${envelope.seq}:queue`);
+        // `SupersedeOperation` never refuses, and `MarkItemPushFailed` cannot meet `not-tracked`: the item
+        // that emitted this event is tracked.
       }, Effect.orDie);
     })
   ),
@@ -119,15 +161,29 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const items = yield* V.SyncItem;
       return Effect.fn(function* ({ event, source, envelope }) {
         if (event.correction !== null) {
-          yield* operations.send(
-            event.correction.operationId,
-            V.QueueOperation.make({ input: event.correction.input }),
-            { commandId: `${envelope.stream}:${envelope.seq}:correct` }
-          );
+          const queued = yield* operations
+            .send(event.correction.operationId, V.QueueOperation.make({ input: event.correction.input }), {
+              commandId: `${envelope.stream}:${envelope.seq}:correct`,
+            })
+            .pipe(
+              Effect.as(true),
+              Effect.catchTag("SyncRuleViolation", (violation) =>
+                Effect.logWarning("vault sync correction refused; the conflict stays open for another review").pipe(
+                  Effect.annotateLogs({ conflictId: source.id, rule: violation.rule }),
+                  Effect.as(false)
+                )
+              )
+            );
+          // A correction whose operation id is held elsewhere leaves the conflict open, and the recorded
+          // review request, in `OpenConflicts` for another review instead of closing it unapplied.
+          if (!queued) return;
         } else if (event.record.itemId !== null) {
-          yield* items.send(event.record.itemId, V.ReturnItemToPending.make({ operationId: event.healOperationId }), {
-            commandId: `${envelope.stream}:${envelope.seq}:heal`,
-          });
+          // An item this slice never tracked has nothing to heal; the review closes, as for an untracked remote item.
+          yield* items
+            .send(event.record.itemId, V.ReturnItemToPending.make({ operationId: event.healOperationId }), {
+              commandId: `${envelope.stream}:${envelope.seq}:heal`,
+            })
+            .pipe(Effect.catchTag("SyncRuleViolation", () => Effect.void));
         }
         yield* conflicts.send(
           source.id,
@@ -138,35 +194,19 @@ export const VaultSyncPolicies = Layer.mergeAll(
           }),
           { commandId: `${envelope.stream}:${envelope.seq}:close` }
         );
+        // `conflict-not-found` is impossible: the scope comes from the conflict that emitted this event.
       }, Effect.orDie);
     })
   ),
   ItemHealing.toLayer(
     Effect.gen(function* () {
-      const operations = yield* V.SyncOperation;
+      const slots = yield* itemOperationSlots;
       return Effect.fn(function* ({ event, source, envelope }) {
         for (const [, id] of event.previousSlots)
           if (id !== event.observation.operationId)
-            yield* operations.send(id, V.SupersedeOperation.make({ reason: "review-heal" }), {
-              commandId: `${envelope.stream}:${envelope.seq}:supersede:${id}`,
-            });
-        const o = event.observation;
-        yield* operations.send(
-          o.operationId,
-          V.QueueOperation.make({
-            input: {
-              destinationId: o.destinationId,
-              itemId: source.id,
-              path: o.path,
-              type: o.type,
-              digest: o.digest,
-              generation: o.generation,
-              parentRequired: o.parentRequired,
-              idempotencyKey: o.operationId,
-            },
-          }),
-          { commandId: `${envelope.stream}:${envelope.seq}:heal` }
-        );
+            yield* slots.supersede(source.id, id, "review-heal", `${envelope.stream}:${envelope.seq}:supersede:${id}`);
+        yield* slots.queue(source.id, event.observation, `${envelope.stream}:${envelope.seq}:heal`);
+        // As in `ItemOperations`: supersession never refuses and the emitting item is tracked.
       }, Effect.orDie);
     })
   ),
@@ -183,7 +223,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
             { at, commandId: `${envelope.stream}:${envelope.seq}:deadline` }
           )
           .pipe(Effect.catchTag("AlreadyExecuted", () => Effect.void));
-      }, Effect.orDie);
+      });
     })
   ),
   OperationFailures.toLayer(
@@ -191,14 +231,14 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const items = yield* V.SyncItem;
       return Effect.fn(function* ({ state, envelope }) {
         if (state === null) return;
-        yield* items.send(
-          state.input.itemId,
-          V.MarkItemPushFailed.make({ terminal: true, generation: state.input.generation }),
-          {
+        // A review correction may queue for an item this slice never tracked; `not-tracked` leaves the
+        // failed operation as the only record.
+        yield* items
+          .send(state.input.itemId, V.MarkItemPushFailed.make({ terminal: true, generation: state.input.generation }), {
             commandId: `${envelope.stream}:${envelope.seq}:error`,
-          }
-        );
-      }, Effect.orDie);
+          })
+          .pipe(Effect.catchTag("SyncRuleViolation", () => Effect.void));
+      });
     })
   ),
   DestinationRecovery.toLayer(
@@ -213,6 +253,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
             yield* operations.send(id, V.ReviveOperation.make({}), {
               commandId: `${envelope.stream}:${envelope.seq}:revive:${id}`,
             });
+        // `ReviveOperation` never refuses: an operation that is not failed records nothing.
       }, Effect.orDie);
     })
   )

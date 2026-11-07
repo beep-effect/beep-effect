@@ -74,7 +74,7 @@ describe("vault sync pure transitions", () => {
   it("a retry budget reset preserves the monotonically increasing lease token", () => {
     const failed = V.SyncOperation.definition.evolve.OperationFailed(
       leased,
-      V.OperationFailed.make({ reason: "vendor" }),
+      V.OperationFailed.make({ reason: "uploadFile" }),
       envelope
     );
     const revived = V.SyncOperation.definition.evolve.OperationRevived(failed, V.OperationRevived.make({}), envelope);

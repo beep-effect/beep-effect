@@ -8,6 +8,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $DocumentsUseCasesId.create("aggregates/VaultSync/BoxMirror.external");
@@ -34,6 +35,36 @@ export const DisconnectReason = LiteralKit(["credentials-missing", "auth-failed"
  */
 export type DisconnectReason = typeof DisconnectReason.Type;
 /**
+ * The adapter-side stage at which a Box call stopped, beside the call name in `operation`.
+ *
+ * **Example** (Inspect declaration)
+ * ```ts
+ * import { MirrorFailureStage } from "@beep/documents-use-cases/aggregates/VaultSync";
+ * void MirrorFailureStage;
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const MirrorFailureStage = LiteralKit([
+  "local-root",
+  "stale-input",
+  "intent-mismatch",
+  "uncertain-outcome-held",
+]).pipe(
+  $I.annoteSchema("MirrorFailureStage", {
+    description:
+      "Where an adapter stopped a Box call: a local precondition, a stale input or a held uncertain outcome.",
+  })
+);
+
+/**
+ * The adapter-side stage at which a Box call stopped.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MirrorFailureStage = typeof MirrorFailureStage.Type;
+/**
  * BoxMirrorUnavailable vault sync orchestration.
  *
  * **Example** (Inspect declaration)
@@ -46,7 +77,15 @@ export type DisconnectReason = typeof DisconnectReason.Type;
  */
 export class BoxMirrorUnavailable extends S.TaggedError<BoxMirrorUnavailable, { readonly brand: unique symbol }>()(
   "BoxMirrorUnavailable",
-  { retryable: S.Boolean, disconnectReason: S.NullOr(DisconnectReason), operation: S.String },
+  {
+    retryable: S.Boolean,
+    disconnectReason: S.NullOr(DisconnectReason),
+    operation: V.MirrorOperation,
+    stage: S.NullOr(MirrorFailureStage).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultKey(Effect.succeed(null))
+    ),
+  },
   $I.annote("BoxMirrorUnavailable", { description: "A declared Box boundary failure." })
 ) {}
 const destination = { destinationId: V.DestinationId };

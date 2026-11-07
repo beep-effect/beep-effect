@@ -11,8 +11,9 @@ import * as Struct from "effect/Struct";
 import * as C from "./SyncItem.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
+import type { SyncRule } from "./SyncRuleViolation.rejection.ts";
 
-const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "item state" });
+const refused = (rule: SyncRule) => SyncRuleViolation.make({ rule, evidence: "item state" });
 const observed = (s: C.ItemState, e: { readonly observation: C.ItemObservation }): C.ItemRecord =>
   C.ItemRecord.make({
     observation: e.observation,

@@ -11,8 +11,9 @@ import * as Struct from "effect/Struct";
 import * as C from "./SyncDestination.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
+import type { SyncRule } from "./SyncRuleViolation.rejection.ts";
 
-const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "destination state" });
+const refused = (rule: SyncRule) => SyncRuleViolation.make({ rule, evidence: "destination state" });
 const sameOwner = (
   s: { readonly orgId: number; readonly workspaceId: number },
   c: { readonly orgId: number; readonly workspaceId: number }
