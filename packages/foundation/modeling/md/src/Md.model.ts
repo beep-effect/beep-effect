@@ -1419,6 +1419,14 @@ export declare namespace BlockChildren {
  * block children preserve nested document structure such as paragraphs, code
  * blocks, and nested lists.
  *
+ * **Gotchas**
+ *
+ * The declared type is load-bearing. `ListItemChild` sits on the recursive
+ * `TaskList -> TaskItem -> ListItemChildren -> ListItemChild -> Block -> TaskList`
+ * cycle; without the annotation its inferred type depends on which declaration a
+ * type checker reaches first, and parallel checkers (tsrs fast mode) then
+ * intermittently collapse `TaskList` and `TaskItem` to `any`.
+ *
  * **Example** (Decode and project list item child)
  *
  * ```ts import.meta.vitest name="Decode and project list item child"
@@ -1430,14 +1438,6 @@ export declare namespace BlockChildren {
  * Result.isSuccess(result) && result.success._tag === "text" // => true
  * Result.isSuccess(result) && ListItemChild.toPlainText(result.success) === "Hello" // => true
  * ```
- *
- * **Gotchas**
- *
- * The declared type is load-bearing. `ListItemChild` sits on the recursive
- * `TaskList -> TaskItem -> ListItemChildren -> ListItemChild -> Block -> TaskList`
- * cycle; without the annotation its inferred type depends on which declaration a
- * type checker reaches first, and parallel checkers (tsrs fast mode) then
- * intermittently collapse `TaskList` and `TaskItem` to `any`.
  *
  * @category models
  * @since 0.0.0
