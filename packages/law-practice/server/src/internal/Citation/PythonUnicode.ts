@@ -4,7 +4,13 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationEngineLimits,
+  CitationEngineOperation,
+  CitationPythonUnicodeStorage,
+  CitationSafetyBudget,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -17,11 +23,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  CitationPythonUnicodeStorage,
-  measureCitationPythonText,
-  validateCitationPythonStorage,
-} from "./PythonHash.ts";
+import { measureCitationPythonText, validateCitationPythonStorage } from "./PythonHash.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PythonUnicode");
 const Limits = S.toType(CitationEngineLimits);
@@ -38,7 +40,7 @@ export class CitationPythonUnicodeFailure extends S.TaggedError<
   { readonly brand: unique symbol }
 >($I`CitationPythonUnicodeFailure`)(
   "CitationPythonUnicodeFailure",
-  { reason: Reason },
+  { reason: Reason, limit: S.optionalKey(CitationSafetyBudget) },
   $I.annoteError<CitationPythonUnicodeFailure>("CitationPythonUnicodeFailure", {
     description: "Lossless Unicode preparation failed without source text, bytes or nested causes.",
   })
@@ -195,6 +197,30 @@ const materializeSlice = Effect.fn("Citation.materializeNativeSlice")(function* 
   return CitationPythonUnicodeStorage.make({ width, bytes });
 });
 
+/** Normalized unit-step Python slice bounds over trusted native storage.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationPythonSliceBounds extends S.Opaque<CitationPythonSliceBounds, { readonly brand: unique symbol }>()(
+  S.Struct({ start: S.Natural, end: S.Natural }).pipe(
+    $I.annoteSchema("CitationPythonSliceBounds", {
+      description: "Clamped native slice bounds with empty reversed intervals.",
+    })
+  )
+) {}
+/** Normalize signed Python slice endpoints without allocating source text.
+ * @internal @category operations @since 0.0.0
+ */
+export const normalizeCitationPythonSlice: {
+  (start: number, end: number): (source: CitationPythonUnicodeStorage) => CitationPythonSliceBounds;
+  (source: CitationPythonUnicodeStorage, start: number, end: number): CitationPythonSliceBounds;
+} = dual(3, (source: CitationPythonUnicodeStorage, start: number, end: number) => {
+  const size = source.bytes.length / source.width;
+  const normalize = (position: number) =>
+    Num.clamp(position < 0 ? size + position : position, { minimum: 0, maximum: size });
+  const lower = normalize(start);
+  return CitationPythonSliceBounds.make({ start: lower, end: Num.max(lower, normalize(end)) });
+});
+
 /** Materialize a range already validated by its captured source owner. Native
  * storage and bounds are trusted here, never issued by decoding this layout.
  * The receiver reserves exact units/bytes before allocating the new payload.
@@ -305,17 +331,47 @@ export const concatCitationPythonRanges = Effect.fn("Citation.concatNativeRanges
   return CitationPythonUnicodeStorage.make({ width, bytes });
 });
 
+const nativeLiteralCandidate = (
+  source: CitationPythonUnicodeStorage,
+  needle: CitationPythonUnicodeStorage,
+  start: number
+) => needle.bytes.length === 0 || citationPythonPointAt(source, start) === citationPythonPointAt(needle, 0);
 const nativeReplacementMatches = Effect.fn("Citation.nativeReplacementMatches")(function* (
   source: CitationPythonUnicodeStorage,
   needle: CitationPythonUnicodeStorage,
   start: number
 ) {
   const count = needle.bytes.length / needle.width;
-  for (let offset = 0; offset < count; offset++) {
+  if (!nativeLiteralCandidate(source, needle, start)) return false;
+  for (let offset = 1; offset < count; offset++) {
     if (offset % 4096 === 0) yield* Effect.yieldNow;
     if (citationPythonPointAt(source, start + offset) !== citationPythonPointAt(needle, offset)) return false;
   }
   return true;
+});
+/** Find a literal native word in a normalized Python slice, returning offsets
+ * relative to that slice. Retain only the first/last match, not a match array.
+ * @internal @category operations @since 0.0.0
+ */
+export const findCitationPythonLiteral = Effect.fn("Citation.findNativeLiteral")(function* (
+  source: CitationPythonUnicodeStorage,
+  needle: CitationPythonUnicodeStorage,
+  start: number,
+  end: number,
+  last?: boolean
+) {
+  const bounds = normalizeCitationPythonSlice(source, start, end);
+  const count = needle.bytes.length / needle.width;
+  const [initial, stop, step] =
+    last === true ? [bounds.end - count, bounds.start, -1] : [bounds.start, bounds.end - count, 1];
+  let visited = 0;
+  for (let index = initial; step * (index - stop) <= 0; index += step) {
+    if (visited++ % 4096 === 0) yield* Effect.yieldNow;
+    if (!nativeLiteralCandidate(source, needle, index)) continue;
+    if (yield* nativeReplacementMatches(source, needle, index))
+      return O.some(CitationPythonSliceBounds.make({ start: index - bounds.start, end: index - bounds.start + count }));
+  }
+  return O.none<CitationPythonSliceBounds>();
 });
 const visitNativeReplacement = Effect.fn("Citation.visitNativeReplacement")(function* <E>(
   source: CitationPythonUnicodeStorage,
@@ -379,22 +435,37 @@ export const replaceCitationPythonStorage = Effect.fn("Citation.replaceNativeSto
 });
 
 /**
- * Capture the intermediate ceiling and minimum operation/clean deadline.
+ * Capture the intermediate ceiling and minimum operation/selected-stage deadline.
+ * Cleaning is the default; explicit server stages select their own operation.
  * Storage input is copied before the first scan yield; output bytes belong to
  * the receiving adapter. Scans yield every 4096 source code points.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")(function* (input: unknown) {
+export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")(function* (
+  input: unknown,
+  operationInput: unknown = "clean"
+) {
   const limits = yield* S.decodeUnknownEffect(Limits)(input).pipe(Effect.mapError(invalidInput));
   const maximum = limits.producedTextUtf16;
   const clock = yield* Clock.Clock;
-  const deadline = Duration.min(limits.cleanDeadline, limits.operationDeadline).pipe(
+  const operation = yield* S.decodeUnknownEffect(CitationEngineOperation)(operationInput).pipe(
+    Effect.mapError(invalidInput)
+  );
+  const deadlineField = `${operation}Deadline` as const;
+  const deadlineLimit = Duration.isLessThanOrEqualTo(limits.operationDeadline, limits[deadlineField])
+    ? "operationDeadline"
+    : deadlineField;
+  const deadline = Duration.min(limits[deadlineField], limits.operationDeadline).pipe(
     Duration.toMillis,
     Duration.millis
   );
   const bounded = <A, E>(body: Effect.Effect<A, E>) =>
     body.pipe(
-      Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(fail("deadline-exceeded")) }),
+      Effect.timeoutOrElse({
+        duration: deadline,
+        orElse: () =>
+          Effect.fail(CitationPythonUnicodeFailure.make({ reason: "deadline-exceeded", limit: deadlineLimit })),
+      }),
       Effect.provideService(Clock.Clock, clock)
     );
   const decodeStorage = Effect.fn("Citation.decodeNativeUnicodeStorage")(function* (input: unknown) {

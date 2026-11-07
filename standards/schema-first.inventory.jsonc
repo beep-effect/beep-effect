@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-06",
+  "generatedOn": "2026-11-07",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -1258,16 +1258,6 @@
       "reason": "Exercises a live registry cursor, membership-before-lookup and fixed source cleaner observations. The fixture codec only authenticates recorded input; stateful runtime callback ordering is tested explicitly. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
-      "file": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 60,
-      "owner": "@beep/law-practice-server",
-      "reason": "Replays source text/subclass/identity relations through actual builtin implementations. Those host identities and provenance relations cannot be manufactured by arbitrary JSON fixture values. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
-    },
-    {
       "file": "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1326,16 +1316,6 @@
       "line": 65,
       "owner": "@beep/law-practice-server",
       "reason": "Compares every frozen source encoding byte and wrapper decision with pre-allocation controls. Fixture codecs load independent source observations; native transport/input properties are covered in the focused input and protocol suites. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
-    },
-    {
-      "file": "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 50,
-      "owner": "@beep/law-practice-server",
-      "reason": "Replays all 440 frozen source vectors and exhaustive Unicode classifier facts. The authenticated corpus is intentionally fixed; random fixture values would not carry independent source expectations. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
       "file": "packages/law-practice/server/test/CitationMentionIdentity.test.ts",
@@ -1566,16 +1546,6 @@
       "reason": "Service integration regression checks exact source-bound advisory items and their ReviewItem wire round-trip, alongside runtime errors and verdict projection. It does not define a new ReviewItem codec; the schema belongs to domain. Owner: @beep/law-practice-use-cases. Exit: retire when the detector excludes consumer integration round-trips or shared ReviewItem property coverage is directly recognized."
     },
     {
-      "file": "packages/party/domain/src/policies/Admission/Admission.model.ts",
-      "symbol": "depositionOutlineEntry",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 572,
-      "owner": "@beep/party-domain",
-      "reason": "Exported function \"depositionOutlineEntry\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
       "file": "packages/party/domain/src/entities/Hierarchy/Hierarchy.model.ts",
       "symbol": "assessOperational",
       "kind": "schema-policy-advisory",
@@ -1594,6 +1564,16 @@
       "line": 373,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"divergences\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "packages/party/domain/src/policies/Admission/Admission.model.ts",
+      "symbol": "depositionOutlineEntry",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 572,
+      "owner": "@beep/party-domain",
+      "reason": "Exported function \"depositionOutlineEntry\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
       "file": "packages/party/domain/src/policies/Projection/Projection.behavior.ts",

@@ -5,8 +5,15 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import { LiteralKit } from "@beep/schema";
+import {
+  CitationBuiltinCleanerName,
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationEngineLimits,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -17,10 +24,9 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import { CitationCleanerFailure, CitationCleanerObject } from "./CleanerPipeline.ts";
 import { CitationCleanerTextDescriptor, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationPythonUnicodeValue, makeCitationPythonUnicode } from "./PythonUnicode.ts";
+import type { CitationLiveCleanerObject } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeFailure } from "./PythonUnicode.ts";
 
 const Limits = S.toType(CitationEngineLimits);
@@ -29,20 +35,7 @@ type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 const CitationCleanerTextOutputType = S.toType(CitationCleanerTextOutput);
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerValues");
-/** @internal @category models @since 0.0.0 */
-export const CitationBuiltinCleanerName = LiteralKit([
-  "html",
-  "inline_whitespace",
-  "all_whitespace",
-  "underscores",
-  "xml",
-]).pipe(
-  $I.annoteSchema("CitationBuiltinCleanerName", {
-    description: "Pinned builtin function selection, not the live clean_text step/registry domain.",
-  })
-);
-/** @internal @category models @since 0.0.0 */
-export type CitationBuiltinCleanerName = typeof CitationBuiltinCleanerName.Type;
+
 /** @internal @category models @since 0.0.0 */
 export class CitationCleanerValueSnapshot extends S.Opaque<
   CitationCleanerValueSnapshot,
@@ -76,6 +69,7 @@ export class CitationCleanerValues extends Context.Service<
     readonly text: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly unicode: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly unicodeSubclass: (input: unknown, host: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
+    readonly getUnicodeUnits: (value: CitationCleanerObject) => Effect.Effect<O.Option<number>, CitationCleanerFailure>;
     readonly getUnicode: (
       value: CitationCleanerObject
     ) => Effect.Effect<O.Option<CitationPythonUnicodeValue>, CitationCleanerFailure>;
@@ -87,7 +81,7 @@ export class CitationCleanerValues extends Context.Service<
       value: CitationCleanerObject
     ) => Effect.Effect<O.Option<CitationCleanerTextDescriptor>, CitationCleanerFailure>;
     readonly getHost: (value: CitationCleanerObject) => Effect.Effect<O.Option<unknown>, CitationCleanerFailure>;
-    readonly assertOwned: (value: CitationCleanerObject) => Effect.Effect<void, CitationCleanerFailure>;
+    readonly assertOwned: (value: CitationLiveCleanerObject) => Effect.Effect<void, CitationCleanerFailure>;
     readonly same: (
       left: CitationCleanerObject,
       right: CitationCleanerObject
@@ -303,6 +297,9 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       const value = yield* unicode.fromStorage(input).pipe(Effect.mapError(translate));
       return yield* Effect.suspend(() => mint({ kind: "text", unicode: value, subtype: "subclass", host }, () => {}));
     }),
+    getUnicodeUnits: Effect.fn("Citation.measureNativeCleanerText")((ref) =>
+      get(ref).pipe(Effect.map((entry) => (entry.kind === "text" ? O.some(entry.unicode.utf16Units) : O.none())))
+    ),
     getUnicode: Effect.fn("Citation.readNativeCleanerText")((ref) =>
       get(ref).pipe(
         Effect.map((entry) =>
@@ -379,4 +376,19 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       })
     ),
   });
+});
+
+/** Copy a native cleaner value only after the enclosing operation reserves its
+ * measured text. The size lookup neither copies storage nor coerces host values.
+ * @internal @category operations @since 0.0.0
+ */
+export const copyCitationCleanerUnicode = Effect.fn("Citation.copyOwnedCleanerUnicode")(function* <E>(
+  values: CitationCleanerValues["Service"],
+  value: CitationCleanerObject,
+  invalid: () => E
+) {
+  const budget = yield* CitationTextBudget;
+  const units = yield* values.getUnicodeUnits(value).pipe(Effect.flatMap((units) => Effect.fromOption(units, invalid)));
+  yield* budget.reserve(units);
+  return yield* values.getUnicode(value).pipe(Effect.flatMap((text) => Effect.fromOption(text, invalid)));
 });

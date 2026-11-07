@@ -1723,7 +1723,12 @@ export const ciLaneStepsForTesting: {
         QualityTaskStep.make({
           label: "ci:property",
           command: "bunx",
-          args: directTurboArgs(["test:property"], [CI_LANE_TURBO_CONCURRENCY_ARG, ...turboShapeArgs(options)]),
+          // Keep sweeping after one red suite so a nightly run reports every
+          // failing package instead of the first (#2687).
+          args: directTurboArgs(
+            ["test:property"],
+            [CI_LANE_TURBO_CONCURRENCY_ARG, "--continue=dependencies-successful", ...turboShapeArgs(options)]
+          ),
           cwd: repoRoot,
           env: {
             BEEP_FC_NUM_RUNS: resolvePropertyLaneRuns(options.runs),

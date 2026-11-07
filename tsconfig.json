@@ -2472,6 +2472,9 @@
       "@beep/alchemy-postgres/*": ["./packages/drivers/alchemy-postgres/src/*"],
       "@beep/law-practice-server/ClaimInspection": [
         "./packages/law-practice/server/src/ClaimInspection/index.ts"
+      ],
+      "@beep/repo-cli/commands/History": [
+        "./packages/tooling/tool/cli/src/commands/History/index.ts"
       ]
     }
   }

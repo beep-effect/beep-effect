@@ -31,6 +31,7 @@ import { GitOptions } from "./Git.models.ts";
 import { GitCommand } from "./GitCommand.ts";
 import { makeWith as makeExecution } from "./internal/execution.ts";
 import {
+  isObjectId,
   parseBranchList,
   parseCommitInfo,
   parseConfigGetAll,
@@ -42,7 +43,9 @@ import {
   parseLsTree,
   parseMergeTree,
   parseNameStatus,
+  parseNotesList,
   parseNulSeparated,
+  parseObjectId,
   parseRevListCount,
   parseStashList,
   parseStatus,
@@ -61,6 +64,9 @@ import type {
   LsTreeEntry,
   MergeTreeResult,
   NameStatusEntry,
+  NoteEntry,
+  NotesCommit,
+  NoteWrite,
   RefEntry,
   StashEntry,
   StatusEntry,
@@ -108,6 +114,9 @@ export {
   LsTreeEntry,
   MergeTreeResult,
   NameStatusEntry,
+  NoteEntry,
+  NotesCommit,
+  NoteWrite,
   RefEntry,
   StashEntry,
   StatusEntry,
@@ -1123,21 +1132,19 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       cwd: string,
       key: string,
       value: string,
-      options?: { readonly file?: string }
+      options: { readonly file?: string; readonly add?: boolean } = {}
     ) {
-      yield* Effect.annotateCurrentSpan({
-        cwd,
-        key,
-        file: options?.file ?? "(repository config)",
-      });
+      const file = O.fromUndefinedOr(options.file);
+      const add = options.add === true;
+      yield* Effect.annotateCurrentSpan({ cwd, key, file: O.getOrElse(file, () => "(repository config)"), add });
       // git config has no documented -- separator, so key, value AND file are all
       // guarded — a leading-dash value is refused typed rather than risking git
       // reading it as a flag. Recorded limitation: a legitimate "-..." config
       // value cannot be written through this method. The value rides the
       // SENSITIVE arm: a refused config value is reported as <redacted>, never
       // echoed into the error (the redaction policy).
-      yield* rejectOptionLikeRefs(cwd, [key, ...(options?.file !== undefined ? [options.file] : [])], [value]);
-      const classified = yield* runFor(GitCommand.configSet(key, value, options?.file), cwd, "generic");
+      yield* rejectOptionLikeRefs(cwd, [key, ...O.toArray(file)], [value]);
+      const classified = yield* runFor(GitCommand.configSet(key, value, O.getOrUndefined(file), add), cwd, "generic");
       return yield* Match.valueTags(classified, {
         success: () => Effect.void,
         ...refFailureArms(cwd, key),
@@ -1986,6 +1993,89 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
+  const notesList: GitShape["notesList"] = dual(
+    2,
+    Effect.fn("Git.notesList")(function* (cwd: string, ref: string) {
+      yield* Effect.annotateCurrentSpan({ cwd, ref });
+      yield* rejectOptionLikeRefs(cwd, [ref]);
+      // A missing notes ref lists nothing and exits 0, so it reads as an
+      // empty list here — the same answer as a ref that holds no notes.
+      return yield* runParsedChecked(
+        "Git.notesList",
+        GitCommand.notesList(ref),
+        cwd,
+        ref,
+        "notes list",
+        parseNotesList
+      );
+    })
+  );
+
+  const replaceNotes: GitShape["replaceNotes"] = dual(
+    stringAt(1),
+    Effect.fn("Git.replaceNotes")(function* (
+      cwd: string,
+      ref: string,
+      notes: ReadonlyArray<NoteWrite>,
+      commit: NotesCommit
+    ) {
+      yield* Effect.annotateCurrentSpan({ cwd, ref, notes: notes.length });
+      yield* rejectOptionLikeRefs(cwd, [ref]);
+      yield* rejectCombination(
+        cwd,
+        !Str.startsWith("refs/notes/")(ref),
+        [ref],
+        "a notes ref must live under refs/notes/"
+      );
+      const objects = A.map(notes, (note) => note.object);
+      yield* rejectCombination(
+        cwd,
+        !A.every(objects, isObjectId),
+        [ref],
+        "every annotated object must be a full lowercase object id"
+      );
+      yield* rejectCombination(
+        cwd,
+        A.dedupe(objects).length !== objects.length,
+        [ref],
+        "each object may carry at most one note"
+      );
+      yield* rejectCombination(
+        cwd,
+        A.some([commit.name, commit.email], (part) =>
+          A.some(["<", ">", "\n"], (forbidden) => Str.includes(forbidden)(part))
+        ),
+        [ref],
+        "the notes commit identity may not contain '<', '>' or a newline"
+      );
+      const invocation = GitCommand.replaceNotes(ref, notes, commit);
+      const classified = yield* runFor(invocation, cwd, "generic");
+      yield* Match.valueTags(classified, {
+        success: () => Effect.void,
+        ...refFailureArms(cwd, ref),
+      });
+      return yield* revParse(cwd, ref);
+    })
+  );
+
+  const hashObject: GitShape["hashObject"] = dual(
+    2,
+    Effect.fn("Git.hashObject")(function* (cwd: string, content: string) {
+      // The content is deliberately NOT annotated: it may be large, and span
+      // annotations carry stable identifiers only.
+      yield* Effect.annotateCurrentSpan({ cwd, bytes: content.length });
+      const invocation = GitCommand.hashObject(content);
+      const classified = yield* runFor(invocation, cwd, "generic");
+      return yield* Match.valueTags(classified, {
+        success: (classified) => failClosed(invocation, cwd, "hash-object")(parseObjectId(classified.output)),
+        // hash-object resolves no revision, so git's own stderr never carries
+        // an unknown-ref shape here.
+        unknownRef: () => Effect.die('Git.hashObject: unexpected classification "unknownRef"'),
+        ...repositoryFailureArms(cwd),
+      });
+    })
+  );
+
   const updateRef: GitShape["updateRef"] = dual(
     3,
     Effect.fn("Git.updateRef")(function* (cwd: string, ref: string, change: UpdateRefChange) {
@@ -2429,6 +2519,9 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     revList,
     revListCount,
     revParse,
+    notesList,
+    hashObject,
+    replaceNotes,
     rm,
     show,
     sparseCheckoutSet,
@@ -2876,6 +2969,10 @@ export interface GitShape {
    * at all rather than hidden behind an option that is easy to pass by
    * accident.
    *
+   * With `options.add` the argv gains `--add` and the value is appended to a
+   * multi-valued key rather than replacing it; without it, a key that
+   * already holds several values fails loudly (git exits 5).
+   *
    * The value never surfaces in an error: a failing `configSet` carries
    * `<redacted>` in `GitCommandError.args` and `.message`, and the method's
    * span annotates `key` and `file` only.
@@ -2885,12 +2982,12 @@ export interface GitShape {
       cwd: string,
       key: string,
       value: string,
-      options?: { readonly file?: string }
+      options?: { readonly file?: string; readonly add?: boolean }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
       key: string,
       value: string,
-      options?: { readonly file?: string }
+      options?: { readonly file?: string; readonly add?: boolean }
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -3150,6 +3247,20 @@ export interface GitShape {
     (options?: {
       readonly path?: string;
     }): (cwd: string) => Effect.Effect<string, GitCommandError | NotARepositoryError>;
+  };
+  /**
+   * `git hash-object --no-filters --stdin` — the blob id `content` would
+   * have in this repository's object format, computed without writing the
+   * object.
+   *
+   * **Details**
+   *
+   * One spawn per call: callers hashing many bodies bound their own
+   * concurrency. The answer is decoded fail-closed as one full object id.
+   */
+  readonly hashObject: {
+    (cwd: string, content: string): Effect.Effect<string, GitCommandError | NotARepositoryError>;
+    (content: string): (cwd: string) => Effect.Effect<string, GitCommandError | NotARepositoryError>;
   };
   /**
    * `git merge-base --is-ancestor <ancestor> <descendant>` — whether
@@ -3460,6 +3571,29 @@ export interface GitShape {
     ) => Effect.Effect<ReadonlyArray<NameStatusEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
+   * `git notes --ref=<ref> list` — every note on the notes ref `ref` as a
+   * {@link NoteEntry} (note blob id, annotated object id), in git's order.
+   *
+   * **Details**
+   *
+   * A notes ref that does not exist answers an empty list, not an error, the
+   * same as a ref that holds no notes; pair with `refExists` when the two
+   * must be told apart. Output that is not `<oid> <oid>` lines fails closed
+   * as `GitCommandError`; an option-like ref is refused typed before any
+   * spawn.
+   */
+  readonly notesList: {
+    (
+      cwd: string,
+      ref: string
+    ): Effect.Effect<ReadonlyArray<NoteEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      ref: string
+    ): (
+      cwd: string
+    ) => Effect.Effect<ReadonlyArray<NoteEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
    * Mutating: `git pull [--rebase] [--ff-only] <remote> [<ref>]` — fetches
    * and integrates.
    *
@@ -3594,6 +3728,39 @@ export interface GitShape {
       readonly remote?: string;
       readonly push?: boolean;
     }): (cwd: string) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
+   * Mutating: replaces the notes ref `ref` with one parentless commit that
+   * holds exactly `notes`, via `git fast-import`, and answers the new commit
+   * id.
+   *
+   * **Details**
+   *
+   * The notes tree uses `git notes`' own fan-out, so `git notes` and
+   * `git log --notes` read it. With a fixed {@link NotesCommit} the commit
+   * id depends on the notes alone: rewriting the same notes leaves the ref
+   * where it was, whatever it held before. The index and work tree are not
+   * touched. A ref outside `refs/notes/`, a malformed or repeated object id,
+   * or an identity containing `<`, `>` or a newline is refused typed before
+   * any spawn.
+   *
+   * **Gotchas**
+   *
+   * The new commit never descends from the old tip, so publishing the ref
+   * needs a forced push and fetching it a `+` refspec.
+   */
+  readonly replaceNotes: {
+    (
+      cwd: string,
+      ref: string,
+      notes: ReadonlyArray<NoteWrite>,
+      commit: NotesCommit
+    ): Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      ref: string,
+      notes: ReadonlyArray<NoteWrite>,
+      commit: NotesCommit
+    ): (cwd: string) => Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
    * `git rev-parse --show-toplevel` — the absolute repository root path, trimmed.
@@ -4699,6 +4866,9 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     forEachRef: dual(hasStringSubject, stubOf(overrides, "forEachRef")),
     revList: dual(stringAt(1), stubOf(overrides, "revList")),
     revListCount: dual(stringAt(1), stubOf(overrides, "revListCount")),
+    notesList: dual(2, stubOf(overrides, "notesList")),
+    hashObject: dual(2, stubOf(overrides, "hashObject")),
+    replaceNotes: dual(stringAt(1), stubOf(overrides, "replaceNotes")),
     upstream: dual(2, stubOf(overrides, "upstream")),
     updateRef: dual(3, stubOf(overrides, "updateRef")),
     commit: dual(stringAt(1), stubOf(overrides, "commit")),

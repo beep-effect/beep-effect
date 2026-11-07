@@ -184,10 +184,14 @@ export class CitationFullCaseMetadata extends S.Opaque<CitationFullCaseMetadata,
  * @since 0.0.0
  */
 export class CitationShortCaseMetadata extends S.Opaque<CitationShortCaseMetadata, { readonly brand: unique symbol }>()(
-  S.Struct({ ...CitationCaseMetadata.fields, antecedentGuess: S.OptionFromNullOr(S.String) }).pipe(
+  S.Struct({
+    ...CitationCaseMetadata.fields,
+    antecedentGuess: S.OptionFromNullOr(S.String),
+    plaintiff: S.String.pipe(S.NullOr, S.OptionFromOptionalKey),
+  }).pipe(
     $I.annoteSchema("CitationShortCaseMetadata", {
       description:
-        "Short case metadata with a source-backed antecedent name; no resolved citation copy or array index.",
+        "Short case metadata with source-backed antecedent and optional source-created plaintiff; missing, null and text remain distinct.",
     })
   )
 ) {}

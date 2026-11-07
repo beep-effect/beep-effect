@@ -4,12 +4,12 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationFrozenEditions, readCitationFrozenEdition } from "./FrozenEditions.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import {
   citationPythonPointAt,
   makeCitationPythonUnicode,
@@ -17,7 +17,7 @@ import {
   sliceCitationPythonStorage,
 } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationTextBudget, makeCitationTextBudget } from "./TextBudget.ts";
+import { makeCitationTextBudget } from "./TextBudget.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResourceCorrection");

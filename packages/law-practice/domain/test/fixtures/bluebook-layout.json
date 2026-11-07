@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "bluebook-layout-reference/v1",
+  "scope": "Constructed full-case formatter inputs only; no donor extraction, source-span or complete export-parity claim.",
+  "source": {
+    "commit": "34133d03143ea65861f48a5ed0eb32c931581666",
+    "tree": "f1243d0723cea1e53a5263ef67c9e066230729fc",
+    "path": "src/utils/bluebook.ts",
+    "sha256": "db337a03e8343c291fd026af2262e8d5ea2db415e2a3545ef97366e4c1eccd79",
+    "license": "MIT",
+    "licenseSha256": "4035b4eb4428ec60e5e02ed53b546ae17b3cd3c039ad42f61611ef8f389d6264",
+    "runtime": "Bun 1.4.4"
+  },
+  "probeSha256": "5663f951676120d87cc6baa8b8555335dbef98a0ac751e1aa20ca2c6ca0a33ea",
+  "identity": {
+    "mappingSha256": "b5aca44dc69f05b82c41decf327863a52c151eeb231bdb4df96e5cf7e85351c5",
+    "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+    "reporterId": "reporter:67d371c6acffe6c7502566ad",
+    "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+    "courtId": "scotus"
+  },
+  "cases": [
+    {
+      "view": {
+        "form": "us-reports-case",
+        "plaintiff": "Bell Atl. Corp.",
+        "defendant": "Twombly",
+        "volume": "550",
+        "page": "544",
+        "year": "2007",
+        "pinCite": "570"
+      },
+      "input": {
+        "type": "case",
+        "volume": "550",
+        "reporter": "U.S.",
+        "page": 544,
+        "year": 2007,
+        "caseName": "Bell Atl. Corp. v. Twombly",
+        "pincite": 570,
+        "text": "Bell Atl. Corp. v. Twombly",
+        "matchedText": "Bell Atl. Corp. v. Twombly",
+        "span": {
+          "cleanStart": 0,
+          "cleanEnd": 26,
+          "originalStart": 0,
+          "originalEnd": 26
+        },
+        "confidence": 1,
+        "processTimeMs": 0,
+        "patternsChecked": 0
+      },
+      "expectedText": "Bell Atl. Corp. v. Twombly, 550 U.S. 544, 570 (2007)"
+    },
+    {
+      "view": {
+        "form": "us-reports-case",
+        "plaintiff": "Foo",
+        "defendant": "Bar",
+        "volume": "1",
+        "page": "1",
+        "year": "2000",
+        "pinCite": null
+      },
+      "input": {
+        "type": "case",
+        "volume": "1",
+        "reporter": "U.S.",
+        "page": 1,
+        "year": 2000,
+        "caseName": "Foo v. Bar",
+        "text": "Foo v. Bar",
+        "matchedText": "Foo v. Bar",
+        "span": {
+          "cleanStart": 0,
+          "cleanEnd": 10,
+          "originalStart": 0,
+          "originalEnd": 10
+        },
+        "confidence": 1,
+        "processTimeMs": 0,
+        "patternsChecked": 0
+      },
+      "expectedText": "Foo v. Bar, 1 U.S. 1 (2000)"
+    },
+    {
+      "view": {
+        "form": "us-reports-case",
+        "plaintiff": "Élodie 😀",
+        "defendant": "Bar",
+        "volume": "1",
+        "page": "1",
+        "year": "2000",
+        "pinCite": null
+      },
+      "input": {
+        "type": "case",
+        "volume": "1",
+        "reporter": "U.S.",
+        "page": 1,
+        "year": 2000,
+        "caseName": "Élodie 😀 v. Bar",
+        "text": "Élodie 😀 v. Bar",
+        "matchedText": "Élodie 😀 v. Bar",
+        "span": {
+          "cleanStart": 0,
+          "cleanEnd": 16,
+          "originalStart": 0,
+          "originalEnd": 16
+        },
+        "confidence": 1,
+        "processTimeMs": 0,
+        "patternsChecked": 0
+      },
+      "expectedText": "Élodie 😀 v. Bar, 1 U.S. 1 (2000)"
+    }
+  ]
+}

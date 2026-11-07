@@ -18,6 +18,7 @@ import {
   CitationRuntimeDictionaryFailure,
   CitationRuntimeDictionaryKey,
   CitationRuntimeDictionaryLimits,
+  citationRuntimeDictionaryLimitFailure,
 } from "./RuntimeDictionary.ts";
 
 const CitationRuntimeDictionaryLimitsType = S.toType(CitationRuntimeDictionaryLimits);
@@ -44,7 +45,7 @@ const createRuntimeSet = Effect.fn("Citation.createRuntimeSet")(function* (
   let steps = 0;
   let buckets = HashMap.empty<number, CitationRuntimeDictionaryKey>();
   const step = Effect.suspend(() => {
-    if (steps >= limits.iterations) return Effect.fail(failure("limit-exceeded"));
+    if (steps >= limits.iterations) return Effect.fail(citationRuntimeDictionaryLimitFailure(limits.iterationLimit));
     steps += 1;
     return comparison.step;
   });
@@ -93,7 +94,7 @@ const createRuntimeSet = Effect.fn("Citation.createRuntimeSet")(function* (
   const tryBucket = Effect.fn("Citation.setTryBucket")(function* (key: CitationRuntimeDictionaryKey, bucket: number) {
     const entry = HashMap.get(buckets, bucket);
     if (O.isSome(entry)) return yield* sameKey(entry.value, key);
-    if (used >= limits.entries) return yield* failure("limit-exceeded");
+    if (used >= limits.entries) return yield* citationRuntimeDictionaryLimitFailure(limits.entryLimit);
     buckets = HashMap.set(buckets, bucket, CitationRuntimeDictionaryKey.make({ ...key }));
     used += 1;
     if (used * 5 >= (size - 1) * 3) yield* grow();
@@ -169,5 +170,11 @@ export const makeCitationRuntimeSet = Effect.fn("Citation.makeRuntimeSet")(funct
     Effect.mapError(() => failure("invalid-input"))
   );
   const comparison = yield* CitationRuntimeDictionaryComparison;
-  return yield* createRuntimeSet(limits, comparison, 8, 0, HashMap.empty());
+  return yield* createRuntimeSet(
+    CitationRuntimeDictionaryLimits.make({ ...limits }),
+    comparison,
+    8,
+    0,
+    HashMap.empty()
+  );
 });

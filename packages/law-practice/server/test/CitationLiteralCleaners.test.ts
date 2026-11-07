@@ -1,18 +1,19 @@
 import * as NodeURL from "node:url";
-import { CitationCleanerWorkSnapshot } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationLiteralCleaner,
   makeCitationLiteralCleaners,
 } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { citationPythonTextData } from "@beep/law-practice-server/internal/Citation/PythonTextData";
 import { encodeCitationRuntimeString } from "@beep/law-practice-server/internal/Citation/RuntimeHashEncoding";
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationCleanerWorkSnapshot, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -26,8 +27,8 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { CitationCleanerWork } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import type { CitationLiteralCleanerFailure } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
+import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
 const Corpus = S.fromJsonString(
   S.Struct({
@@ -316,4 +317,19 @@ it.effect("keeps the enclosing native cleaner deadline active when the preparati
     expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "cleanDeadline" });
     expect(timers).toBe(2);
   })
+);
+
+const PropertyType = S.toType(CitationCleanerWorkSnapshot);
+const PropertyJson = CitationCleanerWorkSnapshot.pipe(S.toCodecJson, S.fromJsonString);
+const propertyEquivalent = S.toEquivalence(PropertyType);
+it.effect.prop(
+  "preserves cleaner work counters through JSON",
+  { value: Arbitrary.schema(PropertyType) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(PropertyJson)(value);
+      const decoded = yield* S.decodeEffect(PropertyJson)(encoded);
+      expect(propertyEquivalent(value, decoded)).toBe(true);
+    }),
+  { arbitrary: fcRuns(100) }
 );

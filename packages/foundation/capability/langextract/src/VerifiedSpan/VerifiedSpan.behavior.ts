@@ -335,18 +335,24 @@ const convertUtf16CodeUnitRange = Effect.fnUntraced(function* (
   });
 });
 
+const codePointUtf16Width = (point: number) => (point > 65535 ? 2 : 1);
+
 const convertCodePointRange = Effect.fnUntraced(function* (
   range: TextOffsetRange,
   sourceText: string
 ): Effect.fn.Return<Utf16TextRange, VerifiedSpanError> {
-  const points = A.fromIterable(sourceText);
-  if (range.end > A.length(points)) {
-    return yield* VerifiedSpanError.fromReason("invalid-offset");
+  let pointIndex = 0;
+  let cursor = 0;
+  let startChar = 0;
+  while (pointIndex < range.end && cursor < Str.length(sourceText)) {
+    if (pointIndex % 4096 === 0) yield* Effect.yieldNow;
+    if (pointIndex === range.start) startChar = cursor;
+    const point = O.getOrThrow(Str.codePointAt(sourceText, cursor));
+    cursor += codePointUtf16Width(point);
+    pointIndex++;
   }
-  return Utf16TextRange.make({
-    endChar: S.Natural.make(Str.length(A.join(A.take(points, range.end), ""))),
-    startChar: S.Natural.make(Str.length(A.join(A.take(points, range.start), ""))),
-  });
+  if (pointIndex !== range.end) return yield* VerifiedSpanError.fromReason("invalid-offset");
+  return Utf16TextRange.make({ endChar: S.Natural.make(cursor), startChar: S.Natural.make(startChar) });
 });
 
 /**

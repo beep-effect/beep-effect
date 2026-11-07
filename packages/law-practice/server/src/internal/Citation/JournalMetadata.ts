@@ -4,6 +4,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -20,7 +21,6 @@ import {
   prepareCitationPublicationMetadata,
   processCitationMetadataStrings,
 } from "./MetadataComposition.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";

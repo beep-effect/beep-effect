@@ -840,7 +840,7 @@ const program = Effect.gen(function* () {
       name,
       world: world as World,
       old: oldExecuteMergeGate(context, OldMergeGateMerge.make(decision)),
-      new: executeMergeGate(MergeGateMerge.make(decision)),
+      new: executeMergeGate(MergeGateMerge.make({ ...decision, commitMessage: "" })),
       projectOld: (merged: { readonly mergeSha: string }) => merged.mergeSha,
       projectNew: (merged: { readonly mergeSha: string }) => merged.mergeSha,
       ...(classified === undefined ? {} : { classified }),
