@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "tracked-scanner-discovery-key-review/v1",
+  "at": "2026-11-07T00:03:44.354154+00:00",
+  "sourceRevision": "91848cad972714901cb1100e68f4c77b71b5df1a",
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "observations": [
+    {
+      "channel": "stable",
+      "candidateTracked": false,
+      "trackedPaths": ["docs/base.md"],
+      "hash": "76948a61f20e3c98",
+      "inputPaths": [
+        ".gitignore",
+        "docs/base.md",
+        "docs/candidate.md",
+        "package.json",
+        "turbo.json"
+      ],
+      "rawSha256": "093204528aea1ddca4e8d48ca09c8dd1486c48be1b8307dad05321f2c41e03cd",
+      "rawBytes": 2370
+    },
+    {
+      "channel": "canary",
+      "candidateTracked": false,
+      "trackedPaths": ["docs/base.md"],
+      "hash": "76948a61f20e3c98",
+      "inputPaths": [
+        ".gitignore",
+        "docs/base.md",
+        "docs/candidate.md",
+        "package.json",
+        "turbo.json"
+      ],
+      "rawSha256": "1d89f7d15e7e54811fb7db12b1167b6b74d8beb253b469ab25325e4cd31098db",
+      "rawBytes": 2379
+    },
+    {
+      "channel": "stable",
+      "candidateTracked": true,
+      "trackedPaths": ["docs/base.md", "docs/candidate.md"],
+      "hash": "76948a61f20e3c98",
+      "inputPaths": [
+        ".gitignore",
+        "docs/base.md",
+        "docs/candidate.md",
+        "package.json",
+        "turbo.json"
+      ],
+      "rawSha256": "8f384d4a2e6de768008799a05048cd73bd2829488921bcefddb77561678abef9",
+      "rawBytes": 2370
+    },
+    {
+      "channel": "canary",
+      "candidateTracked": true,
+      "trackedPaths": ["docs/base.md", "docs/candidate.md"],
+      "hash": "76948a61f20e3c98",
+      "inputPaths": [
+        ".gitignore",
+        "docs/base.md",
+        "docs/candidate.md",
+        "package.json",
+        "turbo.json"
+      ],
+      "rawSha256": "e8374a09567c850cddd6c8ade111a65f2a8218f802d18057767f2f95bdb9b590",
+      "rawBytes": 2379
+    }
+  ],
+  "hashChanged": {
+    "stable": false,
+    "canary": false
+  },
+  "taskBodiesExecuted": false,
+  "qualitySuitesRun": false,
+  "secretsLoaded": false,
+  "authority": "Isolated native metadata fixture only; does not execute a tracked-text scanner or its fingerprint prerequisite.",
+  "reviewedSourceRevision": "91848cad972714901cb1100e68f4c77b71b5df1a",
+  "affectedTasks": [
+    "//#lint:retired-effect-paths",
+    "//#lint:retired-iri-authorities",
+    "//#lint:markdown-fences"
+  ],
+  "sourceBindingsAfter": {
+    "turbo.json": "04e8b00030e5a220d0b89051b3bae5a5621e2f9780533197fb738e0c67ee251d",
+    "package.json": "8aeab93d1609618577fdce356c0da33c095e2adb0df1d1eddb8c51d67e9d3a2f",
+    "packages/tooling/tool/cli/src/commands/Laws/internal/TrackedTextFiles.ts": "36bf1224545e6b192924d278c882d3fd484e25e02190bed717da2aedd7d7e0ce",
+    "packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.ts": "48370a644447ea3610bcb35268ff64e9a527c34eaee72c5529ce09903197690f",
+    "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts": "8b3dba1f63763c7005a6c73dfeeab4d26c593855a8f92834912328c5420084b8",
+    "packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.ts": "0413149807f5b6e026d35f0119414152221493b84774ae07a05f5e34ab26456c",
+    "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts": "403973826d6a1a81bfb858ae99f7470303034e7ed94b37b6eb03e4aaacd8aff5",
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": "01f2ddbe7578332427b27f59c0c8b98bd869c75c5dfee55619f1e29a3fd31c41",
+    "packages/tooling/tool/cli/test/lint-policy-scope.test.ts": "abed92b13d2734b43a80868b763dc8c6b63555c9f0392b62103846757709938d",
+    "packages/tooling/tool/cli/test/quality-tasks.test.ts": "35e8b67ef8781096e8ce385a0298fbc6bb17d57a846bd9a16a8b5e669885f190",
+    "packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts": "3db51be4d4af78083250592c00fcd13c10b4dc7a08625a82c315b583a404b97e"
+  },
+  "rootConfigurationBeforeSha256": "ac2286808e66d71d4af7045b469e1aa03a83a792dd74d38d0160c17d3144bc6a",
+  "sourceBasedFinding": "Three additional root checks call the same regular-index-file scanner as entity-kit freeze. Their native inputs bind content while Git metadata and a runtime discovery env input were absent.",
+  "candidatePolicy": {
+    "cache": false,
+    "runtimeInput": "BEEP_CACHE_TOOLCHAIN_DIGEST",
+    "qualificationGranted": false
+  },
+  "distinctConsumer": {
+    "task": "//#lint:effect-imports-markdown",
+    "reason": "Uses tracked plus visible untracked paths with Git-failure fallback. A plain untracked-to-tracked transition does not establish changed selection; unchanged by this repair."
+  },
+  "scope": "Four isolated Markdown dry-run metadata observations only. Does not execute repository scanner bodies, their fingerprint dependency chain, or observe an actual stale verdict.",
+  "remaining": "Qualify complete native input chain, law-specific scope/baselines, semantic negatives, output/log safety, portable runtime and concurrent-index isolation before restoring reuse. Temporary fresh boundaries remain unfinished adoption.",
+  "hostedRepair": {
+    "failedHead": "8589d4eb7e511020f52cbba1f3eae0f65828c224",
+    "causes": [
+      "outdated cache/env contract assertions",
+      "Git fixture staged/worktree mismatch",
+      "affected filtering still skips index-sensitive discovery"
+    ],
+    "policy": "Five held checks execute in the existing unfiltered state graph; concurrency width unchanged.",
+    "localQualityExecuted": false,
+    "correctedHeadHostedProof": "pending",
+    "followOn": "Hosted repo-cli-2 passed 1993 tests and failed one stale full-plan prefix-count assertion. Replace that derived prefix with the exact full-scope sequence, including all five held discovery tasks; local and hosted plan scopes remain separately asserted. Corrected-head hosted proof pending."
+  }
+}

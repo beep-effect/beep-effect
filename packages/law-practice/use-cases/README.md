@@ -20,7 +20,46 @@ This is the slice's documented cross-slice bounded exception: importing
 Exception Ledger and `DECISIONS.md`. The law-practice DOMAIN tier stays clean —
 no epistemic dependency there.
 
-Citation policy schemas export from `/server`. Citation oracle corpus,
+Citation policy, operation names and the closed `CitationEngineFailure` union
+export only from `/server`. Its five error families are `CitationInputError`,
+`CitationPrerequisiteError`, `CitationSafetyLimitExceeded`,
+`CitationAnnotationError` and `CitationOperationUnsupported`. Raw text, private
+causes and caller-controlled mode labels are excluded from these failure
+payloads. Unknown/ambiguous/unresolved citation meanings remain domain data.
+These contracts do not publish a live `CitationEngine` service yet. Root and
+`/public` do not re-export them.
+
+Single-source `CitationEngineSourceInput` and named
+`CitationEngineExtractionOptions` components also export only from `/server`.
+Builtin cleaner names, container kinds and source roles have one schema owner
+there, reused by private server implementation. Decoding source data grants no
+verified-source capability. The private adapter uses the existing canonical
+`SourceTextResolver` and provenance verifier. `CitationEngineSourcePairInput`
+adds independently identified plain/markup slots, retaining empty supplied
+identities. Private single/pair extraction shares admission, timing and cumulative
+budgets. Retained-Document dispatch and the complete service remain unfinished.
+
+`CitationCleaner` is the captured server execution port. Its owned-value,
+lazy-cursor and reservation contracts have one owner here; issuance and native
+execution remain server implementations. Decoding handle data grants no runtime
+ownership. Declared cleaner-port failures remain distinct from the five engine
+boundary failures and require engine translation.
+
+`CitationTokenizer` captures the existing native token-plan profile with closed
+execution methods. Its token seeds, assembly results and failure contract have
+one owner on `/server`. `CitationPythonUnicodeStorage` preserves explicit native
+code-point storage; `CitationTextBudget` captures per-operation allocation
+authority. The server constructs the default tokenizer within its current Scope
+and budget and consumes this port directly. These contracts grant no verified
+source authority. General mutable/custom-tokenizer protocols remain unfinished.
+
+`CitationEngineReport` and `CitationExtractionMeasurements` describe completed
+operations separately from semantic citations. Counts, captured policy and engine
+identity compare deterministically; measured work duration does not. Reports have
+no source-text or citation payload fields. Failure/interruption reporting and the
+complete engine service remain integration work.
+
+Citation oracle corpus,
 accounting, divergence and benchmark schemas export only from `/test`;
 production code must not import that subpath. These test schemas are evidence
 contracts and do not provide a live citation engine or imply parity.

@@ -7,6 +7,17 @@
  */
 
 /**
+ * Structured supported Bluebook forms and directional schema transforms.
+ * @category codecs
+ * @since 0.0.0
+ */
+export {
+  BluebookCitation,
+  BluebookFromFullCitation,
+  BluebookText,
+  BluebookTextFromBluebookCitation,
+} from "./Citation.bluebook.ts";
+/**
  * Canonical case and reference semantic models.
  * @category models
  * @since 0.0.0

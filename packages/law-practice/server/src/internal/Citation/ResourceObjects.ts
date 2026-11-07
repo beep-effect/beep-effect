@@ -7,7 +7,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import { CitationEngineLimits, CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -16,6 +16,7 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import * as Struct from "effect/Struct";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
 import { CitationCaseResourceHashInput, makeCitationCaseResourceHash } from "./CaseResourceHash.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
@@ -90,7 +91,7 @@ export class CitationResourceObjectFailure extends S.TaggedError<
   { readonly brand: unique symbol }
 >($I`CitationResourceObjectFailure`)(
   "CitationResourceObjectFailure",
-  { reason: Reason },
+  { reason: Reason, limit: S.optionalKey(CitationSafetyBudget) },
   $I.annoteError<CitationResourceObjectFailure>("CitationResourceObjectFailure", {
     description: "Closed resource-object failure without semantic input or nested causes.",
   })
@@ -228,6 +229,7 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
   const tableError = (error: CitationResourceObjectFailure) =>
     CitationRuntimeDictionaryFailure.make({
       reason: error.reason === "limit-exceeded" ? "limit-exceeded" : "comparison-failed",
+      ...Struct.pick(error, ["limit"]),
     });
   const comparison = CitationRuntimeDictionaryComparison.of({
     equal: Effect.fn("Citation.resourceEqual")((left: number, right: number) =>
@@ -249,7 +251,11 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
         Effect.gen(function* () {
           yield* alive;
           yield* models.step;
-          if (next >= maximum) return yield* failure("limit-exceeded");
+          if (next >= maximum)
+            return yield* CitationResourceObjectFailure.make({
+              reason: "limit-exceeded",
+              limit: "resolutionIterations",
+            });
           const snapshot = yield* referenceSnapshot(reference);
           const resource = CitationResourceObject.make({ slot: next });
           references = HashMap.set(references, next, snapshot);

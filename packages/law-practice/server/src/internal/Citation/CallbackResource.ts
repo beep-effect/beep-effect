@@ -7,8 +7,10 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationGroupMember } from "@beep/law-practice-domain/values";
+import { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { CitationResourceIdentity } from "./ResourceIdentity.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CallbackResource");
@@ -99,8 +101,15 @@ export class CitationCallbackFailure extends S.TaggedError<CitationCallbackFailu
   $I`CitationCallbackFailure`
 )(
   "CitationCallbackFailure",
-  { reason: Reason },
+  { reason: Reason, limit: S.optionalKey(CitationSafetyBudget) },
   $I.annoteError<CitationCallbackFailure>("CitationCallbackFailure", {
     description: "Callback resolution failed without resource presentation, source text or nested causes.",
   })
 ) {}
+/** Copy only closed diagnostic fields through callback boundaries. Older
+ * injected adapters may omit limit; absence never invents a budget category.
+ * @internal @category errors @since 0.0.0
+ */
+export const copyCitationCallbackFailure = (
+  error: Pick<CitationCallbackFailure, "reason" | "limit">
+): CitationCallbackFailure => CitationCallbackFailure.make({ reason: error.reason, ...Struct.pick(error, ["limit"]) });

@@ -4,15 +4,12 @@ import {
   makeCitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
-import { CitationCleanerRuntime } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import {
-  CitationPythonUnicodeStorage,
-  makeCitationPythonHash,
-} from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import { CitationCleaner, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -61,7 +58,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             );
             const operation = yield* makeCitationCleanerOperation(limits).pipe(
               Effect.provideService(CitationOperationAdmission, admission),
-              Effect.provideService(CitationCleanerRuntime, owned.runtime)
+              Effect.provideService(CitationCleaner, owned.runtime)
             );
             const citationResult1 = yield* defaultCitationEnginePolicy;
             const hash = yield* makeCitationPythonHash(citationResult1.limits);

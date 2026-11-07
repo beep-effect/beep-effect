@@ -28,6 +28,24 @@ const RuntimePath = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
     description: "Explicit trusted local worker executable/script/working-directory path.",
   })
 );
+/** Snapshot schema-owned limits and explicit runtime capabilities at installation.
+ * @internal @category operations @since 0.0.0
+ */
+export const prepareCitationNativeRuntime = Effect.fn("Citation.prepareNativeRuntime")(function* <E>(
+  policy: unknown,
+  runtimeInput: unknown,
+  invalid: () => E
+) {
+  const decoded = yield* S.decodeUnknownEffect(LimitsType)(policy).pipe(Effect.mapError(invalid));
+  const limits = yield* S.encodeEffect(CitationEngineLimits)(decoded).pipe(
+    Effect.flatMap(S.decodeEffect(CitationEngineLimits)),
+    Effect.mapError(invalid)
+  );
+  const runtime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
+    Effect.mapError(invalid)
+  );
+  return { limits, runtime };
+});
 /** @internal @category models @since 0.0.0 */
 export const CitationNativeRuntimeKind = LiteralKit(["bun", "node"]).pipe(
   $I.annoteSchema("CitationNativeRuntimeKind", {
@@ -109,6 +127,73 @@ const Phase = LiteralKit(["starting", "running", "stopping", "quarantined"]).pip
 export interface CitationOwnedNativeProcess<E> {
   readonly retire: (retry: boolean) => Effect.Effect<void, E | CitationSafetyLimitExceeded>;
 }
+/** Existing physical owner capability, without exposing its private records.
+ * @internal @category services @since 0.0.0
+ */
+export interface CitationNativeProcessStarter<E> {
+  readonly ensureOpen: Effect.Effect<void, E>;
+  readonly start: (
+    command: ChildProcess.Command,
+    binding: CitationNativeProcessLease
+  ) => Effect.Effect<
+    {
+      readonly process: CitationOwnedNativeProcess<E>;
+      readonly child: Exit.Exit<ChildProcessHandle, E>;
+    },
+    E
+  >;
+}
+/** One invocation's transfer capability; server code may acquire/start once.
+ * @internal @category services @since 0.0.0
+ */
+export interface CitationNativeProcessOperation<E> {
+  readonly acquire: Effect.Effect<void, E>;
+  readonly start: (command: ChildProcess.Command) => Effect.Effect<ChildProcessHandle, E>;
+}
+/** Share the existing regex ownership sequence: preparation may reserve before
+ * copying, start atomically captures physical ownership, and only retirement
+ * releases a transferred lease. Cancellation cannot skip this cleanup boundary.
+ * This composes the existing owner/admission capabilities; it adds no scheduler.
+ * @internal @category operations @since 0.0.0
+ */
+export const withCitationNativeProcess = Effect.fn("Citation.withNativeProcess")(function* <E, A, F>(
+  owner: CitationNativeProcessStarter<E>,
+  acquire: Effect.Effect<CitationNativeProcessLease, E>,
+  invalid: () => E,
+  task: (operation: CitationNativeProcessOperation<E>) => Effect.Effect<A, F>
+) {
+  return yield* Effect.uninterruptibleMask(
+    Effect.fnUntraced(function* (restore) {
+      yield* owner.ensureOpen;
+      let permit = O.none<CitationNativeProcessLease>();
+      let process = O.none<CitationOwnedNativeProcess<E>>();
+      const claim = Effect.gen(function* () {
+        if (O.isSome(permit)) return yield* Effect.fail(invalid());
+        const lease = yield* acquire;
+        permit = O.some(lease);
+      }).pipe(Effect.uninterruptible);
+      const start = Effect.fn("Citation.transferNativeProcess")((command: ChildProcess.Command) =>
+        Effect.gen(function* () {
+          if (O.isSome(process)) return yield* Effect.fail(invalid());
+          const lease = yield* Effect.fromOption(permit).pipe(Effect.mapError(invalid));
+          const started = yield* owner.start(command, lease).pipe(
+            Effect.tap((value) =>
+              Effect.sync(() => {
+                process = O.some(value.process);
+              })
+            ),
+            Effect.uninterruptible
+          );
+          return yield* started.child;
+        })
+      );
+      const outcome = yield* Effect.exit(restore(task({ acquire: claim, start })));
+      if (O.isSome(process)) yield* process.value.retire(false);
+      else if (O.isSome(permit)) yield* permit.value.release;
+      return yield* outcome;
+    })
+  );
+});
 interface OwnedProcess {
   readonly handle: Ref.Ref<O.Option<ChildProcessHandle>>;
   readonly phase: Ref.Ref<typeof Phase.Type>;

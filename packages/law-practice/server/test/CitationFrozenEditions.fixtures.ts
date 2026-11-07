@@ -6,13 +6,20 @@
  */
 import * as NodeURL from "node:url";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
+import {
+  CitationFrozenEditions,
+  makeCitationFrozenEditions,
+} from "@beep/law-practice-server/internal/Citation/FrozenEditions";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
+import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const SourceType = S.fromJsonString(S.Struct({ pythonType: S.String }));
 const Corpus = S.fromJsonString(
@@ -60,4 +67,16 @@ export const loadCitationFrozenEditionFixtures = Effect.fn("FrozenEditionTest.fi
   const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(expectedRaw));
   expect(citationResult2).toBe("0c23ff189ec5c381303af14c79f630a4d7910a11374308f9c7400ca3f79faf0d");
   return { bundle: { reporters, editions }, expected: yield* S.decodeEffect(Expected)(expectedRaw) };
+});
+
+/** Install an authenticated edition owner with the shared actual metadata runtime.
+ * @internal @category testing @since 0.0.0
+ */
+export const installCitationFrozenMetadataRuntime = Effect.fn("FrozenEditionTest.metadataRuntime")(function* (
+  kind: CitationNativeRuntimeKind
+) {
+  const { bundle } = yield* loadCitationFrozenEditionFixtures();
+  const owner = yield* makeCitationFrozenEditions(bundle);
+  const setup = yield* setupCitationMetadataRuntime(kind, undefined, false, true, 8192);
+  return { ...setup, provided: Context.add(setup.provided, CitationFrozenEditions, owner) };
 });

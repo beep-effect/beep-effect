@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "citation-annotation-xml-build/v1",
+  "kernelSourceSha256": "eb76cd3b252044ad3f789ca595e753098b97fb62566b2231d573e5d4aba8efea",
+  "producerSha256": "a737c8b11ee5ab6fb77d33dd0d269e5f96a9094d121218ed9bc729b0ba3806a1",
+  "parserRelinkArchiveSha256": "10abf778c288a827ef035a7a41ba3afe963470a532631bcb5618ea16e99598c1",
+  "parserBuildReceiptSha256": "fe5045768c3cee8b0acb51e14a524278f5b1ba392f6a9bf3ef5bc53ab2d18d79",
+  "sdkVersion": "34.0\nwasi-libc: 2e6fb9d8ee0c\nllvm: 895aa2c896ad\nllvm-version: 23.1.0\nconfig: f992bcc08219",
+  "clangSha256": "061f88b9f4c48f3742434c2513d5038ab7fa4dc27abff5cb13b5eaedcb51d6ea",
+  "replacementIconvSha256": null,
+  "target": "wasm32-wasip1",
+  "exports": ["xml_version", "xml_balance", "malloc", "free"],
+  "memoryMaximumBytes": 536870912,
+  "wasmBytes": 1622787,
+  "wasmSha256": "10a71415bb305b1cac194ef9cc577253a35d40b5b22dc0b81ee2079e3c918b48"
+}

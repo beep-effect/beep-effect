@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "citation-diff-kernel-notices/v1",
+  "sourceArchive": {
+    "url": "https://files.pythonhosted.org/packages/db/b3/d21a9e7d31a32564874046042caf695b04c7967941d237bbc4f6dd2d76a0/fast_diff_match_patch-2.0.1.tar.gz",
+    "sha256": "ec335bbd9780d2182c351b5c486e5c80d8975ea91772eaf02014dfe9e9907a5d"
+  },
+  "additionalRuntimeNotices": [
+    {
+      "repository": "llvm/llvm-project",
+      "commit": "895aa2c896ada719451be2e3673c83da8ddf1141",
+      "path": "libcxx/LICENSE.TXT",
+      "url": "https://raw.githubusercontent.com/llvm/llvm-project/895aa2c896ada719451be2e3673c83da8ddf1141/libcxx/LICENSE.TXT",
+      "sha256": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b",
+      "file": "licenses/llvm-project-libcxx-LICENSE.TXT"
+    },
+    {
+      "repository": "llvm/llvm-project",
+      "commit": "895aa2c896ada719451be2e3673c83da8ddf1141",
+      "path": "libcxxabi/LICENSE.TXT",
+      "url": "https://raw.githubusercontent.com/llvm/llvm-project/895aa2c896ada719451be2e3673c83da8ddf1141/libcxxabi/LICENSE.TXT",
+      "sha256": "e2b35be49f7284a45b7baca8fc7b3ab7440e7902392b2528a457816b5bb2a15c",
+      "file": "licenses/llvm-project-libcxxabi-LICENSE.TXT"
+    },
+    {
+      "repository": "llvm/llvm-project",
+      "commit": "895aa2c896ada719451be2e3673c83da8ddf1141",
+      "path": "libunwind/LICENSE.TXT",
+      "url": "https://raw.githubusercontent.com/llvm/llvm-project/895aa2c896ada719451be2e3673c83da8ddf1141/libunwind/LICENSE.TXT",
+      "sha256": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+      "file": "licenses/llvm-project-libunwind-LICENSE.TXT"
+    }
+  ],
+  "sharedRuntimeNoticeInventory": "../citation-html/notices.json"
+}
