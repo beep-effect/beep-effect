@@ -131,24 +131,18 @@ export const isSourcePrefixAbbreviatedHead =
   (head: string) =>
   (candidate: string): boolean => {
     const matched = Str.match(/\(([a-z][a-z0-9-]+)\)([^()]*)$/u)(candidate);
-    return O.exists(matched, (parts) => {
-      const abbreviation = O.getOrElse(A.get(parts, 1), () => "");
-      const tail = O.getOrElse(A.get(parts, 2), () => "");
-      const before = Str.trim(
-        Str.slice(
-          0,
-          O.getOrElse(O.fromUndefinedOr(parts.index), () => 0)
-        )(candidate)
-      );
-      const words = Str.split(before, " ");
-      const start = words.length - abbreviation.length;
-      return (
-        start >= 0 &&
-        A.join(
-          A.map(A.drop(words, start), (word) => Str.slice(0, 1)(word)),
-          ""
-        ) === abbreviation &&
-        Str.trim(`${A.join(A.take(words, start), " ")} ${abbreviation}${tail}`) === head
-      );
-    });
+    return O.exists(matched, (parts) =>
+      O.exists(
+        O.all([A.get(parts, 1), A.get(parts, 2), O.fromUndefinedOr(parts.index)]),
+        ([abbreviation, tail, index]) => {
+          const words = Str.split(Str.trim(Str.slice(0, index)(candidate)), " ");
+          const start = words.length - abbreviation.length;
+          return (
+            start >= 0 &&
+            A.join(A.map(A.drop(words, start), Str.slice(0, 1)), "") === abbreviation &&
+            Str.trim(`${A.join(A.take(words, start), " ")} ${abbreviation}${tail}`) === head
+          );
+        }
+      )
+    );
   };
