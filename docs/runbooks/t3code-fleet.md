@@ -174,3 +174,11 @@ not Tailscale Serve.
 - WSL terminates a distro once its last `wsl.exe` session ends, even with
   systemd running inside it; the T3 service on tom-pc-1 survives only while the
   `T3AgentWSL` keep-alive task holds a session open.
+- A delegated Claude turn that fails with "Claude timed out while registering
+  its MCP tools" after 90 s points at the target project's `.mcp.json`: servers
+  the host's Claude config has neither approved nor disabled for that checkout
+  sit at "Pending approval", and a headless T3 turn has no one to answer.
+  `claude mcp list` in the checkout shows them. Record each one under that
+  project's `disabledMcpjsonServers` (or `enabledMcpjsonServers`) in the host's
+  Claude user config (`.claude.json` in the account's home). A bare one-commit
+  project passing on the same host confirms the diagnosis.

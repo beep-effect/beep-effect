@@ -214,5 +214,12 @@
     ]
   },
   "mission": "Capture, triage, remediate, and close every open Codex Cloud security finding for beep-effect (the 9-finding batch of 2026-07-14) in one PR on security/codex-findings-2026-07-14. The end state is a merged PR, no unresolved PR comments or failing CI jobs, and zero packet-applicable open Codex security findings.",
-  "researchReports": ["research/SOURCES.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/codex-security-findings-2026-07-14",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "3a4a470c82493162a09a31cefc4fca9e17b06ae8",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

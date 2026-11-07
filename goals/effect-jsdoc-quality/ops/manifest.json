@@ -33,13 +33,6 @@
     "goals/effect-jsdoc-quality/GOAL.md",
     "goals/effect-jsdoc-quality/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/P0-baseline-check.md",
-    "research/P1-summary.md",
-    "research/P2-summary.md",
-    "research/P3-summary.md",
-    "research/SOURCES.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -89,5 +82,13 @@
     "The implementation would exceed named scope (mass JSDoc edits or link-resolution work).",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/effect-jsdoc-quality",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "ef87f479117df6df529e42f7522253443747d3fe",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

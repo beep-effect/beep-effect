@@ -11,11 +11,7 @@
   "packetPath": "goals/domain-kernel-hardening",
   "lifecycle": "completed-retained",
   "statusNote": "P0-P2 merged via #1577, #1593 and #1599; P3 reflection and retained completion recorded under the run-9 ruling.",
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/p0-kernel-surface-2026-10-09.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -81,5 +77,13 @@
     "The implementation would exceed named scope (this packet is the kernel only; do not migrate slice entities).",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/domain-kernel-hardening",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "bd58485650363001f7c4402706a73e673ca1d4a5",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

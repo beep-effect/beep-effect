@@ -79,8 +79,12 @@
     "A dependency packet (rich-text-foundation, workspace-thread-domain) is not closed."
   ],
   "mission": "Ship the control plane's command surface E2E in `apps/professional-desktop`: streamed block turns, edit-as-branch, cancel-in-flight, PGlite persistence, UsageRecord capture — agents-slice turn kernel serving both the Anthropic streaming implementation and the deterministic fixture agent.",
-  "researchReports": [
-    "research/2026-06-14-port-findings.md",
-    "research/2026-07-31-usage-record-capture-design.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/desktop-chat-surface",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "bf803cc4093deb0627e3f25f7a50dc5bbfb8d923",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

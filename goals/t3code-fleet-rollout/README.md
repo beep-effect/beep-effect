@@ -33,9 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — publish and pull run unattended on beep-worker and dankserver (#2705, #2719), both linked on the agent plane. tom-pc-1's WSL distro `t3-agent` runs the fork build as a service on its own tailnet node, is linked from the hub and completed a delegated turn. Open: the desktop-app pairings (operator confirms), reboot proof at the PC user's next sign-in, then P2 Verify.
+P2 Verify complete — all four hosts on `0.1.7-fork.20261106.1401`, every link reachable, desktop pairings confirmed, one delegated turn per host (beep-worker after recording its project MCP approvals). Residual: tom-pc-1 reboot proof at the PC user's next sign-in (restart path already exercised). Next: P3 Yeet (this receipt PR to mergeable), then P4 Close.
 
 ## Latest Evidence
+
+2026-11-07: `history/2026-11-07-p2-verify.md` (version parity, reachability, per-host turns, beep-worker MCP-approval fix, tom-pc-1 restart-path proof).
 
 2026-11-06: `history/2026-11-06-dankserver-link.md` (Serve route and link) and `history/2026-11-06-tom-pc-1-wsl.md` (distro provisioned, keep-alive task, service, hub link, delegated turn); runbook gained the WSL host, client-plane pairing and gated tbk-worker sections.
 

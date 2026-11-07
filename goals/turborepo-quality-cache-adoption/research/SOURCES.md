@@ -678,3 +678,5 @@ wrapper executes in this observation. Full qualification remains pending.
   two flags are independent or a whole-repository qualification grant.
 
 - `query-package-count-repair-2026-11-06.json`: repair native affected-query package counting, with a three-task/two-package and empty-query assertion. The initial SCM proof report's hashes are explicitly bound to its original f48bf842 source; historical hashes and native captures remain intact. Hosted proof is pending.
+
+- `storybook-declaration-context-observations-2026-11-07.json` and `.md`: failed legacy-profile check, successful alias candidate and successful original-resolution check on a refreshed dependency profile. Actual bases differ; no causal, transport, corruption or qualification claim. The unproven alias modification is withdrawn.

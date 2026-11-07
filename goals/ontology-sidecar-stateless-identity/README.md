@@ -31,7 +31,7 @@ harness on the 2026 wire through `@beep/mcp-kit/client`, and the Origin allow-li
 5. [`research/SOURCES.md`](./research/SOURCES.md) - carried source ledger; primary is the exploration.
 6. [`../../explorations/effect-mcp-2026-07-28/`](../../explorations/effect-mcp-2026-07-28/) - BRIEF, MAP, DECISIONS (D-run-key, D-origin,
    D-posture), RESEARCH §3.3–3.4 and lanes 22-r3 / 24-r5.
-7. [`../agent-execution-authority/SPEC.md`](../agent-execution-authority/SPEC.md) - decision 10 home.
+7. [`../agent-execution-authority/SPEC.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/agent-execution-authority/SPEC.md) - decision 10 home.
 
 ## Current Phase
 

@@ -2579,3 +2579,6 @@ authored for hosted CI; they were not run locally. A shared source-eligibility
 checklist at the pilot boundary would have prevented this omission. No source
 worktree is cleaned automatically, and no credential, signing or reuse grant
 changes. This repair is not complete task or production qualification.
+### Bind repeatability evidence to the measured revision, 2026-11-07
+
+The accepted dependency refresh changed the root manifest and lockfile after a real matching pair at b0c9bab1. Calling the old pair current would overstate its profile applicability. Publish the measured revision and artifact hashes, compare the thirteen controls, and require a fresh pair for the changed profile. Preserve the old successful and failed observations. The adapter candidate has four unchanged declared build inputs, so avoid a redundant build based only on commit movement.
