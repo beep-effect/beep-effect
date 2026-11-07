@@ -131,6 +131,7 @@ storybook-static/
 .repos/*
 
 .claude/settings.local.json
+*.doctor-bak
 
 # secrets / credential exports (never commit; public repo)
 *cookies*.txt
