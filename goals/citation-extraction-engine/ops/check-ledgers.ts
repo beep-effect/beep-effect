@@ -102,7 +102,7 @@ const program = Effect.gen(function* () {
       entry.workflowState !== binding.workflowState ||
       entry.observation.normalizedSha256 !== sourceCase.value.observationSha256 ||
       !same(entry.proof, binding.proof) ||
-      !same(entry.targetTest, binding.proof.targetTests[0])
+      !same(entry.targetTest, A.getUnsafe(binding.proof.targetTests, 0))
     )
       return yield* reject("canonical proof binding mismatch");
   }
