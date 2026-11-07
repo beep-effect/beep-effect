@@ -1921,7 +1921,6 @@
     {"name":"InstrumentationCatalog.harvest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"InstrumentationCatalog.harvestFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"InstrumentationCatalog.loadDeclarations","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"InstrumentationCatalog.loadDeclarationsFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"InstrumentationCatalog.make","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"InstrumentationCatalog.resolveScope","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"InstrumentationCatalog.retire","owner":"@beep/repo-cli","family":"tooling","conforms":true},
