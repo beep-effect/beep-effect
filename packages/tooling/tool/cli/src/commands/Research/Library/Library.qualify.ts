@@ -10,14 +10,8 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import {
-  acquireLibrarySource,
-  libraryAdapterFor,
-  removedLibraryWebAdapter,
-  requiredLibraryAdapters,
-} from "./Library.acquire.ts";
+import { acquireLibrarySource, libraryAdapterFor, requiredLibraryAdapters } from "./Library.acquire.ts";
 import { encodeLibraryJson, saveLibraryText } from "./Library.adapter.ts";
-import { LibraryError } from "./Library.errors.ts";
 import { LibraryProbeEvidence, libraryQualificationValid } from "./Library.evidence.ts";
 import { LibraryCatalog, LibraryQualification } from "./Library.schemas.ts";
 import { hashBytes, loadCatalog, withCatalog } from "./Library.store.ts";
@@ -63,12 +57,6 @@ export const qualifyLibrary = Effect.fn("Library.qualify")(function* (
   root: string,
   options = LibraryQualifyOptions.make({ adapters: [], sourceIds: [], maxProbes: 3 })
 ) {
-  if (A.contains(options.adapters, removedLibraryWebAdapter)) {
-    return yield* LibraryError.make({
-      message: `Adapter ${removedLibraryWebAdapter} was removed and cannot be probed; its retained receipts still verify.`,
-      cause: "options",
-    });
-  }
   const catalog = yield* loadCatalog(root);
   const captureProbeCandidates = Effect.fn("Library.qualify.captureProbeCandidates")(function* (
     initial: LibrarySource,

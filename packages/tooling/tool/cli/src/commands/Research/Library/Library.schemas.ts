@@ -11,6 +11,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
+import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
 
@@ -850,6 +851,10 @@ export class LibraryAcquireOptions extends S.Opaque<LibraryAcquireOptions, { rea
     sourceIds: S.Array(S.String),
     concurrency: S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(8)),
     retryFailed: S.Boolean,
+    hopPolicy: LibraryHopPolicy.pipe(
+      S.withConstructorDefault(Effect.sync(() => LibraryHopPolicy.make({}))),
+      S.withDecodingDefaultTypeKey(Effect.sync(() => LibraryHopPolicy.make({})))
+    ),
   })
     .pipe(
       $I.annoteSchema("LibraryAcquireOptions", {
