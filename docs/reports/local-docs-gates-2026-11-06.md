@@ -118,10 +118,10 @@ actual generated prebuilt docs configuration and an ignored build manifest.
 
 ## Current two-lane measurement
 
-Pending the matched cold-cache qualification on the reviewed two-lane source.
-Acceptance remains **at least 30% and at least 60 seconds**, with exactly two
-reasoned skips and **25 equivalent retained outcomes**. Earlier measurements
-below cannot satisfy this gate. The current command has 27 actual lanes: the static
+Qualification used the gate of **at least 30% and at least 60 seconds**, with
+exactly two reasoned skips and **25 equivalent retained outcomes**. The final
+result is in "Final admission-only scheduling qualification: rejected" below;
+earlier measurements cannot satisfy this gate. The current command has 27 actual lanes: the static
 catalog plus the dynamic changeset preflight. Historical 26-lane runs also had
 the changeset preflight but predated the entity-kit-freeze lane; no retained lane
 is omitted from the current comparison.
