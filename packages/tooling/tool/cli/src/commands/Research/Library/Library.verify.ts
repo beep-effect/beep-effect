@@ -17,11 +17,13 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { removedLibraryWebAdapter, requiredLibraryAdapters } from "./Library.acquire.ts";
+import { requiredLibraryAdapters } from "./Library.acquire.ts";
 import { encodeLibraryCaptureJson, runLibraryCommand } from "./Library.adapter.ts";
+import { libraryBoxFileId } from "./Library.box.ts";
 import { LibraryCaptureCorrection } from "./Library.corrections.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { libraryEffectiveCaptures, libraryEffectiveCategory, librarySourceEvidenceValid } from "./Library.evidence.ts";
+import { libraryHopTwoOnly } from "./Library.hops.ts";
 import { LibraryDispositionImportPayload, libraryDispositionValid } from "./Library.import.ts";
 import { libraryArtifactIntegrity } from "./Library.integrity.ts";
 import { extractLibraryReferences } from "./Library.inventory.ts";
@@ -119,6 +121,9 @@ const pinIdentityMatches = (
   pin.clone === `repos/github/${source.repository}` &&
   pin.remote === `https://github.com/${source.repository}.git`;
 const targetRevision = (source: LibrarySource, capture: LibraryCapture) => {
+  // Box captures record `<fileId>:<versionId>`; the version id is the cited source revision.
+  if (O.isSome(libraryBoxFileId(source.canonicalUrl)))
+    return { revision: capture.requestedRevision, reason: "Box requested version differs from source versions" };
   if (source.kind === "youtube")
     return { revision: capture.requestedRevision, reason: "video request differs from inventoried source target" };
   if (source.kind === "paper" && Str.startsWith("arxiv:")(source.identity))
@@ -313,6 +318,7 @@ const verifyOccurrenceBindings = Effect.fn("Library.verifyOccurrenceBindings")(f
 const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function* (context: VerificationContext) {
   const { root, fs, path, catalog, issue, artifactValid } = context;
   let readable = 0;
+  let cataloguedOnly = 0;
   let unavailable = 0;
   let nonReferences = 0;
   let missing = 0;
@@ -494,6 +500,10 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
   };
   const verifySource = Effect.fn("Library.verifySource")(function* (source: LibrarySource) {
     const captures = A.filter(catalog.captures, (item) => item.sourceId === source.id);
+    if (!A.isReadonlyArrayNonEmpty(captures) && libraryHopTwoOnly(catalog, source.id)) {
+      cataloguedOnly++;
+      return;
+    }
     if (!A.isReadonlyArrayNonEmpty(captures)) {
       recordMissingSource(source);
       return;
@@ -520,6 +530,7 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
   });
   for (const source of catalog.sources) yield* verifySource(source);
   return {
+    cataloguedOnly,
     readable,
     unavailable,
     nonReferences,
@@ -595,9 +606,7 @@ const verifyRequiredQualifications = Effect.fn("Library.verifyRequiredQualificat
       Str.isNonEmpty(receipt.recordedAt)
     )
       requiredVerified++;
-    // The removed web route cannot be re-qualified, so its retained receipt is held only to the
-    // evidence integrity checks above; anything else would wedge verify permanently.
-    else if (adapter !== removedLibraryWebAdapter) {
+    else {
       requiredFailed++;
       issue(`${adapter}: required route lacks verified source-bound probe evidence`);
     }
@@ -642,10 +651,11 @@ export const verifyLibrary = Effect.fn("Research.Library.verify")(function* (roo
     incomplete,
     toolBlocked,
     versionCategories,
+    cataloguedOnly,
   } = yield* verifySourceCoverage(context);
   const { requiredVerified, requiredFailed } = yield* verifyRequiredQualifications(context);
   yield* Console.log(
-    `library verify: readable=${readable} unavailable=${unavailable} nonReferences=${nonReferences} missing=${missing} ambiguous=${ambiguous} incomplete=${incomplete} toolBlocked=${toolBlocked} failedAttempts=${failed} interruptedAttempts=${interrupted} providerBlockedAttempts=${providerBlocked} requiredVerified=${requiredVerified} requiredFailed=${requiredFailed} integrityFailures=${problems.length}`
+    `library verify: readable=${readable} unavailable=${unavailable} nonReferences=${nonReferences} missing=${missing} ambiguous=${ambiguous} incomplete=${incomplete} toolBlocked=${toolBlocked} failedAttempts=${failed} interruptedAttempts=${interrupted} providerBlockedAttempts=${providerBlocked} requiredVerified=${requiredVerified} requiredFailed=${requiredFailed} cataloguedHop2=${cataloguedOnly} integrityFailures=${problems.length}`
   );
   yield* Console.log(
     `source/version coverage: ${A.join(

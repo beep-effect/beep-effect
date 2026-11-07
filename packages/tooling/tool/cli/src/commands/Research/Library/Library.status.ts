@@ -9,6 +9,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
+import { libraryHopTotals } from "./Library.hopStatus.ts";
 import { loadCatalog } from "./Library.store.ts";
 import {
   LibraryCountRow,
@@ -91,4 +92,6 @@ export const libraryStatus = Effect.fn("Research.Library.status")(function* (roo
   yield* Console.log(
     `private partition: documents=${privateCount("Report")} sources=${privateCount("Source")} artifacts=${privateCount("Artifact")} occurrences=${privateCount("Occurrence")}`
   );
+  const hops = yield* libraryHopTotals(root, catalog);
+  yield* Effect.forEach(hops, (line) => Console.log(line), { discard: true });
 });
