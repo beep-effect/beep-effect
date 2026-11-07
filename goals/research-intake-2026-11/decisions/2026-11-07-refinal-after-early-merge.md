@@ -2,7 +2,7 @@
 title: "goals-only re-final after #2892 merged before merge-ready"
 date: 2026-11-07
 kind: checkpoint
-lane: "docs/research-intake-2026-11-refinal"
+pr: "2904"
 reversal: "Point proposedCloseout.finalPullRequest back at #2892 and drop this checkpoint"
 ---
 
