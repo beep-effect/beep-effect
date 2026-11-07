@@ -1213,6 +1213,7 @@
         "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
         "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command.ts",
         "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.errors.ts",
+        "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.packages.ts",
         "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
         "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
