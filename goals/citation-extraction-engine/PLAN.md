@@ -1589,6 +1589,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional private limit metadata and its producers/translators together, retaining source corpora and exact-category regression evidence without weakening any acceptance requirement.
 
+### Qualify original extraction observations through the public engine, 2026-11-07
+
+The focused public CitationEngine Layer replay now passes on Bun and Node across seven original documents and all eight canonical families, with independent kind/component and Unicode/HTML span comparisons. The unchanged full 36-document corpus is registered in hosted integration. Resolution completion is not independent group parity; metadata, retained-host, laws, safety and all source/donor obligations remain open. See history/evidence/2026-11-07-public-engine-corpus.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Remove the public replay entrypoints while retaining original oracle observations and unresolved acceptance obligations.
+
 ### Repair hosted JSDoc since tags without weakening the ratchet, 2026-11-07
 
 Hosted job 128250296967 reports nine missing since tags plus one leading/trailing blank. Public comments now separate category/since tags, and the mode alias has a lead description. The actual repository tag/shape parser passes 86 focused export comments. Main ce87ff21b2 is merged at 0ef0edc00a. Full hosted ratchet remains pending; baselines/thresholds unchanged. See history/evidence/2026-11-07-public-source-resolution.md.

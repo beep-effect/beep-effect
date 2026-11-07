@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "6542f3889f269894609e8a088524f0758ac6387599957b3fd0d68adc6a95ef53",
+  "planSha256": "aea7e531fc2b7ac6ed1de628b3990d6a7a00663ac40c9d1820caaa19cadf030b",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1084,7 +1084,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
-          "sha256": "9caecdf8edad33f7075cda51520633e564ca5a2778b5445d5e06eb59586c9939"
+          "sha256": "2aa26f008de311d37618a8ee190dd501b0c540a179c498f63ff0f8c22bf329d6"
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticExtraction.test.ts",
@@ -1652,11 +1652,31 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineLayer.test.ts",
-          "sha256": "5e8ccc2a64112e96abfce018b81405584ca3895e05ce0c1168f364288acdebe3"
+          "sha256": "8d8663403ec747bbbef2d573b773d3e516b4b48f25a962c013c4e80f69e15b5e"
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceCleaning.test.ts",
           "sha256": "cd4d5151dc0ea94c305b61092d48c812a0bec17d66712d882942e1e16cf0cb68"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-public-engine-corpus.md",
+          "sha256": "5f425a12189f488df54cd30be7ca52fc07cc5af97c2dda722ef1406c8db24444"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+          "sha256": "7fb29cbf690a993f4cc93444dbd5071eabe7a7d78dc567aed63b03a5ad681b5b"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationEngineCorpus.fixtures.ts",
+          "sha256": "e219ddedde39a61f2a95e939cd84f5bbedea811ec5e5c57480fa9b72a154a98c"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationEngineCorpus.test.ts",
+          "sha256": "037444012d860bee4dd147fd3f16d8986fc3686fd9a6412083ea36375f10499d"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationEngineCorpus.test.ts",
+          "sha256": "39d4e93d3d972b1920b27bec94392d536215aa19910a9e5a40b42f0e94841758"
         }
       ],
       "workflowState": "audit",

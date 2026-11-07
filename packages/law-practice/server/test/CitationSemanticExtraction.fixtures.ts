@@ -55,7 +55,11 @@ const semanticTextUnits = Effect.fnUntraced(function* (unicode: Unicode, origina
   }
   return units;
 });
-const assertSemanticDocument = Effect.fnUntraced(function* (
+/** Compare public semantic kind/components with the original normalized source
+ * observations; this does not independently prove every metadata field.
+ * @internal @category testing @since 0.0.0
+ */
+export const assertCitationSemanticDocument = Effect.fn("SemanticExtractionTest.assertDocument")(function* (
   unicode: Unicode,
   citations: ReadonlyArray<Citation>,
   expected: ReadonlyArray<SourceRow>
@@ -121,7 +125,7 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
     const result = yield* invokeCitationRawExtraction(stage.extract, unicode, row);
     if (result.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Document branch");
     yield* assertCitationTokenizedExtractionRow(result.raw.outcome.result.extraction, row, translated);
-    const projectedUnits = yield* assertSemanticDocument(unicode, result.citations, row.expected);
+    const projectedUnits = yield* assertCitationSemanticDocument(unicode, result.citations, row.expected);
     expect(result.reservedUnits).toBe(result.raw.reservedUnits + projectedUnits);
     yield* occurrences.verify(unicode, result, row);
   }

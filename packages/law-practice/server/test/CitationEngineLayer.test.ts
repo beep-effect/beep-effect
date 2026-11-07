@@ -1,9 +1,7 @@
 import { ResolvedSourceText, SourceTextResolver, SourceTextResolverError } from "@beep/file-processing/SourceText";
 import { captureCitationMentionReceiptData } from "@beep/law-practice-server/internal/Citation/Mention";
-import { CitationEngineConfiguration, CitationEngineLive } from "@beep/law-practice-server/layer";
 import {
   CitationAnnotationReplacement,
-  CitationEngine,
   CitationEngineAnnotationInput,
   CitationEngineCleanInput,
   CitationEngineResolutionInput,
@@ -14,18 +12,16 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
-import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import { buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
-import { makeCitationXmlTestRuntime } from "./CitationXmlWorker.fixtures.ts";
 
 const word = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
@@ -37,7 +33,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         () =>
           Effect.gen(function* () {
             const installed = yield* installCitationDefaultConfigurationFixture(kind);
-            const { setup, provided, defaultConfiguration, engineArtifact, adapter } = installed;
+            const { setup, adapter } = installed;
             const proof = yield* citationFixtureSourceProof("Foo v. Bar, 1 U.S. 1 (2000). Id. at 2.");
             const slot = { source: proof.source, sourceText: proof.sourceText };
             let sourceCalls = 0;
@@ -49,20 +45,8 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
                 return ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText });
               }),
             });
-            const xmlRuntime = yield* makeCitationXmlTestRuntime(kind);
             const originalDeadline = Duration.toMillis(setup.limits.cleanDeadline);
-            const configuration = CitationEngineConfiguration.make({
-              limits: { ...setup.limits, cleanDeadline: Duration.millis(originalDeadline) },
-              runtime: setup.runtime,
-              extraction: { extraction: defaultConfiguration, engineArtifact },
-              annotation: { geometry: defaultConfiguration.extraction.document, xmlRuntime },
-            });
-            const built = yield* Layer.build(CitationEngineLive(configuration)).pipe(
-              Effect.provideContext(provided),
-              Effect.provideService(SourceTextResolver, resolver),
-              DateTime.withCurrentZoneOffset(0)
-            );
-            const engine = Context.get(built, CitationEngine);
+            const { engine, configuration } = yield* buildCitationEngineFixture(installed, resolver);
             expect(Reflect.set(configuration.limits.cleanDeadline.value, "millis", 1)).toBe(true);
             const late = SourceTextResolver.of({
               resolve: Effect.fn("EngineLayerTest.late")(() =>
