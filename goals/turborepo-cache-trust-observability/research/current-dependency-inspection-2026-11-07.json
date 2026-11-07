@@ -1,0 +1,142 @@
+{
+  "at": "2026-11-07T03:17:07.944929+00:00",
+  "runId": 42332185638,
+  "attempt": 1,
+  "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42332185638",
+  "sourceRevision": "cf46c700488b6950ea7340369e0d0508e596cd1e",
+  "conclusion": "success",
+  "resolvedWorkflows": [
+    {
+      "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+      "sha": "cf46c700488b6950ea7340369e0d0508e596cd1e",
+      "ref": "refs/heads/main"
+    }
+  ],
+  "aggregateReportBytes": 3411533,
+  "diagnosticStatus": "stable-match",
+  "sourceUnchanged": true,
+  "snapshotsEqual": true,
+  "declaredDigestMatches": true,
+  "observedDependencySha256": "c112ea17c1f7526a0d6a43583ca3d27179220c00d1ba706e8ef941ea1e11ab3d",
+  "packageGroups": 2194,
+  "diagnosticSeconds": 43.781,
+  "sourceInspectionPassed": true,
+  "successfulDiagnosticObservation": true,
+  "executedInspectionJobId": 128280973652,
+  "approvalGranted": false,
+  "credentialsOrSigningActivated": false,
+  "taskBodiesExecuted": false,
+  "schemaVersion": "cache-current-dependency-observation-checkpoint/v1",
+  "pairStatus": "awaiting-second-observation",
+  "secondRun": {
+    "runId": 42333355378,
+    "sourceRevision": "cf46c700488b6950ea7340369e0d0508e596cd1e",
+    "url": "https://github.com/beep-effect/beep-effect/actions/runs/42333355378"
+  },
+  "receiptSha256": "d347325abcfcc94b7c441c45561aac4e703326b226189fd25270ec26557abbe3",
+  "controls": [
+    {
+      "path": ".github/workflows/cache-producer-inspect.yml",
+      "sha256": "9b0fdc6777c67d070db99758b31002b0674437fbd0b5247ea6763535e783ca92"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "4601dcc6ba6f226d8d8007f580e7c8610edee700d810c481cb89a494c1d36b1c"
+    },
+    {
+      "path": ".github/actions/setup-monorepo-ci/action.yml",
+      "sha256": "44262ad3cd003a8674568cc8a252ec28ccf9e4c9a5c8543f2126ef0c820fe22b"
+    },
+    {
+      "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+      "sha256": "5934f0861d1d908584706773c72514c100e28e1039a1b076f2b00b95af243c99"
+    },
+    {
+      "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
+      "sha256": "c22565b6fdd9bfe8aeac4f88742e19546706e49f0fe1308dcf707fa8c5c0e6e1"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+      "sha256": "6d11ef5065110bd491965ed92792037125edd3900cb7db268b3359a044be31a9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-workflow.test.ts",
+      "sha256": "926ec6c25270f04daed508236155c96696e0f0ceaaa846e1d22e4d7885f0b203"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
+      "sha256": "9c66effc682e8d3e05de2c7c1af885497342e7230d9c7ce91fdc2c9441b5000b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.errors.ts",
+      "sha256": "c1a235549333a9dbe34e6a56830e4cb7e26b31b9f6436c49fe244f4eb4bdca03"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "ee8a5dae274fb99d67837bdc1d63593a7d72eeac13c59f89e453d45d06f27c9e"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "172546b71271d1624276f33e6eebf29bd7544b971a1570b76ed259ed6965922f"
+    },
+    {
+      "path": "package.json",
+      "sha256": "a6d4d802d1fa4264da4e0697d218ad02615761e532c09296003a1bcd05f48afa"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
+      "sha256": "a043702f07bf24d9579e1d75e50dbd4739f67488f4aef529c426ae0e814fa164"
+    }
+  ],
+  "bounds": {
+    "runnerJobsAtOnce": 1,
+    "jobMinutes": 10,
+    "diagnosticSeconds": 300,
+    "archivePasses": 2,
+    "archiveBytesPerPass": 6442450944,
+    "processMemoryMiB": 256,
+    "entriesPerPass": 600000,
+    "groupsPerPass": 4096,
+    "aggregateReportBytes": 4194304,
+    "retentionDays": 1
+  },
+  "sourceReaderBounds": {
+    "perFileBytes": 67108864,
+    "aggregateBytes": 1073741824,
+    "readers": 4,
+    "paths": 20000
+  },
+  "fileDetailBounds": {
+    "group": "node-gyp",
+    "regularFiles": 512,
+    "encodedBytes": 131072
+  },
+  "fileDetailApplicability": {
+    "targetGroup": "node-gyp",
+    "presentInCompleteGroupInventory": false,
+    "detailPresent": false,
+    "fileLevelComparisonPassed": false,
+    "reason": "Target group absent; production diagnostic emits the optional section only when target regular files exist. Full raw dependency equality remains required."
+  },
+  "authority": "Accepted-source installation observation only. The paired repeatability result, independent producer approval, signed execution/publication/import, task qualification and representative windows remain unproven.",
+  "artifacts": [
+    {
+      "id": 13558283590,
+      "name": "cache-producer-inspection-42332185638-1",
+      "archiveBytes": 2747838,
+      "archiveSha256": "9c4c77301dc2b343d9811d0d6193f238413ccece4aac86f79af568df89fbedcd",
+      "reportBytes": 2747702,
+      "reportSha256": "3aa4a0e5c7b66e648e7311b83aecab35543900bd7309cc3ea353c337d4e3a936",
+      "expiresAt": "2026-11-08T03:16:21Z"
+    },
+    {
+      "id": 13558615984,
+      "name": "cache-producer-dependencies-42332185638-1",
+      "archiveBytes": 663979,
+      "archiveSha256": "aca6149bd27d330937d32d1c3d26d84439af252ff7af7eee1c25a6a3ec60f87d",
+      "reportBytes": 663831,
+      "reportSha256": "401d6f0ecf7ae7f16f36184ceefcda27fd5643223debfc8abbc364a15a4c5eee",
+      "expiresAt": "2026-11-08T03:16:22Z"
+    }
+  ]
+}
