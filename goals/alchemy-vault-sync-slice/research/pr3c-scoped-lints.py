@@ -16,7 +16,11 @@ import subprocess
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("mode", choices=["schema-first", "effect-vitest"])
-parser.add_argument("--base", default="3b891a35348ad562e0d4b1d98d608fdbed078afa")
+parser.add_argument(
+    "--base",
+    required=True,
+    help="Commit the scan diffs against; record it beside the result (the handoff used 5b8d9cee35).",
+)
 args = parser.parse_args()
 root = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip())
 os.chdir(root)

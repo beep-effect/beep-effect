@@ -76,6 +76,33 @@ const decode = <T extends S.Top>(schema: T, value: unknown) =>
  */
 export const VAULT_SYNC_REVOCATION_POLL = "250 millis" as const;
 
+/**
+ * Wait between live grant re-reads on an open subscription; sleeps `VAULT_SYNC_REVOCATION_POLL` by default.
+ *
+ * **Details**
+ *
+ * Adapters read it once when they are built. A host or test may provide an explicit signal instead
+ * of a timer, so an idle stream re-checks membership exactly when the caller says it changed.
+ *
+ * **Example** (Re-check only when a signal fires)
+ * ```ts
+ * import { VaultSyncRevocationPause } from "@beep/documents-server/aggregates/Sync";
+ * import * as Deferred from "effect/Deferred";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * const program = Effect.gen(function* () {
+ *   const changed = yield* Deferred.make<void>();
+ *   return Layer.succeed(VaultSyncRevocationPause, Deferred.await(changed));
+ * });
+ * void program;
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const VaultSyncRevocationPause = Context.Reference<Effect.Effect<void>>($I`VaultSyncRevocationPause`, {
+  defaultValue: () => Effect.sleep(VAULT_SYNC_REVOCATION_POLL),
+});
+
 const authenticatedBy = LiteralKit(["launch-token", "channel"]);
 type AuthenticatedBy = typeof authenticatedBy.Type;
 
@@ -84,6 +111,7 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
   const memberships = yield* VaultSyncMembership;
   const destinations = yield* V.SyncDestination;
   const conflicts = yield* V.SyncConflict;
+  const pause = yield* VaultSyncRevocationPause;
   const grants = Effect.fn("VaultSyncSession.grants")(function* (request: V.VaultSyncRequest) {
     if (request.principal.kind !== "User") return yield* V.ScopeDenied.make({});
     return yield* memberships.read(request.principal.userId, V.VaultSyncScope.make(request));
@@ -148,9 +176,7 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
     scope,
     revoked: Effect.fn("VaultSyncSession.revoked")((request) =>
       grants(request).pipe(
-        Effect.flatMap((current) =>
-          A.isReadonlyArrayEmpty(current) ? V.ScopeDenied.make({}) : Effect.sleep(VAULT_SYNC_REVOCATION_POLL)
-        ),
+        Effect.flatMap((current) => (A.isReadonlyArrayEmpty(current) ? V.ScopeDenied.make({}) : pause)),
         Effect.forever
       )
     ),

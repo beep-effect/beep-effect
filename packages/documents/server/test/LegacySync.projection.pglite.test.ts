@@ -282,14 +282,20 @@ describe("legacy sync SQL projections", () => {
           Effect.timeout("10 seconds")
         );
         expect(failedRows).toEqual([{ status: "failed", last_error: "ensureFolder", operation_type: "createFolder" }]);
-        const before = yield* sql`SELECT * FROM documents_sync_item`;
-        // The command receipt is replayed while the projection row remains byte-for-byte stable.
+        const operationRow = sql`SELECT * FROM documents_sync_operation WHERE public_id = ${operationId}`;
+        const before = yield* operationRow;
+        // A repeated completion of an already-succeeded operation leaves its projection row byte-for-byte
+        // stable: when the kernel accepts it, wait for the projection; when it rejects it, nothing is emitted.
         yield* operations
           .send(operationId, V.CompleteOperation.make({ holder: "scenario", attempt: 1 }), {
             commandId: "duplicate-success",
           })
-          .pipe(Effect.ignore);
-        const after = yield* sql`SELECT * FROM documents_sync_item`;
+          .pipe(
+            Effect.flatMap((receipt) => LegacySyncOperation.caughtUp(receipt).pipe(Effect.provideContext(runtime))),
+            Effect.ignore
+          );
+        const after = yield* operationRow;
+        expect(before).toHaveLength(1);
         expect(after).toEqual(before);
 
         // An operation's workspace is its destination's, not its item row's: here the item was never

@@ -4,13 +4,13 @@
     "id": "verification-route",
     "packetId": "goal-packet/v1:6649f2c41038f499966c51d8f6c8bff51687f3345939382eef023fef06fae1c3",
     "title": "Verification Route",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-28",
     "updated": "2026-11-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/verification-route",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Run only the checks a change kind can affect, cheapest first, proven by replay over merged PRs: footprint record, classify, route, census, final-check, hosted skip-satisfied.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -103,12 +103,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -124,8 +124,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2885
-  }
+  },
+  "retentionReason": "Documents a live system: the verification route in repo-cli commands/Ci (ROUTE_FOOTPRINTS and ROUTE_REFINEMENTS), the pinned census corpus in research/corpus, the revocation sentinel standards/verification-route.sentinel.json, and the per-lane skip-satisfied path in check.yml, heavy-admit.yml and heavy.yml all cite this packet's decisions."
 }

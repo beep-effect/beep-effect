@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T12:18:27.705Z",
-  "git_sha": "802a6e68c484f7e0b6320a3c1b78ce19b85678c9",
-  "command": "bun run coverage -- --filter=@beep/documents-server --filter=@beep/documents-use-cases --filter=@beep/documents-domain --filter=@beep/professional-desktop --filter=@beep/db-admin --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-07T18:04:44.395Z",
+  "git_sha": "ee6d9e503725cd8bac98178e389e8cafb845335a",
+  "command": "bun run coverage -- --filter=@beep/professional-desktop --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -1647,6 +1647,18 @@
             "statements": 4,
             "branches": 1,
             "functions": 4
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         }
       }
@@ -6617,12 +6629,12 @@
         "packages/documents/domain/src/aggregates/VaultSync/DestinationNameReservation.aggregate.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 40,
+          "branches": 90,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 6,
+            "branches": 1,
             "functions": 0
           }
         },
@@ -6951,15 +6963,15 @@
           }
         },
         "packages/documents/domain/src/aggregates/VaultSync/SyncConflict.aggregate.ts": {
-          "lines": 80,
-          "statements": 80,
-          "branches": 60.86,
-          "functions": 80,
+          "lines": 94.73,
+          "statements": 95,
+          "branches": 73.33,
+          "functions": 93.75,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 9,
-            "functions": 2
+            "lines": 1,
+            "statements": 1,
+            "branches": 4,
+            "functions": 1
           }
         },
         "packages/documents/domain/src/aggregates/VaultSync/SyncConflict.command.ts": {
@@ -6988,14 +7000,14 @@
         },
         "packages/documents/domain/src/aggregates/VaultSync/SyncDestination.aggregate.ts": {
           "lines": 100,
-          "statements": 90.9,
-          "branches": 50.87,
-          "functions": 94.44,
+          "statements": 96.66,
+          "branches": 57.89,
+          "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 2,
-            "branches": 28,
-            "functions": 1
+            "statements": 1,
+            "branches": 24,
+            "functions": 0
           }
         },
         "packages/documents/domain/src/aggregates/VaultSync/SyncDestination.command.ts": {
@@ -7035,14 +7047,14 @@
           }
         },
         "packages/documents/domain/src/aggregates/VaultSync/SyncItem.aggregate.ts": {
-          "lines": 91.66,
-          "statements": 83.33,
-          "branches": 70,
-          "functions": 92.3,
+          "lines": 100,
+          "statements": 88.23,
+          "branches": 68.18,
+          "functions": 94.11,
           "uncovered": {
-            "lines": 2,
-            "statements": 5,
-            "branches": 15,
+            "lines": 0,
+            "statements": 4,
+            "branches": 14,
             "functions": 1
           }
         },
@@ -7083,8 +7095,8 @@
           }
         },
         "packages/documents/domain/src/aggregates/VaultSync/SyncOperation.aggregate.ts": {
-          "lines": 96.42,
-          "statements": 87.5,
+          "lines": 96.77,
+          "statements": 89.47,
           "branches": 78.02,
           "functions": 100,
           "uncovered": {
@@ -7178,30 +7190,6 @@
             "functions": 0
           }
         },
-        "packages/documents/domain/src/aggregates/VaultSync/LegacySync.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/domain/src/aggregates/VaultSync/SyncGenesis.command.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/documents/domain/src/aggregates/VaultSync/Session.context.ts": {
           "lines": 100,
           "statements": 100,
@@ -7215,15 +7203,15 @@
           }
         },
         "packages/documents/domain/src/aggregates/VaultSync/Session.middleware.ts": {
-          "lines": 15.38,
-          "statements": 14.28,
-          "branches": 0,
-          "functions": 0,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 11,
-            "statements": 12,
-            "branches": 14,
-            "functions": 2
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/documents/domain/src/aggregates/VaultSync/VaultSyncRequest.command.ts": {
@@ -7349,6 +7337,18 @@
             "functions": 3
           }
         },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts": {
+          "lines": 88.91,
+          "statements": 89,
+          "branches": 77.86,
+          "functions": 84.57,
+          "uncovered": {
+            "lines": 51,
+            "statements": 53,
+            "branches": 27,
+            "functions": 27
+          }
+        },
         "packages/documents/server/src/aggregates/Sync/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -7359,6 +7359,174 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/SyncConflict/SyncConflict.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/SyncConflict/SyncConflict.repo.ts": {
+          "lines": 55.93,
+          "statements": 55.93,
+          "branches": 55,
+          "functions": 52.38,
+          "uncovered": {
+            "lines": 30,
+            "statements": 30,
+            "branches": 9,
+            "functions": 10
+          }
+        },
+        "packages/documents/server/src/entities/SyncConflict/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/SyncCursor/SyncCursor.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/SyncCursor/SyncCursor.repo.ts": {
+          "lines": 53.33,
+          "statements": 54.34,
+          "branches": 40,
+          "functions": 41.17,
+          "uncovered": {
+            "lines": 27,
+            "statements": 27,
+            "branches": 6,
+            "functions": 10
+          }
+        },
+        "packages/documents/server/src/entities/SyncCursor/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/SyncItem/SyncItem.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/SyncItem/SyncItem.repo.ts": {
+          "lines": 57.14,
+          "statements": 58.46,
+          "branches": 57.14,
+          "functions": 55.55,
+          "uncovered": {
+            "lines": 27,
+            "statements": 27,
+            "branches": 6,
+            "functions": 12
+          }
+        },
+        "packages/documents/server/src/entities/SyncItem/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/SyncOperation/SyncOperation.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/SyncOperation/SyncOperation.repo.ts": {
+          "lines": 54.65,
+          "statements": 55.55,
+          "branches": 52,
+          "functions": 51.28,
+          "uncovered": {
+            "lines": 39,
+            "statements": 40,
+            "branches": 12,
+            "functions": 19
+          }
+        },
+        "packages/documents/server/src/entities/SyncOperation/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/entities/internal/RepoSupport.ts": {
+          "lines": 90,
+          "statements": 84.61,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
           }
         },
         "packages/documents/server/src/index.ts": {
@@ -7386,26 +7554,26 @@
           }
         },
         "packages/documents/server/src/aggregates/Sync/BoxMirror.ts": {
-          "lines": 88.57,
-          "statements": 84.81,
-          "branches": 91.66,
-          "functions": 60.86,
+          "lines": 91.66,
+          "statements": 87.5,
+          "branches": 93.33,
+          "functions": 70.83,
           "uncovered": {
-            "lines": 8,
-            "statements": 12,
+            "lines": 6,
+            "statements": 10,
             "branches": 1,
-            "functions": 9
+            "functions": 7
           }
         },
         "packages/documents/server/src/aggregates/Sync/LegacySync.projection.ts": {
           "lines": 100,
-          "statements": 94.11,
-          "branches": 66.03,
+          "statements": 96.2,
+          "branches": 79.16,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 3,
-            "branches": 18,
+            "branches": 10,
             "functions": 0
           }
         },
@@ -7433,6 +7601,18 @@
             "functions": 0
           }
         },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.drift.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts": {
           "lines": 100,
           "statements": 100,
@@ -7445,100 +7625,64 @@
             "functions": 0
           }
         },
-        "packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts": {
-          "lines": 78.51,
-          "statements": 73.54,
-          "branches": 47.88,
-          "functions": 90,
-          "uncovered": {
-            "lines": 29,
-            "statements": 41,
-            "branches": 74,
-            "functions": 2
-          }
-        },
-        "packages/documents/server/src/aggregates/Sync/SyncCutover.service.ts": {
-          "lines": 97.36,
-          "statements": 95.23,
-          "branches": 85.71,
+        "packages/documents/server/src/aggregates/Sync/VaultSync.push.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 2,
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
-        "packages/documents/server/src/aggregates/Sync/SyncGenesis.service.ts": {
+        "packages/documents/server/src/aggregates/Sync/VaultSync.reconcile.ts": {
           "lines": 100,
-          "statements": 97.56,
-          "branches": 88.09,
-          "functions": 92.85,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 2,
-            "branches": 5,
-            "functions": 1
-          }
-        },
-        "packages/documents/server/src/aggregates/Sync/LegacySync.query.ts": {
-          "lines": 83.33,
-          "statements": 83.33,
-          "branches": 100,
-          "functions": 71.42,
-          "uncovered": {
-            "lines": 4,
-            "statements": 4,
+            "statements": 0,
             "branches": 0,
-            "functions": 4
+            "functions": 0
           }
         },
-        "packages/documents/server/src/aggregates/Sync/SyncAdmission.service.ts": {
-          "lines": 91.46,
-          "statements": 91.66,
-          "branches": 66.66,
-          "functions": 86.95,
-          "uncovered": {
-            "lines": 7,
-            "statements": 7,
-            "branches": 6,
-            "functions": 3
-          }
-        },
-        "packages/documents/server/src/aggregates/Sync/SyncWriterEpoch.service.ts": {
-          "lines": 97.36,
-          "statements": 97.5,
+        "packages/documents/server/src/aggregates/Sync/VaultSync.review.ts": {
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 90.9,
+          "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
           }
         },
-        "packages/documents/server/src/aggregates/Sync/VaultSyncModel.service.ts": {
-          "lines": 92.79,
-          "statements": 90.83,
-          "branches": 60,
-          "functions": 82.22,
+        "packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts": {
+          "lines": 96.11,
+          "statements": 92.79,
+          "branches": 76.78,
+          "functions": 100,
           "uncovered": {
             "lines": 8,
-            "statements": 11,
-            "branches": 4,
-            "functions": 8
+            "statements": 17,
+            "branches": 26,
+            "functions": 0
           }
         },
         "packages/documents/server/src/aggregates/Sync/VaultSyncApi.ts": {
-          "lines": 72.41,
-          "statements": 72.41,
-          "branches": 0,
-          "functions": 50,
+          "lines": 86.66,
+          "statements": 86.95,
+          "branches": 27.27,
+          "functions": 73.91,
           "uncovered": {
-            "lines": 8,
-            "statements": 8,
+            "lines": 6,
+            "statements": 6,
             "branches": 16,
-            "functions": 8
+            "functions": 6
           }
         },
         "packages/documents/server/src/aggregates/Sync/VaultSyncMcp.ts": {
@@ -7555,14 +7699,14 @@
         },
         "packages/documents/server/src/aggregates/Sync/VaultSyncRpcs.api.ts": {
           "lines": 100,
-          "statements": 97.26,
-          "branches": 55.55,
-          "functions": 92.59,
+          "statements": 98.78,
+          "branches": 72.72,
+          "functions": 96.87,
           "uncovered": {
             "lines": 0,
-            "statements": 2,
-            "branches": 8,
-            "functions": 2
+            "statements": 1,
+            "branches": 6,
+            "functions": 1
           }
         },
         "packages/documents/server/src/aggregates/Sync/VaultSyncSession.repository.ts": {
@@ -7578,10 +7722,10 @@
           }
         },
         "packages/documents/server/src/aggregates/Sync/VaultSyncSession.ts": {
-          "lines": 93.22,
-          "statements": 87.5,
-          "branches": 80.76,
-          "functions": 91.66,
+          "lines": 93.54,
+          "statements": 88.23,
+          "branches": 82.14,
+          "functions": 92.3,
           "uncovered": {
             "lines": 4,
             "statements": 8,
@@ -7943,6 +8087,150 @@
             "functions": 0
           }
         },
+        "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncConflict/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncConflict/server.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncCursor/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncCursor/server.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncItem/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncItem/server.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncOperation/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/entities/SyncOperation/server.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/documents/use-cases/src/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -8100,15 +8388,15 @@
           }
         },
         "packages/documents/use-cases/src/aggregates/VaultSync/VaultSync.policy-handlers.ts": {
-          "lines": 98.38,
-          "statements": 95.38,
-          "branches": 80,
-          "functions": 94.73,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 3,
-            "branches": 6,
-            "functions": 1
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/documents/use-cases/src/aggregates/VaultSync/VaultSync.policy.ts": {
@@ -17799,15 +18087,15 @@
     },
     "@beep/law-practice-server": {
       "path": "packages/law-practice/server",
-      "lines": 99,
-      "statements": 98.84,
-      "branches": 93.67,
-      "functions": 97.79,
+      "lines": 98.36,
+      "statements": 97.48,
+      "branches": 94.42,
+      "functions": 95.52,
       "uncovered": {
-        "lines": 32,
-        "statements": 40,
-        "branches": 44,
-        "functions": 31
+        "lines": 224,
+        "statements": 394,
+        "branches": 282,
+        "functions": 202
       },
       "files": {
         "packages/law-practice/server/src/CandorPromotionGate/CandorPromotionGate.layer.ts": {
@@ -17823,18 +18111,6 @@
           }
         },
         "packages/law-practice/server/src/CandorPromotionGate/CandorPromotionGate.ports.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/CandorPromotionGate/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -17870,16 +18146,16 @@
             "functions": 0
           }
         },
-        "packages/law-practice/server/src/CandorRecord/index.ts": {
-          "lines": 100,
-          "statements": 100,
+        "packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts": {
+          "lines": 94.44,
+          "statements": 90.47,
           "branches": 100,
-          "functions": 100,
+          "functions": 75,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 1,
+            "statements": 2,
             "branches": 0,
-            "functions": 0
+            "functions": 2
           }
         },
         "packages/law-practice/server/src/DocketIntake/DocketIntake.agents.ts": {
@@ -17956,18 +18232,6 @@
         },
         "packages/law-practice/server/src/DocketIntake/DocketIntake.undo.ts": {
           "lines": 100,
-          "statements": 99.29,
-          "branches": 97.56,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 1,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/DocketIntake/index.ts": {
-          "lines": 100,
           "statements": 100,
           "branches": 100,
           "functions": 100,
@@ -17979,27 +18243,27 @@
           }
         },
         "packages/law-practice/server/src/DocumentIdentification/Identification.contacts.ts": {
-          "lines": 96.87,
-          "statements": 93.33,
-          "branches": 75,
-          "functions": 94.28,
+          "lines": 100,
+          "statements": 100,
+          "branches": 84.37,
+          "functions": 100,
           "uncovered": {
-            "lines": 3,
-            "statements": 8,
-            "branches": 16,
-            "functions": 2
+            "lines": 0,
+            "statements": 0,
+            "branches": 10,
+            "functions": 0
           }
         },
         "packages/law-practice/server/src/DocumentIdentification/Identification.extraction.ts": {
-          "lines": 93.54,
-          "statements": 94.28,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 75,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 2
+            "functions": 0
           }
         },
         "packages/law-practice/server/src/DocumentIdentification/Identification.prompts.ts": {
@@ -18015,30 +18279,18 @@
           }
         },
         "packages/law-practice/server/src/DocumentIdentification/Identification.rdap.ts": {
-          "lines": 97.29,
-          "statements": 97.61,
+          "lines": 100,
+          "statements": 100,
           "branches": 93.33,
-          "functions": 90.9,
+          "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
+            "lines": 0,
+            "statements": 0,
             "branches": 2,
-            "functions": 1
+            "functions": 0
           }
         },
         "packages/law-practice/server/src/DocumentIdentification/Identification.uspto.ts": {
-          "lines": 95.45,
-          "statements": 95.83,
-          "branches": 100,
-          "functions": 90.9,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/law-practice/server/src/DocumentIdentification/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -18075,18 +18327,6 @@
           }
         },
         "packages/law-practice/server/src/LegalPositionRecord/LegalPositionRecord.repo.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/LegalPositionRecord/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -18230,7 +18470,7 @@
             "functions": 0
           }
         },
-        "packages/law-practice/server/src/MailTagging/index.ts": {
+        "packages/law-practice/server/src/NoticeMailbox/NoticeMailbox.layer.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -18266,7 +18506,7 @@
             "functions": 0
           }
         },
-        "packages/law-practice/server/src/OfficeActionStructure/index.ts": {
+        "packages/law-practice/server/src/PartyContactSource/PartyContactSource.layer.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -18316,13 +18556,13 @@
         },
         "packages/law-practice/server/src/PracticeKg.correspondents.ts": {
           "lines": 100,
-          "statements": 99.55,
-          "branches": 94.44,
+          "statements": 100,
+          "branches": 97.22,
           "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
-            "branches": 2,
+            "statements": 0,
+            "branches": 1,
             "functions": 0
           }
         },
@@ -18365,12 +18605,12 @@
         "packages/law-practice/server/src/PracticeKg.fts.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 75,
+          "branches": 83.33,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 3,
+            "branches": 2,
             "functions": 0
           }
         },
@@ -18411,15 +18651,15 @@
           }
         },
         "packages/law-practice/server/src/PracticeKg.projections.ts": {
-          "lines": 97.23,
-          "statements": 97.35,
+          "lines": 98.63,
+          "statements": 98.69,
           "branches": 85.07,
-          "functions": 91.66,
+          "functions": 95.89,
           "uncovered": {
-            "lines": 6,
-            "statements": 6,
+            "lines": 3,
+            "statements": 3,
             "branches": 10,
-            "functions": 6
+            "functions": 3
           }
         },
         "packages/law-practice/server/src/PracticeKg.queries.ts": {
@@ -18483,10 +18723,10 @@
           }
         },
         "packages/law-practice/server/src/PracticeKg.tool-handlers.ts": {
-          "lines": 98.27,
-          "statements": 98.3,
+          "lines": 99.18,
+          "statements": 99.19,
           "branches": 97.14,
-          "functions": 96.15,
+          "functions": 98.18,
           "uncovered": {
             "lines": 1,
             "statements": 1,
@@ -18495,186 +18735,6 @@
           }
         },
         "packages/law-practice/server/src/PracticeKg.verify.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/QuestionCalendar/QuestionCalendar.layer.ts": {
-          "lines": 94.52,
-          "statements": 94.66,
-          "branches": 91.66,
-          "functions": 87.09,
-          "uncovered": {
-            "lines": 4,
-            "statements": 4,
-            "branches": 1,
-            "functions": 4
-          }
-        },
-        "packages/law-practice/server/src/ReviewFiles/ReviewFiles.layer.ts": {
-          "lines": 88.88,
-          "statements": 90,
-          "branches": 100,
-          "functions": 85,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 0,
-            "functions": 3
-          }
-        },
-        "packages/law-practice/server/src/Tools.ts": {
-          "lines": 85.71,
-          "statements": 85.71,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/law-practice/server/src/UsptoClaims/UsptoClaims.layer.ts": {
-          "lines": 86.27,
-          "statements": 86.79,
-          "branches": 50,
-          "functions": 76,
-          "uncovered": {
-            "lines": 7,
-            "statements": 7,
-            "branches": 4,
-            "functions": 6
-          }
-        },
-        "packages/law-practice/server/src/UsptoClaims/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/internal/Jsonl.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/internal/JsonlLog.ts": {
-          "lines": 95.45,
-          "statements": 91.3,
-          "branches": 100,
-          "functions": 75,
-          "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
-          }
-        },
-        "packages/law-practice/server/src/internal/MailAddress.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/internal/MailTaggingStateFile.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/internal/PosInt.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/internal/RepoSupport.ts": {
-          "lines": 87.5,
-          "statements": 88.88,
-          "branches": 100,
-          "functions": 83.33,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/law-practice/server/src/internal/Sql.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/NoticeMailbox/NoticeMailbox.layer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/server/src/PartyContactSource/PartyContactSource.layer.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -18734,6 +18794,54 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/QuestionCalendar/QuestionCalendar.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 91.66,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/ReviewFiles/ReviewFiles.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/Tools.ts": {
+          "lines": 85.71,
+          "statements": 85.71,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/UsptoClaims/UsptoClaims.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 94.66,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 4,
+            "functions": 0
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/Admission.ts": {
           "lines": 100,
           "statements": 100,
@@ -18744,6 +18852,162 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationAssembly.ts": {
+          "lines": 100,
+          "statements": 97.1,
+          "branches": 93.33,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationBudget.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationCallback.ts": {
+          "lines": 94.44,
+          "statements": 90.47,
+          "branches": 100,
+          "functions": 60,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationEntry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationFailure.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationOperation.ts": {
+          "lines": 100,
+          "statements": 88.88,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationPreparation.ts": {
+          "lines": 91.66,
+          "statements": 92.59,
+          "branches": 71.42,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationSkip.ts": {
+          "lines": 100,
+          "statements": 93.33,
+          "branches": 75,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationSpan.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationStyle.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationTemplate.ts": {
+          "lines": 99.1,
+          "statements": 96.5,
+          "branches": 93.5,
+          "functions": 95.83,
+          "uncovered": {
+            "lines": 1,
+            "statements": 5,
+            "branches": 5,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/AnnotationWrap.ts": {
+          "lines": 96.29,
+          "statements": 84.37,
+          "branches": 60,
+          "functions": 57.14,
+          "uncovered": {
+            "lines": 1,
+            "statements": 5,
+            "branches": 4,
+            "functions": 3
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/Asset.ts": {
+          "lines": 90.9,
+          "statements": 92.3,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
           }
         },
         "packages/law-practice/server/src/internal/Citation/AuthorityIdentity.ts": {
@@ -18821,7 +19085,7 @@
         "packages/law-practice/server/src/internal/Citation/CallbackRuntimeIndex.ts": {
           "lines": 99.41,
           "statements": 97.4,
-          "branches": 91,
+          "branches": 91.17,
           "functions": 97.56,
           "uncovered": {
             "lines": 1,
@@ -18831,15 +19095,51 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/CallbackSession.ts": {
-          "lines": 99.15,
-          "statements": 99.05,
-          "branches": 97.97,
-          "functions": 97.35,
+          "lines": 99.37,
+          "statements": 99.24,
+          "branches": 99.49,
+          "functions": 97.33,
           "uncovered": {
-            "lines": 4,
-            "statements": 5,
-            "branches": 4,
+            "lines": 3,
+            "statements": 4,
+            "branches": 1,
             "functions": 4
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/CanonicalSource.ts": {
+          "lines": 91.42,
+          "statements": 87.5,
+          "branches": 100,
+          "functions": 61.53,
+          "uncovered": {
+            "lines": 3,
+            "statements": 5,
+            "branches": 0,
+            "functions": 5
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/CaseMetadata.ts": {
+          "lines": 98.46,
+          "statements": 97.22,
+          "branches": 100,
+          "functions": 88.88,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/CaseName.ts": {
+          "lines": 92.85,
+          "statements": 90,
+          "branches": 90,
+          "functions": 77.77,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 1,
+            "functions": 2
           }
         },
         "packages/law-practice/server/src/internal/Citation/CaseNamePredicates.ts": {
@@ -18867,15 +19167,27 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/CaseNameScan.ts": {
-          "lines": 99.33,
-          "statements": 98.83,
-          "branches": 97.64,
+          "lines": 99.32,
+          "statements": 98.82,
+          "branches": 98.79,
           "functions": 97.14,
           "uncovered": {
             "lines": 1,
             "statements": 2,
-            "branches": 2,
+            "branches": 1,
             "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/CaseNameSelection.ts": {
+          "lines": 96.77,
+          "statements": 94.11,
+          "branches": 100,
+          "functions": 86.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
           }
         },
         "packages/law-practice/server/src/internal/Citation/CaseResourceHash.ts": {
@@ -18905,20 +19217,20 @@
         "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 96.15,
+          "branches": 98.52,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 2,
+            "branches": 1,
             "functions": 0
           }
         },
         "packages/law-practice/server/src/internal/Citation/CleanerRegistry.ts": {
           "lines": 100,
-          "statements": 98.61,
-          "branches": 87.32,
-          "functions": 98.55,
+          "statements": 98.59,
+          "branches": 87.67,
+          "functions": 98.52,
           "uncovered": {
             "lines": 0,
             "statements": 3,
@@ -18939,14 +19251,14 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/CleanerValues.ts": {
-          "lines": 99.24,
-          "statements": 96.27,
-          "branches": 91.08,
-          "functions": 98.3,
+          "lines": 99.27,
+          "statements": 96.44,
+          "branches": 92.23,
+          "functions": 98.43,
           "uncovered": {
             "lines": 1,
             "statements": 6,
-            "branches": 9,
+            "branches": 8,
             "functions": 1
           }
         },
@@ -18986,6 +19298,114 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/DefaultConfiguration.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DiffKernel.ts": {
+          "lines": 92.2,
+          "statements": 88.17,
+          "branches": 82.75,
+          "functions": 79.31,
+          "uncovered": {
+            "lines": 6,
+            "statements": 11,
+            "branches": 5,
+            "functions": 6
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DiffSteps.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DiffWorker.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DiffWorker.node.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DiffWorker.ts": {
+          "lines": 88.88,
+          "statements": 83.33,
+          "branches": 63.63,
+          "functions": 61.9,
+          "uncovered": {
+            "lines": 6,
+            "statements": 10,
+            "branches": 4,
+            "functions": 8
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DiffWorkerProgram.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 32,
+            "statements": 34,
+            "branches": 6,
+            "functions": 14
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DiffWorkerProtocol.ts": {
+          "lines": 96.29,
+          "statements": 91.93,
+          "branches": 81.81,
+          "functions": 90,
+          "uncovered": {
+            "lines": 2,
+            "statements": 5,
+            "branches": 4,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DiffWorkerRpc.ts": {
+          "lines": 87.5,
+          "statements": 83.33,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 0,
+            "functions": 3
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/Document.ts": {
           "lines": 99.26,
           "statements": 99.35,
@@ -18998,10 +19418,46 @@
             "functions": 1
           }
         },
+        "packages/law-practice/server/src/internal/Citation/DocumentCleanerProtocols.ts": {
+          "lines": 96,
+          "statements": 95.76,
+          "branches": 90.38,
+          "functions": 95.83,
+          "uncovered": {
+            "lines": 4,
+            "statements": 5,
+            "branches": 5,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DocumentExtraction.ts": {
+          "lines": 98,
+          "statements": 98.18,
+          "branches": 100,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/DocumentServices.ts": {
+          "lines": 90.9,
+          "statements": 90.9,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/EditionInference.ts": {
           "lines": 100,
-          "statements": 97.91,
-          "branches": 95.65,
+          "statements": 97.95,
+          "branches": 95.83,
           "functions": 100,
           "uncovered": {
             "lines": 0,
@@ -19010,10 +19466,106 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/EngineArtifact.ts": {
+          "lines": 96.77,
+          "statements": 96.96,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/EngineFailure.ts": {
+          "lines": 83.33,
+          "statements": 84.21,
+          "branches": 62.5,
+          "functions": 72.72,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 6,
+            "functions": 3
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ExtractionChildren.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ExtractionContext.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ExtractionEntry.ts": {
+          "lines": 95.34,
+          "statements": 93.61,
+          "branches": 90,
+          "functions": 80,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 1,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ExtractionLoop.ts": {
+          "lines": 92.18,
+          "statements": 92.85,
+          "branches": 91.3,
+          "functions": 82.35,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 2,
+            "functions": 3
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ExtractionSelection.ts": {
+          "lines": 100,
+          "statements": 95.76,
+          "branches": 93.84,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 0,
+            "statements": 5,
+            "branches": 4,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ExtractionShortcut.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/ExtractorOrdering.ts": {
           "lines": 100,
           "statements": 97.72,
-          "branches": 50,
+          "branches": 75,
           "functions": 92.85,
           "uncovered": {
             "lines": 0,
@@ -19058,6 +19610,42 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/FullExtraction.ts": {
+          "lines": 97.91,
+          "statements": 96.36,
+          "branches": 75,
+          "functions": 90,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 3,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/GeneratedReferences.ts": {
+          "lines": 95.37,
+          "statements": 92.96,
+          "branches": 86.36,
+          "functions": 84.37,
+          "uncovered": {
+            "lines": 5,
+            "statements": 9,
+            "branches": 6,
+            "functions": 5
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/HelperConfigurations.ts": {
+          "lines": 93.75,
+          "statements": 94.11,
+          "branches": 100,
+          "functions": 75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/HostResources.ts": {
           "lines": 100,
           "statements": 100,
@@ -19070,6 +19658,18 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/HtmlCaseName.ts": {
+          "lines": 96.63,
+          "statements": 94.44,
+          "branches": 91.48,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 4,
+            "statements": 8,
+            "branches": 4,
+            "functions": 3
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/HtmlCompletion.ts": {
           "lines": 100,
           "statements": 100,
@@ -19080,6 +19680,30 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/HtmlDiscovery.ts": {
+          "lines": 100,
+          "statements": 96.38,
+          "branches": 83.33,
+          "functions": 94.11,
+          "uncovered": {
+            "lines": 0,
+            "statements": 3,
+            "branches": 2,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/HtmlGeometryPreparation.ts": {
+          "lines": 96.42,
+          "statements": 93.54,
+          "branches": 100,
+          "functions": 77.77,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
           }
         },
         "packages/law-practice/server/src/internal/Citation/HtmlInput.ts": {
@@ -19095,9 +19719,9 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/HtmlKernel.ts": {
-          "lines": 99.15,
-          "statements": 98.55,
-          "branches": 95.23,
+          "lines": 98.55,
+          "statements": 97.56,
+          "branches": 95,
           "functions": 100,
           "uncovered": {
             "lines": 1,
@@ -19130,23 +19754,35 @@
             "functions": 1
           }
         },
+        "packages/law-practice/server/src/internal/Citation/HtmlWorker.node.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts": {
           "lines": 100,
-          "statements": 99.08,
-          "branches": 88.23,
+          "statements": 100,
+          "branches": 100,
           "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
-            "branches": 4,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
         "packages/law-practice/server/src/internal/Citation/HtmlWorkerProgram.ts": {
-          "lines": 95.12,
-          "statements": 93.47,
-          "branches": 90,
-          "functions": 76.92,
+          "lines": 94.11,
+          "statements": 91.89,
+          "branches": 87.5,
+          "functions": 75,
           "uncovered": {
             "lines": 2,
             "statements": 3,
@@ -19156,8 +19792,8 @@
         },
         "packages/law-practice/server/src/internal/Citation/HtmlWorkerProtocol.ts": {
           "lines": 100,
-          "statements": 98.41,
-          "branches": 97.4,
+          "statements": 97.18,
+          "branches": 94.73,
           "functions": 100,
           "uncovered": {
             "lines": 0,
@@ -19168,14 +19804,26 @@
         },
         "packages/law-practice/server/src/internal/Citation/HtmlWorkerRpc.ts": {
           "lines": 100,
-          "statements": 96.29,
-          "branches": 92.85,
+          "statements": 100,
+          "branches": 100,
           "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
-            "branches": 1,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/InputDocument.ts": {
+          "lines": 96.72,
+          "statements": 95.52,
+          "branches": 95.45,
+          "functions": 88.88,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 1,
+            "functions": 2
           }
         },
         "packages/law-practice/server/src/internal/Citation/JournalMetadata.ts": {
@@ -19214,6 +19862,18 @@
             "functions": 1
           }
         },
+        "packages/law-practice/server/src/internal/Citation/MarkupWorker.ts": {
+          "lines": 100,
+          "statements": 98.48,
+          "branches": 83.33,
+          "functions": 96.15,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 3,
+            "functions": 1
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/Mention.ts": {
           "lines": 100,
           "statements": 100,
@@ -19239,9 +19899,9 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/MetadataComposition.ts": {
-          "lines": 99.15,
-          "statements": 98.47,
-          "branches": 92.3,
+          "lines": 99.22,
+          "statements": 98.58,
+          "branches": 92.68,
           "functions": 100,
           "uncovered": {
             "lines": 1,
@@ -19298,19 +19958,67 @@
             "functions": 0
           }
         },
-        "packages/law-practice/server/src/internal/Citation/NativeProcess.ts": {
+        "packages/law-practice/server/src/internal/Citation/NativeJson.ts": {
           "lines": 100,
-          "statements": 99.04,
-          "branches": 96.55,
+          "statements": 100,
+          "branches": 96.66,
           "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
+            "statements": 0,
             "branches": 1,
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/NativeProcess.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/NativeRpc.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/NativeWasm.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/OccurrenceProjection.ts": {
+          "lines": 94.85,
+          "statements": 93.63,
+          "branches": 85.18,
+          "functions": 88.88,
+          "uncovered": {
+            "lines": 7,
+            "statements": 10,
+            "branches": 8,
+            "functions": 4
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ParserCatalog.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -19332,6 +20040,18 @@
             "statements": 2,
             "branches": 1,
             "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/PortFailure.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/law-practice/server/src/internal/Citation/PostCaseMetadata.ts": {
@@ -19432,7 +20152,7 @@
         },
         "packages/law-practice/server/src/internal/Citation/PythonHash.ts": {
           "lines": 100,
-          "statements": 99.26,
+          "statements": 99.25,
           "branches": 96.42,
           "functions": 95.65,
           "uncovered": {
@@ -19480,14 +20200,50 @@
         },
         "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts": {
           "lines": 100,
-          "statements": 99.13,
-          "branches": 98,
-          "functions": 97.77,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 2,
-            "branches": 1,
-            "functions": 1
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ReferenceNames.ts": {
+          "lines": 94,
+          "statements": 92.3,
+          "branches": 86.36,
+          "functions": 76.92,
+          "uncovered": {
+            "lines": 3,
+            "statements": 5,
+            "branches": 3,
+            "functions": 3
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ReferencePatterns.ts": {
+          "lines": 96.8,
+          "statements": 96.49,
+          "branches": 100,
+          "functions": 84.61,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 0,
+            "functions": 4
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ReferenceTokenExtraction.ts": {
+          "lines": 95.77,
+          "statements": 93.75,
+          "branches": 81.81,
+          "functions": 84.61,
+          "uncovered": {
+            "lines": 3,
+            "statements": 5,
+            "branches": 4,
+            "functions": 4
           }
         },
         "packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts": {
@@ -19527,14 +20283,14 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/RegexInput.ts": {
-          "lines": 98.49,
-          "statements": 96.98,
-          "branches": 92.22,
+          "lines": 99.25,
+          "statements": 98.2,
+          "branches": 96.73,
           "functions": 94.59,
           "uncovered": {
-            "lines": 2,
-            "statements": 5,
-            "branches": 7,
+            "lines": 1,
+            "statements": 3,
+            "branches": 3,
             "functions": 2
           }
         },
@@ -19565,12 +20321,12 @@
         "packages/law-practice/server/src/internal/Citation/RegexProgram.ts": {
           "lines": 100,
           "statements": 98.84,
-          "branches": 96.56,
+          "branches": 96.84,
           "functions": 99.33,
           "uncovered": {
             "lines": 0,
             "statements": 7,
-            "branches": 12,
+            "branches": 11,
             "functions": 1
           }
         },
@@ -19635,14 +20391,14 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/RegexWorker.ts": {
-          "lines": 97.82,
-          "statements": 96.07,
-          "branches": 66.66,
-          "functions": 93.75,
+          "lines": 96.55,
+          "statements": 93.93,
+          "branches": 80,
+          "functions": 90.9,
           "uncovered": {
             "lines": 1,
             "statements": 2,
-            "branches": 5,
+            "branches": 1,
             "functions": 1
           }
         },
@@ -19684,21 +20440,21 @@
         },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts": {
           "lines": 100,
-          "statements": 99.2,
-          "branches": 95,
+          "statements": 98.64,
+          "branches": 90,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 1,
-            "branches": 2,
+            "branches": 1,
             "functions": 0
           }
         },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts": {
-          "lines": 97.5,
-          "statements": 93.33,
+          "lines": 97.22,
+          "statements": 92.5,
           "branches": 66.66,
-          "functions": 88.88,
+          "functions": 85.71,
           "uncovered": {
             "lines": 1,
             "statements": 3,
@@ -19730,6 +20486,18 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/ResolutionEditions.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/ResolutionInput.ts": {
           "lines": 100,
           "statements": 100,
@@ -19752,6 +20520,18 @@
             "statements": 0,
             "branches": 1,
             "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/ResolverOperation.ts": {
+          "lines": 93.33,
+          "statements": 93.75,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/ResolverText.ts": {
@@ -19803,7 +20583,7 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/ResourceObjects.ts": {
-          "lines": 98.8,
+          "lines": 98.82,
           "statements": 97.84,
           "branches": 91.66,
           "functions": 93.75,
@@ -19816,14 +20596,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/RuntimeDictionary.ts": {
           "lines": 100,
-          "statements": 99.54,
-          "branches": 97.7,
-          "functions": 97.56,
+          "statements": 99.55,
+          "branches": 98.85,
+          "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 1,
-            "branches": 2,
-            "functions": 1
+            "branches": 1,
+            "functions": 0
           }
         },
         "packages/law-practice/server/src/internal/Citation/RuntimeHashEncoding.ts": {
@@ -19848,6 +20628,42 @@
             "statements": 0,
             "branches": 1,
             "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SemanticExtraction.ts": {
+          "lines": 96.42,
+          "statements": 96.66,
+          "branches": 83.33,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SemanticProjection.ts": {
+          "lines": 100,
+          "statements": 97.33,
+          "branches": 90.9,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 2,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SemanticVocabulary.ts": {
+          "lines": 93.33,
+          "statements": 87.17,
+          "branches": 75,
+          "functions": 75,
+          "uncovered": {
+            "lines": 2,
+            "statements": 5,
+            "branches": 3,
+            "functions": 3
           }
         },
         "packages/law-practice/server/src/internal/Citation/SessionDescriptors.ts": {
@@ -19886,6 +20702,90 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/SourceAnnotation.ts": {
+          "lines": 98.33,
+          "statements": 93.93,
+          "branches": 92,
+          "functions": 86.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 4,
+            "branches": 2,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SourceCleaning.ts": {
+          "lines": 95,
+          "statements": 95.34,
+          "branches": 77.77,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SourceDocument.ts": {
+          "lines": 96.55,
+          "statements": 93.33,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SourceEvidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SourceExtraction.ts": {
+          "lines": 94.59,
+          "statements": 94.59,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SourceRequest.ts": {
+          "lines": 100,
+          "statements": 97.01,
+          "branches": 93.33,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/SourceResolution.ts": {
+          "lines": 90.69,
+          "statements": 90.9,
+          "branches": 85.71,
+          "functions": 80,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 2,
+            "functions": 2
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/SpanOffsets.ts": {
           "lines": 100,
           "statements": 100,
@@ -19922,6 +20822,18 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/TextCapacity.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/TextPoints.ts": {
           "lines": 100,
           "statements": 100,
@@ -19936,7 +20848,7 @@
         },
         "packages/law-practice/server/src/internal/Citation/TokenAssembly.ts": {
           "lines": 100,
-          "statements": 97.67,
+          "statements": 97.59,
           "branches": 93.75,
           "functions": 100,
           "uncovered": {
@@ -19985,7 +20897,7 @@
         "packages/law-practice/server/src/internal/Citation/TokenEditions.ts": {
           "lines": 97.61,
           "statements": 97.82,
-          "branches": 90,
+          "branches": 91.66,
           "functions": 91.66,
           "uncovered": {
             "lines": 1,
@@ -19995,8 +20907,8 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/TokenObjects.ts": {
-          "lines": 99,
-          "statements": 97.41,
+          "lines": 98.96,
+          "statements": 97.34,
           "branches": 93.18,
           "functions": 100,
           "uncovered": {
@@ -20018,11 +20930,23 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/internal/Citation/TokenizedExtraction.ts": {
+          "lines": 97.29,
+          "statements": 95.45,
+          "branches": 100,
+          "functions": 86.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
         "packages/law-practice/server/src/internal/Citation/Tokenizer.ts": {
           "lines": 98.75,
           "statements": 97.84,
           "branches": 88.88,
-          "functions": 96.29,
+          "functions": 96.42,
           "uncovered": {
             "lines": 1,
             "statements": 2,
@@ -20040,6 +20964,294 @@
             "statements": 1,
             "branches": 1,
             "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/VerifiedExtraction.ts": {
+          "lines": 97.77,
+          "statements": 95.91,
+          "branches": 93.33,
+          "functions": 92.3,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 2,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/XmlBalanceKernel.ts": {
+          "lines": 94.28,
+          "statements": 88.37,
+          "branches": 83.33,
+          "functions": 77.77,
+          "uncovered": {
+            "lines": 2,
+            "statements": 5,
+            "branches": 2,
+            "functions": 4
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/XmlWorker.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/XmlWorker.node.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/XmlWorker.ts": {
+          "lines": 85.18,
+          "statements": 77.41,
+          "branches": 12.5,
+          "functions": 71.42,
+          "uncovered": {
+            "lines": 4,
+            "statements": 7,
+            "branches": 7,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/XmlWorkerProgram.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 23,
+            "statements": 26,
+            "branches": 6,
+            "functions": 11
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/XmlWorkerProtocol.ts": {
+          "lines": 96.77,
+          "statements": 94.44,
+          "branches": 83.33,
+          "functions": 83.33,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/XmlWorkerRpc.ts": {
+          "lines": 92.85,
+          "statements": 87.5,
+          "branches": 50,
+          "functions": 75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/internal/Jsonl.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/JsonlLog.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/MailAddress.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/MailTaggingStateFile.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/PosInt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/RepoSupport.ts": {
+          "lines": 87.5,
+          "statements": 88.88,
+          "branches": 100,
+          "functions": 83.33,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Sql.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/CandorPromotionGate/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/CandorRecord/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/DocketIntake/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/DocumentIdentification/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/LegalPositionRecord/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/MailTagging/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/OfficeActionStructure/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/UsptoClaims/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         }
       }
@@ -20469,15 +21681,15 @@
     },
     "@beep/law-practice-use-cases": {
       "path": "packages/law-practice/use-cases",
-      "lines": 96.38,
-      "statements": 96.36,
-      "branches": 90.49,
-      "functions": 94.35,
+      "lines": 97.1,
+      "statements": 97.06,
+      "branches": 92.89,
+      "functions": 95.11,
       "uncovered": {
-        "lines": 79,
-        "statements": 87,
+        "lines": 78,
+        "statements": 86,
         "branches": 44,
-        "functions": 64
+        "functions": 63
       },
       "files": {
         "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.errors.ts": {
@@ -20576,6 +21788,162 @@
             "functions": 0
           }
         },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.annotation.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.cleaner.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.evidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.input.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.limits.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.operations.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.report.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.result.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.runtime.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.safety.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.tokenizer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/use-cases/src/ClaimInspection.tools.ts": {
           "lines": 97.87,
           "statements": 97.95,
@@ -20586,6 +21954,66 @@
             "statements": 1,
             "branches": 0,
             "functions": 1
+          }
+        },
+        "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimInspection.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimInspection.pages.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimInspection.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimInspection.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts": {
@@ -20626,7 +22054,7 @@
         },
         "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.service.ts": {
           "lines": 90,
-          "statements": 90.24,
+          "statements": 90.47,
           "branches": 75,
           "functions": 81.81,
           "uncovered": {
@@ -20637,6 +22065,66 @@
           }
         },
         "packages/law-practice/use-cases/src/ClaimSelfCheck/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/DailyNotice/DailyNotice.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/DailyNotice/DailyNotice.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/DailyNotice/DailyNotice.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/DailyNotice/DailyNotice.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/DailyNotice/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -20675,7 +22163,7 @@
         "packages/law-practice/use-cases/src/DocketIntake/DocketIntake.service.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 98.8,
+          "branches": 98.86,
           "functions": 100,
           "uncovered": {
             "lines": 0,
@@ -20684,16 +22172,28 @@
             "functions": 0
           }
         },
-        "packages/law-practice/use-cases/src/DocketIntake/DocketQuestions.service.ts": {
-          "lines": 79.51,
-          "statements": 80.23,
+        "packages/law-practice/use-cases/src/DocketIntake/DocketQuestions.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 72.13,
+          "functions": 100,
           "uncovered": {
-            "lines": 17,
-            "statements": 17,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 17
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/DocketIntake/DocketQuestions.service.ts": {
+          "lines": 88.54,
+          "statements": 89.43,
+          "branches": 100,
+          "functions": 84.21,
+          "uncovered": {
+            "lines": 15,
+            "statements": 15,
+            "branches": 0,
+            "functions": 15
           }
         },
         "packages/law-practice/use-cases/src/DocketIntake/DocketReview.policy.ts": {
@@ -20733,7 +22233,7 @@
           }
         },
         "packages/law-practice/use-cases/src/DocumentIdentification/Identification.contacts.ts": {
-          "lines": 96.66,
+          "lines": 96.72,
           "statements": 96.34,
           "branches": 63.33,
           "functions": 95.12,
@@ -20781,10 +22281,10 @@
           }
         },
         "packages/law-practice/use-cases/src/DocumentIdentification/Identification.resolver.ts": {
-          "lines": 96.66,
-          "statements": 95.25,
+          "lines": 96.68,
+          "statements": 95.27,
           "branches": 78.89,
-          "functions": 94.64,
+          "functions": 94.69,
           "uncovered": {
             "lines": 7,
             "statements": 12,
@@ -21236,6 +22736,114 @@
             "functions": 0
           }
         },
+        "packages/law-practice/use-cases/src/PracticeSetup/PracticeSetup.policy.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/PracticeSetup/PracticeSetup.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/PracticeSetup/PracticeSetup.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/PracticeSetup/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionQueue/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/use-cases/src/QuestionWrites/QuestionWrites.errors.ts": {
           "lines": 100,
           "statements": 100,
@@ -21245,6 +22853,138 @@
             "lines": 0,
             "statements": 0,
             "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionWrites/QuestionWrites.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionWrites/QuestionWrites.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionWrites/QuestionWrites.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/QuestionWrites/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ReviewHub/ReviewHub.tools.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ReviewHub/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/ReviewItemStore/ReviewItemStore.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
@@ -21258,6 +22998,18 @@
             "statements": 1,
             "branches": 3,
             "functions": 1
+          }
+        },
+        "packages/law-practice/use-cases/src/ReviewItemStore/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/law-practice/use-cases/src/ReviewQueue/ReviewQueue.errors.ts": {
@@ -21404,6 +23156,150 @@
             "functions": 0
           }
         },
+        "packages/law-practice/use-cases/src/internal/citationDivergences.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationEnginePolicyFixture.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationOracleAssertions.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationOracleDiscovery.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationOracleJson.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationOracleLedgers.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationOracleOperations.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationOracleVocabularyMapping.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationRegexBenchmarks.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationSupplementalExtraction.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationSupplementalText.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/citationTypescriptDonors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/use-cases/src/internal/claimEvidence.ts": {
           "lines": 100,
           "statements": 100,
@@ -21429,6 +23325,30 @@
           }
         },
         "packages/law-practice/use-cases/src/internal/latestVerdict.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/logMemory.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/officeActionFixture.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -31712,6 +33632,18 @@
             "functions": 5
           }
         },
+        "apps/professional-desktop/src/sync/VaultSyncOrchestrator.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 20,
+            "statements": 20,
+            "branches": 0,
+            "functions": 10
+          }
+        },
         "apps/professional-desktop/src/sync/VaultSyncPanel.tsx": {
           "lines": 85.71,
           "statements": 86,
@@ -31842,30 +33774,6 @@
             "statements": 15,
             "branches": 2,
             "functions": 15
-          }
-        },
-        "apps/professional-desktop/src/runtime/SessionToken.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "apps/professional-desktop/src/sync/VaultSyncSession.ts": {
-          "lines": 83.33,
-          "statements": 71.42,
-          "branches": 100,
-          "functions": 50,
-          "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
           }
         }
       }

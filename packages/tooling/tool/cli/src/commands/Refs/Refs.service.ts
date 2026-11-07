@@ -13,6 +13,7 @@ import {
   systemdUnitDirective,
   systemdUserUnitDir,
 } from "@beep/repo-cli-kit/systemd/index";
+import { ReferencesManifestPath } from "@beep/repo-configs/PolicyData";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -120,13 +121,13 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
-  const manifestPath = path.join(owner, "scripts", "references.json");
+  const manifestPath = path.join(owner, ReferencesManifestPath);
   const readManifest = Effect.fn("ReferenceWorkspace.readManifest")(
     function* () {
       const text = yield* fs.readFileString(manifestPath);
       return yield* ReferenceWorkspaceManifest.decodeJson(text);
     },
-    Effect.mapError(ioError(manifestPath, "Cannot decode scripts/references.json."))
+    Effect.mapError(ioError(manifestPath, `Cannot decode ${ReferencesManifestPath}.`))
   );
 
   const resolveRoot: ReferenceWorkspaceShape["resolveRoot"] = Effect.fn("ReferenceWorkspace.resolveRoot")(
@@ -543,7 +544,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
 });
 
 /**
- * Binds reference operations to the checkout that owns scripts/references.json.
+ * Binds reference operations to the checkout that owns the repo-configs references manifest.
  *
  * **Example** (Prepare an isolated owner)
  * ```ts

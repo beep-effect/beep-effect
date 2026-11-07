@@ -64,6 +64,8 @@
     }
   },
   "dependencies": {
+    "@alchemy.run/domain": "catalog:",
+    "@beep/alchemy-postgres": "workspace:^",
     "@beep/box": "workspace:^",
     "@beep/documents-domain": "workspace:^",
     "@beep/documents-tables": "workspace:^",
@@ -78,18 +80,16 @@
     "@beep/utils": "workspace:^",
     "@noble/hashes": "catalog:",
     "drizzle-orm": "catalog:",
-    "effect": "catalog:",
-    "@alchemy.run/domain": "catalog:",
-    "@beep/alchemy-postgres": "workspace:^"
+    "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/pglite": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:",
-    "@beep/pglite": "workspace:^"
+    "bun-types": "catalog:"
   }
 }

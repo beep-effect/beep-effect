@@ -1095,6 +1095,7 @@
       "dependencies": {
         "@alchemy.run/domain": "catalog:",
         "@beep/identity": "workspace:^",
+        "@beep/observability": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "alchemy": "catalog:",
@@ -4234,6 +4235,8 @@
         "@beep/fc-runs": "workspace:^",
         "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
+        "@changesets/changelog-github": "catalog:",
+        "@changesets/cli": "catalog:",
         "@changesets/parse": "catalog:",
         "@commitlint/is-ignored": "catalog:",
         "@effect/platform-node-shared": "catalog:",

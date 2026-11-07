@@ -166,6 +166,23 @@ carries #2886's opaque `DestinationId`, hashed reservation keys and the 3b1 fixe
   denies the stream without membership, then sees the pending count go from 0
   to 1 after an item is observed. The desktop atom test sees the
   accepted-then-finished frames on one subscription.
+- **Availability frames (stale-disconnect gap closed).** Sidecar availability
+  is not part of the destination's aggregate state, so a probe that only moved
+  the Box connection state used to push nothing, and the panel kept a stale
+  disconnect note until the next View change or a refresh.
+  `DmsMirrorAvailability` now has `changes`, which emits the current probe on
+  subscription and then every later resolution. The Box adapter's probe cache
+  is a `SubscriptionRef`, and constant adapters emit their one probe.
+  `WatchVaultSyncStatus` combines the View watch and `changes` with
+  `Stream.zipLatest`. Each availability frame passes the same
+  `authorizeVaultSyncDelivery` gate as the View frames: live grants, the
+  revocation barrier, and the typed `ScopeDenied` ending. Identical consecutive
+  statuses are dropped with `Stream.changesWith`. The server test runs a probe
+  with no View change and sees a new frame carrying `connected: false` and
+  `auth-failed`. A subscriber revoked before the probe gets no availability
+  frame, and its stream ends denied. The Box test shows a refresh that
+  reconnects reaching a subscriber, and the desktop atom test shows the
+  disconnect state clearing from a pushed frame with no status re-read.
 - **Hygiene.** Template strings replace concatenation in the four View
   validators (a new biome rule after the main merge). The request events carry
   the same `schemaVersion` fallow-ignore as their siblings. `VaultSyncSession`'s

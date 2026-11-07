@@ -152,8 +152,9 @@ export const makeVaultSyncFileStore = Effect.fn($I`makeVaultSyncFileStore`)(func
           // `readLink` succeeds exactly when the entry is a symlink.
           const symlinkTarget = yield* Effect.result(fs.readLink(childAbsolutePath));
           if (Result.isSuccess(symlinkTarget)) {
+            // The entry's path is never logged: vault paths name clients and matters.
             yield* Effect.logDebug("Documents vault scan skipped a symlink").pipe(
-              Effect.annotateLogs({ path: childAbsolutePath })
+              Effect.annotateLogs({ "documents.vault_sync.depth": childSegments.length })
             );
             return emptyObservation;
           }

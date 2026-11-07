@@ -1378,6 +1378,7 @@
         "allow": [
           "@beep/alchemy-postgres",
           "@beep/identity",
+          "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
@@ -1386,6 +1387,7 @@
         "allowTypeOnly": [
           "@beep/alchemy-postgres",
           "@beep/identity",
+          "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
@@ -1895,7 +1897,6 @@
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/postgres",
-          "@beep/shared-tables",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
@@ -1912,7 +1913,6 @@
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/postgres",
-          "@beep/shared-tables",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",

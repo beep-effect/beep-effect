@@ -9,10 +9,13 @@ import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Formatter from "effect/Formatter";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as References from "effect/References";
 import * as Str from "effect/String";
 
 type FileSystemFault = (fs: FileSystem.FileSystem) => Partial<FileSystem.FileSystem>;
@@ -275,7 +278,7 @@ describe("Vault filesystem boundary empty observations", () => {
   });
   it.layer(Layer.fresh(testLayer(() => ({}))), { timeout: "10 seconds" })((it) => {
     it.effect(
-      "skips symbolic links without following them",
+      "skips symbolic links without following them and logs them by depth only",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -284,10 +287,27 @@ describe("Vault filesystem boundary empty observations", () => {
         const outside = yield* fs.makeTempDirectoryScoped({ prefix: "beep-vault-outside-" });
         yield* fs.writeFileString(path.join(outside, "secret.txt"), "outside the vault");
         yield* fs.symlink(path.join(outside, "secret.txt"), path.join(root, "link.txt"));
+        yield* fs.symlink(path.join(root, "missing.txt"), path.join(root, "dangling.txt"));
         yield* fs.writeFileString(path.join(root, "kept.txt"), "inside");
         const canonicalRoot = yield* fs.realPath(root);
-        const observation = yield* files.scan(canonicalRoot);
+        const logged: Array<{ readonly message: unknown; readonly annotations: unknown }> = [];
+        const recorder = Logger.make(({ fiber, message }) => {
+          logged.push({ message, annotations: fiber.getRef(References.CurrentLogAnnotations) });
+        });
+        const observation = yield* files
+          .scan(canonicalRoot)
+          .pipe(Effect.withLogger(recorder), Effect.provideService(References.MinimumLogLevel, "Debug"));
         expect(A.map(observation.files, (file) => file.relPath)).toEqual(["kept.txt"]);
+        // Each skipped link is logged by depth only: no vault path, no entry name.
+        const skipped = A.filter(logged, ({ message }) => Str.includes("skipped a symlink")(Formatter.format(message)));
+        expect(A.map(skipped, ({ annotations }) => annotations)).toEqual([
+          { "documents.vault_sync.depth": 1 },
+          { "documents.vault_sync.depth": 1 },
+        ]);
+        const everything = Formatter.format(logged);
+        expect(everything).not.toContain(root);
+        expect(everything).not.toContain("link.txt");
+        expect(everything).not.toContain("dangling.txt");
       })
     );
     it.effect(
