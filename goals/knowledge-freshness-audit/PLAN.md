@@ -150,6 +150,22 @@ Lane `codex/knowledge-audit-p4-linked`
 
 Reverse: Revert this checkpoint and its scoped documentation repairs; retain original private evidence and historical receipts.
 
+### Close two omissions in already reviewed example families, 2026-11-06
+
+Parent review revalidated original T9 t9-dd93a013201032ab and T10 t10-c6ad1b6701cf3daf against frozen blob and exact line hashes. The skill TopicName copy was already repaired, but the standards duplicate still filtered empty segments before validation. The extracted standards example rejects :a after the repair and passes all six boundary cases; before it failed on accepting :a. Remove the unused filtering helper and use Str.split directly. The Atom runtime comment named a nonexistent defaultMemoMap export; installed source defines runtime = context() and a registry-scoped memo-map atom. Correct only the comment, with dependency bytes archived separately from Git provenance. Fresh paginated16-open-PR target census found no overlap. No ontology work, package source, external service, spending or broad runtime certification; PM and ADHD remain separate.
+
+Lane `codex/knowledge-audit-p4-enforcement-context`
+
+Reverse: Restore only the two example edits; retain the original parent evidence and six-case counterfactual.
+
+### Distinguish implemented architecture checks from planned enforcement, 2026-11-06
+
+Parent review of original T5 t5-f8e5feb0d8e0f72d and T3 kfa-t3-003 at source 6dbf4e543148c1ac30838fa9a72d7a2cc6047d62 validated two description corrections. Source hashes still match at fresh base ff3970ddf0c0848d65830d60af080ad903ed4b6a. Promotion-record lint is planned; required manual PR review and record schema remain binding. The effect-drizzle member and ecosystem-polarity command exist; member-local boundary tests and configured CI proof remain required, without inferring their execution from a command registration. Fresh file census found no overlap in 14 open PRs. Use a direct Git worktree in canonical sibling placement to avoid the optional worktree helper's local-only file copying under this task's no-credential-copy constraint. No root switch, source package change, cloud work or spending. PM, ADHD, other owners and broader P4 obligations remain separate.
+
+Lane `codex/knowledge-audit-p4-enforcement-context`
+
+Reverse: Restore the two original enforcement paragraphs and remove this checkpoint; preserve the binding promotion schema, dependency rules and private parent review.
+
 ### Begin final-tree reconciliation with explicit unresolved coverage, 2026-11-06
 
 P4 is in progress under the operator instruction of 2026-11-06. Reconcile frozen inventory e462bc12 against source snapshot 914ede95a490cf26e1fe435762ec191fd2e69da1. Keep raw per-entry ledgers and full reports in the private archive; publish compact accounting and review limits. Inventory, entry linkage, whole-body reading, claim acceptance and delivery readiness are separate obligations. PM and ADHD remain separate holds; no spending or cloud work is admitted.
@@ -174,6 +190,14 @@ Lane `codex/knowledge-audit-p4-routing`
 
 Reverse: Revert only the current-use qualifications and this checkpoint; retain the private before/after receipts and original dated models.
 
+### Complete the named Markdown heading domain repair, 2026-11-06
+
+Parent review of T11 C2 at immutable source 3f3b06289764853e3b6f5982e4b80247ac5aabf7 distinguishes the already repaired opaque brands from the remaining named HeadingLevel domain. Use the existing LiteralKit import as prescribed by root and schema-first guidance. Preserve the six numeric wire values and annotation. The new keyed-helper test fails before this expression change while the existing 24 conformance tests pass; all 25 pass after it. Package verification and final publication proof are still pending. No duplicate brand edit, new helper, private-package changeset, cloud work or spending. PM, ADHD, existing owner repairs and broader P4 coverage remain separate.
+
+Lane `codex/knowledge-audit-p4-heading-domain`
+
+Reverse: Restore HeadingLevel to S.Literals and remove the added keyed-helper regression test; preserve all existing conformance tests and private review evidence.
+
 ### Qualify dated memory assessments without rewriting their history, 2026-11-06
 
 Review T8 K1/K2/K4 at immutable source 34d6cd130971c7d8434a188fcb5532a4a6c709c2. Reject an automatic contradiction for the explicitly dated July 8 Graphiti condition; preserve it as history. Add current reading context to the landscape assessment and decision log, linking later coverage, dated retirement/archive decisions and the governing root Agent Memory policy. Original assessment and decision bytes remain unchanged. No vendor/scientific/deployment qualification, service configuration, memory revival, ontology operation or paid/cloud work. P4 remains in progress, with PM/ADHD and existing source-owner/delivery-proof holds separate.
@@ -181,5 +205,35 @@ Review T8 K1/K2/K4 at immutable source 34d6cd130971c7d8434a188fcb5532a4a6c709c2.
 Lane `codex/knowledge-audit-p4-memory-context`
 
 Reverse: Remove the two dated reading notes and this checkpoint; preserve original assessments, decisions and private review evidence.
+
+### Make existing query example prefix context explicit, 2026-11-06
+
+Original T14 t14-6805ebba1de26ec6 and T21 t21-f48d16497c14c00c frozen file and line hashes matched. Parent review qualifies the omitted-prefix finding: host injection can supply context, so no universal runtime failure is proven. Existing copyable examples still omit mappings under their own include-prefix rule. Add explicit rdf, default and federation mappings without changing query bodies; explain dataset placeholder and shared prologue reuse. W3C SPARQL1.1 section4.1.1.1 is the primary syntax reference. Static source review only: no engine, endpoint, ontology operation or vendor behavior certification. Fresh16-PR target census found no overlap. PM, ADHD, private records and broader P4 remain separate; no spending.
+
+Lane `codex/knowledge-audit-p4-enforcement-context`
+
+Reverse: Remove only the added prefix mappings and prologue explanation; preserve query bodies and the private parent review.
+
+### Require Examples on runtime namespaces, 2026-11-06
+
+A current-source parent read of the JSDoc law found an inventory classification gap: every namespace was treated as pure type-level, including namespaces exporting runtime values. The real inventory scanner marks the runtime namespace resolved without an Example, while an equivalent direct value is flagged. Require an Example when the namespace symbol is a TypeScript value module; keep genuinely type-only namespaces optional. The regression covers runtime and type-only namespaces in ordinary and ambient declarations, fails against the old source, and passes with the repair. This is a bounded P4 repair, not complete export-kind coverage or audit closeout. Preserve PM and ADHD holds, original evidence and other owners; no paid or cloud work.
+
+Reverse: Revert the namespace classification and its focused regression; retained audit evidence remains historical.
+
+### Protect both documented TopicName examples with source-bound tests, 2026-11-06
+
+Reuse the existing collectMarkdownFences API and scoped platform test pattern to execute the actual TopicName fence in each of the two public guidance files. Three valid forms and five empty-segment forms are asserted per copy; no second TopicName implementation or parser is introduced. A fresh main-only control fails the standards copy on true versus false while its already-repaired skill copy passes; the repaired branch passes both tests. Package lint/typecheck and the real file detector pass. This adds standing protection for the demonstrated duplicate-example omission; five other guidance facets still lack established dedicated protection in the bounded review, and broader acceptance remains unproven. The next PR2817 push includes a repo-cli test and must carry ready-for-heavy admission plus current code proof; the old docs-only coverage skip belongs only to its earlier published head. PM, ADHD, private evidence and source-owner holds remain separate. No paid work, lifecycle flip or S11.
+
+Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
+
+Reverse: Remove only the new source-bound test and this checkpoint; preserve the repaired examples and private counterfactual evidence.
+
+### Publish two bounded P4 repairs without adopting goal closeout, 2026-11-06
+
+Documentation repair PR #2817 and heading-domain PR #2818 are published as drafts. They cover six bounded guidance corrections and the named HeadingLevel helper omission, with prior repairs and false positives kept distinct. The 80-path refresh is a delta/context review, not whole-body or exhaustive extraction. The derived private navigation index links 68 of 70 flagged rows to parent review; the other two remain privacy/ADHD holds, not accepted or repaired claims. PM original-report recovery is a separate unvalidated hold. P4 remains in progress and P5 remains pending; this is not proposed closeout or a lifecycle change. Main repair #2811 was integrated once. Fresh documentation final-check at f705b4cc9add fails only the inherited live fleet-reference gate; existing owner repair #2815 carries an explicit sole-merger hold. The audit does not copy that fix, lower the gate or use S11. Heading local gates excluding the known inherited policy red are deliberately incomplete and cannot admit ready. Each PR still needs current proof, readable threads and the full review window; same-packet finals merge one at a time. Records remain in the private archive; no paid work or cloud resumption.
+
+Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
+
+Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
 
 <!-- beep:decisions:end -->

@@ -35861,6 +35861,42 @@
             "functions": 2
           }
         },
+        "packages/tooling/tool/cli/src/commands/Goals/Archive.service.ts": {
+          "lines": 96.58,
+          "statements": 95.45,
+          "branches": 92.3,
+          "functions": 90,
+          "uncovered": {
+            "lines": 4,
+            "statements": 6,
+            "branches": 3,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/Archive.ts": {
+          "lines": 96.8,
+          "statements": 95.95,
+          "branches": 91.66,
+          "functions": 87.09,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 2,
+            "functions": 4
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/ArchiveExecution.service.ts": {
+          "lines": 93.33,
+          "statements": 91.14,
+          "branches": 90.9,
+          "functions": 76.05,
+          "uncovered": {
+            "lines": 12,
+            "statements": 17,
+            "branches": 2,
+            "functions": 17
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -36003,6 +36039,30 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/Harvest.service.ts": {
+          "lines": 93.24,
+          "statements": 92.47,
+          "branches": 86.84,
+          "functions": 84.32,
+          "uncovered": {
+            "lines": 20,
+            "statements": 24,
+            "branches": 5,
+            "functions": 21
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/Harvest.ts": {
+          "lines": 97.43,
+          "statements": 95.23,
+          "branches": 87.5,
+          "functions": 84.61,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts": {

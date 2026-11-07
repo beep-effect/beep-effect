@@ -26,9 +26,9 @@
 #     covers;
 #   - postcss-selector-parser 7.1.6, because @tailwindcss/typography pins 6.0.10,
 #     covered by GHSA-rj75-hqrm-r3gf (fixed in 7.1.6).
-# The residue hold register records all three as retained overrides. The lock
-# resolves http-cache-semantics 4.3.0, outside GHSA-ch52-4w7c-c8xp's range; the
-# register records why its max-stale path is unchanged and not exploitable here.
+# The residue hold register records all three as retained overrides.
+# http-cache-semantics left the lock with the 2026-11-06 dependency refresh, so
+# its 4.3.0 floor override and hold were retired.
 
 # No patched npm releases exist as of the 2026-10-17 recheck (npm latest braces
 # 3.0.3 and sprintf-js 1.1.3 are both inside the advisory ranges). These exact
