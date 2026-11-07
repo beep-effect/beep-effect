@@ -3,8 +3,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
+import { DmsEventType } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { BoxMirror, VaultSyncPass } from "@beep/documents-use-cases/aggregates/VaultSync";
+import { $DocumentsServerId } from "@beep/identity/packages";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
@@ -21,16 +24,18 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Activity from "effect/workflow/Activity";
 import { VaultSyncRoot } from "./BoxMirror.ts";
+import { EchoClass, echoClassForEvent, echoClassForOperation } from "./VaultPush.model.ts";
 import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
 import type * as WorkflowEngine from "effect/workflow/WorkflowEngine";
 
+const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncPass.saga-handlers");
 const stable = (value: string) => bytesToHex(sha256(new TextEncoder().encode(value)));
 const Echo = S.Struct({
   remoteId: V.RemoteItemId,
-  kind: S.String,
+  kind: EchoClass,
   name: S.String,
   parentRemoteId: S.NullOr(V.RemoteItemId),
-});
+}).pipe($I.annoteSchema("PassEcho", { description: "One consumable same-pass remote echo token." }));
 /**
  * Fault-injection boundary used by restart tests; production leaves it idle.
  *
@@ -42,10 +47,9 @@ const Echo = S.Struct({
  * @category testing
  * @since 0.0.0
  */
-export const VaultSyncCheckpoint = Context.Reference<(phase: string) => Effect.Effect<void>>(
-  "documents/VaultSyncCheckpoint",
-  { defaultValue: () => () => Effect.void }
-);
+export const VaultSyncCheckpoint = Context.Reference<(phase: string) => Effect.Effect<void>>($I`VaultSyncCheckpoint`, {
+  defaultValue: () => () => Effect.void,
+});
 /**
  * Hosts pass activities on the ambient workflow engine supplied by AlchemyPostgres.
  *
@@ -187,9 +191,13 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
             A.fromIterable(destination.paths),
             Order.mapInput(Order.String, ([p]: readonly [V.VaultRelPath, V.ItemId]) => p)
           );
-          for (const [, itemId] of ordered) {
-            const item = yield* items.state(itemId);
-            if (item !== null) for (const [, operationId] of item.slots) planned.push({ itemId, operationId });
+          for (const kind of [V.SyncItemKind.Enum.folder, V.SyncItemKind.Enum.file]) {
+            for (const [, itemId] of ordered) {
+              const item = yield* items.state(itemId);
+              if (item !== null && item.observation.kind === kind) {
+                for (const [, operationId] of item.slots) planned.push({ itemId, operationId });
+              }
+            }
           }
           return planned;
         }),
@@ -319,14 +327,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
             }
             return {
               ...receipt,
-              kind:
-                input.type === "ensureFolder" || input.type === "uploadFile"
-                  ? "created"
-                  : input.type === "uploadFileVersion"
-                    ? "edited"
-                    : input.type === "moveItem"
-                      ? "moved"
-                      : "renamed",
+              kind: echoClassForOperation(input.type === "ensureFolder" ? "createFolder" : input.type),
             };
           }).pipe(Effect.orDie),
         });
@@ -366,14 +367,25 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
             const page = result.success;
             for (const event of page.events) {
               if (event.remoteId === null) continue;
-              const token = A.findFirstIndex(
-                tokens,
-                (echo) => echo.remoteId === event.remoteId && echo.kind === event.kind
+              const eventClass = S.is(DmsEventType)(event.kind) ? echoClassForEvent(event.kind) : O.none();
+              const token = O.flatMap(eventClass, (kind) =>
+                A.findFirstIndex(tokens, (echo) => echo.remoteId === event.remoteId && echo.kind === kind)
               );
               if (O.isSome(token)) {
                 tokens = A.remove(tokens, token.value);
                 continue;
               }
+              if (
+                event.kind !== "edited" &&
+                A.some(
+                  echoes,
+                  (echo) =>
+                    echo.remoteId === event.remoteId &&
+                    echo.name === event.name &&
+                    echo.parentRemoteId === (event.parentRemoteId === destination.rootId ? null : event.parentRemoteId)
+                )
+              )
+                continue;
               let tracked: V.ItemId | null = null;
               let parentTracked = event.parentRemoteId === destination.rootId;
               for (const [, id] of destination.paths) {

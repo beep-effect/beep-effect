@@ -10,6 +10,8 @@ import {
   LegacySyncOperation,
 } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { $DocumentsServerId } from "@beep/identity/packages";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -144,6 +146,15 @@ export const LegacySyncProjections = Layer.mergeAll(
             local_generation: o.generation,
             local_rel_path: o.path,
             remote_id: state.remoteId,
+            ...(event._tag === "ItemKindReplaced"
+              ? {
+                  remote_name: null,
+                  remote_parent_id: null,
+                  last_pushed_digest: null,
+                  last_pushed_generation: null,
+                  last_error: null,
+                }
+              : {}),
             ...(pushed
               ? {
                   remote_name: event.remoteName ?? path.basename(o.path),
@@ -151,7 +162,9 @@ export const LegacySyncProjections = Layer.mergeAll(
                 }
               : {}),
             sync_state: state.status === "synced" ? "current" : state.status === "drifted" ? "conflict" : state.status,
-            ...(pushed ? { last_pushed_digest: o.digest, last_pushed_generation: event.generation } : {}),
+            ...(pushed
+              ? { last_pushed_digest: o.digest, last_pushed_generation: event.generation, last_error: null }
+              : {}),
           });
         }
       });
@@ -194,7 +207,9 @@ export const LegacySyncProjections = Layer.mergeAll(
           yield* write("conflict", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
             sync_item_id: item,
             remote_event_id: record.remoteEventId,
-            remote_payload: yield* S.encodeEffect(S.fromJsonString(S.String))(record.evidence).pipe(Effect.orDie),
+            remote_payload: yield* S.encodeEffect(S.fromJsonString(S.Struct({ evidence: S.String })))({
+              evidence: record.evidence,
+            }).pipe(Effect.orDie),
             remote_id: record.remoteId ?? null,
             local_rel_path: record.path ?? null,
             conflict_kind: record.kind ?? "remoteUnknown",
@@ -210,14 +225,21 @@ export const LegacySyncProjections = Layer.mergeAll(
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
           if (state === null || state._tag !== "Registered" || state.cursor === null) continue;
-          yield* write("cursor", source.id, envelope.stream, envelope.seq, DateTime.toEpochMillis(envelope.at), {
-            stream_position: state.cursor,
-            ...(event._tag === "CursorAdvanced" && event.lastEventId !== undefined
-              ? { last_event_id: event.lastEventId }
-              : {}),
-            last_error: state.cursorError,
-            status: state.cursorError === null ? "active" : "error",
-          });
+          yield* write(
+            "cursor",
+            `documents_sync_cursor_a${bytesToHex(sha256(new TextEncoder().encode(source.id)))}`,
+            envelope.stream,
+            envelope.seq,
+            DateTime.toEpochMillis(envelope.at),
+            {
+              stream_position: state.cursor,
+              ...(event._tag === "CursorAdvanced" && event.lastEventId !== undefined
+                ? { last_event_id: event.lastEventId }
+                : {}),
+              last_error: state.cursorError,
+              status: state.cursorError === null ? "active" : "error",
+            }
+          );
         }
       });
     })

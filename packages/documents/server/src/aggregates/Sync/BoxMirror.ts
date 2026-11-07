@@ -22,8 +22,12 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/BoxMirror");
-const Receipt = S.Struct({ remoteId: V.RemoteItemId, name: S.String, parentRemoteId: S.NullOr(V.RemoteItemId) });
-const Stored = S.Array(S.Struct({ fingerprint: S.String, result: S.NullOr(S.String) }));
+const Receipt = S.Struct({ remoteId: V.RemoteItemId, name: S.String, parentRemoteId: S.NullOr(V.RemoteItemId) }).pipe(
+  $I.annoteSchema("BoxMirrorReceipt", { description: "Durable remote acknowledgement without local bytes." })
+);
+const Stored = S.Array(S.Struct({ fingerprint: S.String, result: S.NullOr(S.String) })).pipe(
+  $I.annoteSchema("StoredBoxReceipt", { description: "Persisted intent fingerprint and optional acknowledged result." })
+);
 const unavailable = (operation: string) =>
   BoxMirrorUnavailable.make({
     retryable: false,

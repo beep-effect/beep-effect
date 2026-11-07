@@ -31,6 +31,19 @@ const leased = V.SyncOperation.definition.evolve.OperationLeased(
 );
 
 describe("vault sync pure transitions", () => {
+  it("cursor advances retain the classified page event identity", () => {
+    const registered = V.SyncDestination.definition.evolve.DestinationRegistered(
+      V.SyncDestination.definition.initial,
+      V.DestinationRegistered.make({ orgId: 1, workspaceId: 1, name: "synthetic" }),
+      { ...envelope, id: destination }
+    );
+    const events = V.SyncDestination.definition.decide.RecordDestinationPoll(
+      registered,
+      V.RecordDestinationPoll.make({ position: "p2", error: null, lastEventId: "event-2" }),
+      { ...ctx, id: destination }
+    );
+    expect(events).toEqual([V.CursorAdvanced.make({ position: "p2", lastEventId: "event-2" })]);
+  });
   it("queued events evolve to a stable input and zero attempts", () => {
     expect(queued).toMatchObject({ input, attempts: 0, leaseEpoch: 0, status: "queued" });
   });

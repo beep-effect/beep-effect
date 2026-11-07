@@ -177,12 +177,13 @@ describe("legacy sync SQL projections", () => {
           },
         ]);
         const conflictRows =
-          yield* sql`SELECT public_id, sync_item_id, conflict_kind, remote_id, resolution_status FROM documents_sync_conflict`;
+          yield* sql`SELECT public_id, sync_item_id, conflict_kind, remote_id, remote_payload, resolution_status FROM documents_sync_conflict`;
         expect(conflictRows).toEqual([
           {
             public_id: conflictId,
             sync_item_id: 1,
             conflict_kind: "remoteEdit",
+            remote_payload: { evidence: "synthetic remote edit" },
             remote_id: remoteId,
             resolution_status: "open",
           },
@@ -195,6 +196,94 @@ describe("legacy sync SQL projections", () => {
           Effect.timeout("10 seconds")
         );
         expect(cursorRows).toEqual([{ stream_position: "opaque-2", last_event_id: "remote-event", status: "active" }]);
+        const reviewedReceipt = yield* conflicts.send(
+          conflictId,
+          V.ConfirmConflictReview.make({
+            remoteEventId: "remote-event",
+            workspaceId: 4,
+            destinationId,
+          })
+        );
+        yield* LegacySyncConflict.caughtUp(reviewedReceipt).pipe(Effect.provide(runtime));
+        const reviewedRows = yield* sql`SELECT resolution_status, sync_item_id FROM documents_sync_conflict`;
+        expect(reviewedRows).toEqual([{ resolution_status: "reviewed", sync_item_id: 1 }]);
+        yield* destinations.send(destinationId, V.RecordDestinationPoll.make({ position: null, error: "offline" }));
+        const cursorError = yield* sql`SELECT stream_position, status, last_error FROM documents_sync_cursor`.pipe(
+          Effect.repeat({ until: (rows) => rows[0]?.status === "error", schedule: Schedule.spaced("10 millis") }),
+          Effect.timeout("10 seconds")
+        );
+        expect(cursorError).toEqual([{ stream_position: "opaque-2", status: "error", last_error: "offline" }]);
+        const replacementId = V.OperationId.make("documents_sync_operation_areplacement");
+        yield* items.send(
+          itemId,
+          V.ObserveItem.make({
+            observation: V.ItemObservation.make({
+              ...observation,
+              kind: "folder",
+              digest: null,
+              generation: 2,
+              operationId: replacementId,
+              type: "ensureFolder",
+            }),
+          })
+        );
+        const replacementRows = yield* sql`SELECT item_kind, remote_id, remote_name, remote_parent_id,
+          last_pushed_digest, last_pushed_generation FROM documents_sync_item`.pipe(
+          Effect.repeat({ until: (rows) => rows[0]?.item_kind === "folder", schedule: Schedule.spaced("10 millis") }),
+          Effect.timeout("10 seconds")
+        );
+        expect(replacementRows).toEqual([
+          {
+            item_kind: "folder",
+            remote_id: null,
+            remote_name: null,
+            remote_parent_id: null,
+            last_pushed_digest: null,
+            last_pushed_generation: null,
+          },
+        ]);
+        yield* operations.send(
+          replacementId,
+          V.QueueOperation.make({
+            input: V.OperationInput.make({
+              ...observation,
+              itemId,
+              generation: 2,
+              type: "ensureFolder",
+              digest: null,
+              idempotencyKey: replacementId,
+            }),
+          })
+        );
+        yield* operations.send(
+          replacementId,
+          V.LeaseOperation.make({
+            holder: "scenario",
+            leaseMillis: 30000,
+            itemRemoteId: null,
+            parentRemoteId: null,
+          })
+        );
+        const failed = yield* operations.send(
+          replacementId,
+          V.FailOperation.make({
+            holder: "scenario",
+            attempt: 1,
+            retryable: false,
+            maxAttempts: 3,
+            backoffMillis: 1000,
+            reason: "synthetic-failure",
+          })
+        );
+        yield* LegacySyncOperation.caughtUp(failed).pipe(Effect.provide(runtime));
+        const failedRows = yield* sql`SELECT status, last_error, operation_type FROM documents_sync_operation
+          WHERE public_id = ${replacementId}`.pipe(
+          Effect.repeat({ until: (rows) => rows[0]?.status === "failed", schedule: Schedule.spaced("10 millis") }),
+          Effect.timeout("10 seconds")
+        );
+        expect(failedRows).toEqual([
+          { status: "failed", last_error: "synthetic-failure", operation_type: "createFolder" },
+        ]);
         const before = yield* sql`SELECT * FROM documents_sync_item`;
         // The command receipt is replayed while the projection row remains byte-for-byte stable.
         yield* operations
