@@ -18,6 +18,8 @@ import * as Census from "@beep/repo-cli/commands/Cache/Cache.census";
 import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import {
   collectCacheGitExclusions,
+  collectCacheTrackedSourceIndex,
+  collectCacheTrackedTestMembership,
   CacheRuntimeFileGuards as FsGuards,
   CacheRuntimeProfile as Profile,
   CacheRuntimeProcess as StepExec,
@@ -29,6 +31,7 @@ import { Sha256Hex } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -251,7 +254,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
 );
 
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
-  "Git exclusion runtime identity",
+  "Git discovery runtime identity",
   (it) => {
     it.effect("binds content across clone and linked-worktree paths and rejects unsafe files", () =>
       Effect.gen(function* () {
@@ -272,7 +275,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             timeout: Duration.seconds(10),
             bound: StepExec.OutputBound.make({ maxChars: 4096, truncatedNotice: "[git fixture overflow]" }),
           });
-          expect(result.exitCode).toBe(0);
+          expect(result.exitCode, `fixture git ${A.join(args, " ")}`).toBe(0);
           expect(result.truncated).toBe(false);
         });
         yield* git(["init", "--template=", "."]);
@@ -287,6 +290,69 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           "fixture",
         ]);
         yield* git(["worktree", "add", "--detach", worktree]);
+        const emptyMembership = yield* collectCacheTrackedTestMembership(clone);
+        const linkedEmptyMembership = yield* collectCacheTrackedTestMembership(worktree);
+        expect(linkedEmptyMembership).toBe(emptyMembership);
+        const candidateName = "candidate with space\nand newline.test.ts";
+        yield* fs.writeFileString(path.join(clone, candidateName), "export const sample = true;\n");
+        const untrackedMembership = yield* collectCacheTrackedTestMembership(clone);
+        expect(untrackedMembership).toBe(emptyMembership);
+        yield* git(["add", "--", candidateName]);
+        const trackedMembership = yield* collectCacheTrackedTestMembership(clone);
+        expect(trackedMembership).not.toBe(emptyMembership);
+        const independentIndex = yield* collectCacheTrackedTestMembership(worktree);
+        expect(independentIndex).toBe(emptyMembership);
+        yield* fs.writeFileString(path.join(worktree, candidateName), "export const sample = true;\n");
+        yield* git(["-C", worktree, "add", "--", candidateName]);
+        const linkedTrackedMembership = yield* collectCacheTrackedTestMembership(worktree);
+        expect(linkedTrackedMembership).toBe(trackedMembership);
+        const sourceName = "source with space\nand newline.ts";
+        yield* fs.writeFileString(path.join(clone, sourceName), "export const source = true;\n");
+        const untrackedSource = yield* collectCacheTrackedSourceIndex(clone);
+        yield* git(["add", "--", sourceName]);
+        const trackedSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(trackedSource).not.toBe(untrackedSource);
+        yield* fs.writeFileString(path.join(worktree, sourceName), "export const source = true;\n");
+        yield* git(["-C", worktree, "add", "--", sourceName]);
+        const linkedSource = yield* collectCacheTrackedSourceIndex(worktree);
+        expect(linkedSource).toBe(trackedSource);
+        yield* git(["update-index", "--chmod=+x", "--", sourceName]);
+        const executableSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(executableSource).not.toBe(trackedSource);
+        const sourceKey = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedSourceIndex: O.some(trackedSource) })
+        );
+        const modeKey = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedSourceIndex: O.some(executableSource) })
+        );
+        expect(modeKey).not.toBe(sourceKey);
+        yield* git(["update-index", "--chmod=-x", "--", sourceName]);
+        const restoredSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(restoredSource).toBe(trackedSource);
+        yield* fs.writeFileString(path.join(clone, sourceName), "export const source = false;\n");
+        const workingSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(workingSource).toBe(trackedSource);
+        yield* git(["add", "--", sourceName]);
+        const stagedSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(stagedSource).not.toBe(trackedSource);
+        yield* git(["rm", "--cached", "--", sourceName]);
+        const removedSource = yield* collectCacheTrackedSourceIndex(clone);
+        expect(removedSource).toBe(untrackedSource);
+        const trackedKey = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedTestMembership: O.some(trackedMembership) })
+        );
+        const emptyKey = yield* hashCacheToolchain(
+          CacheToolchainSnapshot.make({ ...runtimeSnapshot, trackedTestMembership: O.some(emptyMembership) })
+        );
+        expect(trackedKey).not.toBe(emptyKey);
+        yield* fs.writeFileString(path.join(clone, candidateName), "export const sample = false;\n");
+        const contentOnlyChange = yield* collectCacheTrackedTestMembership(clone);
+        expect(contentOnlyChange).toBe(trackedMembership);
+        // Align the newly staged fixture with its working-tree contents first.
+        yield* git(["add", "--", candidateName]);
+        yield* git(["rm", "--cached", "--", candidateName]);
+        const removedMembership = yield* collectCacheTrackedTestMembership(clone);
+        expect(removedMembership).toBe(emptyMembership);
         const absent = yield* collectCacheGitExclusions(clone);
         yield* fs.makeDirectory(path.join(clone, ".git/info"), { recursive: true });
         const exclude = path.join(clone, ".git/info/exclude");
@@ -366,6 +432,84 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
   });
+
+  it.effect("rejects failed, truncated or unterminated tracked-test discovery without retaining paths", () =>
+    Effect.gen(function* () {
+      for (const captured of [
+        StepExec.CapturedStep.make({ exitCode: 1, output: "private fixture failure", truncated: false }),
+        StepExec.CapturedStep.make({ exitCode: 0, output: "partial.test.ts\0", truncated: true }),
+        StepExec.CapturedStep.make({ exitCode: 0, output: "unterminated.test.ts", truncated: false }),
+      ]) {
+        vi.spyOn(StepExec, "runCaptured").mockImplementation(() => Effect.succeed(captured));
+        const failure = yield* collectCacheTrackedTestMembership("/fixture").pipe(Effect.flip);
+        assertInstanceOf(failure, CacheCommandError);
+        expect(failure.message).toBe("Tracked test discovery failed or exceeded its capture bound.");
+        expect(failure.cause).toBeUndefined();
+      }
+    })
+  );
+
+  it.effect("drops captured discovery paths from timeout diagnostics", () =>
+    Effect.gen(function* () {
+      vi.spyOn(StepExec, "runCaptured").mockImplementation(() =>
+        Effect.fail(
+          StepExec.CaptureCommandTimedOutError.make({
+            commandLine: "git ls-files",
+            message: "timed out after private-discovery-path.test.ts",
+          })
+        )
+      );
+      const failure = yield* collectCacheTrackedTestMembership("/fixture").pipe(Effect.flip);
+      assertInstanceOf(failure, CacheCommandError);
+      expect(failure.message).toBe("Tracked test discovery is unavailable.");
+      expect(failure.cause).toBeUndefined();
+    })
+  );
+
+  it.effect("refuses incomplete source-index captures without retaining their paths", () =>
+    Effect.gen(function* () {
+      for (const captured of [
+        StepExec.CapturedStep.make({ exitCode: 1, output: "private source failure", truncated: false }),
+        StepExec.CapturedStep.make({ exitCode: 0, output: "100644 abc 0\tprivate.ts\0", truncated: true }),
+        StepExec.CapturedStep.make({ exitCode: 0, output: "100644 abc 0\tprivate.ts", truncated: false }),
+      ]) {
+        vi.spyOn(StepExec, "runCaptured").mockImplementation(() => Effect.succeed(captured));
+        const failure = yield* collectCacheTrackedSourceIndex("/fixture").pipe(Effect.flip);
+        assertInstanceOf(failure, CacheCommandError);
+        expect(failure.message).toBe("Tracked source discovery failed or exceeded its capture bound.");
+        expect(failure.cause).toBeUndefined();
+      }
+    })
+  );
+
+  it.effect("scrubs source-index capture and drops timeout diagnostics", () =>
+    Effect.gen(function* () {
+      const capture = vi.spyOn(StepExec, "runCaptured").mockImplementation(() =>
+        Effect.fail(
+          StepExec.CaptureCommandTimedOutError.make({
+            commandLine: "git ls-files --stage -z",
+            message: "timed out after private-source-path.ts",
+          })
+        )
+      );
+      const failure = yield* collectCacheTrackedSourceIndex("/fixture").pipe(Effect.flip);
+      assertInstanceOf(failure, CacheCommandError);
+      expect(failure.message).toBe("Tracked source discovery is unavailable.");
+      expect(failure.cause).toBeUndefined();
+      expect(capture).toHaveBeenCalledWith(
+        expect.objectContaining({
+          args: ["ls-files", "--stage", "-z"],
+          extendEnv: false,
+          source: "stdout",
+          timeout: Duration.seconds(10),
+          bound: StepExec.OutputBound.make({
+            maxChars: 16777216,
+            truncatedNotice: "[tracked discovery exceeds limit]",
+          }),
+        })
+      );
+    })
+  );
 
   it.effect("forces a reader without its required key to run locally without forwarding a reference", () =>
     Effect.gen(function* () {

@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "entity-kit-membership-metadata-observation/v1",
+  "at": "2026-11-06T23:21:05.525937+00:00",
+  "sourceRevision": "88aafd537349b9e37464292220a4da20216ba191",
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "observations": [
+    {
+      "channel": "stable",
+      "candidateTracked": false,
+      "trackedTests": ["packages/sample/src/base.ts"],
+      "hash": "dac3b07af335d7f3",
+      "inputPaths": [
+        ".gitignore",
+        "package.json",
+        "packages/sample/src/base.ts",
+        "packages/sample/src/candidate.ts",
+        "turbo.json"
+      ],
+      "rawSha256": "a9282c5d6e064f5f58115629bf23f16759bc6d9e21a101ebc1e8678cf4bc124c",
+      "rawBytes": 2400
+    },
+    {
+      "channel": "canary",
+      "candidateTracked": false,
+      "trackedTests": ["packages/sample/src/base.ts"],
+      "hash": "dac3b07af335d7f3",
+      "inputPaths": [
+        ".gitignore",
+        "package.json",
+        "packages/sample/src/base.ts",
+        "packages/sample/src/candidate.ts",
+        "turbo.json"
+      ],
+      "rawSha256": "78c1bface8a1eeddaefa25700599a45236da249af00abdf757c27a9a0fca0625",
+      "rawBytes": 2409
+    },
+    {
+      "channel": "stable",
+      "candidateTracked": true,
+      "trackedTests": [
+        "packages/sample/src/base.ts",
+        "packages/sample/src/candidate.ts"
+      ],
+      "hash": "dac3b07af335d7f3",
+      "inputPaths": [
+        ".gitignore",
+        "package.json",
+        "packages/sample/src/base.ts",
+        "packages/sample/src/candidate.ts",
+        "turbo.json"
+      ],
+      "rawSha256": "4a9df0a80f17b4a3b1511208bfa23bfdf0b3545c08c85b8566a8154df4db2661",
+      "rawBytes": 2400
+    },
+    {
+      "channel": "canary",
+      "candidateTracked": true,
+      "trackedTests": [
+        "packages/sample/src/base.ts",
+        "packages/sample/src/candidate.ts"
+      ],
+      "hash": "dac3b07af335d7f3",
+      "inputPaths": [
+        ".gitignore",
+        "package.json",
+        "packages/sample/src/base.ts",
+        "packages/sample/src/candidate.ts",
+        "turbo.json"
+      ],
+      "rawSha256": "ae96f2834e376f7396f163a9ee4c2d2afe9f2bed2292c1d3feebf4c3f6fa19f6",
+      "rawBytes": 2409
+    }
+  ],
+  "hashChanged": {
+    "stable": false,
+    "canary": false
+  },
+  "taskBodiesExecuted": false,
+  "qualitySuitesRun": false,
+  "secretsLoaded": false,
+  "authority": "Isolated native metadata fixture only; does not execute the entity-kit scanner or its fingerprint prerequisite.",
+  "reviewedSourceRevision": "15072daef388195c9243161c6190d5d94635b684",
+  "sourceBindingsBefore": {
+    "turbo.json": "5e24847cd2aba98fc582322bb9c6fc3df1669c50ab7ce775fa9c31bd90e75072",
+    "packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.ts": "4f9e919e89e81161207bc2f172ada2499504f7999951f55bffe8edf7e39ab7e6",
+    "packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.model.ts": "2ecb8e3678f5638f5f627e1021141c0ca75154d7fe408149fa06dffe05b697f4",
+    "packages/tooling/tool/cli/src/commands/Laws/internal/TrackedTextFiles.ts": "36bf1224545e6b192924d278c882d3fd484e25e02190bed717da2aedd7d7e0ce"
+  },
+  "finding": "Tracked source selection changes without a native file-content task-key change in the isolated fixture. Actual law source selects tracked regular TS/TSX files under packages/apps and reads the baseline.",
+  "notEstablished": "No repository law body executed and no actual stale law verdict was observed.",
+  "requiredDiscoverySemantics": [
+    "tracked path membership",
+    "regular index file modes (100644/100755) versus nonregular modes",
+    "working-tree content and deletion behavior",
+    "law scope and exemptions",
+    "baseline contents"
+  ],
+  "existingTrackedTestCollectorSufficient": false,
+  "candidateChange": {
+    "task": "//#lint:entity-kit-freeze",
+    "cache": false
+  },
+  "remaining": "Bind and qualify the complete law discovery state before restoring reuse. The test-only membership collector cannot stand in for regular source-file discovery. The hold is unfinished adoption, not final exclusion.",
+  "preparedSourceBindings": {
+    "turbo.json": "04e8b00030e5a220d0b89051b3bae5a5621e2f9780533197fb738e0c67ee251d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "61ef182fc929f3a1b97a66bcb83c2110efeea98721f18b73b992d091ce70ee51",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "5c63da2d613525645b62edd679cd23ad10dc37b794c28bd5547d340154ebb531",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "84dce03fbd76a2b130d7aad47f5960437323eec3dd791c55d9ff62304049a500",
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "31e6a8069484d83cef1dac99261a97ae4bf6eb26ec8510945d1af6501263d4fa"
+  },
+  "preparedBinding": {
+    "schemaField": "CacheToolchainSnapshot.trackedSourceIndex",
+    "collection": "Canonical GitCommand.lsFiles stage argv through shared scrubbed bounded capture; complete NUL-framed listing digest retains paths, modes, staged object ids and merge stages.",
+    "maxCapturedCharacters": 16777216,
+    "timeoutSeconds": 10,
+    "nativeInput": "BEEP_CACHE_TOOLCHAIN_DIGEST",
+    "qualificationGranted": false,
+    "taskBodiesExecuted": false,
+    "testsAuthoredNotRun": [
+      "index-only source add/remove",
+      "spaces and newlines in source paths",
+      "matching clone and independent worktree inventories",
+      "index executable mode change and restoration",
+      "working-tree content change preserves index digest; staged change invalidates",
+      "index digest changes alter toolchain identity",
+      "failed/truncated/unterminated capture refuses without path-bearing causes",
+      "ten-second scrubbed stage capture and timeout redaction"
+    ],
+    "remaining": "Full native dependency-chain, actual scanner semantics, byte-path safety, portable runtime, isolation/concurrency and hosted qualification remain required before cache promotion."
+  },
+  "preparedSourceParent": "91848cad972714901cb1100e68f4c77b71b5df1a"
+}

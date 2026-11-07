@@ -5751,7 +5751,8 @@
       ]
     },
     "//#lint:opaque-roundtrips": {
-      "cache": true,
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],
       "dependsOn": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-opaque-roundtrips"
@@ -5837,7 +5838,8 @@
       ]
     },
     "//#lint:retired-effect-paths": {
-      "cache": true,
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
       "inputs": [
@@ -5857,7 +5859,8 @@
       ]
     },
     "//#lint:entity-kit-freeze": {
-      "cache": true,
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
       "inputs": [
@@ -5877,7 +5880,8 @@
       ]
     },
     "//#lint:retired-iri-authorities": {
-      "cache": true,
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
       "inputs": [
@@ -5897,7 +5901,8 @@
       ]
     },
     "//#lint:markdown-fences": {
-      "cache": true,
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
       "inputs": [
