@@ -12,7 +12,7 @@ import {
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
 import { expect, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Command from "effect/cli/Command";
@@ -369,6 +369,44 @@ layer(NodeTestLayer, { timeout: "30 seconds" })("GoalManifest capability fields"
         "P1:pending",
       ]);
       expect(report.packets[0]?.statusNote).toBeUndefined();
+    })
+  );
+
+  it.effect(
+    "11b. carries an archived packet's archive time into the report and the Archived column",
+    Effect.fn("GoalsManifestCapabilitiesTest.archivedColumn")(function* () {
+      const result = yield* withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeProjectFile("bun.lock", "");
+          yield* writeSyntheticPacket({
+            slug: "archived",
+            manifest: {
+              ...(manifestFixture("archived") as object),
+              archive: {
+                repo: "beep-effect/beep-effect-goals-archive",
+                path: "goals/archived",
+                commit: Str.repeat(40)("a"),
+                contentHash: Str.repeat(40)("b"),
+                archivedAt: "2026-11-06T12:00:00.000Z",
+                sourceCommit: Str.repeat(40)("c"),
+              },
+            },
+          });
+          yield* writeSyntheticPacket({ slug: "live", manifest: manifestFixture("live") });
+          return { report: yield* buildPortfolioIndexReport(), content: yield* buildPortfolioIndexContent() };
+        })
+      );
+
+      deepStrictEqual(
+        A.map(result.report.packets, (row) => [row.slug, O.fromUndefinedOr(row.archivedAt)] as const),
+        [
+          ["archived", O.some("2026-11-06T12:00:00.000Z")],
+          ["live", O.none()],
+        ]
+      );
+      expect(result.content).toContain("| Packet | Title | Phases | Updated | Closeout | Archived | Mission |");
+      expect(result.content).toContain("| 2026-11-06 | Ship archived. |");
+      expect(result.content).toContain("| — | — | Ship live. |");
     })
   );
 

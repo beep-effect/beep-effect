@@ -48,6 +48,7 @@ describe("reference manifest schemas", () => {
         "t3code",
         "opencode",
         "alchemy",
+        "goals-archive",
       ]);
       assertSome(
         A.findFirst(manifest.members, (member) => member.name === "opencode").pipe(O.map((member) => member.branch)),

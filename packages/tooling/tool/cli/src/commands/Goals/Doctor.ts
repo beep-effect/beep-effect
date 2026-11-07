@@ -40,6 +40,7 @@ import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
 import { runRepoCommandCaptureRaw } from "../../internal/repo-run/index.ts";
+import { ExplorationManifest, ExplorationStatus } from "../Explore/Atlas.ts";
 import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.ts";
 import {
   goalCloseoutView,
@@ -162,6 +163,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "decision-file-invalid",
   "decision-log-drift",
   "research-reports-drift",
+  "archive-decision-missing",
 ]).pipe(
   $I.annoteSchema("GoalDoctorFindingKind", {
     description:
@@ -828,6 +830,101 @@ const statusConsistencyFindings = (
   return findings;
 };
 
+const decodeExplorationManifestOption = S.decodeUnknownOption(ExplorationManifest);
+
+/**
+ * The `archive-decision-missing` advisory for one exploration: a `graduated`
+ * or `killed` exploration whose manifest has neither an `archive` block nor a
+ * `retentionReason`.
+ *
+ * **Details**
+ *
+ * The finding's slug is `explorations/<slug>` so it never collides with a goal
+ * slug in the doctor baseline. A manifest that does not decode yields nothing
+ * here; `beep explore --check` owns that finding.
+ *
+ * **Example** (Flag a graduated exploration)
+ *
+ * ```ts
+ * import { explorationArchiveFindings } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * const manifest =
+ *   '{"schemaVersion":"exploration-manifest/v1","exploration":{"slug":"demo","title":"Demo","status":"graduated","stage":"graduate","updated":"2026-11-06"}}'
+ * console.log(explorationArchiveFindings("demo", manifest).map((finding) => finding.kind)) // ["archive-decision-missing"]
+ * ```
+ *
+ * @param slug - Exploration directory name.
+ * @param manifestText - Raw `ops/manifest.json` text.
+ * @returns The advisory, or nothing.
+ * @category validation
+ * @since 0.0.0
+ */
+export const explorationArchiveFindings: {
+  (slug: string, manifestText: string): ReadonlyArray<GoalDoctorFinding>;
+  (manifestText: string): (slug: string) => ReadonlyArray<GoalDoctorFinding>;
+} = dual(
+  2,
+  (slug: string, manifestText: string): ReadonlyArray<GoalDoctorFinding> =>
+    pipe(
+      parseGoalManifestText(manifestText),
+      O.flatMap(decodeExplorationManifestOption),
+      O.map((manifest) => manifest.exploration),
+      O.filter(
+        (entry) =>
+          (ExplorationStatus.is.graduated(entry.status) || ExplorationStatus.is.killed(entry.status)) &&
+          entry.archive === undefined &&
+          entry.retentionReason === undefined
+      ),
+      O.map((entry) =>
+        finding(
+          `explorations/${slug}`,
+          "archive-decision-missing",
+          "advisory",
+          `${entry.status} exploration has neither an archive block nor a retentionReason; run bun run beep goals archive --kind explorations or declare retentionReason.`
+        )
+      ),
+      A.fromOption
+    )
+);
+
+const collectExplorationArchiveFindings = Effect.fn("Goals.collectExplorationArchiveFindings")(function* (
+  repoRoot = "."
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = path.join(repoRoot, "explorations");
+  const entries = yield* fs.readDirectory(root).pipe(Effect.orElseSucceed(A.empty<string>));
+  const slugs = A.sort(
+    A.filter(entries, (entry) => !Str.startsWith("_")(entry) && !Str.startsWith(".")(entry)),
+    Order.String
+  );
+  const findings = yield* Effect.forEach(slugs, (slug) =>
+    fs.readFileString(path.join(root, slug, "ops", "manifest.json")).pipe(
+      Effect.map((text) => explorationArchiveFindings(slug, text)),
+      Effect.orElseSucceed(A.empty<GoalDoctorFinding>)
+    )
+  );
+  return A.flatten(findings);
+});
+
+const isUndecidedTerminalGoal = (manifest: GoalManifest): boolean =>
+  (GoalStatus.is["completed-retained"](manifest.initiative.status) ||
+    GoalStatus.is.superseded(manifest.initiative.status)) &&
+  manifest.archive === undefined &&
+  manifest.retentionReason === undefined;
+
+const goalArchiveFindings = (slug: string, manifest: GoalManifest): ReadonlyArray<GoalDoctorFinding> =>
+  isUndecidedTerminalGoal(manifest)
+    ? [
+        finding(
+          slug,
+          "archive-decision-missing",
+          "advisory",
+          `${manifest.initiative.status} packet has neither an archive block nor a retentionReason; run bun run beep goals archive or declare retentionReason.`
+        ),
+      ]
+    : A.empty<GoalDoctorFinding>();
+
 const manifestAdvisoryFindings = (
   record: GoalPacketRecord,
   manifest: GoalManifest,
@@ -853,6 +950,8 @@ const manifestAdvisoryFindings = (
       )
     );
   }
+
+  findings = A.appendAll(findings, goalArchiveFindings(record.slug, manifest));
 
   if (GoalStatus.is.superseded(status) && !hasSupersessionPointer(raw)) {
     push(
@@ -1604,8 +1703,10 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   const capabilityFindings = capabilityPacketFindings(
     A.map(packets, (packet) => ({ slug: packet.record.slug, manifest: packet.manifest }))
   );
+  const explorationFindings = yield* collectExplorationArchiveFindings();
   const allFindings = [
     ...A.flatMap(packets, (packet) => packet.findings),
+    ...explorationFindings,
     ...capabilityFindings,
     ...A.filter(
       advisoriesFromGit.findings,
