@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-07T22:30:22.941Z",
+  "generatedAt": "2026-11-07T23:00:01.939Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 176,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
-    "publicModules": 3803,
-    "publicExports": 27152,
+    "publicModules": 3808,
+    "publicExports": 27170,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -361844,9 +361844,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 71,
-        "publicModuleCount": 71,
-        "publicExportCount": 837
+        "sourceFileCount": 76,
+        "publicModuleCount": 76,
+        "publicExportCount": 855
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -361971,6 +361971,50 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 20,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/claude-cowork-lifecycle.ts",
+          "line": 1,
+          "anchor": "packages-tooling-library-ai-metrics-src-claude-cowork-lifecycle-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/claude-cowork-plugin.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/claude-cowork-plugin.ts",
+          "line": 1,
+          "anchor": "packages-tooling-library-ai-metrics-src-claude-cowork-plugin-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -362387,7 +362431,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 65,
+          "exportCount": 67,
           "remediationStatus": "resolved"
         },
         {
@@ -362629,7 +362673,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -363272,6 +363316,50 @@
         },
         {
           "docKind": "jsdoc",
+          "filePath": "src/test/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/claude-cowork-lifecycle.ts",
+          "line": 1,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-claude-cowork-lifecycle-ts-1-module",
+          "currentTags": [
+            "@internal",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/test/cowork-ancestor.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/cowork-ancestor.ts",
+          "line": 1,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-cowork-ancestor-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "jsdoc",
           "filePath": "src/test/cursor-lifecycle.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/test/cursor-lifecycle.ts",
           "line": 1,
@@ -363298,6 +363386,28 @@
           "repoPath": "packages/tooling/library/ai-metrics/src/test/cursor-peer-diagnostic.ts",
           "line": 1,
           "anchor": "packages-tooling-library-ai-metrics-src-test-cursor-peer-diagnostic-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/test/lifecycle-ack-server.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/lifecycle-ack-server.ts",
+          "line": 1,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-lifecycle-ack-server-ts-1-module",
           "currentTags": [
             "@packageDocumentation",
             "@since"
@@ -365733,6 +365843,114 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export { CoworkLifecyclePolicy } from \"./internal/cowork-lifecycle-schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/claude-cowork-lifecycle.ts",
+          "line": 12,
+          "anchor": "packages-tooling-library-ai-metrics-src-claude-cowork-lifecycle-ts-12-export-coworklifecyclepolicy-from-internal-cowork-lifecycle-schemas-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { CursorLifecycleError as CoworkLifecycleError } from \"./internal/cursor-lifecycle-schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/claude-cowork-lifecycle.ts",
+          "line": 13,
+          "anchor": "packages-tooling-library-ai-metrics-src-claude-cowork-lifecycle-ts-13-export-cursorlifecycleerror-as-coworklifecycleerror-from-internal-cursor-lifecycle-schemas-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeCoworkLifecycleReceiver",
+          "exportKind": "const",
+          "filePath": "src/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/claude-cowork-lifecycle.ts",
+          "line": 40,
+          "anchor": "packages-tooling-library-ai-metrics-src-claude-cowork-lifecycle-ts-40-makecoworklifecyclereceiver",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CoworkLifecyclePluginRequest",
+          "exportKind": "class",
+          "filePath": "src/claude-cowork-plugin.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/claude-cowork-plugin.ts",
+          "line": 22,
+          "anchor": "packages-tooling-library-ai-metrics-src-claude-cowork-plugin-ts-22-coworklifecyclepluginrequest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderCoworkLifecyclePlugin",
+          "exportKind": "const",
+          "filePath": "src/claude-cowork-plugin.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/claude-cowork-plugin.ts",
+          "line": 44,
+          "anchor": "packages-tooling-library-ai-metrics-src-claude-cowork-plugin-ts-44-rendercoworklifecycleplugin",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "renderAiMetricsLocalPhoenixCompose",
           "exportKind": "const",
           "filePath": "src/compose.ts",
@@ -366143,8 +366361,8 @@
           "exportKind": "const",
           "filePath": "src/cursor-lifecycle.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/cursor-lifecycle.ts",
-          "line": 50,
-          "anchor": "packages-tooling-library-ai-metrics-src-cursor-lifecycle-ts-50-makecursorlifecyclereceiver",
+          "line": 49,
+          "anchor": "packages-tooling-library-ai-metrics-src-cursor-lifecycle-ts-49-makecursorlifecyclereceiver",
           "currentTags": [
             "@param",
             "@returns",
@@ -366167,8 +366385,8 @@
           "exportKind": "const",
           "filePath": "src/cursor-lifecycle.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/cursor-lifecycle.ts",
-          "line": 66,
-          "anchor": "packages-tooling-library-ai-metrics-src-cursor-lifecycle-ts-66-projectcursorlifecyclehookinput",
+          "line": 65,
+          "anchor": "packages-tooling-library-ai-metrics-src-cursor-lifecycle-ts-65-projectcursorlifecyclehookinput",
           "currentTags": [
             "@param",
             "@returns",
@@ -366191,8 +366409,8 @@
           "exportKind": "const",
           "filePath": "src/cursor-lifecycle.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/cursor-lifecycle.ts",
-          "line": 87,
-          "anchor": "packages-tooling-library-ai-metrics-src-cursor-lifecycle-ts-87-forwardcursorlifecyclehook",
+          "line": 86,
+          "anchor": "packages-tooling-library-ai-metrics-src-cursor-lifecycle-ts-86-forwardcursorlifecyclehook",
           "currentTags": [
             "@category",
             "@since"
@@ -370772,12 +370990,50 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./claude-cowork-lifecycle.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
+          "line": 43,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-43-export-from-claude-cowork-lifecycle-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./claude-cowork-plugin.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
+          "line": 44,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-44-export-from-claude-cowork-plugin-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./compose.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 51,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-51-export-from-compose-ts",
+          "line": 53,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-53-export-from-compose-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370798,8 +371054,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 60,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-60-export-from-config-snapshot-ts",
+          "line": 62,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-62-export-from-config-snapshot-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370820,8 +371076,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 62,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-62-export-from-cursor-lifecycle-ts",
+          "line": 64,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-64-export-from-cursor-lifecycle-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -370839,8 +371095,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 71,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-71-export-from-data-root-ts",
+          "line": 73,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-73-export-from-data-root-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370861,8 +371117,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 84,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-84-export-from-delivery-ledger-ts",
+          "line": 86,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-86-export-from-delivery-ledger-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370883,8 +371139,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 97,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-97-export-from-delivery-response-ts",
+          "line": 99,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-99-export-from-delivery-response-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370905,8 +371161,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 105,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-105-export-from-derived-storage-ts",
+          "line": 107,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-107-export-from-derived-storage-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370927,8 +371183,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 113,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-113-export-from-duckdb-ts",
+          "line": 115,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-115-export-from-duckdb-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370949,8 +371205,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 120,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-120-export-from-evidence-retention-ts",
+          "line": 122,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-122-export-from-evidence-retention-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370971,8 +371227,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 127,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-127-export-from-evidence-window-ts",
+          "line": 129,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-129-export-from-evidence-window-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -370993,8 +371249,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 135,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-135-export-from-file-inventory-ts",
+          "line": 137,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-137-export-from-file-inventory-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371015,8 +371271,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 144,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-144-export-from-flight-record-ts",
+          "line": 146,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-146-export-from-flight-record-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371037,8 +371293,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 153,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-153-export-from-forwarder-ts",
+          "line": 155,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-155-export-from-forwarder-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371059,8 +371315,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 161,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-161-export-from-git-root-evidence-ts",
+          "line": 163,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-163-export-from-git-root-evidence-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371081,8 +371337,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 171,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-171-export-from-harness-ledger-ts",
+          "line": 173,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-173-export-from-harness-ledger-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371103,8 +371359,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 180,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-180-export-from-hook-pulse-ts",
+          "line": 182,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-182-export-from-hook-pulse-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371125,8 +371381,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 189,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-189-export-from-hook-pulse-namespace-ts",
+          "line": 191,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-191-export-from-hook-pulse-namespace-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371147,8 +371403,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 198,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-198-export-from-identity-registry-ts",
+          "line": 200,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-200-export-from-identity-registry-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371169,8 +371425,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 207,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-207-export-from-ingest-ts",
+          "line": 209,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-209-export-from-ingest-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371191,8 +371447,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 216,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-216-export-from-ingest-manifest-ts",
+          "line": 218,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-218-export-from-ingest-manifest-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371213,8 +371469,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 225,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-225-export-from-install-ts",
+          "line": 227,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-227-export-from-install-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371235,8 +371491,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 234,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-234-export-from-mirror-ts",
+          "line": 236,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-236-export-from-mirror-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371257,8 +371513,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 243,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-243-export-from-models-ts",
+          "line": 245,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-245-export-from-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371279,8 +371535,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 250,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-250-export-from-native-delivery-ts",
+          "line": 252,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-252-export-from-native-delivery-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371301,8 +371557,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 257,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-257-export-from-native-export-ts",
+          "line": 259,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-259-export-from-native-export-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371323,8 +371579,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 270,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-270-export-from-native-http-ts",
+          "line": 272,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-272-export-from-native-http-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371345,8 +371601,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 280,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-280-export-from-native-intake-ts",
+          "line": 282,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-282-export-from-native-intake-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371367,8 +371623,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 282,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-282-export-from-native-lifecycle-ts",
+          "line": 284,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-284-export-from-native-lifecycle-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -371386,8 +371642,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 289,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-289-export-from-native-readback-ts",
+          "line": 291,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-291-export-from-native-readback-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371408,8 +371664,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 296,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-296-export-from-native-schedule-ts",
+          "line": 298,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-298-export-from-native-schedule-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371430,8 +371686,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 306,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-306-export-from-native-trace-ts",
+          "line": 308,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-308-export-from-native-trace-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371452,8 +371708,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 313,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-313-export-from-observation-availability-ts",
+          "line": 315,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-315-export-from-observation-availability-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371474,8 +371730,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 320,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-320-export-from-observation-backup-ts",
+          "line": 322,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-322-export-from-observation-backup-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371496,8 +371752,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 327,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-327-export-from-observation-control-ts",
+          "line": 329,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-329-export-from-observation-control-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371518,8 +371774,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 333,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-333-export-from-observation-coverage-ts",
+          "line": 335,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-335-export-from-observation-coverage-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371540,8 +371796,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 341,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-341-export-from-observation-inventory-ts",
+          "line": 343,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-343-export-from-observation-inventory-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371562,8 +371818,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 348,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-348-export-from-observation-launch-ts",
+          "line": 350,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-350-export-from-observation-launch-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371584,8 +371840,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 354,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-354-export-from-observation-launch-facts-ts",
+          "line": 356,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-356-export-from-observation-launch-facts-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371606,8 +371862,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 361,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-361-export-from-observation-launch-http-ts",
+          "line": 363,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-363-export-from-observation-launch-http-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371628,8 +371884,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 368,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-368-export-from-observation-maintenance-http-ts",
+          "line": 370,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-370-export-from-observation-maintenance-http-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371650,8 +371906,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 375,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-375-export-from-observation-outcomes-ts",
+          "line": 377,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-377-export-from-observation-outcomes-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371672,8 +371928,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 388,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-388-export-from-observation-root-probe-ts",
+          "line": 390,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-390-export-from-observation-root-probe-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371694,8 +371950,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 395,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-395-export-from-observation-runtime-ts",
+          "line": 397,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-397-export-from-observation-runtime-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371716,8 +371972,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 402,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-402-export-from-observation-source-health-ts",
+          "line": 404,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-404-export-from-observation-source-health-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371738,8 +371994,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 409,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-409-export-from-observation-worker-ts",
+          "line": 411,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-411-export-from-observation-worker-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371760,8 +372016,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 418,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-418-export-from-otlp-ts",
+          "line": 420,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-420-export-from-otlp-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371782,8 +372038,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 431,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-431-export-from-payload-reclamation-ts",
+          "line": 433,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-433-export-from-payload-reclamation-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371804,8 +372060,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 440,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-440-export-from-privacy-ts",
+          "line": 442,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-442-export-from-privacy-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371826,8 +372082,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 449,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-449-export-from-retention-ts",
+          "line": 451,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-451-export-from-retention-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371848,8 +372104,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 458,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-458-export-from-scorecard-ts",
+          "line": 460,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-460-export-from-scorecard-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371870,8 +372126,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 466,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-466-export-from-sequence-break-ts",
+          "line": 468,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-468-export-from-sequence-break-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371892,8 +372148,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 475,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-475-export-from-session-lease-ts",
+          "line": 477,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-477-export-from-session-lease-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371914,8 +372170,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 483,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-483-export-from-shell-ts",
+          "line": 485,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-485-export-from-shell-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371936,8 +372192,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 492,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-492-export-from-source-discovery-ts",
+          "line": 494,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-494-export-from-source-discovery-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371958,8 +372214,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 501,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-501-export-from-telemetry-v2-ts",
+          "line": 503,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-503-export-from-telemetry-v2-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -371980,8 +372236,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 510,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-510-export-from-telemetry-v2-store-ts",
+          "line": 512,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-512-export-from-telemetry-v2-store-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -372002,8 +372258,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 517,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-517-export-from-transcript-discovery-ts",
+          "line": 519,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-519-export-from-transcript-discovery-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -372024,8 +372280,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 524,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-524-export-from-transcript-export-ts",
+          "line": 526,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-526-export-from-transcript-export-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -372046,8 +372302,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 537,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-537-export-from-transcript-intake-ts",
+          "line": 539,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-539-export-from-transcript-intake-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -372068,8 +372324,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 550,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-550-export-from-transcript-page-ts",
+          "line": 552,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-552-export-from-transcript-page-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -372090,8 +372346,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/index.ts",
-          "line": 560,
-          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-560-export-from-transcript-sweep-ts",
+          "line": 562,
+          "anchor": "packages-tooling-library-ai-metrics-src-index-ts-562-export-from-transcript-sweep-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -374822,8 +375078,8 @@
           "exportKind": "const",
           "filePath": "src/native-export.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-export.ts",
-          "line": 235,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-export-ts-235-encodenativetracebatch",
+          "line": 249,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-export-ts-249-encodenativetracebatch",
           "currentTags": [
             "@category",
             "@since"
@@ -374980,6 +375236,72 @@
           "repoPath": "packages/tooling/library/ai-metrics/src/native-lifecycle.ts",
           "line": 25,
           "anchor": "packages-tooling-library-ai-metrics-src-native-lifecycle-ts-25-nativelifecyclemetadata",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ClaudeCoworkLifecycleMetadata",
+          "exportKind": "class",
+          "filePath": "src/native-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/native-lifecycle.ts",
+          "line": 75,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-lifecycle-ts-75-claudecoworklifecyclemetadata",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "NativeLifecycleObservation",
+          "exportKind": "const",
+          "filePath": "src/native-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/native-lifecycle.ts",
+          "line": 121,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-lifecycle-ts-121-nativelifecycleobservation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "NativeLifecycleObservation",
+          "exportKind": "type",
+          "filePath": "src/native-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/native-lifecycle.ts",
+          "line": 131,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-lifecycle-ts-131-nativelifecycleobservation",
           "currentTags": [
             "@category",
             "@since"
@@ -381243,6 +381565,154 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export { coworkPeerSource } from \"../internal/cowork-peer-source.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/test/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/claude-cowork-lifecycle.ts",
+          "line": 60,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-claude-cowork-lifecycle-ts-60-export-coworkpeersource-from-internal-cowork-peer-source-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { hashObservationPayload, nativeTraceWire } from \"../internal/native-trace-wire.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/test/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/claude-cowork-lifecycle.ts",
+          "line": 61,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-claude-cowork-lifecycle-ts-61-export-hashobservationpayload-nativetracewire-from-internal-native-trace-wire-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeCoworkLifecycleFixtureReceiver",
+          "exportKind": "const",
+          "filePath": "src/test/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/claude-cowork-lifecycle.ts",
+          "line": 26,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-claude-cowork-lifecycle-ts-26-makecoworklifecyclefixturereceiver",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "prepareCoworkLifecycleFixtureHook",
+          "exportKind": "const",
+          "filePath": "src/test/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/claude-cowork-lifecycle.ts",
+          "line": 48,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-claude-cowork-lifecycle-ts-48-preparecoworklifecyclefixturehook",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "coworkLifecycleFixtureCodecs",
+          "exportKind": "const",
+          "filePath": "src/test/claude-cowork-lifecycle.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/claude-cowork-lifecycle.ts",
+          "line": 59,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-claude-cowork-lifecycle-ts-59-coworklifecyclefixturecodecs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CoworkAncestorFixture",
+          "exportKind": "interface",
+          "filePath": "src/test/cowork-ancestor.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/cowork-ancestor.ts",
+          "line": 45,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-cowork-ancestor-ts-45-coworkancestorfixture",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "coworkAncestorFixture",
+          "exportKind": "const",
+          "filePath": "src/test/cowork-ancestor.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/cowork-ancestor.ts",
+          "line": 114,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-cowork-ancestor-ts-114-coworkancestorfixture",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export { cursorPeerSource } from \"../internal/cursor-peer-source.ts\";",
           "exportKind": "re-export",
           "filePath": "src/test/cursor-lifecycle.ts",
@@ -381331,6 +381801,28 @@
           "repoPath": "packages/tooling/library/ai-metrics/src/test/cursor-peer-diagnostic.ts",
           "line": 18,
           "anchor": "packages-tooling-library-ai-metrics-src-test-cursor-peer-diagnostic-ts-18-cursorpeerdiagnosticbootstrap",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeLifecycleAckServer",
+          "exportKind": "const",
+          "filePath": "src/test/lifecycle-ack-server.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/test/lifecycle-ack-server.ts",
+          "line": 26,
+          "anchor": "packages-tooling-library-ai-metrics-src-test-lifecycle-ack-server-ts-26-makelifecycleackserver",
           "currentTags": [
             "@category",
             "@since"

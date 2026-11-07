@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T22:30:22.941Z
+Generated: 2026-11-07T23:00:01.939Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 176 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3803 |
-| publicExports | 27152 |
+| publicModules | 3808 |
+| publicExports | 27170 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -180,7 +180,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 122 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
 | 123 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
 | 124 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 12 | 174 | 10 | 0 |
-| 125 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 71 | 837 | 0 | 0 |
+| 125 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 76 | 855 | 0 | 0 |
 | 126 | `@beep/repo-cli-kit` | `packages/tooling/library/repo-cli-kit` | clean | 54 | 347 | 0 | 0 |
 | 127 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
 | 128 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
