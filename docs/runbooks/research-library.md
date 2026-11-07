@@ -123,10 +123,10 @@ counts as unset.
 ## Hops and the hop-2 gate
 
 `inventory` records a hop-1 `Derivation` (with `hopDepth = 1`) for every citation in
-a hop-0 document of each intake. It then reads the readable text of every hop-1
+a hop-0 document of the intake that run recorded; earlier intakes keep their edges unchanged. It then reads the readable text of every hop-1
 capture (Markdown, plain text, and transcripts up to 5 MB) and records each URL in it
 as a hop-2 `Source` with a `hopDepth = 2` derivation from its hop-1 parent. Depth is
-on the edge; nothing is dropped, and re-running inventory adds no duplicate edges. Run
+on the edge; nothing is dropped, and re-running inventory on the same roots adds no duplicate edges. Run
 `inventory`, `acquire`, then `inventory` again to catalogue hop 2.
 
 `acquire` fetches a hop-2-only source only when the gate admits it:

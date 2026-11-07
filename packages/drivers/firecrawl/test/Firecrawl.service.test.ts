@@ -52,6 +52,16 @@ const responses: ReadonlyArray<readonly [string, () => Response]> = [
         { status: 200 }
       ),
   ],
+  [
+    "/pdf-param",
+    () =>
+      new Response(
+        page("pdf-param", {
+          metadata: { sourceURL: target("pdf-param"), statusCode: 200, contentType: "text/html; name=pdf-guide" },
+        }),
+        { status: 200 }
+      ),
+  ],
   ["/unauthorized", () => new Response("{}", { status: 401 })],
   ["/limited", () => new Response("{}", { status: 429 })],
   ["/failed", () => new Response(encodeJson({ success: false, error: "blocked" }), { status: 200 })],
@@ -121,6 +131,13 @@ describe("Firecrawl", () => {
           "unsupported-content",
           "unsupported-content",
         ]);
+      })
+    );
+
+    it.effect("keeps an HTML page whose content-type parameter mentions pdf", () =>
+      Effect.gen(function* () {
+        const result = yield* scrape("pdf-param");
+        expect(result.document.metadata.contentType).toBe("text/html; name=pdf-guide");
       })
     );
 

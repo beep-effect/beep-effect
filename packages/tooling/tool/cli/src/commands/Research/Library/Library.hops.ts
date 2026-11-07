@@ -596,10 +596,10 @@ const hopTwoEdges = (catalog: LibraryCatalog, source: LibrarySource): ReadonlyAr
  * **Example** (Gate an empty catalog)
  *
  * ```ts
- * import { libraryHopGate, LibraryHopPolicy, LibraryCatalog } from "@beep/repo-cli/commands/Research"
+ * import { libraryHopGate, LibraryHopGateInput, LibraryHopPolicy, LibraryCatalog } from "@beep/repo-cli/commands/Research"
  *
  * const catalog = LibraryCatalog.make({ schema: "beep.research.library/v2", documents: [], sources: [], occurrences: [], captures: [], qualifications: [] })
- * console.log(libraryHopGate(catalog, { concepts: [], policy: LibraryHopPolicy.make({}) })) // []
+ * console.log(libraryHopGate(catalog, LibraryHopGateInput.make({ concepts: [], policy: LibraryHopPolicy.make({}) }))) // []
  * ```
  *
  * @returns One decision per hop-2-only source.

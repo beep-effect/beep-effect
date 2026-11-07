@@ -6,7 +6,9 @@
  */
 
 import { $FirecrawlId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -126,7 +128,17 @@ const isPdfText = Str.startsWith("%PDF-");
 const pdfLabelled = (metadata: FirecrawlScrapeMetadata) =>
   O.match(O.fromUndefinedOr(metadata.contentType), {
     onNone: () => false,
-    onSome: (contentType) => Str.includes("pdf")(Str.toLowerCase(contentType)),
+    onSome: (contentType) =>
+      A.contains(
+        ["application/pdf", "application/x-pdf"],
+        pipe(
+          Str.split(contentType, ";"),
+          A.head,
+          O.getOrElse(() => ""),
+          Str.toLowerCase,
+          Str.trim
+        )
+      ),
   });
 
 /**
