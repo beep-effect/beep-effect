@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { makeCitationOccurrenceProjection } from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
+import { CitationSemanticExtractionResult } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import {
   VerifiedSourceText,
@@ -18,7 +19,6 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import type { CitationExtractionLoopModel } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
 import type { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import type { CitationSemanticExtractionResult } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
 import type { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
 
 type Installed = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>;
@@ -56,11 +56,12 @@ export const assertCitationNativeRange = Effect.fnUntraced(function* (
 // A source model has two validated views. Controls update both views using
 // explicit original IDs from the sealed corpus, without inferring retained IDs.
 const replaceModelAt = Effect.fnUntraced(function* (
-  result: CitationSemanticExtractionResult,
+  input: unknown,
   position: number,
   modelId: number,
   transform: (model: CitationExtractionLoopModel) => unknown
 ) {
+  const result = yield* S.decodeUnknownEffect(S.toType(CitationSemanticExtractionResult))(input);
   if (result.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Document branch");
   const document = result.raw.outcome.result;
   const loop = document.extraction.extraction;
@@ -87,6 +88,49 @@ const replaceModelAt = Effect.fnUntraced(function* (
     },
   };
 });
+const verifyPinOverrides = Effect.fn("OccurrenceProjectionTest.pinOverrides")(function* (
+  stage: Effect.Success<ReturnType<typeof makeCitationOccurrenceProjection>>,
+  source: VerifiedSourceText,
+  expected: SourceRow,
+  result: CitationSemanticExtractionResult
+) {
+  const pointLength = A.fromIterable(source.sourceText).length;
+  for (const observation of expected.pinCiteOverrides) {
+    const modelId = A.getUnsafe(expected.returned, observation.index);
+    const changed = yield* replaceModelAt(result, observation.index, modelId, (model) =>
+      "outcome" in model
+        ? {
+            ...model,
+            outcome: {
+              ...model.outcome,
+              metadata: {
+                ...model.outcome.metadata,
+                pinCiteSpanStart: observation.pinCiteSpanStart,
+                pinCiteSpanEnd: observation.pinCiteSpanEnd,
+              },
+            },
+          }
+        : model
+    );
+    const actual = yield* stage.project({ source, result: changed });
+    const mention = A.getUnsafe(actual.mentions, observation.index);
+    const component = A.findFirst(mention.components, (entry) => entry.name === "spanWithPincite");
+    const [start, end] = observation.spanWithPincite;
+    if (start >= 0 && start < end && end <= pointLength) {
+      expect(actual.unverifiedComponents).toEqual([]);
+      yield* assertCitationNativeRange(
+        source.sourceText,
+        observation.spanWithPincite,
+        O.getOrThrow(component).anchor.anchor
+      );
+    } else {
+      expect(component).toEqual(O.none());
+      expect(actual.unverifiedComponents).toEqual([
+        { index: observation.index, name: "spanWithPincite", reason: "invalid-span" },
+      ]);
+    }
+  }
+});
 /** Reuse captured runtime services; source proofs come only from the public verifier. */
 export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjectionTest.install")(function* (
   setup: Installed["setup"],
@@ -110,11 +154,16 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
     expect(actual.unverified).toEqual([]);
     expect(actual.unverifiedComponents).toEqual([]);
     expect(actual.unboundWarnings).toEqual([]);
+    yield* verifyPinOverrides(stage, proof, expected, result);
     expect(actual.mentions).toHaveLength(expected.expected.length);
     for (const [mention, row] of A.zip(actual.mentions, expected.expected)) {
       yield* assertCitationNativeRange(source.text, row.span, mention.anchor.anchor);
       const fullSpan = O.getOrThrow(A.findFirst(mention.components, (component) => component.name === "fullSpan"));
       yield* assertCitationNativeRange(source.text, row.fullSpan, fullSpan.anchor.anchor);
+      const pincite = O.getOrThrow(
+        A.findFirst(mention.components, (component) => component.name === "spanWithPincite")
+      );
+      yield* assertCitationNativeRange(source.text, row.spanWithPincite, pincite.anchor.anchor);
       expect(mention.engineArtifact).toBe(artifact);
     }
     for (const [mention, index] of A.map(actual.mentions, (mention, index) => Tuple.make(mention, index))) {
@@ -171,6 +220,35 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
       const incomplete = yield* stage.project({ source: proof, result: badComponents });
       expect(incomplete.mentions).toHaveLength(2);
       expect(incomplete.unverifiedComponents).toEqual([{ index: 0, name: "fullSpan", reason: "invalid-span" }]);
+      const invalidPincite = yield* replaceModelAt(result, 0, firstId, (model) =>
+        "outcome" in model
+          ? {
+              ...model,
+              outcome: {
+                ...model.outcome,
+                metadata: { ...model.outcome.metadata, pinCiteSpanEnd: source.pythonLength + 1 },
+              },
+            }
+          : model
+      );
+      const missingPincite = yield* stage.project({ source: proof, result: invalidPincite });
+      expect(missingPincite.mentions).toHaveLength(2);
+      expect(missingPincite.unverifiedComponents).toEqual([
+        { index: 0, name: "spanWithPincite", reason: "invalid-span" },
+      ]);
+      expect(A.map(A.getUnsafe(missingPincite.mentions, 0).components, (component) => component.name)).toEqual([
+        "fullSpan",
+      ]);
+      const twoBadComponents = yield* replaceModelAt(invalidPincite, 0, firstId, (model) =>
+        "outcome" in model ? { ...model, outcome: { ...model.outcome, fullSpanStart: -1 } } : model
+      );
+      const secondId = A.getUnsafe(expected.returned, 1);
+      const threeIssues = yield* replaceModelAt(twoBadComponents, 1, secondId, (model) =>
+        "outcome" in model ? { ...model, outcome: { ...model.outcome, fullSpanStart: -1 } } : model
+      );
+      const boundedIssues = yield* install({ ...setup.limits, candidates: 2 });
+      const issueLimit = yield* boundedIssues.project({ source: proof, result: threeIssues }).pipe(Effect.flip);
+      expect(issueLimit).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "candidates" });
       const mismatch = yield* citationFixtureSourceProof(`${source.text} altered`);
       const failed = yield* stage.project({ source: mismatch, result }).pipe(Effect.flip);
       expect(failed).toMatchObject({ reason: "source-mismatch" });

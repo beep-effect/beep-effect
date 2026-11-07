@@ -53,6 +53,7 @@ def main():
                 'metadata': {k: native(v) if isinstance(v, str) else v for k, v in vars(citation.metadata).items()},
                 'span': list(citation.span()), 'fullSpanStart': citation.full_span_start,
                 'fullSpanEnd': citation.full_span_end, 'fullSpan': list(citation.full_span()),
+                'spanWithPincite': list(citation.span_with_pincite()),
                 'year': getattr(citation, 'year', None), 'editionGuess': reference(getattr(citation, 'edition_guess', None)),
                 'documentAttached': citation.document is not None}
     texts = [
@@ -104,13 +105,26 @@ def main():
                      'tokens': tokens, 'before': [snapshot(c) for c in before], 'selected': selected,
                      'returned': [next(i for i, original in enumerate(before) if original is item) for item in result],
                      'warnings': warnings, 'expected': [snapshot(c) for c in result]})
+        overrides = []
+        if rows[-1]['id'] in [4, 26]:
+            citation = result[0]
+            original_start, original_end = citation.metadata.pin_cite_span_start, citation.metadata.pin_cite_span_end
+            endpoints = [(None, None), (0, None), (None, len(document.plain_text)), (0, len(document.plain_text)),
+                         (-1, len(document.plain_text)), (0, len(document.plain_text) + 1),
+                         (citation.token.start + 1, citation.token.end - 1), (None, 0)]
+            for start, end in endpoints:
+                citation.metadata.pin_cite_span_start, citation.metadata.pin_cite_span_end = start, end
+                overrides.append({'index': 0, 'pinCiteSpanStart': start, 'pinCiteSpanEnd': end,
+                                  'spanWithPincite': list(citation.span_with_pincite())})
+            citation.metadata.pin_cite_span_start, citation.metadata.pin_cite_span_end = original_start, original_end
+        rows[-1]['pinCiteOverrides'] = overrides
     bindings = [{'id': i, 'ref': ref, 'source': used[ref]} for i, ref in enumerate(sorted(used))]
     ids = {b['ref']: b['id'] for b in bindings}
     for row in rows:
         for token in [x['token'] for x in row['tokens']] + [x['token'] for field in ['before', 'expected'] for x in row[field]]:
             for key in ['exact', 'variation']:
                 token[key] = [ids[ref] for ref in token[key]]
-    output = {'schemaVersion': 'citation-extraction-loop/v1', 'oracleCommit': git('rev-parse', 'HEAD'), 'oracleTree': git('rev-parse', 'HEAD^{tree}'),
+    output = {'schemaVersion': 'citation-extraction-loop/v2', 'oracleCommit': git('rev-parse', 'HEAD'), 'oracleTree': git('rev-parse', 'HEAD^{tree}'),
               'producerSha256': sha(Path(__file__).read_bytes()), 'normalizerSha256': sha((ops / 'export-operations.py').read_bytes()),
               'sources': {name: sha((root / 'eyecite' / name).read_bytes()) for name in ['find.py', 'models.py', 'helpers.py', 'tokenizers.py']},
               'licenseSha256': sha((root / 'LICENSE').read_bytes()), 'lockSha256': sha((root / 'uv.lock').read_bytes()),

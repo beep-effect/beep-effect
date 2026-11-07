@@ -48,9 +48,13 @@ const Unverified = S.Struct({ index: S.Natural, citation: Citation, reason: Unve
     description: "Retained semantic value and original result index without occurrence authority.",
   })
 );
-const ComponentIssue = S.Struct({ index: S.Natural, name: S.tag("fullSpan"), reason: S.tag("invalid-span") }).pipe(
+const ComponentIssue = S.Struct({
+  index: S.Natural,
+  name: S.Literals(["fullSpan", "spanWithPincite"]),
+  reason: S.tag("invalid-span"),
+}).pipe(
   $I.annoteSchema("ComponentIssue", {
-    description: "An original full span that cannot issue canonical component evidence.",
+    description: "An original full or pin-cite-inclusive span that cannot issue canonical component evidence.",
   })
 );
 const UnboundWarning = S.Struct({

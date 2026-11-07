@@ -1629,4 +1629,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert SourceResolution and public resolution contracts together, restoring the former extraction-local edition selector and retaining all original restoration/parity corpora.
 
+### Verify pin-cite-inclusive source components, 2026-11-07
+
+Publish canonical spanWithPincite evidence using the pinned source algorithm and closed per-component diagnostics. The source-v2 corpus adds 157 direct ranges and sixteen actual-model endpoint overrides without changing any prior observation. Nine public/private regression tests pass; source replay and eight corruption controls pass. Component issue and text limits remain enforced. See history/evidence/2026-11-07-verified-pincite-components.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the new component and source-v2 field together while preserving original observations and all unfinished parity duties.
+
 <!-- beep:decisions:end -->

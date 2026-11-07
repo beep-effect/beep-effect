@@ -24,12 +24,15 @@ import {
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { CitationExtractionLoopEntry } from "./ExtractionLoop.ts";
 import { projectCitationExtractionSelection } from "./ExtractionSelection.ts";
 import { makeCitationMention } from "./Mention.ts";
@@ -61,10 +64,17 @@ const fail = (reason: typeof Reason.Type) => CitationOccurrenceProjectionFailure
 const Span = S.Tuple([S.Int, S.Int]).pipe(
   $I.annoteSchema("Span", { description: "Original Python point pair before canonical nonempty-range validation." })
 );
-const Row = S.Struct({ index: S.Natural, modelId: S.Natural, citation: Citation, span: Span, fullSpan: Span }).pipe(
+const Row = S.Struct({
+  index: S.Natural,
+  modelId: S.Natural,
+  citation: Citation,
+  span: Span,
+  fullSpan: Span,
+  spanWithPincite: Span,
+}).pipe(
   $I.annoteSchema("Row", {
     description:
-      "Snapshot of semantic meaning, original model identity and native primary/full coordinates before identity work.",
+      "Snapshot of semantic meaning, original model identity and native primary/full/pin-cite-inclusive coordinates before identity work.",
   })
 );
 const Rows = S.Array(Row)
@@ -154,7 +164,23 @@ const snapshotRows = Effect.fn("Citation.snapshotOccurrenceRows")(function* (res
     Effect.fnUntraced(function* ([model, citation], index) {
       const modelId = yield* Effect.fromOption(A.get(captured.ids, index), () => fail("invalid-input"));
       const selected = yield* projectCitationExtractionSelection(modelId, model);
-      return { index, modelId, citation, span: selected.span, fullSpan: selected.fullSpan };
+      const metadata = "outcome" in model ? model.outcome.metadata : model.metadata;
+      // CitationBase.span_with_pincite uses all non-null endpoint observations,
+      // including token endpoints even when explicit model spans override them.
+      const start = pipe(
+        model.token.start,
+        Num.min(selected.span[0]),
+        Num.min(metadata.pinCiteSpanStart ?? model.token.start)
+      );
+      const end = pipe(model.token.end, Num.max(selected.span[1]), Num.max(metadata.pinCiteSpanEnd ?? model.token.end));
+      return {
+        index,
+        modelId,
+        citation,
+        span: selected.span,
+        fullSpan: selected.fullSpan,
+        spanWithPincite: Tuple.make(start, end),
+      };
     }),
     { concurrency: 1 }
   );
@@ -209,13 +235,15 @@ const sourceCorresponds = Effect.fn("Citation.checkOccurrenceSource")(function* 
   const [, points] = yield* measureCitationPythonText(text);
   return points === native.pythonLength;
 });
-const fullSpanEvidence = Effect.fn("Citation.verifyOccurrenceFullSpan")(function* (
+const componentEvidence = Effect.fn("Citation.verifyOccurrenceComponent")(function* (
   source: VerifiedSourceText,
   row: typeof Row.Type,
-  primary: VerifiedTextAnchor
+  primary: VerifiedTextAnchor,
+  name: typeof ComponentIssue.Type.name
 ) {
-  const proof = sameSpan(row.span, row.fullSpan) ? O.some(primary) : yield* anchor(source, row.fullSpan);
-  return O.map(proof, (anchor) => CitationComponentAnchor.make({ name: "fullSpan", anchor }));
+  const span = row[name];
+  const proof = sameSpan(row.span, span) ? O.some(primary) : yield* anchor(source, span);
+  return O.map(proof, (anchor) => CitationComponentAnchor.make({ name, anchor }));
 });
 const bindWarnings = (pairs: typeof Snapshot.Type.warnings, byModel: HashMap.HashMap<number, CitationMention>) => {
   let warnings = HashMap.empty<number, ReadonlyArray<CitationOverlapWarning>>();
@@ -246,18 +274,27 @@ const createMentionEvidence = Effect.fn("Citation.createOccurrenceEvidence")(fun
   primary: VerifiedTextAnchor,
   engineArtifact: Sha256Hex
 ) {
-  const component = yield* fullSpanEvidence(source, row, primary);
+  const projected = yield* Effect.forEach(
+    ComponentIssue.fields.name.literals,
+    (name) => componentEvidence(source, row, primary, name).pipe(Effect.map((component) => ({ name, component }))),
+    { concurrency: 1 }
+  );
+  const components = A.getSomes(A.map(projected, (entry) => entry.component));
+  const issues = pipe(
+    projected,
+    A.filter((entry) => O.isNone(entry.component)),
+    A.map((entry) => ComponentIssue.make({ index: row.index, name: entry.name }))
+  );
   const mention = yield* makeCitationMention({
     citation: row.citation,
     engineArtifact: engineArtifact,
     anchor: primary,
-    components: O.isSome(component) ? [component.value] : [],
+    components,
     footnote: O.none(),
     signal: O.none(),
     warnings: [],
     evidenceConfidence: O.none(),
   });
-  const issues = O.isNone(component) ? [ComponentIssue.make({ index: row.index })] : [];
   return { mention, issues };
 });
 const projectRows = Effect.fn("Citation.projectOccurrenceRows")(function* (
@@ -280,6 +317,8 @@ const projectRows = Effect.fn("Citation.projectOccurrenceRows")(function* (
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "mentions" });
     const created = yield* createMentionEvidence(source, row, proof.value, engineArtifact);
     const mention = created.mention;
+    if (created.issues.length > limits.candidates - unverifiedComponents.length)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
     unverifiedComponents.push(...created.issues);
     byModel = HashMap.set(byModel, row.modelId, mention);
     modelOrder.push(row.modelId);

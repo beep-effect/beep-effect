@@ -50,6 +50,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "4e6f206c6567616c206369746174696f6e7320686572652e",
         "width": 1
@@ -133,6 +134,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "4e6f206c6567616c206369746174696f6e7320686572652e",
         "width": 1
@@ -247,6 +249,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -314,6 +317,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -348,6 +352,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e203120283230303029",
         "width": 1
@@ -549,6 +554,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -616,6 +622,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -650,6 +657,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e203120283230303029",
         "width": 1
@@ -851,6 +859,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -897,6 +906,7 @@
             "pin_cite_span_start": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -951,6 +961,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -997,6 +1008,7 @@
             "pin_cite_span_start": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -1018,6 +1030,56 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [
+        {
+          "index": 0,
+          "pinCiteSpanEnd": null,
+          "pinCiteSpanStart": null,
+          "spanWithPincite": [12, 20]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": null,
+          "pinCiteSpanStart": 0,
+          "spanWithPincite": [0, 20]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 38,
+          "pinCiteSpanStart": null,
+          "spanWithPincite": [12, 38]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 38,
+          "pinCiteSpanStart": 0,
+          "spanWithPincite": [0, 38]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 38,
+          "pinCiteSpanStart": -1,
+          "spanWithPincite": [-1, 38]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 39,
+          "pinCiteSpanStart": 0,
+          "spanWithPincite": [0, 39]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 19,
+          "pinCiteSpanStart": 13,
+          "spanWithPincite": [12, 20]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 0,
+          "pinCiteSpanStart": null,
+          "spanWithPincite": [12, 20]
+        }
+      ],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e2049642e20617420322e",
         "width": 1
@@ -1289,6 +1351,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -1335,6 +1398,7 @@
             "pin_cite_span_start": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -1389,6 +1453,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -1435,6 +1500,7 @@
             "pin_cite_span_start": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -1456,6 +1522,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e2049642e20617420322e",
         "width": 1
@@ -1715,6 +1782,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "466f6f2061742032",
@@ -1767,6 +1835,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -1834,6 +1903,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -1887,6 +1957,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "466f6f2061742032",
@@ -1908,6 +1979,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e20466f6f20617420322e",
         "width": 1
@@ -2151,6 +2223,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "466f6f2061742032",
@@ -2203,6 +2276,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -2270,6 +2344,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -2323,6 +2398,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "466f6f2061742032",
@@ -2344,6 +2420,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e20466f6f20617420322e",
         "width": 1
@@ -2587,6 +2664,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "4261722061742032",
@@ -2627,6 +2705,7 @@
             "resolved_case_name_short": null
           },
           "span": [39, 47],
+          "spanWithPincite": [39, 47],
           "token": {
             "data": {
               "bytes": "466f6f2061742033",
@@ -2679,6 +2758,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -2746,6 +2826,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -2799,6 +2880,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "4261722061742032",
@@ -2839,6 +2921,7 @@
             "resolved_case_name_short": null
           },
           "span": [39, 47],
+          "spanWithPincite": [39, 47],
           "token": {
             "data": {
               "bytes": "466f6f2061742033",
@@ -2860,6 +2943,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e2042617220617420322e20466f6f20617420332e",
         "width": 1
@@ -3157,6 +3241,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "4261722061742032",
@@ -3197,6 +3282,7 @@
             "resolved_case_name_short": null
           },
           "span": [39, 47],
+          "spanWithPincite": [39, 47],
           "token": {
             "data": {
               "bytes": "466f6f2061742033",
@@ -3249,6 +3335,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -3316,6 +3403,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -3369,6 +3457,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "4261722061742032",
@@ -3409,6 +3498,7 @@
             "resolved_case_name_short": null
           },
           "span": [39, 47],
+          "spanWithPincite": [39, 47],
           "token": {
             "data": {
               "bytes": "466f6f2061742033",
@@ -3430,6 +3520,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e2042617220617420322e20466f6f20617420332e",
         "width": 1
@@ -3742,6 +3833,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -3804,6 +3896,7 @@
             }
           },
           "span": [22, 30],
+          "spanWithPincite": [22, 30],
           "token": {
             "data": {
               "bytes": "3220462e32642033",
@@ -3847,6 +3940,7 @@
             "pin_cite_span_start": null
           },
           "span": [39, 42],
+          "spanWithPincite": [39, 42],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -3904,6 +3998,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -3966,6 +4061,7 @@
             }
           },
           "span": [22, 30],
+          "spanWithPincite": [22, 30],
           "token": {
             "data": {
               "bytes": "3220462e32642033",
@@ -4009,6 +4105,7 @@
             "pin_cite_span_start": null
           },
           "span": [39, 42],
+          "spanWithPincite": [39, 42],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -4030,6 +4127,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e20312c203220462e32642033202832303030292e2049642e",
         "width": 1
@@ -4337,6 +4435,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -4399,6 +4498,7 @@
             }
           },
           "span": [22, 30],
+          "spanWithPincite": [22, 30],
           "token": {
             "data": {
               "bytes": "3220462e32642033",
@@ -4442,6 +4542,7 @@
             "pin_cite_span_start": null
           },
           "span": [39, 42],
+          "spanWithPincite": [39, 42],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -4499,6 +4600,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -4561,6 +4663,7 @@
             }
           },
           "span": [22, 30],
+          "spanWithPincite": [22, 30],
           "token": {
             "data": {
               "bytes": "3220462e32642033",
@@ -4604,6 +4707,7 @@
             "pin_cite_span_start": null
           },
           "span": [39, 42],
+          "spanWithPincite": [39, 42],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -4625,6 +4729,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e20312c203220462e32642033202832303030292e2049642e",
         "width": 1
@@ -4929,6 +5034,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -4982,6 +5088,7 @@
             "resolved_case_name_short": null
           },
           "span": [58, 66],
+          "spanWithPincite": [58, 66],
           "token": {
             "data": {
               "bytes": "42617a2061742034",
@@ -5034,6 +5141,7 @@
             }
           },
           "span": [41, 49],
+          "spanWithPincite": [41, 49],
           "token": {
             "data": {
               "bytes": "3220552e532e2033",
@@ -5101,6 +5209,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -5166,6 +5275,7 @@
             }
           },
           "span": [41, 49],
+          "spanWithPincite": [41, 49],
           "token": {
             "data": {
               "bytes": "3220552e532e2033",
@@ -5219,6 +5329,7 @@
             "resolved_case_name_short": null
           },
           "span": [58, 66],
+          "spanWithPincite": [58, 66],
           "token": {
             "data": {
               "bytes": "42617a2061742034",
@@ -5240,6 +5351,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030293b2042617a20762e205175782c203220552e532e2033202832303031292e2042617a20617420342e",
         "width": 1
@@ -5653,6 +5765,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -5706,6 +5819,7 @@
             "resolved_case_name_short": null
           },
           "span": [58, 66],
+          "spanWithPincite": [58, 66],
           "token": {
             "data": {
               "bytes": "42617a2061742034",
@@ -5758,6 +5872,7 @@
             }
           },
           "span": [41, 49],
+          "spanWithPincite": [41, 49],
           "token": {
             "data": {
               "bytes": "3220552e532e2033",
@@ -5825,6 +5940,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -5890,6 +6006,7 @@
             }
           },
           "span": [41, 49],
+          "spanWithPincite": [41, 49],
           "token": {
             "data": {
               "bytes": "3220552e532e2033",
@@ -5943,6 +6060,7 @@
             "resolved_case_name_short": null
           },
           "span": [58, 66],
+          "spanWithPincite": [58, 66],
           "token": {
             "data": {
               "bytes": "42617a2061742034",
@@ -5964,6 +6082,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030293b2042617a20762e205175782c203220552e532e2033202832303031292e2042617a20617420342e",
         "width": 1
@@ -6377,6 +6496,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -6441,6 +6561,7 @@
             }
           },
           "span": [34, 46],
+          "spanWithPincite": [34, 46],
           "token": {
             "data": {
               "bytes": "3120552e532e2c2061742032",
@@ -6508,6 +6629,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -6572,6 +6694,7 @@
             }
           },
           "span": [34, 46],
+          "spanWithPincite": [34, 46],
           "token": {
             "data": {
               "bytes": "3120552e532e2c2061742032",
@@ -6606,6 +6729,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e20466f6f2c203120552e532e2c20617420322e",
         "width": 1
@@ -6894,6 +7018,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -6958,6 +7083,7 @@
             }
           },
           "span": [34, 46],
+          "spanWithPincite": [34, 46],
           "token": {
             "data": {
               "bytes": "3120552e532e2c2061742032",
@@ -7025,6 +7151,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -7089,6 +7216,7 @@
             }
           },
           "span": [34, 46],
+          "spanWithPincite": [34, 46],
           "token": {
             "data": {
               "bytes": "3120552e532e2c2061742032",
@@ -7123,6 +7251,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e20466f6f2c203120552e532e2c20617420322e",
         "width": 1
@@ -7411,6 +7540,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -7462,6 +7592,7 @@
             "volume": null
           },
           "span": [34, 45],
+          "spanWithPincite": [34, 45],
           "token": {
             "data": {
               "bytes": "73757072612c",
@@ -7516,6 +7647,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -7567,6 +7699,7 @@
             "volume": null
           },
           "span": [34, 45],
+          "spanWithPincite": [34, 45],
           "token": {
             "data": {
               "bytes": "73757072612c",
@@ -7588,6 +7721,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e20466f6f2c2073757072612c20617420322e",
         "width": 1
@@ -7877,6 +8011,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -7928,6 +8063,7 @@
             "volume": null
           },
           "span": [34, 45],
+          "spanWithPincite": [34, 45],
           "token": {
             "data": {
               "bytes": "73757072612c",
@@ -7982,6 +8118,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -8033,6 +8170,7 @@
             "volume": null
           },
           "span": [34, 45],
+          "spanWithPincite": [34, 45],
           "token": {
             "data": {
               "bytes": "73757072612c",
@@ -8054,6 +8192,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e2031202832303030292e20466f6f2c2073757072612c20617420322e",
         "width": 1
@@ -8324,6 +8463,7 @@
             "pin_cite_span_start": null
           },
           "span": [0, 8],
+          "spanWithPincite": [0, 8],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -8354,6 +8494,7 @@
             "pin_cite_span_start": null
           },
           "span": [10, 15],
+          "spanWithPincite": [10, 15],
           "token": {
             "data": {
               "bytes": "496269642e",
@@ -8392,6 +8533,7 @@
             "volume": null
           },
           "span": [21, 32],
+          "spanWithPincite": [21, 32],
           "token": {
             "data": {
               "bytes": "73757072612c",
@@ -8422,6 +8564,7 @@
             "pin_cite_span_start": null
           },
           "span": [34, 35],
+          "spanWithPincite": [34, 35],
           "token": {
             "data": {
               "bytes": "a7",
@@ -8457,6 +8600,7 @@
             "pin_cite_span_start": null
           },
           "span": [0, 8],
+          "spanWithPincite": [0, 8],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -8487,6 +8631,7 @@
             "pin_cite_span_start": null
           },
           "span": [10, 15],
+          "spanWithPincite": [10, 15],
           "token": {
             "data": {
               "bytes": "496269642e",
@@ -8525,6 +8670,7 @@
             "volume": null
           },
           "span": [21, 32],
+          "spanWithPincite": [21, 32],
           "token": {
             "data": {
               "bytes": "73757072612c",
@@ -8555,6 +8701,7 @@
             "pin_cite_span_start": null
           },
           "span": [34, 35],
+          "spanWithPincite": [34, 35],
           "token": {
             "data": {
               "bytes": "a7",
@@ -8576,6 +8723,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "49642e20617420322e20496269642e20466f6f2c2073757072612c20617420332e20a72031322e",
         "width": 1
@@ -8844,6 +8992,7 @@
             "pin_cite_span_start": null
           },
           "span": [0, 8],
+          "spanWithPincite": [0, 8],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -8874,6 +9023,7 @@
             "pin_cite_span_start": null
           },
           "span": [10, 15],
+          "spanWithPincite": [10, 15],
           "token": {
             "data": {
               "bytes": "496269642e",
@@ -8912,6 +9062,7 @@
             "volume": null
           },
           "span": [21, 32],
+          "spanWithPincite": [21, 32],
           "token": {
             "data": {
               "bytes": "73757072612c",
@@ -8942,6 +9093,7 @@
             "pin_cite_span_start": null
           },
           "span": [34, 35],
+          "spanWithPincite": [34, 35],
           "token": {
             "data": {
               "bytes": "a7",
@@ -8977,6 +9129,7 @@
             "pin_cite_span_start": null
           },
           "span": [0, 8],
+          "spanWithPincite": [0, 8],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -9007,6 +9160,7 @@
             "pin_cite_span_start": null
           },
           "span": [10, 15],
+          "spanWithPincite": [10, 15],
           "token": {
             "data": {
               "bytes": "496269642e",
@@ -9045,6 +9199,7 @@
             "volume": null
           },
           "span": [21, 32],
+          "spanWithPincite": [21, 32],
           "token": {
             "data": {
               "bytes": "73757072612c",
@@ -9075,6 +9230,7 @@
             "pin_cite_span_start": null
           },
           "span": [34, 35],
+          "spanWithPincite": [34, 35],
           "token": {
             "data": {
               "bytes": "a7",
@@ -9096,6 +9252,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "49642e20617420322e20496269642e20466f6f2c2073757072612c20617420332e20a72031322e",
         "width": 1
@@ -9368,6 +9525,7 @@
             }
           },
           "span": [0, 15],
+          "spanWithPincite": [0, 15],
           "token": {
             "data": {
               "bytes": "333520552e532e432e20a720313031",
@@ -9418,6 +9576,7 @@
             }
           },
           "span": [24, 39],
+          "spanWithPincite": [24, 39],
           "token": {
             "data": {
               "bytes": "333720432e462e522e20a720312e31",
@@ -9461,6 +9620,7 @@
             "pin_cite_span_start": null
           },
           "span": [48, 51],
+          "spanWithPincite": [48, 51],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -9500,6 +9660,7 @@
             }
           },
           "span": [0, 15],
+          "spanWithPincite": [0, 15],
           "token": {
             "data": {
               "bytes": "333520552e532e432e20a720313031",
@@ -9550,6 +9711,7 @@
             }
           },
           "span": [24, 39],
+          "spanWithPincite": [24, 39],
           "token": {
             "data": {
               "bytes": "333720432e462e522e20a720312e31",
@@ -9593,6 +9755,7 @@
             "pin_cite_span_start": null
           },
           "span": [48, 51],
+          "spanWithPincite": [48, 51],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -9614,6 +9777,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "333520552e532e432e20a720313031202832303138293b20333720432e462e522e20a720312e31202832303230292e2049642e",
         "width": 1
@@ -9832,6 +9996,7 @@
             }
           },
           "span": [0, 15],
+          "spanWithPincite": [0, 15],
           "token": {
             "data": {
               "bytes": "333520552e532e432e20a720313031",
@@ -9882,6 +10047,7 @@
             }
           },
           "span": [24, 39],
+          "spanWithPincite": [24, 39],
           "token": {
             "data": {
               "bytes": "333720432e462e522e20a720312e31",
@@ -9925,6 +10091,7 @@
             "pin_cite_span_start": null
           },
           "span": [48, 51],
+          "spanWithPincite": [48, 51],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -9964,6 +10131,7 @@
             }
           },
           "span": [0, 15],
+          "spanWithPincite": [0, 15],
           "token": {
             "data": {
               "bytes": "333520552e532e432e20a720313031",
@@ -10014,6 +10182,7 @@
             }
           },
           "span": [24, 39],
+          "spanWithPincite": [24, 39],
           "token": {
             "data": {
               "bytes": "333720432e462e522e20a720312e31",
@@ -10057,6 +10226,7 @@
             "pin_cite_span_start": null
           },
           "span": [48, 51],
+          "spanWithPincite": [48, 51],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -10078,6 +10248,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "333520552e532e432e20a720313031202832303138293b20333720432e462e522e20a720312e31202832303230292e2049642e",
         "width": 1
@@ -10301,6 +10472,7 @@
             }
           },
           "span": [0, 17],
+          "spanWithPincite": [0, 17],
           "token": {
             "data": {
               "bytes": "3120486172762e204c2e205265762e2031",
@@ -10358,6 +10530,7 @@
             }
           },
           "span": [0, 17],
+          "spanWithPincite": [0, 17],
           "token": {
             "data": {
               "bytes": "3120486172762e204c2e205265762e2031",
@@ -10392,6 +10565,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "3120486172762e204c2e205265762e20312c20322028323030302920286e6f7465292e",
         "width": 1
@@ -10548,6 +10722,7 @@
             }
           },
           "span": [0, 17],
+          "spanWithPincite": [0, 17],
           "token": {
             "data": {
               "bytes": "3120486172762e204c2e205265762e2031",
@@ -10605,6 +10780,7 @@
             }
           },
           "span": [0, 17],
+          "spanWithPincite": [0, 17],
           "token": {
             "data": {
               "bytes": "3120486172762e204c2e205265762e2031",
@@ -10639,6 +10815,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "3120486172762e204c2e205265762e20312c20322028323030302920286e6f7465292e",
         "width": 1
@@ -10799,6 +10976,7 @@
             }
           },
           "span": [0, 10],
+          "spanWithPincite": [0, 10],
           "token": {
             "data": {
               "bytes": "31204372616e63682031",
@@ -10855,6 +11033,7 @@
             }
           },
           "span": [19, 25],
+          "spanWithPincite": [19, 25],
           "token": {
             "data": {
               "bytes": "3120462e2031",
@@ -10916,6 +11095,7 @@
             }
           },
           "span": [0, 10],
+          "spanWithPincite": [0, 10],
           "token": {
             "data": {
               "bytes": "31204372616e63682031",
@@ -10972,6 +11152,7 @@
             }
           },
           "span": [19, 25],
+          "spanWithPincite": [19, 25],
           "token": {
             "data": {
               "bytes": "3120462e2031",
@@ -11006,6 +11187,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "31204372616e63682031202831383031292e203120462e20312e",
         "width": 1
@@ -11190,6 +11372,7 @@
             }
           },
           "span": [0, 10],
+          "spanWithPincite": [0, 10],
           "token": {
             "data": {
               "bytes": "31204372616e63682031",
@@ -11246,6 +11429,7 @@
             }
           },
           "span": [19, 25],
+          "spanWithPincite": [19, 25],
           "token": {
             "data": {
               "bytes": "3120462e2031",
@@ -11304,6 +11488,7 @@
             }
           },
           "span": [19, 25],
+          "spanWithPincite": [19, 25],
           "token": {
             "data": {
               "bytes": "3120462e2031",
@@ -11338,6 +11523,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "31204372616e63682031202831383031292e203120462e20312e",
         "width": 1
@@ -11516,6 +11702,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "4261722061742032",
@@ -11568,6 +11755,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -11635,6 +11823,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -11688,6 +11877,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "4261722061742032",
@@ -11709,6 +11899,56 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [
+        {
+          "index": 0,
+          "pinCiteSpanEnd": null,
+          "pinCiteSpanStart": null,
+          "spanWithPincite": [12, 20]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": null,
+          "pinCiteSpanStart": 0,
+          "spanWithPincite": [0, 20]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 38,
+          "pinCiteSpanStart": null,
+          "spanWithPincite": [12, 38]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 38,
+          "pinCiteSpanStart": 0,
+          "spanWithPincite": [0, 38]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 38,
+          "pinCiteSpanStart": -1,
+          "spanWithPincite": [-1, 38]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 39,
+          "pinCiteSpanStart": 0,
+          "spanWithPincite": [0, 39]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 19,
+          "pinCiteSpanStart": 13,
+          "spanWithPincite": [12, 20]
+        },
+        {
+          "index": 0,
+          "pinCiteSpanEnd": 0,
+          "pinCiteSpanStart": null,
+          "spanWithPincite": [12, 20]
+        }
+      ],
       "plain": {
         "bytes": "e90000004c75000000f6010020000000760000002e000000200000004200000061000000720000002c000000200000003100000020000000550000002e000000530000002e0000002000000031000000200000002800000032000000300000003000000030000000290000002e0000002000000042000000610000007200000020000000610000007400000020000000320000002e000000",
         "width": 4
@@ -11952,6 +12192,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "4261722061742032",
@@ -12004,6 +12245,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -12071,6 +12313,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -12124,6 +12367,7 @@
             "resolved_case_name_short": null
           },
           "span": [29, 37],
+          "spanWithPincite": [29, 37],
           "token": {
             "data": {
               "bytes": "4261722061742032",
@@ -12145,6 +12389,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "e90000004c75000000f6010020000000760000002e000000200000004200000061000000720000002c000000200000003100000020000000550000002e000000530000002e0000002000000031000000200000002800000032000000300000003000000030000000290000002e0000002000000042000000610000007200000020000000610000007400000020000000320000002e000000",
         "width": 4
@@ -12403,6 +12648,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -12452,6 +12698,7 @@
             "pin_cite_span_start": null
           },
           "span": [36, 44],
+          "spanWithPincite": [36, 44],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -12509,6 +12756,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -12558,6 +12806,7 @@
             "pin_cite_span_start": null
           },
           "span": [36, 44],
+          "spanWithPincite": [36, 44],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -12579,6 +12828,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e20312028323030302920286e6f7465292e2049642e206174203220286f74686572292e",
         "width": 1
@@ -12889,6 +13139,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -12938,6 +13189,7 @@
             "pin_cite_span_start": null
           },
           "span": [36, 44],
+          "spanWithPincite": [36, 44],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -12995,6 +13247,7 @@
             }
           },
           "span": [12, 20],
+          "spanWithPincite": [12, 20],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -13044,6 +13297,7 @@
             "pin_cite_span_start": null
           },
           "span": [36, 44],
+          "spanWithPincite": [36, 44],
           "token": {
             "data": {
               "bytes": "49642e",
@@ -13065,6 +13319,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f20762e204261722c203120552e532e20312028323030302920286e6f7465292e2049642e206174203220286f74686572292e",
         "width": 1
@@ -13363,6 +13618,7 @@
             "year": null
           },
           "span": [0, 8],
+          "spanWithPincite": [0, 8],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -13419,6 +13675,7 @@
             "year": null
           },
           "span": [10, 18],
+          "spanWithPincite": [10, 18],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -13475,6 +13732,7 @@
             "year": null
           },
           "span": [20, 28],
+          "spanWithPincite": [20, 28],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -13533,6 +13791,7 @@
             "year": null
           },
           "span": [0, 8],
+          "spanWithPincite": [0, 8],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -13589,6 +13848,7 @@
             "year": null
           },
           "span": [10, 18],
+          "spanWithPincite": [10, 18],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -13645,6 +13905,7 @@
             "year": null
           },
           "span": [20, 28],
+          "spanWithPincite": [20, 28],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -13679,6 +13940,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "3120552e532e20313b203120552e532e20313b203120552e532e20312e",
         "width": 1
@@ -13920,6 +14182,7 @@
             "year": null
           },
           "span": [0, 8],
+          "spanWithPincite": [0, 8],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -13976,6 +14239,7 @@
             "year": null
           },
           "span": [10, 18],
+          "spanWithPincite": [10, 18],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -14032,6 +14296,7 @@
             "year": null
           },
           "span": [20, 28],
+          "spanWithPincite": [20, 28],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -14090,6 +14355,7 @@
             "year": null
           },
           "span": [0, 8],
+          "spanWithPincite": [0, 8],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -14146,6 +14412,7 @@
             "year": null
           },
           "span": [10, 18],
+          "spanWithPincite": [10, 18],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -14202,6 +14469,7 @@
             "year": null
           },
           "span": [20, 28],
+          "spanWithPincite": [20, 28],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -14236,6 +14504,7 @@
         "bytes": "",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "3120552e532e20313b203120552e532e20313b203120552e532e20312e",
         "width": 1
@@ -14474,6 +14743,7 @@
             "resolved_case_name_short": null
           },
           "span": [31, 40],
+          "spanWithPincite": [31, 40],
           "token": {
             "data": {
               "bytes": "466f6f202061742032",
@@ -14511,6 +14781,7 @@
             "resolved_case_name_short": null
           },
           "span": [30, 34],
+          "spanWithPincite": [30, 34],
           "token": {
             "data": {
               "bytes": "20466f6f",
@@ -14563,6 +14834,7 @@
             }
           },
           "span": [13, 21],
+          "spanWithPincite": [13, 21],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -14630,6 +14902,7 @@
             }
           },
           "span": [13, 21],
+          "spanWithPincite": [13, 21],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -14683,6 +14956,7 @@
             "resolved_case_name_short": null
           },
           "span": [31, 40],
+          "spanWithPincite": [31, 40],
           "token": {
             "data": {
               "bytes": "466f6f202061742032",
@@ -14704,6 +14978,7 @@
         "bytes": "3c703e3c693e466f6f3c2f693e20762e204261722c203120552e532e2031202832303030292e203c656d3e466f6f3c2f656d3e20617420322e3c2f703e",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f2020762e204261722c203120552e532e2031202832303030292e2020466f6f2020617420322e",
         "width": 1
@@ -14971,6 +15246,7 @@
             "resolved_case_name_short": null
           },
           "span": [30, 34],
+          "spanWithPincite": [30, 34],
           "token": {
             "data": {
               "bytes": "20426172",
@@ -15008,6 +15284,7 @@
             "resolved_case_name_short": null
           },
           "span": [41, 45],
+          "spanWithPincite": [41, 45],
           "token": {
             "data": {
               "bytes": "20466f6f",
@@ -15060,6 +15337,7 @@
             }
           },
           "span": [13, 21],
+          "spanWithPincite": [13, 21],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -15127,6 +15405,7 @@
             }
           },
           "span": [13, 21],
+          "spanWithPincite": [13, 21],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -15177,6 +15456,7 @@
             "resolved_case_name_short": null
           },
           "span": [30, 34],
+          "spanWithPincite": [30, 34],
           "token": {
             "data": {
               "bytes": "20426172",
@@ -15214,6 +15494,7 @@
             "resolved_case_name_short": null
           },
           "span": [41, 45],
+          "spanWithPincite": [41, 45],
           "token": {
             "data": {
               "bytes": "20466f6f",
@@ -15235,6 +15516,7 @@
         "bytes": "3c703e3c693e466f6f3c2f693e20762e204261722c203120552e532e2031202832303030292e203c693e4261723c2f693e207468656e203c656d3e466f6f3c2f656d3e2e3c2f703e",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f2020762e204261722c203120552e532e2031202832303030292e202042617220207468656e2020466f6f202e",
         "width": 1
@@ -15544,6 +15826,7 @@
             }
           },
           "span": [13, 21],
+          "spanWithPincite": [13, 21],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -15611,6 +15894,7 @@
             }
           },
           "span": [13, 21],
+          "spanWithPincite": [13, 21],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -15645,6 +15929,7 @@
         "bytes": "3c703e3c693e466f6f3c2f693e20762e204261722c203120552e532e2031202832303030292e203c656d3e466f6f3c2f656d3e20762e204f746865723c2f703e",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f2020762e204261722c203120552e532e2031202832303030292e2020466f6f2020762e204f74686572",
         "width": 1
@@ -15941,6 +16226,7 @@
             "resolved_case_name_short": null
           },
           "span": [31, 39],
+          "spanWithPincite": [31, 39],
           "token": {
             "data": {
               "bytes": "466f6f2061742032",
@@ -15978,6 +16264,7 @@
             "resolved_case_name_short": null
           },
           "span": [30, 34],
+          "spanWithPincite": [30, 34],
           "token": {
             "data": {
               "bytes": "20466f6f",
@@ -16030,6 +16317,7 @@
             }
           },
           "span": [13, 21],
+          "spanWithPincite": [13, 21],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -16097,6 +16385,7 @@
             }
           },
           "span": [13, 21],
+          "spanWithPincite": [13, 21],
           "token": {
             "data": {
               "bytes": "3120552e532e2031",
@@ -16150,6 +16439,7 @@
             "resolved_case_name_short": null
           },
           "span": [31, 39],
+          "spanWithPincite": [31, 39],
           "token": {
             "data": {
               "bytes": "466f6f2061742032",
@@ -16171,6 +16461,7 @@
         "bytes": "3c703e3c693e466f6f3c2f693e20762e204261722c203120552e532e2031202832303030292e203c656d3e466f6f3c2f693e20617420322e3c2f703e",
         "width": 1
       },
+      "pinCiteOverrides": [],
       "plain": {
         "bytes": "466f6f2020762e204261722c203120552e532e2031202832303030292e2020466f6f20617420322e",
         "width": 1
@@ -16412,9 +16703,9 @@
   "normalizerSha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8",
   "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
   "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
-  "producerSha256": "4d646fc2f8b1caef262537f57856e467ee16382e798e55be91f686086e9bc4aa",
+  "producerSha256": "7a0d7e7e3d2564f52c74aad00aa8e5ef08ee2d27022e78bc99b3bbaff9b12976",
   "python": "3.11.15",
-  "schemaVersion": "citation-extraction-loop/v1",
+  "schemaVersion": "citation-extraction-loop/v2",
   "scope": "Actual builtin get_citations loop; prepared Document/token inputs for target replay. Joke shortcut, custom hosts/tokenizers, normalization and broad API acceptance remain separate.",
   "sources": {
     "find.py": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d",

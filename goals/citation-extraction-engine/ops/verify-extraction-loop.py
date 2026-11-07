@@ -8,8 +8,8 @@ import subprocess
 import sys
 import tempfile
 
-CORPUS_SHA = '938316acc08880fd464a9e91b89e45ee802ed4ef08d6c08656baaa925fa97f3e'
-PRODUCER_SHA = '4d646fc2f8b1caef262537f57856e467ee16382e798e55be91f686086e9bc4aa'
+CORPUS_SHA = 'f068a21141db823055f6dbad6c79d9c0c996f300e7b76258ca26a92009f2f89b'
+PRODUCER_SHA = '7a0d7e7e3d2564f52c74aad00aa8e5ef08ee2d27022e78bc99b3bbaff9b12976'
 NORMALIZER_SHA = '9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8'
 sha = lambda data: hashlib.sha256(data).hexdigest()
 
@@ -18,7 +18,7 @@ def validate(data, producer, normalizer):
     assert sha(data) == CORPUS_SHA and sha(producer) == PRODUCER_SHA, 'extraction loop source seals'
     assert sha(normalizer) == NORMALIZER_SHA, 'original edition normalizer seal'
     corpus = json.loads(data)
-    assert corpus['schemaVersion'] == 'citation-extraction-loop/v1'
+    assert corpus['schemaVersion'] == 'citation-extraction-loop/v2'
     assert corpus['producerSha256'] == PRODUCER_SHA and corpus['normalizerSha256'] == NORMALIZER_SHA
     assert corpus['oracleCommit'] == '04d82c032ad5fd0f9ab72a61c87110c46ee8f52e'
     assert corpus['oracleTree'] == 'a35a58fac03400f71a93a93485b77f1d56f2b02f'
@@ -34,6 +34,8 @@ def validate(data, producer, normalizer):
     assert sum(len(row['warnings']) for row in rows) == 2
     assert sum(bool(row['markup']['bytes']) for row in rows) == 4
     assert sum(row['removeAmbiguous'] for row in rows) == 16
+    assert sum(len(row['pinCiteOverrides']) for row in rows) == 16
+    assert any(o['spanWithPincite'] != row['expected'][o['index']]['span'] for row in rows for o in row['pinCiteOverrides'])
     for row in rows:
         assert row['expected'] == [row['before'][index] for index in row['returned']]
         assert all(c['documentAttached'] == (c['kind'] != 'ReferenceCitation') for c in row['before'])
@@ -59,6 +61,9 @@ def main():
             changed = json.loads(data)
             changed[key] = '0' * 64
             mutations.append(json.dumps(changed).encode())
+        changed = json.loads(data)
+        changed['cases'][4]['pinCiteOverrides'][1]['spanWithPincite'][0] = 1
+        mutations.append(json.dumps(changed).encode())
         changed = json.loads(data)
         changed['cases'][2]['expected'][0]['kind'] = 'FullLawCitation'
         mutations.extend([json.dumps(changed).encode(), data + b' '])

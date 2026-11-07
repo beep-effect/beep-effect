@@ -223,7 +223,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic ci
         const raw = yield* load();
         const corpus = yield* readCitationOracleFixture(
           "extraction-loop",
-          "938316acc08880fd464a9e91b89e45ee802ed4ef08d6c08656baaa925fa97f3e"
+          "f068a21141db823055f6dbad6c79d9c0c996f300e7b76258ca26a92009f2f89b"
         ).pipe(Effect.flatMap(S.decodeEffect(SourceModels)));
         const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
         const stage = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {

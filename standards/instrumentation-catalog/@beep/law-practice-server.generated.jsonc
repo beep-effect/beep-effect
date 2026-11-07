@@ -916,7 +916,7 @@
     {"name":"Citation.verifyBoundGroups","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.verifyDefaultAuthorityGroup","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.verifyDocumentAuthorities","owner":"@beep/law-practice-server","family":"slice","conforms":true},
-    {"name":"Citation.verifyOccurrenceFullSpan","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.verifyOccurrenceComponent","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.verifyOccurrenceSpan","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.verifyResourceBinding","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.visitAssemblyToken","owner":"@beep/law-practice-server","family":"slice","conforms":true},

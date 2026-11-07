@@ -60,6 +60,7 @@ const Model = S.Struct({
   metadata: S.Record(S.String, S.Union([S.Null, CitationNativeUnicodeHex, S.Int])),
   span: S.Tuple([S.Int, S.Int]),
   fullSpan: S.Tuple([S.Int, S.Int]),
+  spanWithPincite: S.Tuple([S.Int, S.Int]),
   fullSpanStart: S.NullOr(S.Int),
   fullSpanEnd: S.NullOr(S.Int),
   year: S.NullOr(S.Int),
@@ -82,6 +83,14 @@ const Corpus = S.fromJsonString(
         returned: S.Array(S.Natural),
         warnings: S.Array(S.Tuple([S.Natural, S.Natural])),
         expected: S.Array(Model),
+        pinCiteOverrides: S.Array(
+          S.Struct({
+            index: S.Natural,
+            pinCiteSpanStart: S.NullOr(S.Int),
+            pinCiteSpanEnd: S.NullOr(S.Int),
+            spanWithPincite: S.Tuple([S.Int, S.Int]),
+          })
+        ),
       })
     ),
   })
@@ -90,7 +99,9 @@ const Corpus = S.fromJsonString(
     description: "Original get_citations documents and complete pre/post-filter state with original identity indices.",
   })
 );
-type Expected = typeof Model.Type;
+// Construction comparisons also serve the separate legacy shortcut corpus.
+// Pin-cite ranges are compared by the occurrence adapter against the v2 corpus.
+type Expected = Omit<typeof Model.Type, "spanWithPincite">;
 const isGenerated = S.is(CitationGeneratedReference);
 export const assertCitationExtractionLoopModel = Effect.fn("ExtractionLoopTest.model")(function* (
   entry: CitationExtractionLoopEntry,
@@ -132,7 +143,7 @@ export const installCitationExtractionLoopFixture = Effect.fn("ExtractionLoopTes
 ) {
   const corpus = yield* readCitationOracleFixture(
     "extraction-loop",
-    "938316acc08880fd464a9e91b89e45ee802ed4ef08d6c08656baaa925fa97f3e"
+    "f068a21141db823055f6dbad6c79d9c0c996f300e7b76258ca26a92009f2f89b"
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   const cases = yield* readCitationCaseMetadataConfiguration();
   const laws = yield* loadCitationLawMetadataFixtures();

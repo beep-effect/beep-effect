@@ -88,6 +88,14 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
       yield* assertCitationNativeRange(result.source.source.sourceText, original.span, mention.anchor.anchor);
       const fullSpan = O.getOrThrow(A.findFirst(mention.components, (component) => component.name === "fullSpan"));
       yield* assertCitationNativeRange(result.source.source.sourceText, original.fullSpan, fullSpan.anchor.anchor);
+      const pincite = O.getOrThrow(
+        A.findFirst(mention.components, (component) => component.name === "spanWithPincite")
+      );
+      yield* assertCitationNativeRange(
+        result.source.source.sourceText,
+        original.spanWithPincite,
+        pincite.anchor.anchor
+      );
     }
     expect(result.report.extraction?.semanticCitations).toBe(row.expected.length);
     expect(result.report.extraction?.verifiedMentions).toBe(row.expected.length);
