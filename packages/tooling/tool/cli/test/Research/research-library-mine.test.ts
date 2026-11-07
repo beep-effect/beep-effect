@@ -6,6 +6,7 @@ import {
   LibraryCatalog,
   LibraryDerivation,
   LibraryDocument,
+  LibraryError,
   LibraryFinding,
   LibraryHopGateInput,
   LibraryHopPolicy,
@@ -18,6 +19,7 @@ import {
   LibraryMinePrivateRouteError,
   LibraryMineReceipt,
   LibraryMineRunner,
+  LibraryMineRunnerError,
   LibraryMineSpanError,
   LibraryMineUnreadError,
   LibraryModelRun,
@@ -44,22 +46,29 @@ import {
   libraryShapesDataset,
 } from "@beep/repo-cli/commands/Research/Library/Library.ontology";
 import { catalogDataset } from "@beep/repo-cli/commands/Research/Library/Library.projection";
-import { checkLibraryMineSpans, planLibraryMine } from "@beep/repo-cli/test/ResearchLibrary";
+import {
+  checkLibraryMineSpans,
+  libraryMinePdfArtifact,
+  libraryMineTextArtifact,
+  planLibraryMine,
+} from "@beep/repo-cli/test/ResearchLibrary";
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertInstanceOf, assertTrue, strictEqual } from "@effect/vitest/utils";
+import { assertInstanceOf, assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import type { LibraryMineRunRequest } from "@beep/repo-cli/commands/Research";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -131,6 +140,19 @@ const occurrence = (id: string, sourceId: string, locator: string) =>
     form: "url",
   });
 
+const webSource = (id: string, url: string, accessClass: "public" | "private" = "public") =>
+  LibrarySource.make({
+    id,
+    accessClass,
+    kind: "web",
+    canonicalUrl: url,
+    identity: url,
+    revision: "abc",
+    repository: "",
+    ownership: "external",
+    locators: [url],
+  });
+
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -140,24 +162,7 @@ const fixture = Effect.gen(function* () {
   const manifest = yield* encodeJson({ initiative: { id: "demo-memory", title: "Demo memory" } });
   yield* fs.writeFileString(path.join(repo, "goals/demo-memory/ops/manifest.json"), manifest);
   const report = yield* saveImmutable(root, "intakes/2026-11-06/raw/report.md", new TextEncoder().encode(reportText));
-  const sources = A.map(
-    [
-      ["one", "https://example.com/one", "public"],
-      ["two", "https://example.com/two", "private"],
-    ] as const,
-    ([id, url, accessClass]) =>
-      LibrarySource.make({
-        id,
-        accessClass,
-        kind: "web",
-        canonicalUrl: url,
-        identity: url,
-        revision: "abc",
-        repository: "",
-        ownership: "external",
-        locators: [url],
-      })
-  );
+  const sources = [webSource("one", "https://example.com/one"), webSource("two", "https://example.com/two", "private")];
   const captures = [
     yield* webCapture(root, "one", "https://example.com/one", publicText, "public"),
     yield* webCapture(root, "two", "https://example.com/two", privateText, "private"),
@@ -211,10 +216,15 @@ const fixture = Effect.gen(function* () {
  * Add hop-0 intake documents: a nightly whose bytes equal source one's captured text
  * (the same bytes a Box route captured) and a private DM archive markdown file.
  */
-const documentFixture = Effect.gen(function* () {
-  const base = yield* fixture;
-  const { root, repo, path } = base;
-  const add = Effect.fn(function* (id: string, name: string, text: string, accessClass: "public" | "private") {
+type IntakeDocument = readonly [id: string, name: string, text: string, accessClass: "public" | "private"];
+
+const addIntakeDocuments = Effect.fn("test.addIntakeDocuments")(function* (
+  root: string,
+  repo: string,
+  entries: ReadonlyArray<IntakeDocument>
+) {
+  const path = yield* Path.Path;
+  const add = Effect.fn(function* ([id, name, text, accessClass]: IntakeDocument) {
     const saved = yield* saveImmutable(root, `intakes/2026-11-06/raw/${name}`, new TextEncoder().encode(text));
     const originalPath = path.join(repo, name);
     return {
@@ -239,10 +249,7 @@ const documentFixture = Effect.gen(function* () {
       }),
     };
   });
-  const added = [
-    yield* add("nightly", "nightly.md", publicText, "public"),
-    yield* add("dm", "dm.md", dmText, "private"),
-  ];
+  const added = yield* Effect.forEach(entries, add);
   yield* withCatalog(root, (catalog) =>
     Effect.succeed(
       LibraryCatalog.make({
@@ -254,32 +261,47 @@ const documentFixture = Effect.gen(function* () {
       })
     )
   );
+});
+
+const documentFixture = Effect.gen(function* () {
+  const base = yield* fixture;
+  yield* addIntakeDocuments(base.root, base.repo, [
+    ["nightly", "nightly.md", publicText, "public"],
+    ["dm", "dm.md", dmText, "private"],
+  ]);
   return base;
 });
 
 const options = (
   repo: string,
   profile: LibraryMineOptions["profile"],
-  overrides: Partial<Pick<LibraryMineOptions, "dryRun" | "excludePrivate" | "limit">> = {}
+  overrides: Partial<
+    Pick<LibraryMineOptions, "concurrency" | "dryRun" | "excludePrivate" | "limit" | "onlyPrivate">
+  > = {}
 ) =>
   LibraryMineOptions.make({
     intake: "2026-11-06",
     profile,
     limit: overrides.limit ?? O.none(),
-    concurrency: 2,
+    concurrency: overrides.concurrency ?? 2,
     dryRun: overrides.dryRun ?? false,
     excludePrivate: overrides.excludePrivate ?? false,
+    onlyPrivate: overrides.onlyPrivate ?? false,
     repoRoot: O.some(repo),
   });
 
 type Answer = (request: LibraryMineRunRequest) => string;
 
-const fakeRunner = Effect.fn("test.fakeRunner")(function* (answer: Answer) {
+// A runner answers with text or fails the launch the way the live runner reports a failed exit.
+const fakeRunner = Effect.fn("test.fakeRunner")(function* (
+  answer: (request: LibraryMineRunRequest) => string | LibraryMineRunnerError
+) {
   const calls = yield* Ref.make<ReadonlyArray<LibraryMineRunRequest>>([]);
   const service = LibraryMineRunner.of({
     run: Effect.fn("LibraryMineRunner.run")(function* (request) {
       yield* Ref.update(calls, A.append(request));
-      return answer(request);
+      const reply = answer(request);
+      return P.isString(reply) ? reply : yield* reply;
     }),
   });
   return { calls, service };
@@ -415,6 +437,44 @@ describe("research library mine", () => {
       expect(folded).toStrictEqual(["experiences, \u2126 (usually 1-3)"]);
       const error = yield* Effect.flip(checkLibraryMineSpans("capture:a", text, ["98% of parent child relationships"]));
       expect(error.spans).toStrictEqual(["98% of parent child relationships"]);
+    })
+  );
+
+  it("binds a capture's PDF only when it has no text artifact", () => {
+    const artifact = (role: string, mediaType: string, sha: string) =>
+      LibraryArtifact.make({ path: `evidence/${sha}`, sha256: Str.repeat(64)(sha), bytes: 1, role, mediaType });
+    const capture = (artifacts: ReadonlyArray<LibraryArtifact>) =>
+      LibraryCapture.make({
+        id: "c",
+        sourceId: "s",
+        status: "readable",
+        method: "fixture",
+        recordedAt: "",
+        capturedRevision: "",
+        complete: true,
+        artifacts,
+        reason: "",
+      });
+    const pdf = artifact("raw-full-text", "application/pdf", "a");
+    const transcript = artifact("transcript-full-text", "text/plain", "b");
+    const mixed = capture([pdf, transcript]);
+    assertSome(libraryMineTextArtifact(mixed), transcript);
+    assertNone(libraryMinePdfArtifact(mixed));
+    const pdfOnly = capture([pdf, artifact("raw-response", "application/json", "c")]);
+    assertNone(libraryMineTextArtifact(pdfOnly));
+    assertSome(libraryMinePdfArtifact(pdfOnly), pdf);
+  });
+
+  it.effect("rejects blank spans and folds only when NFKC keeps the text length", () =>
+    Effect.gen(function* () {
+      const blank = yield* Effect.flip(checkLibraryMineSpans("capture:a", publicText, ["  \n "]));
+      expect(blank.spans).toStrictEqual(["  \n "]);
+      // NFKC expands the ligature to two characters, so folded offsets would not map back to the original.
+      const ligature = "A ﬁle store keeps every revision.";
+      const unfolded = yield* Effect.flip(checkLibraryMineSpans("capture:a", ligature, ["file store"]));
+      expect(unfolded.spans).toStrictEqual(["file store"]);
+      const verbatim = yield* checkLibraryMineSpans("capture:a", ligature, ["ﬁle store"]);
+      expect(verbatim).toStrictEqual(["ﬁle store"]);
     })
   );
 });
@@ -800,6 +860,373 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
       expect(decide([finding("doc-finding", "", "report"), finding("src-finding", "parent", "")])).toStrictEqual([
         ["child", true, "routed-parent"],
       ]);
+    })
+  );
+
+  it.effect("rejects unknown and ambiguous intakes and a profile that does not serve the tier", () =>
+    Effect.gen(function* () {
+      const { root, repo } = yield* fixture;
+      const unknown = yield* Effect.flip(planLibraryMine(root, "2026-01-01"));
+      assertInstanceOf(unknown, LibraryError);
+      strictEqual(unknown.message, "No intake matches 2026-01-01; pass an intake id or date from the catalog.");
+      yield* withCatalog(root, (catalog) =>
+        Effect.succeed(
+          LibraryCatalog.make({
+            ...catalog,
+            intakes: [
+              ...catalog.intakes,
+              LibraryIntake.make({ ...A.getUnsafe(catalog.intakes, 0), id: "intake-2026-11-06-b", files: [] }),
+            ],
+          })
+        )
+      );
+      const ambiguous = yield* Effect.flip(planLibraryMine(root, "2026-11-06"));
+      strictEqual(ambiguous.message, "Intake date 2026-11-06 is ambiguous; pass the intake id.");
+      expect(ambiguous.cause).toStrictEqual(["intake-2026-11-06", "intake-2026-11-06-b"]);
+      strictEqual((yield* planLibraryMine(root, "intake-2026-11-06-b")).length, 0);
+      const runner = yield* fakeRunner(selectAll);
+      const refused = yield* Effect.flip(
+        mineLibraryTriage(root, options(repo, "junie")).pipe(Effect.provideService(LibraryMineRunner, runner.service))
+      );
+      strictEqual(refused.message, "Runner profile junie does not serve t1.");
+      strictEqual((yield* Ref.get(runner.calls)).length, 0);
+    })
+  );
+
+  it.effect("plans sources cited through derivations and aliases, skips uncaptured ones and types plain text", () =>
+    Effect.gen(function* () {
+      const { root, repo } = yield* fixture;
+      const derived = yield* webCapture(root, "three", "https://example.com/three", "Derived ledgers.", "public");
+      const aliased = yield* webCapture(root, "four", "https://example.com/four", "Aliased spans.", "public");
+      yield* withCatalog(root, (catalog) =>
+        Effect.succeed(
+          LibraryCatalog.make({
+            ...catalog,
+            sources: [
+              ...catalog.sources,
+              webSource("three", "https://example.com/three"),
+              LibrarySource.make({ ...webSource("four", "https://example.com/four"), aliasIds: ["legacy-four"] }),
+              webSource("five", "https://example.com/five"),
+            ],
+            occurrences: [
+              ...catalog.occurrences,
+              occurrence("o4", "legacy-four", "https://example.com/four"),
+              occurrence("o5", "five", "https://example.com/five"),
+            ],
+            derivations: [
+              LibraryDerivation.make({
+                id: "d-three",
+                derivedId: "three",
+                sourceId: "one",
+                intakeId: "intake-2026-11-06",
+                rootId: "report",
+                hopDepth: 1,
+                recordedAt: "2026-11-06",
+              }),
+            ],
+            captures: [...catalog.captures, derived, aliased],
+          })
+        )
+      );
+      yield* addIntakeDocuments(root, repo, [["notes", "notes.txt", "Plain notes on ledgers.", "public"]]);
+      const plan = yield* planLibraryMine(root, "2026-11-06");
+      expect(A.map(plan, (job) => [job.captureId || job.documentId, job.artifact.mediaType])).toStrictEqual([
+        ["capture-one", "text/markdown"],
+        ["capture-two", "text/markdown"],
+        ["capture-three", "text/markdown"],
+        ["capture-four", "text/markdown"],
+        ["report", "text/markdown"],
+        ["notes", "text/plain"],
+      ]);
+    })
+  );
+
+  it.effect("pauses the batch on a quota failure and skips the jobs it has not launched", () =>
+    Effect.gen(function* () {
+      const { root, repo } = yield* fixture;
+      const runner = yield* fakeRunner((request) =>
+        isPublicJob(request) ? LibraryMineRunnerError.make({ quota: true, message: "usage limit reached" }) : "{}"
+      );
+      const error = yield* Effect.flip(
+        mineLibraryTriage(root, options(repo, "codex-luna", { concurrency: 1 })).pipe(
+          Effect.provideService(LibraryMineRunner, runner.service)
+        )
+      );
+      assertInstanceOf(error, LibraryMineBatchError);
+      assertTrue(error.paused);
+      expect(A.map(error.failed, (label) => Str.replace(/:[0-9a-f]{64}/, "")(label))).toStrictEqual([
+        "capture-one LibraryMineRunnerError: usage limit reached",
+        "capture-two paused",
+        "document:report paused",
+      ]);
+      strictEqual((yield* Ref.get(runner.calls)).length, 1);
+      const receipts = yield* receiptsUnder(root, "t1");
+      expect(A.map(receipts, (receipt) => [receipt.outcome, receipt.errorTag, receipt.message])).toStrictEqual([
+        ["paused", "LibraryMineRunnerError", "usage limit reached"],
+      ]);
+      strictEqual((yield* loadCatalog(root)).modelRuns.length, 0);
+    })
+  );
+
+  it.effect("records runner failures and schema-invalid answers as failed receipts without pausing", () =>
+    Effect.gen(function* () {
+      const { root, repo } = yield* fixture;
+      const runner = yield* fakeRunner((request) =>
+        isPublicJob(request)
+          ? LibraryMineRunnerError.make({ quota: false, message: "codex exited 1: crashed" })
+          : isReportJob(request)
+            ? selectAll(request)
+            : "I would rather not answer in JSON."
+      );
+      const error = yield* Effect.flip(
+        mineLibraryTriage(root, options(repo, "codex-luna")).pipe(
+          Effect.provideService(LibraryMineRunner, runner.service)
+        )
+      );
+      assertInstanceOf(error, LibraryMineBatchError);
+      assertTrue(!error.paused);
+      const receipts = yield* receiptsUnder(root, "t1");
+      const outcomes = A.map(receipts, (receipt) => [
+        receipt.outcome,
+        receipt.errorTag,
+        Str.startsWith("T1 answer failed its schema")(receipt.message) ? "schema" : receipt.message,
+      ]);
+      expect(
+        A.sort(
+          A.map(outcomes, (outcome) => A.join(outcome, "|")),
+          Str.Order
+        )
+      ).toStrictEqual([
+        "completed||",
+        "failed|LibraryMineRunnerError|codex exited 1: crashed",
+        "failed|LibraryMineRunnerError|schema",
+      ]);
+      const read = yield* fakeRunner(() => "not a reading");
+      const readError = yield* Effect.flip(
+        mineLibraryRead(root, options(repo, "claude")).pipe(Effect.provideService(LibraryMineRunner, read.service))
+      );
+      assertInstanceOf(readError, LibraryMineBatchError);
+      const readings = yield* receiptsUnder(root, "t2");
+      expect(
+        A.map(readings, (receipt) => [receipt.outcome, Str.startsWith("T2 answer failed its schema")(receipt.message)])
+      ).toStrictEqual([["failed", true]]);
+    })
+  );
+
+  it.effect("limits a batch to private artifacts when asked", () =>
+    Effect.gen(function* () {
+      const { root, repo } = yield* fixture;
+      const runner = yield* fakeRunner(selectAll);
+      const result = yield* mineLibraryTriage(root, options(repo, "codex-luna", { onlyPrivate: true })).pipe(
+        Effect.provideService(LibraryMineRunner, runner.service)
+      );
+      expect(result).toStrictEqual({ completed: 1, failed: 0, paused: 0, skippedUnreadable: 0 });
+      const calls = yield* Ref.get(runner.calls);
+      expect(A.map(calls, (call) => Str.startsWith("capture-two-")(call.jobKey))).toStrictEqual([true]);
+    })
+  );
+
+  it.effect("fails a document job whose snapshot is missing or differs from its digest before any launch", () =>
+    Effect.gen(function* () {
+      const { root, repo, fs, path } = yield* documentFixture;
+      const catalog = yield* loadCatalog(root);
+      const snapshotOf = (id: string) =>
+        path.join(root, O.getOrThrow(A.findFirst(catalog.documents, (document) => document.id === id)).snapshotPath);
+      yield* fs.remove(snapshotOf("report"));
+      yield* fs.writeFileString(snapshotOf("report"), "See nothing at all");
+      yield* fs.remove(snapshotOf("dm"));
+      const runner = yield* fakeRunner(selectAll);
+      const error = yield* Effect.flip(
+        mineLibraryTriage(root, options(repo, "codex-luna")).pipe(
+          Effect.provideService(LibraryMineRunner, runner.service)
+        )
+      );
+      assertInstanceOf(error, LibraryMineBatchError);
+      expect(A.map(error.failed, (label) => Str.replace(/:[0-9a-f]{64}/, "")(label))).toStrictEqual([
+        "document:report LibraryError: Bound capture text differs from its digest.",
+        "document:dm LibraryError: Cannot read bound capture text.",
+      ]);
+      const launched = yield* Ref.get(runner.calls);
+      expect(A.map(launched, (call) => Str.startsWith("capture-")(call.jobKey))).toStrictEqual([true, true]);
+    })
+  );
+
+  it.effect("truncates long texts in the T1 prompt and reads them as partial, dropping affirmative claims", () =>
+    Effect.gen(function* () {
+      const { root, repo } = yield* fixture;
+      const opening = "Opening claim about bitemporal ledgers.";
+      const long = `${opening} ${Str.repeat(30_000)("filler ")}`;
+      yield* addIntakeDocuments(root, repo, [["long", "long.md", long, "public"]]);
+      const triage = yield* triageAll(root, repo);
+      const longJob = (request: LibraryMineRunRequest) => Str.startsWith("document-long-")(request.jobKey);
+      const triageCalls = yield* Ref.get(triage.calls);
+      const triagePrompt = O.getOrThrow(A.findFirst(triageCalls, longJob)).prompt;
+      assertTrue(
+        Str.includes(`Capture text (first 24000 of ${long.length} characters; the rest was not shown):`)(triagePrompt)
+      );
+      const runner = yield* fakeRunner((request) =>
+        longJob(request)
+          ? `{"coverage":"complete","summary":"long","findings":[{"citoRelation":"supports","span":"${opening}","summary":"a","topicIds":["goals/demo-memory"]},{"citoRelation":"discusses","span":"filler filler","summary":"b","topicIds":["goals/gone"]}]}`
+          : readings(request)
+      );
+      yield* mineLibraryRead(root, options(repo, "claude")).pipe(
+        Effect.provideService(LibraryMineRunner, runner.service)
+      );
+      const catalog = yield* loadCatalog(root);
+      expect(
+        A.map(
+          A.filter(catalog.findings, (finding) => finding.documentId === "long"),
+          (finding) => [finding.citoRelation, finding.span, finding.topicIds]
+        )
+      ).toStrictEqual([["discusses", "filler filler", []]]);
+      const readReceipts = yield* receiptsUnder(root, "t2");
+      const receipt = O.getOrThrow(
+        A.findFirst(readReceipts, (entry) => Str.startsWith("document-long-")(entry.jobKey))
+      );
+      expect([receipt.outcome, receipt.message, receipt.droppedTopicIds]).toStrictEqual([
+        "completed",
+        "1 affirmative finding(s) dropped: coverage partial.",
+        ["goals/gone"],
+      ]);
+    })
+  );
+
+  it.effect("synthesize dry runs against the enclosing repository and rejects unbindable findings", () =>
+    Effect.gen(function* () {
+      const { root, repo, fs, path } = yield* fixture;
+      yield* withCatalog(root, (catalog) =>
+        Effect.succeed(
+          LibraryCatalog.make({
+            ...catalog,
+            sources: [...catalog.sources, webSource("five", "https://example.com/five")],
+            occurrences: [...catalog.occurrences, occurrence("o5", "five", "https://example.com/five")],
+          })
+        )
+      );
+      const author = { model: "claude-fable-5-1", effort: "medium", route: "claude-code", argv: ["claude"] };
+      const synthesisFile = Effect.fn(function* (id: string, sourceId: string, captureId: string) {
+        const file = path.join(repo, `${id}.json`);
+        const text = yield* encodeJson({
+          id,
+          author,
+          findings: [
+            {
+              sourceId,
+              captureId,
+              citoRelation: "citesAsEvidence",
+              span: "They support audit queries.",
+              summary: "audit",
+              topicIds: [],
+            },
+          ],
+        });
+        yield* fs.writeFileString(file, text);
+        return file;
+      });
+      const valid = yield* synthesisFile("t3-dry", "one", "capture-one");
+      const dry = yield* mineLibrarySynthesize(root, valid, O.some(repo), true);
+      expect(dry).toStrictEqual({ findings: 0 });
+      strictEqual((yield* loadCatalog(root)).modelRuns.length, 0);
+      // Without --repo the topics come from the enclosing repository: this checkout.
+      const enclosing = yield* mineLibrarySynthesize(root, valid, O.none(), true);
+      expect(enclosing).toStrictEqual({ findings: 0 });
+      for (const [id, sourceId] of [
+        ["t3-ghost", "ghost"],
+        ["t3-uncaptured", "five"],
+      ] as const) {
+        const file = yield* synthesisFile(id, sourceId, "capture-one");
+        const error = yield* Effect.flip(mineLibrarySynthesize(root, file, O.some(repo), false));
+        assertInstanceOf(error, LibraryMineUnreadError);
+        strictEqual(
+          error.message,
+          `Finding 0 binds capture capture-one, which is not an effective readable capture of ${sourceId}.`
+        );
+      }
+    })
+  );
+
+  // Live clock: the losing import waits on the catalog writer lock with real retry sleeps.
+  it.effect("synthesize writes a raced import once under the catalog writer lock", () =>
+    Effect.gen(function* () {
+      const { root, repo, fs, path } = yield* fixture;
+      const file = path.join(repo, "t3-race.json");
+      const text = yield* encodeJson({
+        id: "t3-race",
+        author: { model: "claude-fable-5-1", effort: "medium", route: "claude-code", argv: ["claude"] },
+        findings: [
+          {
+            sourceId: "one",
+            captureId: "capture-one",
+            citoRelation: "citesAsEvidence",
+            span: "They support audit queries.",
+            summary: "audit",
+            topicIds: [],
+          },
+        ],
+      });
+      yield* fs.writeFileString(file, text);
+      const results = yield* TestClock.withLive(
+        Effect.all(
+          [
+            mineLibrarySynthesize(root, file, O.some(repo), false),
+            mineLibrarySynthesize(root, file, O.some(repo), false),
+          ],
+          { concurrency: 2 }
+        )
+      );
+      strictEqual(
+        A.reduce(results, 0, (sum, result) => sum + result.findings),
+        2
+      );
+      const catalog = yield* loadCatalog(root);
+      expect(A.map(catalog.modelRuns, (run) => run.id)).toStrictEqual(["mine:t3:t3-race"]);
+      strictEqual(catalog.findings.length, 1);
+    })
+  );
+
+  it.effect("synthesize rejects a readable capture without a bound text artifact", () =>
+    Effect.gen(function* () {
+      const { root, repo, fs, path } = yield* fixture;
+      yield* withCatalog(root, (catalog) =>
+        Effect.succeed(
+          LibraryCatalog.make({
+            ...catalog,
+            captures: A.map(catalog.captures, (capture) =>
+              capture.id === "capture-one"
+                ? LibraryCapture.make({
+                    ...capture,
+                    artifacts: A.map(capture.artifacts, (artifact) =>
+                      artifact.role === "extracted-full-text"
+                        ? LibraryArtifact.make({ ...artifact, mediaType: "application/octet-stream" })
+                        : artifact
+                    ),
+                  })
+                : capture
+            ),
+          })
+        )
+      );
+      const plan = yield* planLibraryMine(root, "2026-11-06");
+      assertTrue(!A.some(plan, (job) => job.captureId === "capture-one"));
+      const file = path.join(repo, "t3-binary.json");
+      const text = yield* encodeJson({
+        id: "t3-binary",
+        author: { model: "claude-fable-5-1", effort: "medium", route: "claude-code", argv: [] },
+        findings: [
+          {
+            sourceId: "one",
+            captureId: "capture-one",
+            citoRelation: "discusses",
+            span: "audit queries",
+            summary: "audit",
+            topicIds: [],
+          },
+        ],
+      });
+      yield* fs.writeFileString(file, text);
+      const error = yield* Effect.flip(mineLibrarySynthesize(root, file, O.some(repo), false));
+      assertInstanceOf(error, LibraryMineUnreadError);
+      strictEqual(error.message, "Capture capture-one has no bound text artifact.");
     })
   );
 });

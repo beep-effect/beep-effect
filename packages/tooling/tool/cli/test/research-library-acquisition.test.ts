@@ -2,6 +2,7 @@ import { decodeFirecrawlScrapeBody, Firecrawl } from "@beep/firecrawl";
 import {
   hashBytes,
   importLibraryResult,
+  importLibraryRoutedResult,
   LibraryArtifact,
   LibraryCapture,
   LibraryCatalog,
@@ -22,11 +23,13 @@ import {
   acquireLibraryGithub,
   acquireLibraryPaper,
   acquireLibrarySource,
+  acquireLibraryWeb,
   acquireLibraryYoutube,
   correctLibraryCaptures,
   encodeLibraryCaptureJson,
   LibraryBoxFixture,
   LibraryCaptureCorrection,
+  LibraryFirecrawlLive,
   libraryCaptionProvenance,
   libraryQualificationValid,
   librarySourceEvidenceValid,
@@ -42,7 +45,9 @@ import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -53,6 +58,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const encodeCatalogJson = S.encodeEffect(S.fromJsonString(LibraryCatalog));
 
@@ -669,6 +675,20 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
     })
   );
 
+  it.effect("routes a manifest without a VidBee or alphaXiv kind to the capture importer", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      yield* writePayload(fixture.resultPath, fixture.payload);
+      const catalog = yield* importLibraryRoutedResult(fixture.root, fixture.resultPath);
+      expect(A.map(catalog.captures, (capture) => [capture.method, capture.status])).toEqual([
+        ["fixture-original-import", "readable"],
+      ]);
+      const absent = fixture.path.join(fixture.path.dirname(fixture.resultPath), "absent.json");
+      const missing = yield* importLibraryRoutedResult(fixture.root, absent).pipe(Effect.flip);
+      expect(missing.message).toBe(`Cannot read import manifest ${absent}.`);
+    })
+  );
+
   it.effect("preserves hash-bound before and after states when correcting an invalid reading claim", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
@@ -956,6 +976,123 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
     })
   );
 });
+
+// Live Firecrawl over a fake HTTP client and an `op` answered by a local `printf`, or by `false`
+// for an unreadable reference; the recorded headers and `op` arguments show which key was used.
+const liveFirecrawl = (env: Record<string, unknown>, opBinary: "printf" | "false") => {
+  const authorizations: Array<string> = [];
+  const opArgs: Array<ReadonlyArray<unknown>> = [];
+  const http = Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) => {
+      authorizations.push(request.headers.authorization ?? "");
+      return encodeFixtureJson({
+        success: true,
+        data: {
+          markdown: "# Article\n\nFull text of the article.",
+          rawHtml: "<article>Full text of the article.</article>",
+          metadata: { sourceURL: source.canonicalUrl, statusCode: 200, contentType: "text/html" },
+        },
+      }).pipe(
+        Effect.orDie,
+        Effect.map((body) => HttpClientResponse.fromWeb(request, new Response(body, { status: 200 })))
+      );
+    })
+  );
+  const op = Layer.effect(
+    ChildProcessSpawner.ChildProcessSpawner,
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      return ChildProcessSpawner.make((command) => {
+        opArgs.push(command._tag === "StandardCommand" ? command.args : []);
+        return spawner.spawn(
+          opBinary === "printf" ? ChildProcess.make("printf", ["%s", "fc-from-op"]) : ChildProcess.make("false", [])
+        );
+      });
+    })
+  ).pipe(Layer.provide(NodeServices.layer));
+  const layer = Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    LibraryFirecrawlLive.pipe(
+      Layer.provide(Layer.merge(http, op)),
+      Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
+    )
+  );
+  return { layer, authorizations, opArgs };
+};
+
+const literalKey = liveFirecrawl({ FIRECRAWL_API_KEY: "fc-literal" }, "printf");
+it.layer(literalKey.layer, { timeout: "30 seconds" })("live Firecrawl key from a literal", (it) => {
+  it.effect("sends a literal FIRECRAWL_API_KEY without reading 1Password", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const result = yield* acquireLibraryWeb(fixture.root, source, "captures/literal");
+      expect([result.status, literalKey.authorizations, literalKey.opArgs]).toEqual([
+        "readable",
+        ["Bearer fc-literal"],
+        [],
+      ]);
+    })
+  );
+});
+
+const referencedKey = liveFirecrawl({ FIRECRAWL_API_KEY: "op://Vault/Firecrawl/key" }, "printf");
+it.layer(referencedKey.layer, { timeout: "30 seconds" })("live Firecrawl key from an op:// reference", (it) => {
+  it.effect("reads a referenced FIRECRAWL_API_KEY through op", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const result = yield* acquireLibraryWeb(fixture.root, source, "captures/reference");
+      expect([result.status, referencedKey.authorizations, referencedKey.opArgs]).toEqual([
+        "readable",
+        ["Bearer fc-from-op"],
+        [["read", "op://Vault/Firecrawl/key", "--no-newline"]],
+      ]);
+    })
+  );
+});
+
+const unreadableKey = liveFirecrawl({}, "false");
+it.layer(unreadableKey.layer, { timeout: "30 seconds" })("live Firecrawl key that op cannot read", (it) => {
+  it.effect("blocks the capture without a request when the canonical reference is unreadable", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const result = yield* acquireLibraryWeb(fixture.root, source, "captures/unreadable");
+      expect([result.status, result.reason, unreadableKey.authorizations]).toEqual([
+        "blocked",
+        "Firecrawl config: The Firecrawl key reference could not be resolved through op.",
+        [],
+      ]);
+      expect(unreadableKey.opArgs).toHaveLength(1);
+    })
+  );
+});
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "stalled Firecrawl scrape",
+  (it) => {
+    it.effect("blocks a web capture whose Firecrawl scrape exceeds the timeout", () =>
+      Effect.gen(function* () {
+        const stalled = Firecrawl.of({
+          scrape: Effect.fn("test.stalledScrape")(function* () {
+            return yield* Effect.never;
+          }),
+        });
+        const fiber = yield* acquireLibraryWeb("/library", source, "captures/slow").pipe(
+          Effect.provideService(Firecrawl, stalled),
+          Effect.forkChild
+        );
+        yield* TestClock.adjust("151 seconds");
+        const result = yield* Fiber.join(fiber);
+        expect([result.status, result.complete, result.reason]).toEqual([
+          "blocked",
+          false,
+          "Firecrawl timeout: Firecrawl scrape timed out.",
+        ]);
+      })
+    );
+  }
+);
 
 it.effect.prop(
   "property: schema-generated capture corrections survive a JSON round trip",

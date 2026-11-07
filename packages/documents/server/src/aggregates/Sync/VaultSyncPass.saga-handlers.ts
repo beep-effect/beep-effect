@@ -200,7 +200,8 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         O.liftPredicate(state, (s): s is Registered => s._tag === "Registered" && !s.paused)
       );
       const probe = Effect.fnUntraced(function* (destination: Registered) {
-        const root = yield* mirror.resolveRoot({ destinationId, name: destination.name });
+        // Genesis keeps the legacy mirror root folder name apart from the destination name.
+        const root = yield* mirror.resolveRoot({ destinationId, name: destination.remoteRootName ?? destination.name });
         yield* destinations.send(
           destinationId,
           V.ResolveDestinationRoot.make({ rootId: root.remoteId }),
@@ -262,12 +263,15 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         }
         return planned;
       });
+      // The `ItemOperations` policy creates the operation from the item's event. After a host crash that
+      // delivery can stay leased to the dead host until the driver lease lapses (30 seconds by default), so
+      // the wait must outlast it, or a resumed pass dies before the policy runs.
       const awaitOperation = (operationId: V.OperationId) =>
         operations
           .state(operationId)
           .pipe(
             Effect.repeat({ until: (state) => state !== null, schedule: Schedule.spaced("10 millis") }),
-            Effect.timeout("10 seconds"),
+            Effect.timeout("2 minutes"),
             Effect.orDie
           );
       // An expired lease held by this pass is expired so the next lease takes a new epoch.

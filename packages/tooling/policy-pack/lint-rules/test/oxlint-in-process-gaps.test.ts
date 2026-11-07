@@ -270,7 +270,11 @@ describe("oxlint rules in process", () => {
 
   it("allows only the drain exit in the slim CI entrypoint", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/tooling/tool/cli/src/bin-ci.ts", reports);
+    const rule = createOnceRule(
+      "no-direct-process-io",
+      "/repo/packages/tooling/tool/cli/src/commands/Ci/CiBinary.ts",
+      reports
+    );
 
     rule.CallExpression?.(processExit());
     rule.CallExpression?.(call(member(member(identifier("process"), "stdout"), "write"), [literal("out")]));

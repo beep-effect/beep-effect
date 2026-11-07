@@ -297,6 +297,37 @@ describe("legacy sync SQL projections", () => {
         const after = yield* operationRow;
         expect(before).toHaveLength(1);
         expect(after).toEqual(before);
+
+        // An operation's workspace is its destination's, not its item row's: here the item was never
+        // projected and the audit default (4) differs from the destination's workspace (9).
+        const otherDestination = V.DestinationId.make("documents_sync_destination_aotherworkspace");
+        yield* destinations.send(
+          otherDestination,
+          V.RegisterDestination.make({ orgId: 7, workspaceId: 9, name: "other synthetic" })
+        );
+        const orphanId = V.OperationId.make("documents_sync_operation_aorphan");
+        const orphanQueued = yield* operations.send(
+          orphanId,
+          V.QueueOperation.make({
+            input: {
+              destinationId: otherDestination,
+              itemId: V.ItemId.make("documents_sync_item_anever"),
+              type: "uploadFile",
+              path: V.VaultRelPath.make("never.txt"),
+              digest: "digest",
+              generation: 1,
+              parentRequired: false,
+              idempotencyKey: orphanId,
+            },
+          })
+        );
+        yield* LegacySyncOperation.caughtUp(orphanQueued).pipe(Effect.provideContext(runtime));
+        const orphanRows = yield* sql`SELECT workspace_id, status FROM documents_sync_operation
+          WHERE public_id = ${orphanId}`.pipe(
+          Effect.repeat({ until: (rows) => rows.length > 0, schedule: Schedule.spaced("10 millis") }),
+          Effect.timeout("10 seconds")
+        );
+        expect(orphanRows).toEqual([{ workspace_id: 9, status: "queued" }]);
       })
     );
   });

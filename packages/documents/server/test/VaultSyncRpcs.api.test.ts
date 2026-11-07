@@ -3,6 +3,7 @@ import { Internals } from "@alchemy.run/domain/Model";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import {
+  LegacySyncReadModel,
   VaultSyncMembershipLive,
   VaultSyncRpcOrganization,
   VaultSyncRpcsApiLive,
@@ -12,7 +13,6 @@ import {
 } from "@beep/documents-server/aggregates/Sync";
 import { DmsMirrorAvailability, DmsMirrorProbe } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { VaultSyncModel, VaultSyncPolicies } from "@beep/documents-use-cases/aggregates/VaultSync";
-import { SyncConflictRepository } from "@beep/documents-use-cases/entities/SyncConflict/server";
 import { VaultSyncRpcs } from "@beep/documents-use-cases/public";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { describe, expect, it } from "@effect/vitest";
@@ -108,12 +108,15 @@ const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: Readonl
     ),
   });
   const availability = Layer.succeed(DmsMirrorAvailability, mirrorAvailability);
+  // The read model has no write methods: the adapter can only read projected rows.
   const legacy = Layer.succeed(
-    SyncConflictRepository,
-    SyncConflictRepository.of({
-      listOpen: Effect.fn("legacy.listOpen")(() => Effect.succeed([legacyRow, unrelatedRow, ...extraRows])),
-      markReviewed: Effect.fn("legacy.markReviewed")(() => Effect.die("the adapter never writes legacy rows")),
-      record: Effect.fn("legacy.record")(() => Effect.die("the adapter never writes legacy rows")),
+    LegacySyncReadModel,
+    LegacySyncReadModel.of({
+      items: Effect.fn("legacy.items")(() => Effect.succeed([])),
+      operationsByStatus: Effect.fn("legacy.operations")(() => Effect.succeed([])),
+      openConflicts: Effect.fn("legacy.openConflicts")(() => Effect.succeed([legacyRow, unrelatedRow, ...extraRows])),
+      conflict: Effect.fn("legacy.conflict")(() => Effect.succeedNone),
+      cursor: Effect.fn("legacy.cursor")(() => Effect.succeedNone),
     })
   );
   const host = VaultSyncSessionLive.pipe(

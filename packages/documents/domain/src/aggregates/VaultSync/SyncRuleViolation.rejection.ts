@@ -30,6 +30,7 @@ export const SyncRule = LiteralKit([
   "correction-scope",
   "destination-paused",
   "destination-scope",
+  "genesis-requires-empty-stream",
   "item-remote-id",
   "item-scope",
   "lease-duration",

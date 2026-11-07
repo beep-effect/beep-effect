@@ -7,8 +7,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T18:04:44.395Z",
-  "git_sha": "ee6d9e503725cd8bac98178e389e8cafb845335a",
+  "generated_at": "2026-11-07T21:04:03.757Z",
+  "git_sha": "5faa14d215d5fb0cb38af4075ec252b132b538c3",
   "command": "bun run coverage -- --filter=@beep/professional-desktop --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
@@ -7225,6 +7225,30 @@
             "branches": 0,
             "functions": 0
           }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/LegacySync.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/SyncGenesis.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
         }
       }
     },
@@ -7337,18 +7361,6 @@
             "functions": 3
           }
         },
-        "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts": {
-          "lines": 88.91,
-          "statements": 89,
-          "branches": 77.86,
-          "functions": 84.57,
-          "uncovered": {
-            "lines": 51,
-            "statements": 53,
-            "branches": 27,
-            "functions": 27
-          }
-        },
         "packages/documents/server/src/aggregates/Sync/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -7359,174 +7371,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/SyncConflict/SyncConflict.layer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/SyncConflict/SyncConflict.repo.ts": {
-          "lines": 55.93,
-          "statements": 55.93,
-          "branches": 55,
-          "functions": 52.38,
-          "uncovered": {
-            "lines": 30,
-            "statements": 30,
-            "branches": 9,
-            "functions": 10
-          }
-        },
-        "packages/documents/server/src/entities/SyncConflict/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/SyncCursor/SyncCursor.layer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/SyncCursor/SyncCursor.repo.ts": {
-          "lines": 53.33,
-          "statements": 54.34,
-          "branches": 40,
-          "functions": 41.17,
-          "uncovered": {
-            "lines": 27,
-            "statements": 27,
-            "branches": 6,
-            "functions": 10
-          }
-        },
-        "packages/documents/server/src/entities/SyncCursor/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/SyncItem/SyncItem.layer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/SyncItem/SyncItem.repo.ts": {
-          "lines": 57.14,
-          "statements": 58.46,
-          "branches": 57.14,
-          "functions": 55.55,
-          "uncovered": {
-            "lines": 27,
-            "statements": 27,
-            "branches": 6,
-            "functions": 12
-          }
-        },
-        "packages/documents/server/src/entities/SyncItem/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/SyncOperation/SyncOperation.layer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/SyncOperation/SyncOperation.repo.ts": {
-          "lines": 54.65,
-          "statements": 55.55,
-          "branches": 52,
-          "functions": 51.28,
-          "uncovered": {
-            "lines": 39,
-            "statements": 40,
-            "branches": 12,
-            "functions": 19
-          }
-        },
-        "packages/documents/server/src/entities/SyncOperation/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/entities/internal/RepoSupport.ts": {
-          "lines": 90,
-          "statements": 84.61,
-          "branches": 100,
-          "functions": 66.66,
-          "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
           }
         },
         "packages/documents/server/src/index.ts": {
@@ -7601,55 +7445,7 @@
             "functions": 0
           }
         },
-        "packages/documents/server/src/aggregates/Sync/VaultSync.drift.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/aggregates/Sync/VaultSync.push.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/aggregates/Sync/VaultSync.reconcile.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/server/src/aggregates/Sync/VaultSync.review.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -7731,6 +7527,78 @@
             "statements": 8,
             "branches": 5,
             "functions": 1
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/LegacySync.query.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncAdmission.service.ts": {
+          "lines": 91.46,
+          "statements": 91.66,
+          "branches": 66.66,
+          "functions": 86.95,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 6,
+            "functions": 3
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncCutover.service.ts": {
+          "lines": 97.43,
+          "statements": 95.34,
+          "branches": 85.71,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncGenesis.service.ts": {
+          "lines": 100,
+          "statements": 99.3,
+          "branches": 97.5,
+          "functions": 97.56,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncWriterEpoch.service.ts": {
+          "lines": 97.36,
+          "statements": 97.5,
+          "branches": 100,
+          "functions": 90.9,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncModel.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         }
       }
@@ -8076,150 +7944,6 @@
           }
         },
         "packages/documents/use-cases/src/aggregates/Sync/server.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncConflict/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncConflict/server.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncCursor/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncCursor/server.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncItem/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncItem/server.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncOperation/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/use-cases/src/entities/SyncOperation/server.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -33775,6 +33499,30 @@
             "branches": 2,
             "functions": 15
           }
+        },
+        "apps/professional-desktop/src/runtime/SessionToken.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/professional-desktop/src/sync/VaultSyncSession.ts": {
+          "lines": 83.33,
+          "statements": 71.42,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
         }
       }
     },
@@ -41501,6 +41249,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.box.ts": {
+          "lines": 99.48,
+          "statements": 99.53,
+          "branches": 100,
+          "functions": 98.46,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.command.ts": {
           "lines": 32.43,
           "statements": 32.43,
@@ -41561,6 +41321,18 @@
             "functions": 22
           }
         },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.firecrawl.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.github.ts": {
           "lines": 58.54,
           "statements": 56.4,
@@ -41573,6 +41345,30 @@
             "functions": 17
           }
         },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.hopStatus.ts": {
+          "lines": 100,
+          "statements": 98.14,
+          "branches": 93.75,
+          "functions": 96,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.hops.ts": {
+          "lines": 97.45,
+          "statements": 96.42,
+          "branches": 88.23,
+          "functions": 93.63,
+          "uncovered": {
+            "lines": 6,
+            "statements": 10,
+            "branches": 14,
+            "functions": 7
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.import.ts": {
           "lines": 77.7,
           "statements": 74.92,
@@ -41583,6 +41379,18 @@
             "statements": 88,
             "branches": 66,
             "functions": 31
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.importMethods.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 92.53,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 5,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.integrity.ts": {
@@ -41607,6 +41415,42 @@
             "statements": 81,
             "branches": 33,
             "functions": 52
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.mine.runner.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.mine.text.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.mine.ts": {
+          "lines": 99.75,
+          "statements": 99.57,
+          "branches": 99.51,
+          "functions": 98.83,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.provenance.ts": {
@@ -41643,6 +41487,30 @@
             "statements": 10,
             "branches": 17,
             "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.routeEvidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.routes.ts": {
+          "lines": 97.43,
+          "statements": 97.67,
+          "branches": 93.33,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Research/Library/Library.schemas.ts": {

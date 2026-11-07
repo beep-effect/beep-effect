@@ -6,10 +6,6 @@
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import { DmsMirrorAvailability, VaultSyncStatus } from "@beep/documents-use-cases/aggregates/Sync/server";
-import {
-  ListOpenSyncConflictsInput,
-  SyncConflictRepository,
-} from "@beep/documents-use-cases/entities/SyncConflict/server";
 import { VaultSyncActionError, VaultSyncRpcs } from "@beep/documents-use-cases/public";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import * as A from "effect/Array";
@@ -25,8 +21,10 @@ import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { LegacySyncReadModel } from "./LegacySync.query.ts";
 import { authorizeVaultSyncDelivery, VaultSyncDeliveryClient } from "./VaultSyncApi.ts";
 import type * as View from "@alchemy.run/domain/View";
+import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type * as Equivalence from "effect/Equivalence";
 import type * as Headers from "effect/http/Headers";
 
@@ -104,7 +102,7 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
     const client = yield* VaultSyncDeliveryClient;
     const { orgId } = yield* VaultSyncRpcOrganization;
     const availability = yield* DmsMirrorAvailability;
-    const legacyConflicts = yield* SyncConflictRepository;
+    const legacyConflicts = yield* LegacySyncReadModel;
     const denied = (context: string) => VaultSyncActionError.failEffect(context);
     // Only the failure tag is logged: denials and driver errors never cross the legacy wire.
     const dropped = (context: string) => (error: unknown) =>
@@ -177,13 +175,14 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
           )
         )
       );
-    const openRows = Effect.fn("VaultSyncRpcsApi.openRows")(function* (workspaceId: number, headers: Headers.Input) {
+    const openRows = Effect.fn("VaultSyncRpcsApi.openRows")(function* (
+      workspaceId: WorkspaceIdentity.WorkspaceId,
+      headers: Headers.Input
+    ) {
       const destinationId = yield* destinationOf(workspaceId, headers);
       const open = yield* client.OpenConflicts.get(destinationId, { headers });
       const records = valuesOf(open);
-      const rows = yield* legacyConflicts.listOpen(
-        ListOpenSyncConflictsInput.make({ provider: BOX, workspaceId: workspaceId as never })
-      );
+      const rows = yield* legacyConflicts.openConflicts(workspaceId);
       return A.flatMap(rows, (row) =>
         O.match(
           A.findFirst(records, (record) => `${record.publicId}` === `${row.publicId}`),

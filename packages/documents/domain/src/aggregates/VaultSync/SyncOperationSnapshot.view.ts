@@ -24,6 +24,7 @@ export class SyncOperationSnapshot extends Domain.View("SyncOperationSnapshot", 
   state: OperationState,
   initial: SyncOperation.definition.initial,
   evolve: {
+    OperationGenesisImported: (_s, e) => e.record,
     OperationQueued: (s, e, c) =>
       SyncOperation.definition.evolve.OperationQueued(s, e, { ...c.envelope, id: c.source.id }),
     OperationRetargeted: (s, e, c) =>
