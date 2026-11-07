@@ -11,8 +11,8 @@ Status: `in-progress` (P0 slice 1 complete 2026-10-31; P1 slice 2 implemented 20
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Slice 1: schemas, route, census | complete | `ChangeAtom`/`CheckFootprint`/`Propagation` schemas, the total record at `unknown`, `classify`, `route`, the corpus fetch, `beep ci route plan|census|replay`. | Slice-1 acceptance rows in `SPEC.md` green; the census printed with the `unknown` share; PR merged. |
-| P1 Slice 2: refinements, both layers, final-check | in-progress | Refine in census rank with fixtures and recall; compile file/field-grain footprints to turbo inputs and root `package.json` projections; sweep package-local `turbo.json`; final-check shadow then enforced; sentinel row. | At least one refinement enforced; layer-1 fixture green under pinned turbo; receipts carry the route section; PR merged. |
-| P2 Slice 3: hosted per lane | pending | Extend `HeavyAdmission` to per-lane `skip-satisfied` with the receipt in the job summary. | A real PR shows a routed-out lane completing `skip-satisfied`; required contexts unchanged; PR merged. |
+| P1 Slice 2: refinements, both layers, final-check | complete | Refine in census rank with fixtures and recall; compile file/field-grain footprints to turbo inputs and root `package.json` projections; sweep package-local `turbo.json`; final-check shadow then enforced; sentinel row. | At least one refinement enforced; layer-1 fixture green under pinned turbo; receipts carry the route section; PR merged. |
+| P2 Slice 3: hosted per lane | in-progress | Extend `HeavyAdmission` to per-lane `skip-satisfied` with the receipt in the job summary. | A real PR shows a routed-out lane completing `skip-satisfied`; required contexts unchanged; PR merged. |
 | P3 Yeet: PR to mergeable | pending | Each slice PR through `yeet publish`, `final-check`, `ready`, `monitor --until-ready`. | `merge-ready: yes`; zero unresolved review threads. |
 | P4 Close | pending | Closeout reflection, status flip, proposedCloseout on the final PR. | Reflection lints green; manifest, README and PLAN agree. |
 
@@ -76,8 +76,8 @@ work.
 
 ## P2 — Slice 3
 
-- [ ] `HeavyAdmission` per lane: `run | skip-satisfied | hold` from the route;
-      `heavy.yml` lane jobs compute the route and complete with the receipt.
+- [x] `HeavyAdmission` per lane: `run | skip-satisfied | hold` from the route;
+      `heavy.yml` lane jobs compute the route and complete with the receipt (#2879, #2884).
 - [ ] Prove on one real PR; ruleset contexts unchanged.
 
 ## Closeout Checklist
