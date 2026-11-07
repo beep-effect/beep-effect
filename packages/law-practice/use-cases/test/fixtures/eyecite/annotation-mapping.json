@@ -1,0 +1,2856 @@
+{
+  "annotateSha256": "974bcabb0e7d608540732c42a5f3bf40b2616110bd1aca3d8bc7f09ed044af91",
+  "cases": [
+    {
+      "id": 0,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 16,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 23,
+          "start": 0
+        }
+      ],
+      "placeholder": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f583e20626172",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "666f6f203120552e532e203120626172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "5b666f6f203c693e3120552e532e20313c2f693e206261725d",
+        "width": 1
+      },
+      "source": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f693e20626172",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 4,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 8,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 4,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 15,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 22,
+          "start": 1
+        }
+      ],
+      "placeholder": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f583e20626172",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "666f6f203120552e532e203120626172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "663c613e6f6f203c693e3120552e532e20313c2f693e2062613c2f613e72",
+        "width": 1
+      },
+      "source": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f693e20626172",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 4,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 8,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 4,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "input": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 18,
+          "start": -1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 25,
+          "start": 6
+        }
+      ],
+      "placeholder": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f583e20626172",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "666f6f203120552e532e203120626172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "666f6f203c69283e3120552e532e20313c2f693e2062617229",
+        "width": 1
+      },
+      "source": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f693e20626172",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 4,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 8,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 4,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 16,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 23,
+          "start": 1
+        }
+      ],
+      "placeholder": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f583e20626172",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "666f6f203120552e532e203120626172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "5b665d7b6f6f203c693e3120552e532e20313c2f693e206261727d",
+        "width": 1
+      },
+      "source": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f693e20626172",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 4,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 8,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 4,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "input": [
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        },
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        },
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        }
+      ],
+      "placeholder": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f583e20626172",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "666f6f203120552e532e203120626172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "66416142626f6f203c693e3120552e532e20313c2f693e20626172",
+        "width": 1
+      },
+      "source": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f693e20626172",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 4,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 8,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 4,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 2
+        },
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 16,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 23,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 2
+        }
+      ],
+      "placeholder": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f583e20626172",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "666f6f203120552e532e203120626172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "5b666f6f203c693e3120552e532e20313c2f693e206261725d",
+        "width": 1
+      },
+      "source": {
+        "bytes": "666f6f203c693e3120552e532e20313c2f693e20626172",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 4,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 8,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 4,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 7,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 18,
+          "start": 3
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c693e466f6f3c2f583e203c58583e4261723c2f58583e",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "466f6f20426172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "3c693e5b466f6f3c2f693e203c656d3e4261725d3c2f656d3e",
+        "width": 1
+      },
+      "source": {
+        "bytes": "3c693e466f6f3c2f693e203c656d3e4261723c2f656d3e",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 5,
+          "operation": "+"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 6,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 17,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c693e466f6f3c2f583e203c58583e4261723c2f58583e",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "466f6f20426172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "3c693e463c613e6f6f3c2f693e203c656d3e42613c2f613e723c2f656d3e",
+        "width": 1
+      },
+      "source": {
+        "bytes": "3c693e466f6f3c2f693e203c656d3e4261723c2f656d3e",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 5,
+          "operation": "+"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "input": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 9,
+          "start": -1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 20,
+          "start": 10
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c693e466f6f3c2f583e203c58583e4261723c2f58583e",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "466f6f20426172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "3c693e466f6f3c2f693e28203c656d3e4261723c2f29656d3e",
+        "width": 1
+      },
+      "source": {
+        "bytes": "3c693e466f6f3c2f693e203c656d3e4261723c2f656d3e",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 5,
+          "operation": "+"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 7,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 4,
+          "start": 3
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 18,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c693e466f6f3c2f583e203c58583e4261723c2f58583e",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "466f6f20426172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "3c693e5b465d7b6f6f3c2f693e203c656d3e4261727d3c2f656d3e",
+        "width": 1
+      },
+      "source": {
+        "bytes": "3c693e466f6f3c2f693e203c656d3e4261723c2f656d3e",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 5,
+          "operation": "+"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "input": [
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        },
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 4,
+          "start": 4
+        },
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 4,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c693e466f6f3c2f583e203c58583e4261723c2f58583e",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "466f6f20426172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "3c693e46416142626f6f3c2f693e203c656d3e4261723c2f656d3e",
+        "width": 1
+      },
+      "source": {
+        "bytes": "3c693e466f6f3c2f693e203c656d3e4261723c2f656d3e",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 5,
+          "operation": "+"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 2
+        },
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 7,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 18,
+          "start": 3
+        },
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 4,
+          "start": 5
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c693e466f6f3c2f583e203c58583e4261723c2f58583e",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "466f6f20426172",
+        "width": 1
+      },
+      "result": {
+        "bytes": "3c693e5b466f6f3c2f693e203c656d3e4261725d3c2f656d3e",
+        "width": 1
+      },
+      "source": {
+        "bytes": "3c693e466f6f3c2f693e203c656d3e4261723c2f656d3e",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 3,
+          "operation": "="
+        },
+        {
+          "amount": 5,
+          "operation": "+"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 5,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 2,
+          "start": 0
+        }
+      ],
+      "placeholder": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "6162616261",
+        "width": 1
+      },
+      "result": {
+        "bytes": "5b61625d",
+        "width": 1
+      },
+      "source": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "-"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 4,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 2,
+          "start": 1
+        }
+      ],
+      "placeholder": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "6162616261",
+        "width": 1
+      },
+      "result": {
+        "bytes": "613c613e623c2f613e",
+        "width": 1
+      },
+      "source": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "-"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "input": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 7,
+          "start": -1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 2,
+          "start": 2
+        }
+      ],
+      "placeholder": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "6162616261",
+        "width": 1
+      },
+      "result": {
+        "bytes": "61622829",
+        "width": 1
+      },
+      "source": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "-"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 5,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 2,
+          "start": 1
+        }
+      ],
+      "placeholder": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "6162616261",
+        "width": 1
+      },
+      "result": {
+        "bytes": "5b615d7b627d",
+        "width": 1
+      },
+      "source": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "-"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "input": [
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        },
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        },
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        }
+      ],
+      "placeholder": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "6162616261",
+        "width": 1
+      },
+      "result": {
+        "bytes": "614161426262",
+        "width": 1
+      },
+      "source": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "-"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 2
+        },
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 5,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 2,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 2
+        }
+      ],
+      "placeholder": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "plain": {
+        "bytes": "6162616261",
+        "width": 1
+      },
+      "result": {
+        "bytes": "5b61625d3c613e3c2f613e62",
+        "width": 1
+      },
+      "source": {
+        "bytes": "6162",
+        "width": 1
+      },
+      "steps": [
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "-"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 3,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 10,
+          "start": 3
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000580000003e00000000f6010042000000",
+        "width": 4
+      },
+      "plain": {
+        "bytes": "4100000000f6010042000000",
+        "width": 4
+      },
+      "result": {
+        "bytes": "3c000000620000003e0000005b000000410000003c0000002f000000620000003e00000000f60100420000005d000000",
+        "width": 4
+      },
+      "source": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000620000003e00000000f6010042000000",
+        "width": 4
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 2,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 9,
+          "start": 8
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000580000003e00000000f6010042000000",
+        "width": 4
+      },
+      "plain": {
+        "bytes": "4100000000f6010042000000",
+        "width": 4
+      },
+      "result": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000620000003e0000003c000000610000003e00000000f601003c0000002f000000610000003e00000042000000",
+        "width": 4
+      },
+      "source": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000620000003e00000000f6010042000000",
+        "width": 4
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "input": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 5,
+          "start": -1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 12,
+          "start": 6
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000580000003e00000000f6010042000000",
+        "width": 4
+      },
+      "plain": {
+        "bytes": "4100000000f6010042000000",
+        "width": 4
+      },
+      "result": {
+        "bytes": "3c000000620000003e000000410000003c0000002f00000028000000620000003e00000000f601004200000029000000",
+        "width": 4
+      },
+      "source": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000620000003e00000000f6010042000000",
+        "width": 4
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 3,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 4,
+          "start": 3
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 10,
+          "start": 8
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000580000003e00000000f6010042000000",
+        "width": 4
+      },
+      "plain": {
+        "bytes": "4100000000f6010042000000",
+        "width": 4
+      },
+      "result": {
+        "bytes": "3c000000620000003e0000005b000000410000005d0000003c0000002f000000620000003e0000007b00000000f60100420000007d000000",
+        "width": 4
+      },
+      "source": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000620000003e00000000f6010042000000",
+        "width": 4
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "input": [
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        },
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 4,
+          "start": 8
+        },
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 4,
+          "start": 8
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000580000003e00000000f6010042000000",
+        "width": 4
+      },
+      "plain": {
+        "bytes": "4100000000f6010042000000",
+        "width": 4
+      },
+      "result": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000620000003e00000041000000610000003c0000002f000000620000003e00000042000000620000003c0000002f000000620000003e00000000f6010042000000",
+        "width": 4
+      },
+      "source": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000620000003e00000000f6010042000000",
+        "width": 4
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 2
+        },
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 3,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 10,
+          "start": 3
+        },
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 4,
+          "start": 9
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000580000003e00000000f6010042000000",
+        "width": 4
+      },
+      "plain": {
+        "bytes": "4100000000f6010042000000",
+        "width": 4
+      },
+      "result": {
+        "bytes": "3c000000620000003e0000005b000000410000003c0000002f000000620000003e00000000f60100420000005d000000",
+        "width": 4
+      },
+      "source": {
+        "bytes": "3c000000620000003e000000410000003c0000002f000000620000003e00000000f6010042000000",
+        "width": 4
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 3,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 10,
+          "start": 3
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c0069003e00410000d83c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "410000d84200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "3c0069003e005b00410000d83c002f0069003e0042005d00",
+        "width": 2
+      },
+      "source": {
+        "bytes": "3c0069003e00410000d83c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 2,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 5,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c0069003e00410000d83c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "410000d84200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "3c0069003e0041003c0061003e0000d83c002f0061003e003c002f0069003e004200",
+        "width": 2
+      },
+      "source": {
+        "bytes": "3c0069003e00410000d83c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "input": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 5,
+          "start": -1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 12,
+          "start": 6
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c0069003e00410000d83c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "410000d84200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "3c0069003e00410000d83c0028002f0069003e0042002900",
+        "width": 2
+      },
+      "source": {
+        "bytes": "3c0069003e00410000d83c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 3,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 4,
+          "start": 3
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 10,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c0069003e00410000d83c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "410000d84200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "3c0069003e005b0041005d007b0000d83c002f0069003e0042007d00",
+        "width": 2
+      },
+      "source": {
+        "bytes": "3c0069003e00410000d83c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "input": [
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        },
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 4,
+          "start": 4
+        },
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 4,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c0069003e00410000d83c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "410000d84200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "3c0069003e004100410061004200620000d83c002f0069003e004200",
+        "width": 2
+      },
+      "source": {
+        "bytes": "3c0069003e00410000d83c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 2
+        },
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 3,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 10,
+          "start": 3
+        },
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 4,
+          "start": 9
+        }
+      ],
+      "placeholder": {
+        "bytes": "3c0069003e00410000d83c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "410000d84200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "3c0069003e005b00410000d83c002f0069003e0042005d00",
+        "width": 2
+      },
+      "source": {
+        "bytes": "3c0069003e00410000d83c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 4,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 11,
+          "start": 0
+        }
+      ],
+      "placeholder": {
+        "bytes": "41003c0069003e003dd800de3c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "41003dd800de4200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "5b0041003c0069003e003dd800de3c002f0069003e0042005d00",
+        "width": 2
+      },
+      "source": {
+        "bytes": "41003c0069003e003dd800de3c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 3,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 6,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "41003c0069003e003dd800de3c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "41003dd800de4200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "41003c0069003e003c0061003e003dd800de3c002f0061003e003c002f0069003e004200",
+        "width": 2
+      },
+      "source": {
+        "bytes": "41003c0069003e003dd800de3c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "input": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 6,
+          "start": -1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "29",
+            "width": 1
+          },
+          "before": {
+            "bytes": "28",
+            "width": 1
+          },
+          "end": 13,
+          "start": 6
+        }
+      ],
+      "placeholder": {
+        "bytes": "41003c0069003e003dd800de3c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "41003dd800de4200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "41003c0069003e003dd800de28003c002f0069003e0042002900",
+        "width": 2
+      },
+      "source": {
+        "bytes": "41003c0069003e003dd800de3c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "input": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 4,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 1,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "7d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "7b",
+            "width": 1
+          },
+          "end": 11,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "41003c0069003e003dd800de3c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "41003dd800de4200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "5b0041005d003c0069003e007b003dd800de3c002f0069003e0042007d00",
+        "width": 2
+      },
+      "source": {
+        "bytes": "41003c0069003e003dd800de3c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "input": [
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        },
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 1
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "61",
+            "width": 1
+          },
+          "before": {
+            "bytes": "41",
+            "width": 1
+          },
+          "end": 1,
+          "start": 4
+        },
+        {
+          "after": {
+            "bytes": "62",
+            "width": 1
+          },
+          "before": {
+            "bytes": "42",
+            "width": 1
+          },
+          "end": 1,
+          "start": 4
+        }
+      ],
+      "placeholder": {
+        "bytes": "41003c0069003e003dd800de3c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "41003dd800de4200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "41003c0069003e00410061003c0069003e00420062003c0069003e003dd800de3c002f0069003e004200",
+        "width": 2
+      },
+      "source": {
+        "bytes": "41003c0069003e003dd800de3c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "input": [
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 2
+        },
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 4,
+          "start": 0
+        }
+      ],
+      "mapped": [
+        {
+          "after": {
+            "bytes": "5d",
+            "width": 1
+          },
+          "before": {
+            "bytes": "5b",
+            "width": 1
+          },
+          "end": 11,
+          "start": 0
+        },
+        {
+          "after": {
+            "bytes": "3c2f613e",
+            "width": 1
+          },
+          "before": {
+            "bytes": "3c613e",
+            "width": 1
+          },
+          "end": 1,
+          "start": 5
+        }
+      ],
+      "placeholder": {
+        "bytes": "41003c0069003e003dd800de3c002f0058003e004200",
+        "width": 2
+      },
+      "plain": {
+        "bytes": "41003dd800de4200",
+        "width": 2
+      },
+      "result": {
+        "bytes": "5b0041003c0069003e003dd800de3c002f0069003e0042005d00",
+        "width": 2
+      },
+      "source": {
+        "bytes": "41003c0069003e003dd800de3c002f0069003e004200",
+        "width": 2
+      },
+      "steps": [
+        {
+          "amount": 1,
+          "operation": "="
+        },
+        {
+          "amount": 3,
+          "operation": "+"
+        },
+        {
+          "amount": 2,
+          "operation": "="
+        },
+        {
+          "amount": 4,
+          "operation": "+"
+        },
+        {
+          "amount": 1,
+          "operation": "="
+        }
+      ]
+    }
+  ],
+  "dmp": "2.0.1",
+  "dmpModuleSha256": "f75b70cb57c507076dd6a05e7f6a610b86507ce569fdfb1e6549cf964dcc84d6",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "3fd3ce696955892e699483f13b0383aa9302c04448ffac4d05bd6f2c16a883ed",
+  "python": "3.11.15",
+  "schemaVersion": "citation-annotation-mapping/v1"
+}

@@ -44,10 +44,10 @@ import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import {
+  makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
   makeCitationNativeSleepClock,
   makeCitationNativeWorkerFixture,
-  makeCitationObservedSpawner,
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
 import { setupCitationRegexWorker as setup } from "./CitationRegexWorker.fixtures.ts";
@@ -111,18 +111,8 @@ const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
     cleanupDeadline,
   };
   const admission = yield* makeCitationNativeProcessAdmission(limits);
-  const observed = yield* makeCitationObservedSpawner();
-  const spawner = ChildProcessSpawner.of({
-    ...observed.spawner,
-    spawn: Effect.fn("RegexWorkerTest.spawn")((command) =>
-      observed.spawner.spawn(command).pipe(
-        Effect.map((handle) => ({
-          ...handle,
-          kill: (options) => handle.kill(options).pipe(Effect.andThen(afterKill)),
-        }))
-      )
-    ),
-  });
+  const observed = yield* makeCitationNativeAcknowledgementSpawner(afterKill);
+  const spawner = observed.spawner;
   const worker = yield* makeCitationRegexWorker(limits, fixture, [descriptor]).pipe(
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),

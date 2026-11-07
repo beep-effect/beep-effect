@@ -1,0 +1,14 @@
+{
+  "previous": "186cf8eb4d3467740db1faa5d9d46cf7ab3ecf857243a86e805078864894a568",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
+    "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
+      "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

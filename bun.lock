@@ -1097,6 +1097,7 @@
         "foldkit": "catalog:",
       },
       "devDependencies": {
+        "@beep/pglite": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",

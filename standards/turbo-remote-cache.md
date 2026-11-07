@@ -281,6 +281,12 @@ exact `origin/main` checkout, the repository's pinned Bun version, and ephemeral
 those values only through its protected environment and runs twice monthly or
 on manual dispatch.
 
+The warm runs two write-only Turbo passes: `build check lint` at Turbo's
+default concurrency, then `test` at `--concurrency=4`. The `cache-warm/v1`
+receipt records one lane per pass, in that order. A single combined pass
+starved timing-sensitive tests on one runner (#1858); hosted CI shards those
+lanes and never runs that shape.
+
 `bun run beep cache probe` runs a cold remote-read pass followed by a warm
 local-only pass. `bun run beep cache dashboard` decodes Turbo summaries,
 reports first-touch remote-eligible hit rate plus p50/p95 by cache mode, excludes

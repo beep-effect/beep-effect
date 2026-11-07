@@ -1,17 +1,13 @@
 import * as NodeURL from "node:url";
 import { makeCitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
-import {
-  CitationCleanerFailure,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { CitationCleanerTextDescriptor } from "@beep/law-practice-server/internal/Citation/CleanerTextIdentity";
 import {
   CitationCleanerValues,
   makeCitationCleanerValues,
 } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { CitationLiteralCleaner } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
+import { CitationCleaner, CitationCleanerFailure, CitationCleanerProduced } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -33,7 +29,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { makeCitationUnicodePipelineHarness } from "./CitationUnicodePipeline.fixtures.ts";
-import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
 
 const Row = S.Struct({
   name: S.String,
@@ -163,8 +159,8 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const makePipeline = (value: CitationCleanerObject, name: unknown, repeat = false) =>
           makeCitationCleanerPipeline(policy).pipe(
             Effect.provideService(
-              CitationCleanerRuntime,
-              CitationCleanerRuntime.of({
+              CitationCleaner,
+              CitationCleaner.of({
                 fromText: values.text,
                 assertOwned: values.assertOwned,
                 textUnits: Effect.fn("BuiltinTest.textUnits")((ref) =>

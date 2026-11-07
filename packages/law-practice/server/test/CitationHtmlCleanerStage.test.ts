@@ -1,11 +1,11 @@
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
 import {
+  CitationCleaner,
   CitationCleanerFailure,
   CitationCleanerObject,
   CitationCleanerProduced,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -21,7 +21,7 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
-import type { CitationCleanerWork } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
 const StringJson = S.fromJsonString(S.String);
 
@@ -47,7 +47,7 @@ const owned = (
   const read = Effect.fn("HtmlStageTest.read")((ref: CitationCleanerObject) =>
     readAny(ref).pipe(Effect.filterOrFail((value): value is string => typeof value === "string", fail))
   );
-  const runtime = CitationCleanerRuntime.of({
+  const runtime = CitationCleaner.of({
     fromText: Effect.fn("HtmlStageTest.fromText")((text) => Effect.sync(() => own(text))),
     assertOwned: Effect.fn("HtmlStageTest.assertOwned")(
       (ref): Effect.Effect<void, CitationCleanerFailure> =>
@@ -136,7 +136,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const units = 1_000_003;
         const h = owned(worker, units, () => `${Str.repeat(1_000_001)("A")}😀`);
         const pipeline = yield* makeCitationCleanerPipeline(policy).pipe(
-          Effect.provideService(CitationCleanerRuntime, h.runtime)
+          Effect.provideService(CitationCleaner, h.runtime)
         );
         const result = yield* pipeline.run({ text: "x", plan: "expand-html" });
         const citationResult2 = yield* h.read(result.value);
@@ -150,7 +150,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const zeroWorker = yield* makeCitationHtmlWorker(zeroPolicy, paths);
         const empty = owned(zeroWorker, zeroUnits, () => `<div><script>${Str.repeat(1_000_000)("A")}</script></div>`);
         const zeroPipeline = yield* makeCitationCleanerPipeline(zeroPolicy).pipe(
-          Effect.provideService(CitationCleanerRuntime, empty.runtime)
+          Effect.provideService(CitationCleaner, empty.runtime)
         );
         const zero = yield* zeroPipeline.run({ text: "x", plan: "zero-html" });
         const citationResult4 = yield* empty.read(zero.value);
@@ -162,7 +162,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const fullWorker = yield* makeCitationHtmlWorker(fullPolicy, paths);
         const full = owned(fullWorker, 1, () => "A");
         const fullPipeline = yield* makeCitationCleanerPipeline(fullPolicy).pipe(
-          Effect.provideService(CitationCleanerRuntime, full.runtime)
+          Effect.provideService(CitationCleaner, full.runtime)
         );
         const citationResult6 = yield* Effect.flip(fullPipeline.run({ text: "x", plan: "full-html" }));
         expect(citationResult6).toMatchObject({
@@ -221,7 +221,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         );
         const h = owned(worker, 1, () => "x");
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-          Effect.provideService(CitationCleanerRuntime, h.runtime)
+          Effect.provideService(CitationCleaner, h.runtime)
         );
         const running = yield* pipeline.run({ text: "x", plan: "cancel-html" }).pipe(Effect.forkChild);
         const observed = yield* fs
@@ -260,7 +260,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         });
         const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-          Effect.provideService(CitationCleanerRuntime, h.runtime)
+          Effect.provideService(CitationCleaner, h.runtime)
         );
         const result = yield* pipeline.run({ text: "x", plan: "bytes-html" });
         const citationResult18 = yield* h.read(result.value);
@@ -268,7 +268,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         expect(result.producedTextUtf16).toBe(1);
         const wide = owned(worker, 0, () => new TextEncoder().encode('<meta charset="utf-8"><div>😀</div>'));
         const widePipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-          Effect.provideService(CitationCleanerRuntime, wide.runtime)
+          Effect.provideService(CitationCleaner, wide.runtime)
         );
         const citationResult19 = yield* Effect.flip(widePipeline.run({ text: "x", plan: "bytes-html" }));
         expect(citationResult19).toMatchObject({

@@ -4,18 +4,21 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationSpanOffsetsPlan, makeCitationSpanOffsets } from "./SpanOffsets.ts";
-import { CitationTextBudget } from "./TextBudget.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlTagGeometry");
 const max = CitationEngineAbsoluteMaxima;
@@ -96,10 +99,12 @@ export const makeCitationHtmlTagGeometry = Effect.fn("Citation.makeHtmlTagGeomet
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
   const input = yield* makeCitationRegexInput(limits);
   const plain = yield* input.prepareUnicode(decoded.plain, () => Effect.void);
+  // Forward targets placeholder markup; backward starts at original markup.
+  // Masking preserves Python point count but can change width and UTF-16 units.
   if (
     !sameLayout(decoded.forward.before, plain.layout) ||
     !sameLayout(decoded.backward.after, plain.layout) ||
-    !sameLayout(decoded.forward.after, decoded.backward.before)
+    decoded.forward.after.pythonLength !== decoded.backward.before.pythonLength
   )
     return yield* fail("invalid-input");
   const forward = yield* makeCitationSpanOffsets(limits, decoded.forward);

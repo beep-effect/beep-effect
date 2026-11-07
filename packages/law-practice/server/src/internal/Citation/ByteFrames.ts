@@ -12,6 +12,37 @@ const $I = $LawPracticeServerId.create("internal/Citation/ByteFrames");
 const Limit = S.Int.check(S.isBetween({ minimum: 1, maximum: CitationEngineAbsoluteMaxima.processMessageBytes })).pipe(
   $I.annoteSchema("Limit", { description: "Effective complete-frame byte ceiling, including terminal LF." })
 );
+/** Only closed server error constructors are injected; framing stays shared.
+ * @internal @category services @since 0.0.0
+ */
+export interface CitationNativeFrameErrors<Invalid, Exceeded, Failed> {
+  readonly exceeded: () => Exceeded;
+  readonly failed: () => Failed;
+  readonly invalid: () => Invalid;
+}
+/** Install one family's existing bounded reader without repeating its loop or
+ * error translation. The source's platform error is deliberately discarded.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationNativeFrameReader = <Invalid, Exceeded, Failed>(
+  errors: CitationNativeFrameErrors<Invalid, Exceeded, Failed>
+) =>
+  Effect.fn("Citation.readNativeFrames")(function* <SourceError>(
+    source: Stream.Stream<Uint8Array, SourceError>,
+    maximum: number,
+    expected: 1 | 3,
+    onFrame: (bytes: Uint8Array) => Effect.Effect<void, Invalid | Exceeded | Failed>
+  ) {
+    yield* readCitationByteFrames<SourceError, Invalid | Exceeded | Failed>(
+      source,
+      maximum,
+      expected,
+      onFrame,
+      errors.invalid,
+      errors.exceeded,
+      errors.failed
+    );
+  });
 /** Trusted transport error constructors and callback stay in the parent/worker
  * program. They are never request fields. Every copy and amortized buffer growth
  * stays within the complete-frame ceiling; one-byte fragmentation has fixed

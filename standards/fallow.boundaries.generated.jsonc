@@ -1396,12 +1396,14 @@
         "allow": [
           "@beep/alchemy-postgres",
           "@beep/identity",
+          "@beep/pglite",
           "@beep/schema",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/alchemy-postgres",
           "@beep/identity",
+          "@beep/pglite",
           "@beep/schema",
           "@beep/utils"
         ]

@@ -71,7 +71,7 @@ export const PartitionedCiLane = LiteralKit(["lint", "test-unit"]).pipe(
 export type PartitionedCiLane = typeof PartitionedCiLane.Type;
 
 /**
- * Stable identifiers for the six hosted CI lane partitions.
+ * Stable identifiers for the hosted lint and unit-test partitions.
  *
  * **Details**
  *
