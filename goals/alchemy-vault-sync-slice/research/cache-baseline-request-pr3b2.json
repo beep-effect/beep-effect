@@ -1,0 +1,27 @@
+{
+  "previous": "62a23a82591df70ff19d9b3121e62a9c1989039ce0d8076eaea19bb96dc27fe4",
+  "review": {
+    "reviewer": "GPT-6.1 Sol medium (PR 3b2 implementation self-review)",
+    "reason": "Record only the twelve stack-local dependency-edge subjects after merging the main global-input repair; no task, cache flag or qualification change. Re-observe unchanged turbo.json source.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2.md",
+      "sha256": "e3103506decd37699279b2ae21f95e200df6ef62776749dc3d5dad767c27f50a"
+    }
+  },
+  "scope": [
+    "@beep/alchemy-postgres#build",
+    "@beep/alchemy-postgres#check",
+    "@beep/alchemy-postgres#lint:deprecated-apis",
+    "@beep/alchemy-postgres#test",
+    "@beep/documents-server#build",
+    "@beep/documents-server#check",
+    "@beep/documents-server#lint:deprecated-apis",
+    "@beep/documents-server#test",
+    "@beep/documents-use-cases#build",
+    "@beep/documents-use-cases#check",
+    "@beep/documents-use-cases#lint:deprecated-apis",
+    "@beep/documents-use-cases#test"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

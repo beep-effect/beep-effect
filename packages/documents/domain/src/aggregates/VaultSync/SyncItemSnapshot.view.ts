@@ -24,6 +24,7 @@ export class SyncItemSnapshot extends Domain.View("SyncItemSnapshot", {
   state: ItemState,
   initial: SyncItem.definition.initial,
   evolve: {
+    ItemGenesisImported: (_s, e) => e.record,
     ItemTracked: (s, e, c) => SyncItem.definition.evolve.ItemTracked(s, e, { ...c.envelope, id: c.source.id }),
     ItemEdited: (s, e, c) => SyncItem.definition.evolve.ItemEdited(s, e, { ...c.envelope, id: c.source.id }),
     ItemMoved: (s, e, c) => SyncItem.definition.evolve.ItemMoved(s, e, { ...c.envelope, id: c.source.id }),

@@ -4,10 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as Domain from "@alchemy.run/domain";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import * as C from "./SyncConflict.command.ts";
+import * as G from "./SyncGenesis.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 
@@ -51,8 +54,12 @@ export class SyncConflict extends Domain.Aggregate("SyncConflict", {
   id: V.ConflictId,
   state: S.NullOr(C.ConflictRecord),
   initial: null,
-  commands: [C.ConfirmConflict, C.ReviewConflict, C.ConfirmConflictReview],
+  commands: [G.ImportConflictGenesis, C.ConfirmConflict, C.ReviewConflict, C.ConfirmConflictReview],
   decide: {
+    ImportConflictGenesis: (s, c) =>
+      s === null
+        ? [G.ConflictGenesisImported.make(Struct.omit(c, ["_tag"]))]
+        : SyncRuleViolation.make({ rule: "genesis-requires-empty-stream", evidence: c.importId }),
     ConfirmConflict: (s, c, { id }) =>
       id !== c.record.publicId
         ? SyncRuleViolation.make({ rule: "conflict-id", evidence: id })
@@ -77,6 +84,7 @@ export class SyncConflict extends Domain.Aggregate("SyncConflict", {
       decideOpenConflict(s, c, (record) => [C.ConflictReviewed.make({ record: { ...record, reviewed: true } })]),
   },
   evolve: {
+    ConflictGenesisImported: (_s, e) => e.record,
     ConflictReviewRequested: (s) => s,
     ConflictRecorded: (_s, e) => e.record,
     ConflictReviewed: (_s, e) => e.record,

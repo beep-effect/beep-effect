@@ -200,7 +200,8 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         O.liftPredicate(state, (s): s is Registered => s._tag === "Registered" && !s.paused)
       );
       const probe = Effect.fnUntraced(function* (destination: Registered) {
-        const root = yield* mirror.resolveRoot({ destinationId, name: destination.name });
+        // Genesis keeps the legacy mirror root folder name apart from the destination name.
+        const root = yield* mirror.resolveRoot({ destinationId, name: destination.remoteRootName ?? destination.name });
         yield* destinations.send(
           destinationId,
           V.ResolveDestinationRoot.make({ rootId: root.remoteId }),
