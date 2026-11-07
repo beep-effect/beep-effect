@@ -504,6 +504,8 @@ describe("goals archive", () => {
           A.map(qualified.entries, (entry) => `${entry.root}/${entry.slug}`),
           ["explorations/done"]
         );
+        const template = yield* planner.plan(options(["_template"])).pipe(Effect.flip);
+        assert.strictEqual(template.reason, "archive-input-invalid");
         const unique = yield* planner.plan(options(["old"]));
         assert.deepStrictEqual(
           A.map(unique.entries, (entry) => `${entry.root}/${entry.slug}`),
