@@ -224,12 +224,14 @@ export type LibraryCatalogSchemaVersion = typeof LibraryCatalogSchemaVersion.Typ
 export const LibraryCitoRelation = LiteralKit([
   "citesAsEvidence",
   "citesAsRelated",
+  "citesForInformation",
   "extends",
   "usesMethodIn",
   "usesDataFrom",
   "critiques",
   "supports",
   "disputes",
+  "disagreesWith",
   "discusses",
 ]).pipe($I.annoteSchema("LibraryCitoRelation", { description: "CiTO relation local names attached to a finding." }));
 /**
