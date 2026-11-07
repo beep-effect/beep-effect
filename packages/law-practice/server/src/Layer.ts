@@ -99,4 +99,9 @@ export const LawPracticeServerLive: Layer.Layer<
  * @category layers
  * @since 0.0.0
  */
-export { CitationEngineConfiguration, CitationEngineLive } from "./CitationEngine/CitationEngine.layer.ts";
+export {
+  CitationEngineConfiguration,
+  CitationEngineDefaultConfiguration,
+  CitationEngineDefaultLive,
+  CitationEngineLive,
+} from "./CitationEngine/CitationEngine.layer.ts";

@@ -301,7 +301,10 @@
     "packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts",
     "packages/law-practice/domain/test/CitationBluebook.test.ts",
     "packages/law-practice/domain/test/dtslint/CitationBluebook.test-d.ts",
-    "packages/law-practice/domain/test/fixtures/bluebook-layout.json"
+    "packages/law-practice/domain/test/fixtures/bluebook-layout.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-default-engine-owners.md",
+    "packages/law-practice/server/src/Layer.ts",
+    "packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

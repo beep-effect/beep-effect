@@ -1565,6 +1565,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Remove the stronger assertion while retaining original frozen metadata, edition observations and all unfinished proof duties.
 
+### Compose production default engine owners and capture installation data, 2026-11-07
+
+CitationEngineDefaultLive reuses Effect Layer.effectContext and existing authenticated default installers to create coherent cleaner/container owners and shared operation/native admission. Trusted host/source/identity/platform dependencies remain injected; no synthetic production identity is added. Both configured and default engines capture complete schema data before async use. Four Bun/Node assembly combinations plus one property pass in 60.60s; mixed-runtime/missing-asset refusals, post-build worker-path mutation and scope closure are covered. Package lint/types, declarations, blocking laws and zero-introduced scoped Fallow pass. Deployment, whole-engine safety/scaling and exhaustive source/donor/lifecycle acceptance remain open.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the default Layer and complete configuration snapshot together with their runtime controls; preserve explicit host identity and every unfinished goal requirement.
+
 ### Compose the captured four-operation CitationEngine Layer, 2026-11-07
 
 CitationEngine Context.Service and CitationEngineLive compose real clean/extract/resolve/annotate operations with closed failures and R=never methods. Actual Bun and Node Layer paths execute all four operations, preserve outputs and confirm exits. Final eleven service/cleaner/resolver tests, twenty-two cleaner regressions and four contracts pass; lint/types/declarations/laws/Fallow pass. Ninety-four documentation export checks pass; prior-head hosted JSDoc/Fallow are green. Broader protocols, lawful transforms, deployment/lifecycle, safety/scaling and exhaustive accounting remain open. See history/evidence/2026-11-07-four-operation-engine-layer.md.

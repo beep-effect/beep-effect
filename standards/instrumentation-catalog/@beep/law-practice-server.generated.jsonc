@@ -398,6 +398,7 @@
     {"name":"Citation.makeCourtLookup","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeDefaultCallbacks","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeDefaultConfiguration","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.makeDefaultEngine","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeDefaultEngineConfiguration","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeDiffKernel","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.makeDiffWorker","owner":"@beep/law-practice-server","family":"slice","conforms":true},
