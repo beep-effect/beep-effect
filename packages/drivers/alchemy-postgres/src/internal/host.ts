@@ -68,6 +68,8 @@ const decodeGenerations = rowsOf(S.Struct({ generation: S.Int }));
 const leaseMillis = Duration.toMillis(Duration.seconds(30));
 /** The longest a failed delivery waits before its next attempt. */
 const retryCeilingMillis = Duration.toMillis(Duration.minutes(1));
+/** The largest backoff exponent: keeps `pollMillis * 2^attempts` inside `bigint` however often a row fails. */
+const retryExponentCap = 30;
 /** How long a failed backfill job waits before it runs again. */
 const jobRetryMillis = Duration.toMillis(Duration.seconds(1));
 const byPosition = Order.mapInput(Order.Number, (row: DeliveryRow) => row.position);
@@ -518,7 +520,7 @@ export const makeContext = (deps: HostDeps) => {
     );
     yield* sql`UPDATE ${sql(tables.delivery)}
       SET attempts = attempts + 1, locked_until = 0,
-        next_attempt_at = ${at} + LEAST(${config.pollMillis} * POWER(2, attempts)::bigint, ${retryCeilingMillis})
+        next_attempt_at = ${at} + LEAST(${config.pollMillis} * POWER(2, LEAST(attempts, ${retryExponentCap}))::bigint, ${retryCeilingMillis})
       WHERE position = ${row.position} AND claimed_by = ${owner}`;
   });
 

@@ -730,6 +730,11 @@ const ddl = (sql: SqlClient.SqlClient, tables: AlchemyPostgresTables, prefix: st
     claimed_by text,
     at bigint NOT NULL
   )`,
+  // #2825 named the producer column `aggregate`; rename it in place on databases it migrated.
+  sql`DO $$ BEGIN
+    ALTER TABLE ${sql(tables.delivery)} RENAME COLUMN aggregate TO producer;
+  EXCEPTION WHEN undefined_column OR duplicate_column THEN NULL;
+  END $$`,
   sql`CREATE INDEX IF NOT EXISTS ${sql(`${prefix}delivery_pending_idx`)}
     ON ${sql(tables.delivery)} (model, status, position)`,
   sql`CREATE TABLE IF NOT EXISTS ${sql(tables.consumerGeneration)} (

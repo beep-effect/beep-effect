@@ -120,6 +120,22 @@ describe("AlchemyPostgresPlatform", () => {
       })
     );
 
+    it.effect("renames the outbox's #2825 `aggregate` column to `producer` on migrate", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE legacy_delivery (position bigserial PRIMARY KEY, model text NOT NULL,
+          aggregate text NOT NULL, status text NOT NULL)`;
+        const config = AlchemyPostgresConfig.make({ tablePrefix: "legacy_" });
+        yield* migrate(config);
+        yield* migrate(config);
+        const rows = yield* sql`SELECT column_name AS tablename FROM information_schema.columns
+          WHERE table_name = 'legacy_delivery' AND column_name IN ('aggregate', 'producer')`.pipe(
+          Effect.flatMap(decodeTableNames)
+        );
+        deepStrictEqual(rows, [{ tablename: "producer" }]);
+      })
+    );
+
     it.effect("fails migrate with an AlchemyPostgresError when a table name is taken by another relation", () =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
