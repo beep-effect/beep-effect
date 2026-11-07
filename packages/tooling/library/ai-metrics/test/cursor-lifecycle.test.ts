@@ -216,7 +216,9 @@ const inspectSyntheticPeer = Effect.fn("CursorLifecycleTest.inspectSyntheticPeer
       expect(Str.includes(marker)(output)).toBe(false);
     return { listenerReady, diagnosticAckObserved, helperExitZero: exit === 0, report };
   },
-  Effect.mapError(() => CursorLifecycleError.make({ reason: "transport" }))
+  Effect.timeout("15 seconds"),
+  Effect.mapError(() => CursorLifecycleError.make({ reason: "transport" })),
+  TestClock.withLive
 );
 const salt = "synthetic-cursor-passive-salt";
 const id = Sha256Hex.make(Str.repeat(64)("a"));
@@ -1139,7 +1141,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(observed.diagnosticAckObserved, message).toBe(true);
       expect(observed.helperExitZero, message).toBe(true);
       expect((yield* f.journal.stats).pages, message).toBe(0);
-    }).pipe(Effect.timeout("15 seconds"))
+    })
   )
 );
 
@@ -1206,7 +1208,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(observed.report.phase).toBe("bootstrap");
       expect(R.size(observed.report.checks)).toBe(0);
       expect((yield* f.journal.stats).pages).toBe(0);
-    }).pipe(Effect.timeout("15 seconds"))
+    })
   )
 );
 
@@ -1232,7 +1234,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(observed.report.predicateAstPreserved).toBe(true);
       expect(observed.report.shortCircuitOrderPreserved).toBe(true);
       expect((yield* f.journal.stats).pages).toBe(0);
-    }).pipe(Effect.timeout("15 seconds"))
+    })
   )
 );
 
@@ -1249,6 +1251,6 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(Str.includes("PRIVATE-HELPER")(encoded)).toBe(false);
       expect(Str.includes("_closed_probe")(encoded)).toBe(false);
       expect((yield* f.journal.stats).pages).toBe(0);
-    }).pipe(Effect.timeout("15 seconds"))
+    })
   )
 );

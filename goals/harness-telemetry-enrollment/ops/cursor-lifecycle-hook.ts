@@ -226,7 +226,7 @@ const qualifyEnrollment = Effect.fnUntraced(function* (e: CursorCallbackEnrollme
       const before = yield* io(() => file.stat({ bigint: true }));
       if (!before.isFile() || (before.mode & 0o022n) !== 0n || before.size > 268435456n)
         return yield* failure("enrollment");
-      const bytes = yield* readBoundedFile(file, 268435456);
+      const bytes = yield* readBoundedFile(file, Number(before.size));
       const after = yield* io(() => file.stat({ bigint: true }));
       if ((yield* hashBytes(bytes)) !== e.callbackSha256 || !sameFile(before, after))
         return yield* failure("enrollment");
