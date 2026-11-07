@@ -208,6 +208,14 @@ Lane `feat/research-intake-2026-11`
 
 Reverse: Return to a literal whole-tree git grep on the handle after removing the pre-existing public references, or widen the guard's diff base
 
+### verify acceptance counts this intake's sources; the October missing=5 baseline is reported, not repaired, 2026-11-07
+
+Before any November work, research library verify on the untouched library reports source/version coverage missing=5 and 7 integrity lines, all from the 2026-10-06 and 2026-10-14 intakes, with SHACL conforming. A reflink copy mined with one real T1 and one real T2 job produced byte-identical verify output, so mining adds no failures. The SPEC forbids editing the October intakes or their accounting, so this goal's zero-missing and zero-integrity checks apply to sources whose derivation roots are November or legal-ontology intakes, and COVERAGE.md reports the October baseline beside them. Rejected: writing dispositions onto October sources from this goal.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Give the five October sources reviewed dispositions in a separate packet and tighten the acceptance to library-wide zero
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
