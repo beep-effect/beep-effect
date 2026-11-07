@@ -2040,7 +2040,7 @@
       "qualifiedText": "A system comprising the unit includes: a plate; a cover.",
       "outcome": "admitted-existing-normative-overlay",
       "frozenOracle": {
-        "path": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/claim-check-clauses/packages/law-practice/domain/test/fixtures/claim-element/recurrence-source-plans.json",
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/recurrence-source-plans.json",
         "sha256": "30c157e028651b63ac6074be1d8bfbca01887a6c215b6a077e79446f57648e07",
         "case": "internal-unlabelled-composition"
       },

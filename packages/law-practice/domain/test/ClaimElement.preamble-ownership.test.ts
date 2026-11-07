@@ -29,6 +29,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import fixtures from "./fixtures/claim-element/preamble-ownership-plans.json" with { type: "json" };
@@ -581,3 +583,16 @@ const dependencyIntroducer = Effect.fn("PreambleOwnershipTest.dependencyIntroduc
     );
 });
 it.effect("owns the complete proved dependency introducer without a metadata donor", dependencyIntroducer);
+
+// Fixture strings are repository data; an absolute path would leak the authoring checkout.
+const absoluteFixturePaths = (value: unknown, at: string): ReadonlyArray<string> => {
+  if (P.isString(value)) return Str.startsWith("/")(value) || /^[A-Za-z]:[\\/]/u.test(value) ? [at] : A.empty();
+  if (A.isArray(value)) return A.flatMap(value, (item, index) => absoluteFixturePaths(item, `${at}[${index}]`));
+  if (P.isObject(value))
+    return A.flatMap(R.toEntries(value), ([key, item]) => absoluteFixturePaths(item, `${at}.${key}`));
+  return A.empty();
+};
+it("keeps every recorded fixture path repository-relative", () => {
+  assert.deepStrictEqual(absoluteFixturePaths(fixtures, "plans"), []);
+  assert.deepStrictEqual(absoluteFixturePaths(routeFixtures, "routes"), []);
+});
