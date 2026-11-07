@@ -4,13 +4,13 @@
     "id": "history-message-overlay",
     "packetId": "goal-packet/v1:57aca20f21dde7e51af0ea5bd89e6572dcbdb8d3e4753966b9448706183bdf7d",
     "title": "History Message Overlay",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
-    "updated": "2026-11-06",
+    "updated": "2026-11-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/history-message-overlay",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "History Message Overlay (graduated from explorations/git-history-rewrite).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -87,7 +87,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -102,8 +102,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2858
-  }
+  },
+  "retentionReason": "Documents a live system: docs/history/commit-message-map.json, beep history notes and the History Notes Publish workflow still project refs/notes/history from this packet's decisions (no-rewrite ruling, canonical note body, deterministic notes commit)."
 }
