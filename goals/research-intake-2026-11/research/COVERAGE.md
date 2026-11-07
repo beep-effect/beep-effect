@@ -49,7 +49,7 @@ from `research-library-routes` downloads the Box nightlies.
 | Source | Count | Intake |
 | --- | ---: | --- |
 | `beep-spikes` paper | 1 | November hop 0 |
-| `IP_LAW_ONTOLOGY_RESEARCH` PDFs | 449 (surveyed 2026-11-06; recount at download) | separate snapshot, T1 only |
+| `IP_LAW_ONTOLOGY_RESEARCH` items | 449 (337.6 MB, Box listing 2026-11-07) | separate snapshot, T1 only |
 
 ## Hop 1
 
