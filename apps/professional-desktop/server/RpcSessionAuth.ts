@@ -28,7 +28,7 @@ const rpcAuthDecisions = Metric.counter("desktop_rpc_auth_decisions_total", { in
  * @category configuration
  * @since 0.0.0
  */
-export { DesktopRpcSessionToken, DesktopRpcSessionTokenRequired } from "@/runtime/SessionToken";
+export { DesktopRpcSessionToken, DesktopRpcSessionTokenRequired } from "../src/runtime/SessionToken.ts";
 
 /**
  * Build the HTTP Authorization header value for a desktop RPC session token.
