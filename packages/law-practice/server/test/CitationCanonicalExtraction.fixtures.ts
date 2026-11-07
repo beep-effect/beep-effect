@@ -12,7 +12,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixtures.ts";
-import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
+import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { projectCitationSemanticMetadata } from "./CitationSemanticExtraction.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -165,7 +165,7 @@ export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionT
       yield* assertCitation(actual, expected, row.id);
     expect(result.document.mentions, row.id).toHaveLength(row.input.cites_found.length);
     for (const [mention, original] of A.zip(result.document.mentions, row.input.cites_found))
-      yield* assertCitationNativeRange(result.source.source.sourceText, original.span, mention.anchor.anchor);
+      yield* assertCitationMentionRanges(result.source.source.sourceText, mention, original);
     expect(result.diagnostics.unverified, row.id).toEqual([]);
     expect(result.diagnostics.unverifiedComponents, row.id).toEqual([]);
   });

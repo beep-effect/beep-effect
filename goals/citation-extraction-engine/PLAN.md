@@ -1549,6 +1549,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the extraction wrapper and typed translator together, preserving native corpora and every unfinished acceptance requirement.
 
+### Compare every canonical primary full and pin-inclusive range, 2026-11-07
+
+Share the existing three-range comparison between original public corpora and extend the 150-input canonical replay to full and pin-inclusive source coordinates. Add focused Bun/Node tests for original input 11, whose primary/full/pin-inclusive ranges differ. Original capture coordinates remain authoritative; no inferred expected spans or ledger completion promotion. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Revert only an unsound coordinate projection after recording the source mismatch; retain the original captured ranges and verification requirement.
+
 ### Compare public court and reporter identities with sealed evidence, 2026-11-07
 
 The public extraction corpus and private semantic replay independently compare case reporter ids, publication/court artifact versions and known/unmapped court objects against the sealed vocabulary mapping. All eighty original projection models and explicit unknown/empty/null controls are covered. Seven public/projection tests pass; the factored projection replay passes five tests. Prior head 50a493cef5 now passes hosted Labs and Fallow envelopes. See history/evidence/2026-11-07-public-vocabulary-identities.md. All full-goal proof rows remain open.

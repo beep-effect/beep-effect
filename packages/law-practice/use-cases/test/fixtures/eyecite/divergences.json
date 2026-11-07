@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "02f00400408ed196ad429e969372746482c63831b063b239eaecae182e6ff2de",
+  "planSha256": "661477b7e1ae4af7df07b9a4315d4b721b1d8b129a1e212e1c77d979231cff7f",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1104,7 +1104,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
-          "sha256": "5e1e6b4f4d0a326817faa2fb850f9d311323bcca65d5e71074309b101a0bcad0"
+          "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
         },
         {
           "path": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts",
@@ -1668,7 +1668,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineCorpus.fixtures.ts",
-          "sha256": "5257c7dd720192e217e464483318860cedd00a04ee06df42a598f43adf8cf13f"
+          "sha256": "1aa034f9a780db8c531975b7542491aebb6b24ab91ec6a08529924b10f19dc6a"
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineCorpus.test.ts",
@@ -1772,11 +1772,11 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-extraction-corpus.md",
-          "sha256": "01827444a61995afc03271f0fa61717e7c173cd0b31bb0a3932f6db94c4c6a96"
+          "sha256": "528825798874d47c4316f2ff105d53cfd7b830b219ba096fcc89c270651ea7e8"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-          "sha256": "f80c249fee54bac5a7ab9b0421f19ac10d87ebe52efb06a3c8b79cb00ab502b9"
+          "sha256": "c4b0c5b7c418d6835b058e6e20e696a4b743e75334db481cbf31c13144eddd7d"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -1785,6 +1785,10 @@
         {
           "path": "packages/law-practice/server/test/integration/CitationCanonicalExtraction.test.ts",
           "sha256": "33f6769370a42ef2804b98c17cf325bdabaab629baba8cbbb6616090d40cd8ac"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+          "sha256": "620288628ce88c8676755d1ac9ae7908ad9f5091ae4bd73454837db2fd8a9b8e"
         }
       ],
       "workflowState": "audit",

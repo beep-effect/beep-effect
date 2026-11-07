@@ -9,12 +9,11 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
-import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixtures.ts";
-import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
+import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationSemanticDocument } from "./CitationSemanticExtraction.fixtures.ts";
 import { makeCitationVocabularyAssertion } from "./CitationSemanticVocabulary.fixtures.ts";
@@ -89,17 +88,7 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
     expect(result.document.resolutions).toHaveLength(result.document.mentions.length);
     for (const [mention, original] of A.zip(result.document.mentions, row.expected)) {
       families = HashSet.add(families, original.kind);
-      yield* assertCitationNativeRange(result.source.source.sourceText, original.span, mention.anchor.anchor);
-      const fullSpan = O.getOrThrow(A.findFirst(mention.components, (component) => component.name === "fullSpan"));
-      yield* assertCitationNativeRange(result.source.source.sourceText, original.fullSpan, fullSpan.anchor.anchor);
-      const pincite = O.getOrThrow(
-        A.findFirst(mention.components, (component) => component.name === "spanWithPincite")
-      );
-      yield* assertCitationNativeRange(
-        result.source.source.sourceText,
-        original.spanWithPincite,
-        pincite.anchor.anchor
-      );
+      yield* assertCitationMentionRanges(result.source.source.sourceText, mention, original);
     }
     expect(result.report.extraction?.semanticCitations).toBe(row.expected.length);
     expect(result.report.extraction?.verifiedMentions).toBe(row.expected.length);

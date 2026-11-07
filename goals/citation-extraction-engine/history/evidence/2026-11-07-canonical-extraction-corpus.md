@@ -58,3 +58,26 @@ Final focused result for the expanded replay: all eight tests pass in 105.74
 seconds. This covers the two original case/whitespace inputs and the first
 original law, journal and Tax Court input on both runtimes. It does not qualify
 the remaining scheduled integration inputs.
+
+## All exposed source ranges
+
+The canonical replay now compares primary, full and pin-inclusive source ranges,
+including their exact UTF-16 offsets and quoted source text. A shared helper
+retains the same three comparisons in the existing 36-document original corpus.
+Expected coordinates come from each original captured `cites_found` observation;
+manual expected-object placeholder positions are never used as source evidence.
+
+A dedicated focused test selects original builtin input 11 on both runtimes.
+That input has distinct primary `[20,29]`, full `[4,54]` and pin-inclusive
+`[20,38]` source ranges. Its actual assertions read the sealed coordinates rather
+than embedding those example numbers. This prevents identical no-pin ranges
+from being the only focused check of the helper. Server lint/types and the first
+Fallow new-only audit pass. Runtime replay remains pending at this checkpoint;
+no complete-case or full hosted qualification is inferred.
+
+Final source-range verification: all eight existing canonical focused tests pass
+in 90.66 seconds with all three ranges checked. Both dedicated distinct-range
+tests pass in 40.01 seconds on Bun and Node. Final server lint/types and Fallow
+new-only pass with zero introduced findings. Main was freshly fetched and has
+zero commits ahead of this branch. Full 150-input integration on both runtimes
+and all full-goal acceptance duties remain unqualified.
