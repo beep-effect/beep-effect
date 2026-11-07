@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T12:23:08.363Z
+Generated: 2026-11-07T14:30:30.383Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
 | publicModules | 3777 |
-| publicExports | 26950 |
+| publicExports | 26958 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -193,7 +193,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 135 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
 | 136 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
 | 137 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 138 | `@beep/documents-domain` | `packages/documents/domain` | clean | 80 | 276 | 0 | 0 |
+| 138 | `@beep/documents-domain` | `packages/documents/domain` | clean | 80 | 282 | 0 | 0 |
 | 139 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
 | 140 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 178 | 838 | 0 | 0 |
 | 141 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
@@ -207,7 +207,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 149 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
 | 150 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
 | 151 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
-| 152 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 36 | 151 | 0 | 0 |
+| 152 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 36 | 153 | 0 | 0 |
 | 153 | `@beep/epistemic-config` | `packages/epistemic/config` | clean | 7 | 20 | 0 | 0 |
 | 154 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 34 | 99 | 0 | 0 |
 | 155 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 41 | 158 | 0 | 0 |

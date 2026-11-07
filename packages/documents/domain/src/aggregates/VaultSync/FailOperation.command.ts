@@ -15,7 +15,7 @@ import * as V from "./Values.ts";
  * **Example** (Build a command for dispatch)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
- * const command=V.FailOperation.make({holder:"worker",attempt:1,retryable:true,maxAttempts:3,backoffMillis:1000,reason:"provider unavailable"});
+ * const command=V.FailOperation.make({holder:"worker",attempt:1,retryable:true,maxAttempts:3,backoffMillis:1000,reason:"uploadFile"});
  * console.log(command._tag);
  * ```
  * @category aggregates
@@ -29,7 +29,7 @@ export class FailOperation extends Domain.Command("FailOperation", {
     retryable: S.Boolean,
     maxAttempts: S.Int,
     backoffMillis: S.Finite,
-    reason: S.String,
+    reason: V.MirrorOperation,
   },
   events: [E.OperationRetryScheduled, E.OperationFailed],
   rejects: [SyncRuleViolation],

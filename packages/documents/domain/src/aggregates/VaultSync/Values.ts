@@ -279,6 +279,62 @@ export const OperationType = LiteralKit([
  */
 export type OperationType = typeof OperationType.Type;
 /**
+ * Closed vocabulary of the remote mirror calls a vault sync failure can name.
+ *
+ * **Details**
+ *
+ * Mirror adapters report a failure by the call that failed, never by vendor
+ * text. Operation failures, cursor failures and destination polls carry this
+ * value, so the Views that expose them cannot carry free adapter text.
+ *
+ * **Example** (Check a mirror operation name)
+ * ```ts
+ * import { MirrorOperation } from "@beep/documents-domain/aggregates/VaultSync";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(MirrorOperation)("pollEvents"));
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const MirrorOperation = LiteralKit([
+  "resolveRoot",
+  "ensureFolder",
+  "uploadFile",
+  "uploadFileVersion",
+  "moveItem",
+  "renameItem",
+  "pollEvents",
+]).pipe($I.annoteSchema("MirrorOperation", { description: "The remote mirror call a vault sync failure names." }));
+/**
+ * Runtime value accepted by {@link MirrorOperation}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export type MirrorOperation = typeof MirrorOperation.Type;
+/**
+ * Closed vocabulary of the reasons a queued operation can be superseded.
+ *
+ * **Example** (Check a supersede reason)
+ * ```ts
+ * import { SupersedeReason } from "@beep/documents-domain/aggregates/VaultSync";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(SupersedeReason)("kind-replaced"));
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const SupersedeReason = LiteralKit(["kind-replaced", "review-heal"]).pipe(
+  $I.annoteSchema("SupersedeReason", { description: "Why a queued vault sync operation was superseded." })
+);
+/**
+ * Runtime value accepted by {@link SupersedeReason}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export type SupersedeReason = typeof SupersedeReason.Type;
+/**
  * OperationStatus vault sync contract.
  *
  * **Example** (Inspect contract)

@@ -202,3 +202,38 @@ gate was ok. Domain ran 49 tests and use-cases ran 73. Entity-kit freeze reporte
 findings, tsconfig-sync reported no drift, and the three fallow checks exited 0.
 Effect Vitest showed introduced=0. The scoped schema-first scan reported zero
 introduced findings.
+
+## Final 3a contract on `goals/vs-saga-2` (2026-11-07)
+
+Branch `goals/vs-saga-2` was cut from `goals/vs-saga` (`f320ee92540`) and merges the
+final PR 3a head `e2bd335249e`.
+
+- Merge conflict: `RecordDestinationPoll.input` keeps the saga's optional
+  `lastEventId` and takes 3a's `error: S.NullOr(V.MirrorOperation)`.
+- BoxMirror adapter: `operation` is now always the Box call name
+  (`MirrorOperation`). The adapter stage that used to be passed as `operation`
+  (`local-root`, `stale-input`, `intent-mismatch`, `uncertain-outcome-held`) is in
+  the new `stage` field; `pollEvents` failures carry `stage: null`.
+- Adapter fix found while threading the stage: a local stage failure inside a
+  mutation (unreadable root, stale input) was remapped to
+  `uncertain-outcome-held` and left the receipt claim held, so a later retry with
+  fresh input would be held as uncertain even though Box was never called. The
+  claim is now released (`DELETE ... WHERE result IS NULL`) and the local stage is
+  kept. Only a failure of the Box call itself stays uncertain and held. The
+  BoxMirror test asserts `{ operation: "uploadFile", stage }` on both calls of the
+  stale and uncertain cases.
+- Saga handlers already passed `failure.operation` into `FailOperation.reason`
+  and `RecordDestinationPoll.error`; they now type-check against the kits with
+  no code change. No saga path issues `SupersedeOperation`.
+- Projection: `LegacySync.projection.ts` writes the literal verbatim into the
+  legacy `last_error` text columns (`documents_sync_operation`,
+  `documents_sync_cursor`). The projection test now uses literal reasons
+  (`pollEvents`, `ensureFolder`). The legacy free-text mapping belongs to genesis
+  in 3b part 2 (`research/09`).
+
+Verification: documents-server check clean, 184 tests in 19 files; domain 49;
+use-cases 81. package-verify (lint, audit, docgen) passed for documents-server.
+Coverage ratchet ok for server, domain and use-cases with no floor changed.
+Entity-kit freeze, tsconfig-sync, cache-policy (0 blocking), fallow dead-code,
+health and audit, and docs oxlint on touched files all exited 0. Effect Vitest:
+introduced=0, resolved=2, no inventory write.

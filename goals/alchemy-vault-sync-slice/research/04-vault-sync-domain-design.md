@@ -7,7 +7,8 @@ This PR is additive: no legacy writer, table, transport or filesystem adapter ch
 
 All events declare static schemaVersion = 1. No upcast is needed until a second
 version exists. Principal/source/time remain driver metadata (D10), not payload.
-Public ids remain unchanged; new destination ids are branded strings. Org/workspace
+Public ids remain unchanged; new destination ids are opaque minted ids (the
+`documents_sync_destination_` prefix and a CUID, defined below). Org/workspace
 ids retain the legacy positive integers. Upload data is a relative path and digest,
 never bytes. Names normalize with Effect String trim/toLowerCase.
 
@@ -17,7 +18,8 @@ never bytes. Names normalize with Effect String trim/toLowerCase.
 | DestinationNameReservation | Unclaimed / Claimed: destination, org, name and previous name | ClaimDestinationName/DestinationNameClaimed; ReleaseDestinationName/DestinationNameReleased | SyncRuleViolation(name-held or wrong-key) |
 | SyncItem | Untracked / Tracked: destination, workspace, path, kind, digest, generation, remote mapping, current operation slots | ObserveItem/ItemTracked, ItemEdited, ItemMoved, ItemKindReplaced; MarkItemPushed/ItemPushed; MarkItemPushFailed/ItemPushFailed; FlagItemDrift/ItemDriftFlagged; ReturnItemToPending/ItemReturnedToPending | SyncRuleViolation |
 | SyncOperation | Absent / Present: stable public id, item, destination, type, input generation/digest/path, status, attempts, lease, retry time | QueueOperation/OperationQueued or OperationRetargeted; SquashOperation/OperationSquashed; LeaseOperation/OperationLeased; ExpireLease/OperationLeaseExpired; CompleteOperation/OperationSucceeded; FailOperation/OperationRetryScheduled or OperationFailed; RetryOperation/OperationRequeued; SupersedeOperation/OperationSuperseded; ReviveOperation/OperationRevived | SyncRuleViolation |
-| SyncConflict | one record per existing public conflict id | RecordConflict/ConflictRecorded; ReviewConflict/ConflictReviewed | SyncRuleViolation |
+| ConflictEventRegistry | one stream per destination: reserved remote event ids | RecordConflict/ConflictEventReserved | SyncRuleViolation |
+| SyncConflict | one record per existing public conflict id | ConfirmConflict/ConflictRecorded; ReviewConflict/ConflictReviewRequested; ConfirmConflictReview/ConflictReviewed | SyncRuleViolation (conflict-not-found, correction-scope, correction-key) |
 
 DestinationNameReservation is keyed by `orgId:sha256hex(normalizedName)`, where
 the normalized name is trimmed and lowercased. Every key is built by the one
@@ -127,8 +129,18 @@ concern for the later PR, not mutable queue keys.
 
 Pure aggregate-dispatch policy handlers live in use-cases; no infrastructure
 adapter is instantiated there. Policy command ids derive from source stream/seq.
-Unexpected dispatch rejections become failed delivery defects, so the Postgres
-outbox retries without closing a review or releasing an old name prematurely.
+A dispatch rejection is permanent (the same event and command ids meet the same
+state), so a handler never re-raises one as a delivery defect: that would make
+the Postgres outbox redeliver the event forever and block the source's later
+deliveries. Instead each handler records the refusal. A queue refused because
+another item holds the operation id, or because its operation has left `queued`,
+marks the item failed (terminal) and keeps the slot visible; supersession skips
+operations the item does not own. A refused review correction leaves the
+conflict open for another review instead of closing it. Healing or failing an
+item the slice never tracked records nothing more. `Effect.orDie` remains only
+where the refusal is impossible by construction, each with its reason beside it.
+ReviewConflict refuses a correction whose idempotency key differs from its
+operation id (`correction-key`), since QueueOperation could never accept it.
 The reference InMemory platform logs and drops failed policy deliveries; tests
 must not treat it as proof of durable failure redelivery.
 
