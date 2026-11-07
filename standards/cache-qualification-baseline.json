@@ -280,11 +280,11 @@
       }
     },
     "@beep/db-admin": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover-pr PR 3b part 2)",
+      "reason": "Record the db-admin shared-tables dependency edge for the shared_membership migration on top of the PR 3c baseline merged as #2899. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-cutover-main.md",
+        "sha256": "9f4f4a73b4739de11e3f6bbf0480e017fd86c1a236ac872bb776fbd840c01289"
       }
     },
     "@beep/discord": {
@@ -24742,6 +24742,7 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -24808,6 +24809,7 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -24860,6 +24862,7 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -24997,6 +25000,7 @@
           "@beep/law-practice-tables#transit",
           "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
+          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
@@ -25214,6 +25218,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/law-practice-tables#transit",
           "@beep/postgres#transit",
+          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
@@ -25269,6 +25274,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/law-practice-tables#transit",
           "@beep/postgres#transit",
+          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
@@ -25332,6 +25338,7 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -25384,6 +25391,7 @@
           "@beep/law-practice-domain#build",
           "@beep/law-practice-tables#build",
           "@beep/postgres#build",
+          "@beep/shared-tables#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
@@ -25436,6 +25444,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/law-practice-tables#transit",
           "@beep/postgres#transit",
+          "@beep/shared-tables#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",

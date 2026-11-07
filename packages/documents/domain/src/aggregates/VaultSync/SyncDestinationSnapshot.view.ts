@@ -24,6 +24,9 @@ export class SyncDestinationSnapshot extends Domain.View("SyncDestinationSnapsho
   state: DestinationState,
   initial: SyncDestination.definition.initial,
   evolve: {
+    CursorGenesisImported: (s, e, c) =>
+      SyncDestination.definition.evolve.CursorGenesisImported(s, e, { ...c.envelope, id: c.source.id }),
+    DestinationGenesisImported: (_s, e) => e.record,
     DestinationRegistered: (s, e, c) =>
       SyncDestination.definition.evolve.DestinationRegistered(s, e, { ...c.envelope, id: c.source.id }),
     DestinationRenamed: (s, e, c) =>
