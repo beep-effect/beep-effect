@@ -236,6 +236,14 @@ Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
 
 Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
 
+### Compose the documented recovery logging Effect, 2026-11-07
+
+Parent static and bounded runtime review found that the error-pattern handler discarded Console.log before returning a fallback. Return the logging Effect mapped to the same fallback. A regression extracts the actual Markdown fence, substitutes a local ValidationError operation, and requires exactly one log with the unchanged fallback. The original guide fails that assertion; no HTTP or retry branch is executed. Live local registered-worktree census found no competing committed or dirty target changes. Remote PR census remains unavailable under canonical API quota; publication and finality remain held pending normal remote checks. PM and ADHD remain separate.
+
+Lane `codex/audit-error-boundary`
+
+Reverse: Revert this checkpoint, the narrow example change and its fence regression if the recovery branch intentionally stops logging.
+
 ### Isolate each model-refusal test scenario, 2026-11-07
 
 Reverse: Restore grouped cases only after they fit the unchanged timeout under package verification
@@ -255,5 +263,28 @@ Reverse: Revert the wording clarification; retain the original source and parent
 ### Partition independent CI profile scenarios, 2026-11-07
 
 Reverse: Restore the combined scenario only after package verification fits its unchanged deadline
+
+### Require a closed error channel in the protocol example, 2026-11-07
+
+Parent review validated a precision gap in the worked protocol handler:
+Effect.catchTags can leave a newly added action error in the inferred channel.
+The example now declares Effect.fn.Return<void | typeof ProblemDetail.Type>,
+preserving its success shape while requiring a never error channel.
+
+The regression typechecks the actual Markdown fence. The current example and
+an explicitly unguarded expanded-union control compile; the guarded example
+rejects the newly unhandled tag. No illustrative service or handler is invoked.
+The test also fails against the old guide. Initial probes that incorrectly
+required a problem-detail value on successful void paths were rejected and
+retained in the private archive.
+
+This is bounded example proof and standing regression protection, not evidence
+of production transport behavior, every translator, or complete audit coverage.
+P4 remains active. Original reports and raw proof stay private; no paid pilot
+or cloud work is admitted.
+
+Lane `codex/audit-error-boundary`
+
+Reverse: Revert the example and its regression, regenerate packet projections, and retain the private before/after compiler receipts.
 
 <!-- beep:decisions:end -->
