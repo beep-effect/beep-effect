@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-07T14:30:30.383Z",
+  "generatedAt": "2026-11-07T16:33:58.313Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 172,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
-    "publicModules": 3777,
-    "publicExports": 26958,
+    "publicModules": 3778,
+    "publicExports": 26969,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -220745,8 +220745,8 @@
           "exportKind": "class",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 162,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-162-descendoptions",
+          "line": 181,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-181-descendoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -220768,8 +220768,8 @@
           "exportKind": "namespace",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 189,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-189-descendoptions",
+          "line": 208,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-208-descendoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -220790,8 +220790,8 @@
           "exportKind": "class",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 228,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-228-descendrecordoptions",
+          "line": 247,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-247-descendrecordoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -220813,8 +220813,8 @@
           "exportKind": "namespace",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 250,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-250-descendrecordoptions",
+          "line": 269,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-269-descendrecordoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -220835,8 +220835,8 @@
           "exportKind": "class",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 280,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-280-unreadabledirectory",
+          "line": 299,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-299-unreadabledirectory",
           "currentTags": [
             "@public",
             "@category",
@@ -220858,8 +220858,8 @@
           "exportKind": "namespace",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 313,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-313-unreadabledirectory",
+          "line": 332,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-332-unreadabledirectory",
           "currentTags": [
             "@category",
             "@since"
@@ -220880,8 +220880,8 @@
           "exportKind": "class",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 344,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-344-descendresult",
+          "line": 363,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-363-descendresult",
           "currentTags": [
             "@public",
             "@category",
@@ -220903,8 +220903,8 @@
           "exportKind": "namespace",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 368,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-368-descendresult",
+          "line": 387,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-387-descendresult",
           "currentTags": [
             "@category",
             "@since"
@@ -220925,8 +220925,8 @@
           "exportKind": "class",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 397,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-397-descenderror",
+          "line": 416,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-416-descenderror",
           "currentTags": [
             "@public",
             "@category",
@@ -220948,8 +220948,8 @@
           "exportKind": "const",
           "filePath": "src/Descend.ts",
           "repoPath": "packages/foundation/capability/walker/src/Descend.ts",
-          "line": 854,
-          "anchor": "packages-foundation-capability-walker-src-descend-ts-854-descend",
+          "line": 892,
+          "anchor": "packages-foundation-capability-walker-src-descend-ts-892-descend",
           "currentTags": [
             "@public",
             "@category",
@@ -263584,992 +263584,9 @@
       ]
     },
     {
-      "packageName": "@beep/alchemy-postgres",
-      "packagePath": "packages/drivers/alchemy-postgres",
-      "topoOrder": 98,
-      "status": "clean",
-      "sourceCoverage": {
-        "srcDir": "src",
-        "sourceFileCount": 7,
-        "publicModuleCount": 7,
-        "publicExportCount": 36
-      },
-      "docgenCoverage": {
-        "hasDocgenConfig": true,
-        "enforceDescriptions": false,
-        "enforceExamples": false,
-        "enforceVersion": true
-      },
-      "counts": {
-        "openModules": 0,
-        "openExports": 0,
-        "missingExportExamples": 0,
-        "missingExportCategories": 0,
-        "missingExportSince": 0,
-        "missingExportSummaries": 0,
-        "forbiddenTagFindings": 0,
-        "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 0,
-        "unsafeExampleFindings": 0,
-        "schemaAnnotationFindings": 0,
-        "documentationRuleFindings": {
-          "undescribed-see": 0,
-          "multiple-description-paragraphs": 0,
-          "leading-blank": 0,
-          "trailing-blank": 0,
-          "invalid-heading": 0,
-          "section-out-of-order": 0,
-          "duplicate-section": 0,
-          "empty-section": 0,
-          "section-after-example": 0,
-          "invalid-when-to-use-prefix": 0,
-          "malformed-example": 0,
-          "duplicate-example": 0,
-          "loose-ts-fence": 0,
-          "forbidden-remarks": 0,
-          "no-root-package-import": 0
-        }
-      },
-      "modules": [
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/AlchemyPostgres.config.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.config.ts",
-          "line": 1,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-config-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 3,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/AlchemyPostgres.errors.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts",
-          "line": 1,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-errors-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 3,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/AlchemyPostgres.layer.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.layer.ts",
-          "line": 1,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-layer-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 1,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 21,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/AlchemyPostgresPlatform.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgresPlatform.ts",
-          "line": 1,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgresplatform-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/AlchemyPostgresWorkflows.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgresWorkflows.ts",
-          "line": 1,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgresworkflows-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
-          "line": 1,
-          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 6,
-          "remediationStatus": "resolved"
-        }
-      ],
-      "exports": [
-        {
-          "symbolName": "ProvenanceMapping",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.config.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.config.ts",
-          "line": 41,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-config-ts-41-provenancemapping",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "BackfillTuning",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.config.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.config.ts",
-          "line": 77,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-config-ts-77-backfilltuning",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AlchemyPostgresConfig",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.config.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.config.ts",
-          "line": 115,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-config-ts-115-alchemypostgresconfig",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AlchemyPostgresOperation",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgres.errors.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts",
-          "line": 47,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-errors-ts-47-alchemypostgresoperation",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AlchemyPostgresOperation",
-          "exportKind": "type",
-          "filePath": "src/AlchemyPostgres.errors.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts",
-          "line": 71,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-errors-ts-71-alchemypostgresoperation",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AlchemyPostgresError",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.errors.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts",
-          "line": 88,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-errors-ts-88-alchemypostgreserror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "layer",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgres.layer.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.layer.ts",
-          "line": 40,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-layer-ts-40-layer",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScheduleStatus",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 45,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-45-schedulestatus",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScheduleStatus",
-          "exportKind": "type",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 58,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-58-schedulestatus",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "DeliveryStatus",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 74,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-74-deliverystatus",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "DeliveryStatus",
-          "exportKind": "type",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 86,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-86-deliverystatus",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AlchemyPostgresTables",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 104,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-104-alchemypostgrestables",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "InstanceRow",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 186,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-186-instancerow",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "EventRow",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 221,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-221-eventrow",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AcceptedResult",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 254,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-254-acceptedresult",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AcceptedResult",
-          "exportKind": "type",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 273,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-273-acceptedresult",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StoredSendMeta",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 292,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-292-storedsendmeta",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScheduleRow",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 329,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-329-schedulerow",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "DeliveryJson",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 369,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-369-deliveryjson",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "DeliveryRow",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 424,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-424-deliveryrow",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ViewSnapshotJson",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 455,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-455-viewsnapshotjson",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ViewEntryJson",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 492,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-492-viewentryjson",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StreamMetaJson",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 522,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-522-streammetajson",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StreamEntryJson",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 556,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-556-streamentryjson",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AcceptedJson",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 598,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-598-acceptedjson",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "PartitionRow",
-          "exportKind": "class",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 629,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-629-partitionrow",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "encodeJson",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 656,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-656-encodejson",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "migrate",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgres.schema.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
-          "line": 839,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-839-migrate",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "layer",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgresPlatform.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgresPlatform.ts",
-          "line": 187,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgresplatform-ts-187-layer",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "layer",
-          "exportKind": "const",
-          "filePath": "src/AlchemyPostgresWorkflows.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgresWorkflows.ts",
-          "line": 39,
-          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgresworkflows-ts-39-layer",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./AlchemyPostgres.config.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
-          "line": 9,
-          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-9-export-from-alchemypostgres-config-ts",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./AlchemyPostgres.errors.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
-          "line": 10,
-          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-10-export-from-alchemypostgres-errors-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * as AlchemyPostgres from \"./AlchemyPostgres.layer.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
-          "line": 11,
-          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-11-export-as-alchemypostgres-from-alchemypostgres-layer-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./AlchemyPostgres.schema.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
-          "line": 12,
-          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-12-export-from-alchemypostgres-schema-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * as AlchemyPostgresPlatform from \"./AlchemyPostgresPlatform.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
-          "line": 13,
-          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-13-export-as-alchemypostgresplatform-from-alchemypostgresplatform-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * as AlchemyPostgresWorkflows from \"./AlchemyPostgresWorkflows.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
-          "line": 14,
-          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-14-export-as-alchemypostgresworkflows-from-alchemypostgresworkflows-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        }
-      ]
-    },
-    {
       "packageName": "@beep/cli-kit",
       "packagePath": "packages/foundation/capability/cli-kit",
-      "topoOrder": 99,
+      "topoOrder": 98,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -269600,7 +268617,7 @@
     {
       "packageName": "@beep/doc-text",
       "packagePath": "packages/drivers/doc-text",
-      "topoOrder": 100,
+      "topoOrder": 99,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -269960,7 +268977,7 @@
     {
       "packageName": "@beep/ffmpeg",
       "packagePath": "packages/drivers/ffmpeg",
-      "topoOrder": 101,
+      "topoOrder": 100,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -272608,7 +271625,7 @@
     {
       "packageName": "@beep/gov-legal-mcp",
       "packagePath": "packages/drivers/gov-legal-mcp",
-      "topoOrder": 102,
+      "topoOrder": 101,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -273716,7 +272733,7 @@
     {
       "packageName": "@beep/lexical-schema",
       "packagePath": "packages/foundation/modeling/lexical",
-      "topoOrder": 103,
+      "topoOrder": 102,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -276650,7 +275667,7 @@
     {
       "packageName": "@beep/libpff",
       "packagePath": "packages/drivers/libpff",
-      "topoOrder": 104,
+      "topoOrder": 103,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -277787,7 +276804,7 @@
     {
       "packageName": "@beep/observability",
       "packagePath": "packages/foundation/capability/observability",
-      "topoOrder": 105,
+      "topoOrder": 104,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -286196,7 +285213,7 @@
     {
       "packageName": "@beep/pandoc-ast",
       "packagePath": "packages/foundation/modeling/pandoc-ast",
-      "topoOrder": 106,
+      "topoOrder": 105,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -290866,7 +289883,7 @@
     {
       "packageName": "@beep/poppler",
       "packagePath": "packages/drivers/poppler",
-      "topoOrder": 107,
+      "topoOrder": 106,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -291186,7 +290203,7 @@
     {
       "packageName": "@beep/rdf",
       "packagePath": "packages/foundation/modeling/rdf",
-      "topoOrder": 108,
+      "topoOrder": 107,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -299152,7 +298169,7 @@
     {
       "packageName": "@beep/repo-utils",
       "packagePath": "packages/tooling/library/repo-utils",
-      "topoOrder": 109,
+      "topoOrder": 108,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -300919,8 +299936,8 @@
           "exportKind": "class",
           "filePath": "src/FsUtils.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/FsUtils.ts",
-          "line": 49,
-          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-49-globoptions",
+          "line": 50,
+          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-50-globoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -300941,8 +299958,8 @@
           "exportKind": "interface",
           "filePath": "src/FsUtils.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/FsUtils.ts",
-          "line": 185,
-          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-185-fsutilsshape",
+          "line": 189,
+          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-189-fsutilsshape",
           "currentTags": [
             "@category",
             "@since"
@@ -300963,8 +299980,8 @@
           "exportKind": "class",
           "filePath": "src/FsUtils.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/FsUtils.ts",
-          "line": 296,
-          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-296-fsutils",
+          "line": 300,
+          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-300-fsutils",
           "currentTags": [
             "@category",
             "@since"
@@ -300985,8 +300002,8 @@
           "exportKind": "const",
           "filePath": "src/FsUtils.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/FsUtils.ts",
-          "line": 314,
-          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-314-fsutilslive",
+          "line": 318,
+          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-318-fsutilslive",
           "currentTags": [
             "@category",
             "@since"
@@ -301007,8 +300024,8 @@
           "exportKind": "const",
           "filePath": "src/FsUtils.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/FsUtils.ts",
-          "line": 479,
-          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-479-exists",
+          "line": 484,
+          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-484-exists",
           "currentTags": [
             "@category",
             "@since"
@@ -301029,8 +300046,8 @@
           "exportKind": "const",
           "filePath": "src/FsUtils.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/FsUtils.ts",
-          "line": 522,
-          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-522-findnearestpackagedir",
+          "line": 527,
+          "anchor": "packages-tooling-library-repo-utils-src-fsutils-ts-527-findnearestpackagedir",
           "currentTags": [
             "@category",
             "@since"
@@ -315193,7 +314210,7 @@
     {
       "packageName": "@beep/repo-workspaces",
       "packagePath": "packages/tooling/library/repo-workspaces",
-      "topoOrder": 110,
+      "topoOrder": 109,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -321424,7 +320441,7 @@
     {
       "packageName": "@beep/sbom",
       "packagePath": "packages/foundation/modeling/sbom",
-      "topoOrder": 111,
+      "topoOrder": 110,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -323351,7 +322368,7 @@
     {
       "packageName": "@beep/skill-contract",
       "packagePath": "packages/foundation/modeling/skill-contract",
-      "topoOrder": 112,
+      "topoOrder": 111,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -326562,7 +325579,7 @@
     {
       "packageName": "@beep/tesseract",
       "packagePath": "packages/drivers/tesseract",
-      "topoOrder": 113,
+      "topoOrder": 112,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -327022,7 +326039,7 @@
     {
       "packageName": "@beep/tika",
       "packagePath": "packages/drivers/tika",
-      "topoOrder": 114,
+      "topoOrder": 113,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -327985,7 +327002,7 @@
     {
       "packageName": "@beep/xdg",
       "packagePath": "packages/foundation/capability/xdg",
-      "topoOrder": 115,
+      "topoOrder": 114,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -328861,6 +327878,1187 @@
           "repoPath": "packages/foundation/capability/xdg/src/index.ts",
           "line": 33,
           "anchor": "packages-foundation-capability-xdg-src-index-ts-33-export-xdgbase-xdgbasekind-from-xdgbase-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
+      "packageName": "@beep/alchemy-postgres",
+      "packagePath": "packages/drivers/alchemy-postgres",
+      "topoOrder": 115,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 8,
+        "publicModuleCount": 8,
+        "publicExportCount": 44
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0,
+        "documentationRuleFindings": {
+          "undescribed-see": 0,
+          "multiple-description-paragraphs": 0,
+          "leading-blank": 0,
+          "trailing-blank": 0,
+          "invalid-heading": 0,
+          "section-out-of-order": 0,
+          "duplicate-section": 0,
+          "empty-section": 0,
+          "section-after-example": 0,
+          "invalid-when-to-use-prefix": 0,
+          "malformed-example": 0,
+          "duplicate-example": 0,
+          "loose-ts-fence": 0,
+          "forbidden-remarks": 0,
+          "no-root-package-import": 0
+        }
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/AlchemyPostgres.config.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.config.ts",
+          "line": 1,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-config-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/AlchemyPostgres.errors.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts",
+          "line": 1,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-errors-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 1,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 8,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/AlchemyPostgres.layer.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.layer.ts",
+          "line": 1,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-layer-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 1,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 21,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/AlchemyPostgresPlatform.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgresPlatform.ts",
+          "line": 1,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgresplatform-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/AlchemyPostgresWorkflows.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgresWorkflows.ts",
+          "line": 1,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgresworkflows-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
+          "line": 1,
+          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "ProvenanceMapping",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.config.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.config.ts",
+          "line": 41,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-config-ts-41-provenancemapping",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BackfillTuning",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.config.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.config.ts",
+          "line": 77,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-config-ts-77-backfilltuning",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AlchemyPostgresConfig",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.config.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.config.ts",
+          "line": 115,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-config-ts-115-alchemypostgresconfig",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AlchemyPostgresOperation",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.errors.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts",
+          "line": 47,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-errors-ts-47-alchemypostgresoperation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AlchemyPostgresOperation",
+          "exportKind": "type",
+          "filePath": "src/AlchemyPostgres.errors.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts",
+          "line": 71,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-errors-ts-71-alchemypostgresoperation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AlchemyPostgresError",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.errors.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts",
+          "line": 88,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-errors-ts-88-alchemypostgreserror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeliveryTargetKind",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 48,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-48-deliverytargetkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeliveryTargetKind",
+          "exportKind": "type",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 60,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-60-deliverytargetkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AggregateAttribute",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 76,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-76-aggregateattribute",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TargetKindAttribute",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 92,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-92-targetkindattribute",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TargetNameAttribute",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 109,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-109-targetnameattribute",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PlatformSendSpan",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 126,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-126-platformsendspan",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxDeliverSpan",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 151,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-151-outboxdeliverspan",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AlchemyPostgresInstruments",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.instruments.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts",
+          "line": 178,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-instruments-ts-178-alchemypostgresinstruments",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layer",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.layer.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.layer.ts",
+          "line": 40,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-layer-ts-40-layer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ScheduleStatus",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 45,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-45-schedulestatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ScheduleStatus",
+          "exportKind": "type",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 58,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-58-schedulestatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeliveryStatus",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 74,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-74-deliverystatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeliveryStatus",
+          "exportKind": "type",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 86,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-86-deliverystatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AlchemyPostgresTables",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 104,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-104-alchemypostgrestables",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "InstanceRow",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 186,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-186-instancerow",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "EventRow",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 221,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-221-eventrow",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AcceptedResult",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 254,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-254-acceptedresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AcceptedResult",
+          "exportKind": "type",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 273,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-273-acceptedresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "StoredSendMeta",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 292,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-292-storedsendmeta",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ScheduleRow",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 329,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-329-schedulerow",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeliveryJson",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 369,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-369-deliveryjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeliveryRow",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 424,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-424-deliveryrow",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ViewSnapshotJson",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 455,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-455-viewsnapshotjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ViewEntryJson",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 492,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-492-viewentryjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "StreamMetaJson",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 522,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-522-streammetajson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "StreamEntryJson",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 556,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-556-streamentryjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AcceptedJson",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 598,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-598-acceptedjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PartitionRow",
+          "exportKind": "class",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 629,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-629-partitionrow",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "encodeJson",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 656,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-656-encodejson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "migrate",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgres.schema.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts",
+          "line": 839,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgres-schema-ts-839-migrate",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layer",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgresPlatform.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgresPlatform.ts",
+          "line": 187,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgresplatform-ts-187-layer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layer",
+          "exportKind": "const",
+          "filePath": "src/AlchemyPostgresWorkflows.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/AlchemyPostgresWorkflows.ts",
+          "line": 39,
+          "anchor": "packages-drivers-alchemy-postgres-src-alchemypostgresworkflows-ts-39-layer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./AlchemyPostgres.config.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
+          "line": 9,
+          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-9-export-from-alchemypostgres-config-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./AlchemyPostgres.errors.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
+          "line": 10,
+          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-10-export-from-alchemypostgres-errors-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as AlchemyPostgres from \"./AlchemyPostgres.layer.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
+          "line": 11,
+          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-11-export-as-alchemypostgres-from-alchemypostgres-layer-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./AlchemyPostgres.schema.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
+          "line": 12,
+          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-12-export-from-alchemypostgres-schema-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as AlchemyPostgresPlatform from \"./AlchemyPostgresPlatform.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
+          "line": 13,
+          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-13-export-as-alchemypostgresplatform-from-alchemypostgresplatform-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as AlchemyPostgresWorkflows from \"./AlchemyPostgresWorkflows.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/alchemy-postgres/src/index.ts",
+          "line": 14,
+          "anchor": "packages-drivers-alchemy-postgres-src-index-ts-14-export-as-alchemypostgresworkflows-from-alchemypostgresworkflows-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -389132,8 +389330,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 92,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-92-outputbound",
+          "line": 101,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-101-outputbound",
           "currentTags": [
             "@category",
             "@since"
@@ -389154,8 +389352,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 118,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-118-boundedoutput",
+          "line": 131,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-131-boundedoutput",
           "currentTags": [
             "@category",
             "@since"
@@ -389176,8 +389374,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 144,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-144-capturedstep",
+          "line": 157,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-157-capturedstep",
           "currentTags": [
             "@category",
             "@since"
@@ -389198,8 +389396,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 171,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-171-capturedstreams",
+          "line": 184,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-184-capturedstreams",
           "currentTags": [
             "@category",
             "@since"
@@ -389220,8 +389418,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 206,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-206-stepflakequarantinepolicy",
+          "line": 219,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-219-stepflakequarantinepolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -389242,8 +389440,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 218,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-218-stepflakequarantinepolicy",
+          "line": 231,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-231-stepflakequarantinepolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -389264,8 +389462,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 247,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-247-qualitytaskstep",
+          "line": 260,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-260-qualitytaskstep",
           "currentTags": [
             "@category",
             "@since"
@@ -389286,8 +389484,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 278,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-278-emptyboundedoutput",
+          "line": 291,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-291-emptyboundedoutput",
           "currentTags": [
             "@category",
             "@since"
@@ -389308,8 +389506,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 297,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-297-reporunoutputbound",
+          "line": 314,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-314-reporunoutputbound",
           "currentTags": [
             "@category",
             "@since"
@@ -389330,8 +389528,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 322,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-322-qualitystepoutputbound",
+          "line": 340,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-340-qualitystepoutputbound",
           "currentTags": [
             "@category",
             "@since"
@@ -389352,8 +389550,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 350,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-350-boundedchunkreducer",
+          "line": 369,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-369-boundedchunkreducer",
           "currentTags": [
             "@param",
             "@returns",
@@ -389376,8 +389574,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 395,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-395-collectboundedtext",
+          "line": 430,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-430-collectboundedtext",
           "currentTags": [
             "@param",
             "@returns",
@@ -389400,8 +389598,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 426,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-426-collecttext",
+          "line": 461,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-461-collecttext",
           "currentTags": [
             "@param",
             "@returns",
@@ -389424,8 +389622,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 449,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-449-formatcommandline",
+          "line": 484,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-484-formatcommandline",
           "currentTags": [
             "@param",
             "@returns",
@@ -389448,8 +389646,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 481,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-481-admissionworkloadregistrationerror",
+          "line": 516,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-516-admissionworkloadregistrationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -389470,8 +389668,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 524,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-524-admissionworkloadbinding",
+          "line": 559,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-559-admissionworkloadbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -389492,8 +389690,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 552,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-552-resolvedadmissionworkload",
+          "line": 587,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-587-resolvedadmissionworkload",
           "currentTags": [
             "@category",
             "@since"
@@ -389514,8 +389712,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 590,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-590-withadmissionworkloadbinding",
+          "line": 625,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-625-withadmissionworkloadbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -389536,8 +389734,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 822,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-822-capturepipewedgederror",
+          "line": 857,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-857-capturepipewedgederror",
           "currentTags": [
             "@category",
             "@since"
@@ -389558,8 +389756,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 851,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-851-capturecommandtimedouterror",
+          "line": 886,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-886-capturecommandtimedouterror",
           "currentTags": [
             "@category",
             "@since"
@@ -389580,8 +389778,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 952,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-952-settlecapturedstepfortesting",
+          "line": 987,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-987-settlecapturedstepfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -389602,8 +389800,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1030,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1030-runcapturedoptions",
+          "line": 1065,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1065-runcapturedoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -389624,8 +389822,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1046,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1046-runcapturedwatchedoptions",
+          "line": 1081,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1081-runcapturedwatchedoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -389646,8 +389844,8 @@
           "exportKind": "interface",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1088,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1088-runcaptured",
+          "line": 1123,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1123-runcaptured",
           "currentTags": [
             "@param",
             "@returns",
@@ -389670,8 +389868,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1131,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1131-runcaptured",
+          "line": 1166,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1166-runcaptured",
           "currentTags": [
             "@category",
             "@since"
@@ -389692,8 +389890,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1223,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1223-runcapturedstreamsoptions",
+          "line": 1258,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1258-runcapturedstreamsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -389714,8 +389912,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1292,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1292-runcapturedstreams",
+          "line": 1327,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1327-runcapturedstreams",
           "currentTags": [
             "@param",
             "@returns",
@@ -389738,8 +389936,8 @@
           "exportKind": "class",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1327,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1327-foldedstdout",
+          "line": 1362,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1362-foldedstdout",
           "currentTags": [
             "@category",
             "@since"
@@ -389760,8 +389958,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1347,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1347-runfoldedstdoutoptions",
+          "line": 1382,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1382-runfoldedstdoutoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -389782,8 +389980,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1393,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1393-runfoldedstdout",
+          "line": 1428,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1428-runfoldedstdout",
           "currentTags": [
             "@param",
             "@returns",
@@ -389806,8 +390004,8 @@
           "exportKind": "type",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1414,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1414-runtoexitoptions",
+          "line": 1449,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1449-runtoexitoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -389828,8 +390026,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1458,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1458-runtoexit",
+          "line": 1493,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1493-runtoexit",
           "currentTags": [
             "@param",
             "@returns",
@@ -389852,8 +390050,8 @@
           "exportKind": "const",
           "filePath": "src/process/StepExec.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/process/StepExec.ts",
-          "line": 1500,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1500-ensurezeroexit",
+          "line": 1535,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-process-stepexec-ts-1535-ensurezeroexit",
           "currentTags": [
             "@category",
             "@since"
@@ -421278,8 +421476,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncConflict.aggregate.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncConflict.aggregate.ts",
-          "line": 45,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-aggregate-ts-45-syncconflict",
+          "line": 50,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-aggregate-ts-50-syncconflict",
           "currentTags": [
             "@category",
             "@since"
@@ -422982,8 +423180,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/SyncRuleViolation.rejection.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncRuleViolation.rejection.ts",
-          "line": 55,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncruleviolation-rejection-ts-55-syncrule",
+          "line": 56,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncruleviolation-rejection-ts-56-syncrule",
           "currentTags": [
             "@category",
             "@since"
@@ -423004,8 +423202,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncRuleViolation.rejection.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncRuleViolation.rejection.ts",
-          "line": 67,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncruleviolation-rejection-ts-67-syncruleviolation",
+          "line": 68,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncruleviolation-rejection-ts-68-syncruleviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -482190,8 +482388,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/VaultSync.policy-handlers.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/VaultSync.policy-handlers.ts",
-          "line": 34,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-vaultsync-policy-handlers-ts-34-vaultsyncpolicies",
+          "line": 86,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-vaultsync-policy-handlers-ts-86-vaultsyncpolicies",
           "currentTags": [
             "@category",
             "@since"
@@ -496672,7 +496870,7 @@
         "srcDir": "src",
         "sourceFileCount": 536,
         "publicModuleCount": 533,
-        "publicExportCount": 4961
+        "publicExportCount": 4964
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -497880,7 +498078,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 12,
+          "exportCount": 13,
           "remediationStatus": "resolved"
         },
         {
@@ -505555,7 +505753,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 87,
+          "exportCount": 89,
           "remediationStatus": "resolved"
         },
         {
@@ -517286,12 +517484,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "CacheLocalPilotSummary",
+          "exportKind": "class",
+          "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-50-cachelocalpilotsummary",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "CachePilotRequest",
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 36,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-36-cachepilotrequest",
+          "line": 93,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-93-cachepilotrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -517312,8 +517532,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 77,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-77-cachepilotloginput",
+          "line": 134,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-134-cachepilotloginput",
           "currentTags": [
             "@category",
             "@since"
@@ -517334,8 +517554,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 110,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-110-cachesignedpilotloginput",
+          "line": 167,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-167-cachesignedpilotloginput",
           "currentTags": [
             "@category",
             "@since"
@@ -517356,8 +517576,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 132,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-132-cachepilottask",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-189-cachepilottask",
           "currentTags": [
             "@category",
             "@since"
@@ -517378,8 +517598,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 159,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-159-cachepilotoutcome",
+          "line": 216,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-216-cachepilotoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -517400,8 +517620,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 176,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-176-cachepilotoutcome",
+          "line": 233,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-233-cachepilotoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -517422,8 +517642,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 194,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-194-cachepilotexecutioninterval",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-251-cachepilotexecutioninterval",
           "currentTags": [
             "@category",
             "@since"
@@ -517444,8 +517664,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 218,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-218-cachepilotrun",
+          "line": 275,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-275-cachepilotrun",
           "currentTags": [
             "@category",
             "@since"
@@ -517466,8 +517686,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 252,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-252-cachepilotshadow",
+          "line": 309,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-309-cachepilotshadow",
           "currentTags": [
             "@category",
             "@since"
@@ -517488,8 +517708,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 283,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-283-cachepilotmutation",
+          "line": 340,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-340-cachepilotmutation",
           "currentTags": [
             "@category",
             "@since"
@@ -517510,8 +517730,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 316,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-316-cachepilotnonexecution",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-373-cachepilotnonexecution",
           "currentTags": [
             "@category",
             "@since"
@@ -517532,8 +517752,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.pilot.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
-          "line": 356,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-356-cachepilotreceipt",
+          "line": 413,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-schemas-ts-413-cachepilotreceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -521595,12 +521815,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  CachePilotExecutionInterval,\n  CachePilotLogInput,\n  CachePilotMutation,\n  CachePilotNonExecution,\n  CachePilotOutcome,\n  CachePilotReceipt,\n  CachePilotRequest,\n  CachePilotRun,\n  CachePilotShadow,\n  CachePilotTask,\n  CacheSignedPilotLogInput,\n} from \"./Cache.pilot.schemas.ts\";",
+          "symbolName": "export {\n  CacheLocalPilotSummary,\n  CachePilotExecutionInterval,\n  CachePilotLogInput,\n  CachePilotMutation,\n  CachePilotNonExecution,\n  CachePilotOutcome,\n  CachePilotReceipt,\n  CachePilotRequest,\n  CachePilotRun,\n  CachePilotShadow,\n  CachePilotTask,\n  CacheSignedPilotLogInput,\n} from \"./Cache.pilot.schemas.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
           "line": 241,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-241-export-cachepilotexecutioninterval-cachepilotloginput-cachepilotmutation-cachepilotnonexecution-cachepilotoutcome-cachepilotreceipt-cachepilotrequest-cachepilotrun-cachepilotshadow-cachepilottask-cachesignedpilotloginput-from-cache-pilot-schemas-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-241-export-cachelocalpilotsummary-cachepilotexecutioninterval-cachepilotloginput-cachepilotmutation-cachepilotnonexecution-cachepilotoutcome-cachepilotreceipt-cachepilotrequest-cachepilotrun-cachepilotshadow-cachepilottask-cachesignedpilotloginput-from-cache-pilot-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521621,8 +521841,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 254,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-254-export-cachesignedpilotarchive-cachesignedpilotcapturecontrol-cachesignedpilotfreshpair-cachesignedpilotmutation-cachesignedpilotnonexecution-cachesignedpilotpair-cachesignedpilotphase-cachesignedpilotpolicyrefusal-cachesignedpilotprotection-cachesignedpilotreceipt-cachesignedpilotrequest-cachesignedpilotrun-cachesignedpilotshadow-cachesignedpilottask-from-cache-pilot-signed-schemas-ts",
+          "line": 255,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-255-export-cachesignedpilotarchive-cachesignedpilotcapturecontrol-cachesignedpilotfreshpair-cachesignedpilotmutation-cachesignedpilotnonexecution-cachesignedpilotpair-cachesignedpilotphase-cachesignedpilotpolicyrefusal-cachesignedpilotprotection-cachesignedpilotreceipt-cachesignedpilotrequest-cachesignedpilotrun-cachesignedpilotshadow-cachesignedpilottask-from-cache-pilot-signed-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -521640,8 +521860,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 276,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-276-export-validatecachesignedpilotconcurrency-validatecachesignedpilotfreshpair-validatecachesignedpilotmutation-validatecachesignedpilotpair-validatecachesignedpilotreceipt-validatecachesignedpilotshadow-from-cache-pilot-signed-ts",
+          "line": 277,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-277-export-validatecachesignedpilotconcurrency-validatecachesignedpilotfreshpair-validatecachesignedpilotmutation-validatecachesignedpilotpair-validatecachesignedpilotreceipt-validatecachesignedpilotshadow-from-cache-pilot-signed-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521662,8 +521882,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 290,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-290-export-runcachepilotexperiment-runcachesignedpilotworker-from-cache-pilot-ts",
+          "line": 291,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-291-export-runcachepilotexperiment-runcachesignedpilotworker-from-cache-pilot-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521684,8 +521904,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 297,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-297-export-cacheproducerapproval-cacheproducerbinding-cacheproducerbody-cacheproducerbundle-cacheproducerenvelope-cacheproducerevidencefragment-from-cache-producer-schemas-ts",
+          "line": 298,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-298-export-cacheproducerapproval-cacheproducerbinding-cacheproducerbody-cacheproducerbundle-cacheproducerenvelope-cacheproducerevidencefragment-from-cache-producer-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521706,8 +521926,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 305,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-305-export-cachefixtureartifactkey-cachefixturecredentials-cachefixtureevent-cachefixturefault-cachefixturescenario-from-cache-protocol-fixture-schemas-ts",
+          "line": 306,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-306-export-cachefixtureartifactkey-cachefixturecredentials-cachefixtureevent-cachefixturefault-cachefixturescenario-from-cache-protocol-fixture-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -521725,8 +521945,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 312,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-312-export-corruptcacheartifactbody-makecacheprotocolfixture-servecacheloopback-tampercacheartifacttag-from-cache-protocol-fixture-ts",
+          "line": 313,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-313-export-corruptcacheartifactbody-makecacheprotocolfixture-servecacheloopback-tampercacheartifacttag-from-cache-protocol-fixture-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -521744,8 +521964,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 318,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-318-export-cacheprotocolexecution-cacheprotocolisolationroot-cacheprotocolreadfailure-cacheprotocolrequest-from-cache-protocol-runner-schemas-ts",
+          "line": 319,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-319-export-cacheprotocolexecution-cacheprotocolisolationroot-cacheprotocolreadfailure-cacheprotocolrequest-from-cache-protocol-runner-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -521763,8 +521983,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 324,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-324-export-assertcacheprivatenetwork-cacheprotocolnativesummary-cacheprotocolsandboxmounts-runcacheprotocolexperiment-runcacheprotocolworker-from-cache-protocol-runner-ts",
+          "line": 325,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-325-export-assertcacheprivatenetwork-cacheprotocolnativesummary-cacheprotocolsandboxmounts-runcacheprotocolexperiment-runcacheprotocolworker-from-cache-protocol-runner-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -521782,8 +522002,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 331,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-331-export-cacheprotocolobservation-from-cache-protocol-schemas-ts",
+          "line": 332,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-332-export-cacheprotocolobservation-from-cache-protocol-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -521801,8 +522021,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 332,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-332-export-validatecacheprotocolexecution-validatecacheprotocolobservation-from-cache-protocol-ts",
+          "line": 333,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-333-export-validatecacheprotocolexecution-validatecacheprotocolobservation-from-cache-protocol-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -521820,8 +522040,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 339,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-339-export-assertcacheruntimekeyunspecified-cacheruntimestep-iscachetaskinspectionarg-from-cache-runtime-step-ts",
+          "line": 340,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-340-export-assertcacheruntimekeyunspecified-cacheruntimestep-iscachetaskinspectionarg-from-cache-runtime-step-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521842,8 +522062,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 350,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-350-export-resolvecachesigningposture-runcacheruntimetasks-from-cache-runtime-ts",
+          "line": 351,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-351-export-resolvecachesigningposture-runcacheruntimetasks-from-cache-runtime-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521864,8 +522084,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 357,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-357-export-cacheactivationpreview-cacheactivationrequest-cachebaselinerequest-cachecensusdefinition-cachecensusnode-cachecensusreport-cachecensussource-cachecensusworkspace-cachecomputationconfiguration-cachedashboardreport-cachedashboardreportjson-cacheexecutablepin-cachefilecreationmask-cachelambdasummary-cachelinkedfile-cachelinkerresolution-cacheliveidentity-cacheremotereadsrequest-cacherunmode-cacheruntimeexecutable-cacheruntimelinkersnapshot-cachesigningkeystate-cachesigningposture-cachesigningrequest-cachesigningrole-cachetoolchainsnapshot-cachetransitionrequest-cachewalltime-cachewarmlane-cachewarmreceipt-cachewarmreceiptjson-from-cache-schemas-ts",
+          "line": 358,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-358-export-cacheactivationpreview-cacheactivationrequest-cachebaselinerequest-cachecensusdefinition-cachecensusnode-cachecensusreport-cachecensussource-cachecensusworkspace-cachecomputationconfiguration-cachedashboardreport-cachedashboardreportjson-cacheexecutablepin-cachefilecreationmask-cachelambdasummary-cachelinkedfile-cachelinkerresolution-cacheliveidentity-cacheremotereadsrequest-cacherunmode-cacheruntimeexecutable-cacheruntimelinkersnapshot-cachesigningkeystate-cachesigningposture-cachesigningrequest-cachesigningrole-cachetoolchainsnapshot-cachetransitionrequest-cachewalltime-cachewarmlane-cachewarmreceipt-cachewarmreceiptjson-from-cache-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521886,8 +522106,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 396,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-396-export-cachequalificationlive-cachequalificationservice-type-cachequalificationserviceshape-encodecachepolicybaselinetext-from-cache-service-ts",
+          "line": 397,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-397-export-cachequalificationlive-cachequalificationservice-type-cachequalificationserviceshape-encodecachepolicybaselinetext-from-cache-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521908,8 +522128,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 402,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-402-export-cachehostedproducerverifier-cachehostedproducerverifierlive-from-cache-workflow-github-ts",
+          "line": 403,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-403-export-cachehostedproducerverifier-cachehostedproducerverifierlive-from-cache-workflow-github-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -570722,8 +570942,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1785,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1785-discovereffectimportsourcefiles",
+          "line": 1786,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1786-discovereffectimportsourcefiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -570746,8 +570966,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1827,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1827-discovereffectimportmarkdownfiles",
+          "line": 1830,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1830-discovereffectimportmarkdownfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -570770,8 +570990,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1872,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1872-runeffectimportrules",
+          "line": 1875,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1875-runeffectimportrules",
           "currentTags": [
             "@category",
             "@since"
@@ -595939,12 +596159,56 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "ReportOnlyInertLaneId",
+          "exportKind": "const",
+          "filePath": "src/commands/Quality/Quality.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+          "line": 2077,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2077-reportonlyinertlaneid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ReportOnlyInertLaneId",
+          "exportKind": "type",
+          "filePath": "src/commands/Quality/Quality.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+          "line": 2089,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2089-reportonlyinertlaneid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "GithubCheckLaneRunStatus",
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2072,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2072-githubchecklanerunstatus",
+          "line": 2105,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2105-githubchecklanerunstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -595965,8 +596229,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2085,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2085-githubchecklanerunstatus",
+          "line": 2124,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2124-githubchecklanerunstatus",
           "currentTags": [
             "@see",
             "@category",
@@ -595988,8 +596252,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2167,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2167-qualitytasklanerun",
+          "line": 2206,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2206-qualitytasklanerun",
           "currentTags": [
             "@category",
             "@since"
@@ -596010,8 +596274,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2206,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2206-qualitytasklanerunreport",
+          "line": 2246,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2246-qualitytasklanerunreport",
           "currentTags": [
             "@category",
             "@since"
@@ -596032,8 +596296,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2238,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2238-githubchecklanerun",
+          "line": 2278,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2278-githubchecklanerun",
           "currentTags": [
             "@category",
             "@since"
@@ -596054,8 +596318,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2270,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2270-githubcheckrunreport",
+          "line": 2311,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2311-githubcheckrunreport",
           "currentTags": [
             "@category",
             "@since"
@@ -631012,8 +631276,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/DmsMirrorBox.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts",
-          "line": 896,
-          "anchor": "packages-documents-server-src-aggregates-sync-dmsmirrorbox-ts-896-dmsmirroravailabilityboxlayer",
+          "line": 897,
+          "anchor": "packages-documents-server-src-aggregates-sync-dmsmirrorbox-ts-897-dmsmirroravailabilityboxlayer",
           "currentTags": [
             "@category",
             "@since"

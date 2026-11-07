@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
@@ -34,6 +35,7 @@ import {
   turboCachePlanNeedsSecretSession,
 } from "@beep/repo-cli-kit/cli/TurboCache";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
+import { FsUtils, FsUtilsLive, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -46,8 +48,9 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
@@ -58,8 +61,11 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
-import type { Git } from "@beep/git/Git";
+import { defaultJSDocTotalsBaselinePath } from "./internal/JSDocRatchet.ts";
+import { readJsonc } from "./internal/QualityArtifactSupport.ts";
+import type { LsTreeEntry } from "@beep/git/Git";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
@@ -108,7 +114,9 @@ import {
 import {
   explainLaneProofRefusal,
   hasReusableLaneProof,
+  laneProofVirtualTreeSha,
   persistLaneProofs,
+  pinnedLaneProofBaseSha,
   prepareLaneProofSession,
   renderLaneProofRefusal,
 } from "./internal/LaneProofReuse.ts";
@@ -151,8 +159,10 @@ import {
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
   QualityTaskName,
+  ReportOnlyInertLaneId,
   RootAuditMode,
 } from "./Quality.schemas.ts";
+import type { GitShape } from "@beep/git/Git";
 import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type { CaptureCommandTimedOutError } from "@beep/repo-cli-kit/process/index";
@@ -2214,6 +2224,221 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
 
 type GithubCheckWaveLane = GithubCheckLaneWaveSpec["lanes"][number];
 
+// Deliberately narrower than hosted docs-only routing: these paths are prose
+// reports, never policy, package documentation, executable docs or tooling.
+const ReportOnlyPath = S.String.check(
+  S.isPattern(
+    /^docs\/reports\/(?!\.|AGENTS\.md$|CLAUDE\.md$)(?!.*\/(?:\.|AGENTS\.md$|CLAUDE\.md$))[^\\\u0000]+\.md$/su
+  ),
+  S.isEndingWith(".md")
+).pipe(
+  $RepoCliId.create("commands/Quality/Tasks").annoteSchema("ReportOnlyPath", {
+    description: "A Markdown report under docs/reports without hidden or agent-instruction segments.",
+  })
+);
+const isReportOnlyPath = S.is(ReportOnlyPath);
+const reportOnlySkipReason = "clean report-only diff; source-only lane inputs unchanged";
+
+const reportFilesAreOrdinary = Effect.fn("QualityTasks.reportFilesAreOrdinary")(function* (
+  repoRoot: string,
+  paths: ReadonlyArray<string>,
+  before: ReadonlyArray<LsTreeEntry>,
+  after: ReadonlyArray<LsTreeEntry>
+) {
+  if (
+    A.length(after) !== A.length(paths) ||
+    !A.every([...before, ...after], (entry) => entry.mode === "100644" && entry.type === "blob")
+  )
+    return false;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* Effect.forEach(paths, (relative) => fs.lstat(path.join(repoRoot, relative)), { concurrency: 1 }).pipe(
+    Effect.map(A.every((info) => info.type === "File" && (info.mode & 0o111) === 0))
+  );
+});
+
+// Query names only, never ignored contents. Metadata is checked before a
+// docgen configuration can redirect discovery, and symlink files are refused.
+const ordinaryTrackedScannerInputs = Effect.fn("QualityTasks.ordinaryTrackedScannerInputs")(function* (
+  root: string,
+  files: ReadonlyArray<string>,
+  git: GitShape
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = A.dedupe(A.map(files, (file) => path.resolve(root, file)));
+  // Preserve lexical ancestors: a regular leaf beneath a linked directory is
+  // still mutable independently of the committed tree. Never resolve targets.
+  if (
+    A.some(absolute, (file) => {
+      const relative = path.relative(root, file);
+      return path.isAbsolute(relative) || Str.startsWith("..")(relative);
+    })
+  )
+    return false;
+  const ancestors = A.dedupe(
+    A.flatMap(absolute, (file) => {
+      const relative = path.relative(root, file);
+      const segments = Str.split(relative, path.sep);
+      return A.map(segments, (_, index) => path.join(root, ...A.take(segments, index + 1)));
+    })
+  );
+  const info = yield* Effect.forEach(ancestors, fs.lstat, { concurrency: 16 });
+  const ignored = yield* git.checkIgnore(root, absolute);
+  return (
+    A.isReadonlyArrayEmpty(ignored) && A.every(info, (entry) => entry.type === "File" || entry.type === "Directory")
+  );
+});
+
+const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScannerInputsTracked")(
+  function* (root: string, git: GitShape) {
+    const fs = yield* FsUtils;
+    const fileSystem = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const options = GlobOptions.make({ cwd: root, absolute: true, ignore: ["**/node_modules/**"] });
+    // JSDoc inventory follows source-directory links. Preserve lexical names
+    // to refuse linked ancestors before reading any source or configuration.
+    const projectOptions = GlobOptions.make({ ...options, dot: true, followSymlinks: true, onStatError: "fail" });
+    // Read only configuration locations the selected consumers actually use.
+    // Local docs/build outputs may contain other ignored JSON files.
+    const rootMetadata = yield* fs.globFiles(
+      [
+        "package.json",
+        "docgen.json",
+        "tsdoc.json",
+        "tsconfig*.{json,jsonc}",
+        "pnpm-workspace.yaml",
+        defaultJSDocTotalsBaselinePath,
+      ],
+      projectOptions
+    );
+    if (!(yield* ordinaryTrackedScannerInputs(root, rootMetadata, git))) return false;
+    const patterns = yield* WorkspacePatterns.read(root);
+    const globs = yield* GlobSet.compile(WorkspacePatterns.forMatching(patterns));
+    const workspaces = yield* enumerate(root, globs, { containWithinRoot: true, skipMissingBaseDirs: true });
+    const directories = [root, ...A.map(workspaces, (workspace) => workspace.path)];
+    const metadata = yield* Effect.forEach(
+      directories,
+      (directory) =>
+        fs.globFiles(
+          ["package.json", "docgen.json", "tsdoc.json", "tsconfig*.{json,jsonc}"],
+          GlobOptions.make({ ...projectOptions, cwd: directory })
+        ),
+      { concurrency: 4 }
+    );
+    if (!(yield* ordinaryTrackedScannerInputs(root, A.flatten(metadata), git))) return false;
+    const customSources = yield* Effect.forEach(
+      directories,
+      Effect.fnUntraced(function* (directory) {
+        const configPath = path.join(directory, "docgen.json");
+        const hasConfig = yield* fileSystem.exists(configPath);
+        const config = hasConfig ? yield* readJsonc(configPath) : {};
+        const source = path.resolve(directory, P.isString(config.srcDir) ? config.srcDir : "src");
+        if (!(yield* fileSystem.exists(source))) return [];
+        // Anchor configuration paths literally: brackets are directory names,
+        // and an explicitly selected root may itself sit under node_modules.
+        const lexicalSources = yield* fs.globFiles(
+          "**/*.{ts,tsx}",
+          GlobOptions.make({ ...projectOptions, cwd: source })
+        );
+        // Strict entry errors preserve the reference walk's fail-closed behavior.
+        return [source, ...lexicalSources];
+      }),
+      { concurrency: 4 }
+    );
+    // Semantic scanners remain live: their transitive module inputs cannot be
+    // proven from this bounded names-only discovery. No AST/project is built.
+    const sources = yield* discoverEffectImportSourceFiles(EffectImportRulesOptions.make({ excludePaths: [] }), root);
+    return yield* ordinaryTrackedScannerInputs(root, [...sources, ...A.flatten(customSources)], git);
+  },
+  (effect) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const services = yield* Layer.build(FsUtilsLive);
+        return yield* effect.pipe(Effect.provide(services));
+      })
+    )
+);
+
+// Every unknown axis fails closed. Git owns NUL parsing, including Unicode and
+// newline filenames. noRenames retains the source-side deletion of a move.
+const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(function* (repoRoot: string) {
+  if (!configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "1")) return false;
+  const available = yield* Effect.serviceOption(Git);
+  if (O.isNone(available)) return false;
+  const git = available.value;
+  return yield* Effect.gen(function* () {
+    const status = yield* git.status(repoRoot, { untrackedFiles: "all", noOptionalLocks: true });
+    if (A.isReadonlyArrayNonEmpty(status)) return false;
+    const base = yield* git.revParse(repoRoot, "origin/main", { peel: "commit" });
+    const pinned = pinnedLaneProofBaseSha();
+    if (O.isSome(pinned) && pinned.value !== base) return false;
+    const head = yield* git.revParse(repoRoot, "HEAD", { peel: "commit" });
+    const mergeBase = yield* git.mergeBase(repoRoot, base, head);
+    const entries = yield* git.nameStatus(repoRoot, { base: mergeBase, head, twoDot: true, noRenames: true });
+    if (A.isReadonlyArrayEmpty(entries)) return false;
+    if (
+      !A.every(
+        entries,
+        (entry) => (entry.status === "added" || entry.status === "modified") && isReportOnlyPath(entry.path)
+      )
+    )
+      return false;
+    const pathspec = A.map(entries, (entry) => `:(literal)${entry.path}`);
+    const before = yield* git.lsTree(repoRoot, mergeBase, { pathspec, fullTree: true });
+    const after = yield* git.lsTree(repoRoot, head, { pathspec, fullTree: true });
+    if (
+      !(yield* reportFilesAreOrdinary(
+        repoRoot,
+        A.map(entries, (entry) => entry.path),
+        before,
+        after
+      ))
+    )
+      return false;
+    // A fresh temporary index reads actual tracked contents, including edits
+    // hidden from status by assume-unchanged or skip-worktree. The user's index
+    // and its flags are never copied, refreshed or cleared.
+    const headTree = yield* git.revParse(repoRoot, `${head}^{tree}`);
+    const materializedTree = yield* laneProofVirtualTreeSha(repoRoot);
+    const scannerInputsTracked = yield* reportOnlyScannerInputsTracked(repoRoot, git);
+    const finalHead = yield* git.revParse(repoRoot, "HEAD", { peel: "commit" });
+    const finalBase = yield* git.revParse(repoRoot, "origin/main", { peel: "commit" });
+    const finalStatus = yield* git.status(repoRoot, { untrackedFiles: "all", noOptionalLocks: true });
+    return A.every(
+      [
+        scannerInputsTracked,
+        materializedTree === headTree,
+        finalHead === head,
+        finalBase === base,
+        A.isReadonlyArrayEmpty(finalStatus),
+      ],
+      identity
+    );
+  }).pipe(Effect.orElseSucceed(thunkFalse));
+});
+
+// Admission only schedules possible skips; each lane still proves its complete
+// current input identity before omitting its subprocess.
+const reportOnlyWavesCandidate = (lanes: ReadonlyArray<GithubCheckWaveLane>): boolean => {
+  if (!configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "1")) return false;
+  const repoRoot = O.map(A.head(lanes), (lane) => lane.step.cwd);
+  return (
+    O.isSome(repoRoot) &&
+    A.every(lanes, (lane) => lane.step.cwd === repoRoot.value) &&
+    A.some(lanes, (lane) => lane.tier === "cheap-gates" && S.is(ReportOnlyInertLaneId)(lane.id))
+  );
+};
+
+const shouldSkipReportLane = Effect.fnUntraced(function* (lane: GithubCheckWaveLane, reportOnly: boolean) {
+  return (
+    reportOnly &&
+    lane.tier === "cheap-gates" &&
+    S.is(ReportOnlyInertLaneId)(lane.id) &&
+    (yield* cleanReportOnlyDiff(lane.step.cwd))
+  );
+});
+
 // What one lane contributed to its wave. The journal append and the proof
 // persist are left to the wave runner so lanes that ran concurrently are
 // still recorded in wave order and never write the proof ledger at once.
@@ -2228,8 +2453,27 @@ type GithubCheckLaneOutcome = {
 const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function* (
   label: string,
   lane: GithubCheckWaveLane,
-  session: O.Option<LaneProofSession>
+  session: O.Option<LaneProofSession>,
+  reportOnly: boolean
 ) {
+  if (yield* shouldSkipReportLane(lane, reportOnly)) {
+    yield* Console.log(`[beep-cli] ${label}: skipped lane ${lane.id}: ${reportOnlySkipReason}`);
+    return {
+      lane,
+      laneRun: O.some(
+        QualityTaskLaneRun.make({
+          id: lane.id,
+          label: lane.step.label,
+          status: "skipped",
+          reason: O.some(reportOnlySkipReason),
+          inputDigest: O.none(),
+        })
+      ),
+      failures: A.empty<QualityTaskFailed>(),
+      reused: false,
+      stopAfterRed: false,
+    } satisfies GithubCheckLaneOutcome;
+  }
   const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
   const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
   if (reusable) {
@@ -2281,7 +2525,9 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
 const githubCheckLaneProofSuccess = (
   outcome: GithubCheckLaneOutcome
 ): O.Option<readonly [lane: GithubCheckWaveLane, durationMs: number]> =>
-  outcome.reused || A.isReadonlyArrayNonEmpty(outcome.failures)
+  outcome.reused ||
+  O.exists(outcome.laneRun, (run) => run.status === "skipped") ||
+  A.isReadonlyArrayNonEmpty(outcome.failures)
     ? O.none()
     : O.some([
         outcome.lane,
@@ -2408,7 +2654,8 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
   wave: GithubCheckLaneWaveSpec,
   failurePolicy: GithubCheckFailurePolicy,
   concurrency: number,
-  session: O.Option<LaneProofSession>
+  session: O.Option<LaneProofSession>,
+  reportOnly: boolean
 ) {
   const failFast = GithubCheckFailurePolicy.is["fail-fast"](failurePolicy);
   const stopRequested = yield* Ref.make(false);
@@ -2448,7 +2695,7 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
       Effect.flatMap((stop) =>
         stop
           ? Effect.succeed(O.none<GithubCheckLaneOutcome>())
-          : runGithubCheckLane(label, lane, session).pipe(
+          : runGithubCheckLane(label, lane, session, reportOnly).pipe(
               Effect.tap((outcome) => (failFast && outcome.stopAfterRed ? Ref.set(stopRequested, true) : Effect.void)),
               Effect.asSome
             )
@@ -2554,6 +2801,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
   // One virtual-tree hash identifies every reusable lane up front; each wave
   // then refreshes it once (see advanceGithubCheckLaneProofs).
   const allLanes = A.flatMap(waves, (wave) => wave.lanes);
+  const reportOnly = reportOnlyWavesCandidate(allLanes);
   let session = yield* prepareLaneProofSession(allLanes, laneProofMode).pipe(
     QualityTaskConfigurationError.mapError("Failed to prepare the lane-proof session.")
   );
@@ -2578,7 +2826,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
       skippedLaneIds,
       stoppedAfterRed,
       successes,
-    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy, concurrency, session);
+    } = yield* runGithubCheckWave(`${label}:${wave.wave}`, wave, failurePolicy, concurrency, session, reportOnly);
     // The refresh is skipped only when nothing would read it: no proof to
     // persist and no later wave to identify.
     if (A.isReadonlyArrayNonEmpty(successes) || (!stoppedAfterRed && waveIndex < A.length(waves) - 1)) {
@@ -2591,7 +2839,14 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
         GithubCheckLaneRun.make({
           id: lane.id,
           stage: lane.stage,
-          status: githubCheckLaneRunStatus(lane, activeReusableIds, failedLabels, skippedLaneIds),
+          status: O.getOrElse(
+            A.findFirst(waveLaneRuns, (run) => run.id === lane.id),
+            () => ({ status: githubCheckLaneRunStatus(lane, activeReusableIds, failedLabels, skippedLaneIds) })
+          ).status,
+          reason: O.flatMap(
+            A.findFirst(waveLaneRuns, (run) => run.id === lane.id),
+            (run) => run.reason
+          ),
           wave: lane.wave,
         })
       )

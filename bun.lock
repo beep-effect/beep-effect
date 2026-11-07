@@ -1089,6 +1089,7 @@
       "dependencies": {
         "@alchemy.run/domain": "catalog:",
         "@beep/identity": "workspace:^",
+        "@beep/observability": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "alchemy": "catalog:",

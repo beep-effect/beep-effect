@@ -2,7 +2,7 @@ import { it } from "@beep/test-runner";
 import { replayCitationAnnotationCallbacks } from "./CitationAnnotationCallback.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-it.layer(citationTokenizerTestLayer, { excludeTestServices: true })(
+it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: false, timeout: "5 seconds" })(
   "original annotation callback composition",
   (it) => {
     it.effect(

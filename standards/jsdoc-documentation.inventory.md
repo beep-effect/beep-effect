@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T14:30:30.383Z
+Generated: 2026-11-07T16:33:58.313Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 172 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3777 |
-| publicExports | 26958 |
+| publicModules | 3778 |
+| publicExports | 26969 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -153,24 +153,24 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 95 | `@beep/practice-setup` | `apps/practice-setup` | clean | 6 | 38 | 0 | 0 |
 | 96 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 5 | 24 | 0 | 0 |
 | 97 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | clean | 7 | 31 | 0 | 0 |
-| 98 | `@beep/alchemy-postgres` | `packages/drivers/alchemy-postgres` | clean | 7 | 36 | 0 | 0 |
-| 99 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
-| 100 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 11 | 0 | 0 |
-| 101 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 6 | 112 | 0 | 0 |
-| 102 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | clean | 8 | 40 | 0 | 0 |
-| 103 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | clean | 6 | 124 | 0 | 0 |
-| 104 | `@beep/libpff` | `packages/drivers/libpff` | clean | 7 | 42 | 0 | 0 |
-| 105 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 42 | 337 | 0 | 0 |
-| 106 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
-| 107 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
-| 108 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 40 | 317 | 0 | 0 |
-| 109 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 75 | 642 | 12 | 0 |
-| 110 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 28 | 250 | 0 | 0 |
-| 111 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
-| 112 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 10 | 132 | 0 | 0 |
-| 113 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
-| 114 | `@beep/tika` | `packages/drivers/tika` | clean | 8 | 33 | 0 | 0 |
-| 115 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 7 | 31 | 0 | 0 |
+| 98 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
+| 99 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 11 | 0 | 0 |
+| 100 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 6 | 112 | 0 | 0 |
+| 101 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | clean | 8 | 40 | 0 | 0 |
+| 102 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | clean | 6 | 124 | 0 | 0 |
+| 103 | `@beep/libpff` | `packages/drivers/libpff` | clean | 7 | 42 | 0 | 0 |
+| 104 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 42 | 337 | 0 | 0 |
+| 105 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
+| 106 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
+| 107 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 40 | 317 | 0 | 0 |
+| 108 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 75 | 642 | 12 | 0 |
+| 109 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 28 | 250 | 0 | 0 |
+| 110 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
+| 111 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 10 | 132 | 0 | 0 |
+| 112 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
+| 113 | `@beep/tika` | `packages/drivers/tika` | clean | 8 | 33 | 0 | 0 |
+| 114 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 7 | 31 | 0 | 0 |
+| 115 | `@beep/alchemy-postgres` | `packages/drivers/alchemy-postgres` | clean | 8 | 44 | 0 | 0 |
 | 116 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 34 | 210 | 0 | 0 |
 | 117 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
 | 118 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 13 | 109 | 0 | 0 |
@@ -215,7 +215,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 157 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
 | 158 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
 | 159 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 160 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 533 | 4961 | 45 | 29 |
+| 160 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 533 | 4964 | 45 | 29 |
 | 161 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
 | 162 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
 | 163 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |

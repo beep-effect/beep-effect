@@ -163,7 +163,7 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
             routed: Effect.map(keyRow(key), (row) =>
               O.getOrUndefined(O.flatMap(row, ({ routed }) => O.fromNullOr(routed)))
             ),
-            markLive: Effect.fn("AlchemyPostgres.view.markLive")(function* (routeTarget: string) {
+            markLive: Effect.fn("AlchemyPostgres.View.markLive")(function* (routeTarget: string) {
               const empty = yield* encodeJson(emptySnapshot);
               yield* sql`INSERT INTO ${sql(tables.viewKey)} (model, view, key, snapshot, routed)
                   VALUES (${modelName}, ${name}, ${key}, ${empty}::jsonb, NULL) ON CONFLICT DO NOTHING`;
@@ -215,7 +215,7 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
     });
 
     return {
-      receive: Effect.fn("AlchemyPostgres.view.receive")(function* (
+      receive: Effect.fn("AlchemyPostgres.View.receive")(function* (
         key: string,
         deliveries: ReadonlyArray<DomainPlatform.Delivery>
       ) {

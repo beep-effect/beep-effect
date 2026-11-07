@@ -196,7 +196,7 @@ export const makeProjectionStore =
       );
 
       return {
-        receive: Effect.fn("AlchemyPostgres.projection.receive")(function* (delivery: DomainPlatform.Delivery) {
+        receive: Effect.fn("AlchemyPostgres.Projection.receive")(function* (delivery: DomainPlatform.Delivery) {
           if (yield* consumer(delivery.key).admit(target, [delivery])) yield* intake(delivery);
         }),
         checkpoints: (key) => Effect.map(partitionOf(key), ({ checkpoints }) => checkpoints).pipe(orDie),

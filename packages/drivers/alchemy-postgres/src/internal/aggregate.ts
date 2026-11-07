@@ -13,8 +13,9 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { AggregateAttribute } from "../AlchemyPostgres.instruments.ts";
 import { AcceptedResult, EventRow, encodeJson, InstanceRow, ScheduleRow } from "../AlchemyPostgres.schema.ts";
-import { orDieAs, rowsOf } from "./host.ts";
+import { failureTagOf, orDieAs, rowsOf } from "./host.ts";
 import type * as Aggregate from "@alchemy.run/domain/Aggregate";
 import type * as DomainPlatform from "@alchemy.run/domain/Platform";
 import type { ScheduleStatus } from "../AlchemyPostgres.schema.ts";
@@ -301,7 +302,7 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
             Effect.succeed<DomainPlatform.SendResult>({ _tag: "Rejected", rejection })
           ),
           orDieAs("commit")(tables.aggregateEvent),
-          Effect.withSpan("AlchemyPostgresPlatform.send", { attributes: { aggregate: name, id } })
+          Effect.withSpan("AlchemyPostgresPlatform.send", { attributes: { [AggregateAttribute]: name } })
         );
 
     const executed = (id: string, commandId: string) => Effect.map(receiptOf(id, commandId), O.isSome);
@@ -371,10 +372,10 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
               : yield* commitLocked(id, current, command, meta).pipe(
                   Effect.as<ScheduleStatus>("executed"),
                   Effect.catchTag("RejectedCommand", ({ rejection }) =>
-                    Effect.logWarning(
-                      `alchemy-postgres scheduled ${name}/${id} ${commandId} was rejected`,
-                      rejection
-                    ).pipe(Effect.as<ScheduleStatus>("rejected"))
+                    Effect.logWarning(`alchemy-postgres scheduled ${name} command was rejected`).pipe(
+                      Effect.annotateLogs({ aggregate: name, rejection: failureTagOf(rejection) }),
+                      Effect.as<ScheduleStatus>("rejected")
+                    )
                   )
                 );
             const at = yield* now;
