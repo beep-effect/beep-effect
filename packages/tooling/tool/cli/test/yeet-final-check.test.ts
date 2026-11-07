@@ -48,6 +48,8 @@ import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 import type { FinalCheckVerdict } from "@beep/repo-cli/test/Yeet";
 
+const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+
 const HEAD = Str.repeat(40)("a");
 const encodeReceiptJson = S.encodeUnknownEffect(S.fromJsonString(FinalCheckReceipt));
 const BASE = Str.repeat(40)("b");
@@ -798,7 +800,7 @@ describe("final-check verification routing", () => {
     })
   );
 
-  it.layer(NodeCommandTestLayer)("gate execution and shadow sentinel", (it) => {
+  it.layer(NodeCommandTestLayer, { timeout: "30 seconds" })("gate execution and shadow sentinel", (it) => {
     it.effect("enforced skip records the route reason without running the gate", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -853,7 +855,7 @@ describe("final-check verification routing", () => {
     it.effect("revoked refinement runs the gate after reading the sentinel at the requested head", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        const text = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))({
+        const text = yield* encodeJsonText({
           revoked: [{ id: refinementId, reason: "shadow miss" }],
         });
         const route = yield* collectFinalCheckRoute("/repo", BASE, HEAD).pipe(

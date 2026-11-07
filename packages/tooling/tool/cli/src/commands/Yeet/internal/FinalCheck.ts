@@ -108,6 +108,8 @@ export const YEET_FINAL_CHECK_COMMAND = "bun run beep yeet final-check";
  */
 export const FINAL_CHECK_RECEIPT_DIR = ".beep/yeet/final-check";
 
+const decodeRouteSentinelText = S.decodeUnknownEffect(S.fromJsonString(RouteSentinel));
+
 const gateLane = {
   "expectation-rewrite": "none",
   "cheap-gates": "none",
@@ -182,7 +184,7 @@ export const collectFinalCheckRoute = Effect.fn("Yeet.collectFinalCheckRoute")(
     const sentinelText = yield* git.show(repoRoot, headSha, "standards/verification-route.sentinel.json");
     const sentinel = yield* O.match(sentinelText, {
       onNone: () => Effect.succeed({ revoked: [] }),
-      onSome: S.decodeUnknownEffect(S.fromJsonString(RouteSentinel)),
+      onSome: decodeRouteSentinelText,
     });
     const digest = yield* sha256Hex(routeFootprintCanonicalJson());
     return planFinalCheckRoute(
@@ -819,6 +821,34 @@ const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<ty
 const hasFailure = (steps: ReadonlyArray<FinalCheckStepResult>): boolean =>
   A.some(steps, (step) => step.status === "failed");
 
+// A shadow-skipped gate failed: one P0 inbox row per responsible refinement, naming the sentinel
+// revocation that turns the refinement off.
+const reportShadowMiss = Effect.fnUntraced(function* (
+  run: FinalCheckRun,
+  gate: FinalCheckGate,
+  refinements: ReadonlyArray<string>
+) {
+  for (const refinement of refinements) {
+    const capsule = YeetLocalShardFailureCapsule.make({
+      headSha: run.headSha ?? run.mergeBase,
+      shard: `route-shadow-miss:${refinement}:${gate}`,
+      command: `Revoke refinement ${refinement} in standards/verification-route.sentinel.json; final-check ${gate} failed`,
+      exitCode: 1,
+    });
+    const id = yield* yeetLocalShardFailedRowId(capsule);
+    yield* appendYeetInboxRowOnce(
+      run.repoRoot,
+      YeetLocalShardFailedRow.make({
+        capsule,
+        id,
+        checkout: run.repoRoot,
+        severity: "P0",
+        ts: yield* nowIso,
+      })
+    );
+  }
+});
+
 const runGates = Effect.fn("Yeet.runFinalCheckGates")(function* (
   run: FinalCheckRun,
   gates: ReadonlyArray<FinalCheckGate>,
@@ -835,27 +865,9 @@ const runGates = Effect.fn("Yeet.runFinalCheckGates")(function* (
     const miss = routeFor(run, gate).pipe(
       O.filter((entry) => entry.decision === "shadow-skipped" && hasFailure(next.steps))
     );
-    if (O.isSome(miss)) {
-      for (const refinement of miss.value.refinements) {
-        const capsule = YeetLocalShardFailureCapsule.make({
-          headSha: run.headSha ?? run.mergeBase,
-          shard: `route-shadow-miss:${refinement}:${gate}`,
-          command: `Revoke refinement ${refinement} in standards/verification-route.sentinel.json; final-check ${gate} failed`,
-          exitCode: 1,
-        });
-        const id = yield* yeetLocalShardFailedRowId(capsule);
-        yield* appendYeetInboxRowOnce(
-          run.repoRoot,
-          YeetLocalShardFailedRow.make({
-            capsule,
-            id,
-            checkout: run.repoRoot,
-            severity: "P0",
-            ts: yield* nowIso,
-          })
-        );
-      }
-    }
+    yield* Effect.forEach(O.toArray(miss), (entry) => reportShadowMiss(run, gate, entry.refinements), {
+      discard: true,
+    });
     outcome = {
       steps: A.appendAll(outcome.steps, next.steps),
       verdicts: A.appendAll(outcome.verdicts, next.verdicts),

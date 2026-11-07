@@ -1,9 +1,11 @@
+import { fcRuns } from "@beep/fc-runs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -15,6 +17,17 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const decodeCatalogManifest = S.decodeEffect(S.fromJsonString(S.Struct({ catalog: S.Record(S.String, S.String) })));
+const decodeWorkspaceManifest = S.decodeEffect(
+  S.fromJsonString(
+    S.Struct({
+      name: S.optionalKey(S.String),
+      dependencies: S.optionalKey(S.Record(S.String, S.Unknown)),
+      devDependencies: S.optionalKey(S.Record(S.String, S.Unknown)),
+    })
+  )
+);
 
 const $I = $RepoCliId.create("test/verification-layer1-turbo");
 const Projection = S.Record(S.String, S.Unknown).pipe(
@@ -30,6 +43,10 @@ const decodeSummary = S.decodeEffect(S.fromJsonString(Summary));
 const decodeProjection = S.decodeEffect(S.fromJsonString(Projection));
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const projectionFile = "standards/root-package.projection.generated.json";
+// Catalog maps the property draws: arbitrary dependency names to arbitrary version text.
+const CatalogMap = S.Record(S.String, S.String).pipe(
+  $I.annoteSchema("CatalogMap", { description: "A root catalog: dependency name to version text." })
+);
 // A full tracked-tree copy and three whole-workspace dry runs are deliberately opt-in.
 const fullProofEnabled = Effect.runSync(Config.Boolean("BEEP_LAYER1_DRYRUN").pipe(Config.withDefault(false)));
 const writeFile = Effect.fn("Layer1Test.writeFile")(function* (root: string, file: string, content: string) {
@@ -69,17 +86,41 @@ it.layer(PlatformLayer, { timeout: "180 seconds", buildPerTest: true })("verific
       expect(R.keys(projection)).toEqual(["name", "scripts", "zFutureField"]);
       yield* writeFile(root, projectionFile, change.content);
       const planned0 = yield* TsconfigSyncPlan.planRootPackageProjectionSync(root);
-      expect(O.isNone(planned0)).toBe(true);
+      assertNone(planned0);
       yield* writeJson(root, "package.json", { ...manifest, catalog: { biome: "2" } });
       const planned1 = yield* TsconfigSyncPlan.planRootPackageProjectionSync(root);
-      expect(O.isNone(planned1)).toBe(true);
+      assertNone(planned1);
       yield* writeJson(root, "package.json", { ...manifest, scripts: { check: "echo changed" } });
       const planned2 = yield* TsconfigSyncPlan.planRootPackageProjectionSync(root);
-      expect(O.isSome(planned2)).toBe(true);
+      assertTrue(planned2.pipe(O.isSome));
       yield* writeFile(root, projectionFile, "{}\n");
       const planned3 = yield* TsconfigSyncPlan.planRootPackageProjectionSync(root);
-      expect(O.isSome(planned3)).toBe(true);
+      assertTrue(planned3.pipe(O.isSome));
     })
+  );
+
+  it.effect.prop(
+    "keeps the projection unchanged under any catalog edit",
+    { before: CatalogMap, after: CatalogMap },
+    ({ before, after }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* findRepoRoot();
+        const scratch = path.join(repo, ".beep");
+        yield* fs.makeDirectory(scratch, { recursive: true });
+        const root = yield* fs.makeTempDirectoryScoped({ directory: scratch, prefix: "layer1-catalog-prop-" });
+        yield* fs.makeDirectory(path.join(root, "standards"));
+        const manifest = { name: "fixture", scripts: { check: "echo check" } };
+        yield* writeJson(root, "package.json", { ...manifest, catalog: before });
+        const first = yield* TsconfigSyncPlan.planRootPackageProjectionSync(root);
+        const change = O.getOrThrow(first);
+        yield* writeFile(root, projectionFile, change.content);
+        yield* writeJson(root, "package.json", { ...manifest, catalog: after });
+        const replanned = yield* TsconfigSyncPlan.planRootPackageProjectionSync(root);
+        assertNone(replanned);
+      }),
+    { arbitrary: fcRuns(12) }
   );
 
   it.effect.skipIf(!fullProofEnabled)(
@@ -142,9 +183,7 @@ it.layer(PlatformLayer, { timeout: "180 seconds", buildPerTest: true })("verific
       expect(A.length(A.filter(packetChanges, (task) => task.task === "build" || task.task === "check"))).toBe(0);
       yield* writeFile(root, packet, originalPacket);
       const manifestText = yield* fs.readFileString(path.join(root, "package.json"));
-      const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ catalog: S.Record(S.String, S.String) })))(
-        manifestText
-      );
+      const manifest = yield* decodeCatalogManifest(manifestText);
       // A catalog entry outside the root's own dependencies: a bump of a root dependency (Biome is a
       // root devDependency) changes turbo's root external-dependency hash and invalidates every task,
       // whatever the inputs say (research/slice-2-layer1-dryrun.md).
@@ -171,15 +210,7 @@ it.layer(PlatformLayer, { timeout: "180 seconds", buildPerTest: true })("verific
         A.filter(files, Str.endsWith("/package.json")),
         Effect.fnUntraced(function* (file) {
           const text = yield* fs.readFileString(path.join(root, file));
-          const pkg = yield* S.decodeEffect(
-            S.fromJsonString(
-              S.Struct({
-                name: S.optionalKey(S.String),
-                dependencies: S.optionalKey(S.Record(S.String, S.Unknown)),
-                devDependencies: S.optionalKey(S.Record(S.String, S.Unknown)),
-              })
-            )
-          )(text);
+          const pkg = yield* decodeWorkspaceManifest(text);
           return pkg.name !== undefined &&
             (R.has(pkg.dependencies ?? {}, dependency) || R.has(pkg.devDependencies ?? {}, dependency))
             ? O.some(pkg.name)

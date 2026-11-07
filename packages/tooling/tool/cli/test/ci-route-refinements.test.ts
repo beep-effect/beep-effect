@@ -4,7 +4,6 @@ import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { ChangedPathStatus, RouteReadAt } from "@beep/repo-cli/commands/Ci/RouteClassify";
@@ -125,7 +124,7 @@ it.layer(NodeCrypto.layer)("route refinements", (it) => {
         for (const lane of REFINED_LANES) {
           const decision = yield* decide(["goals/verification-route/SPEC.md", "LICENSE"], lane);
           expect(decision.decision).toBe("selected");
-          expect(O.isSome(A.head(decision.refinements))).toBe(false);
+          expect(decision.refinements).toEqual([]);
         }
       })
     );
