@@ -4289,7 +4289,6 @@
         "$TURBO_ROOT$/packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/schema/src/SchemaUtils/internal/staticDescriptors.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/schema/src/SchemaUtils/isCodecDataFirst.ts",
-        "$TURBO_ROOT$/packages/foundation/modeling/schema/src/SchemaUtils/optionalDefect.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/schema/src/SchemaUtils/toEquivalence.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts",

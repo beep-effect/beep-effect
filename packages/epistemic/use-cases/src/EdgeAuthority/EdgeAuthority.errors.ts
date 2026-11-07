@@ -18,6 +18,7 @@
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { optionalDefect } from "@beep/schema/SchemaUtils/optionalDefect";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -150,9 +151,7 @@ export class SupersessionConflict extends S.TaggedError<SupersessionConflict, { 
 )(
   "SupersessionConflict",
   {
-    cause: SchemaUtils.optionalDefect(
-      "Optional underlying defect captured when a database backstop rejected the supersession."
-    ),
+    cause: optionalDefect("Optional underlying defect captured when a database backstop rejected the supersession."),
     expectedVersion: PosInt.annotateKey({
       description: "Version the caller believed was the open head when it issued the supersession.",
     }),
@@ -341,9 +340,7 @@ export class EdgeRepositoryUnavailable extends S.TaggedError<
 >($I`EdgeRepositoryUnavailable`)(
   "EdgeRepositoryUnavailable",
   {
-    cause: SchemaUtils.optionalDefect(
-      "Optional underlying driver defect captured when the repository could not serve a request."
-    ),
+    cause: optionalDefect("Optional underlying driver defect captured when the repository could not serve a request."),
     operation: EdgeAuthorityOperation.annotateKey({
       description: "Repository operation that could not be served.",
     }),

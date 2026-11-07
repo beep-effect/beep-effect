@@ -246,7 +246,6 @@
     "packages/foundation/modeling/schema/src/SchemaUtils/index.ts",
     "packages/foundation/modeling/schema/src/SchemaUtils/internal/staticDescriptors.ts",
     "packages/foundation/modeling/schema/src/SchemaUtils/isCodecDataFirst.ts",
-    "packages/foundation/modeling/schema/src/SchemaUtils/optionalDefect.ts",
     "packages/foundation/modeling/schema/src/SchemaUtils/toEquivalence.ts",
     "packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts",
     "packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts",

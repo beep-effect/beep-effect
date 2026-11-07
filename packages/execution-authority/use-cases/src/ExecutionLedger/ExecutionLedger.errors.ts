@@ -14,7 +14,8 @@
  */
 
 import { $ExecutionAuthorityUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
+import { optionalDefect } from "@beep/schema/SchemaUtils/optionalDefect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -147,9 +148,7 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<
 >($I`ExecutionLedgerUnavailable`)(
   "ExecutionLedgerUnavailable",
   {
-    cause: SchemaUtils.optionalDefect(
-      "Optional underlying driver defect captured when the ledger could not serve a request."
-    ),
+    cause: optionalDefect("Optional underlying driver defect captured when the ledger could not serve a request."),
     operation: ExecutionLedgerOperation.annotateKey({
       description: "Ledger operation that could not be served.",
     }),
