@@ -222,6 +222,12 @@ ConflictEventRegistry is keyed by destination and atomically reserves remoteEven
 
 Reverse: Replace the registry with a native uniqueness primitive while retaining conflict stream ids
 
+### Hold uncertain Box mutations behind durable intent receipts, 2026-11-07
+
+Commit an operation intent before calling Box and the acknowledgement before returning. An interrupted intent is looked up through BoxMirrorEvidence; insufficient evidence holds the operation without another Box mutation. The existing DmsMirrorBox port has no authoritative version or digest lookup, so the safe production lookup result is absent until that capability is provided. No fixture proves provider idempotency. Runtime composition must scope the existing Box mirror and root configuration to one destination.
+
+Reverse: Use verified provider idempotency while retaining receipt identities
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

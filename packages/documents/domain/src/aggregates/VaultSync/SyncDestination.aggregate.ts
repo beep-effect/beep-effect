@@ -18,6 +18,12 @@ const sameOwner = (
   s: { readonly orgId: number; readonly workspaceId: number },
   c: { readonly orgId: number; readonly workspaceId: number }
 ): boolean => s.orgId === c.orgId && s.workspaceId === c.workspaceId;
+const cursorAdvanced = (position: string, lastEventId: string | undefined) =>
+  C.CursorAdvanced.make({ position, ...(lastEventId === undefined ? {} : { lastEventId }) });
+const pollOutcome = (c: C.RecordDestinationPoll) => {
+  if (c.error !== null) return [C.CursorFailed.make({ reason: c.error })];
+  return c.position === null ? refused("poll-result") : [cursorAdvanced(c.position, c.lastEventId)];
+};
 /**
  * SyncDestination vault sync contract.
  *
@@ -62,14 +68,7 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
     PauseDestination: (s) =>
       s._tag === "Registered" ? (s.paused ? [] : [C.DestinationPaused.make({})]) : refused("not-registered"),
     ResumeDestination: (s) => (s._tag === "Registered" ? [C.DestinationConnected.make({})] : refused("not-registered")),
-    RecordDestinationPoll: (s, c) =>
-      s._tag !== "Registered"
-        ? refused("not-registered")
-        : c.error !== null
-          ? [C.CursorFailed.make({ reason: c.error })]
-          : c.position !== null
-            ? [C.CursorAdvanced.make({ position: c.position })]
-            : refused("poll-result"),
+    RecordDestinationPoll: (s, c) => (s._tag === "Registered" ? pollOutcome(c) : refused("not-registered")),
     ClaimItemPath: (s, c) => {
       if (s._tag !== "Registered") return refused("not-registered");
       const owner = H.get(s.paths, c.path);

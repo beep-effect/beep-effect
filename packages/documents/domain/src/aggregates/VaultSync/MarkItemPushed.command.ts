@@ -23,7 +23,13 @@ import * as V from "./Values.ts";
  */
 export class MarkItemPushed extends Domain.Command("MarkItemPushed", {
   target: V.ItemId,
-  input: { remoteId: V.RemoteItemId, generation: S.Int, operationId: V.OperationId },
+  input: {
+    remoteId: V.RemoteItemId,
+    remoteName: S.optionalKey(S.String),
+    remoteParentId: V.RemoteItemId.pipe(S.NullOr, S.optionalKey),
+    generation: S.Int,
+    operationId: V.OperationId,
+  },
   events: [E.ItemPushed],
   rejects: [SyncRuleViolation],
 }) {}

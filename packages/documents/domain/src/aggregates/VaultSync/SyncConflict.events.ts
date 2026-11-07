@@ -31,6 +31,11 @@ export class ConflictRecord extends S.Opaque<ConflictRecord, { readonly brand: u
     remoteEventId: S.NonEmptyString,
     itemId: S.NullOr(V.ItemId),
     evidence: V.RemoteEvidence,
+    kind: S.optionalKey(
+      S.Literals(["remoteCreate", "remoteEdit", "remoteMove", "remoteRename", "remoteDelete", "remoteUnknown"])
+    ),
+    remoteId: S.optionalKey(V.RemoteItemId),
+    path: S.optionalKey(V.VaultRelPath),
     reviewed: S.Boolean,
   }).pipe($I.annoteSchema("ConflictRecord", { description: "ConflictRecord persisted vault sync value." }))
 ) {}

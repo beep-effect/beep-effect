@@ -29,6 +29,7 @@ export class ItemObservation extends S.Opaque<ItemObservation, { readonly brand:
     path: V.VaultRelPath,
     kind: V.SyncItemKind,
     digest: S.NullOr(S.String),
+    contentSizeBytes: S.optionalKey(S.Natural),
     generation: S.Int,
     operationId: V.OperationId,
     type: V.OperationType,
@@ -148,6 +149,8 @@ export class ItemKindReplaced extends Domain.Event("ItemKindReplaced", {
  */
 export class ItemPushed extends Domain.Event("ItemPushed", {
   remoteId: V.RemoteItemId,
+  remoteName: S.optionalKey(S.String),
+  remoteParentId: V.RemoteItemId.pipe(S.NullOr, S.optionalKey),
   generation: S.Int,
   operationId: V.OperationId,
 }) {

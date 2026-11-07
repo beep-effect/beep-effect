@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T16:33:58.313Z
+Generated: 2026-11-07T16:54:06.930Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 172 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3778 |
-| publicExports | 26969 |
+| publicModules | 3783 |
+| publicExports | 26987 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -207,7 +207,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 149 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
 | 150 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
 | 151 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
-| 152 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 36 | 153 | 0 | 0 |
+| 152 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 38 | 161 | 0 | 0 |
 | 153 | `@beep/epistemic-config` | `packages/epistemic/config` | clean | 7 | 20 | 0 | 0 |
 | 154 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 34 | 99 | 0 | 0 |
 | 155 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 41 | 158 | 0 | 0 |
@@ -222,7 +222,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 164 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
 | 165 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
 | 166 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 167 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
+| 167 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 38 | 133 | 2 | 0 |
 | 168 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
 | 169 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
 | 170 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 122 | 761 | 0 | 0 |

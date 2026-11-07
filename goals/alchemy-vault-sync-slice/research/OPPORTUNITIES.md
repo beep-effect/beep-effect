@@ -14,3 +14,16 @@
 | --- | --- | --- |
 | Obtain scoped lint proof | Both native lint help pages lack scope flags; bounded canonical scans found six schema and two Effect Vitest findings, all fixed | Add native scope flags; the packet adapter preserves detector code and avoids a repo-wide program |
 | Verify deadline policy replay | One run timed out waiting for a 40 ms expiry; final test executes the exact stale expiry id after success and replays the policy | Test replay independently of short wall-clock wakeups; retain the separate scheduled expiry scenario |
+
+## PR 3b part 1 integration friction
+
+- Fresh checkout: the initial session command failed with "Cannot find module effect/Result".
+  Running the pinned bun install repaired this checkout; a dependency preflight would catch it
+  before invoking packet tooling.
+- The brief's decision command used an unsupported --slug flag. The installed CLI accepts the
+  packet slug as the positional argument and --topic for the filename. Its help resolved the mismatch.
+- Snapshot-backed Projection.caughtUp on an aggregate receipt returned before the SQL handler
+  applied transitive View deliveries. Scenario tests now await expected SQL state too. A documented
+  transitive progress contract would prevent mistaking intake progress for read-model readiness.
+- Package-verifier failures create P0 inbox rows despite this lane's no-publication scope.
+  Only mandatory inbox acknowledgements were used; no publication workflow ran.

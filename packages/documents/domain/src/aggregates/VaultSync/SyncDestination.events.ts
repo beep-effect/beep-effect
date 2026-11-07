@@ -131,7 +131,10 @@ export class DestinationConnected extends Domain.Event("DestinationConnected", {
  * @category aggregates
  * @since 0.0.0
  */
-export class CursorAdvanced extends Domain.Event("CursorAdvanced", { position: S.String }) {
+export class CursorAdvanced extends Domain.Event("CursorAdvanced", {
+  position: S.String,
+  lastEventId: S.optionalKey(S.String),
+}) {
   static readonly schemaVersion = 1;
 }
 /**

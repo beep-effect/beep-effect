@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T16:33:33.819Z",
-  "git_sha": "e2bd335249efddcd804c495a48e02d39cdbd384f",
-  "command": "bun run coverage -- --filter=@beep/documents-use-cases --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-07T16:54:06.095Z",
+  "git_sha": "6f7f66a8f2b028b0373c4d8b94be01f5b43d24e9",
+  "command": "bun run coverage -- --filter=@beep/documents-server --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -7516,6 +7516,126 @@
             "branches": 0,
             "functions": 0
           }
+        },
+        "packages/documents/server/src/aggregates/Sync/BoxMirror.ts": {
+          "lines": 91.66,
+          "statements": 87.5,
+          "branches": 93.33,
+          "functions": 70.83,
+          "uncovered": {
+            "lines": 6,
+            "statements": 10,
+            "branches": 1,
+            "functions": 7
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/LegacySync.projection.ts": {
+          "lines": 100,
+          "statements": 96.2,
+          "branches": 79.16,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 3,
+            "branches": 10,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultPush.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.drift.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.push.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.reconcile.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.review.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts": {
+          "lines": 96.11,
+          "statements": 92.79,
+          "branches": 76.78,
+          "functions": 100,
+          "uncovered": {
+            "lines": 8,
+            "statements": 17,
+            "branches": 26,
+            "functions": 0
+          }
         }
       }
     },
@@ -8196,6 +8316,30 @@
           }
         },
         "packages/documents/use-cases/src/aggregates/VaultSync/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/aggregates/VaultSync/LegacySync.projection.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/aggregates/VaultSync/VaultSyncPass.saga.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

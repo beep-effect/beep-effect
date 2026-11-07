@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-07T16:33:58.313Z",
+  "generatedAt": "2026-11-07T16:54:06.930Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 172,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
-    "publicModules": 3778,
-    "publicExports": 26969,
+    "publicModules": 3783,
+    "publicExports": 26987,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -421618,8 +421618,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncConflict.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncConflict.events.ts",
-          "line": 49,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-events-ts-49-conflictrecorded",
+          "line": 54,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-events-ts-54-conflictrecorded",
           "currentTags": [
             "@category",
             "@since"
@@ -421640,8 +421640,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncConflict.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncConflict.events.ts",
-          "line": 63,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-events-ts-63-conflictreviewed",
+          "line": 68,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-events-ts-68-conflictreviewed",
           "currentTags": [
             "@category",
             "@since"
@@ -421662,8 +421662,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncConflict.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncConflict.events.ts",
-          "line": 77,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-events-ts-77-conflicteventreserved",
+          "line": 82,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-events-ts-82-conflicteventreserved",
           "currentTags": [
             "@category",
             "@since"
@@ -421684,8 +421684,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncConflict.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncConflict.events.ts",
-          "line": 92,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-events-ts-92-conflictreviewrequested",
+          "line": 97,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncconflict-events-ts-97-conflictreviewrequested",
           "currentTags": [
             "@category",
             "@since"
@@ -421706,8 +421706,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncDestination.aggregate.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncDestination.aggregate.ts",
-          "line": 33,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncdestination-aggregate-ts-33-syncdestination",
+          "line": 39,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncdestination-aggregate-ts-39-syncdestination",
           "currentTags": [
             "@category",
             "@since"
@@ -422078,8 +422078,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncDestination.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncDestination.events.ts",
-          "line": 148,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncdestination-events-ts-148-cursorfailed",
+          "line": 151,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncdestination-events-ts-151-cursorfailed",
           "currentTags": [
             "@category",
             "@since"
@@ -422100,8 +422100,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncDestination.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncDestination.events.ts",
-          "line": 162,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncdestination-events-ts-162-itempathclaimed",
+          "line": 165,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncdestination-events-ts-165-itempathclaimed",
           "currentTags": [
             "@category",
             "@since"
@@ -422122,8 +422122,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncDestination.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncDestination.events.ts",
-          "line": 176,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncdestination-events-ts-176-itempathreleased",
+          "line": 179,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncdestination-events-ts-179-itempathreleased",
           "currentTags": [
             "@category",
             "@since"
@@ -422327,8 +422327,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 50,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-50-itemrecord",
+          "line": 51,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-51-itemrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -422349,8 +422349,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 69,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-69-itemstate",
+          "line": 70,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-70-itemstate",
           "currentTags": [
             "@category",
             "@since"
@@ -422371,8 +422371,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 78,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-78-itemstate",
+          "line": 79,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-79-itemstate",
           "currentTags": [
             "@category",
             "@since"
@@ -422393,8 +422393,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 90,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-90-itemtracked",
+          "line": 91,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-91-itemtracked",
           "currentTags": [
             "@category",
             "@since"
@@ -422415,8 +422415,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 104,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-104-itemedited",
+          "line": 105,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-105-itemedited",
           "currentTags": [
             "@category",
             "@since"
@@ -422437,8 +422437,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 118,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-118-itemmoved",
+          "line": 119,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-119-itemmoved",
           "currentTags": [
             "@category",
             "@since"
@@ -422459,8 +422459,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 132,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-132-itemkindreplaced",
+          "line": 133,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-133-itemkindreplaced",
           "currentTags": [
             "@category",
             "@since"
@@ -422481,8 +422481,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 149,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-149-itempushed",
+          "line": 150,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-150-itempushed",
           "currentTags": [
             "@category",
             "@since"
@@ -422503,8 +422503,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 167,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-167-itempushfailed",
+          "line": 170,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-170-itempushfailed",
           "currentTags": [
             "@category",
             "@since"
@@ -422525,8 +422525,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 181,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-181-itemdriftflagged",
+          "line": 184,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-184-itemdriftflagged",
           "currentTags": [
             "@category",
             "@since"
@@ -422547,8 +422547,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/SyncItem.events.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/SyncItem.events.ts",
-          "line": 195,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-195-itemreturnedtopending",
+          "line": 198,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-syncitem-events-ts-198-itemreturnedtopending",
           "currentTags": [
             "@category",
             "@since"
@@ -479693,9 +479693,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 40,
-        "publicModuleCount": 36,
-        "publicExportCount": 153
+        "sourceFileCount": 42,
+        "publicModuleCount": 38,
+        "publicExportCount": 161
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -480154,6 +480154,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/VaultSync/LegacySync.projection.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/LegacySync.projection.ts",
+          "line": 1,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-legacysync-projection-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/VaultSync/Model.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/Model.ts",
           "line": 1,
@@ -480171,7 +480193,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -480264,6 +480286,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/VaultSync/VaultSyncPass.saga.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/VaultSyncPass.saga.ts",
+          "line": 1,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-vaultsyncpass-saga-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/VaultSync/index.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/index.ts",
           "line": 1,
@@ -480281,7 +480325,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -482168,8 +482212,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/BoxMirror.external.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/BoxMirror.external.ts",
-          "line": 106,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-106-boxmirror",
+          "line": 108,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-boxmirror-external-ts-108-boxmirror",
           "currentTags": [
             "@category",
             "@since"
@@ -482318,12 +482362,122 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "LegacySyncItem",
+          "exportKind": "class",
+          "filePath": "src/aggregates/VaultSync/LegacySync.projection.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/LegacySync.projection.ts",
+          "line": 19,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-legacysync-projection-ts-19-legacysyncitem",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LegacySyncOperation",
+          "exportKind": "class",
+          "filePath": "src/aggregates/VaultSync/LegacySync.projection.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/LegacySync.projection.ts",
+          "line": 44,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-legacysync-projection-ts-44-legacysyncoperation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LegacySyncConflict",
+          "exportKind": "class",
+          "filePath": "src/aggregates/VaultSync/LegacySync.projection.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/LegacySync.projection.ts",
+          "line": 72,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-legacysync-projection-ts-72-legacysyncconflict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LegacySyncCursor",
+          "exportKind": "class",
+          "filePath": "src/aggregates/VaultSync/LegacySync.projection.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/LegacySync.projection.ts",
+          "line": 88,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-legacysync-projection-ts-88-legacysynccursor",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "VaultSyncModel",
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/Model.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/Model.ts",
-          "line": 21,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-model-ts-21-vaultsyncmodel",
+          "line": 23,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-model-ts-23-vaultsyncmodel",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VaultSyncPassModel",
+          "exportKind": "class",
+          "filePath": "src/aggregates/VaultSync/Model.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/Model.ts",
+          "line": 64,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-model-ts-64-vaultsyncpassmodel",
           "currentTags": [
             "@category",
             "@since"
@@ -482561,6 +482715,28 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "VaultSyncPass",
+          "exportKind": "class",
+          "filePath": "src/aggregates/VaultSync/VaultSyncPass.saga.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/VaultSyncPass.saga.ts",
+          "line": 25,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-vaultsyncpass-saga-ts-25-vaultsyncpass",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./BoxMirror.external.ts\";",
           "exportKind": "re-export",
           "filePath": "src/aggregates/VaultSync/index.ts",
@@ -482583,12 +482759,31 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Model.ts\";",
+          "symbolName": "export * from \"./LegacySync.projection.ts\";",
           "exportKind": "re-export",
           "filePath": "src/aggregates/VaultSync/index.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/index.ts",
           "line": 8,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-index-ts-8-export-from-model-ts",
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-index-ts-8-export-from-legacysync-projection-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Model.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/VaultSync/index.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/index.ts",
+          "line": 9,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-index-ts-9-export-from-model-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -482606,8 +482801,8 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/VaultSync/index.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/index.ts",
-          "line": 9,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-index-ts-9-export-from-vaultsync-policy-ts",
+          "line": 10,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-index-ts-10-export-from-vaultsync-policy-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -482625,8 +482820,27 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/VaultSync/index.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/index.ts",
-          "line": 10,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-index-ts-10-export-from-vaultsync-policy-handlers-ts",
+          "line": 11,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-index-ts-11-export-from-vaultsync-policy-handlers-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./VaultSyncPass.saga.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/VaultSync/index.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/index.ts",
+          "line": 12,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-index-ts-12-export-from-vaultsyncpass-saga-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -629489,9 +629703,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 35,
-        "publicModuleCount": 35,
-        "publicExportCount": 123
+        "sourceFileCount": 38,
+        "publicModuleCount": 38,
+        "publicExportCount": 133
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -629687,6 +629901,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Sync/BoxMirror.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/BoxMirror.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-sync-boxmirror-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/Sync/DmsMirrorBox.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts",
           "line": 1,
@@ -629736,6 +629972,28 @@
           ],
           "exportCount": 9,
           "remediationStatus": "open"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Sync/LegacySync.projection.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/LegacySync.projection.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-sync-legacysync-projection-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -629937,6 +630195,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Sync/VaultSyncPass.saga-handlers.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsyncpass-saga-handlers-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/Sync/index.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/index.ts",
           "line": 1,
@@ -629954,7 +630234,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -631096,6 +631376,72 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "VaultSyncRoot",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/BoxMirror.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/BoxMirror.ts",
+          "line": 51,
+          "anchor": "packages-documents-server-src-aggregates-sync-boxmirror-ts-51-vaultsyncroot",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BoxMirrorEvidence",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/BoxMirror.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/BoxMirror.ts",
+          "line": 69,
+          "anchor": "packages-documents-server-src-aggregates-sync-boxmirror-ts-69-boxmirrorevidence",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BoxMirrorLive",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Sync/BoxMirror.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/BoxMirror.ts",
+          "line": 90,
+          "anchor": "packages-documents-server-src-aggregates-sync-boxmirror-ts-90-boxmirrorlive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "BOX_MIRROR_ROOT_NAME_ENV",
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/DmsMirrorBox.ts",
@@ -631477,6 +631823,50 @@
           "repoPath": "packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts",
           "line": 597,
           "anchor": "packages-documents-server-src-aggregates-sync-dmsmirrorfixture-ts-597-dmsmirrorfixturelayer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LegacySyncAudit",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/LegacySync.projection.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/LegacySync.projection.ts",
+          "line": 39,
+          "anchor": "packages-documents-server-src-aggregates-sync-legacysync-projection-ts-39-legacysyncaudit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LegacySyncProjections",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Sync/LegacySync.projection.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/LegacySync.projection.ts",
+          "line": 210,
+          "anchor": "packages-documents-server-src-aggregates-sync-legacysync-projection-ts-210-legacysyncprojections",
           "currentTags": [
             "@category",
             "@since"
@@ -632108,12 +632498,78 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "VaultSyncCheckpoint",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Sync/VaultSyncPass.saga-handlers.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts",
+          "line": 135,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsyncpass-saga-handlers-ts-135-vaultsynccheckpoint",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VaultSyncPassLive",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Sync/VaultSyncPass.saga-handlers.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts",
+          "line": 155,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsyncpass-saga-handlers-ts-155-vaultsyncpasslive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./BoxMirror.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Sync/index.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/index.ts",
+          "line": 8,
+          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-8-export-from-boxmirror-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./DmsMirrorBox.ts\";",
           "exportKind": "re-export",
           "filePath": "src/aggregates/Sync/index.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/index.ts",
-          "line": 14,
-          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-14-export-from-dmsmirrorbox-ts",
+          "line": 15,
+          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-15-export-from-dmsmirrorbox-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -632134,8 +632590,8 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/Sync/index.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/index.ts",
-          "line": 21,
-          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-21-export-from-dmsmirrorfixture-ts",
+          "line": 22,
+          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-22-export-from-dmsmirrorfixture-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -632152,12 +632608,31 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./LegacySync.projection.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Sync/index.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/index.ts",
+          "line": 23,
+          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-23-export-from-legacysync-projection-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./VaultSync.config.ts\";",
           "exportKind": "re-export",
           "filePath": "src/aggregates/Sync/index.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/index.ts",
-          "line": 28,
-          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-28-export-from-vaultsync-config-ts",
+          "line": 30,
+          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-30-export-from-vaultsync-config-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -632178,12 +632653,31 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/Sync/index.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/index.ts",
-          "line": 35,
-          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-35-export-from-vaultsyncengine-service-ts",
+          "line": 37,
+          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-37-export-from-vaultsyncengine-service-ts",
           "currentTags": [
             "@category",
             "@since"
           ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./VaultSyncPass.saga-handlers.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Sync/index.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/index.ts",
+          "line": 38,
+          "anchor": "packages-documents-server-src-aggregates-sync-index-ts-38-export-from-vaultsyncpass-saga-handlers-ts",
+          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
