@@ -565,6 +565,7 @@ const verifiedPackageExportColumns = (
  * @param documentId - Stable paired-document identity used by semantic delta.
  * @param entries - Tracked entries in the archive side being scanned.
  * @param gitRefNames - Exact branch and tag names collected once for the comparison.
+ * @param packageExports - Inline columns whose affirmative export claim has a tracked owner and target.
  * @returns A finding candidate only when the span is a governed missing path rather than a command
  * or proven Git ref.
  */
