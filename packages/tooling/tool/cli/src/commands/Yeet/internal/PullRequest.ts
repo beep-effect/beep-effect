@@ -178,9 +178,7 @@ const pullRequestLookupFailure = (
   restFailure: O.Option<YeetCommandError>,
   fallbackFailure: GhCommandFailure
 ): YeetCommandError =>
-  fallbackFailure._tag === "nonzero-exit" &&
-  !confirmedMissingPullRequest(context, fallbackFailure) &&
-  O.isSome(restFailure)
+  !confirmedMissingPullRequest(context, fallbackFailure) && O.isSome(restFailure)
     ? restFailure.value
     : ghPullRequestViewFailure(context, fallbackFailure);
 

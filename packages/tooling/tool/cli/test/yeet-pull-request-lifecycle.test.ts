@@ -65,6 +65,14 @@ const provideGitOver =
     self.pipe(provideLegacyGh, Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
 const withGh = (output: string, exitCode = 0) =>
   provideGitOver(ScriptedSpawner.make(() => ({ stdout: output, exit: exitCode })));
+const lookupRunner = (output: string, exit: number, spawnFailure: boolean) =>
+  ScriptedSpawner.make((command) =>
+    command === "git"
+      ? { stdout: "git@github.com:beep-effect/beep-effect.git" }
+      : spawnFailure
+        ? PlatformError.badArgument({ module: "ChildProcess", method: "spawn" })
+        : { stdout: output, exit }
+  );
 const encodeView = S.encodeEffect(
   S.fromJsonString(
     S.Struct({
@@ -134,11 +142,13 @@ describe("Yeet pull request lifecycle boundaries", () => {
     );
 
     for (const scenario of [
-      { name: "rate limit", output: "GraphQL: API rate limit already exceeded" },
-      { name: "authentication failure", output: "authentication required" },
-      { name: "network failure", output: "network unreachable" },
-      { name: "ambiguous 404", output: "HTTP 404: Not Found" },
-      { name: "ambiguous absence", output: "no PR" },
+      { name: "rate limit", output: "GraphQL: API rate limit already exceeded", exit: 1, spawn: false },
+      { name: "authentication failure", output: "authentication required", exit: 1, spawn: false },
+      { name: "network failure", output: "network unreachable", exit: 1, spawn: false },
+      { name: "ambiguous 404", output: "HTTP 404: Not Found", exit: 1, spawn: false },
+      { name: "ambiguous absence", output: "no PR", exit: 1, spawn: false },
+      { name: "spawn failure", output: "", exit: 1, spawn: true },
+      { name: "truncated output", output: Str.repeat(512 * 1024 + 1)("x"), exit: 0, spawn: false },
     ]) {
       it.effect(`keeps typed REST rate and retry information when fallback has ${scenario.name}`, () => {
         const primary = GitHubError.make({
@@ -148,11 +158,7 @@ describe("Yeet pull request lifecycle boundaries", () => {
           status: 403,
           retryAfterMillis: 60000,
         });
-        const runner = ScriptedSpawner.make((command) =>
-          command === "git"
-            ? { stdout: "git@github.com:beep-effect/beep-effect.git" }
-            : { stdout: scenario.output, exit: 1 }
-        );
+        const runner = lookupRunner(scenario.output, scenario.exit, scenario.spawn);
         return Effect.gen(function* () {
           const rest = yield* GithubRest;
           const failedRest = { ...rest, openPullRequestForBranch: () => Effect.fail(primary) };
@@ -170,6 +176,25 @@ describe("Yeet pull request lifecycle boundaries", () => {
           expect(required.cause).toBe(primary);
           expect(optional.cause).toBe(primary);
           expect(primary.retryAfterMillis).toBe(60000);
+        }).pipe(provideGitOver(runner));
+      });
+    }
+
+    for (const scenario of [
+      { name: "spawn", output: "", exit: 1, spawn: true, message: "Failed to inspect current branch" },
+      { name: "truncation", output: Str.repeat(512 * 1024 + 1)("x"), exit: 0, spawn: false, message: "capture limit" },
+      { name: "unknown", output: "network unavailable", exit: 1, spawn: false, message: "presence is unknown" },
+    ]) {
+      it.effect(`reports the fallback ${scenario.name} failure when REST had no error`, () => {
+        const runner = lookupRunner(scenario.output, scenario.exit, scenario.spawn);
+        return Effect.gen(function* () {
+          const rest = yield* GithubRest;
+          const failure = yield* runGhPullRequestView(context).pipe(
+            Effect.flip,
+            Effect.provideService(GithubRest, { ...rest, openPullRequestForBranch: () => Effect.succeedNone })
+          );
+          expect(failure._tag).toBe("YeetCommandError");
+          expect(failure.message).toContain(scenario.message);
         }).pipe(provideGitOver(runner));
       });
     }
@@ -251,12 +276,19 @@ describe("Yeet pull request lifecycle boundaries", () => {
           Effect.flip,
           withGh(Str.repeat(512 * 1024 + 1)("x"))
         );
-        expect(truncated.message).toContain("capture limit");
+        const restTruncated = yield* findOpenPullRequestViaRest(context).pipe(
+          Effect.flip,
+          withGh(Str.repeat(512 * 1024 + 1)("x"))
+        );
+        expect(truncated.message).toBe(restTruncated.message);
+        expect(truncated.command).toBe(restTruncated.command);
         const withSpawnFailure = provideGitOver(
           ScriptedSpawner.make(() => PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
         );
         const spawnFailure = yield* runGhPullRequestView(context).pipe(Effect.flip, withSpawnFailure);
-        expect(spawnFailure.message).toBe("Failed to inspect current branch pull request.");
+        const restSpawnFailure = yield* findOpenPullRequestViaRest(context).pipe(Effect.flip, withSpawnFailure);
+        expect(spawnFailure.message).toBe(restSpawnFailure.message);
+        expect(spawnFailure.command).toBe(restSpawnFailure.command);
         const findFailure = yield* findOpenPullRequest(context).pipe(Effect.flip, withSpawnFailure);
         expect(findFailure.message).toBe(spawnFailure.message);
       })
