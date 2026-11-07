@@ -17,8 +17,8 @@ import {
   LibraryQualification,
   LibrarySource,
   LibrarySourceVersion,
+  libraryWebAdapter,
   loadCatalog,
-  removedLibraryWebAdapter,
   renderLibrary,
   saveImmutable,
   verifyLibrary,
@@ -651,11 +651,12 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
     })
   );
 
-  it.effect("holds a failed retained receipt on the removed web route only to evidence integrity", () =>
+  it.effect("requires the live web route's latest qualification to stay verified", () =>
     Effect.gen(function* () {
       const { root, catalog } = yield* fixture;
       const retained = A.getUnsafe(catalog.qualifications, 0);
-      expect(retained.adapter).toBe(removedLibraryWebAdapter);
+      expect(retained.adapter).toBe(libraryWebAdapter);
+      yield* verifyLibrary(root);
       const failed = LibraryQualification.make({
         ...retained,
         id: "firecrawl-failed",
@@ -664,17 +665,6 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       });
       yield* withCatalog(root, () =>
         Effect.succeed(LibraryCatalog.make({ ...catalog, qualifications: [...catalog.qualifications, failed] }))
-      );
-      yield* verifyLibrary(root);
-
-      const tampered = LibraryQualification.make({
-        ...failed,
-        evidence: A.map(failed.evidence, (artifact) =>
-          LibraryArtifact.make({ ...artifact, sha256: Str.repeat(64)("0") })
-        ),
-      });
-      yield* withCatalog(root, () =>
-        Effect.succeed(LibraryCatalog.make({ ...catalog, qualifications: [...catalog.qualifications, tampered] }))
       );
       (yield* Effect.exit(verifyLibrary(root))).pipe(Exit.isFailure, assertTrue);
     })

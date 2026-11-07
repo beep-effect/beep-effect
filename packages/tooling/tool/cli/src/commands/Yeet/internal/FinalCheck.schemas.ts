@@ -11,6 +11,8 @@ import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { CI_LANE_ID_VALUES } from "../../Ci/CiLane.ts";
+import { ChangeAtomKind, RouteDecision } from "../../Ci/Route.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FinalCheck.schemas");
 
@@ -257,6 +259,83 @@ export const FinalCheckVerdict = LiteralKit(["pass", "fail"]).pipe(
 export type FinalCheckVerdict = typeof FinalCheckVerdict.Type;
 
 /**
+ * Lane identifiers used in final-check route evidence; none names an unrouted gate.
+ *
+ * **Example** (Recognize an unrouted gate)
+ * ```ts
+ * import { FinalCheckRouteLane } from "@beep/repo-cli/test/Yeet"
+ * FinalCheckRouteLane.is.none("none") // => true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const FinalCheckRouteLane = LiteralKit([...CI_LANE_ID_VALUES, "none"]).pipe(
+  $I.annoteSchema("FinalCheckRouteLane", { description: "A CI lane or none for an unrouted final-check gate." })
+);
+
+/**
+ * Type of the lane recorded in route evidence.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FinalCheckRouteLane = typeof FinalCheckRouteLane.Type;
+
+/**
+ * Route evidence for one gate, including the proof-ledger attribution of exclusions.
+ *
+ * **Example** (Describe an always-selected gate)
+ * ```ts
+ * import { FinalCheckRouteGate } from "@beep/repo-cli/test/Yeet"
+ * FinalCheckRouteGate.make({ gate: "cheap-gates", lane: "none", decision: "selected", refinements: [], reason: "always-selected" }).decision // => "selected"
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class FinalCheckRouteGate extends S.Opaque<FinalCheckRouteGate, { readonly brand: unique symbol }>()(
+  S.Struct({
+    gate: FinalCheckGate,
+    lane: FinalCheckRouteLane,
+    decision: RouteDecision,
+    refinements: S.Array(S.NonEmptyString),
+    reason: S.NonEmptyString,
+    proofKey: S.optionalKey(S.Literals(["key-change"])),
+  }).pipe(
+    $I.annoteSchema("FinalCheckRouteGate", {
+      description: "Route selection and refinement evidence for one final-check gate.",
+    })
+  )
+) {}
+
+/**
+ * Head-classified route evidence and observed shadow misses for a final-check run.
+ *
+ * **Example** (Record unavailable routing)
+ * ```ts
+ * import { FinalCheckRoute } from "@beep/repo-cli/test/Yeet"
+ * import { ChangeAtomKind } from "@beep/repo-cli/commands/Ci"
+ * import * as R from "effect/Record"
+ * const atomsByKind = R.map(ChangeAtomKind.Enum, () => 0)
+ * FinalCheckRoute.make({ footprintDigest: "unavailable", atomsByKind, gates: [], shadowMisses: [], reason: "route-unavailable" }).reason // => "route-unavailable"
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class FinalCheckRoute extends S.Opaque<FinalCheckRoute, { readonly brand: unique symbol }>()(
+  S.Struct({
+    footprintDigest: S.NonEmptyString,
+    atomsByKind: S.Record(ChangeAtomKind, S.Number.check(S.isInt(), S.isGreaterThanOrEqualTo(0))),
+    gates: S.Array(FinalCheckRouteGate),
+    shadowMisses: S.Array(FinalCheckRouteGate),
+    reason: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("FinalCheckRoute", {
+      description: "Footprint digest, atom census, per-gate decisions and failed shadow exclusions.",
+    })
+  )
+) {}
+
+/**
  * The receipt `yeet final-check` writes for one committed head, read by
  * `yeet ready` before it flips a draft.
  *
@@ -301,6 +380,7 @@ export class FinalCheckReceipt extends S.Opaque<FinalCheckReceipt, { readonly br
     finishedAt: S.String,
     steps: S.Array(FinalCheckStepResult),
     expectationRewrites: S.Array(ExpectationRewriteVerdict),
+    route: S.optionalKey(FinalCheckRoute),
   }).pipe(
     $I.annoteSchema("FinalCheckReceipt", {
       description: "Head-pinned record of a yeet final-check run, required by yeet ready before a draft flips.",

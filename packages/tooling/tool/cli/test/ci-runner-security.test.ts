@@ -18,6 +18,7 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constant, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -887,9 +888,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
-  it.effect(
-    "classifies goals-only and docs-only pull requests without suppressing mixed or push runs",
-    Effect.fnUntraced(function* () {
+  it.effect.each([
+    { scenario: "packet prose" },
+    { scenario: "nested fixture paths" },
+    { scenario: "documentation and push" },
+    { scenario: "executable and mixed" },
+  ] as const)("classifies $scenario without suppressing mixed or push runs", ({ scenario }) =>
+    Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
@@ -929,109 +934,133 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["add", "."]);
       git(["commit", "-m", "baseline"]);
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
-
-      // Compare both classifiers once per unchanged fixture state; reuse the
-      // result for field assertions instead of starting the full CLI again.
-      const baselineProfile = profile("pull_request");
-      assert.strictEqual(baselineProfile.goals_only, "false");
-      assert.strictEqual(baselineProfile.docs_only, "false");
-      assert.strictEqual(baselineProfile.desktop_rust_relevant, "false");
-      yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
-      git(["add", "."]);
-      git(["commit", "-m", "goals-only"]);
-      const outputPath = path.join(tempRoot, "profile-output.txt");
-      assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
-      // goals_only implies docs_only.
-      assert.strictEqual(profile("pull_request").docs_only, "true");
-      const readFileString7 = yield* fs.readFileString(outputPath);
-      assert.strictEqual(parseProfileOutput(readFileString7).goals_only, "true");
-      yield* fs.remove(outputPath);
-
-      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
-      yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
-      git(["add", "."]);
-      git(["commit", "-m", "goal metadata"]);
-      assert.strictEqual(profile("pull_request").goals_only, "true");
-      // The goal bootstrap emits these markers. They must not turn packet
-      // prose into a code-bearing diff (the #2750 unit-d regression).
-      for (const directory of ["history", "history/reflections", "research"]) {
-        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory), { recursive: true });
-        yield* fs.writeFileString(path.join(tempRoot, "goals", "example", directory, ".gitkeep"), "");
-      }
-      git(["add", "."]);
-      git(["commit", "-m", "generated packet scaffolding"]);
-      const scaffoldingProfile = profile("pull_request");
-      assert.strictEqual(scaffoldingProfile.goals_only, "true");
-      assert.strictEqual(scaffoldingProfile.docs_only, "true");
-      const metadataHead = git(["rev-parse", "HEAD"]);
-
-      for (const directory of ["docs", "designs", "history", "research"] as const) {
-        git(["reset", "--hard", metadataHead]);
-        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory, "fixtures"), { recursive: true });
-        yield* fs.writeFileString(
-          path.join(tempRoot, "goals", "example", directory, "fixtures", "expected.md"),
-          "# Executable test fixture\n"
-        );
+      const metadata = Effect.gen(function* () {
+        yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
         git(["add", "."]);
-        git(["commit", "-m", `nested ${directory} markdown fixture`]);
-        const fixtureProfile = profile("pull_request");
-        assert.strictEqual(fixtureProfile.goals_only, "false");
-        // Heavy admission's path rule counts markdown outside the code roots
-        // as documentation, wherever it sits.
-        assert.strictEqual(fixtureProfile.docs_only, "true");
-      }
-
-      // Documentation outside packet prose is docs-only, never goals-only; the
-      // same file under a code root carries code.
-      git(["reset", "--hard", metadataHead]);
-      for (const [relative, content] of [
-        ["docs/runbooks/ci.md", "# runbook\n"],
-        ["research/ledger/claims.jsonl", "{}\n"],
-        [".changeset/quiet-lane.md", "---\n---\n"],
-        ["README.md", "# readme\n"],
-      ] as const) {
-        yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relative)), { recursive: true });
-        yield* fs.writeFileString(path.join(tempRoot, relative), content);
-      }
-      git(["add", "."]);
-      git(["commit", "-m", "documentation only"]);
-      const docsProfile = profile("pull_request");
-      assert.strictEqual(docsProfile.goals_only, "false");
-      assert.strictEqual(docsProfile.docs_only, "true");
-      assert.strictEqual(profile("push").docs_only, "false");
-      yield* fs.makeDirectory(path.join(tempRoot, "packages", "demo"), { recursive: true });
-      yield* fs.writeFileString(path.join(tempRoot, "packages", "demo", "README.md"), "# package readme\n");
-      git(["add", "."]);
-      git(["commit", "-m", "package readme"]);
-      assert.strictEqual(profile("pull_request").docs_only, "false");
-
-      git(["reset", "--hard", metadataHead]);
-
-      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "fixtures"));
-      yield* fs.writeFileString(
-        path.join(tempRoot, "goals", "example", "fixtures", "expected.md"),
-        "# Executable test fixture\n"
+        git(["commit", "-m", "goals-only"]);
+        yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
+        yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
+        git(["add", "."]);
+        git(["commit", "-m", "goal metadata"]);
+        for (const directory of ["history", "history/reflections", "research"]) {
+          yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory), { recursive: true });
+          yield* fs.writeFileString(path.join(tempRoot, "goals", "example", directory, ".gitkeep"), "");
+        }
+        git(["add", "."]);
+        git(["commit", "-m", "generated packet scaffolding"]);
+        return git(["rev-parse", "HEAD"]);
+      });
+      return yield* Match.value(scenario).pipe(
+        Match.when("packet prose", () =>
+          Effect.gen(function* () {
+            const baselineProfile = profile("pull_request");
+            assert.strictEqual(baselineProfile.goals_only, "false");
+            assert.strictEqual(baselineProfile.docs_only, "false");
+            assert.strictEqual(baselineProfile.desktop_rust_relevant, "false");
+            yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
+            git(["add", "."]);
+            git(["commit", "-m", "goals-only"]);
+            const outputPath = path.join(tempRoot, "profile-output.txt");
+            assert.strictEqual(profile("pull_request", outputPath).goals_only, "true");
+            assert.strictEqual(profile("pull_request").docs_only, "true");
+            const readFileString7 = yield* fs.readFileString(outputPath);
+            assert.strictEqual(parseProfileOutput(readFileString7).goals_only, "true");
+            yield* fs.remove(outputPath);
+            yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "ops"));
+            yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "ops", "manifest.json"), "{}\n");
+            git(["add", "."]);
+            git(["commit", "-m", "goal metadata"]);
+            assert.strictEqual(profile("pull_request").goals_only, "true");
+            for (const directory of ["history", "history/reflections", "research"]) {
+              yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory), { recursive: true });
+              yield* fs.writeFileString(path.join(tempRoot, "goals", "example", directory, ".gitkeep"), "");
+            }
+            git(["add", "."]);
+            git(["commit", "-m", "generated packet scaffolding"]);
+            const scaffoldingProfile = profile("pull_request");
+            assert.strictEqual(scaffoldingProfile.goals_only, "true");
+            assert.strictEqual(scaffoldingProfile.docs_only, "true");
+          })
+        ),
+        Match.when("nested fixture paths", () =>
+          Effect.gen(function* () {
+            const metadataHead = yield* metadata;
+            for (const directory of ["docs", "designs", "history", "research"] as const) {
+              git(["reset", "--hard", metadataHead]);
+              yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", directory, "fixtures"), {
+                recursive: true,
+              });
+              yield* fs.writeFileString(
+                path.join(tempRoot, "goals", "example", directory, "fixtures", "expected.md"),
+                "# Executable test fixture\n"
+              );
+              git(["add", "."]);
+              git(["commit", "-m", `nested ${directory} markdown fixture`]);
+              const fixtureProfile = profile("pull_request");
+              assert.strictEqual(fixtureProfile.goals_only, "false");
+              // Heavy admission's path rule counts markdown outside the code roots
+              // as documentation, wherever it sits.
+              assert.strictEqual(fixtureProfile.docs_only, "true");
+            }
+          })
+        ),
+        Match.when("documentation and push", () =>
+          Effect.gen(function* () {
+            const metadataHead = yield* metadata;
+            git(["reset", "--hard", metadataHead]);
+            for (const [relative, content] of [
+              ["docs/runbooks/ci.md", "# runbook\n"],
+              ["research/ledger/claims.jsonl", "{}\n"],
+              [".changeset/quiet-lane.md", "---\n---\n"],
+              ["README.md", "# readme\n"],
+            ] as const) {
+              yield* fs.makeDirectory(path.dirname(path.join(tempRoot, relative)), { recursive: true });
+              yield* fs.writeFileString(path.join(tempRoot, relative), content);
+            }
+            git(["add", "."]);
+            git(["commit", "-m", "documentation only"]);
+            const docsProfile = profile("pull_request");
+            assert.strictEqual(docsProfile.goals_only, "false");
+            assert.strictEqual(docsProfile.docs_only, "true");
+            assert.strictEqual(profile("push").docs_only, "false");
+            yield* fs.makeDirectory(path.join(tempRoot, "packages", "demo"), { recursive: true });
+            yield* fs.writeFileString(path.join(tempRoot, "packages", "demo", "README.md"), "# package readme\n");
+            git(["add", "."]);
+            git(["commit", "-m", "package readme"]);
+            assert.strictEqual(profile("pull_request").docs_only, "false");
+          })
+        ),
+        Match.when("executable and mixed", () =>
+          Effect.gen(function* () {
+            const metadataHead = yield* metadata;
+            git(["reset", "--hard", metadataHead]);
+            yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "fixtures"));
+            yield* fs.writeFileString(
+              path.join(tempRoot, "goals", "example", "fixtures", "expected.md"),
+              "# Executable test fixture\n"
+            );
+            git(["add", "."]);
+            git(["commit", "-m", "goal markdown fixture"]);
+            assert.strictEqual(profile("pull_request").goals_only, "false");
+            yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "scripts"));
+            yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "scripts", "verify.sh"), "exit 0\n");
+            git(["add", "."]);
+            git(["commit", "-m", "goal executable"]);
+            const executableProfile = profile("pull_request");
+            assert.strictEqual(executableProfile.goals_only, "false");
+            assert.strictEqual(executableProfile.docs_only, "false");
+            yield* fs.makeDirectory(path.join(tempRoot, "src"));
+            yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
+            git(["add", "."]);
+            git(["commit", "-m", "mixed"]);
+            const mixedProfile = profile("pull_request");
+            assert.strictEqual(mixedProfile.goals_only, "false");
+            assert.strictEqual(mixedProfile.docs_only, "false");
+            assert.strictEqual(profile("push").goals_only, "false");
+          })
+        ),
+        Match.exhaustive
       );
-      git(["add", "."]);
-      git(["commit", "-m", "goal markdown fixture"]);
-      assert.strictEqual(profile("pull_request").goals_only, "false");
-
-      yield* fs.makeDirectory(path.join(tempRoot, "goals", "example", "scripts"));
-      yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "scripts", "verify.sh"), "exit 0\n");
-      git(["add", "."]);
-      git(["commit", "-m", "goal executable"]);
-      const executableProfile = profile("pull_request");
-      assert.strictEqual(executableProfile.goals_only, "false");
-      assert.strictEqual(executableProfile.docs_only, "false");
-
-      yield* fs.makeDirectory(path.join(tempRoot, "src"));
-      yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
-      git(["add", "."]);
-      git(["commit", "-m", "mixed"]);
-      const mixedProfile = profile("pull_request");
-      assert.strictEqual(mixedProfile.goals_only, "false");
-      assert.strictEqual(mixedProfile.docs_only, "false");
-      assert.strictEqual(profile("push").goals_only, "false");
     })
   );
 
@@ -2446,6 +2475,48 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       expect(verification.run).toBe("./apps/practice-review-hub/deploy/windows/test-send-token.ps1");
       expect(yamlAt(workflow, ["jobs", "windows-pipe", "steps", 1, "shell"])).toBe("powershell");
+    })
+  );
+  it.effect("passes the admission route outputs to the optional hosted route inputs", () =>
+    Effect.gen(function* () {
+      const policy = yield* readCredentialPolicySources();
+      for (const name of ["route_skips", "route_receipt"]) {
+        expect(yamlAt(policy.heavyWorkflow, ["on", "workflow_call", "inputs", name, "type"])).toBe("string");
+        expect(yamlAt(policy.heavyWorkflow, ["on", "workflow_call", "inputs", name, "default"])).toBe("");
+        expect(yamlAt(policy.workflow, ["jobs", "heavy", "with", name])).toBe(
+          `\${{ needs.admission.outputs.${name} }}`
+        );
+        expect(yamlAt(policy.workflow, ["jobs", "admission", "outputs", name])).toBe(
+          `\${{ steps.decide.outputs.${name} }}`
+        );
+      }
+      // The label-triggered caller is usually a pull request's first admission, so it forwards the
+      // same route outputs as check.yml.
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const admitText = yield* fs.readFileString(`${root}/.github/workflows/heavy-admit.yml`);
+      const admit = parseWorkflowYaml(admitText);
+      for (const name of ["route_skips", "route_receipt"]) {
+        expect(yamlAt(admit, ["jobs", "heavy", "with", name])).toBe(`\${{ needs.admission.outputs.${name} }}`);
+        expect(yamlAt(admit, ["jobs", "admission", "outputs", name])).toBe(`\${{ steps.decide.outputs.${name} }}`);
+      }
+      const jobs = yield* workflowJobs(policy.heavyWorkflow);
+      const gate = stepByName(jobSteps(jobs, "verify"), "Determine lane execution");
+      expect(gate.env).toMatchObject({
+        ROUTE_SKIPS: "${{ inputs.route_skips }}",
+        ROUTE_RECEIPT: "${{ inputs.route_receipt }}",
+        LANE_ID: "${{ matrix.id }}",
+      });
+      expect(gate.run).toContain('"$GITHUB_EVENT_NAME" == "pull_request"');
+      expect(gate.run).toContain('",${ROUTE_SKIPS}," == *",${LANE_ID},"*');
+      expect(gate.run).toContain("### Verification route: skip-satisfied");
+      expect(gate.run).not.toContain("${{ inputs.route_");
+      const script = gate.run ?? "";
+      const admitted = pipe(script, Str.indexOf("ADMITTED"), O.getOrThrow);
+      const route = pipe(script, Str.indexOf("ROUTE_SKIPS"), O.getOrThrow);
+      const goals = pipe(script, Str.indexOf("goals_only"), O.getOrThrow);
+      expect(route).toBeLessThan(goals);
+      expect(admitted).toBeLessThan(route);
     })
   );
   it.effect("keeps coverage comparison separate from Heavy and validates same-run producer artifacts", () =>
