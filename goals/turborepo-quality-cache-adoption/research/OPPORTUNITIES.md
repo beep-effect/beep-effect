@@ -1321,3 +1321,7 @@ avoid repeated static reads while preserving the final live-ref check.
 ## Recipe fixture left an unused outer task constant, 2026-11-06
 
 Heavy / Check job 128224640320 on #2824 reported TS6133 at cache-pilot-orchestration.test.ts:114. The parameterized fixture owns its selected task locally, leaving the former identity-only constant unused. Remove only that superseded outer constant. Preserve all fixture branches and authored controls. The failing hosted log is retained against its exact revision; no local suite ran.
+
+### Types pilot prerequisite refusal coverage, 2026-11-07
+
+PR #2824 hosted coverage measured Cache.pilot.ts functions at 87.30 against the unchanged 87.95 floor. Inspecting all six provider-digest-verified unit coverage artifacts identified unexercised installed-dependency and runtime-linker absence refusals. Add process-boundary controls for both types prerequisites: exact typed cause, zero task invocations, no private sandbox or observation receipt. Tests are authored for hosted CI; no local quality suite ran. Coverage success remains unproven until the new head completes.

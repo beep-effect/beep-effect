@@ -118,6 +118,7 @@ const additionalDirectories: Readonly<Record<string, string>> = {
 };
 const dependencyTasks = [dependencyTask, ...R.keys(additionalDirectories)];
 const closureFaultDomain = LiteralKit(["none", "cached", "unexpected"]);
+const missingPrerequisiteDomain = LiteralKit(["none", "installed-dependencies", "runtime-linker"]);
 const faultDomain = LiteralKit([
   "none",
   "remote-hit",
@@ -203,7 +204,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   profile: typeof S.Boolean.Type = false,
   observeProfile: typeof S.Boolean.Type = true,
   closureFault: typeof closureFaultDomain.Type = "none",
-  computation: CacheQualificationKey["computation"] = "@beep/identity#lint"
+  computation: CacheQualificationKey["computation"] = "@beep/identity#lint",
+  missingPrerequisite: typeof missingPrerequisiteDomain.Type = "none"
 ) {
   const task = computation;
   const typesLeaf = computation === dependencyTask;
@@ -341,8 +343,8 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       turbo: pin,
       biome: pin,
       sources: [],
-      installedDependencies: O.some(tree),
-      runtimeLinker: O.some(linker),
+      installedDependencies: missingPrerequisite === "installed-dependencies" ? O.none() : O.some(tree),
+      runtimeLinker: missingPrerequisite === "runtime-linker" ? O.none() : O.some(linker),
     }),
   });
   const activation = CacheActivationProjection.make({
@@ -969,6 +971,33 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       ).toBe(true);
     })
   );
+  for (const prerequisite of missingPrerequisiteDomain.omit(["none"]).literals) {
+    it.effect(`rejects types execution without ${prerequisite} before any task starts`, () =>
+      Effect.gen(function* () {
+        const { run, calls, root, fs, path, privateDirectories } = yield* fixture(
+          "none",
+          linker,
+          false,
+          true,
+          "none",
+          "@beep/types#lint",
+          prerequisite
+        );
+        const failure = yield* run().pipe(Effect.flip);
+        expect(failure._tag).toBe("CacheCommandError");
+        expect(failure.message).toBe(
+          missingPrerequisiteDomain.match({
+            none: () => "Unexpected complete prerequisites",
+            "installed-dependencies": () => "Pilot qualification requires an installed dependency identity.",
+            "runtime-linker": () => "Pilot qualification requires startup library identity.",
+          })(prerequisite)
+        );
+        expect(calls).toHaveLength(0);
+        expect(A.fromIterable(privateDirectories)).toHaveLength(0);
+        expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
+      })
+    );
+  }
   it.effect("rejects a borrowed dependency graph for the types leaf recipe", () =>
     Effect.gen(function* () {
       const { run, calls } = yield* fixture("none", linker, false, true, "unexpected", "@beep/types#lint");
