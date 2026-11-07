@@ -43,7 +43,7 @@ export class KnowledgeRewriteRule extends S.Opaque<KnowledgeRewriteRule, { reado
 ) {}
 
 /**
- * The versioned, reviewed rule file retained under scripts.
+ * The versioned, reviewed rule file retained as repo-configs policy data.
  *
  * **Example** (Decode the pinned version)
  * ```ts

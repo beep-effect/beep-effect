@@ -121,7 +121,7 @@ Additional checks with no law counterpart below:
 `.repos/effect` points to the Effect child at
 `$HOME/YeeBois/references/effect/effect` (Effect `main` is v4). The workspace also
 contains `effect-tsgo`; `bun run beep refs provision` provisions it from
-`scripts/references.json`, with `BEEP_REFERENCES_ROOT` overriding the
+`packages/tooling/policy-pack/repo-configs/data/references.json`, with `BEEP_REFERENCES_ROOT` overriding the
 `$HOME/YeeBois/references/effect` root.
 
 - [Effect LLMS guide](../../../.repos/effect/LLMS.md)

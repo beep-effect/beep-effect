@@ -1,5 +1,5 @@
 {
-  "previous": "b6ca8e1927bc90c50351972513515943ada74a187c72d2983a2c2bee7b028277",
+  "previous": "fa053f6048cc89d72bb850f33e52ea415778773027552da507fa9a25319d1485",
   "review": {
     "reviewer": "Claude Opus 5.5 (orchestrator, goals/vault-sync-api-pr)",
     "reason": "Record PR 3c's @beep/mcp-kit and @beep/shared-tables dependency edges on @beep/documents-server on top of main after #2894; no command, input, output, env or cache flag changes, and no qualification is granted.",
