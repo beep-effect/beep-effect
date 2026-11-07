@@ -5,13 +5,16 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
@@ -472,6 +475,30 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
   });
 });
 
+const $I = $RepoCliId.create("commands/Research/Library/Library.store");
+
+/**
+ * How many one-second retries a library writer waits on `.writer-lock` before it reports an interrupted holder.
+ *
+ * **Details**
+ *
+ * Concurrent library commands serialize on the writer lock. The default of 300 waits about five minutes;
+ * tests provide a small value so they can run against the live clock.
+ *
+ * **Example** (Read the default patience)
+ * ```ts
+ * import { LibraryWriterLockRetries } from "@beep/repo-cli/commands/Research/Library/Library.store"
+ * console.log(LibraryWriterLockRetries.key)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const LibraryWriterLockRetries: Context.Reference<number> = Context.Reference<number>(
+  $I`LibraryWriterLockRetries`,
+  { defaultValue: () => 300 }
+);
+
 /**
  * Serialize catalog mutations under an exclusive directory lock.
  * **Details**
@@ -497,6 +524,7 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
   const path = yield* Path.Path;
   yield* fs.makeDirectory(root, { recursive: true }).pipe(mapFailure("Cannot create library root."));
   const lock = path.join(root, ".writer-lock");
+  const retries = yield* LibraryWriterLockRetries;
   const writeCatalog = Effect.fnUntraced(function* (catalog: LibraryCatalog) {
     const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
     const bytes = new TextEncoder().encode(encoded);
@@ -517,13 +545,14 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
     return catalog;
   });
   return yield* Effect.acquireUseRelease(
-    fs
-      .makeDirectory(lock)
-      .pipe(
-        mapFailure(
-          "Library writer already active, or an interrupted writer left .writer-lock; inspect before removing it."
-        )
-      ),
+    fs.makeDirectory(lock).pipe(
+      // Concurrent library commands serialize on the lock instead of failing; a lock still held after
+      // five minutes is an interrupted writer and fails with the inspection message.
+      Effect.retry({ schedule: Schedule.spaced("1 second"), times: retries }),
+      mapFailure(
+        "Library writer already active, or an interrupted writer left .writer-lock; inspect before removing it."
+      )
+    ),
     Effect.fnUntraced(function* () {
       const before = yield* catalogFingerprint(root);
       const reusable = O.filter(
