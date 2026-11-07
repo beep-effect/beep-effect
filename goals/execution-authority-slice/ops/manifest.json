@@ -36,7 +36,9 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
+    "research/cache-baseline-request-main-6c3a4b3d06.json",
     "research/cache-baseline-request.json",
+    "research/cache-baseline-review-main-6c3a4b3d06.md",
     "research/cache-baseline-review.md",
     "research/p1-move-evidence.md",
     "research/recordings/post-move.json",
