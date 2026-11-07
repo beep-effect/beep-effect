@@ -1,7 +1,8 @@
 /** Server-only annotation request data; callable behavior is captured in ports.
  * Native tuple behavior adapts eyecite 2.7.6, Free Law Project, BSD-2-Clause.
  * See THIRD_PARTY_NOTICES.md.
- * @packageDocumentation @since 0.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
@@ -18,14 +19,18 @@ const $I = $LawPracticeUseCasesId.create("CitationEngine/CitationEngine.annotati
  * import { CitationAnnotationMode } from "@beep/law-practice-use-cases/server"
  * console.log(CitationAnnotationMode.is.wrap("wrap")) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export const CitationAnnotationMode = LiteralKit(["unchecked", "skip", "wrap"]).pipe(
   $I.annoteSchema("CitationAnnotationMode", {
     description: "Original markup policy, validated before reading other request components.",
   })
 );
-/** @category models @since 0.0.0 */
+/** Schema-derived annotation markup policy.
+ * @category models
+ * @since 0.0.0
+ */
 export type CitationAnnotationMode = typeof CitationAnnotationMode.Type;
 /** Prepared primitive annotation. Positions use Python points; no source proof is issued.
  * **Example** (Inspect replacement coordinates)
@@ -33,7 +38,8 @@ export type CitationAnnotationMode = typeof CitationAnnotationMode.Type;
  * import { CitationAnnotationReplacement } from "@beep/law-practice-use-cases/server"
  * console.log(CitationAnnotationReplacement.fields.start !== undefined) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export class CitationAnnotationReplacement extends S.Opaque<
   CitationAnnotationReplacement,
@@ -60,7 +66,8 @@ export class CitationAnnotationReplacement extends S.Opaque<
  * import { CitationEngineAnnotationInput } from "@beep/law-practice-use-cases/server"
  * console.log(CitationEngineAnnotationInput.fields.mode !== undefined) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export class CitationEngineAnnotationInput extends S.Opaque<
   CitationEngineAnnotationInput,

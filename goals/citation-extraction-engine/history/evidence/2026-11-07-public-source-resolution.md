@@ -88,6 +88,22 @@ cd ../use-cases
 bunx --bun vitest run test/CitationEngineInput.test.ts
 ```
 
+## Hosted documentation repair
+
+The preceding published head's JSDoc Ratchet job 128250296967 reported nine
+missingExportSince findings plus one leading-blank and one trailing-blank
+finding. Public contract comments placed category/since tags on the same line;
+the mode type alias also had no lead description. Tags now occupy separate lines
+and the alias has a meaningful description. A focused maintainer probe calls the
+repository's actual tagsFromComment and documentationShapeViolations helpers
+through the test-kit export. All 86 checked export comments in the citation
+contract files and server barrel have recognized since tags and no leading or
+trailing blank findings. Full hosted inventory/ratchet confirmation remains
+pending; no documentation baseline or threshold was regenerated.
+
+Main ce87ff21b2 is integrated at 0ef0edc00a. Local semantic proof above precedes
+that tooling-only merge; the next hosted run qualifies the exact published head.
+
 Public cleaner composition and the complete four-operation service/Layer remain
 required, along with general host/model protocols, builtin difflib, lawful
 transforms, whole-engine safety/scaling, deployment proof and exhaustive

@@ -1,5 +1,6 @@
 /** Server-only verified source lineage and explicit unverified outcomes.
- * @packageDocumentation @since 0.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { Citation } from "@beep/law-practice-domain/values";
@@ -20,7 +21,8 @@ const EvidenceFields: EvidenceFields = { source: VerifiedSourceText, parent: Sou
  * import { CitationEngineSourceEvidence } from "@beep/law-practice-use-cases/server"
  * console.log(CitationEngineSourceEvidence.cases.Unchanged !== undefined) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export const CitationEngineSourceEvidence = S.TaggedUnion({
   Unchanged: EvidenceFields,
@@ -32,7 +34,8 @@ export const CitationEngineSourceEvidence = S.TaggedUnion({
   })
 );
 /** Schema-derived verified source lineage.
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export type CitationEngineSourceEvidence = typeof CitationEngineSourceEvidence.Type;
 const UnverifiedReason = LiteralKit(["shortcut", "invalid-span", "native-point-layout"]).pipe(
@@ -67,7 +70,8 @@ const UnboundWarning = S.Struct({
  * import { CitationExtractionDiagnostics } from "@beep/law-practice-use-cases/server"
  * console.log(CitationExtractionDiagnostics.fields.unverified !== undefined) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export class CitationExtractionDiagnostics extends S.Opaque<
   CitationExtractionDiagnostics,

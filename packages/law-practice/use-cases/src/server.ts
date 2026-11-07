@@ -7,7 +7,8 @@
  */
 
 /** Server-only native annotation tuples and named raw-source modes.
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export {
   CitationAnnotationMode,
@@ -41,7 +42,8 @@ export {
   CitationPrerequisiteError,
 } from "./CitationEngine/CitationEngine.errors.ts";
 /** Verified citation source lineage and unverified occurrence diagnostics.
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export {
   CitationEngineSourceEvidence,
@@ -79,7 +81,8 @@ export {
  */
 export { CitationEngineOperation } from "./CitationEngine/CitationEngine.operations.ts";
 /** Completed citation operation diagnostics.
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export { CitationEngineReport, CitationExtractionMeasurements } from "./CitationEngine/CitationEngine.report.ts";
 /** Server-only operation measurements, separate from citation semantics.

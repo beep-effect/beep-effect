@@ -1,5 +1,6 @@
 /** Server-only completed extraction results; no private parser graph export.
- * @packageDocumentation @since 0.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { Citation, CitationDocument } from "@beep/law-practice-domain/values";
@@ -25,7 +26,8 @@ const sameSource = S.toEquivalence(SourceTextIdentity);
  * import { CitationEngineExtractionResult } from "@beep/law-practice-use-cases/server"
  * console.log(CitationEngineExtractionResult.fields.document !== undefined) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export class CitationEngineExtractionResult extends S.Opaque<
   CitationEngineExtractionResult,
@@ -86,7 +88,8 @@ const AnnotationEvidence: {
  * import { CitationEngineAnnotationResult } from "@beep/law-practice-use-cases/server"
  * console.log(CitationEngineAnnotationResult.fields.text !== undefined) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export class CitationEngineAnnotationResult extends S.Opaque<
   CitationEngineAnnotationResult,
@@ -119,7 +122,8 @@ const ResolutionEvidence: { readonly source: S.Codec<VerifiedSourceText> } = { s
  * import { CitationEngineResolutionResult } from "@beep/law-practice-use-cases/server"
  * console.log(CitationEngineResolutionResult.fields.document !== undefined) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export class CitationEngineResolutionResult extends S.Opaque<
   CitationEngineResolutionResult,

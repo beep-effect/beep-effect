@@ -1592,11 +1592,11 @@
         },
         {
           "path": "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.evidence.ts",
-          "sha256": "385378bc8bb00d2232e8faefe165afa4bd3be421d0031100139198d6ab18f13a"
+          "sha256": "ca1b59eddfed2b533e17e584bd30e6c2d72ceb2b7eefba45966e26c711297aed"
         },
         {
           "path": "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.result.ts",
-          "sha256": "8e85e1f0c10296192f3a8b2507e93ddc16c36e0649f739894342c7bc8d3fab05"
+          "sha256": "d3488af4c1b3abf6d4981242c12bb1e646e38c6d527fc77d0e1cb4e5af9d5276"
         },
         {
           "path": "packages/law-practice/use-cases/test/CitationEngineInput.test.ts",
@@ -1608,7 +1608,7 @@
         },
         {
           "path": "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.annotation.ts",
-          "sha256": "b192a58d0d108cde981744f3ec0c8c3b101e127a5165114da3ceea05ef26e1ae"
+          "sha256": "681f4ce7cf69ec7566eceb7d84ee184b5be99b0e186cc1f07a22e72f64638e18"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/AnnotationOperation.ts",
@@ -1620,7 +1620,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-public-source-resolution.md",
-          "sha256": "9a1b05bd9c214386dfa790cc5339eed00b0fdabdcf7c39bd327efd9495f460ba"
+          "sha256": "9aa194fb36fb6df631bcc14d3c8ced39cb75797f1027df9eb527fb0a7e78d2a7"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SourceResolution.ts",

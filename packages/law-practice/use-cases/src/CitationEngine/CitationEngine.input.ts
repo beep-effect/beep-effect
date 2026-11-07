@@ -183,7 +183,8 @@ export class CitationEngineSourcePairInput extends S.Opaque<
  * import { CitationEngineResolutionInput } from "@beep/law-practice-use-cases/server"
  * console.log(CitationEngineResolutionInput.fields.mentions !== undefined) // true
  * ```
- * @category models @since 0.0.0
+ * @category models
+ * @since 0.0.0
  */
 export class CitationEngineResolutionInput extends S.Opaque<
   CitationEngineResolutionInput,
