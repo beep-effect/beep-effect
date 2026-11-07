@@ -3,13 +3,13 @@
   "initiative": {
     "id": "fleet-root-registry",
     "title": "Fleet Root Registry",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-05",
-    "updated": "2026-11-06",
+    "updated": "2026-11-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fleet-root-registry",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "One fleet-root setting read by every path-dependent CLI surface, plus an authored seat/lane registry joined onto the derived fleet mirror.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -92,7 +92,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -109,8 +109,9 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "provides": ["fleet/root-config", "fleet/registry"],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2893
-  }
+  },
+  "retentionReason": "Documents a live system: the fleet discovery-roots list (BEEP_FLEET_ROOTS, roots.json), the seat registry and the worktree fleet --join/describe/register views; lane-bootstrap and ops-seat-timers build on its decisions (seat roles, owning seat, lanes/ root)."
 }
