@@ -40,7 +40,8 @@ merged as `821f4287e2` over attributed S11 reds. Its merge-time completion recei
 is unsatisfied. Re-final PR [#2880](https://github.com/beep-effect/beep-effect/pull/2880)
 merged as `9bc3bffb27` with all 15 required checks green, but before the review
 window elapsed and before its monitor recorded readiness. Completion remains
-unknown. This second re-final binds a new publish verdict and must reach
+unknown. Second re-final [#2882](https://github.com/beep-effect/beep-effect/pull/2882)
+binds a new publish verdict and must reach
 `merge-ready: yes` before merging. It changes no implementation or acceptance criteria.
 
 ## Latest Evidence
