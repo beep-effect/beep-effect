@@ -22,21 +22,18 @@ import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import type { CitationHtmlWorkerReply } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
 
-const Startup = S.fromJsonString(CitationHtmlWorkerStartup);
-const startupArgs = S.encodeEffect(Startup)(
+const startup = S.encodeEffect(S.fromJsonString(CitationHtmlWorkerStartup))(
   CitationHtmlWorkerStartup.make({
     maximum: 4096,
     assetPath: NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)),
   })
-).pipe(
-  Effect.map((value) => [value]),
-  Effect.orDie
 );
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program boundary", (it) => {
   it.effect("emits ready, started and exactly one complete result for a bounded request", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;
+      const argument = yield* startup;
       for (const outputUtf16 of [100, 1]) {
         const job = CitationHtmlWorkerJob.make({
           encoding: "UTF-8",
@@ -49,7 +46,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
         yield* citationHtmlWorkerProgram.pipe(
           Effect.provideService(Stdio.Stdio, {
             ...stdio,
-            args: startupArgs,
+            args: Effect.succeed([argument]),
             stdin: Stream.make(frame),
             stdout: () =>
               Sink.forEach((chunk: string | Uint8Array) =>
@@ -88,10 +85,11 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
   it.effect("rejects an empty request stream after startup without emitting a result", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;
+      const argument = yield* startup;
       const error = yield* citationHtmlWorkerProgram.pipe(
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: startupArgs,
+          args: Effect.succeed([argument]),
           stdin: Stream.empty,
           stdout: () => Sink.drain,
         }),
@@ -104,10 +102,11 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
   it.effect("sanitizes a broken reply channel", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;
+      const argument = yield* startup;
       const error = yield* citationHtmlWorkerProgram.pipe(
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: startupArgs,
+          args: Effect.succeed([argument]),
           stdout: () => Sink.fail(PlatformError.systemError({ module: "Stdio", method: "stdout", _tag: "Unknown" })),
         }),
         Effect.flip
@@ -119,17 +118,26 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
   it.effect("rejects a truncated filesystem asset read before announcing worker readiness", () =>
     Effect.gen(function* () {
       const stdio = yield* Stdio.Stdio;
+      const argument = yield* startup;
       const fs = yield* FileSystem.FileSystem;
+      let assetRead = false;
       const failure = yield* citationHtmlWorkerProgram.pipe(
-        Effect.provideService(FileSystem.FileSystem, { ...fs, stream: () => Stream.make(new Uint8Array(0)) }),
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          stream: () => {
+            assetRead = true;
+            return Stream.make(new Uint8Array(0));
+          },
+        }),
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: startupArgs,
+          args: Effect.succeed([argument]),
           stdout: () => Sink.die("truncated asset reached worker readiness"),
         }),
         Effect.flip
       );
       expect(failure).toMatchObject({ _tag: "CitationHtmlWorkerFailure", reason: "invalid-runtime" });
+      expect(assetRead).toBe(true);
     })
   );
 });
