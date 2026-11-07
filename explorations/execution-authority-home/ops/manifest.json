@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "execution-authority-home",
+    "title": "Execution Authority Home",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/execution-authority-slice"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-06",
+    "updated": "2026-11-07"
+  }
+}
