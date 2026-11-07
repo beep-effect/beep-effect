@@ -596,6 +596,7 @@ export const TsconfigSyncSection = LiteralKit([
   "package-docgen",
   "root-vitest-aliases",
   "root-fallow-boundaries",
+  "root-package-projection",
 ]).pipe(
   $I.annoteSchema("TsconfigSyncSection", {
     description: "Sync change section categories for tsconfig-sync.",
@@ -831,7 +832,8 @@ export class PackageDocgenChange extends S.Opaque<PackageDocgenChange, { readonl
  *   "package-check-references": () => "references",
  *   "package-docgen": () => "docgen",
  *   "root-vitest-aliases": () => "vitest",
- *   "root-fallow-boundaries": () => "fallow"
+ *   "root-fallow-boundaries": () => "fallow",
+ *   "root-package-projection": () => "projection"
  * })
  *
  * console.log(label) // => "vitest"
@@ -887,6 +889,38 @@ export class RootFallowBoundariesChange extends S.Opaque<
 ) {}
 
 /**
+ * Generated root manifest projection change summary.
+ *
+ * **Example** (Construct a projection change)
+ *
+ * ```ts
+ * import { RootPackageProjectionChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * const change = RootPackageProjectionChange.make({
+ *   filePath: "standards/root-package.projection.generated.json",
+ *   summary: "project root manifest",
+ * })
+ * console.log(change.section) // "root-package-projection"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RootPackageProjectionChange extends S.Opaque<
+  RootPackageProjectionChange,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    filePath: S.String,
+    summary: S.String,
+    section: S.tag("root-package-projection"),
+  }).pipe(
+    $I.annoteSchema("RootPackageProjectionChange", {
+      description: "Generated root manifest projection change summary.",
+    })
+  )
+) {}
+
+/**
  * A single planned file change.
  *
  * **Example** (Use tsconfig-sync schemas)
@@ -913,6 +947,7 @@ export const TsconfigSyncChange = TsconfigSyncSection.mapMembers(
     () => PackageDocgenChange,
     () => RootVitestAliasesChange,
     () => RootFallowBoundariesChange,
+    () => RootPackageProjectionChange,
   ])
 ).pipe(
   $I.annoteSchema("TsconfigSyncChange", {
@@ -1238,6 +1273,40 @@ export class RootFallowBoundariesPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
+ * Generated root manifest projection content.
+ *
+ * **Example** (Construct a projection change)
+ *
+ * ```ts
+ * import { RootPackageProjectionPlannedFileChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * const change = RootPackageProjectionPlannedFileChange.make({
+ *   filePath: "standards/root-package.projection.generated.json",
+ *   summary: "project root manifest",
+ *   content: "{}\n",
+ * })
+ * console.log(change.section) // "root-package-projection"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RootPackageProjectionPlannedFileChange extends S.Opaque<
+  RootPackageProjectionPlannedFileChange,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    filePath: S.String,
+    summary: S.String,
+    section: S.tag("root-package-projection"),
+    content: S.String,
+  }).pipe(
+    $I.annoteSchema("RootPackageProjectionPlannedFileChange", {
+      description: "Generated root manifest projection content.",
+    })
+  )
+) {}
+
+/**
  * A planned file change with transformed file content.
  *
  * **Example** (Use tsconfig-sync schemas)
@@ -1264,6 +1333,7 @@ export const PlannedFileChange = TsconfigSyncSection.mapMembers(
     () => PackageDocgenPlannedFileChange,
     () => RootVitestAliasesPlannedFileChange,
     () => RootFallowBoundariesPlannedFileChange,
+    () => RootPackageProjectionPlannedFileChange,
   ])
 ).pipe(
   $I.annoteSchema("TsconfigSyncChange", {

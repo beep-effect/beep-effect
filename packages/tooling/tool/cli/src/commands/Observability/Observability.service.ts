@@ -120,8 +120,9 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     Effect.mapError(failure(repoRoot, "Failed to resolve workspace packages."))
   );
 
-  // Both loaders glob with the full scan's globs; a scoped run narrows the matched files with
-  // `includes`, so a scoped shard is parsed from exactly the files the full scan attributes to it.
+  // The source harvest globs with the full scan's globs; a scoped run narrows the matched files
+  // with `includes`, so a scoped shard is parsed from exactly the files the full scan attributes
+  // to it. Declarations are never narrowed (see `loadDeclarations`).
   const harvestFiles = Effect.fn("InstrumentationCatalog.harvestFiles")(function* (
     includes: (absolutePath: string) => boolean
   ) {
@@ -158,17 +159,11 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
 
   const harvest = harvestFiles(everyFile).pipe(Effect.withSpan("InstrumentationCatalog.harvest"));
 
-  const loadDeclarationsFiles = Effect.fn("InstrumentationCatalog.loadDeclarationsFiles")(function* (
-    includes: (absolutePath: string) => boolean
-  ) {
+  // Declarations are repository-wide vocabulary, so every run, scoped or full, loads all of them.
+  const loadDeclarations = Effect.gen(function* () {
     const files = yield* fsUtils
       .globFiles(DECLARATION_GLOBS, { absolute: true, cwd: repoRoot, ignore: SOURCE_IGNORE })
-      .pipe(
-        Effect.mapBoth({
-          onSuccess: A.filter(includes),
-          onFailure: failure(repoRoot, "Failed to list instruments files."),
-        })
-      );
+      .pipe(Effect.mapError(failure(repoRoot, "Failed to list instruments files.")));
     return yield* Effect.forEach(A.sort(files, Str.Order), (file) =>
       Effect.tryPromise({
         try: (): Promise<Record<string, unknown>> => import(file),
@@ -187,11 +182,7 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
         })
       )
     );
-  });
-
-  const loadDeclarations = loadDeclarationsFiles(everyFile).pipe(
-    Effect.withSpan("InstrumentationCatalog.loadDeclarations")
-  );
+  }).pipe(Effect.withSpan("InstrumentationCatalog.loadDeclarations"));
 
   const sync = Effect.fn("InstrumentationCatalog.sync")(function* (
     mode: CatalogRunMode,
@@ -267,10 +258,11 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
       onNone: () => harvest,
       onSome: ({ includes }) => harvestFiles(includes),
     });
-    const files = yield* O.match(scoped, {
-      onNone: () => loadDeclarations,
-      onSome: ({ includes }) => loadDeclarationsFiles(includes),
-    });
+    // Declarations are repository-wide vocabulary: an in-scope instrument may
+    // reference an attribute declared in another package (the desktop metrics
+    // use `beep.outcome` from @beep/observability), so even a scoped run loads
+    // every declaration file and scopes only the harvested spans and shards.
+    const files = yield* loadDeclarations;
     const build = buildCatalog(
       harvested,
       A.flatMap(files, (file) => file.declarations)
