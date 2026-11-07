@@ -21,8 +21,10 @@ export * from "./DmsMirrorBox.ts";
  */
 export * from "./DmsMirrorFixture.ts";
 export * from "./LegacySync.projection.ts";
+export * from "./SyncAdmission.service.ts";
 export * from "./SyncCutover.service.ts";
 export * from "./SyncGenesis.service.ts";
+export * from "./SyncWriterEpoch.service.ts";
 /**
  * Vault sync configuration exports.
  *

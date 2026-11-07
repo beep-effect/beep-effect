@@ -8,6 +8,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
+import { markSyncCutoverWriter } from "./SyncWriterEpoch.service.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/SyncCutover.service");
 const entities = ["item", "operation", "conflict", "cursor"] as const;
@@ -109,6 +110,7 @@ export const restoreSyncTables = Effect.fn($I`restoreSyncTables`)(function* (imp
       if (!A.isReadonlyArrayNonEmpty(state) || state[0].import_id !== importId)
         return yield* SyncCutoverRejected.make({ reason: "backup-required" });
       if (state[0].phase === "restored") return;
+      yield* markSyncCutoverWriter;
       for (const entity of entities) yield* sql`LOCK TABLE ${sql(`documents_sync_${entity}`)} IN ACCESS EXCLUSIVE MODE`;
       // DELETE retains the table contract, indexes, constraints, and dependent readers.
       for (const entity of ["conflict", "operation", "cursor", "item"])

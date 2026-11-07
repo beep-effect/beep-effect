@@ -21,6 +21,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
+import { markSyncModelWriter } from "./SyncWriterEpoch.service.ts";
 import type * as V from "@beep/documents-domain/aggregates/VaultSync";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/LegacySync.projection");
@@ -86,6 +87,8 @@ const store = Effect.gen(function* () {
     yield* sql
       .withTransaction(
         Effect.gen(function* () {
+          // The writer epoch fence admits only transactions that carry this marker.
+          yield* markSyncModelWriter.pipe(Effect.provideService(SqlClient.SqlClient, sql));
           const accepted = yield* sql`INSERT INTO documents_sync_projection_checkpoint (projection, stream, seq)
        VALUES (${entity}, ${stream}, ${seq})
        ON CONFLICT(projection, stream) DO UPDATE SET seq=EXCLUDED.seq
@@ -136,6 +139,8 @@ const store = Effect.gen(function* () {
     yield* sql
       .withTransaction(
         Effect.gen(function* () {
+          // The writer epoch fence admits only transactions that carry this marker.
+          yield* markSyncModelWriter.pipe(Effect.provideService(SqlClient.SqlClient, sql));
           const accepted = yield* sql`INSERT INTO documents_sync_projection_checkpoint (projection, stream, seq)
         VALUES (${entity}, ${stream}, ${seq}) ON CONFLICT(projection, stream) DO UPDATE SET seq=EXCLUDED.seq
         WHERE documents_sync_projection_checkpoint.seq < EXCLUDED.seq RETURNING seq`;

@@ -170,6 +170,18 @@ Lane `alchemy-postgres-views worktree`
 
 Reverse: Add fault-injection seams for the listed host/view/aggregate/projection fallbacks and raise the floor back in a baseline-only PR
 
+### Enforce the single writer with a persisted epoch and a database fence, 2026-11-07
+
+The migrated store records its writer in `documents_sync_writer_epoch` (legacy, migrating or model, plus a reversal generation and the admitted import id). A statement-level trigger on the four legacy tables reads it: under `migrating` or `model` it refuses any transaction that does not carry the `beep.documents_sync_writer = model` marker, and under `legacy` it refuses the marker. Only the alchemy projections set the marker, inside their checkpoint transactions; the offline backup, restore and reversal procedures use a separate `cutover` marker.
+
+**Why the database, not a startup check.** An older sidecar executable knows nothing about a check added later. It boots, re-runs its bundled drizzle migrations and writes through its repositories; every one of those statements reaches the trigger and fails. `SyncCutoverAdmission.pglite.test.ts` boots the real drizzle migrations, admits, then proves raw SQL, ORM-generated SQL and a re-run of the old migrations all fail, while the Model writer keeps working. New code also guards entry points with `requireSyncWriterEpoch`, which fails with the typed `SyncWriterEpochRejected`.
+
+**Why runtime DDL, not a drizzle migration.** The epoch table, the fence and the D14 identity table are cutover state owned by the documents server, created idempotently at admission like the alchemy driver's own tables. The drizzle target keeps describing the four retained table contracts unchanged (D15), so the desktop migration bundle needs no refresh. The down path is the tested post-admission reversal, which leaves the fence armed under the legacy epoch so the abandoned Model cannot write.
+
+Lane `goals/vault-sync-cutover`
+
+Reverse: Drop the four documents_sync_*_writer_fence triggers, the fence function and documents_sync_writer_epoch, after a reversal has returned the store to the legacy epoch
+
 ### Keep activation fenced until writer epoch and both reversal cases are proven, 2026-11-07
 
 The offline importer and pre-admission backup are implementation prerequisites. They do not activate a writer epoch. The existing executable predates any epoch-aware startup check, so adding only a new startup condition cannot prove that an older executable refuses the migrated store. Production cutover must include a database-level stale-writer refusal and the startup compatibility boundary, plus a tested post-admission reversal that retains accepted events. Until these exist, keep legacy application composition and do not claim D7 cutover acceptance.
@@ -217,6 +229,20 @@ Reverse: Replace the reservation aggregate when the pinned kernel provides Uniqu
 ConflictEventRegistry is keyed by destination and atomically reserves remoteEventId. Its idempotent policy records SyncConflict at the existing public id. This preserves D14 while enforcing I8; review intent queues correction before the conflict closes. Lease expiry additionally uses a monotonic leaseEpoch separate from the resettable retry budget.
 
 Reverse: Replace the registry with a native uniqueness primitive while retaining conflict stream ids
+
+### Reverse an admitted store from the current projection, not the pre-cutover backup, 2026-11-07
+
+Research/07 section 7 names two reversal cases. Before admission, `restoreSyncTables` restores the immutable offline backup. After admission that backup is stale, so `reverseSyncCutover` uses the projection-to-legacy route: the four tables already hold the projected state of every accepted event.
+
+Procedure, with the Model runtime and workers stopped: refuse while any Box intent receipt is unsettled (`uncertain-remote-outcome`) or a LegacySync projection has pending deliveries or unprocessed inputs (`projection-behind`); record the event high-water count; in one cutover transaction snapshot the four tables to `*_reversal_backup` and verify a zero diff; return leased operations to queued with a row-version bump, recording their ids (the leases belong to workflows that will never resume); move each table sequence beyond every id in the table and in the D14 allocator; record the reversal receipt and the `legacy` epoch with the next generation.
+
+The event and workflow store stays in place, read-only: the fence refuses the Model marker and `ensureSyncCutover` refuses to resume a reversed store, so a recutover needs a fresh import. Box uploads are never compensated. Destination name reservations and lease metadata have no legacy representation and remain only in the retained event store.
+
+Test: `SyncCutoverAdmission.pglite.test.ts` admits a drizzle-migrated store, writes and leases through the Model, proves the uncertain-intent refusal, reverses, then shows the live tables equal the snapshot except the three recorded lease-rollback columns, the legacy writer inserts and updates again with an id beyond every Model id, and the Model can neither resume nor write.
+
+Lane `goals/vault-sync-cutover`
+
+Reverse: Replace reverseSyncCutover with a restore of the offline backup plus a replay of post-admission events into legacy rows, keeping the same refusal preconditions
 
 ### Hold uncertain Box mutations behind durable intent receipts, 2026-11-07
 
