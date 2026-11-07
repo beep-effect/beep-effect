@@ -108,7 +108,7 @@ describe("Independent semantic reference integrity", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const manifestPath = yield* path.fromFileUrl(
-          new URL("../../../../goals/claim-element-antecedent-check/research/positive-sampling.json", import.meta.url)
+          new URL("./fixtures/claim-element/positive-sampling.json", import.meta.url)
         );
         const argument = S.decodeEffect(manifestJson);
         const readFileString1 = yield* fs.readFileString(manifestPath);

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "execution-authority-slice",
+    "packetId": "goal-packet/v1:05b1eeac067e65c4a4c3d8133d18722202fd6479bbd1fa9349352822aaec8681",
+    "title": "Execution Authority Slice",
+    "status": "active",
+    "created": "2026-11-07",
+    "updated": "2026-11-07",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/execution-authority-slice",
+  "lifecycle": "active",
+  "mission": "Execution Authority Slice (graduated from explorations/execution-authority-home).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/execution-authority-home",
+    "graduated": "2026-11-07"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/execution-authority-slice/README.md",
+    "goals/execution-authority-slice/SPEC.md",
+    "goals/execution-authority-slice/PLAN.md",
+    "goals/execution-authority-slice/GOAL.md",
+    "goals/execution-authority-slice/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/execution-authority-slice/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/execution-authority-slice/GOAL.md)\" -le 4000",
+    "jq . goals/execution-authority-slice/ops/manifest.json",
+    "rg -n \"execution-authority-slice|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/execution-authority-slice",
+    "git diff --check -- goals/execution-authority-slice",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
