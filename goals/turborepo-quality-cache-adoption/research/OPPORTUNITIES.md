@@ -1300,3 +1300,7 @@ No inspection or protected trial was submitted. Independent adoption metadata
 work continued in an isolated source-bound checkout. Retaining immutable hosted
 source bindings and coordinating a short exact-source approval interval would
 avoid repeated static reads while preserving the final live-ref check.
+
+## Storybook mixed source and declaration contexts, 2026-11-07
+
+Heavy / Check job 128225577677 on #2826 executed merge 5541cb724 with accepted base b0c9bab1. Fresh md and editor checks completed, while Storybook rejected TaskItem/TaskList constructors and an unknown Effect context in the unchanged editor-viewer story. Storybook maps Markdown and Lexical models to source but leaves their shared schema helpers outside that source mapping; editor stories inherit the root schema source mapping. Align Storybook's schema root and leaf aliases with that source context. This is a source-based repair candidate; hosted CI must establish whether it resolves the failures. No constructor, story, diagnostic, threshold or test expectation is suppressed, and no local quality suite ran. No matching open fix or unblocks-main PR was found at the initial inventory.
