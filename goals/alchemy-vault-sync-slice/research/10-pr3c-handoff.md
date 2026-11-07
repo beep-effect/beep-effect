@@ -183,3 +183,36 @@ other desktop tests pass. Fallow dead-code, health and audit exit 0. Effect Vite
 reports introduced=0. Entity-kit freeze reports 0 findings. tsconfig-sync reports no
 drift. Docs oxlint is clean on the touched sources. The scoped schema-first scan
 exits 0.
+
+## Final 3a contract on `goals/vs-api-2` (2026-11-07)
+
+Branch `goals/vs-api-2` was cut from `goals/vs-api` (`e864bf44bb4`) and merges
+`goals/vs-saga-2`, which carries the final PR 3a head `e2bd335249e`.
+
+- Merge conflicts: `SyncItem.aggregate.ts` keeps 3c's `repushType` and takes the
+  `SyncRule`-typed `refused`. `ConflictReviews` keeps 3a's refusal handling (a
+  correction refused with `SyncRuleViolation` is logged and leaves the conflict
+  open) and 3c's slot step: the item's `ReturnItemToPending` with the correction
+  `type` runs only once the correction queued. The BoxMirror test keeps 3c's
+  `Effect.flip` form and asserts `{ operation: "uploadFile", stage }`. The
+  domain schema-catalog shard was regenerated, not hand-merged.
+- `SyncRule`: 3c added the `destination-paused` refusal to `RequestVaultSync`;
+  the rule is now a member of the closed kit, covered by
+  `VaultSyncRequest.test.ts`.
+- Api, MCP and RPC schemas: none expose a free-text reason. The views carry
+  `DestinationState.cursorError` already typed as `MirrorOperation`; the
+  legacy RPC failure log names only the error tag. BoxMirror's new `probe` call
+  maps `availability.refresh` and has no failure path, so `MirrorOperation`
+  needs no `probe` member.
+- Coverage (inherited from 3c, not from this merge): the desktop coverage gate
+  failed on `VaultSyncPanel.tsx` branches 81.81 < 84.84. 3c's status atom became a
+  stream, so the old Reconnect test no longer reached the `waiting` branch of
+  "Retry connection". A new panel test renders a waiting status and asserts the
+  button reads "Checking…" and is disabled. No floor changed.
+
+Verification: check clean for documents-domain, -use-cases, -server and
+professional-desktop. Tests: domain 56, use-cases 86, server 209 (23 files),
+desktop 285 (54 files). package-verify passed for all four. Coverage ratchet ok
+for all four. Entity-kit freeze, tsconfig-sync, cache-policy (0 blocking), the
+three fallow checks and docs oxlint on touched sources exited 0. Effect Vitest:
+introduced=0.

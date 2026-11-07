@@ -211,6 +211,29 @@ describe("vault sync panel", () => {
   );
 
   it.effect(
+    "holds Retry connection while the status is being re-read",
+    Effect.fnUntraced(function* () {
+      const disconnected = yield* statusWith(false, O.some("transient"));
+      const { container } = render(
+        <RegistryProvider
+          initialValues={[
+            [
+              vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID),
+              AsyncResult.success(disconnected, { waiting: true }),
+            ],
+            [vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), AsyncResult.success(noConflicts)],
+          ]}
+        >
+          <VaultSyncPanel floating={false} />
+        </RegistryProvider>
+      );
+      const reconnect = within(container).getByTestId("vault-sync-reconnect");
+      expect(reconnect).toHaveTextContent("Checking…");
+      expect(reconnect).toBeDisabled();
+    })
+  );
+
+  it.effect(
     "renders a setup note for every disconnect reason",
     Effect.fnUntraced(function* () {
       // Totality over the reason union: a new member without panel copy must
