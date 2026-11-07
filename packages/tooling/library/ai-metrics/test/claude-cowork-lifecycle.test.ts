@@ -212,6 +212,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
                 ? file
                 : {
                     ...file,
+                    stat: file.stat,
                     readAlloc: Effect.fn("CoworkLifecycleTest.delayedRead")((size) => {
                       if (delayed) return file.readAlloc(size);
                       delayed = true;
