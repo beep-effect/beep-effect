@@ -1423,9 +1423,8 @@ alongside the corresponding YAML edits to avoid another hosted repair wave.
 ### Hosted schema and layer policy repair, 2026-11-07
 
 PR #2850 Heavy Lint Policy job 128307512992 found literal fields that require
-Schema.tag and an inline JSON schema compilation; the new layer-backed test also
-needs an explicit acquisition timeout. Use constructor-default tags, preserving
-required decoding, hoist the JSON codec/decoder and bound layer acquisition.
+Schema.tag and an inline JSON schema compilation; the new layer-backed test retained an opaque native-platform provenance finding. Use constructor-default tags, preserving
+required decoding, hoist the JSON codec/decoder and retain a bounded layer acquisition timeout.
 Existing CitationBluebook findings belong to the consolidated main unblocker;
 do not duplicate its repair or refresh a baseline to conceal either finding.
 No local suite or generator was run.
@@ -1435,3 +1434,15 @@ its bounded read-error budget while CI continued. The canonical one-point quota
 probe confirmed exhausted budgets, and reads resumed only after reset. Reuse
 the existing five-minute monitor interval on recovery to reduce polling demand;
 failed reads remain unknown, never zero threads or a passing check.
+
+### Exact native-platform diagnostic, 2026-11-07
+
+The next hosted Lint Policy job 128317235263 cleared schema-tag and inline-codec
+errors but retained the test finding. A read-only, single-file syntax diagnostic
+identified EV010 platform-resource-provenance-review, rather than a timeout
+finding. Preserve the real Python/filesystem integration: resolve the scoped
+temporary directory through the native filesystem before passing its path to the
+external process. This makes the physical path boundary explicit and supports
+aliased temporary roots without replacing the real subject with memory services.
+No assertion, baseline or detector policy changes. The syntax inspection does
+not execute test bodies or grant a quality receipt; hosted CI remains authoritative.

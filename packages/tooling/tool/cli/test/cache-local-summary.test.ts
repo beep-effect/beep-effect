@@ -22,7 +22,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const root = yield* findRepoRoot();
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "cache-local-summary-contract-" });
+        const temporaryDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "cache-local-summary-contract-" });
+        const directory = yield* fs.realPath(temporaryDirectory);
         const contract = path.join(directory, "summary.json");
         const result = yield* CacheRuntimeProcess.runCaptured({
           command: "/usr/bin/python3",
