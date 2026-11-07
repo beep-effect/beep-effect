@@ -232,6 +232,14 @@ Lane `feat/research-intake-2026-11`
 
 Reverse: Return to a literal whole-tree git grep on the handle after removing the pre-existing public references, or widen the guard's diff base
 
+### Codex is exhausted until about 2026-11-13; the remaining T2 reads run on Opus 5.5 through the local proxy, 2026-11-07
+
+After 463 T2 readings, the signed-in Codex account and then every proxy credential for gpt-6.1-sol reported usage_limit_reached (proxy reset in about 142 hours). Remaining pools: Cursor's API pool shows 0% and refuses private artifacts anyway, and Grok has no mine profile. claude-opus-5-5 is the Claude chain's step 1 and its rate limit had cleared, so the remaining ~724 reads (public and private) run on a new proxy-opus profile. It launches claude -p against CLIProxyAPI with a scrubbed environment, so the batch draws on every admitted Claude login instead of the 12%-left account the CLI is signed in to. The runner pauses on quota errors. Rejected: waiting six days for the Codex reset, and buying credits (operator-only spend).
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Re-run any partition with --profile codex-sol after the Codex reset; per-artifact records keep completed reads
+
 ### Junie ran out of quota mid-T2; the public partition moves to Codex gpt-6.1-sol as well, 2026-11-07
 
 Junie's JetBrains quota returned 477 Out of quota on 2026-11-07 after a handful of reads (the runner recorded 239 failed launches before the batch stopped making progress; the quota signal appeared only in Junie's log file, now detected and treated as a pause). The next pool is claude-opus-5-5 children, which recovered from this morning's rate limit, but 784 Opus reads would draw the scarce Anthropic weekly pool that also runs the orchestrating session, and that pool already tripped a rate limit today. The public partition therefore runs on the chain's step 2, Codex gpt-6.1-sol medium (codex-sol profile), beside the private partition. Every reading records its ModelRun, so pool provenance stays per finding. Rejected: buying JetBrains credits (operator-only spend).
