@@ -32,6 +32,9 @@ import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -259,6 +262,9 @@ export class HeavyAdmissionRoute extends S.Opaque<HeavyAdmissionRoute, { readonl
     $I.annoteSchema("HeavyAdmissionRoute", { description: "Heavy lane decisions and a compact route receipt." })
   )
 ) {}
+
+// Well inside the 15-minute admission job timeout, so a slow git read cannot hold Heavy.
+const ROUTE_READ_TIMEOUT = Duration.minutes(3);
 
 const unavailableRoute = HeavyAdmissionRoute.make({ lanes: [], receipt: "route-unavailable" });
 const heavyRouteLanes = LiteralKit(["lint-policy", "check", "test-integration", "docgen", "doctest", "build"]).pipe(
@@ -715,7 +721,16 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
       ),
     });
     return receipt.length > 8192 ? unavailableRoute : HeavyAdmissionRoute.make({ lanes, receipt });
-  }).pipe(Effect.catchCause(() => Effect.succeed(unavailableRoute)));
+  }).pipe(
+    // The route never blocks Heavy: a stall past the bound or any failure falls back to running
+    // every lane, and the cause goes to stderr (stdout carries the admission JSON) so a route
+    // that breaks on every PR stays visible in the job log.
+    Effect.timeout(ROUTE_READ_TIMEOUT),
+    Effect.tapCause((cause) =>
+      Console.error(`verification route unavailable; every heavy lane runs: ${Cause.pretty(cause)}`)
+    ),
+    Effect.catchCause(() => Effect.succeed(unavailableRoute))
+  );
 });
 
 /**

@@ -32,6 +32,7 @@ import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -39,6 +40,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { parseRunnerFile } from "./support/runnerFile.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
@@ -755,4 +757,30 @@ it.layer(platform, { timeout: "30 seconds" })("hosted admission route", (layerIt
       );
     });
   }
+
+  layerIt.layer(Git.layerTest({ mergeBase: () => Effect.succeed("merge-base"), show: () => Effect.succeedNone }), {
+    timeout: "30 seconds",
+  })("a stalled route read", (routeIt) => {
+    routeIt.effect("falls back to route-unavailable once the read bound passes", () =>
+      temporary((root) =>
+        Effect.gen(function* () {
+          const path = yield* writeEvent(root, payload([HEAVY_ADMISSION_LABEL]));
+          const fiber = yield* readHeavyAdmissionRoute(
+            HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root })
+          ).pipe(
+            Effect.provideService(
+              ChangeClassifier,
+              ChangeClassifier.of({ classify: Effect.fn("ChangeClassifier.classify")(() => Effect.never) })
+            ),
+            Effect.forkChild
+          );
+          // Let the real event-file read reach the stalled classifier before moving the test clock.
+          yield* TestClock.withLive(Effect.sleep("300 millis"));
+          yield* TestClock.adjust("3 minutes");
+          const route = yield* Fiber.join(fiber);
+          expect([route.lanes, route.receipt]).toEqual([[], "route-unavailable"]);
+        })
+      )
+    );
+  });
 });
