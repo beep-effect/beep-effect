@@ -190,7 +190,14 @@ it.layer(
     const manifestText = yield* fs.readFileString(`${fixtureDirectory}/files-${date}.json`);
     const goldenManifest = yield* S.decodeEffect(ReplayManifest)(manifestText);
     expect(index).toBe(goldenIndex);
-    expect(status).toBe(`${goldenStatus}private partition: documents=0 sources=0 artifacts=0 occurrences=0\n`);
+    const legacy = `${goldenStatus}private partition: documents=0 sources=0 artifacts=0 occurrences=0\n`;
+    // Per-hop totals follow the October status byte for byte.
+    expect(Str.slice(0, legacy.length)(status)).toBe(legacy);
+    expect(A.map(Str.split(Str.trimEnd(Str.slice(legacy.length)(status)), "\n"), Str.slice(0, 6))).toEqual([
+      "hop 0:",
+      "hop 1:",
+      "hop 2:",
+    ]);
     expect(manifest).toEqual(goldenManifest);
     return root;
   });

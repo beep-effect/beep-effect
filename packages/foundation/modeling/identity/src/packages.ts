@@ -174,6 +174,7 @@ const generatedComposers = $I.compose(
   "tailscale",
   "agents-tables",
   "graph-3d",
+  "epistemic-config",
   "law-practice-tables",
   "practice-kg-mcp",
   "openclaw",
@@ -247,6 +248,7 @@ const generatedComposers = $I.compose(
   "party-server",
   "repo-cli-kit",
   "alchemy-postgres",
+  "firecrawl",
   "execution-authority-domain",
   "execution-authority-use-cases",
   "execution-authority-tables",
@@ -2384,6 +2386,24 @@ export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = compos
  * @since 0.0.0
  */
 export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = composers.$AgentsTablesId;
+
+/**
+ * Identity composer for `@beep/epistemic-config`.
+ *
+ * **Example** (Make epistemic config package ID)
+ *
+ * ```ts import.meta.vitest name="Make epistemic config package ID"
+ * import { $EpistemicConfigId } from "@beep/identity/packages"
+ *
+ * const id = $EpistemicConfigId.make("EpistemicConfig")
+ * void id
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $EpistemicConfigId: Identity.IdentityComposer<"@beep/epistemic-config"> = composers.$EpistemicConfigId;
+
 /**
  * Identity composer for `@beep/law-practice-tables`.
  *
@@ -3625,6 +3645,23 @@ export const $RepoCliKitId: Identity.IdentityComposer<"@beep/repo-cli-kit"> = co
  * @since 0.0.0
  */
 export const $AlchemyPostgresId: Identity.IdentityComposer<"@beep/alchemy-postgres"> = composers.$AlchemyPostgresId;
+
+/**
+ * Identity composer for `@beep/firecrawl`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $FirecrawlId } from "@beep/identity/packages"
+ *
+ * const id = $FirecrawlId.make("Firecrawl")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $FirecrawlId: Identity.IdentityComposer<"@beep/firecrawl"> = composers.$FirecrawlId;
 
 /**
  * Identity composer for `@beep/execution-authority-domain`.

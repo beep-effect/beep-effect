@@ -134,6 +134,7 @@ const config = {
     "packages/party/use-cases/package.json",
     "packages/party/server/package.json",
     "packages/drivers/alchemy-postgres/package.json",
+    "packages/drivers/firecrawl/package.json",
   ],
   customTypes: {
     catalog: {

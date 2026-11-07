@@ -151,6 +151,9 @@
       "path": "packages/drivers/ffmpeg"
     },
     {
+      "path": "packages/drivers/firecrawl"
+    },
+    {
       "path": "packages/drivers/freshbooks"
     },
     {

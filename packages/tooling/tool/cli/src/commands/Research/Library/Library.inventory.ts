@@ -72,6 +72,20 @@ const documentTopicEvidence = (text: string) =>
 const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
 const failure = (message: string) => Effect.mapError((cause: unknown) => LibraryError.make({ message, cause }));
 
+// A `)` with no matching `(` ends a Markdown link target even when more text follows,
+// as in adjacent links `[a](https://x.example/a)[b](https://y.example/b)`.
+const unbalancedParenthesisCut = (locator: string): string => {
+  let depth = 0;
+  for (const [index, character] of A.map(Str.split(locator, ""), (c, i) => [i, c] as const)) {
+    if (character === "(") depth++;
+    if (character === ")") {
+      if (depth === 0) return Str.slice(0, index)(locator);
+      depth--;
+    }
+  }
+  return locator;
+};
+
 /**
  * Extract citation locators at exact one-based UTF-16 line and column positions.
  * **Details**
@@ -187,7 +201,7 @@ export const extractLibraryReferences: {
     };
     const collectWebLocators = () => {
       for (const match of Str.matchAll(/https?:\/\/[^\s\]<>"`\\，。；！？、]+/g)(text)) {
-        let locator = match[0];
+        let locator = unbalancedParenthesisCut(match[0]);
         locator = Str.replace(/[.,;:!?]+$/, "")(locator);
         while (Str.endsWith(")")(locator) && Str.split(locator, ")").length > Str.split(locator, "(").length)
           locator = Str.slice(0, -1)(locator);
@@ -819,7 +833,8 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
         (source) =>
           source.kind === "github-repository" ||
           A.some(occurrences, (occurrence) => occurrence.sourceId === source.id) ||
-          A.some(catalog.captures, (capture) => capture.sourceId === source.id)
+          A.some(catalog.captures, (capture) => capture.sourceId === source.id) ||
+          A.some(catalog.derivations, (derivation) => derivation.derivedId === source.id)
       );
       const census = yield* LibraryIntakeFile.pipe(
         S.Array,

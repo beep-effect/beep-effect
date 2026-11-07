@@ -1506,15 +1506,15 @@
     },
     "@beep/alchemy-postgres": {
       "path": "packages/drivers/alchemy-postgres",
-      "lines": 98.36,
-      "statements": 97.72,
+      "lines": 96.88,
+      "statements": 96.04,
       "branches": 86.95,
-      "functions": 95.53,
+      "functions": 92.26,
       "uncovered": {
-        "lines": 4,
-        "statements": 6,
-        "branches": 3,
-        "functions": 5
+        "lines": 21,
+        "statements": 30,
+        "branches": 9,
+        "functions": 28
       },
       "files": {
         "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts": {
@@ -1530,22 +1530,22 @@
           }
         },
         "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts": {
-          "lines": 100,
-          "statements": 100,
+          "lines": 95,
+          "statements": 95.23,
           "branches": 100,
-          "functions": 100,
+          "functions": 85.71,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 1,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/drivers/alchemy-postgres/src/AlchemyPostgresPlatform.ts": {
-          "lines": 98.15,
+          "lines": 97.87,
           "statements": 97.44,
           "branches": 86.95,
-          "functions": 95.09,
+          "functions": 95,
           "uncovered": {
             "lines": 4,
             "statements": 6,

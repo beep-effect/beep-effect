@@ -1,5 +1,5 @@
 {
-  "previous": "ef9473f7712075e3adcf824b7633165ca509287a60727331f81bed129b096e0b",
+  "previous": "f826f5bee62879bd33cd721c9efb19940e6e6db10324852f83dc961c31e42612",
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/execution-authority-slice P1)",
     "reason": "Record the generated default computations of the five new @beep/execution-authority-* packages, and attribute the db-admin, epistemic-server and professional-desktop drift to their manifest dependency edges and the global drift to the renamed EXECUTION_AUTHORITY_* turbo env keys and the policy-fingerprint manifest list. No command, output, cache flag or qualification changes.",
