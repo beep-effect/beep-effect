@@ -88,7 +88,7 @@ const main = Effect.gen(function* () {
   );
   const program = Effect.gen(function* () {
     const hosted = yield* Layer.build(runtime);
-    const destinationId = V.DestinationId.make("synthetic-crash-destination");
+    const destinationId = V.DestinationId.make("documents_sync_destination_asyntheticcrash");
     yield* Context.get(hosted, V.SyncDestination).send(
       destinationId,
       V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "synthetic" }),

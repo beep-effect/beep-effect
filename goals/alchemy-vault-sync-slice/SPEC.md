@@ -270,11 +270,27 @@ The current cursor scope is one workspace plus provider, so its position and pol
 
 Reverse: Introduce a separately versioned cursor aggregate if account-wide polling becomes independent
 
+### Genesis binds each workspace to one minted destination id, 2026-11-07
+
+PII audit F3 requires genesis to mint opaque destination ids. The earlier lane derived legacy-box-workspace-<n> from the workspace id, and the bootstrap used the same derivation. A minted id must still be the same on every call: a genesis re-run after a crash in migrating, the desktop bootstrap and the Model engine all have to agree. workspaceDestinationId therefore mints a documents_sync_destination_<cuid-shaped random> id once and records it in documents_sync_destination_binding (workspace_id primary key, destination_id unique). Every later call reads that binding. The table is cutover state, created idempotently at runtime like the epoch and D14 identity tables, and is outside the writer fence. Minting uses Clock and Random through makeDestinationId, not mintDestinationId, so neither host needs a CuidState layer. Uniqueness comes from about 62 random bits plus the unique constraint.
+
+Lane `goals/vs-cutover`
+
+Reverse: Drop documents_sync_destination_binding and restore a derived workspace destination id in SyncGenesis.service.ts; any store already imported keeps its minted ids
+
 ### Genesis creates one Box destination per legacy workspace, 2026-11-07
 
 Use the configured mirror root name, default beep-vault, and orgId from legacy rows. The cursor folds into this destination because its scope is workspace plus provider.
 
 Reverse: Change genesis mapping before import; no data is imported in PR 3a
+
+### Genesis imports the desktop store in one pass, not in batches, 2026-11-07
+
+Genesis reads the four *_cutover_backup tables fully into one validated snapshot, then sends one genesis command per row. It is not paged. The desktop sidecar store is the only genesis target: one workspace, with item and operation rows in the thousands at most. The whole snapshot fits in memory, and the per-row commands are already crash-safe. Each command id is derived from the snapshot digest, so a re-run after a crash replays as receipts and adds no events. Batching would split the snapshot digest that names the import and add a resumable cursor, which costs more than it saves at this size. Revisit when a server Postgres store with many workspaces becomes a genesis target.
+
+Lane `goals/vs-cutover`
+
+Reverse: Page the four backup tables by numeric id and send each page's genesis commands before reading the next
 
 ### Hash destination names in reservation keys, 2026-11-07
 

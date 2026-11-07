@@ -158,3 +158,85 @@ build or browser QA ran.
 - **IPC mode.** An IPC sidecar mounts no HTTP, so the remote CLI cannot reach it
   (PR 3c note); the desktop binding in that mode uses a placeholder token no
   transport accepts.
+
+## Stack fixes on `goals/vs-cutover` (2026-11-07)
+
+Branch `goals/vs-cutover` was cut from `2b3107a43bd`. It merges `goals/vs-api`, so it
+carries #2886, the 3b1 fixes and the 3c PII, provenance, correction and status-stream
+fixes.
+
+- **Merge resolution.** Cutover owns the write wiring and 3c owns the RPC/HTTP
+  surface. The legacy `VaultSyncOrchestrator` stays deleted, and the new
+  `WatchVaultSyncStatus` RPC now has a maintenance handler in the desktop
+  `Layer.ts`. The 3b1 projection column mappers are kept, with cutover's
+  `workspace_id` columns, operation owner lookup, genesis branches and cursor
+  selection folded in as small helpers. Cutover's `LegacySyncReadModel` serves
+  the Api RPCs. The probe resolves `remoteRootName ?? name` in the refactored
+  saga helper. `principalKey` was added to the moved desktop binding
+  (`src/sync/VaultSyncSession.ts`) and to the runtime test. The SPEC and PLAN
+  projections were regenerated from `decisions/`. The Effect Vitest inventory is
+  a three-way union by finding id. Generated catalogs and fallow boundaries were
+  regenerated.
+- **D17 F3, opaque genesis ids.** `legacyBoxDestinationId` is gone.
+  `workspaceDestinationId(workspaceId)` mints a
+  `documents_sync_destination_<cuid-shaped>` id once, records it in
+  `documents_sync_destination_binding`, and returns the bound id on every later
+  call. Genesis and `ensureLegacyBoxDestination` both use it, so a crashed
+  genesis re-run and the bootstrap agree. `SyncGenesis.pglite.test.ts` asserts
+  the id is a valid opaque `DestinationId`, unique per workspace and stable
+  across calls. The runtime test asserts the bootstrap keeps the imported
+  binding. Decision: `2026-11-07-genesis-binds-each-workspace-to-one-minted-destination-id.md`.
+- **Batching.** Genesis stays one pass over the full snapshot. The decision
+  file `2026-11-07-genesis-imports-the-desktop-store-in-one-pass-not-in-batches.md`
+  explains why that is acceptable for desktop store sizes.
+- Every cutover test fixture now uses minted destination ids (hosting, admission,
+  genesis, runtime and the crash child).
+
+- **Fallow on cutover's own code.** `importSyncGenesis` (cyclomatic 29, cognitive
+  46) is now a short pipeline of phase helpers: read snapshot, seed identities,
+  build the context and the bindings, then import destinations, cursors, items,
+  operations and conflicts. Command order and ids are unchanged. The 235-line
+  genesis acceptance test is split into seed and assert phases that share one
+  platform config. The write/genesis checkpoint clone is a single
+  `claimCheckpoint` helper, and the cursor projection's guard is
+  `cursorTarget`. The genesis events carry the `schemaVersion` fallow-ignore,
+  and the moved `desktopVaultSyncRequest` is module-private.
+- **Cache policy.** The baseline conflict took the incoming 3c side.
+  `@beep/db-admin`'s shared-tables edge was then re-recorded through
+  `cache-baseline-request-pr3b2-stack.json`, which supersedes the earlier 3b2
+  requests. Policy reports 0 blocking findings.
+- **Effect Vitest inventory.** The rows for this stack's files that the
+  refactors resolved were pruned (12 EV002 rows in the projection and genesis
+  tests). The scan reports introduced=0 and resolved=2, the same as main.
+
+Verification on this branch: package-verify (lint, audit, docgen) passes for
+documents-domain, documents-use-cases, documents-server, professional-desktop and
+db-admin. The coverage gate is ok for the three documents packages: domain 58,
+use-cases 56 and server 106 tests under coverage. Fallow dead-code, health and audit
+exit 0. Effect Vitest reports introduced=0. Cache policy reports 0 blocking findings.
+Entity-kit freeze reports 0 findings. tsconfig-sync reports no drift. Docs oxlint is
+clean on the touched sources. The scoped schema-first scan exits 0. Goals decisions
+check reports drift 0.
+
+### Still open
+
+- **Load-sensitive runtime assertion.** In one of three runs of the six
+  cutover pglite files together, `VaultSyncRuntime.pglite.test.ts` saw
+  `operationsByStatus(succeeded)` return `[]` right after the joined item and
+  operation row showed `succeeded`. It passed in isolation and in the next two
+  group runs. The operation row's `workspace_id` comes from the item row when
+  that row is already projected, and from the audit otherwise. A projection-order
+  race on that column is the likely cause. It has not been reproduced since and
+  is not fixed. The next step is to read the workspace from
+  `documents_sync_destination_binding` in the operation projection.
+
+- **Provenance mapping for Api requests (D17 F8, 3b2 half).** The driver config
+  takes a single `ProvenanceMapping`, and the cutover host already uses it for
+  `GenesisProvenance` (`principal`/`source`). Mapping the v1 request context's
+  `principalKey`/`sourceKind` as well needs the driver to accept one mapping per
+  context key, or both contexts to share field names. That is a driver PR off
+  `main` (with D17 F4/F7). Until it lands, the 3c fields are populated and proven
+  on the driver (`VaultSyncProvenance.pglite.test.ts`), but the desktop host
+  records principal columns only for genesis events.
+- R7 (`layerCatalogEnrichment` with `StrictDesktop`) is not mounted. It is the
+  same driver/observability follow-up.

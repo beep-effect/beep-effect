@@ -85,6 +85,15 @@ const store = Effect.gen(function* () {
     );
     return A.headNonEmpty(rows).id;
   });
+  // Marks the writer and advances the source checkpoint; false means the delivery was already applied.
+  const claimCheckpoint = Effect.fnUntraced(function* (entity: string, stream: string, seq: number) {
+    // The writer epoch fence admits only transactions that carry this marker.
+    yield* markSyncModelWriter.pipe(Effect.provideService(SqlClient.SqlClient, sql));
+    const accepted = yield* sql`INSERT INTO documents_sync_projection_checkpoint (projection, stream, seq)
+      VALUES (${entity}, ${stream}, ${seq}) ON CONFLICT(projection, stream) DO UPDATE SET seq=EXCLUDED.seq
+      WHERE documents_sync_projection_checkpoint.seq < EXCLUDED.seq RETURNING seq`;
+    return A.isReadonlyArrayNonEmpty(accepted);
+  });
   const write = Effect.fnUntraced(function* (
     entity: keyof typeof entityTypes,
     publicId: string,
@@ -96,13 +105,7 @@ const store = Effect.gen(function* () {
     yield* sql
       .withTransaction(
         Effect.gen(function* () {
-          // The writer epoch fence admits only transactions that carry this marker.
-          yield* markSyncModelWriter.pipe(Effect.provideService(SqlClient.SqlClient, sql));
-          const accepted = yield* sql`INSERT INTO documents_sync_projection_checkpoint (projection, stream, seq)
-       VALUES (${entity}, ${stream}, ${seq})
-       ON CONFLICT(projection, stream) DO UPDATE SET seq=EXCLUDED.seq
-       WHERE documents_sync_projection_checkpoint.seq < EXCLUDED.seq RETURNING seq`;
-          if (A.isReadonlyArrayEmpty(accepted)) return;
+          if (!(yield* claimCheckpoint(entity, stream, seq))) return;
           const id = yield* identity(entity, publicId);
           const meta = yield* audit.resolve(stream, seq);
           const table = `documents_sync_${entity}`;
@@ -148,12 +151,7 @@ const store = Effect.gen(function* () {
     yield* sql
       .withTransaction(
         Effect.gen(function* () {
-          // The writer epoch fence admits only transactions that carry this marker.
-          yield* markSyncModelWriter.pipe(Effect.provideService(SqlClient.SqlClient, sql));
-          const accepted = yield* sql`INSERT INTO documents_sync_projection_checkpoint (projection, stream, seq)
-        VALUES (${entity}, ${stream}, ${seq}) ON CONFLICT(projection, stream) DO UPDATE SET seq=EXCLUDED.seq
-        WHERE documents_sync_projection_checkpoint.seq < EXCLUDED.seq RETURNING seq`;
-          if (A.isReadonlyArrayEmpty(accepted)) return;
+          if (!(yield* claimCheckpoint(entity, stream, seq))) return;
           yield* sql`INSERT INTO documents_sync_legacy_identity (entity, public_id, id)
         VALUES (${entity}, ${row.public_id}, ${row.id}) ON CONFLICT(entity, public_id)
         DO UPDATE SET id = EXCLUDED.id`;
@@ -258,6 +256,13 @@ const cursorColumns = (
   last_error: state.cursorError,
   status: state.cursorError === null ? "active" : "error",
 });
+// Only advance and failure events of a registered destination with a cursor write the cursor row.
+const cursorTarget = (event: { readonly _tag: string }, state: V.DestinationState | null) =>
+  (event._tag === "CursorAdvanced" || event._tag === "CursorFailed") &&
+  state?._tag === "Registered" &&
+  state.cursor !== null
+    ? O.some({ workspaceId: state.workspaceId, cursor: state.cursor, cursorError: state.cursorError })
+    : O.none();
 const SelectionRows = S.Array(S.Struct({ public_id: S.NullOr(S.String), paused: S.Boolean }));
 const OwnerRows = S.Array(S.Struct({ workspace_id: S.Int }));
 /**
@@ -377,13 +382,12 @@ export const LegacySyncProjections = Layer.mergeAll(
             yield* importCursor(source.id, event, envelope);
             continue;
           }
-          if (event._tag !== "CursorAdvanced" && event._tag !== "CursorFailed") continue;
-          if (state?._tag !== "Registered" || state.cursor === null) continue;
+          const target = cursorTarget(event, state);
+          if (O.isNone(target)) continue;
           const publicId = yield* selectedCursor(source.id);
           if (O.isNone(publicId)) continue;
           const at = DateTime.toEpochMillis(envelope.at);
-          const columns = cursorColumns({ ...state, cursor: state.cursor }, event);
-          yield* write("cursor", publicId.value, envelope.stream, envelope.seq, at, columns);
+          yield* write("cursor", publicId.value, envelope.stream, envelope.seq, at, cursorColumns(target.value, event));
         }
       });
     })

@@ -14,26 +14,8 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { DesktopRpcSessionToken } from "@/runtime/SessionToken";
 
-/**
- * The signed-in desktop principal and its workspace, bound to the launch token.
- *
- * **Details**
- *
- * The same user, organization and workspace the desktop already acts as for contradiction review.
- * The value carries no credential; grants are read live from shared membership on every call.
- *
- * **Example** (Decode the desktop request)
- *
- * ```ts
- * import * as Effect from "effect/Effect";
- * import { desktopVaultSyncRequest } from "@/sync/VaultSyncSession"
- * Effect.runPromise(desktopVaultSyncRequest).then((request) => console.log(request.orgId))
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const desktopVaultSyncRequest = S.decodeEffect(V.VaultSyncRequest)({
+// The same user, organization and workspace the desktop already acts as for contradiction review.
+const desktopVaultSyncRequest = S.decodeEffect(V.VaultSyncRequest)({
   principal: { kind: "User", userId: 1 },
   principalKey: "User:1",
   actorSourceKind: "User",

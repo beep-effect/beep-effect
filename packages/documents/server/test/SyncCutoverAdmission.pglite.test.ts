@@ -130,7 +130,7 @@ describe("vault-sync single-writer cutover", () => {
         expect(afterReboot._tag).toBe("SqlError");
 
         // The admitted Model writer works.
-        const destinationId = V.DestinationId.make("cutover-destination");
+        const destinationId = V.DestinationId.make("documents_sync_destination_acutover");
         const itemId = V.ItemId.make("documents_sync_item_amodel1");
         const operationId = V.OperationId.make("documents_sync_operation_amodel1");
         yield* Context.get(runtime, V.SyncDestination).send(

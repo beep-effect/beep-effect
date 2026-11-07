@@ -79,6 +79,7 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Stream from "effect/Stream";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
 import { ContradictionQaSeedLive } from "@/contradiction/ContradictionQaSeed";
@@ -415,6 +416,7 @@ const VaultSyncMaintenanceRpcs = VaultSyncRpcs.toLayer(
       ListVaultSyncConflicts: () => VaultSyncActionError.failEffect("Vault sync is in maintenance."),
       MarkVaultSyncConflictReviewed: () => VaultSyncActionError.failEffect("Vault sync is in maintenance."),
       TriggerVaultSync: () => VaultSyncActionError.failEffect("Vault sync is in maintenance."),
+      WatchVaultSyncStatus: () => Stream.fail(VaultSyncActionError.make({ message: "Vault sync is in maintenance." })),
     })
   )
 );

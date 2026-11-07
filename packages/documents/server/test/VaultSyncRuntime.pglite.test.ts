@@ -16,6 +16,7 @@ import {
   VaultSyncSessionLive,
   VaultSyncSidecarChannelLive,
   VaultSyncWorkspaceRoots,
+  workspaceDestinationId,
 } from "@beep/documents-server/aggregates/Sync";
 import { DocumentsVaultSyncFixtureLive } from "@beep/documents-server/layer";
 import { VaultSyncRpcs } from "@beep/documents-use-cases/public";
@@ -260,7 +261,9 @@ describe("documents vault sync runtime", () => {
         // The bootstrap registers a workspace destination once; the imported one is kept.
         const bootstrap = Effect.provide(Layer.merge(hostingFor(root), Layer.succeedContext(context)));
         const imported = yield* ensureLegacyBoxDestination(3).pipe(bootstrap);
-        expect(imported).toBe("legacy-box-workspace-3");
+        const binding = yield* workspaceDestinationId(3).pipe(bootstrap);
+        expect(imported).toBe(binding);
+        expect(imported).not.toContain("workspace");
         const created = yield* ensureLegacyBoxDestination(5).pipe(bootstrap);
         const recreated = yield* ensureLegacyBoxDestination(5).pipe(bootstrap);
         expect(recreated).toBe(created);

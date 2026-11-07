@@ -23,7 +23,7 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import { VaultSyncRoot } from "./BoxMirror.ts";
 import { LegacySyncAudit } from "./LegacySync.projection.ts";
-import { legacyBoxDestinationId } from "./SyncGenesis.service.ts";
+import { workspaceDestinationId } from "./SyncGenesis.service.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncModel.service");
 
@@ -246,8 +246,8 @@ export const VaultSyncRootFromWorkspaceLive = Layer.effect(
  *
  * **Details**
  *
- * Uses the same destination id genesis derives, so a workspace with legacy
- * rows keeps its imported destination. The fixed command id makes a repeated
+ * Reads the same workspace binding genesis records, so a workspace with legacy
+ * rows keeps its imported destination and a fresh workspace mints one opaque id. The fixed command id makes a repeated
  * bootstrap harmless. Requires the Model's `SyncDestination` aggregate.
  *
  * **Example** (Prepare a bootstrap)
@@ -265,7 +265,7 @@ export const ensureLegacyBoxDestination = Effect.fn($I`ensureLegacyBoxDestinatio
   const destinations = yield* V.SyncDestination;
   const ownership = yield* VaultSyncOwnership;
   const mirrorRoot = yield* VaultSyncMirrorRoot;
-  const destinationId = legacyBoxDestinationId(workspaceId);
+  const destinationId = yield* workspaceDestinationId(workspaceId);
   const state = yield* destinations.state(destinationId);
   if (state._tag === "Registered") return destinationId;
   const orgId = yield* ownership.orgOf(workspaceId);
