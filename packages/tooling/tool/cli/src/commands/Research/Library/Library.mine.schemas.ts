@@ -12,6 +12,7 @@ import {
   LibraryAccessClass,
   LibraryArtifact,
   LibraryCitoRelation,
+  LibraryDocument,
   LibraryFinding,
   LibraryModelRun,
 } from "./Library.schemas.ts";
@@ -266,6 +267,94 @@ const emptyString = S.String.pipe(
 );
 
 /**
+ * Where a mining job's bound text comes from: a stored text artifact, or text derived from a PDF.
+ *
+ * **Example** (Inspect LibraryMineTextSource)
+ * ```ts
+ * import { LibraryMineTextSource } from "@beep/repo-cli/commands/Research"
+ * console.log(LibraryMineTextSource.literals) // ["text", "pdf"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LibraryMineTextSource = LiteralKit(["text", "pdf"]).pipe(
+  $I.annoteSchema("LibraryMineTextSource", {
+    description: "Where a mining job's bound text comes from: a stored text artifact or text derived from a PDF.",
+  })
+);
+/**
+ * Runtime values of LibraryMineTextSource.
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryMineTextSource = typeof LibraryMineTextSource.Type;
+
+/**
+ * Outcome of deriving text from one PDF: readable text, or none (extraction failed or the PDF is scanned).
+ *
+ * **Example** (Inspect LibraryMineTextOutcome)
+ * ```ts
+ * import { LibraryMineTextOutcome } from "@beep/repo-cli/commands/Research"
+ * console.log(LibraryMineTextOutcome.literals) // ["text", "no-text"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LibraryMineTextOutcome = LiteralKit(["text", "no-text"]).pipe(
+  $I.annoteSchema("LibraryMineTextOutcome", {
+    description: "Outcome of deriving text from one PDF: readable text, or none.",
+  })
+);
+/**
+ * Runtime values of LibraryMineTextOutcome.
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryMineTextOutcome = typeof LibraryMineTextOutcome.Type;
+
+/**
+ * Receipt for the text derived once from one PDF, stored beside the text under `ops/mine/text/`.
+ *
+ * **Details**
+ *
+ * The receipt is immutable and keyed by the PDF's sha256, so every job over the same bytes
+ * reuses it. A `no-text` receipt carries no text path; its job is skipped as unreadable.
+ *
+ * **Example** (Decode a no-text receipt)
+ * ```ts
+ * import { LibraryMineDerivedText } from "@beep/repo-cli/commands/Research"
+ * const receipt = LibraryMineDerivedText.make({
+ *   pdfSha256: "a".repeat(64), outcome: "no-text", pageCount: 2, extractor: "@beep/pdf-tools/PdfTools.pageText",
+ *   extractorVersion: "0.0.0", textPath: "", textSha256: "", textBytes: 0, message: "no extractable text", recordedAt: ""
+ * })
+ * console.log(receipt.outcome) // "no-text"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LibraryMineDerivedText extends S.Opaque<LibraryMineDerivedText, { readonly brand: unique symbol }>()(
+  S.Struct({
+    pdfSha256: LibraryArtifact.fields.sha256,
+    outcome: LibraryMineTextOutcome,
+    pageCount: S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
+    extractor: S.String,
+    extractorVersion: S.String,
+    textPath: S.String,
+    textSha256: S.String,
+    textBytes: S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
+    message: S.String,
+    recordedAt: S.String,
+  }).pipe(
+    $I.annoteSchema("LibraryMineDerivedText", {
+      description: "Receipt for the text derived once from one PDF: source digest, pages, extractor and text digest.",
+    })
+  )
+) {}
+
+/**
  * A planned mining unit: one text artifact of one effective readable capture, or one
  * parseable hop-0 document of the intake.
  *
@@ -274,6 +363,10 @@ const emptyString = S.String.pipe(
  * A `source` job binds `sourceId` and `captureId`; its artifact is content-addressed under
  * `objects/sha256`. A `document` job binds `documentId` with empty source and capture ids;
  * its artifact path is the intake snapshot under `intakes/<date>/raw/`.
+ *
+ * A `pdf` job's artifact is the PDF itself; its bound text is derived once under
+ * `ops/mine/text/<pdf-sha256>.txt`. A PDF intake file carries the `pdfDocument` it
+ * registers as a hop-0 report the first time its text is readable.
  *
  * **Example** (Inspect job fields)
  * ```ts
@@ -294,9 +387,14 @@ export class LibraryMineJob extends S.Opaque<LibraryMineJob, { readonly brand: u
     documentId: S.String,
     accessClass: LibraryAccessClass,
     artifact: LibraryArtifact,
+    textSource: LibraryMineTextSource.pipe(
+      S.withConstructorDefault(Effect.succeed("text" as const)),
+      S.withDecodingDefaultKey(Effect.succeed("text" as const))
+    ),
+    pdfDocument: S.Option(LibraryDocument).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("LibraryMineJob", {
-      description: "One text artifact of one readable capture, or one parseable hop-0 intake document.",
+      description: "One text or PDF artifact of one readable capture, or one parseable or PDF hop-0 intake document.",
     })
   )
 ) {}
@@ -320,6 +418,7 @@ export class LibraryTriageRecord extends S.Opaque<LibraryTriageRecord, { readonl
     captureId: S.String,
     documentId: emptyString,
     artifactSha256: LibraryArtifact.fields.sha256,
+    derivedTextSha256: emptyString,
     decision: LibraryTriageDecision,
     reason: S.String,
     topicIds: S.Array(S.String),
@@ -348,6 +447,7 @@ export class LibraryReadingRecord extends S.Opaque<LibraryReadingRecord, { reado
     captureId: S.String,
     documentId: emptyString,
     artifactSha256: LibraryArtifact.fields.sha256,
+    derivedTextSha256: emptyString,
     coverage: LibraryReadingCoverage,
     summary: S.String,
     findings: S.Array(LibraryFinding),

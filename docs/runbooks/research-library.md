@@ -429,16 +429,27 @@ and backup for audit and do not edit historical artifacts.
 CiTO-typed findings. There are two kinds of mining unit:
 
 - A source job is one bound text artifact (extracted full text, then transcript,
-  then raw plain text) of an effective readable, complete capture of a source
-  cited by the intake's documents or derived from the intake. Incomplete or unread
+  then raw plain text, or a PDF when no text artifact exists) of an effective
+  readable, complete capture of a source cited by the intake's documents or derived from the intake. Incomplete or unread
   sources yield no job and no finding.
 - A document job is one parseable intake document (nightlies, link lists, the
-  private DM archive's markdown), bound to its snapshot under
+  private DM archive's markdown) or snapshotted `.pdf` intake file, bound to its
+  snapshot under
   `intakes/<date>/raw/`. A document whose sha256 equals a planned capture text
   artifact (for example a Box nightly the Box route already captured) is skipped,
   because the source job reads the same bytes. A document job inherits the
   document's access class, so private documents are refused by `junie` and
   `cursor` like private sources.
+
+PDF jobs use `@beep/pdf-tools` (`PdfTools.inspect` and `pageText`). The first run
+writes immutable derived text to `ops/mine/text/<pdf-sha256>.txt` and a sibling
+JSON receipt recording the PDF digest, page count, extractor and version, and text
+digest. Reruns reuse that receipt. Empty text and extraction errors record
+`no-text`: those jobs are skipped as unreadable, never failed or used for findings.
+`--dry-run` lists PDF jobs without extracting text. PDF bytes are deduplicated by
+sha256 within the intake, with private access retained if any copy is private.
+Readable intake PDFs register hop-0 documents with no citation census; their
+findings bind `documentId` through the same SHACL constraints as parsed documents.
 
 A source finding binds `sourceId` and `captureId`. A document finding binds
 `documentId` with an empty `sourceId`. The generated SHACL shapes require
@@ -468,8 +479,8 @@ bun run beep research library mine synthesize <t3.json>
   that each name a `sourceId`, a readable `captureId`, a CiTO relation and a span.
 
 Every answer decodes against its tier schema. A finding whose span is not a
-verbatim substring of the bound text (capture text or document snapshot) rejects the whole job
-(`LibraryMineSpanError`). Affirmative relations (`citesAsEvidence`, `supports`,
+verbatim substring of the bound text (capture text, document snapshot, or derived
+PDF text) rejects the whole job (`LibraryMineSpanError`). Affirmative relations (`citesAsEvidence`, `supports`,
 `extends`, `usesMethodIn`, `usesDataFrom`) are dropped from `partial` or `unread`
 readings, and a prompt truncated at 200,000 characters is never `complete`. Topic
 ids outside the live goal and exploration packets are dropped and listed on the

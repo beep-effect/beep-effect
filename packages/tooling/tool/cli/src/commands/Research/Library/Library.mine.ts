@@ -56,13 +56,26 @@ import {
   LibraryTriageOutput,
   LibraryTriageRecord,
 } from "./Library.mine.schemas.ts";
+import {
+  deriveLibraryMinePdfText,
+  readLibraryMineDerivedText,
+  readLibraryMineDerivedTextBody,
+} from "./Library.mine.text.ts";
 import { libraryTopics } from "./Library.projection.ts";
-import { LibraryArtifact, LibraryCatalog, LibraryFinding, LibraryModelRun } from "./Library.schemas.ts";
+import {
+  LibraryArtifact,
+  LibraryCatalog,
+  LibraryDocument,
+  LibraryFinding,
+  LibraryModelRun,
+} from "./Library.schemas.ts";
 import { hashBytes, loadCatalog, saveImmutable, withCatalog } from "./Library.store.ts";
+import type { PdfTools } from "@beep/pdf-tools";
+import type * as Digest from "effect/crypto/Digest";
 import type { LibraryMineProfile } from "./Library.mine.runner.ts";
-import type { LibraryMineOptions, LibraryMineTier } from "./Library.mine.schemas.ts";
+import type { LibraryMineDerivedText, LibraryMineOptions, LibraryMineTier } from "./Library.mine.schemas.ts";
 import type { LibraryTopic } from "./Library.projection.ts";
-import type { LibraryCapture, LibraryDerivation, LibraryDocument, LibraryIntakeFile } from "./Library.schemas.ts";
+import type { LibraryCapture, LibraryDerivation, LibraryIntakeFile } from "./Library.schemas.ts";
 
 const MINE_ROOT = "ops/mine";
 const T1_TEXT_CAP = 24_000;
@@ -76,9 +89,15 @@ const ReceiptJson = S.fromJsonString(LibraryMineReceipt);
 const SynthesisJson = S.fromJsonString(LibrarySynthesisImport);
 const TriageOutputJson = S.fromJsonString(LibraryTriageOutput);
 const ReadingOutputJson = S.fromJsonString(LibraryReadingOutput);
+const DocumentJson = S.fromJsonString(LibraryDocument);
+const DOCUMENTS_DIR = `${MINE_ROOT}/documents`;
 
 type MineFailure = LibraryError | LibraryMineRunnerError | LibraryMineSpanError | LibraryMineUnreadError;
-type JobOutcome = { readonly key: string; readonly outcome: "completed" | "failed" | "paused"; readonly label: string };
+type JobOutcome = {
+  readonly key: string;
+  readonly outcome: "completed" | "failed" | "paused" | "skipped-unreadable";
+  readonly label: string;
+};
 
 const isTextArtifact = (artifact: LibraryArtifact) =>
   A.contains(textRoles, artifact.role) &&
@@ -111,6 +130,38 @@ export const libraryMineTextArtifact = (capture: LibraryCapture): O.Option<Libra
     A.flatMap(textRoles, (role) => A.filter(capture.artifacts, (artifact) => artifact.role === role)),
     isTextArtifact
   );
+
+const isPdfArtifact = (artifact: LibraryArtifact) => Str.startsWith("application/pdf")(artifact.mediaType);
+
+/**
+ * Pick the PDF a capture's findings are bound to when it has no text artifact.
+ *
+ * **Details**
+ *
+ * Box captures store a PDF under a text role with no extracted text. Such a capture is
+ * mined through text derived from the PDF; a capture with a text artifact never is.
+ *
+ * **Example** (A capture without artifacts has no PDF unit)
+ * ```ts
+ * import { libraryMinePdfArtifact } from "@beep/repo-cli/test/ResearchLibrary"
+ * import { LibraryCapture } from "@beep/repo-cli/commands/Research"
+ * const capture = LibraryCapture.make({ id: "c", sourceId: "s", status: "readable", method: "fixture", recordedAt: "", capturedRevision: "", complete: true, artifacts: [], reason: "" })
+ * console.log(libraryMinePdfArtifact(capture)) // none
+ * ```
+ *
+ * @internal
+ * @param capture - Effective readable capture.
+ * @returns The bound PDF artifact, if the capture has no text artifact.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const libraryMinePdfArtifact = (capture: LibraryCapture): O.Option<LibraryArtifact> =>
+  O.isSome(libraryMineTextArtifact(capture))
+    ? O.none()
+    : A.findFirst(
+        A.flatMap(textRoles, (role) => A.filter(capture.artifacts, (artifact) => artifact.role === role)),
+        isPdfArtifact
+      );
 
 const sourceById = (catalog: LibraryCatalog, id: string) =>
   A.findFirst(catalog.sources, (source) => source.id === id || A.contains(source.aliasIds, id));
@@ -151,7 +202,11 @@ const dedupeBy = <A>(items: ReadonlyArray<A>, key: (item: A) => string): Readonl
   });
 };
 
-const documentJob = (document: LibraryDocument, file: LibraryIntakeFile) => {
+const documentJob = (
+  document: LibraryDocument,
+  file: Pick<LibraryIntakeFile, "accessClass">,
+  pdf: O.Option<LibraryDocument> = O.none()
+) => {
   const accessClass = document.accessClass === "private" || file.accessClass === "private" ? "private" : "public";
   return LibraryMineJob.make({
     key: `document-${document.id}-${document.sha256}`,
@@ -166,15 +221,51 @@ const documentJob = (document: LibraryDocument, file: LibraryIntakeFile) => {
       path: document.snapshotPath,
       sha256: document.sha256,
       bytes: document.bytes,
-      mediaType: documentMediaType(document.snapshotPath),
+      mediaType: O.isSome(pdf) ? "application/pdf" : documentMediaType(document.snapshotPath),
       role: "intake-snapshot",
     }),
+    textSource: O.isSome(pdf) ? "pdf" : "text",
+    pdfDocument: pdf,
   });
 };
 
+const isPdfIntakeFile = (file: LibraryIntakeFile) =>
+  /\.pdf$/i.test(file.originalPath) && file.retention === "snapshot" && Str.isNonEmpty(file.snapshotPath);
+
+// A PDF intake file has no parsed report; it binds to a report registered from the file itself,
+// with the id rule `inventory` uses for parsed reports (sha256 of `<originalPath>\n<sha256>`).
+const pdfDocument = Effect.fn("Library.mine.pdfDocument")(function* (
+  catalog: LibraryCatalog,
+  file: LibraryIntakeFile,
+  accessClass: LibraryIntakeFile["accessClass"]
+) {
+  const path = yield* Path.Path;
+  const existing = A.findFirst(
+    catalog.documents,
+    (document) => document.snapshotPath === file.snapshotPath && document.sha256 === file.sha256
+  );
+  if (O.isSome(existing)) return existing.value;
+  const name = path.basename(file.originalPath);
+  return LibraryDocument.make({
+    id: yield* hashBytes(new TextEncoder().encode(`${file.originalPath}\n${file.sha256}`)),
+    accessClass,
+    originalPath: file.originalPath,
+    snapshotPath: file.snapshotPath,
+    sha256: file.sha256,
+    bytes: file.bytes,
+    title: name,
+    reportDate: "",
+    filenameDate: O.getOrElse(
+      O.map(Str.match(/\d{4}-\d{2}-\d{2}/)(name), (match) => match[0]),
+      () => ""
+    ),
+    expectedOccurrences: 0,
+  });
+});
+
 /**
- * Plan every mining unit of an intake: one bound text artifact per effective readable
- * capture, then one job per parseable hop-0 intake document.
+ * Plan every mining unit of an intake: one bound text or PDF artifact per effective
+ * readable capture, then one job per parseable or PDF hop-0 intake document.
  *
  * **Details**
  *
@@ -184,6 +275,12 @@ const documentJob = (document: LibraryDocument, file: LibraryIntakeFile) => {
  * document snapshot of the intake is its own job bound to the snapshot bytes, except a
  * document whose sha256 equals a planned capture text artifact: those are the same bytes,
  * already read through the source. Document jobs inherit the document's access class.
+ *
+ * PDFs are mined through derived text. A readable capture whose only text-role artifact is
+ * a PDF becomes a `pdf` source job. Each snapshotted `.pdf` intake file becomes a `pdf`
+ * document job bound to a report registered from the file (one job per PDF sha256 per
+ * intake, private if any byte-identical copy is private), unless a planned job already
+ * reads the same bytes.
  *
  * **Example** (Prepare a plan)
  * ```ts
@@ -225,7 +322,11 @@ export const planLibraryMine = Effect.fn("Library.mine.plan")(function* (root: s
       return A.flatMap(claims, (claim) => {
         const capture = claim.capture;
         if (claim.category !== "readable" || capture === null || !capture.complete) return [];
-        return A.map(A.fromOption(libraryMineTextArtifact(capture)), (artifact) =>
+        const text = O.map(libraryMineTextArtifact(capture), (artifact) => [artifact, "text"] as const);
+        const bound = O.orElse(text, () =>
+          O.map(libraryMinePdfArtifact(capture), (artifact) => [artifact, "pdf"] as const)
+        );
+        return A.map(A.fromOption(bound), ([artifact, textSource]) =>
           LibraryMineJob.make({
             key: `${capture.id}-${artifact.sha256}`,
             kind: "source",
@@ -235,12 +336,31 @@ export const planLibraryMine = Effect.fn("Library.mine.plan")(function* (root: s
             documentId: "",
             accessClass: source.accessClass === "private" || artifact.accessClass === "private" ? "private" : "public",
             artifact,
+            textSource,
           })
         );
       });
     })
   );
-  const sourceJobs = dedupeBy(A.flatten(jobs), (job) => job.key);
+  const pdfFiles = A.filter(intake.files, isPdfIntakeFile);
+  const allSourceJobs = A.flatten(jobs);
+  const privatePdfs = HashSet.fromIterable([
+    ...A.map(
+      A.filter(pdfFiles, (file) => file.accessClass === "private"),
+      (file) => file.sha256
+    ),
+    ...A.map(
+      A.filter(allSourceJobs, (job) => job.textSource === "pdf" && job.accessClass === "private"),
+      (job) => job.artifact.sha256
+    ),
+  ]);
+  const sourceJobs = A.map(
+    dedupeBy(allSourceJobs, (job) => (job.textSource === "pdf" ? `pdf-${job.artifact.sha256}` : job.key)),
+    (job) =>
+      job.textSource === "pdf" && HashSet.has(privatePdfs, job.artifact.sha256)
+        ? LibraryMineJob.make({ ...job, accessClass: "private" })
+        : job
+  );
   const captured = HashSet.fromIterable(A.map(sourceJobs, (job) => job.artifact.sha256));
   const parseableFiles = HashMap.fromIterable(
     A.map(
@@ -253,27 +373,46 @@ export const planLibraryMine = Effect.fn("Library.mine.plan")(function* (root: s
       ? []
       : A.map(A.fromOption(HashMap.get(parseableFiles, document.snapshotPath)), (file) => documentJob(document, file))
   );
-  return [...sourceJobs, ...dedupeBy(documentJobs, (job) => job.artifact.sha256)];
+  const textDocumentJobs = dedupeBy(documentJobs, (job) => job.artifact.sha256);
+  const planned = HashSet.union(captured, HashSet.fromIterable(A.map(textDocumentJobs, (job) => job.artifact.sha256)));
+  const pdfJobs = yield* Effect.forEach(
+    A.filter(
+      dedupeBy(pdfFiles, (file) => file.sha256),
+      (file) => !HashSet.has(planned, file.sha256)
+    ),
+    Effect.fnUntraced(function* (file) {
+      const accessClass = HashSet.has(privatePdfs, file.sha256) ? "private" : file.accessClass;
+      const document = yield* pdfDocument(catalog, file, accessClass);
+      return documentJob(document, { accessClass }, O.some(document));
+    })
+  );
+  return [...sourceJobs, ...textDocumentJobs, ...pdfJobs];
 });
 
 const tierDir = (tier: LibraryMineTier, kind: "records" | "receipts" | "prompts" | "outputs" | "scratch") =>
   `${MINE_ROOT}/${tier}/${kind}`;
 
-const readRecords = Effect.fn("Library.mine.readRecords")(function* <A>(
+const readRecords = <A>(
   root: string,
   tier: LibraryMineTier,
+  decode: (text: string) => Effect.Effect<A, S.SchemaError>
+) => readJsonFiles(root, tierDir(tier, "records"), decode);
+
+const readJsonFiles = Effect.fn("Library.mine.readJsonFiles")(function* <A>(
+  root: string,
+  relative: string,
   decode: (text: string) => Effect.Effect<A, S.SchemaError>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const directory = path.join(root, tierDir(tier, "records"));
+  const directory = path.join(root, relative);
   if (!(yield* fs.exists(directory).pipe(mapFailure("Cannot inspect mining records.")))) return [];
   const listed = yield* fs.readDirectory(directory).pipe(mapFailure("Cannot list mining records."));
   const entries = A.sort(A.filter(listed, Str.endsWith(".json")), Str.Order);
   return yield* Effect.forEach(entries, (entry) =>
     fs
       .readFileString(path.join(directory, entry))
-      .pipe(Effect.flatMap(decode), mapFailure(`Invalid mining record ${tier}/${entry}.`))
+      .pipe(Effect.flatMap(decode), mapFailure(`Invalid mining record ${relative}/${entry}.`))
   );
 });
 
@@ -303,6 +442,35 @@ const readBoundText = Effect.fn("Library.mine.readBoundText")(function* (
   if ((yield* hashBytes(bytes)) !== artifact.sha256)
     return yield* LibraryError.make({ message: "Bound capture text differs from its digest.", cause: artifact.path });
   return new TextDecoder().decode(bytes);
+});
+
+type BoundText = { readonly text: string; readonly derivedTextSha256: string };
+
+// Resolve a job's bound text; a PDF without text fails with its `no-text` receipt.
+const jobText = Effect.fn("Library.mine.jobText")(function* (
+  root: string,
+  job: LibraryMineJob
+): Effect.fn.Return<
+  Result.Result<BoundText, LibraryMineDerivedText>,
+  LibraryError,
+  FileSystem.FileSystem | Path.Path | Digest.Digest | PdfTools
+> {
+  if (job.textSource === "text") {
+    const text = yield* readBoundText(root, job.artifact, job.kind);
+    return Result.succeed({ text, derivedTextSha256: "" });
+  }
+  const receipt = yield* deriveLibraryMinePdfText(root, job.artifact.sha256);
+  if (receipt.outcome === "no-text") return Result.fail(receipt);
+  const text = yield* readLibraryMineDerivedTextBody(root, receipt);
+  return Result.succeed({ text, derivedTextSha256: receipt.textSha256 });
+});
+
+const saveDocumentBinding = Effect.fn("Library.mine.saveDocumentBinding")(function* (
+  root: string,
+  document: LibraryDocument
+) {
+  const encoded = yield* S.encodeEffect(DocumentJson)(document).pipe(mapFailure("Cannot encode PDF report binding."));
+  yield* saveText(root, `${DOCUMENTS_DIR}/${document.id}.json`, encoded);
 });
 
 const loadTopics = Effect.fn("Library.mine.topics")(function* (repoRoot: O.Option<string>) {
@@ -556,7 +724,21 @@ const failureTag = (error: MineFailure) => error._tag;
 const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, job: LibraryMineJob) {
   if (yield* Ref.get(context.paused))
     return { key: job.key, outcome: "paused", label: `${job.artifactId} paused` } satisfies JobOutcome;
-  const text = yield* readBoundText(context.root, job.artifact, job.kind);
+  const resolved = yield* jobText(context.root, job).pipe(Effect.result);
+  if (resolved._tag === "Failure")
+    return {
+      key: job.key,
+      outcome: "failed",
+      label: `${job.artifactId} ${resolved.failure._tag}: ${resolved.failure.message}`,
+    } satisfies JobOutcome;
+  if (resolved.success._tag === "Failure")
+    return {
+      key: job.key,
+      outcome: "skipped-unreadable",
+      label: `${job.artifactId} skipped-unreadable: ${resolved.success.failure.message}`,
+    } satisfies JobOutcome;
+  const { text, derivedTextSha256 } = resolved.success.success;
+  if (O.isSome(job.pdfDocument)) yield* saveDocumentBinding(context.root, job.pdfDocument.value);
   const prompt =
     context.tier === "t1"
       ? triagePrompt(context.catalog, job, context.topics, text)
@@ -604,6 +786,7 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
         captureId: job.captureId,
         documentId: job.documentId,
         artifactSha256: job.artifact.sha256,
+        derivedTextSha256,
         decision: triage.decision,
         reason: triage.reason,
         topicIds: topics.kept,
@@ -656,6 +839,7 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
       captureId: job.captureId,
       documentId: job.documentId,
       artifactSha256: job.artifact.sha256,
+      derivedTextSha256,
       coverage,
       summary: reading.summary,
       findings,
@@ -710,6 +894,11 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
 /**
  * Import every mining record not yet in the catalog under the single catalog writer.
  *
+ * **Details**
+ *
+ * PDF intake files bind their findings to a report registered from the file: each binding
+ * under `ops/mine/documents/` not yet in the catalog is added to `documents` in the same write.
+ *
  * **Example** (Prepare an import)
  * ```ts
  * import { importLibraryMineRecords } from "@beep/repo-cli/test/ResearchLibrary"
@@ -718,18 +907,21 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
  *
  * @internal
  * @param root - Directory holding the catalog, object store and `ops/mine` records.
- * @returns The number of model runs and findings added.
+ * @returns The number of model runs, findings and PDF report bindings added.
  * @category use-cases
  * @since 0.0.0
  */
 export const importLibraryMineRecords = Effect.fn("Library.mine.importRecords")(function* (root: string) {
   const triage = yield* readRecords(root, "t1", S.decodeEffect(TriageRecordJson));
   const readings = yield* readRecords(root, "t2", S.decodeEffect(ReadingRecordJson));
-  let added = { modelRuns: 0, findings: 0 };
+  const bindings = yield* readJsonFiles(root, DOCUMENTS_DIR, S.decodeEffect(DocumentJson));
+  let added = { modelRuns: 0, findings: 0, documents: 0 };
   yield* withCatalog(
     root,
     Effect.fnUntraced(function* (catalog) {
       const runIds = HashSet.fromIterable(A.map(catalog.modelRuns, (run) => run.id));
+      const documentIds = HashSet.fromIterable(A.map(catalog.documents, (document) => document.id));
+      const documents = A.filter(bindings, (document) => !HashSet.has(documentIds, document.id));
       const findingIds = HashSet.fromIterable(A.map(catalog.findings, (finding) => finding.id));
       const runs = A.filter(
         [...A.map(triage, (record) => record.modelRun), ...A.map(readings, (record) => record.modelRun)],
@@ -739,8 +931,10 @@ export const importLibraryMineRecords = Effect.fn("Library.mine.importRecords")(
         A.flatMap(readings, (record) => record.findings),
         (finding) => !HashSet.has(findingIds, finding.id)
       );
-      added = { modelRuns: runs.length, findings: findings.length };
-      return runs.length === 0 && findings.length === 0 ? catalog : catalogWith(catalog, runs, findings);
+      added = { modelRuns: runs.length, findings: findings.length, documents: documents.length };
+      return runs.length === 0 && findings.length === 0 && documents.length === 0
+        ? catalog
+        : catalogWith(catalog, runs, findings, documents);
     })
   );
   return added;
@@ -749,10 +943,12 @@ export const importLibraryMineRecords = Effect.fn("Library.mine.importRecords")(
 const catalogWith = (
   catalog: LibraryCatalog,
   runs: ReadonlyArray<LibraryModelRun>,
-  findings: ReadonlyArray<LibraryFinding>
+  findings: ReadonlyArray<LibraryFinding>,
+  documents: ReadonlyArray<LibraryDocument> = []
 ): LibraryCatalog =>
   LibraryCatalog.make({
     ...catalog,
+    documents: [...catalog.documents, ...documents],
     modelRuns: [...catalog.modelRuns, ...runs],
     findings: [...catalog.findings, ...findings],
   });
@@ -783,9 +979,19 @@ const pendingJobs = Effect.fn("Library.mine.pendingJobs")(function* (
   );
   const done = yield* Effect.filter(eligible, (job) => recordExists(root, tier, job.key));
   const doneKeys = HashSet.fromIterable(A.map(done, (job) => job.key));
-  const open = A.filter(eligible, (job) => !HashSet.has(doneKeys, job.key));
+  // A PDF already known to hold no text is skipped without a launch; reruns do not retry it.
+  const unreadable = yield* Effect.filter(eligible, (job) =>
+    job.textSource === "pdf" && !HashSet.has(doneKeys, job.key)
+      ? Effect.map(
+          readLibraryMineDerivedText(root, job.artifact.sha256),
+          O.exists((receipt) => receipt.outcome === "no-text")
+        )
+      : Effect.succeed(false)
+  );
+  const unreadableKeys = HashSet.fromIterable(A.map(unreadable, (job) => job.key));
+  const open = A.filter(eligible, (job) => !HashSet.has(doneKeys, job.key) && !HashSet.has(unreadableKeys, job.key));
   const pending = O.match(options.limit, { onNone: () => open, onSome: (limit) => A.take(open, limit) });
-  return { planned, eligible, done: done.length, pending };
+  return { planned, eligible, done: done.length, unreadable: unreadable.length, pending };
 });
 
 const runTier = Effect.fn("Library.mine.runTier")(function* (
@@ -799,7 +1005,7 @@ const runTier = Effect.fn("Library.mine.runTier")(function* (
       message: `Runner profile ${profile.id} does not serve ${tier}.`,
       cause: profile.tiers,
     });
-  const { planned, eligible, done, pending } = yield* pendingJobs(root, tier, options);
+  const { planned, eligible, done, unreadable, pending } = yield* pendingJobs(root, tier, options);
   const privateJobs = A.filter(pending, (job) => job.accessClass === "private");
   if (profile.externalLane && A.isReadonlyArrayNonEmpty(privateJobs))
     return yield* LibraryMinePrivateRouteError.make({
@@ -808,7 +1014,7 @@ const runTier = Effect.fn("Library.mine.runTier")(function* (
       message: `${privateJobs.length} private-partition artifact(s) cannot route to the ${profile.id} lane; use --profile claude or --exclude-private.`,
     });
   yield* Console.log(
-    `library mine ${tier}: planned=${planned.length} eligible=${eligible.length} completed=${done} pending=${pending.length} private=${privateJobs.length} profile=${profile.id} model=${profile.model} effort=${profile.effort} route=${profile.route}`
+    `library mine ${tier}: planned=${planned.length} eligible=${eligible.length} completed=${done} unreadable=${unreadable} pending=${pending.length} pdf=${A.filter(pending, (job) => job.textSource === "pdf").length} private=${privateJobs.length} profile=${profile.id} model=${profile.model} effort=${profile.effort} route=${profile.route}`
   );
   if (options.dryRun) {
     const placeholder = LibraryMineLaunchPaths.make({
@@ -822,13 +1028,13 @@ const runTier = Effect.fn("Library.mine.runTier")(function* (
       pending,
       (job) =>
         Console.log(
-          `${job.artifactId} ${job.kind === "document" ? `document=${job.documentId}` : `source=${job.sourceId}`} access=${job.accessClass}`
+          `${job.artifactId} ${job.kind === "document" ? `document=${job.documentId}` : `source=${job.sourceId}`} access=${job.accessClass}${job.textSource === "pdf" ? ` text=pdf path=${job.artifact.path}` : ""}`
         ),
       {
         discard: true,
       }
     );
-    return { completed: 0, failed: 0, paused: 0 };
+    return { completed: 0, failed: 0, paused: 0, skippedUnreadable: 0 };
   }
   const catalog = yield* loadCatalog(root);
   const topics = yield* loadTopics(options.repoRoot);
@@ -846,16 +1052,16 @@ const runTier = Effect.fn("Library.mine.runTier")(function* (
   const imported = yield* importLibraryMineRecords(root);
   const count = (outcome: JobOutcome["outcome"]) => A.filter(outcomes, (entry) => entry.outcome === outcome).length;
   yield* Console.log(
-    `library mine ${tier}: completed=${count("completed")} failed=${count("failed")} paused=${count("paused")} importedModelRuns=${imported.modelRuns} importedFindings=${imported.findings}; receipts in ${MINE_ROOT}/${tier}/receipts`
+    `library mine ${tier}: completed=${count("completed")} failed=${count("failed")} paused=${count("paused")} skippedUnreadable=${count("skipped-unreadable")} importedModelRuns=${imported.modelRuns} importedFindings=${imported.findings} importedPdfReports=${imported.documents}; receipts in ${MINE_ROOT}/${tier}/receipts, derived PDF text in ${MINE_ROOT}/text`
   );
-  const failed = A.filter(outcomes, (entry) => entry.outcome !== "completed");
+  const failed = A.filter(outcomes, (entry) => entry.outcome !== "completed" && entry.outcome !== "skipped-unreadable");
   if (A.isReadonlyArrayNonEmpty(failed))
     return yield* LibraryMineBatchError.make({
       failed: A.map(failed, (entry) => entry.label),
       paused: count("paused") > 0,
       message: `${failed.length} ${tier} job(s) did not complete; rerun resumes from the receipts.`,
     });
-  return { completed: count("completed"), failed: 0, paused: 0 };
+  return { completed: count("completed"), failed: 0, paused: 0, skippedUnreadable: count("skipped-unreadable") };
 });
 
 /**
@@ -906,6 +1112,24 @@ export const mineLibraryTriage = Effect.fn("Library.mine.triage")(function* (
  */
 export const mineLibraryRead = Effect.fn("Library.mine.read")(function* (root: string, options: LibraryMineOptions) {
   return yield* runTier(root, "t2", options);
+});
+
+// T3 never extracts: a PDF capture is bound only through text an earlier T1/T2 run derived.
+const synthesisText = Effect.fn("Library.mine.synthesisText")(function* (
+  root: string,
+  captureId: string,
+  artifact: LibraryArtifact
+) {
+  if (!isPdfArtifact(artifact)) return yield* readBoundText(root, artifact);
+  const receipt = yield* readLibraryMineDerivedText(root, artifact.sha256);
+  if (O.isNone(receipt) || receipt.value.outcome === "no-text")
+    return yield* LibraryMineUnreadError.make({
+      artifactId: `${captureId}:t3`,
+      message: O.isNone(receipt)
+        ? `Capture ${captureId} is a PDF without derived text; run mine triage first.`
+        : `Capture ${captureId} is a PDF without extractable text.`,
+    });
+  return yield* readLibraryMineDerivedTextBody(root, receipt.value);
 });
 
 /**
@@ -986,13 +1210,13 @@ export const mineLibrarySynthesize = Effect.fn("Library.mine.synthesize")(functi
           artifactId,
           message: `Finding ${index} binds capture ${finding.captureId}, which is not an effective readable capture of ${finding.sourceId}.`,
         });
-      const artifact = libraryMineTextArtifact(capture.value);
+      const artifact = O.orElse(libraryMineTextArtifact(capture.value), () => libraryMinePdfArtifact(capture.value));
       if (O.isNone(artifact))
         return yield* LibraryMineUnreadError.make({
           artifactId,
           message: `Capture ${finding.captureId} has no bound text artifact.`,
         });
-      const text = yield* readBoundText(root, artifact.value);
+      const text = yield* synthesisText(root, finding.captureId, artifact.value);
       const [span = finding.span] = yield* checkLibraryMineSpans(
         `${finding.captureId}:${artifact.value.sha256}`,
         text,

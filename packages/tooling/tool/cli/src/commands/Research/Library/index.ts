@@ -67,12 +67,15 @@ export {
 } from "./Library.mine.runner.ts";
 export {
   LibraryAffirmativeCitoRelation,
+  LibraryMineDerivedText,
   LibraryMineJob,
   LibraryMineJobKind,
   LibraryMineOptions,
   LibraryMineOutcome,
   LibraryMineProfileId,
   LibraryMineReceipt,
+  LibraryMineTextOutcome,
+  LibraryMineTextSource,
   LibraryMineTier,
   LibraryReadingCoverage,
   LibraryReadingFindingOutput,

@@ -1,3 +1,4 @@
+import { PdfTools } from "@beep/pdf-tools";
 import * as Rdf from "@beep/rdf/Rdf";
 import {
   LibraryArtifact,
@@ -74,7 +75,8 @@ const privateText = "A private note about retrieval spans and citation checks.";
 const reportText = "See https://example.com/one and https://example.com/two";
 const dmText = "# DM archive\n\nWe agreed the ledger stays append-only.";
 
-const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, ShaclValidationServiceLive);
+const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, ShaclValidationServiceLive);
+const services = PdfTools.makeLayer().pipe(Layer.provideMerge(platform));
 
 const webCapture = Effect.fn("test.webCapture")(function* (
   root: string,

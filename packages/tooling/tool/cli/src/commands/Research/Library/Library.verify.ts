@@ -27,6 +27,7 @@ import { LibraryDispositionImportPayload, libraryDispositionValid } from "./Libr
 import { libraryArtifactIntegrity } from "./Library.integrity.ts";
 import { extractLibraryReferences } from "./Library.inventory.ts";
 import { assembleLibraryOntology, libraryShapes, libraryShapesDataset } from "./Library.ontology.ts";
+import { libraryPdfSnapshot } from "./Library.paths.ts";
 import { catalogDataset, libraryTopics } from "./Library.projection.ts";
 import { decodeProviderEvents, validateProviderQualification } from "./Library.provenance.ts";
 import { LibraryProbeEvidence } from "./Library.qualify.ts";
@@ -272,6 +273,15 @@ const verifyDocumentCitations = Effect.fn("Library.verifyDocumentCitations")(fun
         })
       );
       if (!valid) return;
+      // A PDF report is registered by `mine` from an unparsed intake file: it has no citation census.
+      if (libraryPdfSnapshot(document.snapshotPath)) {
+        if (
+          document.expectedOccurrences !== 0 ||
+          A.some(catalog.occurrences, (item) => item.documentId === document.id)
+        )
+          issue(`${document.id}: PDF report carries a citation census`);
+        return;
+      }
       const text = yield* fs
         .readFileString(path.resolve(root, document.snapshotPath))
         .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot read verified report", cause })));

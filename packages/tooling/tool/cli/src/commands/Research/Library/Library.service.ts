@@ -7,6 +7,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { N3TurtleCodecLive } from "@beep/n3";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
+import { PdfTools } from "@beep/pdf-tools";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -167,5 +168,6 @@ export const ResearchLibraryLive = Layer.effect(ResearchLibrary, makeResearchLib
     LibraryFirecrawlLive,
     LibraryBoxLive,
     LibraryMineRunnerLive,
+    PdfTools.makeLayer(),
   ])
 );
