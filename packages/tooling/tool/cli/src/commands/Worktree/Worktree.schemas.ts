@@ -23,6 +23,7 @@ import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
+import { FleetRootEntry } from "./internal/FleetRoots.schemas.ts";
 import type { WorktreeEntry } from "@beep/git/Git";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
@@ -1163,6 +1164,10 @@ export class FleetLivenessVerdict extends S.Opaque<FleetLivenessVerdict, { reado
  * `git remote get-url origin`, and the scanner object database lives under the
  * user cache directory. Tests inject scratch equivalents.
  *
+ * Discovery roots resolve in precedence order: `roots`, then `fleetRoot` (one
+ * unfiltered root), then `BEEP_FLEET_ROOTS` or `roots.json`, then the root
+ * derived from the invoking clone.
+ *
  * **Example** (Scan the invoking repository's own fleet)
  *
  * ```ts
@@ -1184,6 +1189,7 @@ export class FleetScanOptions extends S.Opaque<FleetScanOptions, { readonly bran
     targetRef: S.optionalKey(S.String),
     livenessWindowSeconds: S.optionalKey(S.Finite),
     homeDir: S.optionalKey(S.String),
+    roots: FleetRootEntry.pipe(S.NonEmptyArray, S.optionalKey),
   }).pipe(
     $I.annoteSchema("FleetScanOptions", {
       description: "Optional overrides for one fleet-mirror scan; every field defaults from the invoking repository.",
