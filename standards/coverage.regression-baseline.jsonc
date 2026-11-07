@@ -7,8 +7,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T18:04:44.395Z",
-  "git_sha": "ee6d9e503725cd8bac98178e389e8cafb845335a",
+  "generated_at": "2026-11-07T21:04:03.757Z",
+  "git_sha": "5faa14d215d5fb0cb38af4075ec252b132b538c3",
   "command": "bun run coverage -- --filter=@beep/professional-desktop --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
@@ -7225,6 +7225,30 @@
             "branches": 0,
             "functions": 0
           }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/LegacySync.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/SyncGenesis.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
         }
       }
     },
@@ -7731,6 +7755,78 @@
             "statements": 8,
             "branches": 5,
             "functions": 1
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/LegacySync.query.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncAdmission.service.ts": {
+          "lines": 91.46,
+          "statements": 91.66,
+          "branches": 66.66,
+          "functions": 86.95,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 6,
+            "functions": 3
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncCutover.service.ts": {
+          "lines": 97.43,
+          "statements": 95.34,
+          "branches": 85.71,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncGenesis.service.ts": {
+          "lines": 100,
+          "statements": 99.3,
+          "branches": 97.5,
+          "functions": 97.56,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/SyncWriterEpoch.service.ts": {
+          "lines": 97.36,
+          "statements": 97.5,
+          "branches": 100,
+          "functions": 90.9,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncModel.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         }
       }
@@ -33774,6 +33870,30 @@
             "statements": 15,
             "branches": 2,
             "functions": 15
+          }
+        },
+        "apps/professional-desktop/src/runtime/SessionToken.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/professional-desktop/src/sync/VaultSyncSession.ts": {
+          "lines": 83.33,
+          "statements": 71.42,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
           }
         }
       }

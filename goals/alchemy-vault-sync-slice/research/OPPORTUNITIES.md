@@ -28,6 +28,25 @@
 - Package-verifier failures create P0 inbox rows despite this lane's no-publication scope.
   Only mandatory inbox acknowledgements were used; no publication workflow ran.
 
+### 2026-11-07: part 2 checkout and proof friction
+
+- Fresh checkout: the first main merge commit hook could not resolve
+  `@commitlint/config-conventional`. `bun install` repaired local dependencies;
+  the merge then committed through normal hooks. Bootstrap dependencies before
+  invoking merge hooks in a new T3 checkout.
+- Package verification caught an unsupported docgen category, Effect diagnostics
+  and formatting in the new source. These were repaired and the package verifier
+  reran. The mandatory harness required local inbox acknowledgement commands;
+  no publication/readiness/monitor command was run.
+- Main's cache repair was integrated first. Twelve stack-local dependency subjects
+  still needed the reviewed request; re-recording only those subjects restored
+  zero policy blockers. The requested `cache-baseline-request-pr2b-main.json`
+  was absent from this branch; the existing request schema and current main
+  baseline were used instead, without hand-merging baseline JSON.
+- The writer transition remains incomplete: an added startup check cannot make
+  a previously released executable epoch-aware. Cutover needs a database refusal
+  boundary and a tested post-admission reversal before the legacy writer is
+  removed. The packet decision records this implementation hold explicitly.
 ## PR 3c API integration friction
 
 - The fresh checkout lacked dependencies: session tooling failed with "Cannot find module
