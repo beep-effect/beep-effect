@@ -159,6 +159,27 @@ improved. The rating is the baseline; this packet is the fix programme.
 | 2026-10-21 | D5: Review corrections from PR #1996's reviewer pass. The landed rating is amended only through corrections recorded in its Disclosure (the §10 Firecrawl row removed, the launch-failure note re-described); the P1 stale-name regex excludes the current `claude-opus-5-5` pins and its acceptance allows the `AGENTS.md` prohibition line and superseded list; the `passWithNoTests` surface moves from P1 to P2 so the phase surfaces do not overlap. | The Firecrawl file does not exist in the tree; the launch failure was an availability failure misread as a stale pin; the `\b` regex matched every current pin, so the P1 box could never be checked honestly; P2 acceptance and the PLAN P2 row already own `passWithNoTests`. | Restore the pre-correction text of the rating, SOURCES.md and SPEC.md from this PR's head before the fix commit (2c8293dea5) and drop this row; or re-rate at P4 with the corrected baseline. |
 | 2026-10-21 | D6: Closeout is declared, not flipped: the final PR records `proposedCloseout` (`completed-retained`) in `ops/manifest.json` and operative status stays `active` until `bun run beep goals completion refresh` verifies the merge (GOAL done line, PLAN P4 exit, SPEC P4 surface and acceptance aligned). P0 exits only once its PR is merged to `main`. | A proposal never reports achievement; the canonical closeout template and PLAN's closeout checklist already required `proposedCloseout`, and a P0 exit on 'mergeable' let P1 start on a branch without the rating (review threads on #1996). | Restore the pre-correction text from this PR's head e6bdbd08aa and drop this row. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug agent-rating-critique-fixes`; add a `kind: decision` file there, never edit this block._
+
+### research-intake-2026-11 routed 129 affirmative findings here, 2026-11-07
+
+The research-intake-2026-11 intake routed 206 findings to this packet (129 affirmative, 10 critiques or disputes; 28 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+
+- citesAsEvidence: https://arxiv.org/abs/2604.00555 — The process condition adds assessment and escalation flags without revising responses, and produces no significant score improvement over ontology injection alone. This design does not test the downst
+- citesAsEvidence: https://arxiv.org/abs/2609.29454 — Skill-content classification uses incremental grounded extraction, model-assisted taxonomy development, independent model review, and eventual human adjudication. This provides a methodological preced
+- citesAsEvidence: https://www.anthropic.com/research/harness-design-long-running-apps — Self-grading is systematically positively biased, especially on subjective tasks.
+- citesAsEvidence: https://arxiv.org/abs/2609.30120 — The review locates concrete scoring mistakes that favor either condition. Because selection was purposive, non-blind, and informed by outcomes, these disagreements are counterexamples to grading adequ
+- citesAsEvidence: https://effect.website/blog/astra-vs-the-boys — Tim Smart’s retrospective separates useful bug detection from average implementation quality and reports corrective work on every PR. This is qualitative maintainer testimony, and it argues for measur
+
+This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

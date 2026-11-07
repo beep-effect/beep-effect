@@ -229,6 +229,8 @@ export const retiredEffectPathsAllowlist: RetiredEffectPathsAllowlist = RetiredE
   exactPaths: [
     ".gitleaksignore",
     ".patterns/effect-module-paths.md",
+    // Generated research data: finding summaries quote sources written before the module move.
+    "goals/research-intake-2026-11/research/routing.jsonl",
     "packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.model.ts",
     "packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.ts",
     "packages/tooling/tool/cli/test/laws-retired-effect-paths.test.ts",

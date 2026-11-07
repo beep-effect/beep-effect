@@ -24,6 +24,6 @@ import * as S from "effect/Schema";
  */
 export class VaultSyncPass extends Domain.Saga("VaultSyncPass", {
   key: S.NonEmptyString,
-  input: { destinationId: V.DestinationId },
+  input: { destinationId: V.DestinationId, probeOnly: S.optionalKey(S.Boolean) },
   result: { operationsSucceeded: S.Int, conflicts: S.Int },
 }) {}

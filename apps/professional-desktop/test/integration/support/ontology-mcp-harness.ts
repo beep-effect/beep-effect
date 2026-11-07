@@ -30,7 +30,8 @@ import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeOntologyMcpTransportLayer } from "../../../server/OntologyMcpTransport.ts";
+import * as Struct from "effect/Struct";
+import { makeOntologyMcpTransportLayer, OntologyMcpTransportOptions } from "../../../server/OntologyMcpTransport.ts";
 import { rpcSessionAuthorizationHeader } from "../../../server/RpcSessionAuth.ts";
 import type { EpistemicConfig } from "@beep/epistemic-config/server";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
@@ -55,7 +56,7 @@ ex:bob a ex:Person ; ex:name "Bob" .
 export type TransportOptions = {
   readonly mutationsEnabled: boolean;
   readonly approvedMutationTools: ReadonlyArray<string>;
-  readonly egressFetch?: typeof globalThis.fetch | undefined;
+  readonly egressFetch?: typeof globalThis.fetch;
   readonly epistemicConfig?: Layer.Layer<EpistemicConfig> | undefined;
   readonly ledger?: Layer.Layer<ExecutionLedger> | undefined;
 };
@@ -115,11 +116,13 @@ const transportConfigProvider = (root: string, options: TransportOptions) =>
   );
 
 const transportLayer = (root: string, options: TransportOptions) =>
-  makeOntologyMcpTransportLayer({
-    token,
-    approvedMutationTools: options.approvedMutationTools,
-    egressFetch: options.egressFetch,
-  }).pipe(
+  makeOntologyMcpTransportLayer(
+    OntologyMcpTransportOptions.make({
+      token,
+      approvedMutationTools: options.approvedMutationTools,
+      ...Struct.pick(options, ["egressFetch"]),
+    })
+  ).pipe(
     Layer.provide(OntologyMcpConfigLive),
     Layer.provide(options.ledger ?? silentLedgerLayer),
     Layer.provide(options.epistemicConfig ?? EpistemicConfigTest),

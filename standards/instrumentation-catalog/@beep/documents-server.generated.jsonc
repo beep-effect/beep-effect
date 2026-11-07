@@ -57,6 +57,22 @@
     {"name":"Documents.SyncOperationRepository.makeInMemory","owner":"@beep/documents-server","family":"slice","conforms":true},
     {"name":"Documents.SyncOperationRepository.requeueLeased","owner":"@beep/documents-server","family":"slice","conforms":true},
     {"name":"Documents.SyncOperationRepository.update","owner":"@beep/documents-server","family":"slice","conforms":true},
-    {"name":"Documents.VaultSyncPass","owner":"@beep/documents-server","family":"slice","conforms":false}
+    {"name":"Documents.VaultSyncPass","owner":"@beep/documents-server","family":"slice","conforms":false},
+    {"name":"VaultSync.deliveryCheck","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncMembership.read","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncRpcsApi.destination","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncRpcsApi.getStatus","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncRpcsApi.listConflicts","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncRpcsApi.openRows","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncRpcsApi.review","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncRpcsApi.status","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncRpcsApi.statusOf","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncRpcsApi.trigger","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.conflictScope","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.grants","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.registered","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.resolve","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.revoked","owner":"@beep/documents-server","family":"slice","conforms":true},
+    {"name":"VaultSyncSession.scope","owner":"@beep/documents-server","family":"slice","conforms":true}
   ]
 }

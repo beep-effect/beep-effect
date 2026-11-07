@@ -143,3 +143,23 @@ export const libraryOutputAncestor = Effect.fn("Library.outputAncestor")(functio
   const resolved = yield* fs.realPath(ancestor);
   return { absolute, relative: path.relative(realRoot, resolved) };
 });
+
+/**
+ * Whether a report snapshot is a PDF, registered by `mine` rather than parsed by `inventory`.
+ *
+ * **Details**
+ *
+ * A PDF report carries no citation census (`expectedOccurrences` is 0) and its snapshot is
+ * binary; its readable text is the derived object under `ops/mine/text/`.
+ *
+ * **Example** (Classify a snapshot path)
+ * ```ts
+ * import { libraryPdfSnapshot } from "@beep/repo-cli/commands/Research/Library/Library.paths"
+ * console.log(libraryPdfSnapshot("intakes/2026-11-06/raw/abc.pdf")) // true
+ * ```
+ * @param snapshotPath - Relative retained artifact location within an intake.
+ * @returns Whether the retained artifact has a PDF filename extension.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const libraryPdfSnapshot = (snapshotPath: string): boolean => /\.pdf$/i.test(snapshotPath);

@@ -10,16 +10,12 @@ import { BoxMirror } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { BunServices } from "@effect/platform-bun";
 import { describe, expect, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Path from "effect/Path";
 
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer, DmsMirrorFixtureLayer);
@@ -56,21 +52,21 @@ describe("BoxMirror durable intent receipts", () => {
             )
           );
           const mirror = Context.get(context, BoxMirror);
-          const first = yield* Effect.exit(mirror.uploadFile(args));
-          const second = yield* Effect.exit(mirror.uploadFile({ ...args, passId: "another-runtime" }));
+          const retried = { ...args, passId: "another-runtime" };
           if (outcome === "completed") {
-            pipe(first, Exit.isSuccess, assertTrue);
+            const first = yield* mirror.uploadFile(args);
+            const second = yield* mirror.uploadFile(retried);
             expect(second).toEqual(first);
           } else {
             // The call name stays in `operation`; the adapter stage says where it stopped.
-            const expected = O.some({
+            const expected = {
               operation: "uploadFile",
               stage: outcome === "stale" ? "stale-input" : "uncertain-outcome-held",
-            });
-            const named = (exit: typeof first) =>
-              O.map(Exit.findErrorOption(exit), (error) => ({ operation: error.operation, stage: error.stage }));
-            expect(named(first)).toEqual(expected);
-            expect(named(second)).toEqual(expected);
+            };
+            const first = yield* Effect.flip(mirror.uploadFile(args));
+            const second = yield* Effect.flip(mirror.uploadFile(retried));
+            expect({ operation: first.operation, stage: first.stage }).toEqual(expected);
+            expect({ operation: second.operation, stage: second.stage }).toEqual(expected);
           }
           const counts = yield* fixture.counts;
           expect(counts.uploadFile - before.uploadFile).toBe(outcome === "stale" ? 0 : 1);
@@ -100,5 +96,29 @@ describe("BoxMirror durable intent receipts", () => {
         })
       );
     }
+    it.effect("probe refreshes provider availability without a Box mutation", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const fixture = yield* DmsMirrorFixtureHandle;
+        const before = yield* fixture.counts;
+        const context = yield* Layer.build(
+          BoxMirrorLive.pipe(
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(VaultSyncRoot, { resolve: Effect.fn("fixture.root")(() => Effect.succeed(root)) }),
+                Layer.succeed(BoxMirrorEvidence, { lookup: Effect.fn("fixture.evidence")(() => Effect.succeedNone) })
+              )
+            )
+          )
+        );
+        const result = yield* Context.get(context, BoxMirror).probe({
+          destinationId: V.DestinationId.make("documents_sync_destination_aadapter"),
+        });
+        expect(result).toEqual({ connected: true });
+        const after = yield* fixture.counts;
+        expect(after.uploadFile).toBe(before.uploadFile);
+      })
+    );
   });
 });

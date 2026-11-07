@@ -421,7 +421,10 @@ export class FleetRootsStore extends Context.Service<FleetRootsStore, FleetRoots
 export const FleetRootsStoreLive: Layer.Layer<FleetRootsStore, never, FileSystem.FileSystem | Path.Path> = Layer.effect(
   FleetRootsStore,
   Effect.gen(function* () {
-    const context = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
+    // Only the services the store uses: the caller's Clock and ConfigProvider must stay in effect, so a store
+    // built under a test clock or one environment never overrides the caller's.
+    const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
+    const context = Context.pick(FileSystem.FileSystem, Path.Path)(runtime);
     return FleetRootsStore.of({
       configured: Effect.fn("FleetRootsStore.configured")((repository) =>
         readConfiguredFleetRoots(repository).pipe(Effect.provide(context))

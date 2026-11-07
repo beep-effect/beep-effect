@@ -6,6 +6,7 @@
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeUseCasesId.create("internal/citationOracleLedgers");
@@ -16,7 +17,7 @@ const License = S.Struct({
   sha256: S.tag("db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772"),
 });
 const Common = {
-  generatorVersion: S.tag("citation-ledger-projection/v1"),
+  generatorVersion: S.tag("citation-ledger-projection/v2"),
   generatorSha256: Sha256Hex,
   source: S.Struct({
     repository: S.tag("https://github.com/freelawproject/eyecite"),
@@ -64,16 +65,27 @@ const SourceRow = S.Union([
 ]);
 const Inventory = S.Struct({
   ...Common,
-  schemaVersion: S.tag("citation-source-inventory/v1"),
+  schemaVersion: S.tag("citation-source-inventory/v2"),
   rows: S.Array(SourceRow),
   testMethods: S.Array(S.Struct({ ...SourceFields, kind: S.tag("testMethod") })),
   parameterSources: S.JsonObject,
   declarationExpansions: S.Array(S.Struct({ declarationId: S.NonEmptyString, eventIds: S.Array(S.NonEmptyString) })),
 });
 const Workflow = LiteralKit(["audit", "blocked", "ready", "complete"]);
-const Proof = S.NullOr(
-  S.Struct({ command: S.NonEmptyString, result: S.tag("passed"), evidencePath: S.NonEmptyString })
-);
+const FileRef = S.Struct({ path: S.NonEmptyString, sha256: Sha256Hex });
+const TargetTest = S.Struct({ ...FileRef.fields, name: S.NonEmptyString });
+const ProofValue = S.Struct({
+  command: S.NonEmptyString,
+  result: S.tag("passed"),
+  scope: LiteralKit(["stage", "complete-case"]),
+  operation: LiteralKit(["clean", "extract", "resolve", "annotate", "pipeline"]),
+  evidencePath: S.NonEmptyString,
+  evidenceSha256: Sha256Hex,
+  targetTests: S.Array(TargetTest).check(S.isMinLength(1)),
+  references: S.Array(FileRef),
+});
+const Proof = S.NullOr(ProofValue);
+
 const CanonicalFields = {
   kind: S.tag("canonical"),
   disposition: LiteralKit(["required", "subsumed"]),
@@ -82,7 +94,8 @@ const CanonicalFields = {
 };
 const Cases = S.Struct({
   ...Common,
-  schemaVersion: S.tag("citation-canonical-cases/v1"),
+  schemaVersion: S.tag("citation-canonical-cases/v2"),
+  proofPlan: FileRef,
   capabilities: S.Array(
     S.Struct({
       ...CanonicalFields,
@@ -105,7 +118,7 @@ const Cases = S.Struct({
       expectedProjection: S.tag("payload.relation; payload.passed"),
       iterationIds: S.Array(S.NonEmptyString),
       literalItems: S.Array(S.Struct({ parameterId: S.NonEmptyString, itemOrdinal: S.Natural })),
-      targetTest: S.NullOr(S.Struct({ path: S.NonEmptyString, name: S.NonEmptyString })),
+      targetTest: S.NullOr(TargetTest),
     })
   ),
   fixtures: S.Array(
@@ -132,7 +145,7 @@ const Cases = S.Struct({
 });
 const Regexes = S.Struct({
   ...Common,
-  schemaVersion: S.tag("citation-regex-inventory/v1"),
+  schemaVersion: S.tag("citation-regex-inventory/v2"),
   scope: S.tag("Source families and expanded tokenizer instances; no JavaScript regex safety proof yet."),
   families: S.Array(S.Struct({ id: S.NonEmptyString, form: RegexForm, workflowState: Workflow, proof: Proof })),
   extractorInstances: S.Array(
@@ -175,4 +188,55 @@ export class CitationOracleLedgers extends S.Opaque<CitationOracleLedgers, { rea
         "Source ownership, assertion cases and expanded regex evidence; target proof remains independently required.",
     })
   )
+) {}
+
+/** Explicit source-case proof bindings, kept separately from source discovery.
+ * Stage bindings are nonterminal and cannot establish complete-case parity.
+ * **Example** (Reject an unversioned proof plan)
+ * ```ts
+ * import { CitationOracleLedgerProofPlan } from "@beep/law-practice-use-cases/test"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(CitationOracleLedgerProofPlan)({})) // false
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export class CitationOracleLedgerProofPlan extends S.Opaque<
+  CitationOracleLedgerProofPlan,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    schemaVersion: S.tag("citation-ledger-proof-plan/v1"),
+    bindings: S.Array(
+      S.Struct({
+        workflowState: LiteralKit(["ready", "complete"]),
+        cases: S.Array(S.Struct({ id: S.NonEmptyString, observationSha256: Sha256Hex })).check(S.isMinLength(1)),
+        rationale: S.NonEmptyString,
+        proof: ProofValue,
+      })
+    ),
+  })
+    .check(
+      S.makeFilter(
+        (plan) => {
+          const ids = A.flatMap(plan.bindings, (binding) => A.map(binding.cases, (entry) => entry.id));
+          return (
+            A.length(A.dedupe(ids)) === ids.length &&
+            A.every(
+              plan.bindings,
+              (binding) => binding.workflowState !== "complete" || binding.proof.scope === "complete-case"
+            )
+          );
+        },
+        $I.annote("ProofScope", {
+          description: "Bindings are unique and stage proof cannot assert complete-case parity.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("CitationOracleLedgerProofPlan", {
+        description:
+          "Reviewed explicit bindings; source regeneration preserves only matching authenticated observations and proof files.",
+      })
+    )
 ) {}

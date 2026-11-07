@@ -77,13 +77,17 @@ export class CitationEngineAnnotationInput extends S.Opaque<
     plain: S.optionalKey(CitationEngineSourcePairInput.fields.plain),
     markup: CitationEngineSourcePairInput.fields.markup,
     mode: CitationAnnotationMode.pipe(S.withDecodingDefaultKey(Effect.succeed("unchecked"))),
+    useDmp: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true))
+    ),
     replacements: S.Array(CitationAnnotationReplacement).check(
       S.isMaxLength(CitationEngineAbsoluteMaxima.annotationReplacements)
     ),
   }).pipe(
     $I.annoteSchema("CitationEngineAnnotationInput", {
       description:
-        "Primitive annotation data with raw source identities, named markup mode and native replacement tuples.",
+        "Primitive annotation data with raw source identities, named markup mode, explicit DMP/builtin selection and native replacement tuples.",
     })
   )
 ) {}

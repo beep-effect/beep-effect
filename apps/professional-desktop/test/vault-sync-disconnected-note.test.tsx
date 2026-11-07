@@ -12,6 +12,7 @@ import * as O from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import {
   DesktopSyncClient,
   VaultSyncPanelState,
@@ -180,10 +181,13 @@ describe("vault sync panel", () => {
     "forces a fresh sidecar probe when Reconnect is pressed",
     Effect.fnUntraced(function* () {
       const called = yield* Deferred.make<void>();
-      const client = DesktopSyncClient.of((() =>
-        Deferred.succeed(called, undefined).pipe(
-          Effect.andThen(VaultSyncActionError.failEffect("sidecar unavailable"))
-        )) as unknown as DesktopSyncClient["Service"]);
+      // The status subscription stays idle; only the forced probe answers.
+      const client = DesktopSyncClient.of(((tag: string) =>
+        tag === "WatchVaultSyncStatus"
+          ? Stream.never
+          : Deferred.succeed(called, undefined).pipe(
+              Effect.andThen(VaultSyncActionError.failEffect("sidecar unavailable"))
+            )) as unknown as DesktopSyncClient["Service"]);
       const clientLayer = Layer.mergeAll(Layer.succeed(DesktopSyncClient, client), Reactivity.layer);
       const { container } = render(
         <RegistryProvider
@@ -203,6 +207,29 @@ describe("vault sync panel", () => {
       fireEvent.click(within(container).getByTestId("vault-sync-reconnect"));
 
       yield* Deferred.await(called).pipe(Effect.timeout("4 seconds"));
+    })
+  );
+
+  it.effect(
+    "holds Retry connection while the status is being re-read",
+    Effect.fnUntraced(function* () {
+      const disconnected = yield* statusWith(false, O.some("transient"));
+      const { container } = render(
+        <RegistryProvider
+          initialValues={[
+            [
+              vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID),
+              AsyncResult.success(disconnected, { waiting: true }),
+            ],
+            [vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), AsyncResult.success(noConflicts)],
+          ]}
+        >
+          <VaultSyncPanel floating={false} />
+        </RegistryProvider>
+      );
+      const reconnect = within(container).getByTestId("vault-sync-reconnect");
+      expect(reconnect).toHaveTextContent("Checking…");
+      expect(reconnect).toBeDisabled();
     })
   );
 

@@ -31,11 +31,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P3 Yeet: final PR [#2892](https://github.com/beep-effect/beep-effect/pull/2892) carries the
+reflection and `proposedCloseout` (`completed-retained`). The operative lifecycle
+stays `active` until completion verifies after merge; adoption follows in a
+separate packet-state PR.
 
 ## Latest Evidence
 
-Not started.
+- Prerequisite `research-library-routes` landed and adopted (#2868, #2882,
+  #2883); this lane added `mine`, private inputs, PDF text, referenced media,
+  hop-scope and scale fixes, and a bounded hop-2 gate.
+- November intake: 368 files (148 private), 240 hop-0 documents, 2,116 hop-1
+  identities all readable or reviewed, 75,918 hop-2 catalogued and 400 admitted
+  (303 readable). Legal pile: 449 PDFs, own private intake, T1 only.
+- Mining: 1,737 T1, 1,235 T2, 12,330 span-checked CiTO findings; 8,472 routed to
+  90 live packets, 22 amendments; three `/deep-research` runs; `/adhd`
+  portfolio. See [`research/COVERAGE.md`](./research/COVERAGE.md) and
+  [`research/ROUTING.md`](./research/ROUTING.md).
 
 ## Notes
 

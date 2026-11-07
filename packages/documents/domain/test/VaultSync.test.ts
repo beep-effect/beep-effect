@@ -1,12 +1,14 @@
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { CuidState } from "@beep/schema/Cuid";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as H from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -291,4 +293,46 @@ layer(CuidLayer, { timeout: "10 seconds" })("vault sync destination ids", (it) =
       expect(S.is(V.DestinationId)("documents_sync_destination_Vault Name")).toBe(false);
     })
   );
+});
+
+describe("review corrections (I14)", () => {
+  const record = V.ConflictRecord.make({
+    publicId: V.ConflictId.make("documents_sync_conflict_a9"),
+    destinationId: destination,
+    workspaceId: 1,
+    remoteEventId: "event9",
+    itemId,
+    evidence: "remote",
+    kind: "remoteRename",
+    reviewed: false,
+  });
+  const item = V.ItemRecord.make({
+    observation: V.ItemObservation.make({
+      destinationId: destination,
+      workspaceId: 1,
+      path: V.VaultRelPath.make("folder/file.txt"),
+      kind: "file",
+      digest: "d1",
+      generation: 3,
+      operationId: id,
+      type: "uploadFile",
+      parentRequired: true,
+    }),
+    remoteId: V.RemoteItemId.make("remote-9"),
+    status: "drifted",
+    slots: H.empty(),
+  });
+  it("re-asserts the local name for a reviewed remote rename with a stable operation id", () => {
+    const first = O.getOrNull(V.reviewCorrection({ record, item }));
+    expect(first?.input).toMatchObject({ type: "renameItem", generation: 4, path: "folder/file.txt", itemId });
+    expect(first?.input.idempotencyKey).toBe(first?.operationId);
+    expect(O.getOrNull(V.reviewCorrection({ record, item }))?.operationId).toBe(first?.operationId);
+  });
+  it("queues nothing for other kinds, untracked conflicts or items without a remote id", () => {
+    assertNone(V.reviewCorrection({ record: { ...record, kind: "remoteEdit" }, item }));
+    const { kind: _kind, ...legacy } = record;
+    assertNone(V.reviewCorrection({ record: V.ConflictRecord.make(legacy), item }));
+    assertNone(V.reviewCorrection({ record: { ...record, itemId: null }, item }));
+    assertNone(V.reviewCorrection({ record, item: { ...item, remoteId: null } }));
+  });
 });

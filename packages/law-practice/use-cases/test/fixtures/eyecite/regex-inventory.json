@@ -1,6 +1,6 @@
 {
-  "generatorVersion": "citation-ledger-projection/v1",
-  "generatorSha256": "53fbc6daeb563ba285faca28466adf1bb74cb73546735af575f89404a7d6c04f",
+  "generatorVersion": "citation-ledger-projection/v2",
+  "generatorSha256": "08eb1501bdb36728e191ce30aa4f9fe8d92b9e80ee30d63fd2f407e5208ec6fb",
   "source": {
     "repository": "https://github.com/freelawproject/eyecite",
     "commit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
@@ -26,7 +26,7 @@
       "sha256": "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
     }
   },
-  "schemaVersion": "citation-regex-inventory/v1",
+  "schemaVersion": "citation-regex-inventory/v2",
   "scope": "Source families and expanded tokenizer instances; no JavaScript regex safety proof yet.",
   "families": [
     {"form":"module-call","id":"eyecite/clean.py:112:11:regexFamily:module-call","proof":null,"workflowState":"audit"},

@@ -27,3 +27,16 @@
   transitive progress contract would prevent mistaking intake progress for read-model readiness.
 - Package-verifier failures create P0 inbox rows despite this lane's no-publication scope.
   Only mandatory inbox acknowledgements were used; no publication workflow ran.
+
+## PR 3c API integration friction
+
+- The fresh checkout lacked dependencies: session tooling failed with "Cannot find module
+  effect/Result" and the merge commit hook lacked commitlint configuration. Frozen-lockfile
+  installation restored both; no hook was bypassed.
+- No verified signed-in desktop principal or live membership resolver exists in the current
+  sidecar host. RpcSessionAuth verifies only the launch token. An explicit enrollment and
+  membership-owner adapter is needed before switching legacy callers; treating the launch
+  token as an organization grant would violate D14.
+- The installed beta.85 Api client declaration exposes a private CallOptions type through
+  inferred wrappers. A mapped client contract names the original indexed method types,
+  avoiding a patch or a type assertion.

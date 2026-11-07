@@ -51,6 +51,7 @@ const program = Effect.gen(function* () {
     ],
     ["cleaner-unicode", "check-cleaner-unicode.ts", [path.join(fixtures, "cleaner-unicode.json")]],
     ["assertions", "check-assertions.ts", [path.join(fixtures, "assertion-cases.json")]],
+    ["builtin-diff", "verify-builtin-diff.py", ["--self-test", "--fixture", path.join(fixtures, "builtin-diff.json")]],
     ["ledgers", "check-ledgers.ts", [fixtures, ...(audit ? [] : ["--complete"])]],
     [
       "donors",
@@ -77,8 +78,12 @@ const program = Effect.gen(function* () {
       spawner
         .exitCode(
           ChildProcess.make(
-            process.execPath,
-            ["run", path.join(root, "goals/citation-extraction-engine/ops", script), ...argv],
+            Str.endsWith(".py")(script) ? "python3" : process.execPath,
+            [
+              ...(Str.endsWith(".py")(script) ? [] : ["run"]),
+              path.join(root, "goals/citation-extraction-engine/ops", script),
+              ...argv,
+            ],
             {
               cwd: root,
               stdin: "ignore",
@@ -132,7 +137,7 @@ const program = Effect.gen(function* () {
   if (!A.every(results, Boolean)) return yield* reject("Citation evidence component validation failed.");
   if (audit) {
     yield* Console.log(
-      "Citation evidence audit passed: 12 components; completion proof remains open. This is not a parity verdict."
+      `Citation evidence audit passed: ${checks.length} components; completion proof remains open. This is not a parity verdict.`
     );
     return;
   }

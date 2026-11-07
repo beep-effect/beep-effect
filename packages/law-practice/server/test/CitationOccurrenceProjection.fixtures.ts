@@ -17,6 +17,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CitationExtractionLoopModel } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
 import type { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import type { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
@@ -54,6 +55,22 @@ export const assertCitationNativeRange = Effect.fnUntraced(function* (
   const startChar = Str.length(A.join(A.take(points, span[0]), ""));
   const endChar = Str.length(A.join(A.take(points, span[1]), ""));
   expect(actual).toEqual({ startChar, endChar, quote: Str.slice(startChar, endChar)(source) });
+});
+/** Compare every exposed mention range with the independent source coordinates.
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const assertCitationMentionRanges = Effect.fn("OccurrenceProjectionTest.mentionRanges")(function* (
+  source: string,
+  mention: CitationMention,
+  original: Pick<SourceRow["expected"][number], "span" | "fullSpan" | "spanWithPincite">
+) {
+  yield* assertCitationNativeRange(source, original.span, mention.anchor.anchor);
+  for (const name of ["fullSpan", "spanWithPincite"] as const) {
+    const component = O.getOrThrow(A.findFirst(mention.components, (value) => value.name === name));
+    yield* assertCitationNativeRange(source, original[name], component.anchor.anchor);
+  }
 });
 // A source model has two validated views. Controls update both views using
 // explicit original IDs from the sealed corpus, without inferring retained IDs.

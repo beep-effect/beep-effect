@@ -1,5 +1,6 @@
 import { Git } from "@beep/git/Git";
 import {
+  FleetCheckout,
   FleetMirrorService,
   FleetMirrorServiceLive,
   FleetScanOptions,
@@ -8,6 +9,7 @@ import {
   registerFleetCheckout,
 } from "@beep/repo-cli/commands/Worktree";
 import { repoRunOutputBound, runCaptured } from "@beep/repo-cli/test/Process";
+import { acquireJournalFileLock, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
 import {
   layerSessionLedgerMemory,
   PrNumber,
@@ -581,10 +583,83 @@ describe("fleet discovery roots", () => {
         ),
       SCAN_TIMEOUT_MILLIS
     );
+
+    it.effect(
+      "store reads the registry and refuses an update while another owner holds the registry lock",
+      () =>
+        TestClock.withLive(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const store = yield* FleetRegistryStore;
+            const stateRoot = yield* fs.makeTempDirectoryScoped();
+            const withState = Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromEnv({ env: { BEEP_FLEET_STATE_ROOT: stateRoot } })
+            );
+            // A registry that was never written reads as the empty document.
+            const empty = yield* store.read(repository).pipe(withState);
+            expect(empty.rows).toEqual([]);
+            yield* store
+              .update(repository, (current) => [
+                registerFleetRegistryRow(
+                  current,
+                  FleetRegistryRow.make({ checkout: "/p/beep/seats/main", seatRole: "main" })
+                ),
+                undefined,
+              ])
+              .pipe(withState);
+            const written = yield* store.read(repository).pipe(withState);
+            expect(A.map(written.rows, (row) => row.seatRole)).toEqual(["main"]);
+
+            const lockPath = path.join(stateRoot, "github.com__beep-effect__beep-effect", "registry.json.lock");
+            const held = yield* acquireJournalFileLock(lockPath, "other-owner");
+            expect(held).toBe(true);
+            const refused = yield* store
+              .update(repository, (current) => [current, undefined])
+              .pipe(withState, Effect.flip, Effect.ensuring(releaseJournalFileLock(lockPath, "other-owner")));
+            expect(refused.message).toContain("Timed out waiting for the fleet registry lock");
+          })
+        ),
+      SCAN_TIMEOUT_MILLIS
+    );
   });
 });
 
 describe("fleet roots and registry documents", () => {
+  it("falls back to an adopted row for a mirror checkout the registry does not know", () => {
+    const checkout = FleetCheckout.make({
+      path: "/p/beep/lanes/unregistered",
+      kind: "linked-worktree",
+      branch: null,
+      detached: true,
+      head: null,
+      dirtyCount: null,
+      mergeBase: null,
+      branchDiffCount: null,
+      liveness: "unknown",
+      livenessEvidence: [],
+      conflict: "unknown",
+      conflictReason: "head-unknown",
+      conflictPaths: [],
+      policyMovement: "unknown",
+      policyReason: "head-unknown",
+      policyPaths: [],
+    });
+    const [joined] = joinFleetRows({ checkouts: [checkout], registry: EMPTY_FLEET_REGISTRY, ledger: [] });
+    expect(joined).toMatchObject({ seatRole: "adopted", owningSeat: null, drainStatus: "active", lane: null });
+    const described = O.getOrThrow(
+      describeFleetCheckout({
+        checkouts: [checkout],
+        registry: EMPTY_FLEET_REGISTRY,
+        ledger: [],
+        checkout: checkout.path,
+        ledgerLimit: 5,
+      })
+    );
+    expect(described.registry).toMatchObject({ checkout: checkout.path, seatRole: "adopted" });
+    expect(described.ledger).toEqual([]);
+  });
   it("parses a BEEP_FLEET_ROOTS path list, prefix entries included", () => {
     const roots = O.getOrThrow(parseFleetRootsPathList(" /p/beep-effect* : /p/beep/seats ::/p/beep/lanes "));
     expect(roots).toEqual([
