@@ -339,7 +339,8 @@ CAPTURE>>>
 const writeOutputSchema = Effect.fn("Library.mine.writeOutputSchema")(function* (root: string, tier: LibraryMineTier) {
   const path = yield* Path.Path;
   const schema: S.Top = tier === "t1" ? LibraryTriageOutput : LibraryReadingOutput;
-  const document = S.toJsonSchemaDocument(schema, { onExcessProperty: "error" });
+  // Structured-output endpoints require an inline `type: "object"` root, so no named `$ref` root is allowed.
+  const document = S.toJsonSchemaDocument(schema, { onExcessProperty: "error", referencePolicy: () => undefined });
   const text = yield* encodeLibraryJson({
     $schema: "https://json-schema.org/draft/2020-12/schema",
     ...document.schema,
