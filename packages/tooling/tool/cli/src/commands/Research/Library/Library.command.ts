@@ -194,13 +194,14 @@ const importResult = Command.make(
   "import-result",
   {
     library,
-    result: Argument.String("result-file"),
+    results: Argument.String("result-file").pipe(Argument.atLeast(1)),
   },
-  Effect.fn("ResearchLibrary.importCommand")(function* ({ library, result }) {
+  Effect.fn("ResearchLibrary.importCommand")(function* ({ library, results }) {
     const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* research.importResult(root, result);
-    yield* Console.log(`Imported source-bound result into ${root}.`);
+    // One process imports the batch so every catalog write after the first reuses the decoded catalog.
+    yield* Effect.forEach(results, (result) => research.importResult(root, result), { discard: true });
+    yield* Console.log(`Imported ${results.length} source-bound result(s) into ${root}.`);
   })
 ).pipe(
   Command.provide(ResearchLibraryLive),
@@ -214,7 +215,6 @@ const importResult = Command.make(
  * ```ts
  * import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary"
  * import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
  * console.log(Effect.isEffect(runLibraryVerificationCommand("/library")))
  * ```
  *
