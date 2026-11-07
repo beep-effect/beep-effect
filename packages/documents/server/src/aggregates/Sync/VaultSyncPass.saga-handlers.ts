@@ -8,6 +8,7 @@ import { BoxMirror, VaultSyncPass } from "@beep/documents-use-cases/aggregates/V
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as H from "effect/HashMap";
@@ -28,6 +29,21 @@ const Echo = S.Struct({
   name: S.String,
   parentRemoteId: S.NullOr(V.RemoteItemId),
 });
+/**
+ * Fault-injection boundary used by restart tests; production leaves it idle.
+ *
+ * **Example** (Inspect checkpoint reference)
+ * ```ts
+ * import { VaultSyncCheckpoint } from "@beep/documents-server/aggregates/Sync";
+ * console.log(VaultSyncCheckpoint.key);
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const VaultSyncCheckpoint = Context.Reference<(phase: string) => Effect.Effect<void>>(
+  "documents/VaultSyncCheckpoint",
+  { defaultValue: () => () => Effect.void }
+);
 /**
  * Hosts pass activities on the ambient workflow engine supplied by AlchemyPostgres.
  *
@@ -66,6 +82,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const files = yield* makeVaultSyncFileStore();
+    const checkpoint = yield* VaultSyncCheckpoint;
 
     return Effect.fn("Documents.VaultSyncPass")(function* ({
       key,
@@ -271,6 +288,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
               }),
               options(`ack/${operationId}`)
             );
+            yield* checkpoint("item-acknowledged");
             yield* operations.send(
               operationId,
               V.CompleteOperation.make({
@@ -295,6 +313,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         });
         if (echo !== null) echoes.push(echo);
       }
+      yield* checkpoint("before-poll");
       const conflicts = yield* Activity.make({
         name: "poll",
         success: S.Int,

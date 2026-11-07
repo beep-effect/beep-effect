@@ -20,6 +20,7 @@ export * from "./DmsMirrorBox.ts";
  * @since 0.0.0
  */
 export * from "./DmsMirrorFixture.ts";
+export * from "./LegacySync.projection.ts";
 /**
  * Vault sync configuration exports.
  *
