@@ -643,11 +643,26 @@ export const checkLibraryMineSpans = Effect.fn("Library.mine.checkSpans")(functi
 
 const escapeRegExp = Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const matchWords = (text: string, words: ReadonlyArray<string>) =>
+  O.fromNullishOr(new RegExp(A.join(A.map(words, escapeRegExp), "\\s+")).exec(text));
+
 const resolveSpan = (text: string, span: string): O.Option<string> => {
   const words = A.filter(Str.split(Str.trim(span), /\s+/), Str.isNonEmpty);
   if (!A.isReadonlyArrayNonEmpty(words)) return O.none();
   if (Str.includes(span)(text)) return O.some(span);
-  return O.map(O.fromNullishOr(new RegExp(A.join(A.map(words, escapeRegExp), "\\s+")).exec(text)), (match) => match[0]);
+  const direct = O.map(matchWords(text, words), (match) => match[0]);
+  if (O.isSome(direct)) return direct;
+  // Compatibility characters (OHM SIGN for GREEK OMEGA, ligatures) that NFKC folds one-for-one keep their
+  // offsets, so a match in the folded text maps back to the exact verbatim slice of the original.
+  const folded = Str.normalize("NFKC")(text);
+  if (folded.length !== text.length) return O.none();
+  return O.map(
+    matchWords(
+      folded,
+      A.map(words, (word) => Str.normalize("NFKC")(word))
+    ),
+    (match) => Str.slice(match.index, match.index + match[0].length)(text)
+  );
 };
 
 type JobContext = {

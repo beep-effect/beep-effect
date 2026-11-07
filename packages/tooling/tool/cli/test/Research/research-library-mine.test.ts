@@ -410,6 +410,9 @@ describe("research library mine", () => {
         "occur locally.",
       ]);
       expect(spans).toStrictEqual(["98% of\nparent-child relationships (p < 0.05)", "occur locally."]);
+      const ohm = "experiences, \u2126 (usually 1-3) bound the memory";
+      const folded = yield* checkLibraryMineSpans("capture:a", ohm, ["experiences, \u03a9 (usually 1-3)"]);
+      expect(folded).toStrictEqual(["experiences, \u2126 (usually 1-3)"]);
       const error = yield* Effect.flip(checkLibraryMineSpans("capture:a", text, ["98% of parent child relationships"]));
       expect(error.spans).toStrictEqual(["98% of parent child relationships"]);
     })
