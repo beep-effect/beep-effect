@@ -367,9 +367,11 @@ const mineTriage = Command.make(
   "triage",
   {
     ...mineFlags,
-    profile: Flag.Literals("profile", ["codex-luna", "claude"]).pipe(
+    profile: Flag.Literals("profile", ["codex-luna", "claude", "proxy-opus"]).pipe(
       Flag.withDefault("codex-luna"),
-      Flag.withDescription("Runner profile: codex-luna (gpt-6-luna medium) or claude (claude-opus-5-5 medium)")
+      Flag.withDescription(
+        "Runner profile: codex-luna (gpt-6-luna medium), claude (claude-opus-5-5 medium) or proxy-opus (claude-opus-5-5 via the local proxy)"
+      )
     ),
   },
   Effect.fn("ResearchLibrary.mineTriageCommand")(function* (flags) {

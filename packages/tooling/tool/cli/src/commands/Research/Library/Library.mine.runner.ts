@@ -132,7 +132,7 @@ const profiles = {
   // child.heavy through the proxy: claude-opus-5-5 across every admitted Claude login, not only the CLI's.
   "proxy-opus": LibraryMineProfile.make({
     id: "proxy-opus",
-    tiers: ["t2"],
+    tiers: ["t1", "t2"],
     command: "claude",
     model: "claude-opus-5-5",
     effort: "medium",
