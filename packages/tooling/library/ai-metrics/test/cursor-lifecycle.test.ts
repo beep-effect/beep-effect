@@ -216,7 +216,9 @@ const inspectSyntheticPeer = Effect.fn("CursorLifecycleTest.inspectSyntheticPeer
       expect(Str.includes(marker)(output)).toBe(false);
     return { listenerReady, diagnosticAckObserved, helperExitZero: exit === 0, report };
   },
-  Effect.mapError(() => CursorLifecycleError.make({ reason: "transport" }))
+  Effect.timeout("15 seconds"),
+  Effect.mapError(() => CursorLifecycleError.make({ reason: "transport" })),
+  TestClock.withLive
 );
 const salt = "synthetic-cursor-passive-salt";
 const id = Sha256Hex.make(Str.repeat(64)("a"));
@@ -428,101 +430,111 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
     );
   }
   for (const fault of ["ready", "observed", "cwd", "digest", "overflow", "timeout"]) {
-    it.effect(`synthetic helper ${fault} output fails closed and finalizes without ACK or journal admission`, () =>
-      Effect.gen(function* () {
-        const f = yield* fixture();
-        const started = yield* Deferred.make<void>();
-        let released = 0;
-        let dispatches = 0;
-        let acknowledgements = 0;
-        let policyFrames = 0;
-        const policyObserved = yield* Deferred.make<void>();
-        const output = yield* syntheticHelperOutput(fault, f.policy);
-        const gatedOutput = policyObserved.pipe(Deferred.await, Stream.fromEffect, Stream.drain, Stream.concat(output));
-        const synthetic = ChildProcessSpawner.make((command) =>
-          Effect.gen(function* () {
-            const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
-            if (!Stream.isStream(input)) return yield* Effect.die("synthetic helper input stream missing");
-            yield* Effect.forkScoped(
-              Stream.runForEach(input, (chunk) => {
-                if (!(chunk instanceof Uint8Array)) return Effect.die("synthetic helper input chunk invalid");
-                if (Str.includes("receiptId")(new TextDecoder().decode(chunk)))
+    it.layer(TestClock.layer())((it) =>
+      it.effect(`synthetic helper ${fault} output fails closed and finalizes without ACK or journal admission`, () =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          const started = yield* Deferred.make<void>();
+          let released = 0;
+          let dispatches = 0;
+          let acknowledgements = 0;
+          let policyFrames = 0;
+          const policyObserved = yield* Deferred.make<void>();
+          const output = yield* syntheticHelperOutput(fault, f.policy);
+          const gatedOutput = policyObserved.pipe(
+            Deferred.await,
+            Stream.fromEffect,
+            Stream.drain,
+            Stream.concat(output)
+          );
+          const synthetic = ChildProcessSpawner.make((command) =>
+            Effect.gen(function* () {
+              const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
+              if (!Stream.isStream(input)) return yield* Effect.die("synthetic helper input stream missing");
+              yield* Effect.forkScoped(
+                Stream.runForEach(input, (chunk) => {
+                  if (!(chunk instanceof Uint8Array)) return Effect.die("synthetic helper input chunk invalid");
+                  if (Str.includes("receiptId")(new TextDecoder().decode(chunk)))
+                    return Effect.sync(() => {
+                      acknowledgements++;
+                    });
                   return Effect.sync(() => {
-                    acknowledgements++;
-                  });
-                return Effect.sync(() => {
-                  policyFrames++;
-                }).pipe(Effect.andThen(Deferred.succeed(policyObserved, undefined)));
-              })
-            );
-            return yield* Effect.acquireRelease(
-              Effect.sync(() => {
-                dispatches++;
-                return syntheticHandle(gatedOutput, Sink.drain, false);
-              }).pipe(Effect.tap(() => Deferred.succeed(started, undefined))),
-              () =>
-                Effect.sync(() => {
-                  released++;
+                    policyFrames++;
+                  }).pipe(Effect.andThen(Deferred.succeed(policyObserved, undefined)));
                 })
-            );
-          })
-        );
-        const receiver = yield* makeCursorLifecycleFixtureReceiver(f.policy).pipe(
-          Effect.provideService(CursorLifecycleRuntime, { journal: f.journal, control: f.control })
-        );
-        const running = yield* Effect.forkChild(
-          receiver.open().pipe(
-            Effect.flatMap((opened) => opened.accept),
-            Effect.result,
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, synthetic)
-          )
-        );
-        yield* Deferred.await(started);
-        if (fault === "timeout") yield* TestClock.adjust("10 seconds");
-        const result = yield* Fiber.join(running);
-        assertFailure(
-          result,
-          CursorLifecycleError.make({
-            reason: fault === "observed" ? "callback" : fault === "timeout" ? "transport" : "kernel-binding",
-          })
-        );
-        expect(dispatches).toBe(1);
-        expect(released).toBe(1);
-        expect(policyFrames).toBe(1);
-        expect(acknowledgements).toBe(0);
-        expect((yield* f.journal.stats).pages).toBe(0);
-      })
+              );
+              return yield* Effect.acquireRelease(
+                Effect.sync(() => {
+                  dispatches++;
+                  return syntheticHandle(gatedOutput, Sink.drain, false);
+                }).pipe(Effect.tap(() => Deferred.succeed(started, undefined))),
+                () =>
+                  Effect.sync(() => {
+                    released++;
+                  })
+              );
+            })
+          );
+          const receiver = yield* makeCursorLifecycleFixtureReceiver(f.policy).pipe(
+            Effect.provideService(CursorLifecycleRuntime, { journal: f.journal, control: f.control })
+          );
+          const running = yield* Effect.forkChild(
+            receiver.open().pipe(
+              Effect.flatMap((opened) => opened.accept),
+              Effect.result,
+              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, synthetic)
+            )
+          );
+          yield* Deferred.await(started);
+          if (fault === "timeout") yield* TestClock.adjust("10 seconds");
+          const result = yield* Fiber.join(running);
+          assertFailure(
+            result,
+            CursorLifecycleError.make({
+              reason: fault === "observed" ? "callback" : fault === "timeout" ? "transport" : "kernel-binding",
+            })
+          );
+          expect(dispatches).toBe(1);
+          expect(released).toBe(1);
+          expect(policyFrames).toBe(1);
+          expect(acknowledgements).toBe(0);
+          expect((yield* f.journal.stats).pages).toBe(0);
+        })
+      )
     );
   }
-  it.effect("a native session without generation or effort retains Unknown fields and stable replay identity", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      const callback = {
-        hook_event_name: "sessionStart",
-        cursor_version: start.cursor_version,
-        session_id: "native-missing-generation",
-        conversation_id: "native-missing-generation",
-        is_background_agent: false,
-      };
-      const first = yield* f.deliver(callback);
-      if (Result.isFailure(first.result)) return yield* first.result.failure;
-      const events = yield* f.journal.readNewEvents(first.result.success.page.receiptId);
-      if (O.isNone(events) || events.value[0] === undefined) return yield* Effect.die("missing lifecycle observation");
-      const lifecycle = yield* Effect.fromOption(events.value[0].nativeLifecycle);
-      assertNone(lifecycle.generationHash);
-      assertNone(lifecycle.reportedEffort);
-      const expectedId = yield* hashPrivateIdentifier(
-        `cursor-lifecycle/v1:${lifecycle.runtimeInstanceId}:${lifecycle.sessionHash}:Unknown:sessionStart`,
-        O.some(salt)
-      );
-      expect(events.value[0].eventId).toBe(expectedId);
-      yield* TestClock.adjust("1 second");
-      const replay = yield* f.deliver(callback);
-      if (Result.isFailure(replay.result)) return yield* replay.result.failure;
-      expect(replay.result.success).toEqual(first.result.success);
-      const retained = yield* f.journal.readNewEvents(first.result.success.page.receiptId);
-      expect(retained).toEqual(events);
-    })
+  it.layer(TestClock.layer())((it) =>
+    it.effect("a native session without generation or effort retains Unknown fields and stable replay identity", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const callback = {
+          hook_event_name: "sessionStart",
+          cursor_version: start.cursor_version,
+          session_id: "native-missing-generation",
+          conversation_id: "native-missing-generation",
+          is_background_agent: false,
+        };
+        const first = yield* f.deliver(callback);
+        if (Result.isFailure(first.result)) return yield* first.result.failure;
+        const events = yield* f.journal.readNewEvents(first.result.success.page.receiptId);
+        if (O.isNone(events) || events.value[0] === undefined)
+          return yield* Effect.die("missing lifecycle observation");
+        const lifecycle = yield* Effect.fromOption(events.value[0].nativeLifecycle);
+        assertNone(lifecycle.generationHash);
+        assertNone(lifecycle.reportedEffort);
+        const expectedId = yield* hashPrivateIdentifier(
+          `cursor-lifecycle/v1:${lifecycle.runtimeInstanceId}:${lifecycle.sessionHash}:Unknown:sessionStart`,
+          O.some(salt)
+        );
+        expect(events.value[0].eventId).toBe(expectedId);
+        yield* TestClock.adjust("1 second");
+        const replay = yield* f.deliver(callback);
+        if (Result.isFailure(replay.result)) return yield* replay.result.failure;
+        expect(replay.result.success).toEqual(first.result.success);
+        const retained = yield* f.journal.readNewEvents(first.result.success.page.receiptId);
+        expect(retained).toEqual(events);
+      })
+    )
   );
 });
 
@@ -572,17 +584,19 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.
       assertFailure(result, CursorLifecycleError.make({ reason: "callback" }));
     })
   );
-  it.effect("a silent ACK peer times out and releases the production forwarder socket", () =>
-    Effect.gen(function* () {
-      const server = yield* ackServer("", true);
-      const body = yield* encode(start);
-      const sending = yield* Effect.forkChild(forwardCursorLifecycleHook(server.path, body).pipe(Effect.result));
-      yield* server.awaitRequest;
-      yield* TestClock.adjust("5 seconds");
-      const result = yield* Fiber.join(sending);
-      assertFailure(result, CursorLifecycleError.make({ reason: "transport" }));
-      expect((yield* server.received).length).toBeGreaterThan(0);
-    })
+  it.layer(TestClock.layer())((it) =>
+    it.effect("a silent ACK peer times out and releases the production forwarder socket", () =>
+      Effect.gen(function* () {
+        const server = yield* ackServer("", true);
+        const body = yield* encode(start);
+        const sending = yield* Effect.forkChild(forwardCursorLifecycleHook(server.path, body).pipe(Effect.result));
+        yield* server.awaitRequest;
+        yield* TestClock.adjust("5 seconds");
+        const result = yield* Fiber.join(sending);
+        assertFailure(result, CursorLifecycleError.make({ reason: "transport" }));
+        expect((yield* server.received).length).toBeGreaterThan(0);
+      })
+    )
   );
   for (const kind of ["valid", "malformed", "oversized"]) {
     it.effect(`production forwarder projects input and validates ${kind} synthetic ACK without durability claims`, () =>
@@ -614,42 +628,44 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.
 });
 it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeMemoMapUnsafe() })((it) => {
   for (const fault of ["overflow", "wrong-drop-sentinel", "timeout"]) {
-    it.effect(`synthetic peer ${fault} output refuses and closes its owned fixture resources`, () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const requested = yield* Deferred.make<void>();
-        let released = 0;
-        const output =
-          fault === "timeout"
-            ? Stream.never
-            : Stream.make(new TextEncoder().encode(fault === "overflow" ? Str.repeat(1025)("x") : "unexpected\n"));
-        const observedOutput = Stream.concat(
-          Stream.fromEffect(Deferred.succeed(requested, undefined)).pipe(Stream.drain),
-          output
-        );
-        const spawner = ChildProcessSpawner.make(() =>
-          Effect.acquireRelease(Effect.succeed(syntheticHandle(observedOutput, Sink.drain, false)), () =>
-            Effect.sync(() => {
-              released++;
-            })
-          )
-        );
-        const runtime = yield* makeSealedRuntimeFixture().pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-        );
-        const sending = yield* Effect.forkChild(
-          runtime.send("/synthetic-no-listener", "{}", fault === "wrong-drop-sentinel").pipe(Effect.result)
-        );
-        yield* Deferred.await(requested);
-        if (fault === "timeout") yield* TestClock.adjust("6 seconds");
-        const result = yield* Fiber.join(sending);
-        if (Result.isSuccess(result)) return yield* Effect.die("unsafe synthetic child output admitted");
-        expect(result.failure.reason).toBe("transport");
-        yield* runtime.close;
-        expect(released).toBe(1);
-        const remains = yield* fs.exists(runtime.executable);
-        expect(remains).toBe(false);
-      })
+    it.layer(TestClock.layer())((it) =>
+      it.effect(`synthetic peer ${fault} output refuses and closes its owned fixture resources`, () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const requested = yield* Deferred.make<void>();
+          let released = 0;
+          const output =
+            fault === "timeout"
+              ? Stream.never
+              : Stream.make(new TextEncoder().encode(fault === "overflow" ? Str.repeat(1025)("x") : "unexpected\n"));
+          const observedOutput = Stream.concat(
+            Stream.fromEffect(Deferred.succeed(requested, undefined)).pipe(Stream.drain),
+            output
+          );
+          const spawner = ChildProcessSpawner.make(() =>
+            Effect.acquireRelease(Effect.succeed(syntheticHandle(observedOutput, Sink.drain, false)), () =>
+              Effect.sync(() => {
+                released++;
+              })
+            )
+          );
+          const runtime = yield* makeSealedRuntimeFixture().pipe(
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          );
+          const sending = yield* Effect.forkChild(
+            runtime.send("/synthetic-no-listener", "{}", fault === "wrong-drop-sentinel").pipe(Effect.result)
+          );
+          yield* Deferred.await(requested);
+          if (fault === "timeout") yield* TestClock.adjust("6 seconds");
+          const result = yield* Fiber.join(sending);
+          if (Result.isSuccess(result)) return yield* Effect.die("unsafe synthetic child output admitted");
+          expect(result.failure.reason).toBe("transport");
+          yield* runtime.close;
+          expect(released).toBe(1);
+          const remains = yield* fs.exists(runtime.executable);
+          expect(remains).toBe(false);
+        })
+      )
     );
   }
   it.effect("terminal observation refuses a still-running handle and never converts interruption into success", () =>
@@ -1139,7 +1155,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(observed.diagnosticAckObserved, message).toBe(true);
       expect(observed.helperExitZero, message).toBe(true);
       expect((yield* f.journal.stats).pages, message).toBe(0);
-    }).pipe(Effect.timeout("15 seconds"))
+    })
   )
 );
 
@@ -1206,7 +1222,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(observed.report.phase).toBe("bootstrap");
       expect(R.size(observed.report.checks)).toBe(0);
       expect((yield* f.journal.stats).pages).toBe(0);
-    }).pipe(Effect.timeout("15 seconds"))
+    })
   )
 );
 
@@ -1232,7 +1248,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(observed.report.predicateAstPreserved).toBe(true);
       expect(observed.report.shortCircuitOrderPreserved).toBe(true);
       expect((yield* f.journal.stats).pages).toBe(0);
-    }).pipe(Effect.timeout("15 seconds"))
+    })
   )
 );
 
@@ -1249,6 +1265,6 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       expect(Str.includes("PRIVATE-HELPER")(encoded)).toBe(false);
       expect(Str.includes("_closed_probe")(encoded)).toBe(false);
       expect((yield* f.journal.stats).pages).toBe(0);
-    }).pipe(Effect.timeout("15 seconds"))
+    })
   )
 );
