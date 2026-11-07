@@ -12,5 +12,22 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../../foundation/capability/observability/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../ai-metrics/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/fc-runs/tsconfig.json"
+    }
+  ]
 }

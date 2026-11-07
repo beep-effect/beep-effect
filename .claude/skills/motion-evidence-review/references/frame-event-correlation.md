@@ -36,16 +36,26 @@ Finding: "selection highlight during sash drag".
 
 ## Tolerances
 
-| clockSync.confidence | Safe claim granularity |
+| Method and confidence | Evidence interpretation |
 |---|---|
-| high (≤25 ms RMS) | single frame at 30 fps |
-| medium (≤60 ms) | ±2 frames; fine for hover/drag presence, weak for transition-timing |
-| low (assumed-start) | window-level only; windows already padded ±250 ms — never cite exact frames vs event boundaries |
+| beacon, high | Fit residual RMS ≤25 ms with at least four matched beacon pairs. Use recorded frame timestamps; this is not a single-frame accuracy guarantee. |
+| beacon, medium | Fit residual RMS ≤80 ms when the high criteria are not met, with at least three matched pairs. Prefer gesture-window claims; precise transition timing needs additional evidence. |
+| obs-record-state, medium | Uses the reported recording-start anchor. Its stored zero residual is not a measured beacon-fit error or a frame-accuracy bound. |
+| low, including assumed-start | Window-level claims only; inspect the extraction window padding and do not infer exact frame/event boundaries from this label. |
+
+The beacon thresholds and fallback methods are defined in
+[`ClockCorrelator.service.ts`](../../../../packages/tooling/library/qa-capture/src/ClockCorrelator.service.ts).
+RMS summarizes the fitted beacon residuals; it is not a maximum error bound for
+every event. Frame duration also depends on the recording frame rate. Check
+`clockSync.method`, `residualRmsMs`, the actual timestamps and the available
+beacon evidence together rather than converting a confidence label into a
+fixed number of frames.
 
 Transition-timing findings additionally need the recorded
 `transition` events (`phase: "start"/"end"`) — compare their epoch span to
-the frames where motion is visible; a mismatch > confidence tolerance is the
-finding.
+the frames where motion is visible. Qualify any mismatch against the observed
+sync evidence and frame sampling; the confidence label alone does not establish
+a timing defect.
 
 ## Gotchas
 

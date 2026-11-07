@@ -12,5 +12,37 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../drivers/shacl/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/semantic-web/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/rdf/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ]
 }

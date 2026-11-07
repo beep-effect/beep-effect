@@ -12,6 +12,7 @@ import {
   makeCitationResolutionWork,
 } from "@beep/law-practice-server/internal/Citation/CallbackSession";
 import {
+  CitationFrozenEditionFailure,
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
@@ -32,12 +33,14 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import type { CitationResourceObject } from "@beep/law-practice-server/internal/Citation/ResourceObjects";
 
@@ -257,6 +260,99 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("mixed live resource
         { concurrency: 1, discard: true }
       );
       expect(count).toBe(89);
+    })
+  );
+  it.effect("redacts edition service faults and publication digest failures for each real source family", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const raw = yield* fs.readFileString(
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/live-resources.json", import.meta.url))
+      );
+      const data = yield* S.decodeEffect(Corpus)(raw);
+      const allModels = A.flatMap(data.cases, (row) => row.initial);
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      for (const family of ["case", "law", "journal"]) {
+        const model = yield* Effect.fromOption(
+          A.findFirst(
+            allModels,
+            (model) => model.citation.type === family && O.isSome(model.citation.publication.selectedEdition)
+          ),
+          modelFailure
+        );
+        const input = yield* prepareCallbackObservation(
+          CitationCallbackObservation.make({
+            name: `service-failure-${family}`,
+            kinds: [model.citation.type],
+            pages: {},
+            bindings: {},
+            events: [],
+            outcome: { status: "value", groups: [] },
+          })
+        );
+        const prepared = yield* prepareCitationResolution(input);
+        const reference = CitationGroupMember.cases.Mention.make({ mentionId: A.getUnsafe(prepared.mentions, 0).id });
+        const models = CitationResourceModels.of({
+          read: Effect.fn("ResourceServiceFailureTest.read")(() => Effect.succeed(model)),
+          step: Effect.void,
+        });
+        let lookups = 0;
+        const failingEditions = CitationFrozenEditions.of({
+          ...frozen,
+          lookup: Effect.fn("ResourceServiceFailureTest.lookup")(() => {
+            lookups++;
+            return Effect.fail(CitationFrozenEditionFailure.make({ reason: "corrupt-artifact" }));
+          }),
+          lookupMany: Effect.fn("ResourceServiceFailureTest.lookupMany")(() => {
+            lookups++;
+            return Effect.fail(CitationFrozenEditionFailure.make({ reason: "corrupt-artifact" }));
+          }),
+        });
+        const objects = yield* makeCitationResourceObjects(prepared.limits).pipe(
+          Effect.provideService(CitationResourceModels, models),
+          Effect.provideService(CitationFrozenEditions, failingEditions)
+        );
+        const resource = yield* objects.create(reference);
+        const artifactFailure = yield* objects.key(resource).pipe(Effect.flip);
+        expect(artifactFailure).toMatchObject({ _tag: "CitationResourceObjectFailure", reason: "artifact-failed" });
+        expect(lookups).toBe(1);
+        expect("cause" in artifactFailure).toBe(false);
+        yield* objects.close;
+        const digestObjects = yield* makeCitationResourceObjects(prepared.limits).pipe(
+          Effect.provideService(CitationResourceModels, models),
+          Effect.provideService(CitationFrozenEditions, frozen),
+          Effect.provideService(
+            Digest.Digest,
+            makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
+          )
+        );
+        const digestResource = yield* digestObjects.create(reference);
+        const digestFailure = yield* digestObjects.key(digestResource).pipe(Effect.flip);
+        expect(digestFailure).toMatchObject({ _tag: "CitationResourceObjectFailure", reason: "digest-failed" });
+        expect("cause" in digestFailure).toBe(false);
+        yield* digestObjects.close;
+        if (model.citation.type !== "case") continue;
+        const codec = S.fromJsonString(CitationResourceModelInput);
+        const encoded = yield* S.encodeEffect(codec)(model);
+        const malformed = yield* S.decodeEffect(codec)(encoded);
+        // A provider can retain and mutate its own publication object after construction.
+        if (malformed.citation.type !== "case") return yield* modelFailure();
+        const publication: { vocabularyVersion: string } = malformed.citation.publication;
+        publication.vocabularyVersion = "";
+        const malformedModels = CitationResourceModels.of({
+          ...models,
+          read: Effect.fn("ResourceServiceFailureTest.malformedRead")(() => Effect.succeed(malformed)),
+        });
+        const malformedObjects = yield* makeCitationResourceObjects(prepared.limits).pipe(
+          Effect.provideService(CitationResourceModels, malformedModels),
+          Effect.provideService(CitationFrozenEditions, frozen)
+        );
+        const malformedResource = yield* malformedObjects.create(reference);
+        const malformedFailure = yield* malformedObjects.key(malformedResource).pipe(Effect.flip);
+        expect(malformedFailure).toMatchObject({ _tag: "CitationResourceObjectFailure", reason: "invalid-input" });
+        expect("cause" in malformedFailure).toBe(false);
+        yield* malformedObjects.close;
+      }
     })
   );
 });

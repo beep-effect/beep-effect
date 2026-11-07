@@ -303,5 +303,5 @@ export const planResearchProjection: {
   const next = A.reduce(edits, manifestText, (content, edit) =>
     applyJsoncModification(JsoncModification.make({ content, path: [edit.path], value: edit.value }))
   );
-  return Str.isEmpty(next) ? O.none() : O.some(next);
+  return O.some(next);
 });

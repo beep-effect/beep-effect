@@ -7,6 +7,7 @@ import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -21,7 +22,11 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, NodeCommandTestLayer, temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
-const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
+const dispatchLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
+const runLintCommand = (args: ReadonlyArray<string>) =>
+  dispatchLintCommand(args).pipe(
+    Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_LINT_TSGOLINT: "true" }))
+  );
 // The type-aware sweep takes its worker count from the host's concurrency plan: 4 on CI and
 // small hosts, wider on a workstation.
 const oxlintThreadsArg = `--threads=${localQualityConcurrencyPlan().oxlintThreads}`;

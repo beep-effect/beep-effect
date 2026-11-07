@@ -23,6 +23,7 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { citationBunTestExecutable } from "./CitationNativeSpawner.fixtures.ts";
 import { loadCitationUnicodeHistories } from "./CitationUnicodePipeline.fixtures.ts";
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparation and framing", (it) => {
@@ -160,9 +161,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
       yield* preflightCitationHtmlControlFrames(policy.processMessageBytes);
       const real = yield* ChildProcessSpawner;
       let spawned = 0;
+      const executable = yield* citationBunTestExecutable;
       const worker = yield* makeCitationHtmlWorker(policy, {
         kind: "bun",
-        executable: process.execPath,
+        executable,
         cwd: process.cwd(),
         workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
       }).pipe(

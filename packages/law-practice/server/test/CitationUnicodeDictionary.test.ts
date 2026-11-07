@@ -65,6 +65,38 @@ const CorpusJson = S.fromJsonString(Corpus);
 
 const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode dictionary", (it) => {
+  it.effect("keeps equal-hash exact Unicode keys distinct without dispatching rich comparison", () =>
+    Effect.gen(function* () {
+      const strings = ["a😀", "a😁"];
+      const comparison = CitationRuntimeDictionaryComparison.of({
+        step: Effect.void,
+        exactUnicode: Effect.fn("UnicodeCollisionTest.text")((id) => Effect.succeed(A.get(strings, id))),
+        equal: Effect.fn("UnicodeCollisionTest.noRichCompare")(() =>
+          Effect.die("Exact Unicode collisions must compare native text without rich hooks")
+        ),
+      });
+      const table = yield* makeCitationRuntimeDictionary({ entries: 4, iterations: 100 }).pipe(
+        Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+      );
+      const left = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(7) });
+      const right = CitationRuntimeDictionaryKey.make({ objectId: 1, hash: BigInt(7) });
+      yield* table.set(left, 10);
+      yield* table.set(right, 20);
+      const leftValue = yield* table.get(left);
+      const rightValue = yield* table.get(right);
+      assertSome(
+        O.map(leftValue, (entry) => entry.value),
+        10
+      );
+      assertSome(
+        O.map(rightValue, (entry) => entry.value),
+        20
+      );
+      const entries = yield* table.read;
+      expect(A.map(entries, (entry) => entry.value)).toEqual([10, 20]);
+    })
+  );
+
   it.effect("matches all pinned transitions, reflected host calls and equality mutation restarts", () =>
     Effect.gen(function* () {
       const citationResult1 = yield* FileSystem.FileSystem;

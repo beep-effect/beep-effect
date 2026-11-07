@@ -1,5 +1,23 @@
 # Friction and opportunities
 
+## GitHub check-list refusal despite positive quota observations, 2026-11-06
+
+The replacement readiness observers report `Failed to read the complete pull request check census`. The exact `gh pr checks --json ...` command, both branch-inferred and explicitly naming PR #2804, reports `GraphQL: API rate limit already exceeded`. Within the same approved credential lane, the REST quota response at 21:40 UTC reports 4,604 core and 4,831 GraphQL requests remaining; a direct GraphQL rate-limit query at 21:41 reports 4,559 remaining. This does not establish a token, provider or CLI root cause. Current-head REST workflow job inventories remain readable and show no failed jobs at 21:42; they do not establish complete PR merge readiness or replace the review-thread gate. Preserve the running observers, avoid blind restarts or credential changes, and retain the original refusals plus independent quota observations. A diagnostic that preserves the failed census command's safe cause would prevent the generic monitor message from obscuring this distinction.
+
+Resolution at 21:50 UTC: the installed GitHub CLI 2.102.1 [check command](https://github.com/cli/cli/blob/v2.102.1/pkg/cmd/pr/checks/checks.go) uses a 24-hour cached feature detector. Exactly two local response-cache entries contained HTTP 200 GraphQL `RATE_LIMIT` errors dated before the recovered quota reset. Their response headers contained neither authorization nor cookies. Preserve byte-exact rollback copies privately, then remove only those two entries after verifying their hashes. The same check-list command immediately returned a complete 44-row result without credential, limit or configuration changes. This establishes a stale error-cache cause for the reproduced refusal; no readiness gate was bypassed. Keep failed API responses distinguishable from fresh provider failures when diagnosing future quota incidents.
+
+
+## Types lint ignore-policy input gap, 2026-11-06
+
+While preparing the next reviewed pilot, source inspection found `biome check .` reads Git ignore files but inherited types lint inputs omit the root ignore policy. Twelve bounded stable/canary native `run lint --filter=@beep/types --dry=json` plans confirm that adding a types source exclusion to that policy leaves the original task hash unchanged, while the explicit candidate invalidates. Caching remains disabled, so this is a pre-adoption input gap, not evidence of a stale artifact served in production. The input-profile correction and source-bound reports are prepared in the local types pilot lane. Include ignore-policy perturbation in computation qualification before enabling reuse; metadata coverage alone does not establish semantic correctness.
+## Hosted Integration interrupted by runner loss, 2026-11-06
+
+PR #2804 Integration job 128166148577 failed on head 0bdabf78490c3ee2e8ac86fb356bbaa837d481b3 after the self-hosted runner lost communication. GitHub's sole failure annotation identifies runner loss; the verification step remains in progress in the terminal job record and no step reports a test failure. The completed-job log endpoint returns provider `BlobNotFound` instead of a test log; preserve that response separately and never claim it as captured test output. After rechecking the unchanged open PR head and completed failed run, request one retry of only the interrupted job. Its request was accepted; replacement-job execution still needs verification. Do not patch tests or rerun the whole workflow from this evidence. A subsequent REST status read hit the account's real API quota, so further REST verification waits for reset without changing credentials. This operational interruption is separate from the scoped integration routing omission prepared in this lane.
+
+## Scoped integration routing omits plain-only script owners, 2026-11-06
+
+While following the remaining hosted Integration jobs, source review found that the root Quality runner sets its plain integration bucket empty for every affected or explicit-filter invocation. Seven current plain-only owners contain integration source files. Preserve those owners under the original caller scope and exclude split owners to avoid duplicate execution. Native stable/canary metadata fixtures confirm that negative exclusions preserve both explicit and affected selection; the source resolver and helper regression are prepared in the unpublished integration-scope lane, with hosted correctness still required. This is a fresh-test coverage repair, not a reason to cache live integration verdicts.
+
 ## Captured output lost at timeout, 2026-11-03
 
 Heavy / Lint Policy on #2686 timed out in `knowledge doctor ci` after its
@@ -1255,3 +1273,87 @@ After #2695 landed, the affected-query summary still initialized `packages` to z
 ### 2026-11-06: Use the current Option extraction helper
 
 The package-counter change failed Repo Sanity and Heavy / Check with TS2375 and the existing positive assertion returned zero instead of two. The callback supplied Option to Array.filterMap, whose current contract consumes Result. Use Array.map followed by Array.getSomes, matching the Effect reference and existing TurboLaneDigest code. Preserve the failing hosted receipts and both counter assertions. This is an introduced defect fixed in its owning PR; no local test, verify, publish or quality suite was run.
+
+### 2026-11-06 — external test inputs must follow every actual consumer
+
+During the adoption audit, `architecture-operation-plan.test.ts` was found to
+read the live architecture-lab, architecture-lab-proof and db-admin proof trees.
+The CLI's `test`, `test:property` and `coverage` scripts all execute this suite,
+but only `test` declared these external trees and generated-output exclusions.
+The two economics source reports were also absent from coverage inputs despite
+its execution of `gate-order-handoff.test.ts`. Copy the already reviewed external
+input set to all three consumers, preserving inherited package inputs and
+`coverage.cache: false`. Native dry metadata must show actual proof source files
+and economics inputs for each consumer; hosted CI remains the behavioral proof.
+No computation qualification or production-cache activation follows from this
+repair. Prevent recurrence by auditing the script's full executed suite rather
+than treating property tests or coverage as narrower without source evidence.
+
+## Replay formatting and pilot profile phase complexity, 2026-11-06
+
+Hosted #2824 Lint found expanded singleton arrays in types/turbo.json left by an unpublished replay resolution. Apply the exact formatter diff and keep the environment/input declarations unchanged. Fallow artifact13548435278 attributes one new cognitive/CRAP finding to runPilot. Group its selected-profile discovery, refusal and validation in one named phase, leaving executable pin checks reusable before every execution and preserving validation order. Retain the three failed logs and artifact digests privately. No baseline, threshold, suppression or local quality suite changes.
+
+## Hosted diagnostics reject sequential channel and Option wrappers, 2026-11-06
+
+#2824 Check, Build and Integration all fail on the same two introduced Effect diagnostics in Cache.pilot.ts: mapMapErrorToMapBoth and mapSomeToAsSome. Replace the sequential success/error mappings with mapBoth and the success wrapper with asSome, preserving failures and values. Three completed logs are retained once under their actual jobs. No signature, baseline, threshold, test expectation or local quality suite changes.
+
+## 2026-11-06 — Reference links enter identity's broad metadata inputs
+
+During actual-root strict-entrypoint review, pinned canary lint dry-run refused
+`input symlink leaves repository` before that flag was enabled. The observed
+identity lint input glob spans repository manifests and reaches ignored external
+`.repos` links. A source-bound negative reference-tree input lets that same dry
+run finish and preserves every observed stable lint input path. The original
+refusal is retained separately. A real-root baseline with canonical provisioned
+reference links before profile approval would have caught the mismatch earlier.
+No quality task body ran and no feature/qualification/production setting changed.
+
+
+## 2026-11-06 — Main advanced during the producer freshness preflight
+
+After #2793 and #2796 merged, the current-source inspection preflight at recorded
+revision `68d37217c6` refused `Main moved; review current source` before dispatch.
+No inspection or protected trial was submitted. Independent adoption metadata
+work continued in an isolated source-bound checkout. Retaining immutable hosted
+source bindings and coordinating a short exact-source approval interval would
+avoid repeated static reads while preserving the final live-ref check.
+
+## Storybook mixed source and declaration contexts, 2026-11-07
+
+Heavy / Check job 128225577677 on #2826 executed merge 5541cb724 with accepted base b0c9bab1. Fresh md and editor checks completed, while Storybook rejected TaskItem/TaskList constructors and an unknown Effect context in the unchanged editor-viewer story. Storybook maps Markdown and Lexical models to source but leaves their shared schema helpers outside that source mapping; editor stories inherit the root schema source mapping. Align Storybook's schema root and leaf aliases with that source context. This is a source-based repair candidate; hosted CI must establish whether it resolves the failures. No constructor, story, diagnostic, threshold or test expectation is suppressed, and no local quality suite ran. No matching open fix or unblocks-main PR was found at the initial inventory.
+
+### Controlled Storybook resolution comparison, 2026-11-07
+
+The earlier cached-failure/fresh-success jobs differed in two declared configuration inputs across the reviewed 693-path build dependency set. They are not a matched experiment. On draft PR #2827, temporarily remove only the candidate schema source aliases and request plain compiler diagnostics; retain all prerequisite source, dependency, workflow and cache permissions. The original resolution configuration otherwise matches accepted main. Use existing hosted CI, retain the candidate successful Check log, and join actual prerequisite hashes/origins and runtime/source identities before attributing the result. Restore the candidate after this bounded comparison; a non-reproduction remains unresolved. No local compiler or quality suite, new job, capacity or credential is introduced.
+
+### Prefer executed merge identity over the event base field, 2026-11-07
+
+The original-resolution control passed, but its actual checkout merged into d8f335ca while the event still carried b0c9bab1. The saved candidate ran on b0c9bab1. Their manifests, lockfiles and prerequisite hashes differ, so branch-only matched native plans do not establish a matched hosted experiment. Withdraw the unproven aliases, retain source-bound observations, and require an executed-merge/workflow/profile join for full qualification. This does not resolve the historical cause or grant reuse.
+## Recipe fixture left an unused outer task constant, 2026-11-06
+
+Heavy / Check job 128224640320 on #2824 reported TS6133 at cache-pilot-orchestration.test.ts:114. The parameterized fixture owns its selected task locally, leaving the former identity-only constant unused. Remove only that superseded outer constant. Preserve all fixture branches and authored controls. The failing hosted log is retained against its exact revision; no local suite ran.
+
+### Types pilot prerequisite refusal coverage, 2026-11-07
+
+PR #2824 hosted coverage measured Cache.pilot.ts functions at 87.30 against the unchanged 87.95 floor. Inspecting all six provider-digest-verified unit coverage artifacts identified unexercised installed-dependency and runtime-linker absence refusals. Add process-boundary controls for both types prerequisites: exact typed cause, zero task invocations, no private sandbox or observation receipt. Tests are authored for hosted CI; no local quality suite ran. Coverage success remains unproven until the new head completes.
+
+### Separate Effect execution from assertion construction, 2026-11-07
+
+PR #2824 hosted Check rejected the new observation-absence assertion with TS377171: yield in call argument. Bind the filesystem result before asserting it. The negative control and coverage floor remain unchanged. Prevent this with the existing Effect test-authoring checklist; hosted CI remains authoritative and no local quality suite was run.
+
+## 2026-11-07 — Packet archive removed executable fixture inputs
+
+After merging accepted main containing the first fifty-goal archive, hosted
+Fallow jobs 128271849277 and 128272196751 rejected four unresolved imports from
+three law-practice corpus manifests. Labs job 128272196429 failed five CI Ops
+reading/replay cases because four retained evidence files had moved out of the
+live tree. Both consumer groups were unchanged by the Turbo PRs. Promote the
+seven consumed files to package-owned fixture directories and update their
+consumers, rather than restoring archived packets or suppressing checks. Five
+files retain exact bytes; two KPI render goldens change only the adoption-table
+locator, with measurements and source/digest pins preserved. A scan of literal
+source references across all fifty archived slugs found no other live file-read
+consumer beyond these paths; historical citations remain historical. A
+consumer-edge inventory before archive would have prevented this inherited red.
+No local tests, quality suites, compiler or evidence generator ran. Hosted CI
+will prove the consolidated repair.

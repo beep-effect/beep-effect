@@ -103,6 +103,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           "t3code",
           "opencode",
           "alchemy",
+          "goals-archive",
           "effect-workspace",
         ];
         const assertLinks = Effect.fn("SetupEffectRefTest.assertLinks")(function* () {
@@ -128,6 +129,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
               `clone --quiet --branch main -- https://github.com/pingdotgg/t3code.git ${expectedRoot}/t3code`,
               `clone --quiet --branch v2 -- https://github.com/anomalyco/opencode.git ${expectedRoot}/opencode`,
               `clone --quiet --branch main -- https://github.com/alchemy-run/alchemy.git ${expectedRoot}/alchemy`,
+              `clone --quiet --branch main -- git@github.com:beep-effect/beep-effect-goals-archive.git ${expectedRoot}/goals-archive`,
               "",
             ],
             "\n"

@@ -9,5 +9,25 @@
     "noEmit": true,
     "rootDir": "..",
     "types": ["node", "bun"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/jsonc/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../../test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../../test-kit/test-utils/tsconfig.json"
+    }
+  ]
 }

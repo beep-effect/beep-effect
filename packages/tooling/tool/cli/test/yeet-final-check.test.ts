@@ -2,6 +2,7 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
+import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality/Quality.schemas";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
   collectExpectationRewrites,
@@ -344,6 +345,38 @@ describe("planFinalCheckSteps", () => {
     expect(planFinalCheckSteps(BASE, ["goals/x/ops/check.ts", "packages/a/src/a.ts"])("/repo")).toEqual(steps);
     const withoutFiles = planFinalCheckSteps("/repo", BASE, []);
     expect(A.some(withoutFiles, (step) => step.step.label === "final-check:lint:changed-files")).toBe(false);
+  });
+});
+
+describe("full-policy final-check planning", () => {
+  it("forces full policy and preserves its config in both calling forms", () => {
+    const sweeps = LintPolicySweeps.make({ schemaVersion: "lint-policy-sweeps/v1", deprecatedApis: "oxlint" });
+    const allSteps = planFinalCheckSteps("/repo", BASE, [], sweeps);
+    const steps = A.filter(allSteps, (entry) => entry.gate === "lint-policy");
+    expect(planFinalCheckSteps(BASE, [], sweeps)("/repo")).toEqual(allSteps);
+    expect(A.map(steps, (entry) => entry.step.label)).toEqual(["final-check:lint-policy:laws"]);
+    expect(steps[0]?.step.args).toEqual(["run", "beep", "lint", "policy", "--full", "--base", BASE]);
+  });
+
+  it("retains the independent full deprecated sweep when policy uses Turbo", () => {
+    const steps = A.filter(
+      planFinalCheckSteps(
+        "/repo",
+        BASE,
+        [],
+        LintPolicySweeps.make({
+          schemaVersion: "lint-policy-sweeps/v1",
+          deprecatedApis: "turbo",
+        })
+      ),
+      (entry) => entry.gate === "lint-policy"
+    );
+    expect(A.map(steps, (entry) => entry.step.label)).toEqual([
+      "final-check:lint-policy:laws",
+      "final-check:lint-policy:deprecated-apis",
+    ]);
+    expect(steps[0]?.step.args).toContain("--full");
+    expect(steps[1]?.step.args).toEqual(["run", "beep", "lint", "deprecated-apis", "--full"]);
   });
 });
 

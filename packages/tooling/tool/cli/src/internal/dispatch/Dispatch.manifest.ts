@@ -264,7 +264,7 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     {
       name: "tsconfig-sync",
       description:
-        "Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package tsconfig.check.json references, package docgen, the generated Vitest alias data, and the generated Fallow boundary config",
+        "Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package check and test references, package docgen, the generated Vitest alias data, and the generated Fallow boundary config",
     },
     ["fs-utils"]
   )(() => import("../../commands/TsconfigSync/index.ts").then((module) => module.tsconfigSyncCommand)),

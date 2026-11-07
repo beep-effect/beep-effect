@@ -225,6 +225,7 @@ const COVERAGE_FULL_VITEST_WORKER_CAP = 11;
 const COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS = 300;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const COVERAGE_REPLACE_ALL_ARG = "--replace-all";
+const COVERAGE_ADD_MISSING_FILES_ONLY_ARG = "--add-missing-files-only";
 // A single lost child-exit signal must fail with the command name while the
 // workflow still has time to report and clean up. The longest healthy policy
 // child is under eight minutes on the hosted heavy runner.
@@ -282,6 +283,7 @@ type RootAuditSelectionState = {
 };
 
 type CoverageTaskOptions = {
+  readonly addMissingFilesOnly?: boolean;
   readonly topologyPackageNames?: ReadonlyArray<string>;
   readonly args: ReadonlyArray<string>;
   readonly expectedPackageNames: ReadonlyArray<string>;
@@ -610,21 +612,52 @@ const SPLIT_INTEGRATION_SCRIPTS = ["test:integration:parallel", "test:integratio
 // Packages that predate the parallel/serial integration split still ship a plain
 // `test:integration`; without this bucket they would be silently dropped from the
 // root integration lane instead of running alongside the bounded-parallel packages.
-const unsplitIntegrationTaskFilters = Effect.fn("QualityTasks.unsplitIntegrationTaskFilters")(function* (
-  repoRoot: string
+const unsplitIntegrationTaskArgs = Effect.fn("QualityTasks.unsplitIntegrationTaskArgs")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
   const owners = yield* workspaceTaskOwners(repoRoot);
-
-  return pipe(
+  const unsplit = A.filter(
     owners,
-    A.filter(
-      (owner) =>
-        ownerDefinesScript("test:integration")(owner) &&
-        !A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))
-    ),
-    A.map(ownerFilter)
+    (owner) =>
+      ownerDefinesScript("test:integration")(owner) &&
+      !A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))
   );
+  return A.match(unsplit, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (unsplitOwners) =>
+      A.some(args, isExplicitTurboAffectedOrScopeArg)
+        ? [
+            ...pipe(
+              owners,
+              A.filter((owner) => A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))),
+              A.map((owner) => `--filter=!${owner.packageName}`)
+            ),
+            ...args,
+          ]
+        : [...A.map(unsplitOwners, ownerFilter), ...args],
+  });
 });
+
+/**
+ * Resolve the plain integration lane without broadening explicit caller scope.
+ *
+ * **Example** (Prepare affected integration arguments)
+ *
+ * ```ts
+ * import { unsplitIntegrationTaskArgsForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(unsplitIntegrationTaskArgsForTesting(".", ["--affected"]))) // true
+ * ```
+ *
+ * @param repoRoot - Root whose workspace manifests define integration script owners.
+ * @param args - Caller scope and task arguments, preserved after any owner exclusions.
+ * @returns No arguments when there are no unsplit owners; otherwise the plain lane's scoped arguments.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const unsplitIntegrationTaskArgsForTesting = unsplitIntegrationTaskArgs;
 
 const requireWorkspaceTaskFilters = Effect.fn("QualityTasks.requireWorkspaceTaskFilters")(function* (
   repoRoot: string,
@@ -714,7 +747,11 @@ const isCoverageReplaceAllArg = (arg: string): boolean => arg === COVERAGE_REPLA
 const isCoveragePassthroughDelimiter = (arg: string): boolean => arg === "--";
 
 const stripCoverageControlArgs: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
-  (arg) => !isCoverageWriteBaselineArg(arg) && !isCoverageReplaceAllArg(arg) && !isCoveragePassthroughDelimiter(arg)
+  (arg) =>
+    !isCoverageWriteBaselineArg(arg) &&
+    !isCoverageReplaceAllArg(arg) &&
+    arg !== COVERAGE_ADD_MISSING_FILES_ONLY_ARG &&
+    !isCoveragePassthroughDelimiter(arg)
 );
 
 const coverageTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
@@ -730,6 +767,7 @@ const parseCoverageTaskOptions = (args: ReadonlyArray<string>): CoverageTaskOpti
   const stripped = stripPassthroughDelimiter(args);
   return {
     args: coverageTurboArgs(stripped),
+    ...(A.contains(stripped, COVERAGE_ADD_MISSING_FILES_ONLY_ARG) ? { addMissingFilesOnly: true } : {}),
     expectedPackageNames: A.empty<string>(),
     replaceAll: A.some(stripped, isCoverageReplaceAllArg),
     scoped: A.some(stripped, isExplicitTurboAffectedOrScopeArg),
@@ -916,6 +954,7 @@ const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray
 const isCoverageFullOwnedBooleanArg = (arg: string): boolean =>
   arg === COVERAGE_WRITE_BASELINE_ARG ||
   arg === COVERAGE_REPLACE_ALL_ARG ||
+  arg === COVERAGE_ADD_MISSING_FILES_ONLY_ARG ||
   arg === "--only" ||
   Str.startsWith("--only=")(arg) ||
   arg === "--summarize" ||
@@ -953,12 +992,26 @@ const coverageFullPassthroughArgs = (args: ReadonlyArray<string>): ReadonlyArray
   return passthrough;
 };
 
+const validateCoverageFileIdentityTaskOptions = Effect.fn("QualityTasks.validateFileIdentityTaskOptions")(function* (
+  parsed: CoverageTaskOptions,
+  args: ReadonlyArray<string>
+) {
+  if (
+    parsed.addMissingFilesOnly === true &&
+    (!parsed.writeBaseline || !parsed.scoped || parsed.replaceAll || A.some(args, isCoverageAffectedArg))
+  )
+    return yield* QualityTaskConfigurationError.new(
+      "--add-missing-files-only requires --write-baseline with exact --filter package selectors; --replace-all and --affected are unsupported."
+    );
+});
+
 const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOptions")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>,
   baseOverride?: string
 ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const parsed = parseCoverageTaskOptions(args);
+  yield* validateCoverageFileIdentityTaskOptions(parsed, args);
   // A scoped `--replace-all` is the deliberate re-measure path: it adopts every
   // package this run measured, and the hosted pull-request run judges every row
   // it raises.
@@ -3201,6 +3254,7 @@ const policyMediumTasks = [
   "lint:effect-imports-markdown",
   "lint:markdown-fences",
   "lint:retired-effect-paths",
+  "lint:entity-kit-freeze",
   "lint:retired-iri-authorities",
   "lint:schema-tag-idioms",
   "lint:holds",
@@ -4278,6 +4332,7 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   if (options.writeBaseline) {
     yield* writeCoverageRegressionBaseline(repoRoot, options.scoped, options.expectedPackageNames, {
       replaceAll: options.replaceAll,
+      addMissingFilesOnly: options.addMissingFilesOnly === true,
     });
     return;
   }
@@ -4348,9 +4403,7 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   let integrationFailures = A.empty<QualityTaskFailed>();
   if (lanes.integration) {
     const parallelArgs = yield* workspaceTaskArgs(repoRoot, "test:integration:parallel", lanes.args);
-    const unsplitFilters = A.some(lanes.args, isExplicitTurboAffectedOrScopeArg)
-      ? A.empty<string>()
-      : yield* unsplitIntegrationTaskFilters(repoRoot);
+    const unsplitArgs = yield* unsplitIntegrationTaskArgs(repoRoot, lanes.args);
     const parallelFailures = yield* collectStreamingStepFailures("test:integration:parallel", [
       turboStep(
         repoRoot,
@@ -4359,14 +4412,9 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
         boundedRootTurboArgs(parallelArgs, plan)
       ),
       ...optionalQualityTaskStep({
-        enabled: A.isReadonlyArrayNonEmpty(unsplitFilters),
+        enabled: A.isReadonlyArrayNonEmpty(unsplitArgs),
         step: () =>
-          turboStep(
-            repoRoot,
-            "test:integration",
-            ["test:integration"],
-            boundedRootTurboArgs([...unsplitFilters, ...lanes.args], plan)
-          ),
+          turboStep(repoRoot, "test:integration", ["test:integration"], boundedRootTurboArgs(unsplitArgs, plan)),
       }),
     ]);
     const serialFailures = yield* Effect.scoped(

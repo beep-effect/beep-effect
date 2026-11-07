@@ -90,10 +90,9 @@ Is this state...
 
 ## Escalation
 
-- `effect-first-development` when the task is broader than frontend state.
+- `effect-first-development` when the task is broader than frontend state,
+  including service/Layer wiring and typed error recovery outside atom rendering.
 - `schema-first-development` for schema modeling within atoms.
-- `effect-v4-services` for service and layer wiring patterns.
-- `effect-error-handling` for typed error recovery outside atom rendering.
 
 ## Source References
 

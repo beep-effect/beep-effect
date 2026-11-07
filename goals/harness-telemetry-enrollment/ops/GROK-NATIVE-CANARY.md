@@ -32,15 +32,36 @@ marketplaces, MCP or LSP entries, no enabled foreign compatibility source and
 only the one exact private configuration layer. Unexpected required policy or
 config drift refuses admission. Existing host/user managed and requirements
 files must be absent under this finite qualification; if they appear, preserve
-and requalify them rather than hiding or deleting them. Remote policy and cloud
+and requalify them rather than hiding or deleting them. Only the exact private
+`GROK_HOME/managed_config.toml` and `GROK_HOME/requirements.toml` placeholders
+may instead exist as owned single-link regular 0600 files of exactly zero bytes.
+The adapter checks metadata through the held canonical private-parent descriptor,
+with no-follow opens and stable entry/descriptor/parent observations; it reads no
+placeholder contents. Zero-byte TOML contains no policy directives and is treated
+as equivalent to absence only for these two private placeholders. Whitespace and
+any other policy bytes refuse. This exception
+never applies to system/original-user policy or private authentication files.
+A native-created empty placeholder does not change the fixed profile, the two
+fresh zero-inventory inspections, auth checks, source budget or replay fence.
+Remote policy and cloud
 retention are not frozen by the local qualification.
 
 Authentication uses the existing normal native login-store consumer through
 `GROK_AUTH_PATH`. The adapter reads only the authentication file's owner, mode,
 inode and timestamp metadata. It never opens, copies or serializes its contents.
 The child inherits only the fixed environment: no API key, provider command,
-transport/endpoint override or ambient environment is passed. Native credential
-refresh may change metadata; such drift causes Unknown and never grants replay.
+transport/endpoint override or ambient environment is passed. The initial admitted credential metadata stays bound to the request. Before each
+native operation, the last accepted metadata must still match. Immediately after
+one bounded pinned native operation, the adapter may observe a changed credential
+file only at the same canonical location, with an owned regular single-link 0600
+file, bounded nonempty size, a no-follow metadata descriptor and unchanged owned
+parent identity. Binary, profile, MCP, original policy and session pins remain
+strict. This supports native automatic credential replacement without reading
+credential bytes. An additive optional isolation field records at most three
+`changed-during-native-phase` transitions, with cause and auth health `Unknown`;
+it does not prove which writer changed the file or that a refresh was legitimate.
+Unexpected pre-operation drift, unsafe structure or changed parent still refuses.
+No transition grants a new source attempt or permits replay of a failed run.
 The owner separately binds the authorized existing native subscription route.
 
 The implementation uses a direct native executable in the owned pilot worktree,
@@ -160,3 +181,56 @@ The explicit main/title `grok-4.7` pins, fixed prompt, 23-tool denylist, native
 read-only sandbox, one source fence and unknown HTTP retry accounting are unchanged.
 Metadata authentication and an empty inventory do not claim successful inference,
 model entitlement, quota, or recovery of any prior failed attempt.
+
+
+## Finite native failure reports
+
+Nonzero main exits with observed error rows can retain an optional
+`nativeFailureClass`: `auth`, `subscription-or-quota`,
+`model-unavailable-or-config`, `network`, or `Unknown`. These classify a native
+report, never verified account state or historical cause. Exact case-sensitive
+message literals from the installed public 1.0.77 binary qualify the allowlist:
+`Not signed in` (including its exact login-help sentence),
+`SuperGrok subscription required`, `Model not found in config.toml [model.*]`,
+and the fixed Grok connection-timeout/interruption sentence with an HTTP status.
+The model class includes a local configuration failure; it does not prove that
+Grok 4.7 is unavailable at the provider. The subscription class does not infer
+quota from generic quota words. Static binary presence alone does not establish
+that every literal appears in a headless error envelope.
+
+Every unsupported, appended, malformed, conflicting, duplicate-error or oversized
+report remains `Unknown`. Generic HTTP status, auth codes, OS network tokens,
+nested messages and stderr never qualify a class. Raw messages and unknown fields
+remain transient and are discarded. The older positive NotSignedIn observation
+remains separate and retains its previously qualified substring semantics.
+No new class permits replay or changes admission, fences, native invocation,
+retention, delivery, authentication or model/effort pins.
+
+The latest actual native exit cannot be retroactively classified because its raw
+output was discarded. Its cause remains Unknown. Only a fresh owner-admitted,
+independently reviewed single-use attempt can exercise this observer against
+new native output. Offline fixtures validate the closed projection and retained
+metadata; they do not establish real account, quota, model or network diagnosis.
+
+
+## Failure lifecycle receipts
+
+Once the owned native process is observed, source failure or interruption emits
+`Finished` after that process scope is released. An observed nonzero exit records
+`failed`; an observed zero exit rejected by collection records `unknown`; an
+interruption or deadline with no observed exit records `cancelled`. These facts
+identify an attempt outcome without inventing a session, native timestamp, usage,
+or successful response. They do not produce a normalized LLM span.
+
+The producer retains a private finite lifecycle intent before delivery and records
+an acknowledged or pending result. An uncertain or refused terminal acknowledgement
+never replaces the original source failure and never replays the native source.
+Successful source metadata replay continues to use the existing exact, idempotent
+lifecycle facts. Later trace transport failure is outside source terminalization.
+
+When failure classification is Unknown, an optional closed structural reason can
+report unsupported exit, bounds, missing error, malformed stream, unsupported
+envelope, ambiguous errors, or unmatched literal. It retains no arbitrary message,
+code, body, identifier, or fingerprint and cannot recover the discarded f5 error.
+The actual historical f5 journal contains Prepared and Started only; this change
+does not alter that journal or retroactively manufacture its missing Finished.

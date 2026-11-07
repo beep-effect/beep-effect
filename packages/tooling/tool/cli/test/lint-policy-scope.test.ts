@@ -17,7 +17,7 @@ import {
   readLintPolicySeal,
   rootLintPolicyStagesForTesting,
 } from "@beep/repo-cli/test/Quality";
-import { runGitOutput } from "@beep/repo-cli/test/RepoRun";
+import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
@@ -33,20 +33,24 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { NodeTestLayer } from "./support/CommandTest.ts";
 import type { QualityTaskStep } from "@beep/repo-cli/test/Quality";
-import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 const REPO_ROOT = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 
 // The scope collector reads git and the filesystem; the prebuild spawns `bun build`.
 const testLayer = Layer.mergeAll(NodeTestLayer, TestConsole.layer);
 
-const gitAdapter: GitCommandErrorAdapter<Error> = {
-  onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
-  onNonZeroExit: ({ commandLine, exitCode, output }) => new Error(`${commandLine} exit ${exitCode}: ${output}`),
-  onTruncated: O.none(),
-};
+// Fixture git over the repo-run capture: a nonzero exit fails the test with git's output (the generic
+// repo-run runner retired with repo-cli-gh-git-consolidation D-21).
+const gitOutput = (root: string, args: ReadonlyArray<string>) =>
+  runRepoCommandCapture("git", args, root).pipe(
+    Effect.flatMap((captured) =>
+      captured.exitCode === 0
+        ? Effect.succeed(captured.output)
+        : Effect.die(new Error(`git ${A.join(args, " ")} exited with ${captured.exitCode}: ${captured.output}`))
+    )
+  );
 
-const git = (root: string, args: ReadonlyArray<string>) => runGitOutput(root, args, gitAdapter);
+const git = gitOutput;
 
 const noSeal = (_path: string): boolean => false;
 const facts = (

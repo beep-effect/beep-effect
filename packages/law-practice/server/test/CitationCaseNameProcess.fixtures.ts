@@ -4,16 +4,21 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationCaseNameProcessConfiguration,
+  CitationCaseNameProcessFailure,
   makeCitationCaseNameProcess,
 } from "@beep/law-practice-server/internal/Citation/CaseNameProcess";
+import { makeCitationMetadataStage } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import { parseCitationPythonInteger } from "@beep/law-practice-server/internal/Citation/PythonInteger";
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
@@ -26,6 +31,7 @@ import {
   assertCitationWorkerCompositionReleased,
   makeCitationMetadataFixture,
   readCitationOracleFixture,
+  setupCitationMetadataRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -151,7 +157,9 @@ export const replayCitationCaseNameProcess = Effect.fn("CaseNameProcessTest.repl
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const setup = yield* install(kind);
+  // Source parity is independent of host scheduling; the lifetime test below
+  // explicitly triggers and verifies this same captured extraction deadline.
+  const setup = yield* install(kind, undefined, false, true);
   const smoke = [13, 55, 137, 185, 197, 201, 239, 243, 251, 293, 301, 305, 313, 321];
   const rows = A.filter(setup.corpus.cases, (row) => full || row.error === "TypeError" || A.contains(smoke, row.id));
   for (const row of rows) yield* assertRow(setup.stage, row);
@@ -176,6 +184,13 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
   const row = A.getUnsafe(setup.corpus.cases, 13);
   const accepted = yield* setup.stage.apply(request(row));
   expect(accepted.reservedUnits).toBe(54);
+  const bounded = yield* makeCitationCaseNameProcess(
+    { ...setup.limits, tokens: 1 },
+    setup.runtime,
+    setup.configuration
+  ).pipe(Effect.provideContext(setup.provided));
+  const tokens = yield* bounded.apply(request(row)).pipe(Effect.flip);
+  expect(tokens).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
   setup.configuration.patterns.splitV.bytes.fill(0);
   setup.configuration.cleaner.patterns.stopWords.bytes.fill(0);
   const repeated = yield* setup.stage.apply(request(row));
@@ -202,7 +217,22 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
 export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  for (const configuration of [
+    null,
+    {
+      ...closed.configuration,
+      patterns: { ...closed.configuration.patterns, splitV: { width: 1, bytes: new Uint8Array([88]) } },
+    },
+  ]) {
+    const rejected = yield* makeCitationCaseNameProcess(closed.limits, closed.runtime, configuration).pipe(
+      Effect.provideContext(closed.provided),
+      Effect.flip
+    );
+    expect(rejected).toMatchObject({ reason: "invalid-configuration" });
+  }
   const row = A.getUnsafe(closed.corpus.cases, 13);
+  const invalid = yield* closed.stage.apply({}).pipe(Effect.flip);
+  expect(invalid).toMatchObject({ reason: "invalid-input" });
   yield* assertCitationWorkerClosedLifetime(scope, closed.stage.apply(request(row)), closed.observed.snapshot);
   const timed = yield* install("bun", undefined, false, true);
   yield* assertCitationWorkerCapturedDeadline(
@@ -210,4 +240,34 @@ export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessT
     timed.timer.trigger
   );
   yield* assertCitationWorkerCompositionReleased(timed.operation, timed.admission, timed.observed.snapshot, 0);
+});
+
+/** The enclosing stage deadline interrupts work without a nested timed helper. */
+export const assertCitationMetadataStageDeadline = Effect.fn("CaseNameProcessTest.stageDeadline")(function* () {
+  const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true);
+  const started = yield* Deferred.make<void>();
+  const released = yield* Ref.make(false);
+  const prepare: () => Effect.Effect<never, never, Scope.Scope> = Effect.fn("CaseNameProcessTest.blockStage")(
+    function* () {
+      yield* Effect.addFinalizer(() => Ref.set(released, true));
+      yield* Deferred.succeed(started, undefined);
+      return yield* Effect.never;
+    }
+  );
+  const make = makeCitationMetadataStage({
+    method: "apply",
+    schema: S.Void,
+    invalid: () => CitationCaseNameProcessFailure.make({ reason: "invalid-configuration" }),
+    own: () => Effect.void,
+    prepare,
+    project: identity,
+  });
+  const stage = yield* make(setup.limits, setup.runtime, undefined).pipe(Effect.provideContext(setup.provided));
+  yield* assertCitationWorkerCapturedDeadline(
+    stage.apply(undefined),
+    Deferred.await(started).pipe(Effect.andThen(setup.timer.trigger))
+  );
+  const didRelease = yield* Ref.get(released);
+  expect(didRelease).toBe(true);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 0);
 });

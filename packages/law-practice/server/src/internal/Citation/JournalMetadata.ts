@@ -42,6 +42,7 @@ export class CitationJournalMetadataFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationJournalMetadataFailure.make({ reason });
+const invalidConfiguration = () => fail("invalid-configuration");
 /** Source-bound journal patterns and captured calendar state.
  * @internal @category models @since 0.0.0
  */
@@ -158,19 +159,19 @@ export const makeCitationJournalMetadata = Effect.fn("Citation.makeJournalMetada
     policy,
     configurationInput,
     Config,
-    () => fail("invalid-configuration")
+    invalidConfiguration
   );
   const { runtime, config } = yield* prepareCitationPublicationMetadata(
     limits,
     runtimeInput,
     { ...decoded, pattern: decoded.journalPattern, bindings: decoded.journalBindings },
     "1b0484f822d2762ae3517e7a1152feea80d96791582a126e0bd3f8789cb66200",
-    () => fail("invalid-configuration")
+    invalidConfiguration
   );
   const installed = yield* makeCitationMetadataOperation(
     limits,
     (request: CitationJournalMetadataInput) => preparePatch(limits, runtime, config, request),
-    () => fail("invalid-configuration")
+    invalidConfiguration
   );
   const inference = yield* makeCitationEditionInference(limits);
   const apply = Effect.fn("Citation.addJournalMetadata")(

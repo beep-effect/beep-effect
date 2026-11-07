@@ -29,14 +29,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
-import {
-  formatCommandLine,
-  OutputBound,
-  repoRunOutputBound,
-  runCaptured,
-  runCapturedStreams,
-  runFoldedStdout,
-} from "@beep/repo-cli-kit/process/StepExec";
+import { formatCommandLine, runCapturedStreams, runFoldedStdout } from "@beep/repo-cli-kit/process/StepExec";
 import { isOptionLike } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -44,7 +37,6 @@ import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -56,12 +48,9 @@ import type {
   UnknownRefError,
 } from "@beep/git/Git";
 import type { GitInvocation } from "@beep/git/GitCommand";
-import type {
-  RunCapturedOptions,
-  RunCapturedStreamsOptions,
-  RunFoldedStdoutOptions,
-} from "@beep/repo-cli-kit/process/StepExec";
+import type { RunCapturedStreamsOptions, RunFoldedStdoutOptions } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as Path from "effect/Path";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -351,64 +340,12 @@ export const gitPathListFromNulOutput: (output: string) => ReadonlyArray<string>
   sortedUniquePaths
 );
 
-/**
- * Splits captured git output into trimmed, non-empty lines.
- *
- * **Details**
- *
- * This is the default line parser for {@link runGitLines}, matching the newline-based readers used
- * by the package-verify and docgen quality scanners.
- *
- * **Example** (Normalize ragged git stdout)
- *
- * ```ts
- * import { gitLinesFromOutput } from "@beep/repo-cli/test/RepoRun"
- *
- * console.log(gitLinesFromOutput("a\n  b  \n\nc\n")) // [ "a", "b", "c" ]
- * ```
- *
- * @param output - Raw captured stdout.
- * @returns Trimmed, non-empty lines.
- * @category parsing
- * @since 0.0.0
- */
-export const gitLinesFromOutput = (output: string): ReadonlyArray<string> =>
-  pipe(Str.split(/\r?\n/)(output), A.map(Str.trim), A.filter(Str.isNonEmpty));
-
 /** One captured git invocation reduced to the fields the shared failure policy reads. */
 type GitCaptureOutcome = {
   readonly exitCode: number;
   readonly parsed: string;
   readonly failureOutput: string;
   readonly truncated: boolean;
-};
-
-/**
- * Shared spawn-capture-then-adapt path behind every combined-output runner in this module: only the
- * capture profile differs between them, so the command line, spawn-failure mapping, and
- * exit/truncation handling live here once.
- */
-const runGitCaptured = <E>(
-  args: ReadonlyArray<string>,
-  adapter: GitCommandErrorAdapter<E>,
-  capture: Omit<RunCapturedOptions, "command" | "args">
-): Effect.Effect<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> => {
-  const commandLine = formatCommandLine("git", args);
-  return runCaptured({ command: "git", args, ...capture }).pipe(
-    Effect.mapError(adapter.onSpawnFailure(commandLine)),
-    Effect.flatMap((captured) =>
-      failFromOutcome(
-        {
-          exitCode: captured.exitCode,
-          parsed: captured.output,
-          failureOutput: captured.output,
-          truncated: captured.truncated,
-        },
-        commandLine,
-        adapter
-      )
-    )
-  );
 };
 
 /**
@@ -440,22 +377,6 @@ const runGitStructured = <E>(
   );
 };
 
-/** The bounded, trimmed, stdin-inheriting profile every structured reader shares with {@link runGitOutput}. */
-const structuredCapture = (cwd: string): Omit<RunCapturedStreamsOptions, "command" | "args"> => ({
-  cwd,
-  extendEnv: true,
-  stdin: "inherit",
-  bound: repoRunOutputBound,
-  trim: true,
-});
-
-// Large merges can contain thousands of long filenames. Only the machine-read
-// path stream gets this budget; stderr and general Git output keep their cap.
-const gitPathOutputBound = OutputBound.make({
-  maxChars: 8 * 1024 * 1024,
-  truncatedNotice: "\n[repo-run] Git filename inventory exceeded 8 MiB",
-});
-
 const failFromOutcome = <E>(
   outcome: GitCaptureOutcome,
   commandLine: string,
@@ -471,147 +392,6 @@ const failFromOutcome = <E>(
     onSome: (toError) => (outcome.truncated ? Effect.fail(toError(commandLine)) : Effect.succeed(outcome.parsed)),
   });
 };
-
-/**
- * Runs a git command and returns its trimmed, bounded, merged output.
- *
- * **Details**
- *
- * Uses the 512 KiB {@link repoRunOutputBound} with merged stdout and stderr, `stdin` inherited, and
- * `extendEnv` on — the profile the yeet and worktree groups rely on. Nonzero exits fail through
- * `adapter.onNonZeroExit`; truncation fails only when `adapter.onTruncated` is set.
- *
- * **Example** (Capture a short status)
- *
- * ```ts
- * import { runGitOutput } from "@beep/repo-cli/test/RepoRun"
- * import * as Effect from "effect/Effect";
- * import * as O from "effect/Option"
- *
- * const status = runGitOutput(process.cwd(), ["status", "--short"], {
- *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
- *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
- *   onTruncated: O.none()
- * })
- *
- * console.log(Effect.isEffect(status)) // true
- * ```
- *
- * @param cwd - Working directory.
- * @param args - Git arguments, excluding the `git` executable.
- * @param adapter - Error adapter for the calling command group.
- * @returns Trimmed combined output on a zero exit.
- * @category execution
- * @since 0.0.0
- */
-export const runGitOutput = Effect.fn("GitExec.runGitOutput")(function* <E>(
-  cwd: string,
-  args: ReadonlyArray<string>,
-  adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitCaptured(args, adapter, {
-    cwd,
-    extendEnv: true,
-    stdin: "inherit",
-    source: "merge",
-    bound: repoRunOutputBound,
-    trim: true,
-  });
-});
-
-/**
- * Runs a git command and parses NUL-delimited path output.
- *
- * **Details**
- *
- * Reads stdout alone. `-z` records are machine-read, so a zero-exit diagnostic on stderr must not
- * become a phantom path; stderr surfaces only in the nonzero-exit message. Filename stdout is
- * bounded at 8 MiB, while stderr retains the generic repo-run bound. Configured truncation
- * adapters still reject incomplete inventories rather than parsing their clipped paths.
- *
- * **Example** (List staged paths)
- *
- * ```ts
- * import { runGitPathList } from "@beep/repo-cli/test/RepoRun"
- * import * as Effect from "effect/Effect";
- * import * as O from "effect/Option"
- *
- * const staged = runGitPathList(process.cwd(), ["diff", "--cached", "--name-only", "-z"], {
- *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
- *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
- *   onTruncated: O.none()
- * })
- *
- * console.log(Effect.isEffect(staged)) // true
- * ```
- *
- * @param cwd - Working directory.
- * @param args - Git arguments, which must include `-z`.
- * @param adapter - Error adapter for the calling command group.
- * @returns Sorted, unique paths on a zero exit.
- * @category execution
- * @since 0.0.0
- */
-export const runGitPathList = Effect.fn("GitExec.runGitPathList")(function* <E>(
-  cwd: string,
-  args: ReadonlyArray<string>,
-  adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* runGitStructured(args, adapter, { ...structuredCapture(cwd), stdoutBound: gitPathOutputBound });
-  return gitPathListFromNulOutput(output);
-});
-
-/**
- * Runs a git command and parses its stdout into lines.
- *
- * **Details**
- *
- * Uses the unbounded stdout-only profile — stderr is ignored — that the package-verify and docgen
- * scanners rely on. Pass `parseLines` to diverge from the default {@link gitLinesFromOutput}, for
- * example to normalize path separators.
- *
- * **Example** (List untracked files)
- *
- * ```ts
- * import { runGitLines } from "@beep/repo-cli/test/RepoRun"
- * import * as Effect from "effect/Effect";
- * import * as O from "effect/Option"
- *
- * const untracked = runGitLines(process.cwd(), ["ls-files", "--others", "--exclude-standard"], {
- *   onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
- *   onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
- *   onTruncated: O.none()
- * })
- *
- * console.log(Effect.isEffect(untracked)) // true
- * ```
- *
- * @param cwd - Working directory.
- * @param args - Git arguments, excluding the `git` executable.
- * @param adapter - Error adapter for the calling command group.
- * @param parseLines - Line parser applied to captured stdout on a zero exit.
- * @returns Parsed lines on a zero exit.
- * @category execution
- * @since 0.0.0
- */
-export const runGitLines = Effect.fn("GitExec.runGitLines")(function* <E>(
-  cwd: string,
-  args: ReadonlyArray<string>,
-  adapter: GitCommandErrorAdapter<E>,
-  parseLines: (output: string) => ReadonlyArray<string> = gitLinesFromOutput
-): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* runGitCaptured(args, adapter, { cwd, source: "stdout" });
-  return parseLines(output);
-});
-
-/** Run a Git command with unbounded, untrimmed stdout, keeping stderr out of the parsed text. @category execution @since 0.0.0 */
-export const runGitRawOutput = Effect.fn("GitExec.runGitRawOutput")(function* <E>(
-  cwd: string,
-  args: ReadonlyArray<string>,
-  adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitStructured(args, adapter, { cwd, stdin: "ignore" });
-});
 
 /**
  * Runs a git command and folds its stdout while it streams instead of capturing it.
@@ -835,7 +615,7 @@ export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E
  *
  * The clone-local attributes file outranks every attribute layer {@link gitArchiveArgs} and
  * {@link gitArchiveEnv} pin, and no git invocation can disable it (measured against git 2.55.0).
- * The path is resolved through `git rev-parse --git-path info/attributes` so worktrees reach the
+ * The path is resolved through `Git.gitDir(cwd, { path: "info/attributes" })` so worktrees reach the
  * shared common-dir file, then stat'd: an absent or empty file passes — fresh clones and CI never
  * carry one, so the guard is vacuously green there — while a non-empty file fails with the resolved
  * path. A stat failure other than not-found also fails closed via `onStatFailure`: a file that
@@ -849,19 +629,13 @@ export const guardCloneLocalGitAttributes = Effect.fn("GitExec.guardCloneLocalGi
   adapter: GitCommandErrorAdapter<E>,
   onCloneLocalAttributes: (attributesPath: string) => EDirty,
   onStatFailure: (attributesPath: string) => (cause: PlatformError.PlatformError) => E
-): Effect.fn.Return<
-  void,
-  E | EDirty,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
-> {
+): Effect.fn.Return<void, E | EDirty, Git | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const gitPath = yield* runGitStructured(
-    ["rev-parse", "--git-path", "info/attributes"],
-    adapter,
-    structuredCapture(cwd)
-  );
-  const attributesPath = path.isAbsolute(gitPath) ? gitPath : path.join(cwd, gitPath);
+  const git = yield* Git;
+  // `Git.gitDir` answers `--path-format=absolute`, so the path needs no resolve against `cwd` (X2, SPEC D-21).
+  const attributesPath = yield* git
+    .gitDir(cwd, { path: "info/attributes" })
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.gitDir("info/attributes"), adapter)));
   const nonEmpty = yield* fs.stat(attributesPath).pipe(
     Effect.map((info) => info.size > BigInt(0)),
     Effect.catchIf(
@@ -1074,9 +848,9 @@ export type CurrentBranchRef = "abbrev-ref" | "show-current";
  *
  * `"abbrev-ref"` runs `Git.currentBranch` (`git rev-parse --abbrev-ref HEAD`), restoring the
  * literal `HEAD` the kit degrades to `Option.none` on a detached HEAD; `"show-current"` runs
- * `git branch --show-current` through the bounded capture, since the kit has no member for it. Both
- * forms are kept because they differ on a detached HEAD: the former reports `HEAD`, the latter
- * reports an empty string.
+ * `Git.currentBranch(cwd, { mode: "show-current" })` (`git branch --show-current`). Both forms are
+ * kept because they differ on a detached HEAD: the former reports `HEAD`, the latter reports an
+ * empty string.
  *
  * **Example** (Read the checked-out branch)
  *
@@ -1105,11 +879,16 @@ export const currentBranch = Effect.fn("GitExec.currentBranch")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>,
   ref: CurrentBranchRef = "abbrev-ref"
-): Effect.fn.Return<string, E, Git | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  if (ref === "show-current") {
-    return yield* runGitOutput(cwd, ["branch", "--show-current"], adapter);
-  }
+): Effect.fn.Return<string, E, Git> {
   const git = yield* Git;
+  if (ref === "show-current") {
+    // `Git.currentBranch({ mode: "show-current" })` is `None` on a detached HEAD, where `branch --show-current`
+    // printed an empty line (X1, SPEC D-21).
+    const shown = yield* git
+      .currentBranch(cwd, { mode: "show-current" })
+      .pipe(Effect.mapError(adaptGitKitError(GitCommand.currentBranch("show-current"), adapter)));
+    return O.getOrElse(shown, () => "");
+  }
   const branch = yield* git
     .currentBranch(cwd)
     .pipe(Effect.mapError(adaptGitKitError(GitCommand.currentBranch(), adapter)));

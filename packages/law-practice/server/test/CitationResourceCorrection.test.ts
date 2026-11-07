@@ -142,6 +142,24 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
       }),
     { arbitrary: fcRuns(50) }
   );
+  it.effect("rejects malformed correction policy and requests before consulting editions", () =>
+    Effect.gen(function* () {
+      const { owner, limits } = yield* load();
+      const invalidPolicy = yield* makeCitationResourceCorrection(null).pipe(
+        Effect.provideService(CitationFrozenEditions, owner),
+        Effect.flip
+      );
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+      const correction = yield* makeCitationResourceCorrection(limits).pipe(
+        Effect.provideService(CitationFrozenEditions, owner)
+      );
+      for (const method of [correction.reporter, correction.page, correction.citation]) {
+        const failure = yield* method(null).pipe(Effect.flip);
+        expect(failure).toMatchObject({ reason: "invalid-input" });
+        expect("cause" in failure).toBe(false);
+      }
+    })
+  );
   it.effect(
     "preflights amplified output and interrupts adversarial native scanning",
     () =>

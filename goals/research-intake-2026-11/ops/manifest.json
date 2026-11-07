@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "research-intake-2026-11",
+    "packetId": "goal-packet/v1:80023d9f5fe05da39442f58d63bf692a34b6ae7a3b73f4001b7b9fff99d33984",
+    "title": "Research intake 2026-11",
+    "status": "active",
+    "created": "2026-11-06",
+    "updated": "2026-11-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/research-intake-2026-11",
+  "lifecycle": "active",
+  "mission": "Run and mine the library's third intake: Box nightlies, the Nov-5 aggregation (papers, link list, VidBee bundles, private DM archive) at hop 0, hop 1 in full, gated hop 2; T1/T2/T3 mining into CiTO-typed, SKOS-routed findings; deep-research per gap cluster; per-hop coverage; routing amendments. Box legal-ontology pile: download, dedupe, T1 only.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/research-library-ontology",
+    "graduated": "2026-11-06"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/research-intake-2026-11/README.md",
+    "goals/research-intake-2026-11/SPEC.md",
+    "goals/research-intake-2026-11/PLAN.md",
+    "goals/research-intake-2026-11/GOAL.md",
+    "goals/research-intake-2026-11/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/research-intake-2026-11/GOAL.md"
+    }
+  ],
+  "provides": ["research-library/intake-2026-11"],
+  "requires": ["research-library/ontology-core", "research-library/routes"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/research-intake-2026-11/GOAL.md)\" -le 4000",
+    "jq . goals/research-intake-2026-11/ops/manifest.json",
+    "rg -n \"research-intake-2026-11|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/research-intake-2026-11",
+    "git diff --check -- goals/research-intake-2026-11",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

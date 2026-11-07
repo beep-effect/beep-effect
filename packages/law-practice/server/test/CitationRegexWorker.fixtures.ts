@@ -312,6 +312,10 @@ export const assertCitationMetadataFixtureLifetime = Effect.fn("RegexWorkerTest.
     Effect.provideService(Scope.Scope, scope)
   );
   const row = yield* Effect.fromOption(A.get(closed.corpus.cases, ordinal));
+  const invalid = yield* closed.stage.apply({}).pipe(Effect.flip);
+  expect(invalid).toMatchObject({ reason: "invalid-input" });
+  const unstarted = yield* closed.observed.snapshot;
+  expect(unstarted).toEqual({ spawned: 0, confirmed: 0 });
   yield* assertCitationWorkerClosedLifetime(scope, closed.stage.apply(row.request), closed.observed.snapshot);
   const timed = yield* install("bun", undefined, false, true, patternUtf16);
   yield* assertCitationWorkerCapturedDeadline(timed.stage.apply({ ...row.request, words }), timed.timer.trigger);

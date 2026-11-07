@@ -26,6 +26,7 @@ import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 
 const CorpusJson = S.fromJsonString(
   S.Struct({
@@ -46,11 +47,10 @@ const CorpusJson = S.fromJsonString(
 
 const runtime = Effect.gen(function* () {
   const citationResult1 = yield* FileSystem.FileSystem;
+  const workerRuntime = yield* citationHtmlWorkerTestRuntime();
   return {
-    kind: "bun",
-    executable: process.execPath,
+    ...workerRuntime,
     cwd: yield* citationResult1.makeTempDirectoryScoped({ prefix: "citation-html-corpus-" }),
-    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   };
 });
 const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
@@ -61,9 +61,11 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const admission = yield* makeCitationNativeProcessAdmission(limits);
       const citationResult2 = yield* runtime;
-      const worker = yield* makeCitationHtmlWorker(limits, citationResult2).pipe(
-        Effect.provideService(CitationNativeProcessAdmission, admission)
-      );
+      const worker = yield* makeCitationHtmlWorker(limits, {
+        ...citationResult2,
+        // Keep a direct source-entrypoint control alongside the bundled corpus replays.
+        workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+      }).pipe(Effect.provideService(CitationNativeProcessAdmission, admission));
       const citationResult3 = yield* worker.clean("").pipe(Effect.flip);
       expect(citationResult3).toMatchObject({
         _tag: "CitationHtmlKernelFailure",

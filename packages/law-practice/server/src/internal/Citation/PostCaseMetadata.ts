@@ -39,6 +39,7 @@ export class CitationPostCaseMetadataFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationPostCaseMetadataFailure.make({ reason });
+const invalidConfiguration = () => fail("invalid-configuration");
 const Value = S.NullOr(CitationPythonUnicodeStorage);
 /** Source-bound full-case/year patterns plus the authenticated frozen court table.
  * @internal @category models @since 0.0.0
@@ -181,7 +182,7 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
     policy,
     configurationInput,
     Config,
-    () => fail("invalid-configuration")
+    invalidConfiguration
   );
   // Installation authenticates even when later input has no raw court capture.
   yield* makeCitationCourtLookup(limits, decoded.courtTable);
@@ -190,12 +191,12 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
     runtimeInput,
     decoded,
     "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
-    () => fail("invalid-configuration")
+    invalidConfiguration
   );
   const installed = yield* makeCitationMetadataOperation(
     limits,
     (raw: unknown) => prepare(limits, runtime, config, decoded.courtTable, raw),
-    () => fail("invalid-configuration")
+    invalidConfiguration
   );
   const apply = Effect.fn("Citation.addPostCaseMetadata")(
     (raw: unknown) =>

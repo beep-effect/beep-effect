@@ -12,5 +12,28 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../drivers/m365/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/epistemics/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../shared/domain/tsconfig.json"
+    }
+  ]
 }

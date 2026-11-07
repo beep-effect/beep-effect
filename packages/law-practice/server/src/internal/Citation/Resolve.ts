@@ -226,7 +226,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
       candidates.pipe(A.fromIterable, idsOf, A.length) !== 1 &&
       O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)
     ) {
-      const guess = stripCitationAntecedentPunctuation(O.getOrElse(citation.metadata.antecedentGuess, () => ""));
+      const guess = citation.metadata.antecedentGuess.pipe(O.getOrThrow, stripCitationAntecedentPunctuation);
       return yield* partyCandidates(candidates, guess);
     }
     return candidates;
@@ -268,7 +268,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     citation: SupraCitation
   ) {
     if (!O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) return yield* missingAntecedent(mention);
-    const guess = stripCitationAntecedentPunctuation(O.getOrElse(citation.metadata.antecedentGuess, () => ""));
+    const guess = citation.metadata.antecedentGuess.pipe(O.getOrThrow, stripCitationAntecedentPunctuation);
     const citationResult1 = yield* partyCandidates(fulls, guess);
     return yield* select(A.fromIterable(citationResult1), mention);
   });

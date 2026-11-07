@@ -15,6 +15,7 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import type { CitationHtmlInputFailure } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
@@ -135,16 +136,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           let spawned = 0;
           let exits = 0;
           const citationResult9 = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bytes-" });
+          const workerRuntime = yield* citationHtmlWorkerTestRuntime();
           const worker = yield* makeCitationHtmlWorker(
             { ...limits, concurrentOperations: 2 },
-            {
-              kind: "bun",
-              executable: process.execPath,
-              cwd: citationResult9,
-              workerFile: NodeURL.fileURLToPath(
-                new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)
-              ),
-            }
+            { ...workerRuntime, cwd: citationResult9 }
           ).pipe(
             Effect.provideService(ChildProcessSpawner, {
               ...real,

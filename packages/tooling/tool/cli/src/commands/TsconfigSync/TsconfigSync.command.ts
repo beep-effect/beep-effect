@@ -109,6 +109,6 @@ export const tsconfigSyncCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package tsconfig.check.json references, package docgen, the generated Vitest alias data, and the generated Fallow boundary config"
+    "Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package check and test references, package docgen, the generated Vitest alias data, and the generated Fallow boundary config"
   )
 );

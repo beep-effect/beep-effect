@@ -12,6 +12,7 @@ import { qualityStepOutputBound, runCaptured } from "@beep/repo-cli-kit/process/
 import { findRepoRoot } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
+import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -29,6 +30,7 @@ import {
   OXLINT_DEPRECATED_APIS_CONFIG,
   resolveLintPackage,
 } from "./internal/LintPackage.ts";
+import { validateLintProgramAssignment } from "./internal/LintProgramAssignment.ts";
 import { LintProgramAssignmentError } from "./Lint.errors.ts";
 
 const validateAssignmentEvidence = Effect.fn("Lint.validateAssignmentEvidence")(function* (
@@ -75,6 +77,29 @@ const validateAssignmentEvidence = Effect.fn("Lint.validateAssignmentEvidence")(
   }
 });
 
+const validateRustAssignmentEvidence = Effect.fn("Lint.validateRustAssignmentEvidence")(function* (
+  root: string,
+  args: ReadonlyArray<string>
+) {
+  const path = yield* Path.Path;
+  const inventory = yield* runCaptured({
+    command: path.join(root, "node_modules/.bin/oxlint"),
+    args: ["--debug=files", ...args],
+    cwd: root,
+    env: { OXC_LOG: "off" },
+    extendEnv: true,
+    bound: qualityStepOutputBound,
+  });
+  if (inventory.exitCode !== 0 || inventory.truncated) {
+    return yield* LintProgramAssignmentError.make({
+      files: [],
+      message: "lint deprecated-apis: file inventory failed or was truncated; cannot prove TypeScript coverage.",
+    });
+  }
+  const files = pipe(inventory.output, Str.split(/\r?\n/), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  yield* validateLintProgramAssignment(root, files).pipe(Effect.scoped);
+});
+
 const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
   root: string,
   targets: ReadonlyArray<string>
@@ -94,17 +119,25 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
     ...(A.some(targets, isLabsWorkspaceDir) ? ["--no-error-on-unmatched-pattern"] : []),
     ...targets,
   ];
-  yield* Console.log(`[lint:deprecated-apis] oxlint ${A.join(args, " ")}`);
+  const useGo = yield* Config.Boolean("BEEP_LINT_TSGOLINT").pipe(Config.withDefault(false));
+  if (!useGo) yield* validateRustAssignmentEvidence(root, args);
+  yield* Console.log(`[lint:deprecated-apis] oxlint (${useGo ? "tsgolint" : "tsrs"}) ${A.join(args, " ")}`);
   const result = yield* runCaptured({
     command: path.join(root, "node_modules/.bin/oxlint"),
     args,
     cwd: root,
-    env: { OXC_LOG: "debug" },
+    env: useGo
+      ? { OXC_LOG: "debug" }
+      : {
+          OXLINT_TSGOLINT_PATH: path.join(root, "node_modules/.bin/tsrs-lint"),
+          RAYON_NUM_THREADS: `${plan.oxlintThreads}`,
+          TSRS_FAST: "0",
+        },
     extendEnv: true,
     bound: qualityStepOutputBound,
     tee: true,
   });
-  yield* validateAssignmentEvidence(root, result.output, result.truncated);
+  if (useGo) yield* validateAssignmentEvidence(root, result.output, result.truncated);
   if (result.exitCode !== 0) {
     return yield* failWithReportedExit(
       `lint deprecated-apis: failed with exit code ${result.exitCode}.`,

@@ -68,6 +68,7 @@ export class CitationOrderedExtractors extends S.Opaque<CitationOrderedExtractor
   )
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationExtractorOrderingFailure.make({ reason });
+const invalidBindings = () => fail("invalid-bindings");
 const missing = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 const setFailure = (failure: CitationRuntimeDictionaryFailure) =>
   failure.reason === "limit-exceeded"
@@ -86,7 +87,7 @@ export const makeCitationExtractorOrdering = Effect.fn("Citation.makeExtractorOr
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const bindings = yield* S.decodeUnknownEffect(Bindings)(input).pipe(Effect.mapError(() => fail("invalid-bindings")));
+  const bindings = yield* S.decodeUnknownEffect(Bindings)(input).pipe(Effect.mapError(invalidBindings));
   const keys = HashMap.fromIterable(
     A.map(bindings, (binding) =>
       Tuple.make(binding.id, CitationRuntimeDictionaryKey.make({ objectId: binding.id, hash: binding.hash }))
@@ -100,7 +101,7 @@ export const makeCitationExtractorOrdering = Effect.fn("Citation.makeExtractorOr
   );
   const selector = yield* makeCitationExtractorSelection(limits, bindings);
   const keyFor = Effect.fn("Citation.extractorOrderKey")((id: number) =>
-    Effect.fromOption(HashMap.get(keys, id)).pipe(Effect.mapError(() => fail("invalid-bindings")))
+    Effect.fromOption(HashMap.get(keys, id)).pipe(Effect.mapError(invalidBindings))
   );
   const comparison = CitationRuntimeDictionaryComparison.of({
     step: Effect.yieldNow,

@@ -17,6 +17,24 @@ const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(te
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "extractor selection",
   (it) => {
+    it.effect("refuses malformed bindings and native points before selection", () =>
+      Effect.gen(function* () {
+        const limits = (yield* defaultCitationEnginePolicy).limits;
+        const invalidPoint = { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) };
+        for (const bindings of [{}, [{ id: 0, flags: 0, strings: [invalidPoint] }]]) {
+          const failed = yield* makeCitationExtractorSelection(limits, bindings).pipe(Effect.flip);
+          expect(failed).toMatchObject({ reason: "invalid-bindings" });
+        }
+        const selector = yield* makeCitationExtractorSelection(limits, []);
+        const invalidSource = yield* selector.select(invalidPoint).pipe(Effect.flip);
+        expect(invalidSource).toMatchObject({ reason: "invalid-input" });
+        const limited = yield* makeCitationExtractorSelection({ ...limits, patterns: 1 }, [
+          { id: 0, flags: 0, strings: [] },
+          { id: 1, flags: 0, strings: [] },
+        ]).pipe(Effect.flip);
+        expect(limited).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patterns" });
+      })
+    );
     it.effect("matches source membership across prefixes, overlaps, casing and native surrogate distinctions", () =>
       Effect.gen(function* () {
         const corpus = yield* loadCitationExtractorSelectionControls();
@@ -95,4 +113,14 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
       })
     );
   }
+);
+
+it.effect("rejects malformed policy with a closed failure before installing operations", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationExtractorSelection(policy, []).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-policy" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
 );

@@ -1,4 +1,3 @@
-import * as NodeURL from "node:url";
 import {
   CitationCleanerFailure,
   CitationCleanerObject,
@@ -21,6 +20,7 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 
 const StringJson = S.fromJsonString(S.String);
@@ -93,11 +93,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const citationResult1 = yield* FileSystem.FileSystem;
+        const workerRuntime = yield* citationHtmlWorkerTestRuntime();
         const paths = {
-          kind: "bun",
-          executable: process.execPath,
+          ...workerRuntime,
           cwd: yield* citationResult1.makeTempDirectoryScoped({ prefix: "citation-html-stage-" }),
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         };
         const policy = {
           ...limits,
@@ -202,9 +201,9 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         };
         const real = yield* ChildProcessSpawner;
         let childPid = O.none<number>();
+        const workerRuntime = yield* citationHtmlWorkerTestRuntime();
         const worker = yield* makeCitationHtmlWorker(limits, {
-          kind: "bun",
-          executable: process.execPath,
+          ...workerRuntime,
           cwd,
           workerFile,
         }).pipe(
@@ -254,11 +253,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16: 1, producedTextUtf16: 1 };
         const citationResult16 = yield* FileSystem.FileSystem;
         const citationResult17 = yield* citationResult16.makeTempDirectoryScoped({ prefix: "citation-byte-stage-" });
+        const workerRuntime = yield* citationHtmlWorkerTestRuntime();
         const worker = yield* makeCitationHtmlWorker(limits, {
-          kind: "bun",
-          executable: process.execPath,
+          ...workerRuntime,
           cwd: citationResult17,
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         });
         const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(

@@ -182,6 +182,65 @@ describe("B8 heavy admission contracts", () => {
     { arbitrary: fcRuns(60) }
   );
 
+  it("classifies the complete PR 2750 packet diff as docs-only but retains mixed-code work", () => {
+    const changedPaths = [
+      "explorations/research-library-ontology/BRIEF.md",
+      "explorations/research-library-ontology/CAPTURE.md",
+      "explorations/research-library-ontology/DECISIONS.md",
+      "explorations/research-library-ontology/MAP.md",
+      "explorations/research-library-ontology/README.md",
+      "explorations/research-library-ontology/RESEARCH.md",
+      "explorations/research-library-ontology/assets/.gitkeep",
+      "explorations/research-library-ontology/ops/manifest.json",
+      "explorations/research-library-ontology/research/SOURCES.md",
+      "goals/research-intake-2026-11/GOAL.md",
+      "goals/research-intake-2026-11/PLAN.md",
+      "goals/research-intake-2026-11/README.md",
+      "goals/research-intake-2026-11/SPEC.md",
+      "goals/research-intake-2026-11/decisions/2026-11-06-box-ip-law-ontology-research-gets-its-own-intake-with-t1-triage-only.md",
+      "goals/research-intake-2026-11/decisions/2026-11-06-box-is-the-authoritative-nightly-series-near-duplicates-are-versions-of-one-identity.md",
+      "goals/research-intake-2026-11/decisions/2026-11-06-mining-tiers-and-pools.md",
+      "goals/research-intake-2026-11/decisions/2026-11-06-the-private-dm-archive-enters-the-library-under-a-private-access-class.md",
+      "goals/research-intake-2026-11/history/.gitkeep",
+      "goals/research-intake-2026-11/history/reflections/.gitkeep",
+      "goals/research-intake-2026-11/ops/manifest.json",
+      "goals/research-intake-2026-11/research/.gitkeep",
+      "goals/research-intake-2026-11/research/SOURCES.md",
+      "goals/research-library-ontology-core/GOAL.md",
+      "goals/research-library-ontology-core/PLAN.md",
+      "goals/research-library-ontology-core/README.md",
+      "goals/research-library-ontology-core/SPEC.md",
+      "goals/research-library-ontology-core/decisions/2026-11-06-dispositions-are-capture-phases-and-hop-depth-is-an-edge-property.md",
+      "goals/research-library-ontology-core/decisions/2026-11-06-effect-s-class-is-the-ontology-source-turtle-and-shacl-are-generated.md",
+      "goals/research-library-ontology-core/decisions/2026-11-06-library-models-stay-in-tooling-epistemic-promotion-is-gated.md",
+      "goals/research-library-ontology-core/history/.gitkeep",
+      "goals/research-library-ontology-core/history/reflections/.gitkeep",
+      "goals/research-library-ontology-core/ops/manifest.json",
+      "goals/research-library-ontology-core/research/.gitkeep",
+      "goals/research-library-ontology-core/research/SOURCES.md",
+      "goals/research-library-routes/GOAL.md",
+      "goals/research-library-routes/PLAN.md",
+      "goals/research-library-routes/README.md",
+      "goals/research-library-routes/SPEC.md",
+      "goals/research-library-routes/decisions/2026-11-06-hop-2-admission-is-a-routed-finding-gate-with-domain-caps.md",
+      "goals/research-library-routes/decisions/2026-11-06-vidbee-and-alphaxiv-are-import-result-methods-box-is-a-native-route-on-beep-box.md",
+      "goals/research-library-routes/decisions/2026-11-06-web-acquisition-runs-through-a-new-beep-firecrawl-driver.md",
+      "goals/research-library-routes/history/.gitkeep",
+      "goals/research-library-routes/history/reflections/.gitkeep",
+      "goals/research-library-routes/ops/manifest.json",
+      "goals/research-library-routes/research/.gitkeep",
+      "goals/research-library-routes/research/SOURCES.md",
+    ];
+    expect(decideHeavyAdmission(event({ changedPaths }))).toMatchObject({ docsOnly: true, verdict: "skip-satisfied" });
+    for (const executable of [
+      "goals/research-intake-2026-11/ops/run.sh",
+      "goals/research-intake-2026-11/research/fixture.json",
+      "packages/a/src/index.ts",
+    ]) {
+      expect(decideHeavyAdmission(event({ changedPaths: [...changedPaths, executable] })).docsOnly).toBe(false);
+    }
+  });
+
   it("classifies docs-only paths by the widened goals_document_pattern", () => {
     const rows: ReadonlyArray<readonly [string, boolean]> = [
       ["goals/INDEX.md", true],
@@ -193,6 +252,13 @@ describe("B8 heavy admission contracts", () => {
       ["goals/time-to-certainty/DECISIONS.md", true],
       ["goals/time-to-certainty/ops/manifest.json", true],
       ["goals/time-to-certainty/research/b8-brief.md", true],
+      ["goals/x/history/.gitkeep", true],
+      ["goals/x/history/reflections/.gitkeep", true],
+      ["goals/x/research/.gitkeep", true],
+      ["goals/x/ops/.gitkeep", false],
+      ["goals/x/scripts/.gitkeep", false],
+      ["goals/x/research/.gitkeep.sh", false],
+      ["goals/x/research/fixture.json", false],
       ["goals/x/scripts/run.sh", false],
       ["goals/x/ops/fixtures.json", false],
       ["goals/x/ops/manifest.json.bak", false],

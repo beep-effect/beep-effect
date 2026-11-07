@@ -12,5 +12,22 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../modeling/glob/tsconfig.json"
+    },
+    {
+      "path": "../../modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/memfs/tsconfig.json"
+    }
+  ]
 }

@@ -9,10 +9,12 @@ import {
   CitationPostCaseMetadataInput,
   makeCitationPostCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PostCaseMetadata";
+import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -24,6 +26,7 @@ import {
   assertCitationWorkerCompositionReleased,
   citationMetadataDeadlineText,
   makeCitationMetadataFixtureInstaller,
+  setupCitationMetadataRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -177,3 +180,35 @@ export const assertCitationPostCaseWhitespace = Effect.fn("PostCaseMetadataTest.
     expect(actual).toEqual(row.result);
   }
 });
+
+/** Installation rejects malformed policy/configuration and mismatched fixed patterns before spawning. */
+export const assertCitationPostCaseMetadataConfiguration = Effect.fn("PostCaseMetadataTest.configuration")(
+  function* () {
+    const corpus = yield* load();
+    const setup = yield* setupCitationMetadataRuntime("bun");
+    const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
+    for (const [policy, runtime, configuration] of [
+      [{}, setup.runtime, corpus.configuration],
+      [setup.limits, setup.runtime, {}],
+      [setup.limits, {}, corpus.configuration],
+      [setup.limits, setup.runtime, { ...corpus.configuration, pattern: changedPattern }],
+    ]) {
+      const failed = yield* makeCitationPostCaseMetadata(policy, runtime, configuration).pipe(
+        Effect.provideContext(setup.provided),
+        Effect.flip
+      );
+      expect(failed).toMatchObject({ reason: "invalid-configuration" });
+    }
+    const oversized = yield* makeCitationTextBudget({
+      ...setup.limits,
+      producedTextUtf16: setup.limits.producedTextUtf16 + 1,
+    });
+    const failed = yield* makeCitationPostCaseMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+      Effect.provideContext(Context.add(setup.provided, CitationTextBudget, oversized)),
+      Effect.flip
+    );
+    expect(failed).toMatchObject({ _tag: "CitationCourtLookupFailure", reason: "invalid-policy" });
+    const observed = yield* setup.observed.snapshot;
+    expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+  }
+);

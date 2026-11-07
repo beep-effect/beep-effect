@@ -144,6 +144,9 @@ describe("yeet final-check command", () => {
         assertInclude(planned, "final-check plan for");
         assertInclude(planned, "skip coverage: hosted proves it");
         assertInclude(planned, "expectation-rewrite: scan the diff's test files");
+        assertInclude(planned, "scope probe unavailable; retaining standalone root sweeps");
+        assertInclude(planned, "lint-policy: bunx oxlint . --config .oxlintrc.docs.json");
+        assertInclude(planned, "lint-policy: bun run beep lint deprecated-apis --full");
         assertInclude(planned, "lint: bunx biome check --files-ignore-unknown=true --no-errors-on-unmatched README.md");
 
         expect((yield* finalCheck(["--gates", "heavy"]).pipe(Effect.flip)).message).toContain(
@@ -184,6 +187,46 @@ describe("yeet final-check command", () => {
         expect(moved.message).toContain("the checkout changed while the gates ran");
         const readDirectory3 = yield* fs.readDirectory(`${root}/.beep/yeet/final-check`);
         expect(readDirectory3).toHaveLength(1);
+      })
+    );
+
+    it.effect(
+      "plans full policy explicitly and retains affected-scope root guards",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* temporaryWorkingDirectory;
+        yield* runFixtureGit(root, ["init", "-q"]);
+        yield* commit(root, ".gitignore", ".beep/\n", "ignore yeet state");
+        yield* fs.makeDirectory(`${root}/standards`, { recursive: true });
+        yield* commit(
+          root,
+          "standards/lint-policy.sweeps.jsonc",
+          '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"oxlint"}\n',
+          "sweep configuration"
+        );
+        yield* commit(root, "README.md", "head\n", "head");
+        const before = yield* TestConsole.logLines;
+        yield* finalCheck(["--base", "HEAD~1", "--gates", "lint-policy", "--dry-run"]);
+        const after = yield* TestConsole.logLines;
+        const planned = A.join(A.map(A.drop(after, A.length(before)), String), "\n");
+        assertInclude(planned, "lint-policy: bun run beep lint policy --full --base");
+        expect(planned).not.toContain("bunx oxlint");
+        expect(planned).not.toContain("lint deprecated-apis --full");
+
+        yield* commit(
+          root,
+          "standards/policy-tools.fingerprint.json",
+          '{"schemaVersion":"policy-tools-fingerprint/v2","shared":[],"sharedTasks":[],"check":[],"entries":[]}\n',
+          "readable seal"
+        );
+        yield* commit(root, "README.md", "source-only change\n", "source-only change");
+        const affectedBefore = yield* TestConsole.logLines;
+        yield* finalCheck(["--base", "HEAD~1", "--gates", "lint-policy", "--dry-run"]);
+        const affectedAfter = yield* TestConsole.logLines;
+        const affected = A.join(A.map(A.drop(affectedAfter, A.length(affectedBefore)), String), "\n");
+        expect(affected).not.toContain("lint policy --full");
+        assertInclude(affected, "lint-policy: bunx oxlint . --config .oxlintrc.docs.json");
+        assertInclude(affected, "lint-policy: bun run beep lint deprecated-apis --full");
       })
     );
   });
@@ -1110,6 +1153,61 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
   });
 
   it.effect(
+    "uses attached readiness monitoring when the user manager is unavailable",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-attached-" });
+      const fixture = yield* tailFixture(root, 'console.log("merge-ready: yes")');
+      const submit = RepoPlanStep.make({ ...fixture.submit, args: [...fixture.submit.args, "--", "--detach"] });
+      const result = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): attached fallback", pr: true }),
+        [submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("unsupported"),
+          listJobs: () => Effect.succeed([]),
+        }
+      );
+      expect(result.pushed).toBe(true);
+      const entries = yield* Ref.get(fixture.recorder);
+      expect(entries).toHaveLength(1);
+      const entry = O.getOrThrow(A.head(entries));
+      expect(entry.step.args).not.toContain("--detach");
+      expect(entry.step.verification).toBe("attached-until-ready-monitor");
+      expect(entry.result.output).toContain("merge-ready: yes");
+    })
+  );
+
+  it.effect(
+    "does not report publish success when attached readiness monitoring exits with a wave",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-attached-wave-" });
+      const fixture = yield* tailFixture(root, "process.exit(2)");
+      const error = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): attached wave", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("failed"),
+          listJobs: () => Effect.succeed([]),
+        }
+      ).pipe(Effect.flip);
+      expect(error.message).toContain("The branch is published; its attached monitor needs attention");
+      const entries = yield* Ref.get(fixture.recorder);
+      expect(A.map(entries, (entry) => entry.result.exitCode)).toContain(2);
+    })
+  );
+
+  it.effect(
     "reuses the running monitor for the pull request instead of submitting a second job",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1126,6 +1224,7 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         false,
         {
           ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
           listJobs: () => Ref.update(listed, (n) => n + 1).pipe(Effect.as([finished, running])),
         }
       );
@@ -1161,6 +1260,7 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         false,
         {
           ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
           listJobs: () => Effect.succeed([finished, running]),
           runnerStatus: (record) =>
             Ref.update(probed, (ids) => [...ids, record.jobId]).pipe(Effect.as("dead" as const)),
@@ -1192,7 +1292,11 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         fixture.recorder,
         fixture.extras,
         false,
-        { ensurePullRequest: fixture.ensurePullRequest, listJobs: () => Effect.succeed([finished, otherPr]) }
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
+          listJobs: () => Effect.succeed([finished, otherPr]),
+        }
       );
       expect(result.pushed).toBe(true);
       const entries = yield* Ref.get(fixture.recorder);
@@ -1284,7 +1388,7 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
           fixture.recorder,
           fixture.extras,
           false,
-          { ensurePullRequest: fixture.ensurePullRequest, listJobs }
+          { ensurePullRequest: fixture.ensurePullRequest, monitorSupport: Effect.succeed("active"), listJobs }
         );
       yield* Effect.all([publish(first), publish(second)], { concurrency: 2 }).pipe(TestClock.withLive);
       const readFileString21 = yield* fs.readFileString(submits);
@@ -1337,6 +1441,7 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         false,
         {
           ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
           listJobs: () => YeetCommandError.make({ message: "jobs dir unreadable" }),
         }
       );

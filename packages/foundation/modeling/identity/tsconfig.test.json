@@ -17,5 +17,16 @@
         "./src/internal/schemaStatics.ts"
       ]
     }
-  }
+  },
+  "references": [
+    {
+      "path": "../../primitive/types/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/test-runner/tsconfig.json"
+    }
+  ]
 }

@@ -36,6 +36,7 @@ export class CitationPythonHashFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationPythonHashFailure.make({ reason });
+const invalidInput = () => fail("invalid-input");
 const maximum = CitationEngineAbsoluteMaxima.producedTextUtf16;
 const Text = S.String.check(S.isMaxLength(maximum)).pipe(
   $I.annoteSchema("Text", {
@@ -100,7 +101,7 @@ export const measureCitationPythonText = Effect.fn("Citation.measurePythonText")
   let points = 0;
   for (let index = 0; index < Str.length(text); ) {
     if (points % 4096 === 0) yield* Effect.yieldNow;
-    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    const point = O.getOrThrow(Str.codePointAt(text, index));
     largest = Num.max(largest, point);
     index += pointUnits(point);
     points++;
@@ -139,9 +140,7 @@ export const validateCitationPythonStorage = Effect.fn("Citation.validatePythonS
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(
-    Effect.mapError(() => fail("invalid-input"))
-  );
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(Effect.mapError(invalidInput));
   const clock = yield* Clock.Clock;
   const deadline = Duration.min(limits.cleanDeadline, limits.operationDeadline).pipe(
     Duration.toMillis,
@@ -193,7 +192,7 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
       Effect.provideService(Clock.Clock, clock)
     );
   const byteHash = Effect.fn("Citation.pythonByteHash")(function* (input: unknown) {
-    const bytes = yield* S.decodeUnknownEffect(Bytes)(input).pipe(Effect.mapError(() => fail("invalid-input")));
+    const bytes = yield* S.decodeUnknownEffect(Bytes)(input).pipe(Effect.mapError(invalidInput));
     let index = 0;
     return yield* hash(bytes.length, () => readByte(bytes, index++));
   });
@@ -203,16 +202,10 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
       bounded(
         Effect.gen(function* () {
           const { width, bytes } = yield* S.decodeUnknownEffect(CitationPythonUnicodeStorageType)(input).pipe(
-            Effect.mapError(() => fail("invalid-input"))
+            Effect.mapError(invalidInput)
           );
           if (bytes.length % width !== 0) return yield* fail("invalid-input");
-          yield* validateCitationPythonStorage(
-            bytes,
-            width,
-            maximum,
-            () => fail("invalid-input"),
-            () => fail("invalid-input")
-          );
+          yield* validateCitationPythonStorage(bytes, width, maximum, invalidInput, invalidInput);
           return yield* byteHash(bytes);
         })
       )
@@ -220,7 +213,7 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
     text: Effect.fn("Citation.hashOwnedText")((input) =>
       bounded(
         Effect.gen(function* () {
-          const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(() => fail("invalid-input")));
+          const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(invalidInput));
           const [largest, points] = yield* measureCitationPythonText(text);
           const width = widthOf(largest);
           let index = 0;
@@ -228,7 +221,7 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
           let left = 0;
           return yield* hash(points * width, () => {
             if (left === 0) {
-              pending = O.getOrElse(Str.codePointAt(text, index), () => 0);
+              pending = O.getOrThrow(Str.codePointAt(text, index));
               index += pending > 65535 ? 2 : 1;
               left = width;
             }

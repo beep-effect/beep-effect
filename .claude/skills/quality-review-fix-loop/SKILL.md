@@ -43,7 +43,7 @@ reviewing; never review from generic taste:
 
 - root and package-local `AGENTS.md`
 - `standards/ARCHITECTURE.md` plus the numbered doctrine index under
-  `standards/architecture/` (01-13; `README.md` covers posture and drift
+  `standards/architecture/` (00-15; `README.md` covers posture and drift
   buckets)
 - `standards/effect-laws-v1.md`, `standards/effect-first-development.md`
 - `.patterns/jsdoc-documentation.md`

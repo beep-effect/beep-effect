@@ -122,6 +122,19 @@ export const assertCitationStopWordsBudget = Effect.fn("StopWordsTest.budget")(f
 export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  for (const configuration of [
+    null,
+    {
+      ...closed.configuration,
+      patterns: { ...closed.configuration.patterns, stopWords: { width: 1, bytes: new Uint8Array([88]) } },
+    },
+  ]) {
+    const rejected = yield* makeCitationStopWords(closed.limits, closed.runtime, configuration).pipe(
+      Effect.provideContext(closed.provided),
+      Effect.flip
+    );
+    expect(rejected).toMatchObject({ reason: "invalid-configuration" });
+  }
   const row = A.getUnsafe(closed.corpus.strips, 2);
   yield* assertCitationWorkerClosedLifetime(scope, closed.stage.clean(row.source), closed.observed.snapshot);
   const timed = yield* install("bun", undefined, false, true);

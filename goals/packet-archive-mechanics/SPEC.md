@@ -1,0 +1,148 @@
+# Packet Archive Mechanics Spec
+
+## Objective
+
+Ship `beep goals harvest` and `beep goals archive` (Goals family, `--kind goals|explorations`), the manifest `archive` block and `retentionReason`, doctor and INDEX support, the public archive repo, then sweep every terminal packet off `main` in sequential hash-verified batches of about 50; the harvest ledger is committed before batch 1.
+
+## Non-Goals
+
+- No new `GoalStatus` value; the 5-state domain stays.
+- No archive branch as the preservation mechanism (a tag marks the last batch only); no workstation or remote-box copies.
+- No archiving of `reference`, `paused`, `parked` or `active` packets; no exemptions in this sweep.
+- No judging of the harvest ledger (that is `harvested-alpha-triage`).
+- No parallel batch PRs.
+
+## Source Hierarchy
+
+1. User objective or issue that created this packet.
+2. `AGENTS.md`, `CLAUDE.md`, and required skills.
+3. Governing architecture/package standards.
+4. This `SPEC.md`.
+5. `PLAN.md`.
+6. `GOAL.md`.
+7. Supporting `research/`, `ops/`, and `history/` files.
+
+Higher sources outrank lower sources when they conflict.
+
+## Target Surfaces
+
+- `packages/tooling/tool/cli/src/commands/Goals/**` (new `Archive.*`, `Harvest.*`, schema additions in `Goals.schemas.ts`, doctor and index changes).
+- Exploration manifest schema under `commands/Explore/**` for the `archive` block.
+- `scripts/references.json` (`.repos/goals-archive` member).
+- `goals/README.md`, `explorations/README.md` (archive operation, `retentionReason`, closeout step); `.claude/skills/closeout/**` (archive step).
+- Every tombstoned packet under `goals/` and `explorations/`, and every file holding an inbound link to a moved file.
+- the exploration's `research/harvest/ledger.jsonl`.
+- The new public repo `beep-effect/beep-effect-goals-archive`.
+
+## Constraints
+
+- Schema first: `ArchiveRecord` (`repo`, `path`, `commit`, `contentHash`, `archivedAt`), `retentionReason`, and the harvest row (`id`, `slug`, `kind`, `status`, `source`, `file`, `line`, `commit`, `text`) are `S.Class` models before any command code.
+- Tombstone keeps, for goals: `ops/manifest.json`, generated stub `README.md` (closeout receipt, `provides`, headline findings, archive URL), `history/reflections/`, `research/OPPORTUNITIES.md`; for explorations: `ops/manifest.json`, stub `README.md`, `DECISIONS.md`, `BRIEF.md`.
+- Archive-first invariant: a packet is deleted from `main` only after its mirrored tree is pushed and its git tree hash verified; the hash is recorded in the `archive` block.
+- Link rewriting rides the shared knowledge link parser (`knowledgeLinkDestinations`), never a regex; targets are `blob/main` URLs in the archive repo.
+- `goals doctor`, `goals catalog`, `goals index --check`, `goals manifest --check` and the knowledge link lints stay green after every batch; archived packets are not drift.
+- Harvest reads every goal and exploration of every status (terminal flagged) and every tracked `OPPORTUNITIES.md` in the repo, including nested and non-packet ledgers; the ledger is committed at a named `main` SHA before batch 1.
+- Batches of about 50 packets, one PR open at a time, goals before explorations.
+- Public CLI runtime smoke (`PacketEventStore` provided) on one packet before the first batch.
+
+## Acceptance Criteria
+
+- [ ] `beep goals harvest --kind goals|explorations` writes a schema-valid provenance ledger covering reflections, friction receipts, unchecked PLAN items, `statusNote`/`stopConditions` and decision files; committed under the exploration's `research/harvest/`.
+- [ ] `beep goals archive --kind goals|explorations <slug>...|--batch <n>` pushes, verifies, tombstones, writes the `archive` block and rewrites inbound links, and refuses a full-retention packet lacking `retentionReason`.
+- [ ] `goals doctor` flags a `completed-retained` packet that has neither an `archive` block nor a `retentionReason`.
+- [ ] INDEX shows an Archived column; `goals catalog` providers from archived packets are unchanged.
+- [ ] Every `completed-retained` and `superseded` goal and every `graduated` and `killed` exploration on `main` is tombstoned; `main` carries the tag `archive/packets-2026-11`; `.repos/goals-archive` provisions via `beep refs`.
+- [ ] `goals/README.md` and `explorations/README.md` document the archive operation, `retentionReason`, and the closeout step; the closeout skill runs `beep goals archive` after the adoption PR.
+- [ ] No unrelated refactors or formatting churn.
+
+## Verification Matrix
+
+| Check | Command or evidence | Required result |
+| --- | --- | --- |
+| Packet launcher size | `test "$(wc -m < goals/packet-archive-mechanics/GOAL.md)" -le 4000` | Passes |
+| Manifest JSON | `jq . goals/packet-archive-mechanics/ops/manifest.json` | Passes |
+| Whitespace | `git diff --check -- goals/packet-archive-mechanics` | Passes |
+| Packet graph | `bun run beep goals doctor && bun run beep goals catalog` | No new findings; provider set unchanged |
+| Projections | `bun run beep goals manifest --check && bun run beep goals index --check` | Passes |
+| Package | `bun run beep quality package-verify @beep/repo-cli` | Passes |
+| Archive integrity | per batch: recorded `contentHash` equals `git rev-parse <commit>:<path>` in the archive repo | Equal for every packet |
+
+## Stop Conditions
+
+- Required source files are missing or materially contradictory.
+- Any spend: purchases, paid services, quota top-ups or plan changes need the
+  operator.
+- The same blocker repeats after reasonable investigation.
+
+Scope growth, destructive side effects and policy calls are not stops: decide
+them and record each as a decision file.
+
+## Decision log
+
+Record each decision as its own file under `decisions/` (`bun run beep goals
+decisions add packet-archive-mechanics --title "..." --reversal "..."`); the block below is
+generated from that directory and never edited by hand.
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug packet-archive-mechanics`; add a `kind: decision` file there, never edit this block._
+
+### Adopt the exploration's 19 locked decisions as this packet's design contract, 2026-11-06
+
+The exploration `packet-archive-and-alpha-harvest` settled nineteen decisions on
+2026-11-06 (archive home, tombstone contents, harvest-before-delete ordering,
+status model, batch shape, exemptions, command ownership, appetite). This packet
+executes them as written; `research/P0-DESIGN.md` is their schema and service
+projection. Reopening any of them is a dated superseding entry in the
+exploration's DECISIONS.md first, never an in-place edit here.
+
+Reverse: Reopen the specific decision in explorations/packet-archive-and-alpha-harvest/DECISIONS.md with a dated superseding entry and amend research/P0-DESIGN.md accordingly
+
+### Archive is recorded in the manifest archive block, not as a packet event, 2026-11-06
+
+`beep goals archive --write` records the operation only in `ops/manifest.json`
+(`archive: ArchiveRecord`). Adding an `archived` packet event is more than a new
+literal: it needs an event body, a fold branch, a SetStatus body switch case, a
+transition-writer request type and a decision on derived state and trace. That is
+a change to the packet event vocabulary and gets its own reviewed PR; the 65
+packets with event streams are untouched by the sweep. Doctor, INDEX and the
+capability graph read the manifest, so nothing observable depends on the event.
+
+Reverse: Add an archived event type to the packet event vocabulary (body, fold branch, SetStatus switch, transition writer) in its own reviewed PR and have TombstoneWriter append it; existing archive blocks stay valid
+
+### Create the archive repo and add its beep refs member in the P0 PR, 2026-11-06
+
+The earlier decision deferred the goals-archive member until the repo existed, because provisioning a member with no remote breaks every checkout. The agent created beep-effect/beep-effect-goals-archive (public, wiki and issues off) and seeded main with the projection README that ArchiveStore writes, so the member is safe now and rides #2801. The SSH URL is used because the archive checkout must push. bun run beep refs provision linked .repos/goals-archive at 4ca1a37. The ledger is still regenerated at a main SHA in its own PR before batch 1.
+
+Lane `feat/packet-archive-mechanics` · PR #2801
+
+Reverse: Remove the goals-archive member from scripts/references.json and its two refs test rows; archive or delete beep-effect/beep-effect-goals-archive only if no tombstone links into it
+
+### Defer the goals-archive beep refs member to P1, 2026-11-06
+
+beep refs provision clones every member with no per-member recovery, and refs refresh reports a missing member as pull-failed with a critical notification, so a member whose remote does not exist yet would break provisioning for every checkout. The member is added in P1 when beep-effect/beep-effect-goals-archive exists.
+
+Reverse: Add the member to scripts/references.json once the archive repo exists
+
+### Exploration tombstones keep research/harvest/** so the harvest ledger stays on main, 2026-11-06
+
+The exploration tombstone decision keeps ops/manifest.json, README.md, DECISIONS.md and BRIEF.md, which would move explorations/packet-archive-and-alpha-harvest/research/harvest/ to the archive repo in the exploration batch. The ledger-home decision puts the harvest ledger and the panel verdicts on main under that path, and harvested-alpha-triage names it as its prerequisite and writes its merge output beside it. The two decisions only agree if the tombstone keeps that subtree, so TombstoneKeep.explorations gains research/harvest/**. Only this exploration has the directory, so the sweep is otherwise unchanged and no packet is exempted.
+
+Lane `feat/packet-archive-mechanics`
+
+Reverse: Drop research/harvest/** from TombstoneKeep.explorations once harvested-alpha-triage has closed and moved its inputs; re-run beep goals archive on the exploration
+
+### Retain executable fixture inputs beside consumers after packet archive, 2026-11-07
+
+The first fifty-goal archive removed three law-practice sampling/reference manifests and four CI Ops retained evidence files still consumed by hosted checks. Fallow reports four unresolved new-URL paths and Labs reports five missing-file test failures. Repair the inherited main regression once in a consolidated unblocker, not in each Turbo lane. Move the consumed files to package-owned fixture directories, update the existing locators and keep the archived packets as tombstones. Copy five files byte-for-byte from accepted pre-archive 7e0288484841963d726c0ee69ac6dcf6688d32f9; update only the adoption-table locator in the two KPI reading goldens. Preserve the adoption-table digest, replay-render digest, metrics, corpus selections, quota/digest checks and all assertions. No new samples or evidence generation, suppression, lowered floor, network-dependent test input or cache promotion. No local verify, publish, tests, compiler, docgen, package quality or manual source-generator entrypoint runs; ordinary bootstrap/hooks and native goal writers are allowed. Hosted CI remains authoritative. Existing Turbo PRs consume the fix through accepted main.
+
+Lane `codex/cache-archive-consumer-repair-20261107`
+
+Reverse: Restore the previous consumer locators and remove the seven promoted fixtures only after another retained runtime owner is supplied; keep the full packet archive intact.
+
+<!-- beep:decisions:end -->
+
+## Exception Ledger
+
+| Exception | Scope | Owner | Rationale | Removal condition |
+| --- | --- | --- | --- | --- |
+| None | N/A | N/A | N/A | N/A |

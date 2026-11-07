@@ -866,7 +866,8 @@ export type SafeInline = typeof SafeInline.Type;
  * @category validation
  * @since 0.0.0
  */
-export const SafeDocument = Document.pipe(
+// Keep the nominal decoded Document type when checks and branding rebuild the schema.
+export const SafeDocument = S.make<S.Codec<Document, Document.Encoded>>(Document.ast).pipe(
   S.check(SafeDocumentCheck),
   S.brand("SafeDocument"),
   $I.annoteSchema("SafeDocument", {

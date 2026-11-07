@@ -53,8 +53,9 @@ const expectedCounts = {
 /** Compare reviewed case-flag contexts through independently acknowledged workers. */
 export const replayCitationRegexCaseFlags = Effect.fn("RegexCaseFlagsTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
-  full: boolean
+  full: boolean,
+  batch?: number
 ) {
   const corpus = yield* load();
-  yield* replayCitationRegexProgramFamily(kind, full, corpus.patterns, expectedCounts, 8192);
+  yield* replayCitationRegexProgramFamily(kind, full, corpus.patterns, expectedCounts, 8192, batch);
 });

@@ -101,6 +101,9 @@ export class CitationFrozenEditions extends Context.Service<
   }
 >()($I`CitationFrozenEditions`) {}
 const failure = (reason: typeof Reason.Type) => CitationFrozenEditionFailure.make({ reason });
+const invalidInput = () => failure("invalid-input");
+const corruptArtifact = () => failure("corrupt-artifact");
+const missingEdition = () => failure("missing-edition");
 const RuntimeJson = S.fromJsonString(CitationRuntimeEdition);
 const encoder = new TextEncoder();
 const dateString = (value: typeof DateValue.Type) => (value === null ? null : Str.replace("T", " ")(value.datetime));
@@ -116,7 +119,7 @@ const dateString = (value: typeof DateValue.Type) => (value === null ? null : St
  * @since 0.0.0
  */
 export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions")(function* (input: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(Bundle)(input).pipe(Effect.mapError(() => failure("invalid-input")));
+  const decoded = yield* S.decodeUnknownEffect(Bundle)(input).pipe(Effect.mapError(invalidInput));
   const rows = {
     reporters: A.map(decoded.reporters, (row) => ({ ...row })),
     editions: A.map(decoded.editions, (row) => ({ ...row })),
@@ -138,24 +141,21 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
       A.map(rows.reporters, (row) => row.ref),
       Order.String
     ),
-  }).pipe(Effect.mapError(() => failure("invalid-input")));
+  }).pipe(Effect.mapError(invalidInput));
   if ((yield* digest(manifest)) !== expectedManifest) return yield* failure("manifest-mismatch");
   let reporters = HashMap.empty<Sha256Hex, typeof Reporter.fields.fields.Type>();
   for (const row of rows.reporters) {
     if ((yield* digest(row.payload)) !== row.ref) return yield* failure("corrupt-artifact");
-    const value = yield* S.decodeEffect(ReporterJson)(row.payload).pipe(
-      Effect.mapError(() => failure("corrupt-artifact"))
-    );
+    const value = yield* S.decodeEffect(ReporterJson)(row.payload).pipe(Effect.mapError(corruptArtifact));
     reporters = HashMap.set(reporters, row.ref, value.fields);
   }
   let editions = HashMap.empty<CitationEditionRef, CitationRuntimeEdition>();
   for (const row of rows.editions) {
     if ((yield* digest(row.payload)) !== row.ref) return yield* failure("corrupt-artifact");
-    const value = yield* S.decodeEffect(EditionJson)(row.payload).pipe(
-      Effect.mapError(() => failure("corrupt-artifact"))
-    );
-    const reporter = yield* Effect.fromOption(HashMap.get(reporters, value.fields.reporter.artifactSha256), () =>
-      failure("corrupt-artifact")
+    const value = yield* S.decodeEffect(EditionJson)(row.payload).pipe(Effect.mapError(corruptArtifact));
+    const reporter = yield* Effect.fromOption(
+      HashMap.get(reporters, value.fields.reporter.artifactSha256),
+      corruptArtifact
     );
     const edition = CitationRuntimeEdition.make({
       edition: CitationEditionRef.make(row.ref),
@@ -169,16 +169,14 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
     editions = HashMap.set(editions, edition.edition, edition);
   }
   const checkedFamily = (family: typeof Family.Type) =>
-    S.decodeEffect(Family)(family).pipe(Effect.mapError(() => failure("invalid-input")));
+    S.decodeEffect(Family)(family).pipe(Effect.mapError(invalidInput));
   const lookup = Effect.fn("Citation.frozenEditionLookup")(function* (
     reference: CitationEditionRef,
     family: typeof Family.Type
   ) {
-    const ref = yield* S.decodeEffect(CitationEditionRef)(reference).pipe(
-      Effect.mapError(() => failure("invalid-input"))
-    );
+    const ref = yield* S.decodeEffect(CitationEditionRef)(reference).pipe(Effect.mapError(invalidInput));
     const kind = yield* checkedFamily(family);
-    const edition = yield* Effect.fromOption(HashMap.get(editions, ref), () => failure("missing-edition"));
+    const edition = yield* Effect.fromOption(HashMap.get(editions, ref), missingEdition);
     const source = edition.value.reporter.source;
     if (
       (kind === "case" && source !== "reporters") ||
@@ -186,14 +184,12 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
       (kind === "journal" && source !== "journals")
     )
       return yield* failure("kind-mismatch");
-    return yield* snapshotCitationValue(RuntimeJson, edition, () => failure("corrupt-artifact"));
+    return yield* snapshotCitationValue(RuntimeJson, edition, corruptArtifact);
   });
   return CitationFrozenEditions.of({
     source: Effect.fn("Citation.frozenEditionSource")(function* (reference: CitationEditionRef) {
-      const ref = yield* S.decodeEffect(CitationEditionRef)(reference).pipe(
-        Effect.mapError(() => failure("invalid-input"))
-      );
-      const edition = yield* Effect.fromOption(HashMap.get(editions, ref), () => failure("missing-edition"));
+      const ref = yield* S.decodeEffect(CitationEditionRef)(reference).pipe(Effect.mapError(invalidInput));
+      const edition = yield* Effect.fromOption(HashMap.get(editions, ref), missingEdition);
       return edition.value.reporter.source;
     }),
     lookup,
@@ -201,7 +197,7 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
       references: ReadonlyArray<CitationEditionRef>,
       family: typeof Family.Type
     ) {
-      const refs = yield* S.decodeEffect(References)(references).pipe(Effect.mapError(() => failure("invalid-input")));
+      const refs = yield* S.decodeEffect(References)(references).pipe(Effect.mapError(invalidInput));
       const kind = yield* checkedFamily(family);
       const captured = A.fromIterable(refs);
       return yield* Effect.forEach(captured, (ref) => lookup(ref, kind), { concurrency: 1 });

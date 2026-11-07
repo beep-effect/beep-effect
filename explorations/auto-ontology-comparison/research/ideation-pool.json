@@ -1,0 +1,272 @@
+[
+  {
+    "id": "competitor-1",
+    "text": "Run NVIDIA Auto Ontology as an adversarial 'shadow ontologist' whose auto-induced classes are treated as attack hypotheses against Beep's hand-designed schemas, never as candidates for adoption.",
+    "rationale": "A competitor would point out that auto-induced ontologies drift toward whatever table layout the source happens to have. Turning that drift into a probe shows where Beep's schemas are missing a distinction, or have overfit to one.",
+    "novelty": 8,
+    "viability": 7,
+    "fit": 9,
+    "score": 7.85
+  },
+  {
+    "id": "competitor-2",
+    "text": "Make every auto-induced concept stay in a quarantined 'unadjudicated' evidence tier, tagged with its induction run, model and input hash, and promote it into the Beep T-Box only after an OntoClean or foundational audit passes.",
+    "rationale": "The obvious integration fails when generated concepts quietly become canonical. Inverting that gives a staging lane with provenance, so a concept can enter only through audit.",
+    "novelty": 5,
+    "viability": 7,
+    "fit": 8,
+    "score": 6.55
+  },
+  {
+    "id": "competitor-3",
+    "text": "Point Auto Ontology at Beep's own Effect schemas and repo-cli codebase, and diff what it induces against what Beep intends: the gap list is the backlog of undocumented semantics.",
+    "rationale": "A competitor would mock Beep's ontology as not matching its own code. Running the tool on Beep itself turns that taunt into a reverse-engineering audit.",
+    "novelty": 7,
+    "viability": 2,
+    "fit": 5,
+    "score": 4.5
+  },
+  {
+    "id": "competitor-4",
+    "text": "Treat disagreement between the two stacks as the agent-facing signal: when NVIDIA's induced relation and Beep's declared relation conflict, show agents the conflict with both evidence chains instead of picking a winner.",
+    "rationale": "An agent stack fails when it hides uncertainty behind one confident answer. Exposing the conflict makes ambiguity something agents can query and act on.",
+    "novelty": 7,
+    "viability": 7,
+    "fit": 9,
+    "score": 7.5
+  },
+  {
+    "id": "competitor-5",
+    "text": "Use Auto Ontology only to propose competency questions and edge-case fixtures, never classes, so that its whole output becomes Beep's test suite rather than Beep's model.",
+    "rationale": "Generated schemas rot, but generated tests that hit real data distributions keep their value. Inverting the usual direction keeps NVIDIA's speed while Beep keeps semantic authority.",
+    "novelty": 8,
+    "viability": 8,
+    "fit": 9,
+    "score": 8.25
+  },
+  {
+    "id": "competitor-6",
+    "text": "Deliberately feed Auto Ontology poisoned or contradictory corpora, such as superseded filings or retracted claims, to measure whether it smears stale evidence into current concepts, then build Beep's temporal and retraction semantics around the exact failure modes found.",
+    "rationale": "An attacker's first move is evidence laundering through automated induction. Recording how that fails gives a requirements spec for Beep's evidence-integrity layer.",
+    "novelty": 8,
+    "viability": 8,
+    "fit": 10,
+    "score": 8.5
+  },
+  {
+    "id": "biology-1",
+    "text": "Thymic negative selection for extracted classes: every class an Auto Ontology-style pass proposes has to survive exposure to Beep's existing schemas and foundational-audit rules before it is admitted, and proposals that react against core identity criteria are killed.",
+    "rationale": "This moves NVIDIA's generator into a gated maturation stage instead of a trusted source, so semantic correctness is enforced at admission rather than repaired downstream.",
+    "novelty": 5,
+    "viability": 6,
+    "fit": 8,
+    "score": 6.15
+  },
+  {
+    "id": "biology-2",
+    "text": "An adaptive-immunity memory ledger: each human or agent rejection of an auto-induced term becomes a stored antibody (a pattern plus its evidence span) that fires on the next run before the term reaches the T-Box.",
+    "rationale": "Review effort compounds across runs, and the antibody file doubles as an auditable evidence-integrity record of why a concept was refused.",
+    "novelty": 9,
+    "viability": 8,
+    "fit": 9,
+    "score": 8.6
+  },
+  {
+    "id": "biology-3",
+    "text": "Speciation by reproductive isolation: let NVIDIA-induced schemas evolve in a quarantined niche graph that can only interbreed with Beep's canonical ontology through SSSOM mappings that pass a fitness test on competency questions.",
+    "rationale": "Both stacks keep their own assumptions intact while gene flow is measured. Neither has to win by fiat, and failed hybrids show where each stack's worldview breaks.",
+    "novelty": 6,
+    "viability": 6,
+    "fit": 8,
+    "score": 6.5
+  },
+  {
+    "id": "biology-4",
+    "text": "Quorum sensing for promotion: a candidate relation becomes canonical only once enough independent evidence carriers (documents, agents, extraction runs) emit the same signal above a concentration threshold.",
+    "rationale": "This replaces single-pass LLM confidence with population-level agreement, which tests the shared assumption that one extraction pass can be trusted on its own.",
+    "novelty": 5,
+    "viability": 3,
+    "fit": 7,
+    "score": 4.7
+  },
+  {
+    "id": "biology-5",
+    "text": "Apoptosis signaling for decaying concepts: every ontology term carries a viability signal fed by agent query hits and evidence refreshes, and it self-deprecates through a KGCL obsoletion event when the signal starves.",
+    "rationale": "Agent usefulness becomes a measurable survival pressure, and the operational cost of carrying dead schema weight shows up as a separate, observable metric.",
+    "novelty": 7,
+    "viability": 2,
+    "fit": 5,
+    "score": 4.5
+  },
+  {
+    "id": "biology-6",
+    "text": "Horizontal gene transfer of design patterns: harvest small reusable motifs from NVIDIA's auto-generated ontologies, such as recurring property bundles and relator shapes, and transplant only those into Beep's schema-first LiteralKit and Class building blocks, never whole hierarchies.",
+    "rationale": "This takes the induction engine's statistical sense of structure while keeping Beep's identity, rigidity and evidence laws, and it tests whether the value lies in the motifs rather than the taxonomy.",
+    "novelty": 7,
+    "viability": 5,
+    "fit": 7,
+    "score": 6.2
+  },
+  {
+    "id": "logistics-1",
+    "text": "NVIDIA class proposals wait in a perishable receiving queue and are scrapped at the dock when their dwell clock expires before Beep's kernel unloads them.",
+    "rationale": "A receiving queue with a spoil time: candidate axioms are freight on the dock, and an expired dwell is a scrap event rather than a schema merge.",
+    "novelty": 6,
+    "viability": 5,
+    "fit": 6,
+    "score": 5.6
+  },
+  {
+    "id": "logistics-2",
+    "text": "Relation suggestions are cube-built onto pallets and enter the Beep kernel only when a pallet reaches a minimum of distinct evidence sources.",
+    "rationale": "Batching as consolidation freight: the ontology commit is a trailer departure, and a half-full pallet of single-source relations stays on the consolidation floor.",
+    "novelty": 4,
+    "viability": 3,
+    "fit": 6,
+    "score": 4.1
+  },
+  {
+    "id": "logistics-3",
+    "text": "An agent query that misses a type posts a kanban card, and NVIDIA Auto Ontology manufactures only that class plus its immediate neighbors for immediate consumption.",
+    "rationale": "Just-in-time pull: the merged ontology is not forecast-built; the miss is a kanban card and the production quantity is the card.",
+    "novelty": 8,
+    "viability": 3,
+    "fit": 7,
+    "score": 5.75
+  },
+  {
+    "id": "logistics-4",
+    "text": "An axiom an agent bound and then failed on evidence integrity ships back to the NVIDIA generator as an RMA with a reason code and stays quarantined until the return is closed.",
+    "rationale": "Returns as reverse logistics: a failed use is a customer return, the reason code is the restock signal, and quarantine blocks reshipment.",
+    "novelty": 7,
+    "viability": 7,
+    "fit": 8,
+    "score": 7.25
+  },
+  {
+    "id": "logistics-5",
+    "text": "The shared ontology terminates at a neighborhood cross-dock, and the last mile is one Schema delivered to one service-contract address, with a decode error counted as a missed stop.",
+    "rationale": "Last-mile delivery: the trunk ontology and the porch delivery are separate networks, and a failed decode is a missed stop on a route.",
+    "novelty": 6,
+    "viability": 4,
+    "fit": 6,
+    "score": 5.2
+  },
+  {
+    "id": "logistics-6",
+    "text": "Pending agent type-demands accumulate as pick tickets and release as one wave, so a single walk of the NVIDIA ontology fulfills the wave.",
+    "rationale": "Wave picking: agent traversals become a timed release of a full pick-ticket wave against the upstream ontology warehouse.",
+    "novelty": 6,
+    "viability": 5,
+    "fit": 6,
+    "score": 5.6
+  },
+  {
+    "id": "regulator-1",
+    "text": "Bind cross-stack agreement to identical source-span byte ranges, and quarantine any shared class label whose spans differ as a false concordance.",
+    "rationale": "A matching name with different evidence is not the same fact; the span is the only join key an audit can re-check.",
+    "novelty": 7,
+    "viability": 2,
+    "fit": 5,
+    "score": 4.5
+  },
+  {
+    "id": "regulator-2",
+    "text": "Run a set of NoHome questions that sit outside both ontologies and require each stack to return a typed refusal naming the missing class.",
+    "rationale": "A system that always emits a class has deleted the right to refuse; the refusal itself is the artifact under test.",
+    "novelty": 9,
+    "viability": 9,
+    "fit": 9,
+    "score": 9
+  },
+  {
+    "id": "regulator-3",
+    "text": "Insert one known-false triple into a corpus both stacks read, and demand a refusal that cites the exact span that would have to be wrong.",
+    "rationale": "Poison that is absorbed without a span cannot later be walked back; traceability is the refusal, not a confidence score.",
+    "novelty": 7,
+    "viability": 5,
+    "fit": 8,
+    "score": 6.45
+  },
+  {
+    "id": "regulator-4",
+    "text": "Leave every NVIDIA-proposed class that fails Beep schema decode as an expiring untyped proposal, and require any agent utterance that touches it to carry the marker unadmitted.",
+    "rationale": "Admission is a decode event; speech that uses an undecoded class stays visible to the audit until it expires or is admitted.",
+    "novelty": 6,
+    "viability": 5,
+    "fit": 7,
+    "score": 5.85
+  },
+  {
+    "id": "regulator-5",
+    "text": "When NVIDIA completes a relation that Beep’s evidence marks unknown, write a gap-fill quarantine record and keep the unknown state intact for downstream proofs.",
+    "rationale": "Unknown is a provable state; filling it removes the ability to show that the evidence never supported the edge.",
+    "novelty": 7,
+    "viability": 8,
+    "fit": 9,
+    "score": 7.9
+  },
+  {
+    "id": "regulator-6",
+    "text": "Attach every ontology refresh to two receipts—an engineering receipt for schema and certificate changes, and an operational receipt for the generation run—and block the refresh when a prior proof certificate is no longer valid.",
+    "rationale": "A cheaper re-ontology run and a schema change are different costs; either one that silently retires a certified proof fails the audit.",
+    "novelty": 6,
+    "viability": 7,
+    "fit": 8,
+    "score": 6.9
+  },
+  {
+    "id": "on_call-1",
+    "text": "Page only when an agent commits a side effect on a fact the two ontologies identify differently; bare disagreement is a morning digest.",
+    "rationale": "The pager measures acted identity splits, so semantic drift with no side effect never wakes anyone.",
+    "novelty": 7,
+    "viability": 2,
+    "fit": 5,
+    "score": 4.5
+  },
+  {
+    "id": "on_call-2",
+    "text": "NVIDIA-induced classes are citations-or-die leases, and the only type allowed to survive a restart is a decoded Beep schema.",
+    "rationale": "An overnight induction run expires with the process instead of becoming the vocabulary you debug at 3am.",
+    "novelty": 6,
+    "viability": 2,
+    "fit": 5,
+    "score": 4.15
+  },
+  {
+    "id": "on_call-3",
+    "text": "Beep and NVIDIA share one refusal token for a denied class, and a tool call typed against that token cannot be retried on the other stack.",
+    "rationale": "Agents lose the second ontology as an appeals court for a concept the first one refused.",
+    "novelty": 8,
+    "viability": 7,
+    "fit": 8,
+    "score": 7.6
+  },
+  {
+    "id": "on_call-4",
+    "text": "Each stack holds immutable canary facts it is forbidden to repair, and a moved canary pages that stack's owner alone.",
+    "rationale": "Vendor regeneration and ledger corruption ring different phones because each canary has one writer.",
+    "novelty": 7,
+    "viability": 8,
+    "fit": 8,
+    "score": 7.65
+  },
+  {
+    "id": "on_call-5",
+    "text": "Every agent answer carries a Beep fact-clock and an NVIDIA score-clock, and the score-clock's type cannot outvote the fact-clock when refresh budget hits zero.",
+    "rationale": "Operational spend sheds freshness on its own meter, while engineering spend remains the only path that changes a committed fact.",
+    "novelty": 7,
+    "viability": 3,
+    "fit": 6,
+    "score": 5.15
+  },
+  {
+    "id": "on_call-6",
+    "text": "A tool result that bears an NVIDIA-sourced field is a read-only effect, and the only writable agent effect is a successful Beep schema decode.",
+    "rationale": "A bad induced class can spoil a read and still cannot enqueue the mutation the on-call would have to undo.",
+    "novelty": 5,
+    "viability": 1,
+    "fit": 4,
+    "score": 3.15
+  }
+]

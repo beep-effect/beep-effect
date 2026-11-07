@@ -58,7 +58,7 @@ export class TimelineMessageItem extends S.Opaque<TimelineMessageItem, { readonl
     role: MessageRole.annotateKey({
       description: "Role of the resolved message.",
     }),
-    content: Document.annotateKey({
+    content: S.suspend(() => Document).annotateKey({
       description: "Resolved message content in md document form.",
     }),
   }).pipe(

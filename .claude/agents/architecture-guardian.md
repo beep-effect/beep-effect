@@ -1,5 +1,6 @@
 ---
 name: architecture-guardian
+model: claude-opus-5-5
 description: Read-only architecture review of a diff, package, or proposal against the repo's binding standards — file-role topology, package family routing, public-surface rules, import boundaries, layer/config/error placement. Use before landing structural changes, when deciding where code belongs, or to audit a package for topology drift.
 tools: Bash, Read, Grep, Glob
 ---

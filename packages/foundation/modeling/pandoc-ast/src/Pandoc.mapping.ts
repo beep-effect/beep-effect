@@ -1361,7 +1361,7 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
  */
 export class PandocToDocumentResult extends S.Opaque<PandocToDocumentResult, { readonly brand: unique symbol }>()(
   S.Struct({
-    document: Md.Document.annotateKey({
+    document: S.suspend(() => Md.Document).annotateKey({
       description: "Mapped Md document.",
     }),
     report: PandocCompatibilityReport.annotateKey({

@@ -218,7 +218,8 @@ explicitly authorized credentials and native Codex tools on managed Linux hosts.
 - [ ] Git, build dependencies, Rust/Cargo, Python/uv, Node 24/nvm, pinned Bun,
       Docker Compose/Buildx, Codex, Claude, Cursor, Grok, Muse and CLIProxyAPI are installed from official
       sources, configured for interactive and noninteractive shells, and checked
-      with actual commands. Install optional tools only for a named workflow.
+      with actual commands. The named baseline is the Linux development/parity
+      workflow below; tools outside that baseline need their own named workflow.
 - [ ] Docker runs a disposable container and a representative compose service;
       expose services only on loopback or the approved tailnet surface. Choose
       rootless operation for agent work where compatible, and document exceptions.
@@ -254,6 +255,18 @@ For infrastructure utilities, record exact authenticated AWS/ECR and other
 required operations separately from installing their CLI binaries.
 
 ### Workstation scan and headless friction acceptance
+
+This packet's named Linux development workflow is the parity baseline described
+in D30. Inventory inclusion remains the default unless a compatibility,
+ownership or host-specific exception is recorded. "Optional tools" in the
+Linux criteria means additions outside that baseline; it does not silently
+remove inventoried baseline capabilities. Installation is still distinct from
+authentication and permission to use a credential or mutate a cloud account.
+
+Vendor-hosted agent VMs have the separate, curated preparation contract in
+`scripts/cloud/bootstrap.sh` and `docs/runbooks/cloud-environments.md`. That
+bootstrap is not the Linux-worker parity installer or proof that every worker
+capability is available.
 
 - Inventory installed development/cloud/agent CLIs, package managers, wrappers,
   headless services and portable agent configuration on DankStation. Assume they
@@ -293,3 +306,16 @@ decisions (D8–D40), L0–L4 and their boundaries are unchanged. D41 (advisory
 | Id | Decision | Consequence |
 | --- | --- | --- |
 | D42 | The operator explicitly expanded the cloud scope to set up Claude, Codex and Cursor cloud environments, spending existing expiring included credits only: no purchases, paid overage, new paid endpoints or plan changes. Current names replace retired ones: the bootstrap is `scripts/cloud/bootstrap.sh` (the retired `scripts/cloud-session-setup.sh` is not recreated), and the cloud runbook is `docs/runbooks/cloud-environments.md` (no separate `cloud-sessions.md` is created; acceptance row 5's runbook requirement reads against it). Per-vendor qualification needs its own receipt: an environment saved or a snapshot built is bootstrap evidence, not agent qualification, and no account count is claimed beyond collected receipts. | P3 is complete on #2486 (`43d0a511`). Renaming waives no obligation: D1–D7 and every original acceptance criterion still bind, read against the current names. The P1 acceptance rows were met by the retired script and stay as its evidence; their obligations carry over to `scripts/cloud/bootstrap.sh`, and the D2 denial path for the current bootstrap is an open, unqualified gap (Verification Matrix). The Verification Matrix uses the current names. Evidence, blockers and next work: [`history/2026-11-01-fleet-cloud-setup.md`](./history/2026-11-01-fleet-cloud-setup.md). Reverse by restoring the prior matrix rows and phase status; no tracked script or runbook is added or removed. |
+
+## Decision log
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug cloud-agent-readiness`; add a `kind: decision` file there, never edit this block._
+
+### Clarify Linux baseline and vendor bootstrap scope, 2026-11-06
+
+The existing Linux development/parity baseline is this packet named workflow. Optional additions outside it require a specific workflow. Vendor-VM bootstrap preparation is a separate curated scope. This clarification adds no tool, installation, authentication, host-admission or cloud-use permission; existing exclusions and proof requirements remain. It replaces only the local audit clarification formerly labelled D43, preserving earlier decisions.
+
+Reverse: Revert the documentation clarification; no operational state changed.
+
+<!-- beep:decisions:end -->

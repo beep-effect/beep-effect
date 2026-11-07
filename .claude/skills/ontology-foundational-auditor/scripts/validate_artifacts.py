@@ -2639,6 +2639,44 @@ def expect_silent(label, out):
 
 def self_test():
     import copy
+    def expect_msg(label, needle, fn, d, path):
+        n = len(errors)
+        fn(d, path)
+        assert any(needle in e for e in errors[n:]), \
+            f"{label}: expected {needle!r} to fire, got {errors[n:][:3]}"
+        del errors[n:]
+
+    shared = SKILL_DIR.parent / "_shared"
+    good_manifest = yload((shared / "schemas/run-manifest.schema.yaml").read_bytes())
+    good_manifest.update({"run_id": "orun-2026-09-11T00:00:00Z",
+                       "ontology": {"name": "x"}, "first_run": True,
+                       "scope_doc": {"path": "docs/scope.md", "sha256_12": "a" * 12},
+                       "cq_suite": {"path": "docs/cqs.yaml", "sha256_12": "b" * 12,
+                                    "cq_count": 1},
+                       "adapters": [{"id": "a", "version": "1", "script": "s",
+                                     "script_sha256_12": "c" * 12,
+                                     "golden_fixture": "g"}]})
+    for role, prompt in PROMPT_ROLES.items():
+        good_manifest["agents"][role].update({
+            "model": "test-model", "effort": "medium",
+            "prompt_sha256_12": sha12((SKILL_DIR / prompt).read_bytes())})
+    contracts = sorted(
+        list((shared / "schemas").glob("*.yaml")) +
+        list(shared.glob("*.yaml")) + list(shared.glob("*.md")) +
+        list(shared.glob("*.json")) +
+        list((SKILL_DIR / "templates").glob("*.yaml")),
+        key=lambda f: str(f.relative_to(SKILL_DIR.parent)))
+    hc = hashlib.sha256()
+    for cf in contracts:
+        data = cf.read_bytes()
+        hc.update(f"{cf.relative_to(SKILL_DIR.parent)}\n{len(data)}\n".encode())
+        hc.update(data)
+    good_manifest["engine"] = {
+        "validator_sha256_12": sha12(Path(__file__).resolve().read_bytes()),
+        "contracts_sha256_12": hc.hexdigest()[:12]}
+    check_manifest(copy.deepcopy(good_manifest), "self:good_manifest")
+    assert not errors, f"good manifest should pass: {errors}"
+
     so = {"id": "", "schema_version": 1,
           "repository": {"commit": "c1", "path": "src/a.ts"},
           "source_span": {"start_line": 1, "end_line": 2, "content_sha256": "d" * 64},
@@ -2762,11 +2800,11 @@ def self_test():
             (P("w/otp-x-001-r3.review.yaml"),
              {"target": "otp:x:001", "target_sha256": "a" * 64, "verdict": "PASS"})]
     out, _, _ = cross_check_review_binding(revs, {})
-    expect_out("FAIL revived through INDETERMINATE", "SAME proposal bytes", out)
+    expect_out("FAIL revived through INDETERMINATE", "PASS on the SAME proposal bytes", out)
     revs[2] = (P("w/otp-x-001-r3.review.yaml"),
                {"target": "otp:x:001", "target_sha256": "b" * 64, "verdict": "PASS"})
     out, _, _ = cross_check_review_binding(revs, {})
-    expect_out("PASS after FAIL needs revision_log", "revision_log", out)
+    expect_out("PASS after FAIL needs revision_log", "PASS after FAIL without a revision_log", out)
     out, _, _ = cross_check_review_binding(
         [(P("w/otp-x-001-r2.review.yaml"),
           {"target": "otp:x:001", "target_sha256": "a" * 64, "verdict": "PASS"})], {})
@@ -2831,12 +2869,10 @@ def self_test():
     b["ontoclean"]["supplies_identity"] = False
     expect_err("provider fields agree", check_ic, b, "self:disagree_ic")
 
-    man = {"run_id": "r", "repository": {"commit": "c", "pin_waived": "no"},
-           "ontology": {"name": "x"}, "scope_doc": {"path": "docs/scope.md"},
-           "cq_suite": {"path": "docs/cqs.yaml", "cq_count": 1},
-           "adapters": [{"id": "a", "script": "s", "script_sha256_12": "d", "golden_fixture": "g"}],
-           "agents": {}, "first_run": True}
-    expect_err("pin_waived must be boolean", check_manifest, man, "self:strwaive_man")
+    man = copy.deepcopy(good_manifest)
+    man["repository"]["pin_waived"] = "no"
+    expect_msg("pin_waived must be boolean", "repository.pin_waived must be a BOOLEAN",
+               check_manifest, man, "self:strwaive_man")
 
     # v5: binding-seam rules
     assert not occurs("id", "class S { #id: string }"), "#id boundary failed"
@@ -2963,23 +2999,23 @@ def self_test():
         "mode", "safe",
         strip_comments("<root mode=\"strict\"/>\n<!-- unclosed\nmode=\"safe\"", "a.xml")), \
         "unclosed xml comment"
-    man3 = {"run_id": "orun-999", "repository": {"commit": "c"},
-            "ontology": {"name": "x"}, "scope_doc": {"path": "docs/scope.md"},
-            "cq_suite": {"path": "docs/cqs.yaml", "cq_count": 1},
-            "adapters": [], "agents": {}, "first_run": True}
-    expect_err("run_id parses as ISO", check_manifest, man3, "self:orun999_man")
-    man4 = {"run_id": "orun-2026-08-28", "repository": {"commit": "c", "dirty": 0},
-            "ontology": {"name": "x"}, "scope_doc": {"path": "docs/scope.md"},
-            "cq_suite": {"path": "docs/cqs.yaml", "cq_count": 1},
-            "adapters": [], "agents": {}, "first_run": True}
-    expect_err("dirty exact bool (int 0)", check_manifest, man4, "self:intdirty_man")
-    man5 = {"run_id": "orun-2026-08-28", "repository": {"commit": "c"},
-            "ontology": {"name": "x"}, "scope_doc": {"path": "docs/scope.md"},
-            "cq_suite": {"path": "docs/cqs.yaml", "cq_count": 1},
-            "adapters": [], "agents": {}, "first_run": True,
-            "prior_index": "work/dispositions.index.yaml",
-            "prior_index_sha256_12": "a" * 12}
-    expect_err("prior self-reference / grammar", check_manifest, man5, "self:selfprior_man")
+    man3 = copy.deepcopy(good_manifest)
+    man3["run_id"] = "orun-999"
+    expect_msg("run_id parses as ISO", "run_id must match the closed grammar",
+               check_manifest, man3, "self:orun999_man")
+    man4 = copy.deepcopy(good_manifest)
+    man4["repository"]["dirty"] = 0
+    expect_msg("dirty exact bool (int 0)", "repository.dirty must be a BOOLEAN",
+               check_manifest, man4, "self:intdirty_man")
+    man5 = copy.deepcopy(good_manifest)
+    man5.update({"first_run": False, "prior_index": "work/dispositions.index.yaml",
+                 "prior_index_sha256_12": "a" * 12})
+    expect_msg("prior archive grammar", "must be an ARCHIVED index",
+               check_manifest, man5, "self:selfprior_man")
+    man5["first_run"] = True
+    man5["prior_index"] = "runs/orun-2026-08-28T00:00:00Z.index.yaml"
+    expect_msg("first run cannot have predecessor", "first_run: true with a prior_index",
+               check_manifest, man5, "self:firstprior_man")
     b = copy.deepcopy(good_dh)
     b["cq_warrants"] = "CQ-001"
     expect_err("scalar cq_warrants", check_dh, b, "self:scalarcq_dh")
@@ -3027,11 +3063,10 @@ def self_test():
         "honest xml attr post-quote slash"
     assert config_pair_occurs("mode", "safe", '{"mode": "safe", "x": 1}'), \
         "honest json comma after quote"
-    man2 = {"run_id": "not-orun", "repository": {"commit": "c"},
-            "ontology": {"name": "x"}, "scope_doc": {"path": "docs/scope.md"},
-            "cq_suite": {"path": "docs/cqs.yaml", "cq_count": 1},
-            "adapters": [], "agents": {}, "first_run": True}
-    expect_err("run_id grammar", check_manifest, man2, "self:runid_man")
+    man2 = copy.deepcopy(good_manifest)
+    man2["run_id"] = "not-orun"
+    expect_msg("run_id grammar", "run_id must match the closed grammar",
+               check_manifest, man2, "self:runid_man")
     b = copy.deepcopy(rev)
     b["verdict"] = "FAIL"
     for a in b["attacks"]:
@@ -3063,13 +3098,6 @@ def self_test():
 
 
     # --- round-10 families ---------------------------------------------------
-    def expect_msg(label, needle, fn, d, path):
-        n = len(errors)
-        fn(d, path)
-        assert any(needle in e for e in errors[n:]), \
-            f"{label}: expected {needle!r} to fire, got {errors[n:][:3]}"
-        del errors[n:]
-
     b = copy.deepcopy(so)
     b["repository"]["path"] = 123
     b["id"] = canonical_obs_id("so", b)
@@ -3083,16 +3111,13 @@ def self_test():
     po_num["id"] = canonical_obs_id("po", po_num)
     expect_msg("PO numeric path", "repository.path must be a non-blank STRING",
                check_po, po_num, "self:intpath_po")
-    man_ad = {"run_id": "orun-2026-08-29", "repository": {"commit": "c"},
-              "ontology": {"name": "x"}, "scope_doc": {"path": "docs/scope.md"},
-              "cq_suite": {"path": "docs/cqs.yaml", "cq_count": 1},
-              "adapters": [{"id": 71, "version": 100, "script": 123,
-                             "script_sha256_12": "a" * 12,
-                             "golden_fixture": 123}],
-              "agents": {}, "first_run": True}
-    expect_msg("manifest numeric adapter fields",
-               "adapters entry id must be a non-blank STRING",
-               check_manifest, man_ad, "self:intadapter_man")
+    # Mutate each adapter field independently from a passing manifest.
+    for field in ("id", "version", "script", "golden_fixture"):
+        man_ad = copy.deepcopy(good_manifest)
+        man_ad["adapters"][0][field] = 71
+        expect_msg(f"manifest numeric adapter {field}",
+                   f"adapters entry {field} must be a non-blank STRING",
+                   check_manifest, man_ad, f"self:intadapter_{field}_man")
     b = copy.deepcopy(good_otp)
     b["term"]["local_name"] = 777
     expect_msg("OTP numeric local_name",
@@ -3272,16 +3297,12 @@ def self_test():
             assert print_run_id(td) == 1, \
                 "print-run-id must refuse what the gate refuses (no strip)"
 
-    man_hex = {"run_id": "orun-2026-08-29T00:00:00Z",
-               "repository": {"commit": "c"}, "ontology": {"name": "x"},
-               "scope_doc": {"path": "docs/scope.md"},
-               "cq_suite": {"path": "docs/cqs.yaml", "cq_count": 1},
-               "adapters": [{"id": "a", "version": "1", "script": "s",
-                              "script_sha256_12": 449203194793,
-                              "golden_fixture": "g"}],
-               "agents": {}, "first_run": True}
+    man_hex = copy.deepcopy(good_manifest)
+    man_hex["adapters"][0]["script_sha256_12"] = 449203194793
     expect_msg("adapter numeric sha12", "script_sha256_12 must be a lowercase",
                check_manifest, man_hex, "self:intsha_man")
+    man_hex = copy.deepcopy(good_manifest)
+    del man_hex["scope_doc"]["sha256_12"]
     expect_msg("scope sha12 missing", "scope_doc.sha256_12 is required",
                check_manifest, man_hex, "self:noscope_man")
     b = copy.deepcopy(so)
@@ -3519,34 +3540,7 @@ def self_test():
         del errors[n:]
 
     # --- v15 field-amendment families ----------------------------------------
-    shared = SKILL_DIR.parent / "_shared"
-    effort_man = yload((shared / "schemas/run-manifest.schema.yaml").read_bytes())
-    effort_man.update({"run_id": "orun-2026-09-11T00:00:00Z",
-                       "ontology": {"name": "x"}, "first_run": True,
-                       "scope_doc": {"path": "docs/scope.md", "sha256_12": "a" * 12},
-                       "cq_suite": {"path": "docs/cqs.yaml", "sha256_12": "b" * 12,
-                                    "cq_count": 1},
-                       "adapters": [{"id": "a", "version": "1", "script": "s",
-                                     "script_sha256_12": "c" * 12,
-                                     "golden_fixture": "g"}]})
-    for role, prompt in PROMPT_ROLES.items():
-        effort_man["agents"][role].update({
-            "model": "test-model", "effort": "medium",
-            "prompt_sha256_12": sha12((SKILL_DIR / prompt).read_bytes())})
-    contracts = sorted(
-        list((shared / "schemas").glob("*.yaml")) +
-        list(shared.glob("*.yaml")) + list(shared.glob("*.md")) +
-        list(shared.glob("*.json")) +
-        list((SKILL_DIR / "templates").glob("*.yaml")),
-        key=lambda f: str(f.relative_to(SKILL_DIR.parent)))
-    hc = hashlib.sha256()
-    for cf in contracts:
-        data = cf.read_bytes()
-        hc.update(f"{cf.relative_to(SKILL_DIR.parent)}\n{len(data)}\n".encode())
-        hc.update(data)
-    effort_man["engine"] = {
-        "validator_sha256_12": sha12(Path(__file__).resolve().read_bytes()),
-        "contracts_sha256_12": hc.hexdigest()[:12]}
+    effort_man = copy.deepcopy(good_manifest)
     for role in PROMPT_ROLES:
         b = copy.deepcopy(effort_man)
         del b["agents"][role]["effort"]
@@ -3565,7 +3559,7 @@ def self_test():
             assert not errors[n:], f"legal seat effort must pass: {errors[n:]}"
             del errors[n:]
 
-    print("SELF-TEST PASS (158 rule families fire: canonical ids, nested closure, "
+    print("SELF-TEST PASS (rule families fire: canonical ids, nested closure, "
           "object grammar, mixed-unrep, discriminator, searched-true, warrant-XOR, "
           "parents grammar, id grammars incl. rat digits, crash-hardening, rat "
           "content binding + staleness + freshness, review edge-target/chain/"

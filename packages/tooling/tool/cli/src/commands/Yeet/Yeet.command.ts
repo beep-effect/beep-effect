@@ -39,6 +39,7 @@ import { runYeetEconomicsCommand } from "./internal/Economics.ts";
 import { runYeetFallowFeedback } from "./internal/FallowFeedback.ts";
 import { YeetFinalCheckOptions } from "./internal/FinalCheck.schemas.ts";
 import { runYeetFinalCheck } from "./internal/FinalCheck.ts";
+import { GateTableCommandOptions, runYeetGateTable } from "./internal/GateTable.ts";
 import { validateProofJobDetach } from "./internal/Guards.ts";
 import { runYeet } from "./internal/Handler.ts";
 import { YeetInboxSeverity, yeetProofJobRowId } from "./internal/Inbox.ts";
@@ -1257,6 +1258,21 @@ const yeetMergeGateCommand = Command.make(
   )
 );
 
+const gateTableJsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Emit the table as a yeet-gate-table/v1 JSON report")
+);
+
+const yeetGateTableCommand = Command.make(
+  "gate-table",
+  { ...porcelainFlags, json: gateTableJsonFlag },
+  flow(GateTableCommandOptions.make, runYeetGateTable)
+).pipe(
+  Command.withDescription(
+    "Orchestrator gate table: one row per open PR (draft, mergeable state, required checks green, outstanding threads, review window, reds, pending commit statuses) with GATE-MET when merge-gate would be worth asking; reads only, never merges"
+  )
+);
+
 const siblingsPrArgument = Argument.Int("pr").pipe(
   Argument.withDescription("Pull request number whose goal-packet siblings to list")
 );
@@ -1322,6 +1338,10 @@ const yeetFinalCheckCommand = Command.make(
     skip: finalCheckSkipFlag,
     dryRun: finalCheckDryRunFlag,
     failFast: finalCheckFailFastFlag,
+    resume: Flag.Boolean("resume").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Reuse completed steps only when source, base, command and environment still match")
+    ),
   },
   (options) => runYeetFinalCheck(YeetFinalCheckOptions.make(options)).pipe(Effect.asVoid)
 ).pipe(
@@ -1495,6 +1515,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetSweepCommand,
     yeetMergeCommand,
     yeetMergeGateCommand,
+    yeetGateTableCommand,
     yeetSiblingsCommand,
     yeetReplyCommand,
     yeetReadyCommand,

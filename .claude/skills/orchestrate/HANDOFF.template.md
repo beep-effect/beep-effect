@@ -1,10 +1,17 @@
 # Orchestrator hand-off — <repo> — written <YYYY-MM-DDTHH:MMZ>
 
 Holder: <session title> (<session id>) since <instant>. Predecessor: <session id or none>.
+Holder thread: <the holder's T3 thread link; a successor asks it here for an explicit release>.
 Successor: <session id, or "unassigned">. Ack: <pending | took over at instant>.
 
 Rule: this file is rewritten at every stopping point, never only at hand-off. A successor reads
 this file, `tail -40 STATE.md`, and `bun run beep session register list`; nothing else is assumed.
+
+`bun run beep session handoff --write` renders this file: it regenerates the holder line, "Rulings
+in force" (from `session ruling list`), "Gate snapshot" (with `--gate-snapshot <file>`),
+"Register" and "Journal pointer", and keeps every other section exactly as written. Hand-typed
+rows in "Register" or "Rulings in force" that are not in their store yet are kept under a "Carried
+over" heading until they are recorded.
 
 ## Rulings in force
 
@@ -19,12 +26,12 @@ Dated, verbatim operator wording, newest first. Paraphrases are not rulings.
 
 ## Gate snapshot
 
-Paste `bash .claude/skills/orchestrate/gate.sh` output here with its time. A PR whose row changed
-since this snapshot is where the predecessor stopped.
+Rendered from `bun run beep yeet gate-table` output (`session handoff --gate-snapshot <file>`). A
+PR whose row changed since this snapshot is where the predecessor stopped.
 
 ```text
 <time>
-#NNNN ready main abcdef1234 clean ok=16/16 threads=0/3 GATE-MET
+#NNNN ready main abcdef1234 clean ok=16/16 threads=0/3 window=ok GATE-MET
 ```
 
 ## Outstanding "final" promises
@@ -69,10 +76,10 @@ worker/lane launch calls (`delegate_task` / `t3_thread_launch` arguments with th
 
 ## Register
 
-Output of `bun run beep session register list --markdown`, pasted at write time.
+Rendered from `bun run beep session register list --markdown` at write time.
 
-| kind | address | owns | state | waiting on orchestrator | last contact | orphan plan |
-| --- | --- | --- | --- | --- | --- | --- |
+| kind | address | name | owns | state | waiting on orchestrator | last contact | orphan plan |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 
 ## Communication routes
 

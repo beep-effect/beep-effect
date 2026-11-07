@@ -108,7 +108,7 @@ writer_started_ms="$(date +%s%3N)"
 # cannot flip a permission today, but the failure mode is catastrophic in both
 # directions: it would bypass permission gating AND destroy the experiment, since
 # an auto-approved call produces no human wait and the instrument would record
-# zeros. Closing fd 1 here makes the guarantee structural rather than a promise
+# zeros. Redirecting fd 1 to /dev/null makes this structural rather than a promise
 # about every future edit. (`$(...)` below still captures jq's output correctly —
 # command substitution installs its own pipe on fd 1.) This is deliberately
 # unlike `law-pulse.sh`, which writes to stdout on purpose to inject context.
@@ -824,9 +824,10 @@ def hook_events: [ "PreToolUse", "PermissionRequest", "PostToolUse", "PostToolUs
                    "PermissionDenied", "SessionStart" ];
 def notification_types: [ "permission_prompt", "idle_prompt" ];
 
-# The three private identifiers arrive pre-hashed and shape-verified, so nothing
-# below can read a raw one: the raw keys are simply never referenced here. An
-# empty argument means the shell could not hash it, which is deliberately the
+# The three identifier arguments arrive pre-hashed and shape-verified. Their
+# raw values are not emitted. This filter reads .transcript_path to derive the
+# coarse sessionRole category below, not to emit the raw path. An empty hash
+# argument means the shell could not hash it, which is deliberately the
 # same case as the field being absent — an unhashable identifier must never
 # degrade into a digest of the empty string.
 ($sessionIdHash | as_present) as $sessionId
@@ -947,8 +948,8 @@ printf '%s\n' "${row}" >>"${store}/hook-pulse-${shard}.ndjson" 2>/dev/null || { 
 # content-free sequence-break worker. The worker is detached only after this
 # append succeeds, so its exact-bracket replay can never race an unwritten
 # request. `setsid -f` prevents the hook runner from waiting through reminder
-# sleeps; both inherited streams are closed so this path cannot influence the
-# permission decision or retain the hook protocol pipe.
+# sleeps; both inherited output streams are redirected away from the hook pipe,
+# so this path cannot influence permission decisions or retain that pipe.
 # A hosted cloud container has no desktop to notify (cloud-agent-readiness D3):
 # the explicit `BEEP_AGENT_HOST=cloud` skips only this notifier, after the row
 # above is already durable. Nothing here guesses the host from other signals.

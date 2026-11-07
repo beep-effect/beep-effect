@@ -300,7 +300,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     let length = 0;
     for (let index = 0; index < Str.length(text); ) {
       if (length % 4096 === 0) yield* Effect.yieldNow;
-      const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+      const point = O.getOrThrow(Str.codePointAt(text, index));
       largest = Num.max(largest, point);
       index += unitsOf(point);
       length++;

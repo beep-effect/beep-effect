@@ -1,10 +1,12 @@
 import * as NodeURL from "node:url";
+import { CitationCleanerWorkSnapshot } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationLiteralCleaner,
   makeCitationLiteralCleaners,
 } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { citationPythonTextData } from "@beep/law-practice-server/internal/Citation/PythonTextData";
 import { encodeCitationRuntimeString } from "@beep/law-practice-server/internal/Citation/RuntimeHashEncoding";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -17,12 +19,14 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { constant } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { CitationCleanerWork } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import type { CitationLiteralCleanerFailure } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 
 const Corpus = S.fromJsonString(
@@ -210,3 +214,106 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
     })
   );
 });
+
+it.effect("rejects malformed policy with a closed failure before installing operations", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationLiteralCleaners(policy).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
+
+it.effect("rejects malformed literal requests before scanning or reserving text", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const cleaners = yield* makeCitationLiteralCleaners(policy.limits);
+    for (const input of [null, {}, { cleaner: "xml", text: 17 }, { cleaner: "html", text: "private source" }]) {
+      const failure = yield* Effect.flip(cleaners.apply(input));
+      expect(failure).toMatchObject({ _tag: "CitationLiteralCleanerFailure", reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
+
+it.effect("translates stage and native preparation failures and preserves reservation failures", () =>
+  Effect.gen(function* () {
+    const clock = yield* Clock.Clock;
+    const limits = { ...(yield* defaultCitationEnginePolicy).limits, producedTextUtf16: 3 };
+    const reservationFailure = CitationSafetyLimitExceeded.make({ operation: "clean", limit: "producedTextUtf16" });
+    const work: CitationCleanerWork = {
+      nested: constant(Effect.die("unexpected nested cleaner")),
+      reserveText: constant(Effect.fail(reservationFailure)),
+      snapshot: Effect.succeed(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false })),
+      withTextCapacity: constant(Effect.die("unexpected capacity loan")),
+    };
+    const cleaners = yield* makeCitationLiteralCleaners(limits);
+    const stageLimit = yield* Effect.flip(cleaners.stage({ cleaner: "xml", text: "abcd" }, work));
+    expect(stageLimit).toMatchObject({
+      _tag: "CitationSafetyLimitExceeded",
+      limit: "producedTextUtf16",
+    });
+    const failedReservation = yield* Effect.flip(cleaners.stage({ cleaner: "xml", text: "a" }, work));
+    expect(failedReservation).toBe(reservationFailure);
+    const invalidStage = yield* Effect.flip(cleaners.stage({ cleaner: "xml", text: null }, work));
+    expect(invalidStage).toMatchObject({
+      _tag: "CitationLiteralCleanerFailure",
+      reason: "invalid-input",
+    });
+    for (const { cleaner, storage, limit } of [
+      { cleaner: "html", storage: { width: 1, bytes: new Uint8Array([65]) }, limit: false },
+      { cleaner: "xml", storage: { width: 2, bytes: new Uint8Array([65]) }, limit: false },
+      { cleaner: "xml", storage: { width: 1, bytes: new Uint8Array([65, 66, 67, 68]) }, limit: true },
+    ]) {
+      const failure = yield* Effect.flip(cleaners.stageUnicode(cleaner, storage, work));
+      expect(failure).toMatchObject(
+        limit
+          ? { _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" }
+          : { _tag: "CitationLiteralCleanerFailure", reason: "invalid-input" }
+      );
+    }
+    const timed = yield* makeCitationLiteralCleaners({ ...limits, producedTextUtf16: 200_000 }).pipe(
+      Effect.provideService(Clock.Clock, { ...clock, sleep: constant(Effect.void) })
+    );
+    const deadlineStage = yield* Effect.flip(
+      timed.stage({ cleaner: "underscores", text: Str.repeat(100_000)("_") }, work)
+    );
+    expect(deadlineStage).toMatchObject({
+      _tag: "CitationSafetyLimitExceeded",
+      limit: "cleanDeadline",
+    });
+    const deadlineNative = yield* Effect.flip(
+      timed.stageUnicode("xml", { width: 1, bytes: new Uint8Array(100_000) }, work)
+    );
+    expect(deadlineNative).toMatchObject({
+      _tag: "CitationSafetyLimitExceeded",
+      limit: "cleanDeadline",
+    });
+  })
+);
+
+it.effect("keeps the enclosing native cleaner deadline active when the preparation timer has not expired", () =>
+  Effect.gen(function* () {
+    const clock = yield* Clock.Clock;
+    let timers = 0;
+    const policy = yield* defaultCitationEnginePolicy;
+    const cleaners = yield* makeCitationLiteralCleaners(policy.limits).pipe(
+      Effect.provideService(Clock.Clock, {
+        ...clock,
+        sleep: () => (++timers === 2 ? Effect.void : Effect.never),
+      })
+    );
+    const work: CitationCleanerWork = {
+      nested: constant(Effect.die("unexpected nested cleaner")),
+      reserveText: constant(Effect.die("deadline should precede reservation")),
+      snapshot: Effect.succeed(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false })),
+      withTextCapacity: constant(Effect.die("unexpected capacity loan")),
+    };
+    const failure = yield* cleaners
+      .stageUnicode("xml", { width: 1, bytes: new Uint8Array(100_000) }, work)
+      .pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "cleanDeadline" });
+    expect(timers).toBe(2);
+  })
+);

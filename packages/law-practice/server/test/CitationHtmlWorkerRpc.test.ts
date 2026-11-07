@@ -78,3 +78,12 @@ it.effect("a failed request write is redacted and never retried", () =>
     expect(sends).toBe(1);
   })
 );
+
+it.effect("rejects a valid control message sent in the wrong protocol stage", () =>
+  Effect.gen(function* () {
+    const call = yield* prepareCitationHtmlRpc(request, 4096);
+    const started = yield* encodeCitationHtmlReply(CitationHtmlWorkerStarted.make({}), 4096);
+    const error = yield* call({ stdin: Sink.drain, stdout: Stream.make(started) }).pipe(Effect.flip);
+    expect(error).toMatchObject({ _tag: "CitationHtmlWorkerFailure", reason: "invalid-frame" });
+  })
+);

@@ -94,19 +94,22 @@ export const GoalDecisionLogLive = Layer.effect(GoalDecisionLog, makeLive);
 
 const isGoalSlug = S.is(GoalSlug);
 
-const selectPackets = Effect.fn("Goals.selectDecisionPackets")(function* (slug: O.Option<string>) {
+const selectPacket = Effect.fn("Goals.selectDecisionPacket")(function* (slug: string) {
+  if (!isGoalSlug(slug)) {
+    return yield* GoalPlanInputError.new(`--slug "${slug}" is not a lowercase hyphenated goal slug.`);
+  }
   const records = yield* listGoalPackets();
-  if (O.isNone(slug)) {
-    return records;
-  }
-  if (!isGoalSlug(slug.value)) {
-    return yield* GoalPlanInputError.new(`--slug "${slug.value}" is not a lowercase hyphenated goal slug.`);
-  }
-  const record = A.findFirst(records, (candidate) => candidate.slug === slug.value);
+  const record = A.findFirst(records, (candidate) => candidate.slug === slug);
   if (O.isNone(record)) {
-    return yield* GoalPacketNotFoundError.new(slug.value, `No packet directory "goals/${slug.value}".`);
+    return yield* GoalPacketNotFoundError.new(slug, `No packet directory "goals/${slug}".`);
   }
-  return [record.value];
+  return record.value;
+});
+const selectPackets = Effect.fn("Goals.selectDecisionPackets")(function* (slug: O.Option<string>) {
+  return yield* O.match(slug, {
+    onNone: listGoalPackets,
+    onSome: (slug: string) => selectPacket(slug).pipe(Effect.map(A.of)),
+  });
 });
 
 const driftLine = (report: GoalDecisionLogReport): ReadonlyArray<string> => [
@@ -300,11 +303,7 @@ export const runGoalsDecisionsAdd = Effect.fn("Goals.runDecisionsAdd")(function*
   const service = yield* GoalDecisionLog;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const records = yield* selectPackets(O.some(input.slug));
-  const record = records[0];
-  if (record === undefined) {
-    return yield* GoalPacketNotFoundError.new(input.slug, `No packet directory "goals/${input.slug}".`);
-  }
+  const record = yield* selectPacket(input.slug);
   const kind = O.getOrElse(input.kind, () => GoalDecisionKind.Enum.decision);
   if (!isKind(kind)) {
     return yield* GoalPlanInputError.new(

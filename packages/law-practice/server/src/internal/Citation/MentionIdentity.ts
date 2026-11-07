@@ -10,6 +10,7 @@ import { CitationMentionId } from "@beep/law-practice-domain/values";
 import { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as Digest from "effect/crypto/Digest";
 
@@ -76,6 +77,9 @@ export class CitationMentionIdentityFailure extends S.TaggedError<
   })
 ) {}
 
+const invalidInput = () => CitationMentionIdentityFailure.make({ reason: "invalid-input" });
+const digestFailed = () => CitationMentionIdentityFailure.make({ reason: "digest-failed" });
+
 // An ordered tuple fixes field order independently of object insertion order.
 // Keep the protocol/version and every position frozen for cm1; change the token
 // version if the identity inputs or encoding protocol change.
@@ -117,9 +121,7 @@ const IdentityPreimage = S.fromJsonString(
 export const makeCitationMentionId = Effect.fn("Citation.makeMentionId")(function* (
   input: unknown
 ): Effect.fn.Return<CitationMentionId, CitationMentionIdentityFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(CitationMentionIdentityInput)(input).pipe(
-    Effect.mapError(() => CitationMentionIdentityFailure.make({ reason: "invalid-input" }))
-  );
+  const decoded = yield* S.decodeUnknownEffect(CitationMentionIdentityInput)(input).pipe(Effect.mapError(invalidInput));
   const source = decoded.anchor.source;
   const anchor = decoded.anchor.anchor;
   const preimage = yield* S.encodeEffect(IdentityPreimage)([
@@ -137,10 +139,10 @@ export const makeCitationMentionId = Effect.fn("Citation.makeMentionId")(functio
     anchor.startChar,
     anchor.endChar,
     anchor.quote,
-  ]).pipe(Effect.mapError(() => CitationMentionIdentityFailure.make({ reason: "invalid-input" })));
+  ]).pipe(Effect.mapError(invalidInput));
   const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
-    Effect.mapError(() => CitationMentionIdentityFailure.make({ reason: "digest-failed" })),
-    Effect.catchDefect(() => Effect.fail(CitationMentionIdentityFailure.make({ reason: "digest-failed" })))
+    Effect.mapError(digestFailed),
+    Effect.catchDefect(flow(digestFailed, Effect.fail))
   );
   return CitationMentionId.make(`cm1:${digest}`);
 });

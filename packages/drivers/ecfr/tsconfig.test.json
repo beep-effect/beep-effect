@@ -12,5 +12,28 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../../foundation/capability/api-transport/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/library/codegen-kit/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ]
 }

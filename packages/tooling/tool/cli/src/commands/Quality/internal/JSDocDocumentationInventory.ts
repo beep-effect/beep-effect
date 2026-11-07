@@ -372,7 +372,11 @@ const hasExampleCarrier = (commentText: string): boolean =>
 const isPureTypeLevelExport = (declaration: Node): boolean =>
   Node.isTypeAliasDeclaration(declaration) ||
   Node.isInterfaceDeclaration(declaration) ||
-  Node.isModuleDeclaration(declaration);
+  (Node.isModuleDeclaration(declaration) &&
+    pipe(
+      O.fromUndefinedOr(declaration.getSymbol()),
+      O.exists((symbol) => !symbol.hasFlags(ts.SymbolFlags.ValueModule))
+    ));
 
 const missingRequiredExportTags = (
   declaration: Node,
@@ -1335,11 +1339,13 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
     sourceFileIsInPackageInventory(sourceFilePath, packageInfo, srcDir, exclude, repoRoot, path, candidatePaths)
   );
   const project = createInMemoryTsMorphProject();
+  // Populate the project before asking for semantic exports: adding another
+  // source file invalidates the compiler program used by getExportedDeclarations.
+  const projectSourceFiles = A.map(sourceFiles, (sourceFilePath) => project.addSourceFileAtPath(sourceFilePath));
   const modules: Array<InventoryEntry> = [];
   const exports: Array<InventoryEntry> = [];
 
-  for (const sourceFilePath of sourceFiles) {
-    const sourceFile = project.addSourceFileAtPath(sourceFilePath);
+  for (const sourceFile of projectSourceFiles) {
     const packageExports = analyzePackageSourceFile(sourceFile, packageInfo, repoRoot, path, forbiddenRootImports);
 
     if (packageExports.length > 0) {

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "research-library-ontology",
+    "title": "Research Library Ontology and Gated 2-Hop Intake",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": [
+      "research/SOURCES.md",
+      "CAPTURE.md",
+      "RESEARCH.md",
+      "DECISIONS.md",
+      "BRIEF.md",
+      "MAP.md"
+    ],
+    "links": {
+      "goals": [
+        "goals/research-library-ontology-core",
+        "goals/research-library-routes",
+        "goals/research-intake-2026-11"
+      ],
+      "docs": ["docs/runbooks/research-library.md"],
+      "supersededBy": null
+    },
+    "created": "2026-11-06",
+    "updated": "2026-11-06"
+  }
+}

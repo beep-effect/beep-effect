@@ -198,7 +198,7 @@ await Effect.runPromise(
         assert.equal(preparedSource.layout.pythonLength, witness.sourcePoints);
         assert.equal(preparedSource.layout.utf16Units, witness.sourceUtf16);
         const evaluator = yield* makeCitationRegexEvaluation(
-          CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor })
+          CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor, engine: registry.engine })
         );
         const body = yield* evaluator.evaluate(
           CitationRegexWorkerJob.make({

@@ -134,7 +134,8 @@ Examples:
 
 Use this two-tier approach:
 
-- **Minimum required**: `rdfs:label`, `skos:definition`, `dcterms:source`
+- **Minimum required**: `rdfs:label`, `skos:definition`; when the definition
+  is sourced, also `dcterms:source` or `obo:IAO_0000119`, as in the table above
 - **Recommended for production**: extended annotation set below
 
 | Field | Suggested Annotation Property |

@@ -10,6 +10,7 @@ import {
 } from "@beep/law-practice-domain/values";
 import {
   CitationCallbackRuntimeIndexFactory,
+  CitationMissingPageIdentityFactory,
   makeCitationCallbackRuntimeIndexFactory,
 } from "@beep/law-practice-server/internal/Citation/CallbackRuntimeIndex";
 import {
@@ -34,6 +35,7 @@ import {
   CitationSessionResourceDescriptors,
   makeCitationSessionDocumentProjector,
 } from "@beep/law-practice-server/internal/Citation/SessionDocument";
+import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -41,6 +43,8 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -53,6 +57,7 @@ import {
   normalizeCallbackFixtureResource,
   prepareCallbackObservation,
 } from "./CitationCallbackSession.fixtures.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import type {
   CitationFullsCallbackInput,
@@ -88,6 +93,107 @@ const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 const Presentation = S.Struct({ mentionId: CitationMentionId });
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback runtime dictionary", (it) => {
+  it.effect("bounds issued slots, exposes canonical equality keys and rejects absent host ownership", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const input = yield* prepareCallbackObservation(
+        CitationCallbackObservation.make({
+          name: "bounded-runtime-slots",
+          kinds: ["case"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const mention = A.getUnsafe(input.mentions, 0);
+      const wire = yield* S.encodeEffect(Citation)(mention.citation);
+      const citation = yield* S.decodeEffect(Citation)({
+        ...wire,
+        components: { ...wire.components, page: "1", reporter: "U.S." },
+      });
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen)
+      );
+      const index = yield* factory.build({
+        limits: { ...input.limits, resolutionIterations: 1 },
+        step: Effect.void,
+        read: Effect.fn("RuntimeSlotTest.read")(() => Effect.succeed(citation)),
+      });
+      const absent = yield* index.createHost({ token: "host-without-adapter" }).pipe(Effect.flip);
+      expect(absent.reason).toBe("identity-failed");
+      const reference = CitationGroupMember.cases.Mention.make({ mentionId: mention.id });
+      const resource = yield* index.create(reference);
+      const key = yield* index.equalityKey(resource);
+      const repeated = yield* index.equalityKey(resource);
+      expect(repeated).toBe(key);
+      const hash = yield* S.decodeEffect(S.BigIntFromString)(key);
+      expect(hash).toBeGreaterThanOrEqual(BigInt(0));
+      const falsy = yield* normalizeCallbackFixtureResource(false);
+      const isFalsy = yield* index.isTruthy(falsy);
+      expect(isFalsy).toBe(false);
+      const unhashable = CitationCallbackResource.cases.Unhashable.make({ truthy: true, value: [] });
+      const isTruthy = yield* index.isTruthy(unhashable);
+      expect(isTruthy).toBe(true);
+      const exhausted = yield* index.create(reference).pipe(Effect.flip);
+      expect(exhausted.reason).toBe("limit-exceeded");
+      const entries = yield* index.read;
+      expect(entries).toEqual([]);
+      yield* index.close;
+      const closed = yield* index.create(reference).pipe(Effect.flip);
+      expect(closed.reason).toBe("identity-failed");
+    })
+  );
+
+  it.effect("refuses failed live models and missing-page identity providers without publishing entries", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const input = yield* prepareCallbackObservation(
+        CitationCallbackObservation.make({
+          name: "runtime-model-failure",
+          kinds: ["case", "id"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const first = A.getUnsafe(input.mentions, 0);
+      const ref = CitationGroupMember.cases.Mention.make({ mentionId: first.id });
+      const encoded = yield* S.encodeEffect(Citation)(first.citation);
+      const missingPage = yield* S.decodeEffect(Citation)({
+        ...encoded,
+        components: { ...encoded.components, page: null },
+      });
+      const malformed = yield* S.decodeEffect(Citation)(encoded);
+      Reflect.set(malformed.components, "page", 42);
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationMissingPageIdentityFactory, {
+          build: Effect.succeed({ read: () => Effect.fail(invalid()) }),
+        })
+      );
+      for (const read of [
+        Effect.fail(invalid()),
+        Effect.succeed(A.getUnsafe(input.mentions, 1).citation),
+        Effect.succeed(malformed),
+        Effect.succeed(missingPage),
+      ]) {
+        const index = yield* factory.build({ limits: input.limits, step: Effect.void, read: () => read });
+        const resource = yield* index.create(ref);
+        const failure = yield* index.get(resource).pipe(Effect.flip);
+        expect(failure.reason).toBe("identity-failed");
+        const entries = yield* index.read;
+        expect(entries).toEqual([]);
+        yield* index.close;
+        const closed = yield* index.uniqueCount([]).pipe(Effect.flip);
+        expect(closed.reason).toBe("identity-failed");
+      }
+    })
+  );
+
   it.effect("executes all three mutable default-key source scenes with complete callback events and final groups", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -481,6 +587,31 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
       );
       const citationResult37 = yield* Effect.flip(owner.read);
       expect(citationResult37.reason).toBe("invalid-input");
+    })
+  );
+  it.effect("refuses index issuance when captured entropy or hashing fails", () =>
+    Effect.gen(function* () {
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(bundle);
+      const random = yield* SecureRandom.SecureRandom;
+      const digest = yield* Digest.Digest;
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const owner = { limits, read: () => Effect.fail(invalid()), step: Effect.void };
+      const cases = [
+        { random: { ...random, randomBytes: () => Effect.die("synthetic entropy failure") }, digest },
+        { random, digest: makeTestCitationDigest(() => Effect.die("synthetic digest failure")) },
+        { random, digest: makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1))) },
+      ];
+      for (const row of cases) {
+        const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+          Effect.provideService(CitationFrozenEditions, frozen),
+          Effect.provideService(SecureRandom.SecureRandom, row.random),
+          Effect.provideService(Digest.Digest, row.digest)
+        );
+        const failure = yield* factory.build(owner).pipe(Effect.flip);
+        expect(failure).toMatchObject({ reason: "identity-failed" });
+        expect("cause" in failure).toBe(false);
+      }
     })
   );
 });

@@ -387,6 +387,12 @@
         ],
         "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
         "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
+      },
+      "currentReferenceContainmentObservation": {
+        "report": "real-root-entrypoint-and-reference-inputs-2026-11-06.json",
+        "sourceRevision": "68d37217c6ab10f6b1ca70316ab6544c87d23c38",
+        "candidateIdentityConfigSha256": "91fae88ab5bd2b458852a0bde1d2cee7fc81e2045ad0256c63bf2b10d66cfed3",
+        "scope": "One explicit reference-tree exclusion fixes actual canary lint dry-run refusal and preserves all observed stable lint input paths. Hosted source acceptance and independent profile binding remain required."
       }
     },
     {
@@ -812,8 +818,8 @@
         }
       },
       "currentRootCatalogueObservation": {
-        "report": "nested-entrypoint-inventory-2026-11-03.json",
-        "scope": "Both exact clients agree on all 6,327 catalogue nodes and 4,235 literal manifest scripts; the configured graph of 4,528 nodes and 2,436 commands is a strict subset. No task body executed.",
+        "report": "nested-entrypoint-inventory-2026-11-06.json",
+        "scope": "Source 845d9f1; both exact clients agree on 6329 catalogue nodes and 4239 literal manifest scripts, including 1801 script-only entries. No task body executed.",
         "remaining": "Actual execution reconciliation and final feature acceptance remain pending."
       }
     },
@@ -1690,6 +1696,15 @@
         "reports": ["native-source-replay-selection-2026-11-03.json"],
         "sourceRevision": "0fa82e5eac6324ccc8806ecc83745daa1d52e70d",
         "scope": "Actual repaired-driver synthetic native behavior only; original per-feature and tuple acceptance requirements remain unchanged."
+      },
+      "currentRootGraphObservation": {
+        "report": "real-root-entrypoint-and-reference-inputs-2026-11-06.json",
+        "sourceRevision": "68d37217c6ab10f6b1ca70316ab6544c87d23c38",
+        "sourceState": "working-tree-overlay",
+        "candidateIdentityConfigSha256": "91fae88ab5bd2b458852a0bde1d2cee7fc81e2045ad0256c63bf2b10d66cfed3",
+        "nativeDryRuns": 12,
+        "rootFlagActivated": false,
+        "scope": "Actual root build/check/lint graphs on both pinned clients; check omits two executable build branches. Execution equivalence, caller semantics, value and feature acceptance remain pending."
       }
     },
     {

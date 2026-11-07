@@ -67,7 +67,12 @@ const runCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 // MemoryStats here, so the unscaled local plan): 4 on CI and small hosts, wider on a workstation.
 const oxlintThreadsArg = `--threads=${localQualityConcurrencyPlan().oxlintThreads}`;
 const run = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =>
-  runCommand(args).pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
+  runCommand(args).pipe(
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromUnknown({ BEEP_LINT_TSGOLINT: "true", ...env })
+    )
+  );
 const runSweepCommand = Effect.fnUntraced(function* (
   args: ReadonlyArray<string>,
   content: string,
@@ -113,6 +118,62 @@ beforeEach(() => {
 
 describe("thin lint workers", { concurrent: false }, () => {
   it.layer(platform, { timeout: "30 seconds" })((it) => {
+    for (const inventory of [
+      { exitCode: 1, output: "inventory failed", truncated: false },
+      { exitCode: 0, output: "packages/example/src/index.ts", truncated: true },
+    ]) {
+      it.effect(`rejects Rust inventory exit=${inventory.exitCode} truncated=${inventory.truncated}`, () =>
+        Effect.gen(function* () {
+          captured.mockImplementation(() => Effect.succeed(StepExec.CapturedStep.make(inventory)));
+          const error = yield* run(["deprecated-apis", "--package", "."], { BEEP_LINT_TSGOLINT: "false" }).pipe(
+            Effect.flip
+          );
+          expect(error).toMatchObject({ _tag: "LintProgramAssignmentError" });
+          expect(captured).toHaveBeenCalledTimes(1);
+          expect(captured.mock.calls[0]?.[0].args).toContain("--debug=files");
+        })
+      );
+    }
+
+    for (const exitCode of [0, 2]) {
+      it.effect(`validates Rust ownership before running the worker with exit=${exitCode}`, () =>
+        Effect.gen(function* () {
+          const root = yield* findRepoRoot();
+          captured
+            .mockImplementationOnce(() =>
+              Effect.succeed(
+                StepExec.CapturedStep.make({
+                  exitCode: 0,
+                  output: "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts\n",
+                  truncated: false,
+                })
+              )
+            )
+            .mockImplementationOnce(() =>
+              Effect.succeed(
+                StepExec.CapturedStep.make({
+                  exitCode,
+                  output: "",
+                  truncated: false,
+                })
+              )
+            );
+          const succeeded = yield* run(["deprecated-apis", "--package", "."], {
+            BEEP_LINT_TSGOLINT: "false",
+          }).pipe(Effect.isSuccess);
+          expect(succeeded).toBe(exitCode === 0);
+          expect(captured).toHaveBeenCalledTimes(2);
+          expect(captured.mock.calls[0]?.[0].args).toContain("--debug=files");
+          expect(captured.mock.calls[1]?.[0].env).toEqual({
+            OXLINT_TSGOLINT_PATH: `${root}/node_modules/.bin/tsrs-lint`,
+            RAYON_NUM_THREADS: `${localQualityConcurrencyPlan().oxlintThreads}`,
+            TSRS_FAST: "0",
+          });
+          expect(captured.mock.calls[1]?.[0].args).not.toContain("--debug=files");
+        })
+      );
+    }
+
     it.effect(
       "fails closed on every unmatched TypeScript extension, including labs",
       Effect.fnUntraced(function* () {

@@ -19,6 +19,7 @@ import { IstanbulCoverageProvider } from "@vitest/coverage-istanbul/dist/provide
 import { createCoverageMap, createFileCoverage } from "@vitest/istanbul-lib-coverage";
 import { createInstrumenter } from "@vitest/istanbul-lib-instrument";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Order from "effect/Order";
@@ -936,7 +937,9 @@ export const collectCoverageProducerArtifacts = Effect.fn("CoverageArtifacts.col
         ),
       });
     }),
-    { concurrency: 1 }
+    // Each package owns its maps and source/runtime discovery process. Two independent
+    // validations fit the hosted 4-vCPU runner without making the producer census authoritative.
+    { concurrency: 2 }
   );
 });
 
@@ -955,8 +958,14 @@ export const compareCoverageProducerArtifacts = Effect.fn("CoverageArtifacts.com
   repoRoot: string,
   options: CoverageProducerCompareOptions
 ) {
-  const snapshots = yield* collectCoverageProducerArtifacts(repoRoot, options);
-  return yield* compareCoverageRegressionBaseline(
+  const [verificationDuration, snapshots] = yield* collectCoverageProducerArtifacts(repoRoot, options).pipe(
+    Effect.timed
+  );
+  yield* Effect.logInfo("Coverage producer artifacts verified", {
+    milliseconds: Duration.toMillis(verificationDuration),
+    packages: snapshots.length,
+  });
+  const [comparisonDuration, result] = yield* compareCoverageRegressionBaseline(
     repoRoot,
     options.scoped,
     sorted(
@@ -964,5 +973,10 @@ export const compareCoverageProducerArtifacts = Effect.fn("CoverageArtifacts.com
     ),
     snapshots,
     options.base
-  );
+  ).pipe(Effect.timed);
+  yield* Effect.logInfo("Coverage baseline comparison complete", {
+    milliseconds: Duration.toMillis(comparisonDuration),
+    packages: snapshots.length,
+  });
+  return result;
 });

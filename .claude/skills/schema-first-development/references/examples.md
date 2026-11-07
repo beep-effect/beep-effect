@@ -49,7 +49,8 @@ What to copy:
   value to one const first)
 - the `Minima.ts` field pattern:
   `PixelAllowance.pipe(S.withConstructorDefault(Effect.succeed<number>(0)))` —
-  note the explicit type parameter, required when the field is branded
+  the explicit type parameter is part of this refined-number example;
+  `PixelAllowance` is not branded
 
 Why it matters:
 
@@ -61,11 +62,11 @@ Why it matters:
 
 File:
 
-- `packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts`
+- `packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts`
 
 Use this file when you need:
 
-- `OptionFromOptionalKey`
+- exact optional transport keys with `S.optionalKey`
 - boundary decoding with typed errors
 - report-oriented schema classes
 
@@ -73,14 +74,16 @@ What to copy:
 
 - `DocgenConfigDocument` for optional config fields
 - `DocgenWorkspacePackage` for boundary data decoded from package metadata
-- `DomainError` mapping around filesystem/process boundaries
+- inspect the consuming Docgen services separately for filesystem/process
+  error mapping
 
 Why it matters:
 
-- optional transport fields become `Option` immediately
-- typed errors remain explicit at the command boundary
-- decode functions are passed directly into the boundary helper instead of
-  creating a parallel shape model
+- optional transport keys retain their wire shape; use `S.OptionFromOptionalKey`
+  when the owning internal model requires `Option`
+- payload schemas and effectful boundary handling have separate source homes
+- decode the exported schema at the boundary rather than creating a parallel
+  shape model
 
 ## 4. Tagged Unions and Schema-Derived Helpers
 
@@ -92,7 +95,6 @@ Use this file when you need:
 
 - a discriminator field such as `kind`
 - `S.toTaggedUnion(...)`
-- schema-derived equivalence
 - array defaults on class fields
 
 What to copy:
@@ -100,7 +102,6 @@ What to copy:
 - `GenerationActionKind` for an annotated literal domain
 - `GenerationAction` for tagged-union assembly with `S.toTaggedUnion("kind")`
 - `FileGenerationPlanInput` for defaulted collection fields
-- `stringEquivalence` for `S.toEquivalence(...)`
 
 Why it matters:
 
@@ -158,8 +159,8 @@ Why it matters:
 - Need schema-driven defaults and transforms:
   Start with the field usage in `packages/foundation/ui-system/dock/src/Minima.ts`
   (upstream `S.withConstructorDefault` / `S.withDecodingDefaultTypeKey`)
-- Need `Option` boundary fields or schema-backed errors:
-  Start with `packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts`
+- Need exact optional config fields or package-metadata schemas:
+  Start with `packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts`
 - Need a `kind` or `type` tagged union:
   Start with `packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts`
   or `packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts`

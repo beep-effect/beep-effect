@@ -86,7 +86,7 @@ query AgentEffectivenessPhoenixInventory {
     edges {
       node {
         name
-        traceAnnotationsNames
+        traceAnnotationsNames: traceAnnotationNames
         spanAnnotationNames
         sessionAnnotationNames
       }

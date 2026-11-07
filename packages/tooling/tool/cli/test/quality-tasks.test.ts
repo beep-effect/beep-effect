@@ -60,6 +60,7 @@ import {
   compareCoverageRegressionSnapshotsForTesting,
   compareCoverageRegressionSnapshotsWithProposedForTesting,
   compareJSDocTotalsForTesting,
+  completeCounterlessCoverageFilesForTesting,
   coverageBaselineChangeSetFromChangedFiles,
   coverageBaselineRowDelta,
   coverageBaselineRowDeltaFromBase,
@@ -111,6 +112,7 @@ import {
   planCoverageAffectedScope,
   planCoverageAffectedScopeWithBaseline,
   planCoverageBaselineWrite,
+  planCoverageFileIdentityAdditions,
   planCoverageFullShards,
   planCoverageSelfJudgeScope,
   planWorkspaceCoverageAffectedScope,
@@ -160,6 +162,7 @@ import {
   turboLaneDigestFromSummary,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
+  unsplitIntegrationTaskArgsForTesting,
   validateCoverageTaskArgsForTesting,
   withoutUnusableRemoteCacheForTesting,
   workspaceCoverageScopeOwners,
@@ -810,6 +813,346 @@ const artifactPlanConfiguration = ConfigProvider.fromUnknown({
 });
 
 it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("counterless coverage geometry and additive file identities", () => {
+    it.effect("restores only existing parsed external re-exports without changing package counters", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-counterless-" });
+        const sourceRoot = path.join(root, "packages/existing/src");
+        yield* fs.makeDirectory(sourceRoot, { recursive: true });
+        const cases: ReadonlyArray<readonly [string, string, boolean]> = [
+          ["Star.ts", "export * from './Body.ts';", true],
+          ["Named.ts", "export { value as renamed } from './Body.ts';", true],
+          ["Namespace.ts", "export * as Body from './Body.ts';", true],
+          ["Types.ts", "export type { Value } from './Body.ts';", true],
+          ["Runtime.ts", "export const value = 1;", false],
+          ["SideEffect.ts", "import './Body.ts'; export * from './Body.ts';", false],
+          ["Local.ts", "export { value };", false],
+          ["Invalid.ts", "export { from './Body.ts';", false],
+          ["Empty.ts", "// no exports", false],
+        ];
+        const files = R.empty<string, CoverageFileBaseline>();
+        for (const [name, text] of cases) {
+          yield* fs.writeFileString(path.join(sourceRoot, name), text);
+          R.assignProperty(files, `packages/existing/src/${name}`, coverageFileBaseline(100, 0));
+        }
+        R.assignProperty(files, "packages/existing/src/Deleted.ts", coverageFileBaseline(100, 0));
+        yield* fs.writeFileString(path.join(root, "Outside.ts"), "export * from './Other.ts';");
+        yield* fs.symlink(path.join(root, "Outside.ts"), path.join(sourceRoot, "Escaped.ts"));
+        R.assignProperty(files, "packages/existing/src/Escaped.ts", coverageFileBaseline(100, 0));
+        yield* fs.writeFileString(path.join(sourceRoot, "NotBaselined.ts"), "export * from './Body.ts';");
+        yield* fs.writeFileString(path.join(sourceRoot, "Reported.ts"), "export * from './Body.ts';");
+        R.assignProperty(files, "packages/existing/src/Reported.ts", coverageFileBaseline(100, 0));
+        const base = CoverageRegressionBaseline.make({
+          ...coverageRegressionBaseline,
+          packages: {
+            "@beep/existing": CoveragePackageBaseline.make({
+              path: "packages/existing",
+              ...coveragePercentages(50),
+              uncovered: coverageUncovered(2),
+              files,
+            }),
+          },
+        });
+        const baselineRow = yield* Effect.fromOption(R.get(base.packages, "@beep/existing"));
+        const measured = CoveragePackageBaseline.make({
+          ...baselineRow,
+          files: { "packages/existing/src/Reported.ts": coverageFileBaseline(50, 1) },
+        });
+        const entries = yield* completeCounterlessCoverageFilesForTesting(root, base, [
+          CoverageSnapshotEntry.make({ packageName: "@beep/existing", baseline: measured }),
+        ]);
+        const completed = A.getUnsafe(entries, 0).baseline;
+        for (const [name, , counterless] of cases)
+          expect(R.has(completed.files, `packages/existing/src/${name}`)).toBe(counterless);
+        expect(R.has(completed.files, "packages/existing/src/Deleted.ts")).toBe(false);
+        expect(R.has(completed.files, "packages/existing/src/Escaped.ts")).toBe(false);
+        expect(R.has(completed.files, "packages/existing/src/NotBaselined.ts")).toBe(false);
+        expect(completed.files["packages/existing/src/Reported.ts"]).toEqual(
+          measured.files["packages/existing/src/Reported.ts"]
+        );
+        expect(completed.uncovered).toEqual(measured.uncovered);
+        expect({ ...completed, files: measured.files }).toEqual(measured);
+        const failures = compareCoverageRegressionSnapshotsForTesting(base, entries, true).failures;
+        expect(failures).toHaveLength(32);
+        expect(
+          A.some(failures, (failure) => O.exists(failure.filePath, (file) => Str.endsWith("Deleted.ts")(file)))
+        ).toBe(true);
+      })
+    );
+    it.effect("canonicalizes checkout aliases and refuses file or package escapes and unresolved roots", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-counterless-alias-" });
+        const root = path.join(temporary, "checkout");
+        const alias = path.join(temporary, "checkout-alias");
+        const sourceRoot = path.join(root, "packages/existing/src");
+        const externalPackage = path.join(temporary, "external-package");
+        yield* fs.makeDirectory(sourceRoot, { recursive: true });
+        yield* fs.makeDirectory(path.join(externalPackage, "src"), { recursive: true });
+        yield* fs.writeFileString(path.join(sourceRoot, "index.ts"), "export * from './Body.ts';");
+        yield* fs.writeFileString(path.join(root, "Outside.ts"), "export * from './Other.ts';");
+        yield* fs.writeFileString(path.join(externalPackage, "src/index.ts"), "export * from './Body.ts';");
+        yield* fs.symlink(root, alias);
+        yield* fs.symlink(path.join(root, "Outside.ts"), path.join(sourceRoot, "Escaped.ts"));
+        yield* fs.symlink(externalPackage, path.join(root, "packages/escaped"));
+        const packages = {
+          "@beep/existing": CoveragePackageBaseline.make({
+            path: "packages/existing",
+            ...coveragePercentages(100),
+            uncovered: coverageUncovered(0),
+            files: {
+              "packages/existing/src/index.ts": coverageFileBaseline(100, 0),
+              "packages/existing/src/Escaped.ts": coverageFileBaseline(100, 0),
+            },
+          }),
+          "@beep/escaped": CoveragePackageBaseline.make({
+            path: "packages/escaped",
+            ...coveragePercentages(100),
+            uncovered: coverageUncovered(0),
+            files: { "packages/escaped/src/index.ts": coverageFileBaseline(100, 0) },
+          }),
+        };
+        const baseline = CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, packages });
+        const measured = A.map(R.toEntries(packages), ([packageName, row]) =>
+          CoverageSnapshotEntry.make({
+            packageName,
+            baseline: CoveragePackageBaseline.make({ ...row, files: {} }),
+          })
+        );
+        for (const checkout of [root, alias]) {
+          const completed = yield* completeCounterlessCoverageFilesForTesting(checkout, baseline, measured);
+          const existing = A.getUnsafe(completed, 0).baseline;
+          const escaped = A.getUnsafe(completed, 1).baseline;
+          expect(R.keys(existing.files)).toEqual(["packages/existing/src/index.ts"]);
+          expect(escaped.files).toEqual({});
+          expect({ ...existing, files: {} }).toEqual(A.getUnsafe(measured, 0).baseline);
+          expect(escaped).toEqual(A.getUnsafe(measured, 1).baseline);
+        }
+        const unavailable = path.join(temporary, "unavailable-checkout");
+        yield* fs.symlink(path.join(temporary, "missing-target"), unavailable);
+        const unresolved = yield* completeCounterlessCoverageFilesForTesting(unavailable, baseline, measured);
+        expect(unresolved).toEqual(measured);
+      })
+    );
+    it.effect("completes root-package re-exports through physical and aliased checkout roots", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-counterless-root-" });
+        const root = path.join(temporary, "checkout");
+        const alias = path.join(temporary, "checkout-alias");
+        const sourceRoot = path.join(root, "src");
+        yield* fs.makeDirectory(sourceRoot, { recursive: true });
+        yield* fs.writeFileString(path.join(sourceRoot, "index.ts"), "export * from './Body.ts';");
+        yield* fs.writeFileString(path.join(sourceRoot, "Runtime.ts"), "export const value = 1;");
+        const outside = path.join(temporary, "Outside.ts");
+        yield* fs.writeFileString(outside, "export * from './Other.ts';");
+        yield* fs.symlink(outside, path.join(sourceRoot, "Escaped.ts"));
+        yield* fs.symlink(root, alias);
+        const row = CoveragePackageBaseline.make({
+          path: ".",
+          ...coveragePercentages(50),
+          uncovered: coverageUncovered(2),
+          files: {
+            "src/index.ts": coverageFileBaseline(100, 0),
+            "src/Runtime.ts": coverageFileBaseline(100, 0),
+            "src/Escaped.ts": coverageFileBaseline(100, 0),
+          },
+        });
+        const baseline = CoverageRegressionBaseline.make({
+          ...coverageRegressionBaseline,
+          packages: { "@beep/root": row },
+        });
+        const measured = CoverageSnapshotEntry.make({
+          packageName: "@beep/root",
+          baseline: CoveragePackageBaseline.make({ ...row, files: {} }),
+        });
+        for (const checkout of [root, alias]) {
+          const completed = yield* completeCounterlessCoverageFilesForTesting(checkout, baseline, [measured]);
+          const actual = A.getUnsafe(completed, 0).baseline;
+          expect(actual.files).toEqual({ "src/index.ts": coverageFileBaseline(100, 0) });
+          expect({ ...actual, files: {} }).toEqual(measured.baseline);
+        }
+      })
+    );
+    it.effect("adds only new measured identities while preserving every committed floor and unrelated owner", () =>
+      Effect.gen(function* () {
+        const existing = "packages/existing/src/Existing.ts";
+        const added = "packages/existing/src/Added.ts";
+        const previous = CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(90),
+          uncovered: coverageUncovered(2),
+          files: { [existing]: coverageFileBaseline(100, 0) },
+        });
+        const unchanged = coveragePackageBaseline("packages/unchanged", 95);
+        const actual = CoveragePackageBaseline.make({
+          path: "packages/existing",
+          ...coveragePercentages(10),
+          uncovered: coverageUncovered(200),
+          files: { [existing]: coverageFileBaseline(0, 20), [added]: coverageFileBaseline(75, 1) },
+        });
+        const entry = CoverageSnapshotEntry.make({ packageName: "@beep/existing", baseline: actual });
+        const plan = yield* planCoverageFileIdentityAdditions(
+          { "@beep/existing": previous, "@beep/unchanged": unchanged },
+          [entry],
+          ["@beep/existing"]
+        );
+        expect(plan.packages["@beep/existing"]).toEqual({
+          ...previous,
+          files: { ...previous.files, [added]: actual.files[added] },
+        });
+        expect(plan.packages["@beep/unchanged"]).toEqual(unchanged);
+        for (const invalid of [
+          planCoverageFileIdentityAdditions({ "@beep/existing": previous }, [entry], []),
+          planCoverageFileIdentityAdditions({}, [entry], ["@beep/existing"]),
+          planCoverageFileIdentityAdditions({ "@beep/existing": previous }, [entry], ["@beep/other"]),
+          planCoverageFileIdentityAdditions({ "@beep/existing": previous }, [], ["@beep/existing"]),
+          planCoverageFileIdentityAdditions(
+            { "@beep/existing": previous },
+            [
+              CoverageSnapshotEntry.make({
+                ...entry,
+                baseline: CoveragePackageBaseline.make({
+                  ...actual,
+                  files: { "packages/foreign/src/Code.ts": coverageFileBaseline(100, 0) },
+                }),
+              }),
+            ],
+            ["@beep/existing"]
+          ),
+        ]) {
+          const failed = yield* invalid.pipe(Effect.flip);
+          expect(failed._tag).toBe("QualityTaskConfigurationError");
+        }
+      })
+    );
+    it.effect("writes additive identities while retaining every existing package and file floor", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-additive-writer-" });
+        yield* fs.makeDirectory(path.join(root, "packages/existing/coverage"), { recursive: true });
+        yield* fs.makeDirectory(path.join(root, "standards"), { recursive: true });
+        const rootManifest = yield* encodeJson({ name: "@beep/root", private: true, workspaces: ["packages/*"] });
+        yield* fs.writeFileString(path.join(root, "package.json"), rootManifest);
+        const packageManifest = yield* encodeJson({
+          name: "@beep/existing",
+          scripts: { coverage: "vitest run --coverage" },
+        });
+        yield* fs.writeFileString(path.join(root, "packages/existing/package.json"), packageManifest);
+        const previous = CoverageRegressionBaseline.make({
+          ...coverageRegressionBaseline,
+          packages: {
+            "@beep/existing": CoveragePackageBaseline.make({
+              path: "packages/existing",
+              ...coveragePercentages(95),
+              uncovered: coverageUncovered(2),
+              files: { "packages/existing/src/Existing.ts": coverageFileBaseline(100, 0) },
+            }),
+          },
+        });
+        const baselinePath = path.join(root, "standards/coverage.regression-baseline.jsonc");
+        const original = yield* encodeCoverageRegressionBaseline(previous).pipe(Effect.flatMap(encodeJson));
+        yield* fs.writeFileString(baselinePath, original);
+        const measuredSummary = yield* encodeJson({
+          total: vitestCoverageMetrics(10, 1, 10),
+          "src/Existing.ts": vitestCoverageMetrics(10, 0, 0),
+          "src/Added.ts": vitestCoverageMetrics(4, 3, 75),
+        });
+        yield* fs.writeFileString(path.join(root, "packages/existing/coverage/coverage-summary.json"), measuredSummary);
+        const legacy = yield* encodeJson({
+          schema_version: 1,
+          generated_at: "2026-07-06T00:00:00.000Z",
+          git_sha: "legacy-fixture",
+          command: "bun run coverage:baseline:write",
+          epsilon: 0.001,
+          packages: { "@beep/existing": { path: "packages/existing" } },
+        });
+        yield* fs.writeFileString(baselinePath, legacy);
+        const unsupported = yield* writeCoverageRegressionBaseline(root, true, ["@beep/existing"], {
+          addMissingFilesOnly: true,
+        }).pipe(Effect.flip);
+        expect(unsupported._tag).toBe("QualityTaskConfigurationError");
+        expect(unsupported.message).toContain("schema-v2 baseline write");
+        const retainedLegacy = yield* fs.readFileString(baselinePath);
+        expect(retainedLegacy).toBe(legacy);
+        yield* fs.remove(baselinePath);
+        const absent = yield* writeCoverageRegressionBaseline(root, true, ["@beep/existing"], {
+          addMissingFilesOnly: true,
+        }).pipe(Effect.flip);
+        expect(absent._tag).toBe("QualityTaskConfigurationError");
+        expect(absent.message).toContain("schema-v2 baseline write");
+        const created = yield* fs.exists(baselinePath);
+        expect(created).toBe(false);
+        yield* fs.writeFileString(baselinePath, original);
+        for (const rejected of [
+          writeCoverageRegressionBaseline(root, false, ["@beep/existing"], { addMissingFilesOnly: true }),
+          writeCoverageRegressionBaseline(root, true, ["@beep/existing"], {
+            addMissingFilesOnly: true,
+            replaceAll: true,
+          }),
+          writeCoverageRegressionBaseline(root, true, [], { addMissingFilesOnly: true }),
+        ]) {
+          const failed = yield* rejected.pipe(Effect.flip);
+          expect(failed._tag).toBe("QualityTaskConfigurationError");
+          const retained = yield* fs.readFileString(baselinePath);
+          expect(retained).toBe(original);
+        }
+        yield* runGit(root, ["init"]);
+        yield* runGit(root, ["config", "user.name", "Coverage Identity Fixture"]);
+        yield* runGit(root, ["config", "user.email", "coverage@example.invalid"]);
+        yield* runGit(root, ["add", "package.json"]);
+        yield* runGit(root, ["commit", "-m", "test: seed additive coverage fixture"]);
+        const git = yield* Git;
+        const measuredHead = yield* git.revParse(root, "HEAD");
+        const writeTimestamp = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+        yield* writeCoverageRegressionBaseline(root, true, ["@beep/existing"], { addMissingFilesOnly: true });
+        const written = yield* fs
+          .readFileString(baselinePath)
+          .pipe(Effect.flatMap(decodeCoverageRegressionBaselineJsoncForTesting));
+        const originalRow = yield* Effect.fromOption(R.get(previous.packages, "@beep/existing"));
+        expect(written).toEqual({
+          ...previous,
+          generated_at: writeTimestamp,
+          git_sha: measuredHead,
+          command: "bun run coverage -- --filter=@beep/existing --write-baseline --add-missing-files-only",
+          packages: {
+            "@beep/existing": {
+              ...originalRow,
+              files: { ...originalRow.files, "packages/existing/src/Added.ts": coverageFileBaseline(75, 1) },
+            },
+          },
+        });
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+    it.effect("requires exact scoped selectors for additive file writes and strips the control flag", () =>
+      Effect.gen(function* () {
+        const repoRoot = yield* findRepoRoot();
+        for (const args of [
+          ["--add-missing-files-only"],
+          ["--write-baseline", "--add-missing-files-only"],
+          ["--write-baseline", "--add-missing-files-only", "--replace-all", "--filter=@beep/repo-cli"],
+          ["--write-baseline", "--add-missing-files-only", "--affected"],
+          ["--write-baseline", "--add-missing-files-only", "--filter=...@beep/repo-cli"],
+        ]) {
+          const failure = yield* validateCoverageTaskArgsForTesting(repoRoot, args).pipe(Effect.flip);
+          expect(failure._tag).toBe("QualityTaskConfigurationError");
+        }
+        const options = yield* validateCoverageTaskArgsForTesting(repoRoot, [
+          "--write-baseline",
+          "--add-missing-files-only",
+          "--filter=@beep/repo-cli",
+        ]);
+        expect(options.addMissingFilesOnly).toBe(true);
+        expect(options.expectedPackageNames).toEqual(["@beep/repo-cli"]);
+        expect(options.args).not.toContain("--add-missing-files-only");
+      })
+    );
+  });
   describe("CI coverage artifact planning", () => {
     it("keeps ordinary tests enabled while supplying deterministic coverage inputs", () => {
       const env = coverageProducerEnvironment();
@@ -1432,6 +1775,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:effect-imports-markdown",
         "lint:markdown-fences",
         "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
         "lint:holds",
@@ -1474,6 +1818,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:retired-effect-paths")).toEqual(
         expectedTurboArgs("lint:retired-effect-paths", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:entity-kit-freeze")).toEqual(
+        expectedTurboArgs("lint:entity-kit-freeze", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:retired-iri-authorities")).toEqual(
         expectedTurboArgs("lint:retired-iri-authorities", ["--summarize"])
@@ -3386,6 +3733,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const argument7 = expect(hashAtConcurrency28).not;
             const hashAtConcurrency7 = yield* hashAtConcurrency("3");
             argument7.toBe(hashAtConcurrency7);
+            const firstToolCall = yield* withEnvVarEffect("CODEX_TOOL_CALL_ID", "first", hashAtConcurrency("2"));
+            const nextToolCall = yield* withEnvVarEffect("CODEX_TOOL_CALL_ID", "next", hashAtConcurrency("2"));
+            expect(firstToolCall).toBe(nextToolCall);
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -4755,6 +5105,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:effect-imports-markdown",
         "lint:markdown-fences",
         "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
         "lint:holds",
@@ -4812,7 +5163,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "quality:test-tsgo",
       ]);
       expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
-        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(16)),
+        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(17)),
         "knowledge:semantic-delta",
         "knowledge:refs-check",
         "lint:jsdoc-module-tags",
@@ -4918,6 +5269,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:opaque-roundtrips",
           "lint:markdown-fences",
           "lint:retired-effect-paths",
+          "lint:entity-kit-freeze",
           "lint:retired-iri-authorities",
           "lint:schema-tag-idioms",
           "lint:holds",
@@ -6377,6 +6729,30 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         expect(
           planCoverageAffectedScope(owners, ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc"])
         ).toEqual({ _tag: "selected", packageNames: ["@beep/repo-cli"], dependentPackageNames: [] });
+      });
+
+      it("routes generated governance metadata to tooling consumers and fails closed on unknown inputs", () => {
+        const owners = [owner("repo-cli"), owner("repo-cli-kit"), owner("unrelated")];
+        const inventory = "standards/effect-vitest.inventory.jsonc";
+        const catalog = "standards/schema-catalog/@beep/schema.generated.jsonc";
+        expect(planCoverageAffectedScope(owners, [inventory])).toEqual({
+          _tag: "selected",
+          packageNames: ["@beep/repo-cli"],
+          dependentPackageNames: [],
+        });
+        expect(planCoverageAffectedScope(owners, [catalog])).toEqual({
+          _tag: "selected",
+          packageNames: ["@beep/repo-cli", "@beep/repo-cli-kit"],
+          dependentPackageNames: [],
+        });
+        expect(planCoverageAffectedScope(owners, [inventory, "standards/unknown.jsonc"])._tag).toBe("full");
+        expect(planCoverageAffectedScope([], [inventory])._tag).toBe("full");
+        expect(planCoverageAffectedScope([owner("repo-cli")], [catalog])._tag).toBe("full");
+        expect(
+          planCoverageAffectedScope(owners, [
+            "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+          ])._tag
+        ).toBe("full");
       });
 
       it.effect("reads workspace edges from the live inventory and never lists the repository root as an owner", () =>
@@ -9669,6 +10045,59 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         TestClock.withLive
       )
+    );
+
+    it.effect(
+      "keeps scoped unsplit integration owners without duplicating split owners or widening caller filters",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = process.cwd();
+            const manifest = yield* encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["packages/*"],
+            });
+            yield* fs.writeFileString(path.join(root, "package.json"), manifest);
+            const scriptsByDirectory = {
+              plain: { test: "vitest" },
+              unsplit: { "test:integration": "vitest run test/integration" },
+              serial: { "test:integration:serial": "vitest run test/integration" },
+              split: {
+                "test:integration": "bun run test:integration:parallel",
+                "test:integration:parallel": "vitest run test/integration",
+              },
+            };
+            for (const [directory, scripts] of R.toEntries(scriptsByDirectory)) {
+              const packageDirectory = path.join(root, "packages", directory);
+              yield* fs.makeDirectory(packageDirectory, { recursive: true });
+              const packageManifest = yield* encodeJson({ name: `@beep/${directory}`, private: true, scripts });
+              yield* fs.writeFileString(path.join(packageDirectory, "package.json"), packageManifest);
+            }
+            const unscoped = yield* unsplitIntegrationTaskArgsForTesting(root, []);
+            expect(unscoped).toEqual(["--filter=@beep/unsplit"]);
+            for (const args of [
+              ["--affected", "--summarize"],
+              ["--filter=@beep/unsplit"],
+              ["--filter=@beep/split"],
+              ["--filter=@beep/serial"],
+              ["--filter", "@beep/unsplit"],
+              ["--filter=!@beep/unsplit"],
+              ["--since=HEAD^"],
+              ["--filter=@beep/unsplit", "--", "--testNamePattern=fixture"],
+            ]) {
+              const selected = yield* unsplitIntegrationTaskArgsForTesting(root, args);
+              expect(selected).toEqual(["--filter=!@beep/serial", "--filter=!@beep/split", ...args]);
+            }
+            const noIntegration = yield* encodeJson({ name: "@beep/unsplit", private: true, scripts: {} });
+            yield* fs.writeFileString(path.join(root, "packages/unsplit/package.json"), noIntegration);
+            const absent = yield* unsplitIntegrationTaskArgsForTesting(root, ["--affected"]);
+            expect(absent).toEqual([]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
     it.effect("reads an object-form workspaces declaration without packages as no workspaces", () =>

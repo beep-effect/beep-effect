@@ -12,33 +12,49 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { recordedApplication, recordedResponses } from "./UsptoClaims.fixture.ts";
 
 // The real driver over an HTTP client that only replays the recorded responses; nothing leaves the process.
-const replayingHttpClient = Layer.succeed(
-  HttpClient.HttpClient,
-  HttpClient.make((request) =>
-    Effect.succeed(
-      HttpClientResponse.fromWeb(
-        request,
-        pipe(
-          A.findFirst(recordedResponses, ([suffix]) => Str.endsWith(suffix)(request.url)),
-          O.match({
-            onNone: () => new Response("", { status: 404 }),
-            onSome: ([, body]) => new Response(body, { status: 200 }),
-          })
-        )
-      )
+const replayingHttpClient = (responses: typeof recordedResponses, requests: Array<string>) =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) =>
+      Effect.sync(() => {
+        requests.push(request.url);
+        return HttpClientResponse.fromWeb(
+          request,
+          pipe(
+            A.findFirst(responses, ([suffix]) => Str.endsWith(suffix)(request.url)),
+            O.match({
+              onNone: () => new Response("", { status: 404 }),
+              onSome: ([, body]) => new Response(body, { status: 200 }),
+            })
+          )
+        );
+      })
     )
-  )
-);
+  );
 
-const recordedUsptoClaims = UsptoClaimsLive.pipe(
-  Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("synthetic-key") }))),
-  Layer.provide(replayingHttpClient)
-);
+const claimsWithResponses = (responses: typeof recordedResponses, requests: Array<string>) =>
+  UsptoClaimsLive.pipe(
+    Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("synthetic-key") }))),
+    Layer.provide(replayingHttpClient(responses, requests))
+  );
+const recordedUsptoClaims = claimsWithResponses(recordedResponses, []);
+const tiedResponses = A.map(recordedResponses, ([suffix, body]): (typeof recordedResponses)[number] => [
+  suffix,
+  Str.endsWith("/documents")(suffix) && P.isString(body)
+    ? Str.replace("2025-06-10T00:00:00.000-0400", "2026-03-02T00:00:00.000-0500")(body)
+    : body,
+]);
+const emptySearchRequests: Array<string> = [];
+const emptySearchResponses: typeof recordedResponses = A.prepend(recordedResponses, [
+  `/applications/search?q=${encodeURIComponent("applicationMetaData.earliestPublicationNumber:US20260100003A*")}`,
+  '{"patentFileWrapperDataBag":[]}',
+]);
 
 const application = (documentIdentifier?: string) =>
   UsptoClaimSource.cases.application.make({
@@ -47,6 +63,34 @@ const application = (documentIdentifier?: string) =>
   });
 
 describe("UsptoClaims adapter", () => {
+  it.layer(claimsWithResponses(tiedResponses, []), { timeout: "10 seconds" })("equal official dates", (it) => {
+    it.effect("breaks the latest claims-document date tie by descending document identifier", () =>
+      Effect.gen(function* () {
+        const port = yield* UsptoClaims;
+        const claims = yield* port.claims(application());
+        assert.strictEqual(claims.documentIdentifier, "SYNTHCLM2");
+        assert.strictEqual(claims.claims.length, 2);
+      })
+    );
+  });
+  it.layer(claimsWithResponses(emptySearchResponses, emptySearchRequests), { timeout: "10 seconds" })(
+    "empty successful publication search",
+    (it) => {
+      it.effect("reports no matching application without attempting a document download", () =>
+        Effect.gen(function* () {
+          const port = yield* UsptoClaims;
+          const error = yield* port
+            .claims(UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make("20260100003") }))
+            .pipe(Effect.flip);
+          assert.strictEqual(error.reason, "not-found");
+          assert.strictEqual(error.message, "The publication did not resolve to one matching USPTO application.");
+          assert.strictEqual(emptySearchRequests.length, 1);
+          assert.isTrue(Str.includes("/applications/search?")(A.getUnsafe(emptySearchRequests, 0)));
+        })
+      );
+    }
+  );
+
   it.layer(recordedUsptoClaims, { timeout: "10 seconds" })("over recorded ODP responses", (it) => {
     it.effect("selects XML after PDF in the latest claims document", () =>
       Effect.gen(function* () {

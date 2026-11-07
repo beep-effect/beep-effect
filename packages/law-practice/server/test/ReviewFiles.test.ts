@@ -18,6 +18,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { oneRun, Platform, temporaryDirectory } from "./MailTagging.adapters.fixture.ts";
@@ -50,6 +51,53 @@ const lineCount = Effect.fnUntraced(function* (file: string) {
 
 describe("@beep/law-practice-server ReviewFiles", () => {
   it.layer(Platform, { timeout: "10 seconds" })("over a temporary data directory", (it) => {
+    it.effect("reports filesystem failures through each store and permits recovery", () =>
+      oneRun(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          let denyRead = false;
+          let denyWrite = true;
+          const denied = PlatformError.systemError({ module: "FileSystem", method: "open", _tag: "PermissionDenied" });
+          const faulty = FileSystem.FileSystem.of({
+            ...fs,
+            exists: Effect.fn("ReviewFilesTest.exists")((path) =>
+              Effect.suspend(() => (denyRead ? Effect.fail(denied) : fs.exists(path)))
+            ),
+            open: Effect.fn("ReviewFilesTest.open")((path, options) =>
+              Effect.suspend(() => (denyWrite ? Effect.fail(denied) : fs.open(path, options)))
+            ),
+          });
+          const { stores } = yield* storesIn("faults").pipe(Effect.provideService(FileSystem.FileSystem, faulty));
+          const verdicts = Context.get(stores, VerdictLog);
+          const answers = Context.get(stores, AnswerLog);
+          const items = Context.get(stores, ReviewItemStore);
+          const verdictWrite = yield* verdicts.append(verdict).pipe(Effect.flip);
+          expect(verdictWrite).toMatchObject({ _tag: "VerdictLogError", operation: "append" });
+          const answerWrite = yield* answers.append(answer).pipe(Effect.flip);
+          expect(answerWrite).toMatchObject({ _tag: "AnswerLogError", operation: "append" });
+          const itemWrite = yield* items.upsert([item("kg-answer:1", "Synthetic")]).pipe(Effect.flip);
+          expect(itemWrite).toMatchObject({ _tag: "ReviewItemStoreError", operation: "upsert" });
+          denyRead = true;
+          const verdictRead = yield* verdicts.rows.pipe(Effect.flip);
+          expect(verdictRead).toMatchObject({ operation: "read", reason: "verdicts.jsonl cannot be read" });
+          const answerRead = yield* answers.rows.pipe(Effect.flip);
+          expect(answerRead).toMatchObject({ operation: "read" });
+          const itemRead = yield* items.list.pipe(Effect.flip);
+          expect(itemRead).toMatchObject({ operation: "read", reason: "items.jsonl cannot be read" });
+          denyRead = false;
+          denyWrite = false;
+          yield* verdicts.append(verdict);
+          yield* answers.append(answer);
+          yield* items.upsert([item("kg-answer:1", "Synthetic")]);
+          const recoveredVerdicts = yield* verdicts.rows;
+          const recoveredAnswers = yield* answers.rows;
+          const recoveredItems = yield* items.list;
+          expect(recoveredVerdicts).toEqual([verdict]);
+          expect(recoveredAnswers).toEqual([answer]);
+          expect(recoveredItems).toEqual([item("kg-answer:1", "Synthetic")]);
+        })
+      )
+    );
     it.effect("appends rows and reads them back, creating the directory", () =>
       oneRun(
         Effect.gen(function* () {

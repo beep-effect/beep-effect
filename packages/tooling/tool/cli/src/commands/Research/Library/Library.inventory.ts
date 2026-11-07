@@ -31,7 +31,7 @@ import {
   LibraryOccurrence,
   LibraryReference,
   LibrarySource,
-  LibraryVersion,
+  LibrarySourceVersion,
 } from "./Library.schemas.ts";
 import { hashBytes, mergeLibraryVersions, saveImmutable, withCatalog } from "./Library.store.ts";
 import type { LibraryInventoryOptions, LibraryOwnership, LibrarySourceKind } from "./Library.schemas.ts";
@@ -496,7 +496,7 @@ export const classifyLibraryReference = Effect.fn("ResearchLibrary.classifyRefer
     repository,
     ownership,
     locators: [locator],
-    versions: [LibraryVersion.make({ revision, canonicalUrl, locators: [locator] })],
+    versions: [LibrarySourceVersion.make({ revision, canonicalUrl, locators: [locator] })],
   });
 });
 
@@ -608,7 +608,7 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
           const priorVersions = citedCommitsRef
             ? A.map(existing.value.versions, (version) =>
                 version.canonicalUrl === source.canonicalUrl
-                  ? LibraryVersion.make({ ...version, revision: source.revision })
+                  ? LibrarySourceVersion.make({ ...version, revision: source.revision })
                   : version
               )
             : existing.value.versions;

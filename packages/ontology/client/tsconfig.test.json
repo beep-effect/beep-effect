@@ -16,7 +16,22 @@
   },
   "references": [
     {
+      "path": "../../agents/client/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/cosmos/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/observability/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/semantic-web/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/schema/tsconfig.json"
@@ -29,6 +44,12 @@
     },
     {
       "path": "../use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
     }
   ]
 }

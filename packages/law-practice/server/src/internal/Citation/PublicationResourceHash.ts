@@ -25,6 +25,7 @@ import {
   makeCitationRuntimeStringOrder,
 } from "./RuntimeHashEncoding.ts";
 import type * as Digest from "effect/crypto/Digest";
+import type { CitationRuntimeHashEncodingFailure } from "./RuntimeHashEncoding.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PublicationResourceHash");
 const Reporter = S.Struct({
@@ -95,8 +96,10 @@ export class CitationPublicationResourceHashFailure extends S.TaggedError<
   })
 ) {}
 const failure = (reason: typeof Reason.Type) => CitationPublicationResourceHashFailure.make({ reason });
+const invalidInput = () => failure("invalid-input");
+const runtimeFailure = (error: CitationRuntimeHashEncodingFailure) => failure(error.reason);
 const quote = Effect.fn("Citation.publicationHashString")((value: string) =>
-  encodeCitationRuntimeString(value).pipe(Effect.mapError((error) => failure(error.reason)))
+  encodeCitationRuntimeString(value).pipe(Effect.mapError(runtimeFailure))
 );
 const nullable = (value: string | null) => (value === null ? Effect.succeed("null") : quote(value));
 /**
@@ -127,7 +130,7 @@ export const makeCitationPublicationResourceHash = Effect.fn("Citation.makePubli
   input: unknown
 ): Effect.fn.Return<CitationCaseResourceHash, CitationPublicationResourceHashFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(CitationPublicationResourceHashInputType)(input).pipe(
-    Effect.mapError(() => failure("invalid-input"))
+    Effect.mapError(invalidInput)
   );
   const refs = decoded.citation.publication.editions;
   if (
@@ -136,7 +139,7 @@ export const makeCitationPublicationResourceHash = Effect.fn("Citation.makePubli
   )
     return yield* failure("missing-edition");
   const groups = yield* S.encodeEffect(CitationComponents)(decoded.citation.components).pipe(
-    Effect.mapError(() => failure("invalid-input"))
+    Effect.mapError(invalidInput)
   );
   const editions = yield* Effect.forEach(
     A.sort(
@@ -161,13 +164,11 @@ export const makeCitationPublicationResourceHash = Effect.fn("Citation.makePubli
     { concurrency: 1 }
   );
   const citationHash = yield* hashCitationRuntimePreimage(`{${A.join(encodedFields, ", ")}}`).pipe(
-    Effect.mapError((error) => failure(error.reason))
+    Effect.mapError(runtimeFailure)
   );
-  const decimal = yield* S.encodeEffect(S.BigIntFromString)(citationHash).pipe(
-    Effect.mapError(() => failure("invalid-input"))
-  );
+  const decimal = yield* S.encodeEffect(S.BigIntFromString)(citationHash).pipe(Effect.mapError(invalidInput));
   const resourceHash = yield* hashCitationRuntimePreimage(`{"citation": ${decimal}, "class": "Resource"}`).pipe(
-    Effect.mapError((error) => failure(error.reason))
+    Effect.mapError(runtimeFailure)
   );
   return CitationCaseResourceHash.make({ citationHash, resourceHash });
 });

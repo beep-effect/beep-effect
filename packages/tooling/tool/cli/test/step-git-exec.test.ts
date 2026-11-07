@@ -2,7 +2,6 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { KnowledgeCloneAttributesError, KnowledgeOperationalError } from "@beep/repo-cli/commands/Knowledge";
-import { repoRunOutputBound } from "@beep/repo-cli/test/Process";
 import {
   adaptGitKitError,
   collectStagedPaths,
@@ -12,7 +11,6 @@ import {
   GitRenameEntry,
   gitArchiveArgs,
   gitArchiveEnv,
-  gitLinesFromOutput,
   gitPathListFromNulOutput,
   guardCloneLocalGitAttributes,
   isSafeOriginBranch,
@@ -21,8 +19,6 @@ import {
   readGitTree,
   resolveGitCommit,
   resolveGitMergeBase,
-  runGitOutput,
-  runGitPathList,
   safeOriginBranchFromBase,
   sortedUniquePaths,
   writeGitArchive,
@@ -56,10 +52,6 @@ describe("GitExec path parsing", () => {
 
   it("sorts, dedupes, and drops empty path entries", () => {
     expect(sortedUniquePaths(["src/z.ts", "", "src/a.ts", "src/a.ts"])).toEqual(["src/a.ts", "src/z.ts"]);
-  });
-
-  it("splits captured output into trimmed non-empty lines", () => {
-    expect(gitLinesFromOutput("a\n  b  \n\nc\n")).toEqual(["a", "b", "c"]);
   });
 });
 
@@ -134,74 +126,6 @@ describe("GitExec archive spawn wiring", () => {
       new Error(`${failure.commandLine} exit ${failure.exitCode}`),
     onTruncated: O.none(),
   };
-
-  const captureSpawner = (stdout: string, stderr = "") => ScriptedSpawner.make(() => ({ stdout, stderr }));
-  const completeAdapter = {
-    ...adapter,
-    onTruncated: O.some((commandLine: string) => new Error(`${commandLine} truncated`)),
-  };
-
-  layer(BunCrypto.layer, { timeout: "10 seconds" })("Git filename inventory capture", (it) => {
-    it.effect("retains every NUL filename when a large merge exceeds the generic Git capture budget", () =>
-      Effect.gen(function* () {
-        const paths = A.append(
-          A.map(
-            A.range(1, 8_000),
-            (index) =>
-              `packages/large-main-merge/long-package-name/src/deeply/nested/component-group/filename-${index}.ts`
-          ),
-          "directory with spaces/line\nbreak.ts"
-        );
-        const stdout = `${A.join(A.reverse(paths), "\0")}\0`;
-        expect(stdout.length).toBeGreaterThan(repoRunOutputBound.maxChars);
-        const actual = yield* runGitPathList(
-          "/repo",
-          ["diff", "--name-only", "-z", "origin/topic..HEAD"],
-          completeAdapter
-        ).pipe(provideSpawner(captureSpawner(stdout, "warning: advice stays out of filename records\n")));
-        expect(actual).toEqual(sortedUniquePaths(paths));
-      })
-    );
-
-    it.effect("rejects a filename inventory beyond its separate bounded budget", () =>
-      Effect.gen(function* () {
-        const stdout = `${A.join(
-          A.map(
-            A.range(1, 100_000),
-            (index) =>
-              `packages/large-main-merge/long-package-name/src/deeply/nested/component-group/filename-${index}.ts`
-          ),
-          "\0"
-        )}\0`;
-        expect(stdout.length).toBeGreaterThan(8 * 1024 * 1024);
-        const failure = yield* runGitPathList("/repo", ["diff", "--name-only", "-z"], completeAdapter).pipe(
-          provideSpawner(captureSpawner(stdout)),
-          Effect.flip
-        );
-        expect(failure.message).toContain("truncated");
-      })
-    );
-
-    it.effect("keeps the smaller stderr diagnostic bound for machine-read filename operations", () =>
-      Effect.gen(function* () {
-        const failure = yield* runGitPathList("/repo", ["ls-files", "-z"], completeAdapter).pipe(
-          provideSpawner(captureSpawner("src/file.ts\0", Str.repeat(repoRunOutputBound.maxChars + 1)("x"))),
-          Effect.flip
-        );
-        expect(failure.message).toContain("truncated");
-      })
-    );
-
-    it.effect("keeps generic Git content captures at the existing smaller bound", () =>
-      Effect.gen(function* () {
-        const failure = yield* runGitOutput("/repo", ["show", "HEAD:content.txt"], completeAdapter).pipe(
-          provideSpawner(captureSpawner(Str.repeat(repoRunOutputBound.maxChars + 1)("x"))),
-          Effect.flip
-        );
-        expect(failure.message).toContain("truncated");
-      })
-    );
-  });
 
   it.layer(BunCrypto.layer)((it) => {
     it.effect(
@@ -450,8 +374,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
 // The clone-local info/attributes file is the one attribute layer no git invocation can disable
 // (research/p3-hermetic-lane-decisions.md "Measured residual"): the guard must pass while the file
 // is absent or empty, fail closed with the resolved path once it is non-empty, and resolve through
-// `rev-parse --git-path` so a worktree reaches the shared common-dir file.
-layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 seconds" })(
+// `Git.gitDir` so a worktree reaches the shared common-dir file.
+layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "5 seconds" })(
   "GitExec clone-local attributes guard",
   (it) => {
     const runGit = (cwd: string, args: ReadonlyArray<string>, env: Record<string, string>): void => {

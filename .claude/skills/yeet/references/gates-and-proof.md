@@ -8,15 +8,23 @@ Since 2026-10-05 (push-first-publish D1–D2) `yeet publish` gates the push on
 the cheap-gates tier and the head-install preflight only; hosted CI is the
 authoritative proof, and `bun run beep yeet verify` (full tier) is an
 on-demand tool for iterating on a red hosted lane locally, never an automatic
-publish step. The full tier's first step still runs the cheap-gates tier. This tier runs 23 deterministic gates in
-collected waves, including config sync, tsgo rule parity, Effect imports,
-schema-first, goals checks, Fallow, publish-enabled changeset status, and the JSDoc
-ratchets against both the committed inventory and a fresh scan of current source.
-It also runs `beep lint schema-catalog` and root `lint:oxlint`, matching the
-hosted catalog and inline-schema-compilation policy checks. The fresh scan runs
-`beep quality jsdoc-ratchet --regenerate`: JSONC and Markdown go only under
-`.beep/ci/`, and generation must succeed before the ratchet compares totals.
-The tracked standards inventory and regression baseline are never rewritten.
+publish step. The full tier's first step still runs the cheap-gates tier. The
+cheap tier collects its current lane set in scheduling waves, including config
+sync, tsgo rule parity, Effect imports, schema-first, goals checks, Fallow,
+publish-enabled changeset status, and the JSDoc
+ratchets against both the committed inventory and an inventory of current source.
+Use `githubCheckCheapGateLanes` and `githubCheckLanePlan` in
+`commands/Quality/internal/GithubChecks.ts` for the current lane set and waves;
+this guide does not pin their count. The Yeet proof planner in
+`commands/Yeet/internal/Planner.ts` also prepends branch-specific changeset
+status outside `main`. The tier also runs `beep lint schema-catalog` and root
+`lint:oxlint`, matching the
+hosted catalog and inline-schema-compilation policy checks. The current
+`quality:jsdoc-ratchet:regenerated` lane runs the root `jsdoc:ratchet:check`
+task, whose `jsdoc:inventory:check` dependency generates JSONC and Markdown
+under `.beep/ci/` before totals are compared. Turbo may restore that inventory
+by content hash; this is not an unconditional in-process regeneration. The
+tracked standards inventory and regression baseline are never rewritten.
 The schema catalog runs alone in the `heavy` scheduling wave within this
 cheap tier, after parallel preflight: a full scan needs roughly 12.6 GiB RSS
 and 24 seconds. It has no package-scoped check; use a 16 GiB runner envelope.

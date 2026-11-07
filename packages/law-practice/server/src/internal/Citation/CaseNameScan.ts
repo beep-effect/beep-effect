@@ -69,6 +69,7 @@ export class CitationCaseNameScanFailure extends S.TaggedError<
   })
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationCaseNameScanFailure.make({ reason });
+const invalidConfiguration = () => fail("invalid-configuration");
 /** @internal @category models @since 0.0.0 */
 export class CitationCaseNameScanConfiguration extends S.Opaque<
   CitationCaseNameScanConfiguration,
@@ -226,7 +227,8 @@ const runScan = Effect.fn("Citation.runCaseNameScan")(function* (
     if (word.data === null) return yield* fail("invalid-token-length");
     const current = yield* Ref.get(state);
     yield* update({ offset: current.offset + word.source.value.pythonLength });
-    if (word.source.value.text === ",") return Step.Enum.continue;
+    // Python compares the original word: dataclass token objects do not equal a bare comma string.
+    if (word.kind === "Text" && word.source.value.text === ",") return Step.Enum.continue;
     const plaintiff = current.vTokenIndex !== null && (yield* predicates.isNonblank(word.source.value));
     yield* update({
       caseNameLength: current.caseNameLength + 1,
@@ -348,7 +350,7 @@ const copyConfiguration = Effect.fn("Citation.copyCaseNameScanConfiguration")(fu
     decoded.patterns,
     decoded.bindings,
     fingerprints,
-    () => fail("invalid-configuration")
+    invalidConfiguration
   );
   return CitationCaseNameScanConfiguration.make(owned);
 });
@@ -361,7 +363,7 @@ const copyConfiguration = Effect.fn("Citation.copyCaseNameScanConfiguration")(fu
 export const makeCitationCaseNameScan = makeCitationMetadataStage({
   method: "scan",
   schema: Config,
-  invalid: () => fail("invalid-configuration"),
+  invalid: invalidConfiguration,
   own: copyConfiguration,
   prepare: (limits, runtime, config, raw) =>
     runScan(limits, runtime, config, raw).pipe(

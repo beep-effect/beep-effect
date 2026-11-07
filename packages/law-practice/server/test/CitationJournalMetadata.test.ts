@@ -2,12 +2,17 @@ import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Ci
 import { it } from "@beep/test-runner";
 import {
   assertCitationJournalMetadataBudget,
+  assertCitationJournalMetadataConfiguration,
   assertCitationJournalMetadataLifetime,
   replayCitationJournalMetadata,
 } from "./CitationJournalMetadata.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source full journal metadata", (it) => {
+  it.effect(
+    "rejects malformed installation and oversized enclosing budgets",
+    assertCitationJournalMetadataConfiguration
+  );
   it.effect("preserves exact invocation budget and fresh repeated calls", assertCitationJournalMetadataBudget, {
     timeout: 120000,
   });

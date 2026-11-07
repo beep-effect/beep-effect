@@ -94,8 +94,9 @@ screenshots-only loop.
   evidence; `judge/timeline.md` gives it the ground-truth event timing to
   correlate against. GIFs exist for humans and PR bodies.
 - Byte budget: judge payload ≤ 8 MB total, ≤ 400 KB per file; sheets/strips
-  are JPEG q80 max-width 1600; ≤ 12 frames per gesture by default. Over
-  budget, `judge-pack` drops assertion-green static screenshots first, then
+  have different formats: extraction plans cap strip-frame width at 960
+  pixels, while contact sheets are JPEG grids. Use the extraction plan and
+  frame manifests for the actual frame count and timestamps. Over budget, `judge-pack` drops assertion-green static screenshots first, then
   thins strips — every drop is recorded in `judge/manifest.json` so the judge
   knows what it did not see.
 

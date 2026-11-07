@@ -147,7 +147,7 @@ const validateQualificationProbe = Effect.fn("Library.validateQualificationProbe
  * import { libraryQualificationValid } from "@beep/repo-cli/test/ResearchLibrary"
  * import { LibraryCatalog, LibraryQualification } from "@beep/repo-cli/commands/Research"
  * import * as Effect from "effect/Effect";
- * const catalog = LibraryCatalog.make({schema: "beep.research.library/v1", documents: [], sources: [], occurrences: [], captures: [], qualifications: []})
+ * const catalog = LibraryCatalog.make({schema: "beep.research.library/v2", documents: [], sources: [], occurrences: [], captures: [], qualifications: []})
  * const receipt = LibraryQualification.make({id: "probe", adapter: "paper", status: "failed", required: true, recordedAt: "2026-10-06T00:00:00Z", evidence: [], reason: "No source-bound probe evidence"})
  * console.log(Effect.isEffect(libraryQualificationValid("/library", catalog, receipt)))
  * ```
@@ -634,34 +634,24 @@ const prepareGithubContext = Effect.fn("Library.prepareGithubContext")(function*
   });
 });
 type GithubEvidenceContext = O.Option.Value<Effect.Success<ReturnType<typeof prepareGithubContext>>>;
-const exactGithubPatch = (context: GithubEvidenceContext, args: ReadonlyArray<string>) => {
-  const { root, fs, path, realRoot, git, role } = context;
-  return Effect.scoped(
-    Effect.gen(function* () {
-      const staging = path.join(root, ".staging");
-      yield* fs.makeDirectory(staging, { recursive: true });
-      const realStaging = yield* fs.realPath(staging);
-      const relativeStaging = path.relative(realRoot, realStaging);
-      if (
-        path.isAbsolute(relativeStaging) ||
-        relativeStaging === ".." ||
-        Str.startsWith(`..${path.sep}`)(relativeStaging)
-      )
-        return false;
-      const temporary = yield* fs.makeTempDirectoryScoped({
-        directory: staging,
-        prefix: "verify-git-patch-",
-      });
-      const output = path.join(temporary, "patch.diff");
-      yield* git([...args, `--output=${output}`]);
-      const stat = yield* fs.stat(output);
-      if (stat.size > BigInt(100_000_000)) return false;
-      const bytes = yield* fs.readFile(output);
-      const hash = yield* hashBytes(bytes);
-      return A.some(role("raw-diff"), (artifact) => artifact.bytes === bytes.byteLength && artifact.sha256 === hash);
-    })
-  );
-};
+const exactGithubPatch = Effect.fn("Library.exactGithubPatch")(function* (
+  context: GithubEvidenceContext,
+  args: ReadonlyArray<string>
+) {
+  const { fs, path, git, role } = context;
+  const compare = Effect.fn("Library.compareGithubPatch")(function* () {
+    // Verification is read-only for the library, including when its root is read-only.
+    const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "verify-git-patch-" });
+    const output = path.join(temporary, "patch.diff");
+    yield* git([...args, `--output=${output}`]);
+    const stat = yield* fs.stat(output);
+    if (stat.size > BigInt(100_000_000)) return false;
+    const bytes = yield* fs.readFile(output);
+    const hash = yield* hashBytes(bytes);
+    return A.some(role("raw-diff"), (artifact) => artifact.bytes === bytes.byteLength && artifact.sha256 === hash);
+  });
+  return yield* Effect.scoped(compare());
+});
 const githubListingPageSizeValid = (length: number, number: number, pages: number) =>
   length <= 100 && (number >= pages || length === 100) && (number !== pages || length < 100);
 const githubListingFirstCommitValid = (

@@ -241,7 +241,7 @@ Use:
   boundary invariants
 - `S.TaggedUnion(...).cases` / `.guards` / `.isAnyOf` / `.match`
 - `S.toTaggedUnion(...).cases` / `.guards` / `.isAnyOf` / `.match`
-- `LiteralKit.Enum`, `.is`, `.$match`, and `.toTaggedUnion`, plus the
+- `LiteralKit.Enum`, `.is`, `.match`, `.matchOrElse`, and `.toTaggedUnion`, plus the
   inherited `S.Literals` members `.literals` and `.pick(...)`
 - `MappedLiteralKit.From`, `.To`, and `.Pairs` for directional literal maps
 

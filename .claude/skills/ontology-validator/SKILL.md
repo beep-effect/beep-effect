@@ -266,9 +266,13 @@ Date: {date}
 
 ## Error Handling
 
+Missing validation prerequisites are blockers, not passing checks. The validator
+reports them and requests the owning role's output; it does not author replacement
+shapes or tests while acting as the evaluator.
+
 | Error | Likely Cause | Recovery |
 |-------|-------------|----------|
 | Reasoner timeout | Ontology too large or complex for HermiT | Switch to ELK; profile the ontology for complexity hotspots |
-| SHACL shapes file missing | Architect didn't generate shapes | Create minimal shapes or defer SHACL check |
-| CQ test files missing | Requirements skill output not available | Generate tests from `ontologies/{name}/docs/competency-questions.yaml` if available |
+| SHACL shapes file missing | Architect did not supply the prerequisite shapes | Report the SHACL check as NOT RUN and hand back to the architect to supply shapes; rerun validation after delivery |
+| CQ test files missing | Requirements skill output not available | Report CQ testing as NOT RUN and hand back to the requirements skill to supply tests from the competency questions; rerun after delivery |
 | ROBOT report fails to parse | Corrupt or malformed Turtle | Run `robot validate --input ontology.ttl` to find syntax errors |

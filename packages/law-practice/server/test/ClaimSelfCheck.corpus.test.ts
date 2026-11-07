@@ -37,7 +37,7 @@ describe("Frozen allowed-claim sample", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const manifestPath = yield* path.fromFileUrl(
-          new URL("../../../../goals/claim-element-antecedent-check/research/allowed-sampling.json", import.meta.url)
+          new URL("./fixtures/claim-element/allowed-sampling.json", import.meta.url)
         );
         const argument = S.decodeEffect(allowedSampleJson);
         const readFileString1 = yield* fs.readFileString(manifestPath);
@@ -104,7 +104,7 @@ describe("Positive source sample integrity", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const manifestPath = yield* path.fromFileUrl(
-          new URL("../../../../goals/claim-element-antecedent-check/research/positive-sampling.json", import.meta.url)
+          new URL("./fixtures/claim-element/positive-sampling.json", import.meta.url)
         );
         const argument1 = S.decodeEffect(positiveSampleJson);
         const readFileString3 = yield* fs.readFileString(manifestPath);

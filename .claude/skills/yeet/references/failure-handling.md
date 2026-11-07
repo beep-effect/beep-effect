@@ -18,10 +18,12 @@ Read when a publish, proof, or hosted check fails and the summary line is not en
   attempt, at most 3 times per job and only while the head is current; check
   the run's `run_attempt` (`gh run view <id> --json attempt`) and its
   `Rerun Runner Loss` summary before re-running it by hand.
-- There is no pre-push git hook; `yeet publish` runs the cheap-gates tier and
-  the head-install preflight itself before pushing, and hosted CI proves the
-  head after. (The former pre-push catalog hook was removed with the
-  repo-exports catalog.)
+- `lefthook.yml` configures a pre-push `bun-version-check` that runs
+  `bun run beep version-sync --check-runtime`. The former catalog hook was
+  removed with the repo-exports catalog; the runtime-version hook remains
+  configured. `yeet publish` runs the cheap-gates tier and head-install
+  preflight before pushing, and hosted CI proves the head afterward. Hook
+  configuration alone does not establish installation in a particular clone.
 - If Yeet refuses untracked, unstaged, or newly generated paths, inspect the
   paths and decide whether they belong in the reviewed publish intent.
 - Full proofs use machine-wide weighted admission as the sole current-version

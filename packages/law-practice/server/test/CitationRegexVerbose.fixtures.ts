@@ -190,6 +190,11 @@ export const replayCitationRegexVerbose = Effect.fn("VerboseTest.replay")(functi
   yield* Effect.forEach(CitationRegexEngine.literals, (engine) => replayEngine(kind, full, corpus, engine));
 });
 
+/** Sixteen disjoint source-case partitions keep each real-worker replay bounded.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationRegexReplayBatches = A.range(0, 15);
+
 /** Reuse one existing observed worker for source grammar families, including
  * closed parser-only execution refusals and independently acknowledged exits.
  * @internal @category testing @since 0.0.0
@@ -199,7 +204,8 @@ export const replayCitationRegexProgramEngine = Effect.fn("RegexProgramTest.engi
   full: boolean,
   patterns: ReadonlyArray<CitationRegexProbePattern>,
   engine: typeof CitationRegexEngine.Type,
-  patternMaximum?: number
+  patternMaximum?: number,
+  batch?: number
 ) {
   const known = A.filter(patterns, (row) => row.engines[engine].profile !== null);
   const rows = A.filter(known, (row) => row.engines[engine].kind === "single-match" && (full || row.smoke));
@@ -210,7 +216,21 @@ export const replayCitationRegexProgramEngine = Effect.fn("RegexProgramTest.engi
   }));
   const setup = yield* setupCitationRegexWorker(bindings, kind, engine, patternMaximum);
   let admitted = 0;
-  for (const row of rows) admitted += yield* replayCitationRegexProgramRow(setup, row, row.engines[engine], full);
+  let sourceAdmissions = 0;
+  let selectedAdmissions = 0;
+  let sourceCase = 0;
+  for (const row of rows) {
+    const expected = row.engines[engine];
+    const modes = expected.profile?.minimumWidthFloor === 0 ? 2 : 3;
+    const cases = A.filter(full ? expected.cases : A.take(expected.cases, 1), () => {
+      sourceAdmissions += modes;
+      const selected = batch === undefined || sourceCase % citationRegexReplayBatches.length === batch;
+      sourceCase++;
+      if (selected) selectedAdmissions += modes;
+      return selected;
+    });
+    admitted += yield* replayCitationRegexProgramRow(setup, row, { ...expected, cases }, true);
+  }
   let refused = 0;
   for (const row of A.filter(known, (row) => row.engines[engine].kind === "parser-only")) {
     const source = yield* Effect.fromOption(A.head(row.engines[engine].cases));
@@ -219,7 +239,7 @@ export const replayCitationRegexProgramEngine = Effect.fn("RegexProgramTest.engi
     refused++;
   }
   yield* assertCitationRegexRuntimeReleased(setup.admission, setup.observed.snapshot, admitted + refused);
-  return { admitted, refused };
+  return { admitted, refused, sourceAdmissions, selectedAdmissions };
 });
 const ReplayCounts = S.Struct({ smoke: S.Natural, full: S.Natural, refused: S.Natural }).pipe(
   $I.annoteSchema("ReplayCounts", {
@@ -232,12 +252,15 @@ export const replayCitationRegexProgramFamily = Effect.fn("RegexProgramTest.fami
   full: boolean,
   patterns: ReadonlyArray<CitationRegexProbePattern>,
   expectedCounts: R.ReadonlyRecord<typeof CitationRegexEngine.Type, typeof ReplayCounts.Type>,
-  patternMaximum: number
+  patternMaximum: number,
+  batch?: number
 ) {
+  if (batch !== undefined) expect(citationRegexReplayBatches).toContain(batch);
   for (const engine of CitationRegexEngine.literals) {
-    const counts = yield* replayCitationRegexProgramEngine(kind, full, patterns, engine, patternMaximum);
+    const counts = yield* replayCitationRegexProgramEngine(kind, full, patterns, engine, patternMaximum, batch);
     const expected = expectedCounts[engine];
-    expect(counts.admitted).toBe(full ? expected.full : expected.smoke);
+    expect(counts.sourceAdmissions).toBe(full ? expected.full : expected.smoke);
+    expect(counts.admitted).toBe(counts.selectedAdmissions);
     expect(counts.refused).toBe(expected.refused);
   }
 });

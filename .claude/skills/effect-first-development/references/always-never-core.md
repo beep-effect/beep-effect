@@ -146,11 +146,6 @@ const TopicSegment = S.NonEmptyString.check(
 
 const isTopicSegment = S.is(TopicSegment)
 
-const splitNonEmpty =
-  (separator: string | RegExp) =>
-  (value: string): ReadonlyArray<string> =>
-    pipe(Str.split(separator)(value), A.filter(Str.isNonEmpty))
-
 const classifyTopicKind = Match.type<string>().pipe(
   Match.when(isContainsScopeSeparator, F.constant(TopicKind.Enum.scoped)),
   Match.orElse(F.constant(TopicKind.Enum.plain))
@@ -170,7 +165,7 @@ export const TopicName = S.NonEmptyString.check(
           classifyTopicKind,
           TopicKind.match({
             plain: isTopicSegment,
-            scoped: () => pipe(value, splitNonEmpty(":"), A.every(isTopicSegment))
+            scoped: () => pipe(value, Str.split(":"), A.every(isTopicSegment))
           })
         ), $I.annote("TopicNameSegmentsCheck", {
         title: "Topic Name Segments",

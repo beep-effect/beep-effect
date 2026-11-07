@@ -37,7 +37,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 | in-body `static readonly is = S.is(Self)` | attach on `S.Class`/`S.TaggedClass` (they lose piped statics) | a free-floating guard next to the class | `Md.model.ts:873` (`Heading.is`) |
 | `S.is` / `S.decodeUnknownOption` / `S.toEquivalence` | upstream free functions over the schema | a hand-written guard, decoder or `===` comparison | call at the use site; Effect caches parsers per AST |
 | `SchemaUtils.withStatics` | `dual` `(self, (schema) => methods) => self & methods` | ad-hoc `Object.assign(schema, {...})` + domain helpers lost on `.annotate`; never for codecs (`SFV4-codec-static`) | `SchemaUtils/withStatics.ts:91` |
-| `SchemaUtils.withLiteralKitStatics` | `(literalKit) => (self) => self & kitHelpers` | LiteralKit helpers dropped after an annotation rebuild | `SchemaUtils/withLiteralKitStatics.ts:37` |
+| `SchemaUtils.withLiteralKitStatics` | `(literalKit) => (self) => self & kitHelpers` | LiteralKit helpers lost by a derivation such as `S.brand`; annotations already preserve them | `SchemaUtils/withLiteralKitStatics.ts:37` |
 
 > Codec statics (`withCodecStatics`, codec facades attached with `withStatics`) were
 > retired under the Upstream-First Foundation/Modeling decision: a decode/guard wall
@@ -47,19 +47,19 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 
 | Symbol | API | Kills | Live site |
 |--------|-----|-------|-----------|
-| `LiteralKit([...])` | `.Enum`, `.is`, `.$match`, `.toTaggedUnion`; inherited `S.Literals` `.literals`, `.pick(...)`, `.mapMembers(...)` | duplicate literal arrays + enum-like objects + ad-hoc literal guards; N near-identical nodes | `Lexical.model.ts:755` (`HeadingTag`) |
+| `LiteralKit([...])` | `.Enum`, `.is`, `.match`, `.toTaggedUnion`; inherited `S.Literals` `.literals`, `.pick(...)`, `.mapMembers(...)` | duplicate literal arrays + enum-like objects + ad-hoc literal guards; N near-identical nodes | `Lexical.model.ts:755` (`HeadingTag`) |
 | `MappedLiteralKit([[from,to]])` | `.From.Enum` (from→to), `.To.Enum` (to→from), `.Pairs`, `.is` | a hand-written bidirectional lookup table + its inverse | code/protocol maps (e.g. `level↔"h1".."h6"`, SQLSTATE) |
 
 > **Key-stringification gotcha.** Non-string literals become string helper keys:
 > `1 → "number1"`, `true → "true"`, `1n → "bigint1n"`. So `LiteralKit([1,2,3,4,5,6]).Enum`
-> is `{ number1, …, number6 }` and `.$match({ number200: … })`. A manual second-arg map
+> is `{ number1, …, number6 }` and matching is keyed by the same names, such as `.match({ number1: …, … })`. A manual second-arg map
 > `[[1,"H1"],…]` renames them (`.Enum.H1`). Do **not** add `as const` to the inline array —
 > the const type params already preserve the tuple.
 
 ### Identity & errors — no bare-string identifiers, no `new Error`
 
 ```ts
-import { $SchemaId } from "@beep/identity/packages";          // ~90 pre-built composers
+import { $SchemaId } from "@beep/identity/packages";          // package-scoped identity composer
 import * as S from "effect/Schema";
 import { LiteralKit } from "@beep/schema";
 

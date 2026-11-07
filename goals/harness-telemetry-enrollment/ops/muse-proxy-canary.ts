@@ -34,6 +34,7 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -324,7 +325,7 @@ const observeNativeDescendant = Effect.fn("MuseProxyCanary.observeNativeDescenda
   shellPid: number
 ) {
   const expected = yield* io(() => Fs.stat(request.executable, { bigint: true }), "source");
-  const snapshot = async (pid: number) => {
+  const snapshotIdentity = async (pid: number) => {
     const raw = await Fs.readFile(`/proc/${pid}/stat`, "utf8");
     const fields = raw
       .slice(raw.lastIndexOf(")") + 2)
@@ -335,11 +336,17 @@ const observeNativeDescendant = Effect.fn("MuseProxyCanary.observeNativeDescenda
     if (ticks === undefined || !/^[1-9][0-9]*$/.test(ticks)) throw new Error("native-process-stat");
     const owner = await Fs.stat(`/proc/${pid}`);
     if (owner.uid !== process.getuid?.()) throw new Error("foreign-process");
+    return { pid, parent, ticks };
+  };
+  const snapshot = async (pid: number) => {
+    const identity = await snapshotIdentity(pid);
     const executable = await Fs.stat(`/proc/${pid}/exe`, { bigint: true });
     const cwd = await Fs.readlink(`/proc/${pid}/cwd`);
-    return { pid, parent, ticks, executable, cwd };
+    return { ...identity, executable, cwd };
   };
-  const shell = yield* io(() => snapshot(shellPid), "source");
+  // Pin ownership/start ticks before any retryable exe/cwd read. Failure to obtain
+  // this baseline refuses admission; a later PID must never become the baseline.
+  const shell = yield* io(() => snapshotIdentity(shellPid), "source");
   if (shell.parent !== process.pid) return yield* failed("source");
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const observed = yield* io(async () => {
@@ -797,6 +804,39 @@ export const runMuseProxyCanary = Effect.fn("HarnessEnrollment.claudeNativeCanar
       Effect.timeout("110 seconds"),
       Effect.catchTag("TimeoutError", () => failed("source-timeout")),
       Effect.mapError((error) => (S.is(MuseProxyCanaryError)(error) ? error : failed("source"))),
+      // Effect.result retains typed failures; interruption needs its own post-cleanup terminal fact.
+      Effect.onExit((exit) =>
+        Effect.gen(function* () {
+          if (!Exit.hasInterrupts(exit) || !O.getOrElse(nativeSpawned, () => false)) return;
+          const outcome = O.isSome(nativeExit) ? (nativeExit.value !== 0 ? "failed" : "unknown") : "cancelled";
+          const writeLifecycle = (stage: (typeof diagnostic.Type)["stage"], delivery: "pending" | "acknowledged") =>
+            writeNativeAttemptDiagnostic(
+              request.attemptDirectory,
+              diagnostic.make({
+                requestBinding,
+                purpose: "lifecycle",
+                stage,
+                nativeSpawned,
+                nativeExitStatus: nativeExit,
+                observedStdoutBytes: observedBytes,
+                outputComplete,
+                protocol: O.none(),
+                failurePhase: O.some("source"),
+                protocolFailure,
+                lifecycleOutcome: O.some(outcome),
+                lifecycleDelivery: O.some(delivery),
+              })
+            );
+          yield* writeLifecycle("dispatch-intent", "pending").pipe(Effect.ignoreCause);
+          const terminal = yield* postFact(
+            ObservationLaunchFact.cases.Finished.make({ launchId: request.launchId, outcome })
+          ).pipe(Effect.exit);
+          yield* writeLifecycle(
+            Exit.isSuccess(terminal) ? "validated" : "pending",
+            Exit.isSuccess(terminal) ? "acknowledged" : "pending"
+          ).pipe(Effect.ignoreCause);
+        })
+      ),
       Effect.result
     );
     const sourceDiagnostic = yield* saveSource(
@@ -805,7 +845,14 @@ export const runMuseProxyCanary = Effect.fn("HarnessEnrollment.claudeNativeCanar
     ).pipe(Effect.result);
     if (Result.isFailure(sourceResult)) {
       // Native process completion and collection refusal are different facts. Never infer task quality from exit0.
-      const outcome = O.isSome(nativeExit) && nativeExit.value !== 0 ? "failed" : "unknown";
+      // A deadline without an observed exit is a cancellation, as in the Codex and Grok canaries.
+      const outcome = O.isSome(nativeExit)
+        ? nativeExit.value !== 0
+          ? "failed"
+          : "unknown"
+        : sourceResult.failure.phase === "source-timeout"
+          ? "cancelled"
+          : "unknown";
       const failurePhase = O.some(sourceResult.failure.phase);
       const writeLifecycle = (stage: (typeof diagnostic.Type)["stage"], delivery: "pending" | "acknowledged") =>
         writeNativeAttemptDiagnostic(

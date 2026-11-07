@@ -30,9 +30,13 @@ Party slice domain: deterministic PartyKey v1 and graduated identifier normalize
 - `IdentifierIssue.input` can hold raw identifier text (personal data). Report
   `reason` and `field`, and never log `input` verbatim. Basis failures carry an
   empty `input`.
-- Layout follows `bun run beep architecture plan --slice party --domain-kind
-  values`: `src/values/<Concept>/<Concept>.{model,behavior,errors}.ts`, plus
-  the private shared normalizer core in `src/internal/`. The thin
-  `src/Identifier.ts` and `src/PartyKey.ts` barrels keep the published
-  `@beep/party-domain/Identifier` and `/PartyKey` subpaths stable under the
-  package's wildcard export.
+- Layout: `src/<domain-kind>/<Concept>/<Concept>.{model,behavior,errors}.ts`,
+  plus the private shared normalizer core in `src/internal/`. Identity-bearing
+  concepts (`Party`, `Communication`, `Provenance`, `Claim`, `Hierarchy`) live
+  in `src/entities/`; `Admission` and the read-time `Resolution` and
+  `Projection` views, which span several concepts, live in the `src/policies/`
+  escape hatch; `Identifier`, `PartyKey`, `Proposition` and `Ids` stay in
+  `src/values/`. Schema identifiers follow
+  the folder (`$PartyDomainId.create("entities/Claim/Claim.model")`). The thin
+  `src/<Concept>.ts` barrels keep each published `@beep/party-domain/<Concept>`
+  subpath stable under the package's wildcard export, whatever folder holds it.

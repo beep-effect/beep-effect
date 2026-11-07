@@ -24,9 +24,9 @@ Lift When-to-use, described `@see` relationships, release-stage tags, and
 deprecation guidance. Prefer stable, non-deprecated APIs whose documented use case
 matches the task.
 
-`@remarks` is retired and should never be requested as the semantic source. Use
-Details and Gotchas. Legacy `@example` tags remain readable in untouched files,
-but files whose documentation is touched migrate to titled Example sections.
+`@remarks` and `@example` are retired across the repo. Use Details and Gotchas
+for supporting prose and titled Example sections for examples. An untouched file
+is not exempt from the zero-legacy rule.
 
 ## Grep audits
 
@@ -43,16 +43,18 @@ rg -n '@category|@since' --type ts
 Classify owning exports before judging Example presence: value-level exports need
 an Example; pure type-level exports need prose only.
 
-### Transitional carriers
+### Retired carriers
 
 ```bash
 rg -n '@remarks\b|@example\b' --type ts
 rg -n '^\s*\* \*\*Example\*\*' --type ts
 ```
 
-In files whose documentation is touched, move `@remarks` into Details or Gotchas
-and convert legacy `@example` to a titled Example section. Do not use these
-searches for a mass migration of untouched files.
+Treat matches as violations: move `@remarks` into Details or Gotchas and
+convert `@example` to a titled Example section. Establish export ownership and
+coordinate existing documentation owners before changing unrelated files. For
+generated documentation, fix the owning generator and regenerate its output;
+do not invent a residual exception.
 
 ### Section shape
 

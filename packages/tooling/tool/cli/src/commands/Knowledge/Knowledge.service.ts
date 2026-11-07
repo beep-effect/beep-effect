@@ -1128,7 +1128,7 @@ export const guardKnowledgeCloneAttributes = (
 ): Effect.Effect<
   void,
   KnowledgeOperationalError | KnowledgeCloneAttributesError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Git | FileSystem.FileSystem | Path.Path
 > =>
   guardCloneLocalGitAttributes(repoRoot, gitAdapter, KnowledgeCloneAttributesError.at, (attributesPath) =>
     KnowledgeOperationalError.new(`Failed to stat clone-local git attributes "${attributesPath}".`)

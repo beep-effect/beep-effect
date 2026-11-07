@@ -21,6 +21,7 @@ import {
   ProofJobSubmitter,
   ProofJobUnit,
   parseYeetReadyInheritedRed,
+  pushReviewerRequestForTesting,
   RepoRunContext,
   readPullRequestForReadyStampingFooterForTesting,
   readYeetReviewLaneLedger,
@@ -500,22 +501,31 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
-    it.effect("keeps the flip when the reviewer re-request push fails", () =>
+    it.effect("keeps the flip and prints a canonical manual request when the comment fails", () =>
       Effect.gen(function* () {
+        const commentHead = Str.repeat(40)("a");
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(context, {
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
-          read: () => Effect.succeed(prView()),
+          read: () => Effect.succeed(prView({ headSha: O.some(commentHead) })),
           markReady: recordingMarkReady(calls),
           requestReview: () =>
-            Effect.fail(YeetCommandError.make({ message: "git push failed", command: "git push", exitCode: 1 })),
+            Effect.fail(
+              YeetCommandError.make({ message: "comment POST failed", command: "gh api comment", exitCode: 1 })
+            ),
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
         const got4 = yield* Ref.get(calls);
         expect(got4).toEqual([["ready", "42"]]);
+        const lines = yield* TestConsole.logLines;
+        const printed = A.join(A.map(lines, String), "\n");
+        expect(printed).toContain("could not create the beep-reviewer re-request: comment POST failed");
+        expect(printed).toContain(`<!-- beep-reviewer:request sha=${commentHead} -->`);
+        expect(printed).toContain("Requesting beep-reviewer review of this ready PR head.");
+        expect(printed).not.toContain("posted beep-reviewer request");
       })
     );
 
@@ -900,6 +910,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         yield* runYeetReadyGate(context, {
+          finalCheck: passingFinalCheck,
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ isDraft: false })),
           markReady: () => Effect.die("the flip must not run"),
@@ -948,6 +959,59 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
           expect(error.message).toContain(state);
         }
+      })
+    );
+
+    it.effect("verifies an ancestor receipt for an already-ready main merge without another flip", () =>
+      Effect.gen(function* () {
+        const receiptHead = Str.repeat(40)("r");
+        const consulted = yield* Ref.make<ReadonlyArray<string>>([]);
+        const decision = yield* runYeetReadyGate(context, {
+          finalCheck: () => Effect.succeedNone,
+          refresh: (repoContext, head) =>
+            Ref.update(consulted, A.append(head)).pipe(
+              Effect.andThen(passingFinalCheck(repoContext, receiptHead)),
+              Effect.map(O.map((receipt) => FinalCheckRefreshPass.make({ receipt, finalHead: head, ownChanges: [] })))
+            ),
+          squashCommitlint: passingSquashCommitlint,
+          read: () => Effect.succeed(prView({ isDraft: false })),
+          markReady: () => Effect.die("an already-ready merge must not flip again"),
+          requestReview: (_context, _number, _head, allowPush) => {
+            expect(allowPush).toBe(false);
+            return stubReviewerRequest();
+          },
+        });
+        expect(decision._tag).toBe("already-ready");
+        const heads = yield* Ref.get(consulted);
+        expect(heads).toEqual([headSha]);
+      })
+    );
+
+    it.effect("refuses an already-ready head whose final-check proof is missing", () =>
+      Effect.gen(function* () {
+        const error = yield* runYeetReadyGate(context, {
+          finalCheck: () => Effect.succeedNone,
+          refresh: () => Effect.succeedNone,
+          read: () => Effect.succeed(prView({ isDraft: false })),
+          markReady: () => Effect.die("the flip must not run"),
+        }).pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+      })
+    );
+
+    it.effect("looks up the already-ready proof under the unknown head when the read carries no head sha", () =>
+      Effect.gen(function* () {
+        const consulted = yield* Ref.make<ReadonlyArray<string>>([]);
+        const error = yield* runYeetReadyGate(context, {
+          finalCheck: (_repoContext, head) => Ref.update(consulted, A.append(head)).pipe(Effect.as(O.none())),
+          refresh: () => Effect.succeedNone,
+          read: () => Effect.succeed(prView({ isDraft: false, headSha: O.none() })),
+          markReady: () => Effect.die("the flip must not run"),
+        }).pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        expect(error.message).toContain("no final-check receipt for head unknown");
+        const heads = yield* Ref.get(consulted);
+        expect(heads).toEqual(["unknown"]);
       })
     );
 
@@ -2041,6 +2105,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ headSha: O.some(clone.head) })),
           markReady: () => Effect.void,
+          requestReview: pushReviewerRequestForTesting,
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
@@ -2081,6 +2146,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ headSha: O.some(clone.head) })),
           markReady: () => Effect.void,
+          requestReview: pushReviewerRequestForTesting,
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
@@ -2100,6 +2166,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ headSha: O.some("0000000000000000000000000000000000000000") })),
           markReady: () => Effect.void,
+          requestReview: pushReviewerRequestForTesting,
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
@@ -2128,6 +2195,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ headSha: O.some(clone.head) })),
           markReady: () => Effect.void,
+          requestReview: pushReviewerRequestForTesting,
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
@@ -2156,6 +2224,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ headSha: O.some(clone.head) })),
           markReady: () => Effect.void,
+          requestReview: pushReviewerRequestForTesting,
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
@@ -2176,6 +2245,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ headSha: O.some(clone.head) })),
           markReady: () => Effect.void,
+          requestReview: pushReviewerRequestForTesting,
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");

@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "cache-external-test-consumer-inputs/v1",
+  "sourceBaseRevision": "67d985cf0a19c9ff3cf1705d96c6d59c4d5fa251",
+  "scope": "Native Turbo 2.11.10 metadata-only dry-run; zero task bodies or local quality suites. No qualification, activation or whole-goal acceptance.",
+  "nativeDryRunSha256": "ea317bd7b90619c1e070cd486ad4b152bf515569f649b5ed1a77ca969ea966d6",
+  "tasks": [
+    {
+      "task": "@beep/repo-cli#coverage",
+      "externalInputs": [
+        {
+          "path": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+          "nativeHash": "3abfdd472b822189a4e6ed5b77f85d608b1c53c9"
+        },
+        {
+          "path": "apps/architecture-lab-proof/package.json",
+          "nativeHash": "7e8001faca5b84d05421212fcc09ff1c142abacb"
+        },
+        {
+          "path": "packages/_internal/db-admin/package.json",
+          "nativeHash": "9846833350715758bc8f66eefc0598a36b206302"
+        },
+        {
+          "path": "goals/time-to-certainty/research/economics.json",
+          "nativeHash": "9b2dcc5a356d1c4f3db62e2243c9b96d5d738592"
+        },
+        {
+          "path": "goals/time-to-certainty/research/gate-order-handoff.json",
+          "nativeHash": "f396121f14f06b440b90e42da51814092632146a"
+        },
+        {
+          "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+          "nativeHash": "a3132f328bf9ff3f395b0985758497cbb555e3d9"
+        },
+        {
+          "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
+          "nativeHash": "b33f020601c23a9f918fac3178c52d27d4d7109f"
+        }
+      ],
+      "inheritedPackageInputsRetained": true,
+      "generatedProofSurfacesExcluded": true,
+      "cacheEnabled": false
+    },
+    {
+      "task": "@beep/repo-cli#test",
+      "externalInputs": [
+        {
+          "path": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+          "nativeHash": "3abfdd472b822189a4e6ed5b77f85d608b1c53c9"
+        },
+        {
+          "path": "apps/architecture-lab-proof/package.json",
+          "nativeHash": "7e8001faca5b84d05421212fcc09ff1c142abacb"
+        },
+        {
+          "path": "packages/_internal/db-admin/package.json",
+          "nativeHash": "9846833350715758bc8f66eefc0598a36b206302"
+        },
+        {
+          "path": "goals/time-to-certainty/research/economics.json",
+          "nativeHash": "9b2dcc5a356d1c4f3db62e2243c9b96d5d738592"
+        },
+        {
+          "path": "goals/time-to-certainty/research/gate-order-handoff.json",
+          "nativeHash": "f396121f14f06b440b90e42da51814092632146a"
+        },
+        {
+          "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+          "nativeHash": "a3132f328bf9ff3f395b0985758497cbb555e3d9"
+        },
+        {
+          "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
+          "nativeHash": "b33f020601c23a9f918fac3178c52d27d4d7109f"
+        }
+      ],
+      "inheritedPackageInputsRetained": true,
+      "generatedProofSurfacesExcluded": true,
+      "cacheEnabled": true
+    },
+    {
+      "task": "@beep/repo-cli#test:property",
+      "externalInputs": [
+        {
+          "path": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+          "nativeHash": "3abfdd472b822189a4e6ed5b77f85d608b1c53c9"
+        },
+        {
+          "path": "apps/architecture-lab-proof/package.json",
+          "nativeHash": "7e8001faca5b84d05421212fcc09ff1c142abacb"
+        },
+        {
+          "path": "packages/_internal/db-admin/package.json",
+          "nativeHash": "9846833350715758bc8f66eefc0598a36b206302"
+        },
+        {
+          "path": "goals/time-to-certainty/research/economics.json",
+          "nativeHash": "9b2dcc5a356d1c4f3db62e2243c9b96d5d738592"
+        },
+        {
+          "path": "goals/time-to-certainty/research/gate-order-handoff.json",
+          "nativeHash": "f396121f14f06b440b90e42da51814092632146a"
+        },
+        {
+          "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+          "nativeHash": "a3132f328bf9ff3f395b0985758497cbb555e3d9"
+        },
+        {
+          "path": "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
+          "nativeHash": "b33f020601c23a9f918fac3178c52d27d4d7109f"
+        }
+      ],
+      "inheritedPackageInputsRetained": true,
+      "generatedProofSurfacesExcluded": true,
+      "cacheEnabled": true
+    }
+  ],
+  "priorAnalyzerRefusal": "Initial inspection incorrectly matched repository paths against package-relative native keys. Corrected by resolving keys relative to the package; retained original dry-run without rerunning Turbo.",
+  "dryRunConfigSha256": "5a13f5f17ce6b2d9f95c5e0b5f7bb961919b45f6b5015aff6e0b4ba4a9b68082",
+  "committedConfigSha256": "ea1a08f5c9367e49b3a70a2ae771f3f5f2fb40492e517b2f028d3aac08c12fc6",
+  "formattingOnlyAfterDryRun": true
+}

@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded (`research/01-p0-spikes.md`, 2026-11-06). |
+| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`. PR 1 (D16): pin, driver scaffold, spikes, doctrine, kit freeze. PR 2: Postgres Platform driver + conformance suite + Cluster engine. PR 3: vault-sync aggregates/views/policies/sagas, Session middleware, Api (HTTP/CLI/MCP views), genesis import, projections, single-writer cutover. PR 4: frontend offline intents + QA recording, observability catalog, PII audit. | Acceptance criteria are met. |
 | P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |

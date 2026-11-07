@@ -6,6 +6,7 @@ import {
   preflightCitationHtmlJob,
 } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
 import { citationPythonTextData } from "@beep/law-practice-server/internal/Citation/PythonTextData";
+import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -247,4 +248,81 @@ it.effect("preflights owned byte jobs before snapshot allocation and keeps the t
     const citationResult13 = yield* Fiber.await(running);
     expect(Exit.hasInterrupts(citationResult13)).toBe(true);
   })
+);
+
+it.effect("rejects malformed HTML policy and native storage before transport preflight", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationHtmlInput(policy).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationHtmlInputFailure", reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+    const policy = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationHtmlInput(policy.limits);
+    let preflights = 0;
+    for (const storage of [null, {}, { width: 3, bytes: new Uint8Array([65]) }, { width: 2, bytes: [65, 0] }]) {
+      const failure = yield* input
+        .prepareUnicode(storage, () =>
+          Effect.sync(() => {
+            preflights++;
+          })
+        )
+        .pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationHtmlInputFailure", reason: "invalid-input" });
+    }
+    expect(preflights).toBe(0);
+  })
+);
+
+it.effect("returns independent sanitized errors when the same malformed native input is retried", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationHtmlInput(policy.limits);
+    const malformed = { width: 3, bytes: new Uint8Array([65]) };
+    const first = yield* input
+      .prepareUnicode(malformed, () => Effect.die("invalid input reached preflight"))
+      .pipe(Effect.flip);
+    const retried = yield* input
+      .prepareUnicode(malformed, () => Effect.die("invalid input reached preflight"))
+      .pipe(Effect.flip);
+    expect(first).toMatchObject({ _tag: "CitationHtmlInputFailure", reason: "invalid-input" });
+    expect(retried).toEqual(first);
+    expect(retried).not.toBe(first);
+    expect("cause" in retried).toBe(false);
+  })
+);
+
+it.effect("preserves an incomplete declaration prefix as ordinary prepared HTML text", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const input = yield* makeCitationHtmlInput(policy.limits);
+    const prepared = yield* input.prepare("<?xml");
+    expect(prepared).toMatchObject({ encoding: "UTF-8", fullHtml: false });
+    expect(prepared.bytes).toEqual(new TextEncoder().encode("<?xml"));
+  })
+);
+
+it.effect(
+  "rejects native transport and absolute UTF-16 expansion before allocating a receiving buffer",
+  () =>
+    Effect.gen(function* () {
+      const policy = yield* defaultCitationEnginePolicy;
+      const short = yield* makeCitationHtmlInput({ ...policy.limits, processMessageBytes: 3 });
+      const transport = yield* short
+        .prepareUnicode({ width: 4, bytes: new Uint8Array([0, 0, 1, 0]) }, () =>
+          Effect.die("oversized native transport reached preflight")
+        )
+        .pipe(Effect.flip);
+      expect(transport).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
+      const count = CitationEngineAbsoluteMaxima.producedTextUtf16 / 2 + 1;
+      const bytes = new Uint8Array(count * 4);
+      const view = new DataView(bytes.buffer);
+      for (let index = 0; index < count; index++) view.setUint32(index * 4, 0x10000, true);
+      const input = yield* makeCitationHtmlInput({ ...policy.limits, processMessageBytes: bytes.byteLength });
+      const expansion = yield* input
+        .prepareUnicode({ width: 4, bytes }, () => Effect.die("oversized UTF-16 expansion reached preflight"))
+        .pipe(Effect.flip);
+      expect(expansion).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+    }),
+  { timeout: 30_000 }
 );

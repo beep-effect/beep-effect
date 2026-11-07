@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "research-library-routes",
+    "packetId": "goal-packet/v1:5e47ae68aade9b0103f3cd3890e3a8f0a83c3329057362d52940005b4ed34267",
+    "title": "Research library acquisition routes",
+    "status": "active",
+    "created": "2026-11-06",
+    "updated": "2026-11-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/research-library-routes",
+  "lifecycle": "active",
+  "mission": "Add the acquisition routes the library lacks: a @beep/firecrawl driver with a native web route, a Box route on @beep/box with per-file receipts, VidBee and alphaXiv import-result methods, per-hop citation extraction, and the routed-finding hop-2 gate with domain caps.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/research-library-ontology",
+    "graduated": "2026-11-06"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/research-library-routes/README.md",
+    "goals/research-library-routes/SPEC.md",
+    "goals/research-library-routes/PLAN.md",
+    "goals/research-library-routes/GOAL.md",
+    "goals/research-library-routes/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/research-library-routes/GOAL.md"
+    }
+  ],
+  "provides": ["drivers/firecrawl", "research-library/routes"],
+  "requires": ["research-library/ontology-core", "box/driver"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/research-library-routes/GOAL.md)\" -le 4000",
+    "jq . goals/research-library-routes/ops/manifest.json",
+    "rg -n \"research-library-routes|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/research-library-routes",
+    "git diff --check -- goals/research-library-routes",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

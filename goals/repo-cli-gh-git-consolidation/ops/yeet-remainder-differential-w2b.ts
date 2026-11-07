@@ -49,13 +49,15 @@ import {
 } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts";
 import { sweepProbeFromGit } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts";
 import { YeetCommandError } from "../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
-import { adaptGitKitError, runGitOutput } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
+import { adaptGitKitError } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 import { patientGit } from "../../../packages/tooling/tool/cli/src/internal/repo-run/PatientGit.ts";
 import {
   runRepoCommandCapture,
   runRepoCommandCaptureRaw,
 } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts";
 import { RepoRunContext } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts";
+// The retired generic runner, frozen verbatim at the lane base (runner retirement, SPEC D-21).
+import { runGitOutput } from "./frozen-w7b/GitRunners.old.ts";
 import type { StatusEntry, WorktreeEntry } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

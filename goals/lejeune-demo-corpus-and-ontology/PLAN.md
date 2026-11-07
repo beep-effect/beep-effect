@@ -4,8 +4,8 @@
 
 Status: `active`
 
-P0-P2 are complete. P3 repository review, publication, and hosted merge-readiness are in
-progress. This packet provides `lejeune/demo-corpus-and-ontology` to the lab packet.
+P0-P3 are complete: the lab shipped in #872 (2026-08-30) and this docs-only final PR
+carries the `completed-retained` proposal. This packet provides `lejeune/demo-corpus-and-ontology` to the lab packet.
 
 ## Phases
 

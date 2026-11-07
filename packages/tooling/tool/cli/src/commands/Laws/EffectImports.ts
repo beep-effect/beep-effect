@@ -6,6 +6,8 @@
  */
 
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { createRepoTsMorphProject } from "@beep/repo-cli-kit/tsmorph/index";
@@ -20,6 +22,7 @@ import { compileAndExpand } from "@beep/walker/Expand";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -30,6 +33,8 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
+import { messageGitErrorAdapter } from "./internal/TrackedTextFiles.ts";
 import { scriptFences } from "./internal/TypeScriptFences.ts";
 import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
 import type { FencedCodeBlockDetail } from "@beep/repo-docgen/Core";
@@ -1713,6 +1718,39 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
   );
 });
 
+// The Markdown walk enters every directory, so git-ignored local residue (a
+// root `tmp/`, `scratchpad/` loop output) would be scanned locally although CI
+// and fresh lanes never contain it. One `git ls-files` listing of the tracked
+// and untracked-but-not-ignored paths, relative to the working directory like
+// the walk, keeps the corpus to what a commit can carry. Outside a git work
+// tree the listing fails and the walk is kept unfiltered.
+const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(function* () {
+  // Tracked plus visible untracked paths through the kit (`ls-files -z` and `ls-files --others
+  // --exclude-standard -z`), as the retired `ls-files --cached --others` capture listed them (SPEC D-21).
+  const git = yield* Git;
+  const adapter = messageGitErrorAdapter((message) => message);
+  const cwd = process.cwd();
+  return yield* Effect.all([
+    git.lsFiles(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles([]), adapter))),
+    // `relative: true` keeps the untracked half cwd-relative, as `lsFiles` and the Markdown filter are.
+    git
+      .untrackedFiles(cwd, { relative: true })
+      .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(true), adapter))),
+  ]).pipe(
+    Effect.map(([tracked, untracked]) =>
+      O.some(
+        HashSet.fromIterable(
+          A.appendAll(
+            A.map(tracked, (entry) => entry.path),
+            untracked
+          )
+        )
+      )
+    ),
+    Effect.orElseSucceed(O.none<HashSet.HashSet<string>>)
+  );
+});
+
 /**
  * Discover the executable sources one `effect-imports` run reads, relative to
  * the working directory.
@@ -1765,8 +1803,9 @@ export const discoverEffectImportSourceFiles = Effect.fn("EffectImports.discover
  * file below the working directory is listed, dot directories included, except
  * the generated and vendored directories the source corpus excludes (any
  * `worktrees` directory among them) plus `.git`, `.beep`, `docs/modules`,
- * `docs/generated` and `docs/_internal`.
- * Symbolic links and unreadable entries are skipped. Paths are
+ * `docs/generated` and `docs/_internal`. Inside a git work tree the walk is
+ * further limited to paths git does not ignore, so ignored local residue never
+ * enters the corpus. Symbolic links and unreadable entries are skipped. Paths are
  * POSIX, deduplicated and sorted; the per-run scope filter is applied by the
  * runner, not here.
  *
@@ -1796,12 +1835,17 @@ export const discoverEffectImportMarkdownFiles = Effect.fn("EffectImports.discov
         A.sort(Order.String)
       );
     }
-    return yield* discoverFilesWithGlob(
+    const walked = yield* discoverFilesWithGlob(
       MARKDOWN_GLOBS,
       MARKDOWN_EXCLUSION_GLOBS,
       true,
       "Could not discover Markdown source files."
     );
+    const visible = yield* listGitVisiblePaths();
+    return O.match(visible, {
+      onNone: () => walked,
+      onSome: (paths) => A.filter(walked, (file) => HashSet.has(paths, file)),
+    });
   }
 );
 

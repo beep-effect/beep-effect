@@ -33,6 +33,7 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Toml from "effect/encoding/Toml";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -46,6 +47,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CodexCanarySource, decodeCodexCanaryOutput } from "./codex-exec-wire.ts";
+import { NativeAttemptDiagnostic, writeNativeAttemptDiagnostic } from "./native-attempt-diagnostic.ts";
 
 const $I = $RepoCliId.create("goals/harness-telemetry-enrollment/ops/codex-native-canary");
 const absolute = S.String.check(S.isPattern(/^\/[^\u0000-\u001f"\\]*$/), S.isMaxLength(4096)).pipe(
@@ -658,6 +660,10 @@ export const runCodexNativeCanary = Effect.fn("HarnessEnrollment.codexNativeCana
     yield* io(() => durableCreate(request.attemptDirectory, "preflight.json", qualificationJson));
     yield* postFact(prepared);
     if ((yield* pinNativeConfig(request, effectiveHome)) !== configIdentitySha256) return yield* failed("admission");
+    let nativeExitStatus = O.none<number>();
+    let sourceProcessObserved = false;
+    let sourceTimedOut = false;
+    let observedStdoutBytes = 0;
     evidence = yield* Effect.scoped(
       Effect.gen(function* () {
         const start = yield* Clock.currentTimeMillis;
@@ -676,9 +682,13 @@ export const runCodexNativeCanary = Effect.fn("HarnessEnrollment.codexNativeCana
           `codex-canary-process/v1:${request.launchId}:${child.pid}:${start}`,
           O.some(Redacted.value(request.hashSalt))
         );
+        sourceProcessObserved = true;
         yield* postFact(ObservationLaunchFact.cases.Started.make({ launchId: request.launchId, processInstanceId }));
         const stdout = yield* boundedText(child.stdout, 262144);
-        if (Number(yield* child.exitCode) !== 0) return yield* failed("source");
+        observedStdoutBytes = Buffer.byteLength(stdout);
+        const code = Number(yield* child.exitCode);
+        nativeExitStatus = O.some(code);
+        if (code !== 0) return yield* failed("source");
         const source = yield* decodeCodexCanaryOutput(stdout, request.hashSalt);
         const end = yield* Clock.currentTimeMillis;
         const elapsed = (yield* Clock.monotonicTimeNanos) - mono;
@@ -702,6 +712,53 @@ export const runCodexNativeCanary = Effect.fn("HarnessEnrollment.codexNativeCana
       })
     ).pipe(
       Effect.timeout("110 seconds"),
+      Effect.catchTag("TimeoutError", () => {
+        sourceTimedOut = true;
+        return failed("source");
+      }),
+      Effect.onExit((exit) =>
+        Effect.gen(function* () {
+          // The process scope is already released; later trace transport errors are outside this boundary.
+          if (Exit.isFailure(exit) && sourceProcessObserved) {
+            const outcome = O.isSome(nativeExitStatus)
+              ? nativeExitStatus.value !== 0
+                ? "failed"
+                : "unknown"
+              : Exit.hasInterrupts(exit) || sourceTimedOut
+                ? "cancelled"
+                : "unknown";
+            const lifecycle = (
+              stage: "dispatch-intent" | "validated" | "pending",
+              delivery: "pending" | "acknowledged"
+            ) =>
+              writeNativeAttemptDiagnostic(
+                request.attemptDirectory,
+                NativeAttemptDiagnostic.make({
+                  requestBinding,
+                  purpose: "lifecycle",
+                  stage,
+                  nativeSpawned: O.some(true),
+                  nativeExitStatus,
+                  observedStdoutBytes,
+                  outputComplete: O.isSome(nativeExitStatus),
+                  protocol: O.none(),
+                  failurePhase: O.some(sourceTimedOut ? "source-timeout" : "source"),
+                  protocolFailure: O.none(),
+                  lifecycleOutcome: O.some(outcome),
+                  lifecycleDelivery: O.some(delivery),
+                })
+              );
+            yield* lifecycle("dispatch-intent", "pending").pipe(Effect.ignoreCause);
+            const terminal = yield* postFact(
+              ObservationLaunchFact.cases.Finished.make({ launchId: request.launchId, outcome })
+            ).pipe(Effect.exit);
+            yield* lifecycle(
+              Exit.isSuccess(terminal) ? "validated" : "pending",
+              Exit.isSuccess(terminal) ? "acknowledged" : "pending"
+            ).pipe(Effect.ignoreCause);
+          }
+        })
+      ),
       Effect.mapError(() => failed("source"))
     );
     const encoded = yield* encodeEvidence(evidence);

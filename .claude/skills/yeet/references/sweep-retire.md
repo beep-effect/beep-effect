@@ -76,3 +76,17 @@ cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep 
   moving on. `bun run beep goals doctor` applies the same deferral and keeps
   flagging the packet as `active-after-merge` while a merge commit cites the
   slug and nobody touches it.
+
+## Post-merge closeout law (moved from `AGENTS.md`)
+
+Post-merge closeout is the agent's job. Once the PR is MERGED, retire the lane
+and sweep its clone from inside the lane as the last command of the session:
+`CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`.
+First read [lane retirement](standards/git-worktrees.md) and the
+[closeout runbook](docs/runbooks/systemd-timers.md#retiring-the-lane-that-ran-the-closeout)
+for archive fences, process holders, stale-clone fallback and `--lane` handling.
+The command must preserve other live checkouts; never bypass a holder refusal.
+If the merged change touched a systemd unit renderer, refresh the affected
+research/refs timers from the swept clone using the runbook's `--refresh`
+forms. Installed units are snapshots; do not leave them stale or hand this
+authorized closeout work back to the operator.

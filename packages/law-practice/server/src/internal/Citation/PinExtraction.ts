@@ -88,7 +88,7 @@ const prepare = Effect.fn("Citation.preparePinExtraction")(function* (
   const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
   const index = request.index < 0 ? request.words.length + request.index : request.index;
   if (index < 0 || index >= request.words.length) return yield* fail("index-out-of-range");
-  const selected = yield* Effect.fromOption(A.get(request.words, index), () => fail("index-out-of-range"));
+  const selected = A.getUnsafe(request.words, index);
   const prefixLength = request.prefix.bytes.length / request.prefix.width;
   const context = CitationTokenContextInput.make({
     words: request.words,

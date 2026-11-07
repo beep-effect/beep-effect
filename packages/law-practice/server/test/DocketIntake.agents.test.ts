@@ -140,7 +140,10 @@ const rejected = aiFailure(AiError.InvalidRequestError.make({}));
 const makeAgentsLayer = (options: DocketAgentsOptions) =>
   makeDocketAgentsLayer(options).pipe(Layer.provide(LanguageModelLayer), Layer.provideMerge(ScriptedModelLayer));
 
-const agentsLayer = makeAgentsLayer(DocketAgentsOptions.make({}));
+const agentsLayer = makeDocketAgentsLayer().pipe(
+  Layer.provide(LanguageModelLayer),
+  Layer.provideMerge(ScriptedModelLayer)
+);
 const fastRetryLayer = makeAgentsLayer(DocketAgentsOptions.make({ retryBaseDelay: Duration.millis(1) }));
 
 const failureOf = <A>(effect: Effect.Effect<A, DocketIntakeError>): Effect.Effect<O.Option<DocketIntakeError>> =>

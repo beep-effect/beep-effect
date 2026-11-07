@@ -32,8 +32,8 @@ wanted. When no distinct identifier is needed, omit it with
 `S.TaggedError<Self, { readonly brand: unique symbol }>()("Tag", fields)`;
 never pass a bare identifier equal to the tag. Every error class carries the
 `{ readonly brand: unique symbol }` brand type argument. Cause-carrying errors declare
-`cause: Defect({ includeStack: true })` explicitly with the `Defect` wrapper
-from `@beep/schema` (see "Declared field equivalence" below).
+`cause: S.Defect({ includeStack: true })` using `effect/Schema`, with the
+field-level equivalence override described in "Declared field equivalence" below.
 
 ### Declared field equivalence
 

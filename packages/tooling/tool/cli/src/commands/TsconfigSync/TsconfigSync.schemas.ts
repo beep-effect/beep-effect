@@ -746,7 +746,7 @@ export class PackageReferencesChange extends S.Opaque<PackageReferencesChange, {
 ) {}
 
 /**
- * Planned change entry for package tsconfig.check.json overlay references.
+ * Planned change entry for package check and test overlay references.
  *
  * **Example** (Report drift in a package check tsconfig)
  *
@@ -774,7 +774,7 @@ export class PackageCheckReferencesChange extends S.Opaque<
     section: S.tag("package-check-references"),
   }).pipe(
     $I.annoteSchema("PackageCheckReferencesChange", {
-      description: "Planned change entry for package tsconfig.check.json overlay references.",
+      description: "Planned change entry for package check and test overlay references.",
     })
   )
 ) {}
@@ -1094,7 +1094,7 @@ export class PackageReferencesPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Planned file content change for package tsconfig.check.json overlay references.
+ * Planned file content change for package check and test overlay references.
  *
  * **Example** (Carry the rewritten check tsconfig)
  *
@@ -1124,7 +1124,7 @@ export class PackageCheckReferencesPlannedFileChange extends S.Opaque<
     content: S.String,
   }).pipe(
     $I.annoteSchema("PackageCheckReferencesPlannedFileChange", {
-      description: "Planned file content change for package tsconfig.check.json overlay references.",
+      description: "Planned file content change for package check and test overlay references.",
     })
   )
 ) {}

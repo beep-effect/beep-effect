@@ -1,16 +1,85 @@
 import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import { makeCitationTokenizer } from "@beep/law-practice-server/internal/Citation/Tokenizer";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import {
   assertCitationTokenizerCase,
   citationTokenizerTestLayer,
   loadCitationTokenizerControls,
   setupCitationTokenizer,
 } from "./CitationTokenizer.fixtures.ts";
+import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned tokenizer composition", (it) => {
+  it.effect("rejects extractor count ceilings and contradictory profiles before native work", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const runtime = yield* setupCitationMetadataRuntime("bun");
+      const overPatterns = yield* makeCitationTokenizer(
+        { ...runtime.limits, patterns: 1 },
+        runtime.runtime,
+        controls.configuration
+      ).pipe(Effect.provideContext(runtime.provided), Effect.flip);
+      expect(overPatterns).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patterns" });
+      const first = A.getUnsafe(controls.configuration.extractors, 0);
+      const contradictory = {
+        ...first,
+        ordering: { ...first.ordering, id: 100 },
+        recipe: { ...first.recipe, id: 100 },
+        descriptor: {
+          ...first.descriptor,
+          profile: { ...first.descriptor.profile, minimumWidthFloor: first.descriptor.profile.minimumWidthFloor + 1 },
+        },
+      };
+      const profileConflict = yield* makeCitationTokenizer(runtime.limits, runtime.runtime, {
+        ...controls.configuration,
+        extractors: [first, contradictory],
+      }).pipe(Effect.provideContext(runtime.provided), Effect.flip);
+      expect(profileConflict).toMatchObject({ _tag: "CitationTokenizerFailure", reason: "invalid-configuration" });
+      const observed = yield* runtime.observed.snapshot;
+      expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
+  it.effect("rejects malformed policy, bindings and source without native work", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const runtime = yield* setupCitationMetadataRuntime("bun");
+      const invalidPolicy = yield* makeCitationTokenizer({}, runtime.runtime, controls.configuration).pipe(
+        Effect.provideContext(runtime.provided),
+        Effect.flip
+      );
+      expect(invalidPolicy).toMatchObject({ reason: "invalid-configuration" });
+      const invalidBindings = yield* setupCitationTokenizer("bun", {}).pipe(Effect.flip);
+      expect(invalidBindings).toMatchObject({ reason: "invalid-configuration" });
+      const setup = yield* setupCitationTokenizer("bun", controls.configuration);
+      for (const source of [{}, { width: 2, bytes: new Uint8Array([1]) }, { width: 3, bytes: new Uint8Array() }]) {
+        const failed = yield* setup.tokenizer.run(source).pipe(Effect.flip);
+        expect(failed).toMatchObject({ reason: "invalid-source" });
+      }
+      const observed = yield* setup.observed.snapshot;
+      expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+      yield* assertCitationTokenizerCase(setup, A.getUnsafe(controls.cases, 0));
+    })
+  );
+  it.effect("owns edition binding rows and rejects duplicate source edition identities", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const objects = yield* loadCitationTokenObjectsControls();
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
+      const edition = { ...A.getUnsafe(objects.editionBindings, 0), ref: A.getUnsafe(bundle.editions, 0).ref };
+      const configuration = { ...controls.configuration, editions: [edition] };
+      const setup = yield* setupCitationTokenizer("bun", configuration);
+      yield* assertCitationTokenizerCase(setup, A.getUnsafe(controls.cases, 0));
+      const duplicate = yield* setupCitationTokenizer("bun", { ...configuration, editions: [edition, edition] }).pipe(
+        Effect.flip
+      );
+      expect(duplicate).toMatchObject({ reason: "stage-failed" });
+    })
+  );
   for (const kind of CitationNativeRuntimeKind.literals) {
     it.effect(
       `composes real isolated captures, class recipes and native text assembly under ${kind}`,

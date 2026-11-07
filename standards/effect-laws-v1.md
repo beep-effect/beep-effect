@@ -23,7 +23,7 @@ Compact, enforceable laws for this codebase. Keep agent-facing files terse; keep
 12. Use `Bool.match` for boolean branching in domain/runtime orchestration code.
 13. Prefer schema defaults and transformations (`S.withDecodingDefaultKey`, `S.decodeTo`, `SchemaTransformation`) over ad-hoc parsing/fallback logic.
 14. HTTP boundaries must be expressed with Effect HTTP modules (`HttpClientRequest`, `HttpClientResponse`, `Headers`, `UrlParams`, `HttpMethod`, `HttpBody`).
-15. JSDoc is required for exported APIs in `packages/*/src` and `packages/tooling/*/*/src`; examples must pass docgen.
+15. JSDoc is required for exported APIs throughout `packages/**/src` and `apps/**/src`; examples must pass docgen.
 16. Do not finish work with failing `check`, `lint`, `test`, or `docgen`.
 17. Named or reused domain constraints are modeled as schemas first; prefer built-in schema constructors/checks before `S.makeFilter`, and derive guards with `S.is(...)`.
 18. Reusable `S.makeFilter`, `S.makeFilterGroup`, and reusable built-in check blocks must include `identifier`, `title`, and `description`; `message` stays user-facing.

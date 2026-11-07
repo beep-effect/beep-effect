@@ -89,10 +89,10 @@ Additional checks with no law counterpart below:
 47. Before keeping `O.match(...)`, check whether `O.map(...)`, `O.flatMap(...)`, `O.liftPredicate(...)`, and `O.getOrElse(...)` express the same control flow more flatly. Avoid `onNone: () => ({})` object compaction; use `O.map(...)` plus `O.getOrElse(() => ({}))`, `O.getSomesStruct({...})` for heterogeneous struct spreads (`R.getSomes({...})` only for homogeneous dynamic-key dictionaries), or `S.OptionFrom*` according to boundary semantics. (Amended 2026-07-05 — see `standards/architecture/DECISIONS.md`.)
 48. In callback-only contexts where `yield*` is unavailable (for example `SchemaTransformation.transform*`), consume services with `Context.Service.use(...)`.
 49. Do not import `node:path` in production/tooling source. Use `Path.Path` service (`yield* Path.Path`) for `join`, `resolve`, `relative`, `basename`, etc.
-50. Do not use native `fetch` in production/tooling source. Use `HttpClient` from `effect/http` and provide platform client layers (Bun: `BunHttpClient.layer`).
+50. Do not use native `fetch` in production/tooling source. Use `HttpClient` from `effect/http/HttpClient` and provide platform client layers (Bun: `BunHttpClient.layer`).
 51. Named or reused domain constraints must be modeled as schemas first; prefer built-in schema constructors/checks before `S.makeFilter`, then derive guards with `S.is(...)`.
 52. Reusable `S.makeFilter`, `S.makeFilterGroup`, and reusable built-in check blocks must include `identifier`, `title`, and `description`; `message` stays user-facing.
-53. Use `LiteralKit` for named internal literal domains, especially when `.Enum`, `.is`, `$match`, `.toTaggedUnion`, or annotation-bearing schema values are part of the design; use `S.Literals` for anonymous inline unions never referenced by name.
+53. Use `LiteralKit` for named internal literal domains, especially when `.Enum`, `.is`, `.match`, `.matchOrElse`, `.toTaggedUnion`, or annotation-bearing schema values are part of the design; use `S.Literals` for anonymous inline unions never referenced by name.
 54. Prefer `P.isTagged("Tag")` over manual `_tag` guard helpers built from `P.hasProperty`, `P.isObject`, or inline `_tag` string checks.
 55. When a matcher is the function body or a reusable helper, prefer `Match.type<T>().pipe(...)` / `Match.tags(...)` over `Match.value(...)`.
 56. At logging/recovery boundaries, render causes with `Cause.pretty(...)` or `Cause.prettyErrors(...)` instead of ad-hoc `String(error)` fallback chains.

@@ -5,7 +5,13 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import { decodeGrokCanaryOutput, GrokCanarySource, observeGrokReportedNotSignedIn } from "./grok-exec-wire.ts";
+import {
+  decodeGrokCanaryOutput,
+  GrokCanarySource,
+  observeGrokNativeFailure,
+  observeGrokNativeFailureClass,
+  observeGrokReportedNotSignedIn,
+} from "./grok-exec-wire.ts";
 
 const salt = Redacted.make("synthetic-namespace-only");
 const workspace = "/synthetic/owned-pilot";
@@ -60,6 +66,56 @@ for (const [name, stdout, exitStatus] of [
   it.effect(`unqualified native report remains unknown: ${name}`, () =>
     Effect.gen(function* () {
       expect(yield* observeGrokReportedNotSignedIn(stdout, exitStatus)).toEqual(O.none());
+    })
+  );
+}
+
+for (const [message, expected] of [
+  ["Not signed in", "auth"],
+  [
+    "Not signed in. Run `grok login` to authenticate (or `grok login --device-code` if no browser is available).",
+    "auth",
+  ],
+  ["SuperGrok subscription required", "subscription-or-quota"],
+  ["Model not found in config.toml [model.*]", "model-unavailable-or-config"],
+  ["Connection to Grok timed out or was interrupted. Please try again. (HTTP 504).", "network"],
+  ["quota exceeded", "Unknown"],
+  ["HTTP 401", "Unknown"],
+  ["UNAUTHENTICATED", "Unknown"],
+  ["dns error", "Unknown"],
+  ["Not signed in PRIVATE_SUFFIX", "Unknown"],
+  ["PRIVATE_PREFIX SuperGrok subscription required", "Unknown"],
+  ["model unavailable", "Unknown"],
+  ["PRIVATE_OTHER_ERROR", "Unknown"],
+] as const) {
+  it.effect(`classifies only a qualified native failure report: ${expected} ${message}`, () =>
+    Effect.gen(function* () {
+      const raw = stream([{ type: "error", message, cwd: "PRIVATE_CWD", code: "PRIVATE_CODE" }]);
+      expect(yield* observeGrokNativeFailureClass(raw, 1)).toBe(expected);
+      expect(yield* observeGrokNativeFailureClass(raw, 0)).toBe("Unknown");
+    })
+  );
+}
+
+for (const stdout of [
+  stream([{ type: "text", message: "Not signed in" }]),
+  stream([{ type: "error", error: { message: "Not signed in" } }]),
+  stream([
+    { type: "error", message: "Not signed in" },
+    { type: "error", message: "SuperGrok subscription required" },
+  ]),
+  stream([
+    { type: "error", message: "Not signed in" },
+    { type: "error", message: "Not signed in" },
+  ]),
+  `${stream([{ type: "error", message: "Not signed in" }])}\n{`,
+  stream([{ type: "error", message: "Not signed in", private: "x".repeat(65536) }]),
+  `${"{}\n".repeat(2048)}${stream([{ type: "error", message: "Not signed in" }])}`,
+  "x".repeat(1048577),
+]) {
+  it.effect("ambiguous or unbounded failure reports remain Unknown", () =>
+    Effect.gen(function* () {
+      expect(yield* observeGrokNativeFailureClass(stdout, 1)).toBe("Unknown");
     })
   );
 }
@@ -178,3 +234,29 @@ it.layer(NodeCrypto.layer)((it) => {
     );
   }
 });
+
+for (const [input, exit, reason] of [
+  [stream([{ type: "error", message: "PRIVATE_UNMATCHED" }]), 1, "unmatched-literal"],
+  [stream([{ type: "error", error: { message: "PRIVATE_NESTED" }, code: "PRIVATE_CODE" }]), 1, "unsupported-envelope"],
+  ["{", 1, "malformed-stream"],
+  [
+    stream([
+      { type: "error", message: "Not signed in" },
+      { type: "error", message: "PRIVATE_OTHER" },
+    ]),
+    1,
+    "ambiguous-errors",
+  ],
+  ["x".repeat(1048577), 1, "bounds"],
+  [stream([{ type: "text", data: "PRIVATE_TEXT" }]), 1, "no-error"],
+  [stream([{ type: "error", message: "Not signed in" }]), 0, "unsupported-exit"],
+] as const) {
+  it.effect(`retains only a finite reason for Unknown: ${reason}`, () =>
+    Effect.gen(function* () {
+      const value = yield* observeGrokNativeFailure(input, exit);
+      expect(value.classification).toBe("Unknown");
+      expect(value.unknownReason).toEqual(O.some(reason));
+      expect(JSON.stringify(value)).not.toContain("PRIVATE_");
+    })
+  );
+}

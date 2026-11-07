@@ -7,14 +7,17 @@
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FinalCheckGate } from "./FinalCheck.schemas.ts";
 import { finalCheckRefusal } from "./FinalCheck.ts";
 import { decideMergeGate, MergeGateInput, MergeGateOptions, MergeGateRead } from "./MergeGate.ts";
 import {
   OwnerCheckpointBinding,
+  OwnerCheckpointCommand,
   OwnerCheckpointDelivery,
   OwnerCheckpointError,
   OwnerCheckpointIntent,
@@ -32,12 +35,20 @@ import type {
 } from "./OwnerCheckpoint.schemas.ts";
 
 const refuse = (reason: OwnerCheckpointError["reason"]) => OwnerCheckpointError.make({ reason });
-const sameBinding = (a: OwnerCheckpointBinding, b: OwnerCheckpointBinding): boolean =>
-  a.repository === b.repository &&
-  a.prNumber === b.prNumber &&
-  a.owner === b.owner &&
-  a.head === b.head &&
-  a.generation === b.generation;
+/**
+ * Compare the complete internal owner binding using its retained schema.
+ * **Example** (Inspect binding equality)
+ * ```ts
+ * import { sameOwnerCheckpointBinding } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof sameOwnerCheckpointBinding) // function
+ * ```
+ * @category predicates
+ * @since 0.0.0
+ */
+export const sameOwnerCheckpointBinding: {
+  (self: OwnerCheckpointBinding, that: OwnerCheckpointBinding): boolean;
+  (that: OwnerCheckpointBinding): (self: OwnerCheckpointBinding) => boolean;
+} = dual(2, S.toEquivalence(OwnerCheckpointBinding));
 const verifiedVercelRateLimit = (status: OwnerCheckpointSnapshot["statuses"][number]): boolean =>
   status.state === "failure" &&
   status.diagnostic._tag === "VercelBuildRateLimit" &&
@@ -75,6 +86,7 @@ export const qualifyOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.qualify
   const read = snapshot.read;
   if (
     snapshot.repository !== binding.repository ||
+    snapshot.base.repository !== binding.repository ||
     read.prNumber !== binding.prNumber ||
     read.headSha !== binding.head ||
     snapshot.state !== "open"
@@ -168,14 +180,14 @@ export const qualifyOwnerCheckpointEvidence = Effect.fn("OwnerCheckpoint.qualify
     A.some(evidence.finalCheck.expectationRewrites, (rewrite) => rewrite.classification !== "follows-diff")
   )
     return yield* refuse("evidence");
-  const started = Date.parse(evidence.finalCheck.startedAt);
-  const finished = Date.parse(evidence.finalCheck.finishedAt);
+  const startedAt = yield* Effect.fromOption(DateTime.make(evidence.finalCheck.startedAt), () => refuse("evidence"));
+  const finishedAt = yield* Effect.fromOption(DateTime.make(evidence.finalCheck.finishedAt), () => refuse("evidence"));
+  const started = DateTime.toEpochMillis(startedAt);
+  const finished = DateTime.toEpochMillis(finishedAt);
   const finalized = DateTime.toEpochMillis(evidence.observer.finalizedAt);
   const observed = DateTime.toEpochMillis(evidence.observer.snapshot.read.readAt);
   const classic = DateTime.toEpochMillis(evidence.classic.read.readAt);
   if (
-    !Number.isFinite(started) ||
-    !Number.isFinite(finished) ||
     started > finished ||
     finished > observed ||
     observed > finalized ||
@@ -183,6 +195,14 @@ export const qualifyOwnerCheckpointEvidence = Effect.fn("OwnerCheckpoint.qualify
     classic > DateTime.toEpochMillis(now)
   )
     return yield* refuse("evidence");
+  if (evidence.finalCheck.base !== `origin/${evidence.classic.base.ref}`) return yield* refuse("binding");
+  const upstreamBase = evidence.observer.snapshot.base;
+  if (
+    upstreamBase.repository !== evidence.classic.base.repository ||
+    upstreamBase.ref !== evidence.classic.base.ref ||
+    upstreamBase.sha !== evidence.classic.base.sha
+  )
+    return yield* refuse("binding");
   yield* qualifyOwnerCheckpointSnapshot(binding, evidence.observer.snapshot, policy, now);
   return yield* qualifyOwnerCheckpointSnapshot(binding, evidence.classic, policy, now);
 });
@@ -216,8 +236,12 @@ const releaseOwner = Effect.fnUntraced(function* (
   yield* qualifyOwnerCheckpointEvidence(current.binding, evidence, policy, now);
   return mutation(
     current,
-    OwnerCheckpointState.cases.Released.make({ releaseId, evidenceDigest: evidence.digest }),
-    OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId })
+    OwnerCheckpointState.cases.Released.make({
+      releaseId,
+      evidenceDigest: evidence.digest,
+      base: evidence.classic.base,
+    }),
+    OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId, base: evidence.classic.base })
   );
 });
 const synchronizeOwner = Effect.fnUntraced(function* (current: OwnerCheckpointRecord, head: string) {
@@ -253,6 +277,12 @@ const claimOwner = Effect.fnUntraced(function* (
   now: DateTime.Utc
 ) {
   if (current.state._tag !== "Released") return yield* refuse("state");
+  if (
+    current.state.base.repository !== snapshot.base.repository ||
+    current.state.base.ref !== snapshot.base.ref ||
+    current.state.base.sha !== snapshot.base.sha
+  )
+    return yield* refuse("binding");
   yield* qualifyOwnerCheckpointSnapshot(current.binding, snapshot, policy, now);
   return mutation(
     current,
@@ -309,22 +339,15 @@ export const transitionOwnerCheckpoint = Effect.fn("OwnerCheckpoint.transition")
   policy: OwnerCheckpointPolicy,
   now: DateTime.Utc
 ) {
-  if (!sameBinding(current.binding, request.binding)) return yield* refuse("binding");
+  if (!sameOwnerCheckpointBinding(current.binding, request.binding)) return yield* refuse("binding");
   if (current.revision >= Number.MAX_SAFE_INTEGER - 1) return yield* refuse("conflict");
   if (current.revision !== request.expectedRevision) return yield* refuse("conflict");
-  const command = request.command;
-  switch (command._tag) {
-    case "Release":
-      return yield* releaseOwner(current, command.releaseId, command.evidence, policy, now);
-    case "Synchronize":
-      return yield* synchronizeOwner(current, command.head);
-    case "Revoke":
-      return yield* revokeOwner(current);
-    case "Claim":
-      return yield* claimOwner(current, command.claimId, command.snapshot, policy, now);
-    case "Unknown":
-      return yield* markUnknownOwner(current, command.claimId);
-    case "Confirm":
-      return yield* confirmOwner(current, command.claimId, command.mergeCommit);
-  }
+  return yield* OwnerCheckpointCommand.match(request.command, {
+    Release: (command) => releaseOwner(current, command.releaseId, command.evidence, policy, now),
+    Synchronize: (command) => synchronizeOwner(current, command.head),
+    Revoke: () => revokeOwner(current),
+    Claim: (command) => claimOwner(current, command.claimId, command.snapshot, policy, now),
+    Unknown: (command) => markUnknownOwner(current, command.claimId),
+    Confirm: (command) => confirmOwner(current, command.claimId, command.mergeCommit),
+  });
 });

@@ -62,6 +62,9 @@ const LANE_PROOF_BOOKKEEPING_ENV = [
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
   LANE_PROOF_MODE_ENV,
   LANE_PROOF_BASE_ENV,
+  // Codex changes this tracing identifier on every shell invocation. It is not
+  // a compiler/test input; retaining it makes cross-invocation resume always miss.
+  "CODEX_TOOL_CALL_ID",
 ] as const;
 
 // A pinned base is a full commit SHA; anything else is a ref to resolve.
@@ -94,9 +97,9 @@ const LaneProofMode = LiteralKit(["off", "shadow", "active"]);
 type LaneProofMode = typeof LaneProofMode.Type;
 const isLaneProofMode = S.is(LaneProofMode);
 const ActiveLaneProofMode = LiteralKit(["shadow", "active"]);
-// These lanes query live vulnerability data. A tree-exact record cannot prove
-// that the external advisory set is still current, so they always run.
-const NonReusableLaneProofId = LiteralKit(["quality:security", "repo-sanity:bun-audit"]);
+// Live advisories and independently authenticated cache acceptance can change
+// or expire without source/environment changes, so these guards always run.
+const NonReusableLaneProofId = LiteralKit(["quality:security", "repo-sanity:bun-audit", "quality:cache-policy"]);
 const isNonReusableLaneProofId = S.is(NonReusableLaneProofId);
 
 class LaneProofRecord extends S.Opaque<LaneProofRecord, { readonly brand: unique symbol }>()(
@@ -227,13 +230,13 @@ const environmentProfileHash = Effect.fnUntraced(function* (lane: GithubCheckLan
 const runGit = Effect.fnUntraced(function* (
   cwd: string,
   args: ReadonlyArray<string>,
-  env?: Readonly<Record<string, string | undefined>>
+  env: Readonly<Record<string, string | undefined>>
 ) {
   const result = yield* runCapturedStreams({
     command: "git",
     args,
     cwd,
-    ...(env === undefined ? {} : { env: { ...env } }),
+    env: { ...env },
     extendEnv: true,
     trim: true,
   }).pipe(Effect.mapError(() => LaneProofGitError.make({ message: `Unable to run git ${A.join(args, " ")}.` })));

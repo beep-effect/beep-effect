@@ -11,6 +11,7 @@ import {
   PracticeKgEmailMessagesInput,
   PracticeKgEmailParticipant,
   parsePracticeKgCorrespondentAddress,
+  parsePracticeKgHeaderParticipants,
   readPracticeKgContacts,
   readPracticeKgEmailMessages,
   withDuckDb,
@@ -69,6 +70,14 @@ const contactLine = (source: string): Effect.Effect<string> =>
   );
 
 describe("practice KG correspondents", () => {
+  it("accepts the maximum address-header length and refuses an oversized header", () => {
+    const suffix = " <pat@example.com>";
+    const header = `${Str.repeat(16_384 - Str.length(suffix))("A")}${suffix}`;
+    const parse = parsePracticeKgHeaderParticipants("to");
+    expect(A.map(parse(header), (person) => [person.address, person.role])).toEqual([["pat@example.com", "to"]]);
+    expect(parse(`A${header}`)).toEqual([]);
+  });
+
   it("recognises the practice's own domains and their subdomains only", () => {
     const isPractice = isPracticeKgPracticeAddress(["@Example-Law.test"]);
     expect(

@@ -13,6 +13,7 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   isCiSync,
@@ -75,6 +76,7 @@ import {
   PartitionedCiLane as PartitionedCiLaneSchema,
   withCiLaneDefaultPlacements,
 } from "./CiLanePartitions.ts";
+import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -2445,6 +2447,10 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Run the turbo-backed lane in CI's --affected pull-request shape")
     ),
+    selectionOnly: Flag.Boolean("selection-only").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Storybook only: write should_run to GITHUB_OUTPUT without building or testing")
+    ),
     base: Flag.String("base").pipe(
       Flag.withDefault("origin/main"),
       Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
@@ -2525,7 +2531,7 @@ export const ciLaneCommand = Command.make(
       Argument.optional
     ),
   },
-  ({
+  Effect.fnUntraced(function* ({
     affected,
     base,
     changesetStatus,
@@ -2546,10 +2552,11 @@ export const ciLaneCommand = Command.make(
     partition,
     runs,
     seed,
+    selectionOnly,
     summarize,
     to,
     validateEnvelopes,
-  }) => {
+  }) {
     const options = CiLaneRunOptions.make({
       affected,
       base,
@@ -2570,10 +2577,24 @@ export const ciLaneCommand = Command.make(
     });
 
     if (list) {
-      return printCiLaneList().pipe(Effect.catchTag("CiCommandError", reportCiCommandError));
+      return yield* printCiLaneList().pipe(Effect.catchTag("CiCommandError", reportCiCommandError));
     }
 
-    return O.match(lane, {
+    if (selectionOnly) {
+      return yield* Effect.gen(function* () {
+        if (!O.contains(lane, "storybook")) {
+          return yield* CiCommandError.make({ message: "--selection-only is supported only for the Storybook lane." });
+        }
+        const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
+        const selected = affected ? yield* resolveStorybookLaneAffected(repoRoot, base) : true;
+        const outputs = yield* ActionOutputs;
+        yield* outputs
+          .set("should_run", selected ? "true" : "false")
+          .pipe(CiCommandError.mapError("Failed to write Storybook selection to GITHUB_OUTPUT."));
+      }).pipe(Effect.catchTag("CiCommandError", reportCiCommandError));
+    }
+
+    return yield* O.match(lane, {
       onNone: () =>
         reportCiCommandError(
           CiCommandError.make({ message: "Specify a lane id or pass --list. See beep ci lane --list." })
@@ -2586,8 +2607,11 @@ export const ciLaneCommand = Command.make(
           })
         ),
     });
-  }
-).pipe(Command.withDescription("Run one check.yml CI lane body exactly as hosted CI does"));
+  })
+).pipe(
+  Command.withDescription("Run one check.yml CI lane body exactly as hosted CI does"),
+  Command.provide(CiRunnerOutputsLive)
+);
 
 /**
  * The lanes `beep ci local` runs when no `--lanes` selection is given.

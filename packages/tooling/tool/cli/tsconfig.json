@@ -36,10 +36,16 @@
       "path": "../../../drivers/m365/tsconfig.json"
     },
     {
+      "path": "../../../drivers/n3/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/obs/tsconfig.json"
     },
     {
       "path": "../../../drivers/occt/tsconfig.json"
+    },
+    {
+      "path": "../../../drivers/oxigraph/tsconfig.json"
     },
     {
       "path": "../../../drivers/pdf-tools/tsconfig.json"
@@ -49,6 +55,9 @@
     },
     {
       "path": "../../../drivers/poppler/tsconfig.json"
+    },
+    {
+      "path": "../../../drivers/shacl/tsconfig.json"
     },
     {
       "path": "../../../drivers/tesseract/tsconfig.json"
@@ -82,6 +91,9 @@
     },
     {
       "path": "../../../foundation/capability/runtime-env/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/semantic-web/tsconfig.json"
     },
     {
       "path": "../../../foundation/capability/technical-drawing/tsconfig.json"
@@ -124,6 +136,9 @@
     },
     {
       "path": "../../../foundation/modeling/md/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/ontology/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/package-json/tsconfig.json"

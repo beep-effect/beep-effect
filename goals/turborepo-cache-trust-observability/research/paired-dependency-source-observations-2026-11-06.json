@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "cache-dependency-paired-source-observation/v1",
+  "authority": "Two actual source-only observations, not producer approval or task qualification.",
+  "acceptedRepairPr": 2764,
+  "acceptedRepairMerge": "4e38ac23f58492effa821c8e76ec1e8b321617f3",
+  "observations": [
+    {
+      "runId": 42236224771,
+      "executedInspectionJobId": 127954426667,
+      "sourceRevision": "126802290f0432e59313ae79191dced1cfe98bfe",
+      "resolvedWorkflows": [
+        {
+          "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+          "sha": "126802290f0432e59313ae79191dced1cfe98bfe",
+          "ref": "refs/heads/main"
+        }
+      ],
+      "conclusion": "success",
+      "diagnosticStatus": "stable-match",
+      "sourceUnchanged": true,
+      "snapshotsEqual": true,
+      "declaredDigestMatches": true,
+      "declaredDependencySha256": "e58388e14477603452cc9b870e7f3979f00f2468d27bc9a26cd61772fd8fc9d2",
+      "observedDependencySha256": "e58388e14477603452cc9b870e7f3979f00f2468d27bc9a26cd61772fd8fc9d2",
+      "packageGroups": 2266,
+      "diagnosticSeconds": 41.267,
+      "aggregateReportBytes": 3426996,
+      "artifacts": [
+        {
+          "id": 13511288766,
+          "name": "cache-producer-inspection-42236224771-1",
+          "reportBytes": 2741679,
+          "reportSha256": "59f4c778c424dac742493f2c8c187ec644f989bfab3f4a5b118b4d8885090623",
+          "archiveBytes": 2741815,
+          "archiveSha256": "b316415035c0f56f9560c315a41a2302e6674af0a52e7ccf07cfb53641e889a0"
+        },
+        {
+          "id": 13511778328,
+          "name": "cache-producer-dependencies-42236224771-1",
+          "reportBytes": 685317,
+          "reportSha256": "7c017117b7b38d950582728ddfac456f9ba97d06120778bb3bbe27ece78ca533",
+          "archiveBytes": 685465,
+          "archiveSha256": "54e97d60132c3dcc538b4b2f3efb939955ee72919d9ca3a28885a5068cdb0e67"
+        }
+      ]
+    },
+    {
+      "runId": 42238818447,
+      "executedInspectionJobId": 127963425134,
+      "sourceRevision": "1d21c0e0071acc0fa3693208b77ec9b8587b0854",
+      "resolvedWorkflows": [
+        {
+          "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+          "sha": "1d21c0e0071acc0fa3693208b77ec9b8587b0854",
+          "ref": "refs/heads/main"
+        }
+      ],
+      "conclusion": "success",
+      "diagnosticStatus": "stable-match",
+      "sourceUnchanged": true,
+      "snapshotsEqual": true,
+      "declaredDigestMatches": true,
+      "declaredDependencySha256": "8002df4aeb6570153ed75fec92b4f9cd46827b06cc29f39cb220c0a7647cb32d",
+      "observedDependencySha256": "8002df4aeb6570153ed75fec92b4f9cd46827b06cc29f39cb220c0a7647cb32d",
+      "packageGroups": 2266,
+      "diagnosticSeconds": 41.138,
+      "aggregateReportBytes": 3426996,
+      "artifacts": [
+        {
+          "id": 13516304463,
+          "name": "cache-producer-inspection-42238818447-1",
+          "reportBytes": 2741679,
+          "reportSha256": "1815add1b60dc597ad2efa13bdeb1be91362a8468a1bcf5e273a19fb5eb88fae",
+          "archiveBytes": 2741815,
+          "archiveSha256": "b3b421185ab9a61f5c843aab63babf920bbd5cb85dd8aed40ec8947d46d75c9b"
+        },
+        {
+          "id": 13516124466,
+          "name": "cache-producer-dependencies-42238818447-1",
+          "reportBytes": 685317,
+          "reportSha256": "f93bc724431fe058f75d6da6ea376c568846767b72fff3494f16d11bef568933",
+          "archiveBytes": 685465,
+          "archiveSha256": "313bd8d5ec63badf77d102c0450797f0e1391a642ad9c1a792308f728b9c8988"
+        }
+      ]
+    }
+  ],
+  "successfulIndividualObservations": 2,
+  "comparablePairPassed": false,
+  "crossRunComparison": {
+    "identicalControlFiles": 13,
+    "identicalResourceBounds": true,
+    "identicalPackageGroupCounts": true,
+    "changedGroups": 1,
+    "changedPackage": "node-gyp",
+    "changedColumns": ["contentSha256"],
+    "unchangedColumns": [
+      "entries",
+      "files",
+      "bytes",
+      "modeSha256",
+      "linksSha256",
+      "headersSha256"
+    ],
+    "entriesPerObservedNodeGypGroup": 390,
+    "filesPerObservedNodeGypGroup": 340,
+    "bytesPerObservedNodeGypGroup": 3381871,
+    "rootCause": "Unproven. Generated Python bytecode is a hypothesis, not a diagnosis.",
+    "interveningSourceChanges": "Knowledge-freshness-audit goal documentation and skills-lock.json only; actual source revisions and report hashes remain distinct."
+  },
+  "bounds": {
+    "runnerJobsAtOnce": 1,
+    "jobMinutes": 10,
+    "diagnosticSeconds": 300,
+    "archivePasses": 2,
+    "archiveBytesPerPass": 6442450944,
+    "processMemoryMiB": 256,
+    "entriesPerPass": 600000,
+    "groupsPerPass": 4096,
+    "aggregateReportBytes": 4194304,
+    "retentionDays": 1
+  },
+  "nextEvidence": "At most 512 opaque filename/content hash rows and fixed file-kind labels for the observed node-gyp package, collected within the same two archive passes and unchanged 256 MiB / 300 s / 4 MiB limits. No file payloads or path strings are retained. Attribute differing files before changing installation preparation or proposing digest normalization.",
+  "qualificationGrants": 0,
+  "signingOrCredentialsActivated": false,
+  "taskBodiesExecuted": false,
+  "wholeGoalAcceptance": "Both goals remain active; no acceptance criterion or representative window is completed by this report.",
+  "testInputRepair": {
+    "consumerTasks": [
+      "@beep/repo-cli#test",
+      "@beep/repo-cli#test:property",
+      "@beep/repo-cli#coverage"
+    ],
+    "pythonFiles": [
+      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
+      "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py"
+    ],
+    "nativeMetadataIncludesBothFiles": true,
+    "nativeMetadataRetainsPackageManifestAndIntegrationTest": true,
+    "coverageCacheEnabled": false,
+    "verificationScope": "Pinned native metadata-only dry-run; no task bodies or local tests executed."
+  }
+}

@@ -1,11 +1,13 @@
 # 00 -- No-Escape Theorem: Architectural Constraints
 
-Every semantic memory system forgets. Every semantic memory system fabricates.
-This is not a quality problem. It is a mathematical consequence of organizing
-information by meaning.
+This standard applies the stated No-Escape claim to memory systems with the
+Semantic Proximity Property (SPP) as they scale. Keep those assumptions when
+using the forgetting and false-recall claims below; they are not an
+unconditional verdict on every memory architecture.
 
-This document codifies the constraints from the No-Escape Theorem and
-translates them into binding architectural rules for this project.
+This document records the repository's account of the cited work and translates
+it into architectural rules. It is not an independent verification of the proof
+or a test of this checkout's memory behavior.
 
 ---
 
@@ -34,6 +36,13 @@ consequences of the embedding space itself.
    without also rejecting true items.
 
 ## Architecture Categories
+
+Numerical values below and in the mitigation table are reported case outcomes,
+not scope-independent guarantees for every architecture in a category. In
+particular, a zero false-recall result in an explicit list-checking setup does
+not establish that every reasoning overlay eliminates false recall. Whether
+that setup uses a verifier outside the stated theorem class requires separate
+evidence.
 
 ### Category 1 -- Pure Geometric (Vector DB, Graph Memory)
 
@@ -100,7 +109,9 @@ inference. Layers 1 and 2 do not degrade. Layer 3 does.
 **C2. Semantic layers require interference management.**
 Consolidation, compression, pruning, and temporal windowing are not
 optimizations. They are requirements. Without them, Layer 3 retention decays
-to zero as memory grows.
+to zero as memory grows. Requiring management does not promise that it
+eliminates the stated scaling limit; the table above describes compression as
+partial mitigation.
 
 **C3. Never treat semantic retrieval as a source of truth.**
 Always verify against deterministic layers when possible. Semantic retrieval is

@@ -214,8 +214,14 @@ it.effect("rejects malformed native layouts and invalid point ranges with closed
   Effect.gen(function* () {
     const citationResult13 = yield* defaultCitationEnginePolicy;
     const input = yield* makeCitationRegexInput(citationResult13.limits);
+    const invalidRole = yield* makeCitationRegexInput(citationResult13.limits, "unknown-role").pipe(Effect.flip);
+    expect(invalidRole).toMatchObject({ reason: "invalid-policy" });
+    const invalidText = yield* input.prepareText(42, preflight).pipe(Effect.flip);
+    expect(invalidText).toMatchObject({ reason: "invalid-input" });
     yield* Effect.forEach(
       [
+        null,
+        {},
         { width: 2, bytes: new Uint8Array([65, 0]) },
         { width: 2, bytes: new Uint8Array([1]) },
         { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) },
@@ -348,5 +354,51 @@ it.effect("captures policy and gives a shorter total deadline precedence during 
       operation: "extract",
       limit: "operationDeadline",
     });
+  })
+);
+
+it.effect("rejects malformed policy with a closed failure before installing operations", () =>
+  Effect.gen(function* () {
+    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
+      const failure = yield* makeCitationRegexInput(policy).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-policy" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
+
+it.effect("rejects native UTF-16 expansion and byte ceilings before transport preflight", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const storage = { width: 4, bytes: new Uint8Array([0, 0, 1, 0]) };
+    for (const { limits, limit } of [
+      { limits: { ...policy.limits, producedTextUtf16: 1 }, limit: "producedTextUtf16" },
+      { limits: { ...policy.limits, processMessageBytes: 3 }, limit: "processMessageBytes" },
+    ]) {
+      const input = yield* makeCitationRegexInput(limits);
+      const failure = yield* input
+        .prepareUnicode(storage, () => Effect.die("rejected native layout reached preflight"))
+        .pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit });
+    }
+  })
+);
+
+it.effect("translates native preparation expiry while its enclosing timer remains pending", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const clock = yield* Clock.Clock;
+    let timers = 0;
+    const input = yield* makeCitationRegexInput(policy.limits).pipe(
+      Effect.provideService(Clock.Clock, {
+        ...clock,
+        sleep: () => (++timers === 2 ? Effect.void : Effect.never),
+      })
+    );
+    const failure = yield* input
+      .prepareUnicode({ width: 1, bytes: new Uint8Array(100_000) }, preflight)
+      .pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "extractDeadline" });
+    expect(timers).toBe(2);
   })
 );

@@ -14,6 +14,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { constant } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
@@ -256,3 +257,51 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime set 
     })
   );
 });
+
+it.effect("rejects malformed set policy before invoking a comparison capability", () =>
+  Effect.gen(function* () {
+    const comparison = CitationRuntimeDictionaryComparison.of({
+      step: Effect.die("invalid policy reached comparison work"),
+      equal: constant(Effect.die("invalid policy reached equality")),
+    });
+    for (const policy of [null, {}, { entries: 0, iterations: 100 }, { entries: 1, iterations: -1 }]) {
+      const failure = yield* makeCitationRuntimeSet(policy).pipe(
+        Effect.provideService(CitationRuntimeDictionaryComparison, comparison),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "CitationRuntimeDictionaryFailure", reason: "invalid-input" });
+      expect("cause" in failure).toBe(false);
+    }
+  })
+);
+
+it.effect("rejects tampered key snapshots without spending work or altering existing set members", () =>
+  Effect.gen(function* () {
+    let steps = 0;
+    const comparison = CitationRuntimeDictionaryComparison.of({
+      step: Effect.sync(() => {
+        steps++;
+      }),
+      equal: constant(Effect.die("invalid key reached comparison")),
+    });
+    const set = yield* makeCitationRuntimeSet({ entries: 4, iterations: 100 }).pipe(
+      Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+    );
+    const first = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(7) });
+    yield* set.add(first);
+    const before = steps;
+    for (const { field, value } of [
+      { field: "objectId", value: -1 },
+      { field: "hash", value: "7" },
+      { field: "hash", value: BigInt(-1) },
+    ]) {
+      const key = CitationRuntimeDictionaryKey.make({ objectId: 1, hash: BigInt(7) });
+      Reflect.set(key, field, value);
+      const failure = yield* set.add(key).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-input" });
+    }
+    expect(steps).toBe(before);
+    const members = yield* set.read;
+    expect(members).toEqual([first]);
+  })
+);

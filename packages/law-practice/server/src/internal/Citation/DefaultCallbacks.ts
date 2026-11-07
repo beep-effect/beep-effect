@@ -160,10 +160,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         const count = yield* unique(candidates);
         if (count === 1) return CitationCallbackResult.make({ resource: A.getUnsafe(candidates, 0).resource });
         if (O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) {
-          candidates = yield* byParty(
-            candidates,
-            O.getOrElse(citation.metadata.antecedentGuess, () => "")
-          );
+          candidates = yield* byParty(candidates, O.getOrThrow(citation.metadata.antecedentGuess));
           return yield* choose(candidates, input.mention.id);
         }
         return yield* rejectedCandidates(input.mention.id, candidates, count);
@@ -176,10 +173,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         if (citation.type !== "supra") return yield* invalid();
         const guess = citation.metadata.antecedentGuess;
         if (!O.exists(guess, Str.isNonEmpty)) return yield* unresolved(input.mention.id, "missing-antecedent");
-        const candidates = yield* byParty(
-          input.fulls,
-          O.getOrElse(guess, () => "")
-        );
+        const candidates = yield* byParty(input.fulls, O.getOrThrow(guess));
         return yield* choose(candidates, input.mention.id);
       },
       Effect.provideService(Digest.Digest, crypto)
@@ -191,13 +185,12 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         const names = citationReferenceNames(citation.metadata);
         if (A.length(names) === 0) return yield* unresolved(input.mention.id, "missing-antecedent");
         let candidates = A.empty<CitationCallbackFull>();
-        if (A.length(names) > 0)
-          for (const entry of input.fulls) {
-            yield* work.step;
-            const prior = yield* citationOf(entry.citation);
-            const values = yield* citationMetadataValues(prior).pipe(Effect.mapError(invalid));
-            if (A.some(names, (name) => A.contains(values, name))) candidates = A.append(candidates, entry);
-          }
+        for (const entry of input.fulls) {
+          yield* work.step;
+          const prior = yield* citationOf(entry.citation);
+          const values = yield* citationMetadataValues(prior).pipe(Effect.mapError(invalid));
+          if (A.some(names, (name) => A.contains(values, name))) candidates = A.append(candidates, entry);
+        }
         return yield* choose(candidates, input.mention.id);
       },
       Effect.provideService(Digest.Digest, crypto)

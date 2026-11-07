@@ -778,7 +778,11 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   // extension disabled. Only Turbo credential references survive for resolution;
   // every unrelated reference is absent from both `op` and its task child.
   if (!directTurbo) {
-    return { ...turboCacheSecretSessionEnvironment(environment), TURBO_UI: "false" };
+    return {
+      ...turboCacheSecretSessionEnvironment(environment),
+      TSRS_FAST: environment.TSRS_FAST ?? "1",
+      TURBO_UI: "false",
+    };
   }
 
   const turboApi = yield* configStringOption("TURBO_API");
@@ -797,6 +801,8 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
     // failed task tears the run down, the child is killed before it can restore
     // the terminal — leaving it emitting mouse-motion reports and swallowing
     // Ctrl-C. Force turbo's stream renderer so it never enables mouse capture.
+    // Fast mode is qualified for the repository; explicit 0 keeps a reference lane.
+    TSRS_FAST: environment.TSRS_FAST ?? "1",
     TURBO_UI: "false",
     ...(unresolvedApi || unresolvedToken || unresolvedTeam ? { TURBO_CACHE: TurboCacheMode.Enum["local:rw"] } : {}),
   };

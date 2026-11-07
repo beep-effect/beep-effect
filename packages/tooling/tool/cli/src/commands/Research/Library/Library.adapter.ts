@@ -11,10 +11,11 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
-import { LibraryArtifact } from "./Library.schemas.ts";
+import { LibraryArtifact, LibraryCapture } from "./Library.schemas.ts";
 import { saveImmutable } from "./Library.store.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
+const LibraryCaptureJson = S.fromJsonString(LibraryCapture);
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.adapter");
 
@@ -182,4 +183,28 @@ export const decodeLibraryJson = <A, I>(schema: S.Codec<A, I>) => {
  */
 export const encodeLibraryJson = Effect.fn("Library.encodeJson")(function* (input: unknown) {
   return yield* S.encodeUnknownEffect(UnknownJson)(input);
+});
+
+/**
+ * Encode a capture record through its schema for hash binding.
+ *
+ * **Details**
+ *
+ * Correction receipts bind the SHA-256 of an encoded capture. Encoding through the
+ * `LibraryCapture` schema keeps that text stable across schema versions: decoding
+ * defaults added after a receipt was written (such as `accessClass: "public"`) are not
+ * written back, so re-encoding a legacy capture reproduces the bytes it was hashed from.
+ *
+ * **Example** (Encode a decoded capture)
+ * ```ts
+ * import { encodeLibraryCaptureJson } from "@beep/repo-cli/test/ResearchLibrary"
+ * console.log(typeof encodeLibraryCaptureJson)
+ * ```
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const encodeLibraryCaptureJson = Effect.fn("Library.encodeCaptureJson")(function* (capture: LibraryCapture) {
+  return yield* S.encodeEffect(LibraryCaptureJson)(capture);
 });

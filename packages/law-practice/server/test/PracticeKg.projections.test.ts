@@ -982,6 +982,72 @@ describe("practice KG projections", () => {
     );
 
     it.effect(
+      "builds without optional text when filesystem probes are unavailable",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const bundleOut = path.join(corpusRoot, "bundle-denied-probes");
+        const manifestPath = path.join(bundleOut, "bundle.manifest.json");
+        const stagingRoot = path.join(corpusRoot, "staging");
+        let manifestProbes = 0;
+        let textProbes = 0;
+        const denied = PlatformError.systemError({ module: "FileSystem", method: "exists", _tag: "PermissionDenied" });
+        const faulty = FileSystem.FileSystem.of({
+          ...fs,
+          exists: Effect.fn("GraphProbeFailureTest.exists")((file) => {
+            if (file === manifestPath) {
+              manifestProbes++;
+              return Effect.fail(denied);
+            }
+            if (Str.startsWith(stagingRoot)(file)) {
+              textProbes++;
+              return Effect.fail(denied);
+            }
+            return fs.exists(file);
+          }),
+        });
+        const summary = yield* runBuild(
+          PracticeKgOptions.make({ ...graphOptions(corpusRoot, bundleOut), skipEmails: true }),
+          bundleOut
+        ).pipe(Effect.provideService(FileSystem.FileSystem, faulty));
+        expect(summary.counts.documents).toBe(6);
+        expect(manifestProbes).toBe(1);
+        expect(textProbes).toBeGreaterThanOrEqual(1);
+        const rows = yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          return yield* db
+            .query("SELECT to_json(t)::VARCHAR AS line FROM (SELECT COUNT(*) AS count FROM document_text) t")
+            .pipe(Effect.flatMap(decodeDumpLines));
+        }).pipe(withDuckDb(path.join(bundleOut, "practice.duckdb")));
+        expect(rows).toEqual([{ line: '{"count":0}' }]);
+      }),
+      { timeout: 120_000 }
+    );
+
+    it.effect(
+      "refuses malformed contact rows before building the graph stores",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const contactsPath = path.join(corpusRoot, "invalid-contacts.jsonl");
+        yield* fs.writeFileString(contactsPath, '{"invalid":"contact-row"}\n');
+        const bundleOut = path.join(corpusRoot, "bundle-invalid-contacts");
+        const failure = yield* runBuild(
+          PracticeKgOptions.make({ ...graphOptions(corpusRoot, bundleOut), contactsPath }),
+          bundleOut
+        ).pipe(Effect.flip);
+        expect(failure._tag).toBe("PracticeKgProjectionError");
+        expect(failure.message).toContain("line 1");
+        expect(failure.message).not.toContain("contact-row");
+        const graphExists = yield* fs.exists(path.join(bundleOut, "practice.duckdb"));
+        expect(graphExists).toBe(false);
+      }),
+      { timeout: 120_000 }
+    );
+
+    it.effect(
       "builds byte-identical ordered dumps with stable IRIs and complete provenance",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;

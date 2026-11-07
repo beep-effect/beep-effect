@@ -1,0 +1,14 @@
+{
+  "previous": "cdd0280e84e8d220b39cce33b758c05b02bf50fac4f759f1032a20baa481f0e2",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (goals/alchemy-vault-sync-slice foundations)",
+    "reason": "Record the added //#lint:entity-kit-freeze root computation (cloned from //#lint:retired-effect-paths) and the generated default computations of the new @beep/alchemy-postgres driver package, and attribute the shared root scripts-digest change to the added root script; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review.md",
+      "sha256": "9d2822366e3c5391c6816282f9430eb21ce299fbfb020c884f15598ca933dfd5"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

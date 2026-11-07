@@ -7,107 +7,44 @@ workflows in skills.
 
 ## Volume pools
 
-Approved model defaults and delegation policy (operator 2026-10-01, amended
-2026-10-14; records in `goals/agent-pool-doctrine/history/`). Historical reports,
-captured user requests, completed-run provenance, and model-parsing fixtures keep
-the models and efforts they actually recorded.
+Use exact model and effort pins below. Default orchestrator: Claude Code
+`claude-fable-5-1` medium; every Claude child: `claude-opus-5-5` medium;
+Codex substantive work: `gpt-6.1-sol` medium. Preserve the lightweight route
+(`gpt-6-luna`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`). Historical provenance and
+model-parsing fixtures keep the models they recorded.
+Codex CLI pin: `--model gpt-6.1-sol -c 'model_reasoning_effort="medium"'`;
+the Codex plugin uses `--model gpt-6.1-sol --effort medium`.
 
-**Defaults.** Claude Code orchestrator: `claude-fable-5-1`, `medium` effort;
-every Claude child (Agent tool, Workflow child, Claude fallback step, QA judge):
-`claude-opus-5-5`, `medium`. Codex: `gpt-6.1-sol`, `medium`. Within these
-substantive-work routes never silently substitute another model from the same
-provider (no `gpt-6-sol`, no `claude-opus-5`, no `fable`/`opus` aliases in pins).
-Named roles below are explicit assignments, not substitutions. Preserve the
-lightweight route (`child.lightweight` = `gpt-6-luna`,
-`ANTHROPIC_DEFAULT_HAIKU_MODEL`) for lightweight tasks.
+Before launching a provider, load [agent-pools.md](docs/runbooks/agent-pools.md)
+for its CLI recipe, quota floor, sandbox and credential constraints. Do not use
+model aliases, fast variants or silent same-provider substitutions.
 
-**Fallback chains**, only on confirmed quota, availability or unsupported-model
-failures, with existing subscriptions and authorized billing:
+- Fallback is allowed only for confirmed quota, availability or unsupported-model
+  failures. Codex: approved Sol route → Cursor `claude-opus-5-5-medium` → Grok
+  `grok-4.7` medium. Claude: Opus → approved Sol route → the same Cursor → Grok.
+  Direct Claude is not a Codex fallback. Code failures and unfavorable reviews
+  require remediation on the current route.
+- Use existing subscriptions and authorized billing only: no purchases, overages,
+  credit top-ups or new paid endpoints. Report blockers when the chain is exhausted.
+- The originating orchestrator owns cross-provider launches. Cursor, Grok and Junie
+  workers do not delegate onward; native same-provider children retain their pins,
+  bounded ownership and evidence requirements. A fallback retains reviewer
+  separation, existing findings and the same acceptance gates.
+- A named `review.panel` is three independent sessions: Astra, Fable and Grok at
+  xhigh, with launch argv retained as effort evidence. The panel is used only when
+  assigned. Muse is opt-in and never a fallback. Junie is the preferred bounded
+  volume route while `bun run beep accounts` shows remaining JetBrains credits;
+  it is not a fallback. Cursor and Junie receive no out-of-repo corpus, client
+  documents or secrets (D11); preserve Cursor's sandbox and git/sudo/pkexec denials
+  (D21). Do not work around a failing sandbox by disabling it.
+- `bun run beep models check` verifies native and repository pins. The interactive
+  Codex picker changes its config; leave it on the configured Sol default. Do not
+  set `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers. Agent source changes are left
+  for their owning lane to validate and commit.
 
-| Originator | 1 | 2 | 3 | 4 |
-| --- | --- | --- | --- | --- |
-| Codex | `gpt-6.1-sol` medium via the approved Codex route | `cursor-agent --model claude-opus-5-5-medium` | grok-build `grok -m grok-4.7 --effort medium` | — |
-| Claude Code | `claude-opus-5-5` medium child | Codex `gpt-6.1-sol` medium via the approved Codex route | `cursor-agent --model claude-opus-5-5-medium` | grok-build `grok -m grok-4.7 --effort medium` |
-
-- Direct Claude is never a fallback in the Codex chain. Codex (`gpt-6.1-sol`
-  medium, the `codex.heavy` codex-cli binding) is the first fallback in the
-  Claude chain (operator ruling 2026-10-18,
-  `goals/agent-pool-doctrine/history/2026-10-18-codex-claude-fallback.md`);
-  Cursor follows; grok-build is the final route in both chains.
-- Cursor-agent, grok-build and Junie workers never initiate delegation to
-  other providers. The originating orchestrator owns every cross-provider
-  decision and launch; a worker returns its result or blocker to it.
-  Same-provider subagents stay allowed where supported and authorized, under
-  the assigned model pins, task boundaries, and evidence requirements.
-- Automatic fallback is authorized only on confirmed quota, availability, or
-  unsupported-model failures. Ordinary code failures or unfavorable reviews
-  require remediation; they never justify switching models to seek a
-  favorable result. Use existing subscriptions and explicitly authorized API
-  billing only: no credit purchases, no overages, no new paid endpoints. When
-  the chain is exhausted, report the concrete blockers and hold the work.
-- Every approved route may perform implementation, exploration, research, and
-  independent review, including goal admission reviews. Retain separate
-  reviewer sessions, source-bound evidence, existing findings, and identical
-  acceptance gates across fallbacks.
-
-**Named roles outside the chains.**
-
-- `review.panel`: independent three-model review (agent-ecosystem work and any
-  packet that names the panel), each member in a session separate from the
-  orchestrator: `gpt-6-astra` xhigh (Codex), `claude-fable-5-1` xhigh (Claude
-  Code), `grok-4.7` xhigh (grok-build). Astra is the frontier tier above Sol,
-  not a superseded predecessor. Capture launch argv as effort evidence.
-- `junie.volume`: the JetBrains AI Pro pool is otherwise unspent, so Junie is
-  the preferred route for bounded implementation, exploration and
-  second-opinion review lanes while `bun run beep accounts` shows JetBrains
-  credits left in the cycle. It is not a fallback step. `junie.default`
-  tracks the interactive launch model in `$HOME/.junie/settings.json`.
-- `muse.opt-in`: Meta Muse through CLIProxyAPI (`claudem`); opt-in only, never in
-  a fallback chain.
-- `research.web`: `grok-4.7` (CLIProxyAPI injects `x_search`).
-
-**Pins per surface** (verified identifiers 2026-10-14; `beep models check`
-reports drift against the manifest):
-
-- Claude native subagents (Agent tool) and Workflow children:
-  `model: "claude-opus-5-5"`; `agent(prompt, { model: "claude-opus-5-5" })`.
-  Proxy sessions (`claudex`, `claudeg`, `claudep`, `claudem`) can use the same
-  id: CLIProxyAPI lists `claude-opus-5-5` since 2026-10-14. Do not set
-  `CLAUDE_CODE_SUBAGENT_MODEL` in proxy wrappers.
-- Codex CLI `--model gpt-6.1-sol -c 'model_reasoning_effort="medium"'`;
-  plugin/companion `--model gpt-6.1-sol --effort medium`; proxy Workflow
-  children `model: "gpt-6.1-sol(medium)"`; the codex-security scan is Codex by
-  nature and carries the same pin. The interactive Codex model picker rewrites
-  `$HOME/.codex/config.toml`; `beep models check` catches the drift.
-- Cursor: `cursor-agent -p --trust --force --sandbox enabled --workspace <abs>
-  --model claude-opus-5-5-medium --output-format stream-json` under a host
-  `timeout`, stdin from `/dev/null`; review seats use `claude-opus-5-5-high`.
-  Both ids are listed and init as "Claude Opus 5.5 300K Medium/High" (the
-  list's "1M" label is cosmetic; `claude-opus-5-5[effort=medium]` is
-  rejected). Never: any `-fast` id, `auto`, `kimi-k3-*`, `claude-fable-5-1-*`.
-  Deny list in `.cursor/cli.json`: `Shell(git)`, `Shell(sudo)`,
-  `Shell(pkexec)`. Nothing from the out-of-repo corpus, client documents, or
-  secrets enters a Cursor lane (D11). Where `--sandbox enabled` fails
-  (AppArmor on some Linux hosts), fix the host before running real lanes.
-- grok-build: the installed `grok` CLI (Grok Build TUI), `grok -m grok-4.7
-  --effort medium -p "<prompt>" --output-format streaming-json`; `modelUsage`
-  reports `grok-4.7-build`.
-- Junie: `junie --model=claude-opus-5-5 --effort=medium --output-format json
-  --skip-update-check -p <abs> "<task>"` under a host `timeout`, stdin from
-  `/dev/null`; the JSON result's `llmUsage[].model` is the identity evidence
-  (Junie also runs small helper models, listed there). Junie lanes leave the
-  tree dirty for the orchestrator to commit, and follow the same data
-  boundary as Cursor lanes (D11).
-
-**Surface pins.** Codex CLI uses `--model gpt-6.1-sol` and
-`-c 'model_reasoning_effort="medium"'`; plugins use `--effort medium`; proxy
-Workflow children use `gpt-6.1-sol(medium)`. Native Claude children use the
-explicit Opus id with medium effort. Cursor CLI uses the medium-suffixed id;
-its SDK has a separate model/effort contract. Keep Cursor's existing sandbox,
-D11 corpus boundary and D21 git/sudo/pkexec denials. grok-build uses grok-4.7
-medium and must return its result or blocker without further delegation.
-
-Manifest projection (tool-owned; `beep models check`):
+The tool-owned projection below keeps this checkout self-contained for cloud and
+non-Claude agents. Operational detail belongs in the runbook, not this always-loaded
+file. Rulings and amendments: `goals/agent-pool-doctrine/history/`.
 
 <!-- beep-models:begin volume-pools -->
 | Role | Surface | Model | Effort |
@@ -140,8 +77,6 @@ Manifest projection (tool-owned; `beep models check`):
 
 superseded: gpt-5.6-sol, gpt-6-sol, grok-4.6, gpt-5.6-luna, claude-opus-5, claude-opus-5-thinking-high, muse-spark-1.3, grok-4.5, gpt-5.4, gpt-5.4-mini
 <!-- beep-models:end volume-pools -->
-
-Runbook: `docs/runbooks/agent-pools.md`.
 
 ## 1Password
 
@@ -326,15 +261,10 @@ needed only for the escalation list below.
   receipt; do not wait for hosted heavy CI, which doubles as the review
   window. A gate parked by constrained compute is skipped only with
   `--skip <gate>=<reason>`, named in the PR body.
-- Heavy admitted work runs in `agent-run-<ticket>.scope` under
-  `agent-runs.slice` when the user manager allows it; `scheduler reap --apply`
-  stops scopes backed by dead leases. A loaded scope without a dead lease is
-  left alone because it may belong to an admission racing with the reaper.
-  Without the installed slice file, systemd uses a transient slice with defaults.
-- Detached proofs run in `beep-proof-<jobId>.service`: use `--detach` for a proof
-  expected to outlive the repair loop, then `yeet job wait <jobId>`; the systemd finalizer journals dead runners
-  (`signal`, `oom-killed`, `timeout`, `cancelled`, `unrecorded-failure`);
-  start failures have a terminal job record and inbox row, without an attempt.
+- Heavy admitted work and detached proofs run under systemd
+  (`agent-run-<ticket>.scope`, `beep-proof-<jobId>.service`): use `--detach`
+  plus `yeet job wait <jobId>` for a proof that may outlive the repair loop.
+  Mechanics: yeet skill, `references/detached-jobs.md`.
 - `main` is PR-only. Do not commit saving/wip/tmp checkpoints to shared
   branches; publish from a feature branch through Yeet and let hosted required
   checks gate the merge. GitHub merge/squash commit messages are also
@@ -345,11 +275,8 @@ needed only for the escalation list below.
 - Attribute verification failures before repairing — introduced / inherited /
   unrelated / environment-only; attribution decides fix vs rebase vs report,
   not blind rerun.
-- Read a completed red job's log at once with
-  `gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`;
-  never wait for the run to finish. `gh run view --log` refuses mid-run, and
-  plain `gh api` prints nothing on ANSI output. Commands: yeet skill, "Read a
-  failed job's log without waiting for the run".
+- Read a completed red job's log at once through the REST logs endpoint;
+  never wait for the run to finish. Commands: yeet skill, `references/gh-rest.md`.
 - “Mergeable” describes the complete PR state, not GitHub's structural
   `MERGEABLE` field alone. It requires all of the following:
   - no outstanding review thread — one that is unresolved, or one the author
@@ -379,63 +306,17 @@ needed only for the escalation list below.
   included, when the thread and window conditions hold and it has no base
   conflict; record each red with its attribution. Every required red that
   reaches `main` gets a named owner and a fix PR the same working day.
-- PR closeout: flip the PR ready at content-final, then, from the checkout you
-  are working in, run
+- PR closeout: flip the PR ready at content-final, then run
   `bun run beep yeet monitor --until-ready --detach` and block on
-  `bun run beep yeet job wait <jobId>` (attached `--until-ready` when the user
-  manager is unreachable; re-submit after a reboot) until it exits 0 with
-  `merge-ready: yes`. Required reds and base conflicts do not end the
-  monitor: it writes them as inbox rows and keeps polling, so pass
-  `--job-max-runtime "<duration>"` when it may be abandoned. Exit 2 is a wave
-  (new P0/P1 rows on the PR): act on the rows, push any fix, and re-run
-  `job wait` on the same job; the attached fallback also exits 2, so re-run it
-  after the push. Any other non-zero exit ended the job: read its summary,
-  fix, and re-submit. A code PR must carry the `ready-for-heavy` label before
-  the `Heavy / *` matrix runs (docs-only PRs skip it); `yeet publish` applies
-  it when it creates the draft PR, so add it by hand only for a PR that
-  already existed or whose label edit failed — `--until-ready` prints the
-  `gh pr edit` command while it holds.
-  Unanswered review threads are a hard merge gate — answer every one and resolve
-  every actionable one via `bun run beep yeet reply`
-  (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
-  them.
-- Post-merge closeout is the agent's job, not the operator's. Once the PR is
-  MERGED, retire the lane and sweep its owning clone in one command, run from
-  inside the lane worktree as the last command of the session:
-  `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`
-  (archives residue, deletes the branch, sweeps the clone; it refuses until the
-  PR is MERGED and heads that branch, so running it early is safe; a lane whose
-  branch never headed a PR retires once `origin/main` already contains its tip
-  and its tree is clean, the `pr-less-on-main` verdict). The swept
-  clone is returned to `main` only when it already stands on `main`; a clone
-  on another live branch is left where it is (refs updated, no `git switch`,
-  no `bun install`) because that checkout may carry another session's running
-  work, so the trailing `cd` can land you on that branch. Run it from
-  the lane, never from the clone: `bun run beep` resolves the CLI from the
-  checkout it runs in, and the clone's `main` may still be behind the merge and
-  reject `--retire` as an unknown flag. The command steps its own process out
-  of the lane before removal; the fence exempts the invoking session's
-  ancestry and, under Claude Code (`CLAUDE_PID`), everything that session
-  spawned into the lane (its MCP servers, tool shells, background jobs), so a
-  desktop session retires its own lane. Run from inside the lane, it also
-  leaves an idle Claude Desktop Terminal panel shell (the app starts one in
-  the session folder even if the panel is never opened) and removes the lane
-  under it. A panel shell running a command, any panel shell under `--lane`,
-  an editor, or another session standing in the lane still refuses it and is
-  named in the error: `cd ~` in it (closing a panel tab starts a new shell in
-  the lane) or close it, then rerun. A later session retires a
-  leftover lane with `bun run beep yeet sweep --retire --lane <lane>` from
-  any sibling lane of the same clone; when only the clone is at hand and its
-  checkout predates `--retire`, run the lane's own CLI:
-  `cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>`.
-  The trailing `cd` moves the shell to the swept clone. When the merged
-  change touched a systemd unit renderer, follow with
-  `bun run beep research install-timers --refresh` and/or
-  `bun run beep refs install-timer --refresh` (the `--refresh` forms are the
-  only agent-allowed forms of those commands) from the swept clone — the installed
-  units are snapshots and stay stale until re-rendered. These are granted Bash
-  permissions; do not hand them back to the operator. Runbook:
-  `docs/runbooks/systemd-timers.md`.
+  `bun run beep yeet job wait <jobId>` until it prints `merge-ready: yes`;
+  exit 2 is a wave of inbox rows to act on. Unanswered review threads are a
+  hard merge gate: answer and resolve every actionable one via
+  `bun run beep yeet reply`; never ask the operator to relay them.
+  Mechanics: yeet skill, `references/monitor-and-inbox.md`.
+- Post-merge closeout is the agent's job: once the PR is MERGED, retire the
+  lane from inside it with `bun run beep yeet sweep --retire`. Preserve other
+  live checkouts, never bypass a holder refusal, and refresh affected systemd
+  timers yourself. Mechanics: yeet skill, `references/sweep-retire.md`.
 - Package handoff: any agent or sub-agent that edits a workspace package runs
   `bun run beep quality package-verify <@beep/package>` before handing the work
   back. Use `--quick` only when the touched surface justifies the lint+check
@@ -486,12 +367,6 @@ If you touch this, load or run this first. Do not hand-author around it.
   lane needs must be committed under `.claude/` or `.codex/`; user-level
   settings, `enabledPlugins`, and user MCP never reach the VM.
 
-## Browser QA
-
-- Gesture-bearing UI milestones run the `browser-qa-loop` skill with recorded
-  evidence via `bun run beep qa` (record → extract → judge); judge inventories
-  are schema-validated (`qa-inventory/v1`).
-
 ## Docs & Knowledge
 
 - `docs/` is tracked authored documentation (`docs/README.md` has the layout);
@@ -520,12 +395,10 @@ If you touch this, load or run this first. Do not hand-author around it.
 
 ## Agent Memory
 
-- File memory is the memory layer: each agent's own durable files
-  (`CLAUDE.md` / `MEMORY.md` auto-memory) plus repo docs. There is no shared
-  external memory service; basic-memory and codegraph were removed on
-  2026-08-29 (`standards/memory-architecture/04-decision-log.md`), and the
-  graft code graph was retired on 2026-10-28 (same log). Do not reintroduce a
-  memory service or wire another code index without a new decision there.
+- File memory is the memory layer: each agent's own durable files plus repo
+  docs. There is no shared external memory service; do not reintroduce one or
+  wire another code index without a new decision in
+  `standards/memory-architecture/04-decision-log.md`.
 - If context is missing, fall back to repo-local docs, code search, and this
   file.
 

@@ -45,12 +45,12 @@ should not need to know every concept-level repository and driver inside the
 slice. Config Layers fit this same local shape: the config package may expose
 server/runtime-only `/layer` helpers, and server/client boundaries plus
 top-level application entrypoint composition decides which Layers to provide.
-`use-cases` and any future `shared/use-cases` package stop at the contract
+`use-cases` and `shared/use-cases` stop at the contract
 surface; they do not export live Layer values.
 
 Slice-to-slice direct imports across `domain`, `use-cases`, `server`, `tables`,
 `client`, or `ui` packages of *different* slices are forbidden. Cross-slice
-integration goes through emitted events or, after a real promotion, the future
+integration goes through emitted events or, after a real promotion, the existing
 `shared/use-cases` contract package.
 
 ## Context.Service Shape

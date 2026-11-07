@@ -14,6 +14,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Terminal from "effect/Terminal";
+import { stageAccountHeadroomReport } from "../Palantiri/Palantiri.service.ts";
 import { AccountsError } from "./Accounts.errors.ts";
 import { AccountsStatusReportJson } from "./Accounts.schemas.ts";
 import { watchAccounts } from "./Accounts.tui.ts";
@@ -54,7 +55,7 @@ export const accountsStatusCommand = Command.make(
   { json: jsonFlag },
   Effect.fn(function* ({ json }) {
     const program = Effect.gen(function* () {
-      const report = yield* loadAccountsReport(O.none());
+      const report = yield* loadAccountsReport(O.none()).pipe(Effect.tap(stageAccountHeadroomReport));
       if (!json) {
         const columns = yield* (yield* Terminal.Terminal).columns;
         const status = `updated ${DateTime.formatLocal(report.generatedAt, { hour: "2-digit", minute: "2-digit", hour12: false })}`;

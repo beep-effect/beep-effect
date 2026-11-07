@@ -9,6 +9,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FinalCheck.schemas");
@@ -356,6 +357,10 @@ export class YeetFinalCheckOptions extends S.Opaque<YeetFinalCheckOptions, { rea
     skip: S.Array(S.String),
     dryRun: S.Boolean,
     failFast: S.Boolean,
+    resume: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
   }).pipe(
     $I.annoteSchema("YeetFinalCheckOptions", {
       description: "Options accepted by yeet final-check: base ref, gate subset, recorded skips, dry run, fail fast.",

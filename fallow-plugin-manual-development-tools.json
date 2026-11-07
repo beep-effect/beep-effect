@@ -4,9 +4,6 @@
     "type": "fileExists",
     "pattern": "goals/schema-opaque-default/ops/codemod/run.ts"
   },
-  "entryPoints": [
-    "goals/schema-opaque-default/ops/codemod/*.ts",
-    "scratchpad/.jsdoc-loop/census.ts"
-  ],
+  "entryPoints": ["goals/schema-opaque-default/ops/codemod/*.ts"],
   "entryPointRole": "support"
 }

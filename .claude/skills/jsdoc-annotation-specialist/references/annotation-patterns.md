@@ -86,7 +86,7 @@ const MySchema = S.String.pipe(
 ## LiteralKit schemas
 
 Same as every non-class schema: `$I.annoteSchema` via `.pipe(...)`. The kit's
-helpers (`.Enum`, `.is`, `$match`) survive it:
+helpers (`.Enum`, `.is`, `.match`, `.matchOrElse`) survive it:
 
 ```ts
 import { LiteralKit } from "@beep/schema";

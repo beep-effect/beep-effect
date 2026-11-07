@@ -12,5 +12,28 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../html/tsconfig.json"
+    },
+    {
+      "path": "../identity/tsconfig.json"
+    },
+    {
+      "path": "../markdown/tsconfig.json"
+    },
+    {
+      "path": "../schema/tsconfig.json"
+    },
+    {
+      "path": "../utils/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ]
 }

@@ -6,7 +6,7 @@
     "title": "Hold Ledger",
     "status": "active",
     "created": "2026-10-31",
-    "updated": "2026-11-01",
+    "updated": "2026-11-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/hold-ledger",
@@ -35,7 +35,18 @@
       },
       {
         "number": 2453,
+        "role": "supporting"
+      },
+      {
+        "number": 2755,
         "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_hold-ledger-closeout-6db2731d5742/verdict.json",
+        "gating": true
       }
     ]
   },
@@ -106,5 +117,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2755
+  }
 }

@@ -320,3 +320,36 @@ it.effect("rejects malformed native rows and overlapping whole matches during co
     });
   })
 );
+
+it.effect("rejects malformed result context and per-call ceilings before decoding or pulling captures", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    for (const operation of [
+      makeCitationRegexResult(null, 0, 1),
+      makeCitationRegexResult(policy.limits, -1, 1),
+      makeCitationRegexResult(policy.limits, 0, 0.5),
+    ]) {
+      const failure = yield* operation.pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-runtime" });
+    }
+    const result = yield* makeCitationRegexResult({ ...policy.limits, patternMatches: 1 }, 0, 1);
+    const decoded = yield* result.decode(new Uint8Array([255]), 2).pipe(Effect.flip);
+    expect(decoded).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternMatches" });
+    const collected = yield* result
+      .collect(Effect.die("ceiling rejection must precede capture pull"), 2)
+      .pipe(Effect.flip);
+    expect(collected).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternMatches" });
+  })
+);
+
+it.effect("rejects valid Base64 whose decoded byte count disagrees with its capture table", () =>
+  Effect.gen(function* () {
+    const policy = yield* defaultCitationEnginePolicy;
+    const result = yield* makeCitationRegexResult(policy.limits, 0, 1);
+    for (const spans of ["AAAAAAAAAA==", "AAAAAAAAAAAA"]) {
+      const body = yield* wire(0, 1, spans);
+      const failure = yield* result.decode(body).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
+    }
+  })
+);

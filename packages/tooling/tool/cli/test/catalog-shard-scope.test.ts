@@ -7,7 +7,7 @@ import {
 import { resolveShardScope } from "@beep/repo-cli/test/Cli";
 import { lintCommand, makeSchemaFirstOwnerResolver } from "@beep/repo-cli/test/Lint";
 import { githubCheckCheapGateLanes } from "@beep/repo-cli/test/Quality";
-import { runGitOutput } from "@beep/repo-cli/test/RepoRun";
+import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { describe, expect, layer } from "@effect/vitest";
@@ -23,7 +23,6 @@ import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { NodeTestLayer, readProjectFile, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
-import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 // The scoped writers resolve owners through the workspace list and stage through `Git`, so the
 // test layer carries the platform services, `Git`, `FsUtils` and the ts-morph service beside a
@@ -112,23 +111,28 @@ const projectFileExists = Effect.fn("CatalogShardScopeTest.projectFileExists")(f
 
 // `git.stagedChanges` lists added/modified paths only; the index diff also shows a staged removal.
 const stagedPaths = (root: string) =>
-  Effect.map(runGitOutput(root, ["diff", "--cached", "--name-only"], gitAdapter), (output) =>
+  Effect.map(gitOutput(root, ["diff", "--cached", "--name-only"]), (output) =>
     A.filter(Str.split(output, "\n"), Str.isNonEmpty)
   );
 
-const gitAdapter: GitCommandErrorAdapter<Error> = {
-  onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
-  onNonZeroExit: ({ commandLine, exitCode, output }) => new Error(`${commandLine} exit ${exitCode}: ${output}`),
-  onTruncated: O.none(),
-};
+// Fixture git over the repo-run capture: a nonzero exit fails the test with git's output (the generic
+// repo-run runner retired with repo-cli-gh-git-consolidation D-21).
+const gitOutput = (root: string, args: ReadonlyArray<string>) =>
+  runRepoCommandCapture("git", args, root).pipe(
+    Effect.flatMap((captured) =>
+      captured.exitCode === 0
+        ? Effect.succeed(captured.output)
+        : Effect.die(new Error(`git ${A.join(args, " ")} exited with ${captured.exitCode}: ${captured.output}`))
+    )
+  );
 
 // A committed fixture repository, so `--stage` has an index to add to and staged paths to read back.
 const initFixtureRepository = Effect.fn("CatalogShardScopeTest.initFixtureRepository")(function* (root: string) {
   const git = yield* Git;
-  yield* runGitOutput(root, ["init", "-q"], gitAdapter);
-  yield* runGitOutput(root, ["config", "user.email", "catalog@example.test"], gitAdapter);
-  yield* runGitOutput(root, ["config", "user.name", "Catalog Test"], gitAdapter);
-  yield* runGitOutput(root, ["config", "commit.gpgsign", "false"], gitAdapter);
+  yield* gitOutput(root, ["init", "-q"]);
+  yield* gitOutput(root, ["config", "user.email", "catalog@example.test"]);
+  yield* gitOutput(root, ["config", "user.name", "Catalog Test"]);
+  yield* gitOutput(root, ["config", "commit.gpgsign", "false"]);
   yield* git.add(root, ["."]);
   yield* git.commit(root, "fixture");
 });

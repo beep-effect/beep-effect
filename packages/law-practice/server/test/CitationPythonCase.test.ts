@@ -70,6 +70,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
     );
     it.effect("checks expanded output before allocation and retains its captured policy", () =>
       Effect.gen(function* () {
+        const invalidPolicy = yield* makeCitationPythonLower(null).pipe(Effect.flip);
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, producedTextUtf16: 1 };
         const { lower } = yield* makeCitationPythonLower(limits);
         limits.producedTextUtf16 = 10;
@@ -105,4 +107,21 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
       })
     );
   }
+);
+
+it.effect("keeps the enclosing lowercase deadline active independently of native preparation", () =>
+  Effect.gen(function* () {
+    const clock = yield* Clock.Clock;
+    let timers = 0;
+    const policy = yield* defaultCitationEnginePolicy;
+    const lower = yield* makeCitationPythonLower(policy.limits).pipe(
+      Effect.provideService(Clock.Clock, {
+        ...clock,
+        sleep: () => (++timers === 2 ? Effect.void : Effect.never),
+      })
+    );
+    const failure = yield* lower.lower({ width: 1, bytes: new Uint8Array(100_000).fill(65) }).pipe(Effect.flip);
+    expect(failure).toMatchObject({ _tag: "CitationPythonUnicodeFailure", reason: "deadline-exceeded" });
+    expect(timers).toBe(2);
+  })
 );

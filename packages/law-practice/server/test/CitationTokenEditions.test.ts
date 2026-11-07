@@ -59,6 +59,23 @@ const load = Effect.fn("EditionTest.load")(function* () {
 it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "token editions",
   (it) => {
+    it.effect("bounds collision probing before publishing deduplicated edition identities", () =>
+      Effect.gen(function* () {
+        const controls = yield* load();
+        const limits = { ...(yield* defaultCitationEnginePolicy).limits, patternEvaluations: 1 };
+        const bindings = A.map(A.take(controls.bindings, 3), (row, id) => ({
+          ...row,
+          id,
+          hash: 0n,
+          equalityClass: id,
+        }));
+        const editions = yield* makeCitationTokenEditions(limits, bindings);
+        const failed = yield* editions.deduplicate([0, 1, 2]).pipe(Effect.flip);
+        expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternEvaluations" });
+        const recovered = yield* editions.deduplicate([0]);
+        expect(recovered).toEqual([0]);
+      })
+    );
     it.effect("performs actual target set deduplication and source nominative choice in every captured case", () =>
       Effect.gen(function* () {
         const controls = yield* load();

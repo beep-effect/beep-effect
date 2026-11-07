@@ -4,7 +4,7 @@ Read when you need the verdict, a failure packet, the proof ledger, or the chang
 
 
 - Every non-plan Yeet run writes `.beep/yeet/runs/<branch>/verdict.json`
-  (`yeet-verdict/v1`): outcome, per-lane status, repair command for each
+  (`yeet-verdict/v2`): outcome, per-lane status, repair command for each
   failed lane, packet paths, staged-only stash identity, and base-freshness
   data. Read `yeet status` or the verdict before scanning logs. `yeet status`
   is observational and writes `.beep/yeet/runs/<branch>/status.json` instead of

@@ -570,6 +570,7 @@ it.effect("should transform errors correctly",
 ### Error Transformation Utilities
 
 ```typescript
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Match from "effect/Match";
 
@@ -600,12 +601,14 @@ const mapFileSystemError = (error: PlatformError.PlatformError): DomainError => 
 };
 
 // Error aggregation for multiple operations
-const aggregateErrors = <E>(errors: ReadonlyArray<E>): E | AggregateError => {
-  if (errors.length === 1) {
-    return errors[0]!;
-  }
-  return new AggregateError(errors);
-};
+const aggregateErrors = <E>(errors: ReadonlyArray<E>): E | AggregateError =>
+  A.matchLeft(errors, {
+    onEmpty: () => new AggregateError(errors),
+    onNonEmpty: (head, tail) => A.match(tail, {
+      onEmpty: () => head,
+      onNonEmpty: () => new AggregateError(errors),
+    }),
+  });
 ```
 
 ### Error Logging Patterns

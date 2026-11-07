@@ -12,17 +12,21 @@ import {
   LibraryInventoryOptions,
   LibraryOccurrence,
   LibrarySource,
-  LibraryVersion,
+  LibrarySourceVersion,
   loadCatalog,
+  ResearchLibraryLive,
   saveImmutable,
   withCatalog,
 } from "@beep/repo-cli/commands/Research";
 import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -30,6 +34,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const LibraryCatalogJson = S.fromJsonString(LibraryCatalog);
+const LibraryArtifactJson = S.fromJsonString(LibraryArtifact);
 
 const fixtureJson = S.Unknown.pipe(S.fromJsonString, S.encodeEffect);
 
@@ -123,9 +128,10 @@ const resolutionFixture = Effect.fn("test.resolutionFixture")(function* () {
 });
 
 // `Git` rides over the platform spawner: an input root's commit is read through the kit (W2b).
-const InventoryPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const InventoryPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
+const LibraryPlatform = Layer.provideMerge(Git.layer, InventoryPlatform);
 
-it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 seconds" })(
+it.layer(Layer.provideMerge(ResearchLibraryLive, LibraryPlatform), { timeout: "30 seconds" })(
   "research library provenance",
   (it) => {
     it.effect("returns a nonzero CLI sentinel for an incomplete source library", () =>
@@ -150,7 +156,7 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         yield* fs.makeDirectory(path.join(root, "qualifications"));
         yield* fs.writeFile(path.join(root, "qualifications/legacy.txt"), bytes);
         const legacy = LibraryCatalog.make({
-          schema: "beep.research.library/v1",
+          schema: "beep.research.library/v2",
           documents: [],
           sources: [],
           occurrences: [],
@@ -197,7 +203,7 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           ...full,
           revision: "@evolu",
           versions: [
-            LibraryVersion.make({ revision: "@evolu", canonicalUrl: full.canonicalUrl, locators: full.locators }),
+            LibrarySourceVersion.make({ revision: "@evolu", canonicalUrl: full.canonicalUrl, locators: full.locators }),
           ],
         });
         yield* withCatalog(root, (catalog) =>
@@ -358,7 +364,7 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         yield* fs.makeDirectory(path.join(root, ".writer-lock"));
         const locked = yield* withCatalog(root, Effect.succeed).pipe(Effect.flip);
         expect(locked.message).toContain("writer already active");
-        expect((yield* loadCatalog(root)).schema).toBe("beep.research.library/v1");
+        expect((yield* loadCatalog(root)).schema).toBe("beep.research.library/v2");
       })
     );
     it.effect("rejects artifact symlink escapes before creating outside directories", () =>
@@ -671,7 +677,9 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
                   ? LibrarySource.make({
                       ...source,
                       revision: "",
-                      versions: A.map(source.versions, (version) => LibraryVersion.make({ ...version, revision: "" })),
+                      versions: A.map(source.versions, (version) =>
+                        LibrarySourceVersion.make({ ...version, revision: "" })
+                      ),
                     })
                   : source
               ),
@@ -793,6 +801,101 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
         }
       })
     );
+    it.effect("bounds migration reconciliation and preserves catalog bytes on an identity no-op", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "library-bounded-migration-" });
+        const artifact = LibraryArtifact.make({
+          path: "missing-legacy-evidence.txt",
+          sha256: Str.repeat(64)("a"),
+          bytes: 1,
+          role: "content",
+          mediaType: "text/plain",
+        });
+        const catalog = LibraryCatalog.make({
+          schema: "beep.research.library/v2",
+          documents: [],
+          sources: [],
+          occurrences: [],
+          captures: [],
+          qualifications: [],
+          artifacts: [artifact],
+        });
+        const text = yield* S.encodeEffect(LibraryCatalogJson)(catalog);
+        yield* fs.makeDirectory(path.join(root, "catalog"));
+        const canonical = path.join(root, "catalog/library.json");
+        yield* fs.writeFileString(canonical, text);
+        const noop = yield* withCatalog(root, Effect.succeed, false);
+        expect(noop).toEqual(catalog);
+        const unchanged = yield* fs.readFileString(canonical);
+        expect(unchanged).toBe(text);
+        const historyExists = yield* fs.exists(path.join(root, "catalog/history"));
+        expect(historyExists).toBe(false);
+        const locked = yield* fs.exists(path.join(root, ".writer-lock"));
+        expect(locked).toBe(false);
+        const changed = yield* withCatalog(
+          root,
+          (current) => Effect.succeed(LibraryCatalog.make({ ...current, artifacts: [] })),
+          false
+        );
+        expect(changed.artifacts).toEqual([]);
+        const persisted = yield* loadCatalog(root);
+        expect(persisted).toEqual(changed);
+        const history = yield* fs.readDirectory(path.join(root, "catalog/history"));
+        expect(history.length).toBe(1);
+      })
+    );
+    it.effect("reconciles colliding legacy identities while retaining aliases, locators and versions", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "library-migration-collision-" });
+        const source = LibrarySource.make({
+          id: "legacy-first",
+          identity: "arxiv:2610.00609",
+          kind: "paper",
+          canonicalUrl: "https://arxiv.org/abs/2610.00609v1",
+          revision: "v1",
+          repository: "",
+          ownership: "external",
+          locators: ["https://arxiv.org/abs/2610.00609v1"],
+        });
+        const other = LibrarySource.make({
+          ...source,
+          id: "unrelated",
+          identity: "arxiv:2610.00610",
+          canonicalUrl: "https://arxiv.org/abs/2610.00610v1",
+          locators: ["https://arxiv.org/abs/2610.00610v1"],
+        });
+        const next = LibrarySource.make({
+          ...source,
+          id: "legacy-second",
+          revision: "v2",
+          canonicalUrl: "https://arxiv.org/abs/2610.00609v2",
+          locators: ["https://arxiv.org/abs/2610.00609v2"],
+        });
+        const catalog = LibraryCatalog.make({
+          schema: "beep.research.library/v2",
+          documents: [],
+          sources: [source, other, next],
+          occurrences: [],
+          captures: [],
+          qualifications: [],
+        });
+        const text = yield* S.encodeEffect(LibraryCatalogJson)(catalog);
+        yield* fs.writeFileString(path.join(root, "catalog.json"), text);
+        const migrated = yield* withCatalog(root, Effect.succeed);
+        expect(migrated.sources.length).toBe(2);
+        const merged = O.getOrThrow(A.findFirst(migrated.sources, (item) => item.identity === source.identity));
+        expect(merged.aliasIds).toEqual([source.id, next.id]);
+        expect(merged.locators).toEqual([...source.locators, ...next.locators]);
+        expect(A.map(merged.versions, (version) => version.revision)).toEqual(["v1", "v2"]);
+        expect(A.some(migrated.sources, (item) => item.identity === other.identity)).toBe(true);
+        const persisted = yield* loadCatalog(root);
+        expect(persisted).toEqual(migrated);
+      })
+    );
     it.effect("migrates legacy catalog IDs without overwriting original evidence or losing capture bindings", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -834,7 +937,7 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           reason: "",
         });
         const legacy = LibraryCatalog.make({
-          schema: "beep.research.library/v1",
+          schema: "beep.research.library/v2",
           documents: [],
           sources: [source],
           occurrences: [occurrence],
@@ -916,17 +1019,17 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
           ownership: "external",
           locators: [],
           versions: [
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "v1",
               canonicalUrl: "https://arxiv.org/abs/2610.00609v1",
               locators: ["https://arxiv.org/abs/2610.00609v1"],
             }),
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "v1",
               canonicalUrl: "https://arxiv.org/abs/2610.00609v1",
               locators: ["https://arxiv.org/pdf/2610.00609v1"],
             }),
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "",
               canonicalUrl: "https://arxiv.org/abs/2610.00609",
               locators: ["https://arxiv.org/abs/2610.00609"],
@@ -988,4 +1091,15 @@ it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 second
       })
     );
   }
+);
+
+it.effect.prop(
+  "property: schema-generated LibraryArtifact round-trips through catalog JSON",
+  { value: Arbitrary.schema(LibraryArtifact) },
+  Effect.fnUntraced(function* ({ value }) {
+    const encoded = yield* S.encodeEffect(LibraryArtifactJson)(value);
+    const decoded = yield* S.decodeEffect(LibraryArtifactJson)(encoded);
+    expect(decoded).toEqual(value);
+  }),
+  { arbitrary: fcRuns(32) }
 );

@@ -6,16 +6,20 @@ import {
   CitationCleanerRuntime,
   makeCitationCleanerPipeline,
 } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationCleanerTextDescriptor } from "@beep/law-practice-server/internal/Citation/CleanerTextIdentity";
 import {
   CitationCleanerValues,
   makeCitationCleanerValues,
 } from "@beep/law-practice-server/internal/Citation/CleanerValues";
+import { CitationLiteralCleaner } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -27,6 +31,8 @@ import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
+import { makeCitationUnicodePipelineHarness } from "./CitationUnicodePipeline.fixtures.ts";
 import type { CitationCleanerObject } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 
 const Row = S.Struct({
@@ -60,6 +66,30 @@ const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
 const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
 
 it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner invocation", (it) => {
+  it.effect.prop(
+    "charges every repeated idempotent builtin invocation on schema-derived text",
+    {
+      cleaner: Arbitrary.schema(CitationLiteralCleaner).pipe(Arbitrary.filter((name) => name !== "xml")),
+      text: Arbitrary.schema(CitationCleanerTextDescriptor.fields.text.check(S.isMaxLength(128))),
+    },
+    ({ cleaner, text }) =>
+      Effect.gen(function* () {
+        const owned = yield* makeCitationUnicodePipelineHarness(false);
+        owned.selectText([cleaner]);
+        const first = yield* owned.pipeline.run({ text, plan: "generated-idempotent-builtin" });
+        const firstText = yield* owned.values.getText(first.value).pipe(Effect.flatMap(Effect.fromOption));
+        owned.selectText([cleaner, cleaner]);
+        const repeated = yield* owned.pipeline.run({ text, plan: "generated-repeated-builtin" });
+        const repeatedText = yield* owned.values.getText(repeated.value).pipe(Effect.flatMap(Effect.fromOption));
+        expect(repeatedText.text).toBe(firstText.text);
+        expect(first.producedTextUtf16).toBe(Str.length(firstText.text));
+        expect(repeated.producedTextUtf16).toBe(2 * Str.length(firstText.text));
+        const native = yield* owned.nativeCounts;
+        expect(native).toEqual({ spawned: 0, confirmed: 0 });
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+
   it.effect(
     "replays all pinned input kinds without coercion and retires every native child",
     () =>
@@ -83,11 +113,10 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         let spawned = 0;
         let retired = 0;
         const citationResult2 = yield* fs.makeTempDirectoryScoped({ prefix: "citation-builtins-" });
+        const workerRuntime = yield* citationHtmlWorkerTestRuntime();
         const builtins = yield* makeCitationBuiltinCleaners(policy, {
-          kind: "bun",
-          executable: process.execPath,
+          ...workerRuntime,
           cwd: citationResult2,
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         }).pipe(
           Effect.provideService(CitationCleanerValues, values),
           Effect.provideService(ChildProcessSpawner, {
@@ -131,7 +160,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         );
         const emit = yield* values.retainHost({ function: "emit" });
         const builtin = yield* values.retainHost({ function: "builtin" });
-        const makePipeline = (value: CitationCleanerObject, name: typeof Row.Type.cleaner, repeat = false) =>
+        const makePipeline = (value: CitationCleanerObject, name: unknown, repeat = false) =>
           makeCitationCleanerPipeline(policy).pipe(
             Effect.provideService(
               CitationCleanerRuntime,
@@ -219,6 +248,29 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
           spawned: 2,
           retired: 2,
         });
+        const invalidBytes = yield* S.decodeEffect(S.Uint8ArrayFromHex)(
+          "3c6d65746120636861727365743d227574662d38223e3c6469763effc0afeda0803c2f6469763e"
+        );
+        const refusalCases = [
+          { name: "not-installed", value: yield* values.text("x"), reason: "unknown-step" },
+          { name: "html", value: yield* values.text(""), reason: "html-parse-error" },
+          {
+            name: "html",
+            value: yield* values.text('<?xml version="1.0" encoding="UTF-8"?><p>x</p>'),
+            reason: "html-unicode-encoding-declaration",
+          },
+          { name: "html", value: yield* values.bytes(invalidBytes), reason: "html-unicode-decode-error" },
+        ];
+        yield* Effect.forEach(
+          refusalCases,
+          Effect.fnUntraced(function* (row) {
+            const pipeline = yield* makePipeline(row.value, row.name);
+            const failure = yield* pipeline.run({ text: "x", plan: "closed-builtin-failure" }).pipe(Effect.flip);
+            expect(failure).toMatchObject({ reason: row.reason });
+            expect("cause" in failure).toBe(false);
+          }),
+          { concurrency: 1, discard: true }
+        );
         const unchanged = yield* values.text("A");
         const repeated = yield* makePipeline(unchanged, "underscores", true);
         const result = yield* repeated.run({ text: "x", plan: "same-reference-still-charges" });

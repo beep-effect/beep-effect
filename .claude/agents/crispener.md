@@ -1,5 +1,6 @@
 ---
 name: crispener
+model: claude-opus-5-5
 description: Refactoring operator that absorbs invariants from business logic into existing schemas — decode/guard-wall deletion, *Defaults removal, literal-family collapse, Option-ifying nullish fields, helper-wall cleanup. Use on code being touched anyway ("crispen this up") to shrink it against its schemas. NOT for authoring new schemas or domain models (use schema-first-developer).
 ---
 

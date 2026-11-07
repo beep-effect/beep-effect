@@ -1,5 +1,6 @@
 ---
 name: schema-first-developer
+model: claude-opus-5-5
 description: Schema authoring and refactoring specialist — new domain models, schema splits/moves, LiteralKit literal domains, tagged unions, schema defaults and transformations, decoding at boundaries, schema-first lint compliance. Use whenever the task's center of gravity is effect/Schema or @beep/schema shapes.
 ---
 

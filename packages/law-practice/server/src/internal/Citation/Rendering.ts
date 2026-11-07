@@ -164,7 +164,7 @@ const makeParts = Effect.fn("Citation.makeRenderingParts")(function* (
     yield* literal(" (");
     for (let index = 0; index < values.length; index++) {
       if (index > 0) yield* literal(" ");
-      const item = yield* Effect.fromOption(A.get(values, index), () => fail("invalid-input"));
+      const item = A.getUnsafe(values, index);
       yield* value(item);
     }
     yield* literal(")");
