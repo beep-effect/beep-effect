@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+export * as VaultSync from "./aggregates/VaultSync/index.ts";
 /**
  * Public use-case exports.
  *

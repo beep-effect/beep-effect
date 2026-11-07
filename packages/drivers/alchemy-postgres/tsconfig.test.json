@@ -18,6 +18,12 @@
       "path": "../pglite/tsconfig.json"
     },
     {
+      "path": "../postgres/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/observability/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {

@@ -66,11 +66,11 @@ not create or install an App, create a service account, or enable a live rule.
 2. From the checkout, run:
 
    ```sh
-   bun scripts/github-app/create-beep-reviewer.ts
+   bun run beep github app mint beep-reviewer
    ```
 
    Open `http://localhost:8787` in the browser signed in as `kriegcloud`. The local
-   form POSTs `scripts/github-app/beep-reviewer.manifest.json` to
+   form POSTs `packages/tooling/policy-pack/repo-configs/data/github-apps/beep-reviewer.manifest.json` to
    `https://github.com/organizations/beep-effect/settings/apps/new`. The localhost
    callback validates a random state, exchanges the one-use code with
    `POST /app-manifests/{code}/conversions`, and sends `id`, `client_id`, and

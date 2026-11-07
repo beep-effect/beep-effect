@@ -1,13 +1,17 @@
 // The compile+expand recipe: one call, one typed error, both causes intact.
 
 import { GlobPatternError, GlobPatternOptions } from "@beep/glob";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { DescendError } from "@beep/walker/Descend";
 import { CompileAndExpandOptions, compileAndExpand, GlobExpansionError } from "@beep/walker/Expand";
 import { assert, describe, it, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { platform, platformWith } from "./support/fixtures.ts";
@@ -240,3 +244,41 @@ layer(platformWith(unreadableTree, { unreadable: HashSet.make("/proj/src/locked"
     );
   }
 );
+
+const statCause = PlatformError.systemError({
+  _tag: "Unknown",
+  module: "FileSystem",
+  method: "stat",
+  description: "Injected stat failure (Unknown represents EIO)",
+  pathOrDescriptor: "/proj/a.ts",
+});
+layer(
+  Layer.mergeAll(
+    MemoryFileSystem.layerWith(
+      { "/proj/a.ts": "" },
+      {
+        faults: { stat: (path) => (path === "/proj/a.ts" ? Effect.fail(statCause) : undefined) },
+      }
+    ),
+    Path.layer
+  ),
+  { timeout: "10 seconds" }
+)("compileAndExpand strict stat forwarding", (it) => {
+  it.effect("inherits the option schema and keeps the original filesystem failure", () =>
+    Effect.gen(function* () {
+      const options = yield* S.decodeEffect(CompileAndExpandOptions)({
+        cwd: "/proj",
+        glob: defaults,
+        onStatError: "fail",
+      });
+      const error = yield* Effect.flip(compileAndExpand("a.ts", options));
+      assert.strictEqual(error.stage, "descend");
+      assert.instanceOf(error.cause, DescendError);
+      if (S.is(DescendError)(error.cause)) {
+        assert.strictEqual(error.cause.reason, "statFailed");
+        assert.strictEqual(error.cause.path, "a.ts");
+        assert.strictEqual(error.cause.cause, statCause);
+      }
+    })
+  );
+});

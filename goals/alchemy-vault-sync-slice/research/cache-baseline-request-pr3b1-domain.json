@@ -1,0 +1,14 @@
+{
+  "previous": "f17262d476db70b14865591baa9a2b9b61f77068ef4b537c2bdeeceb1ca15676",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/vs-saga PR 3b part 1)",
+    "reason": "Record the documents-server alchemy domain, alchemy-postgres and PGlite dependency edges on top of #2886's baseline. No command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b1-domain.md",
+      "sha256": "2d421b2461d9cc0dbb2c21b9523290a502b94931ae1363b0ca9760b13531e837"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

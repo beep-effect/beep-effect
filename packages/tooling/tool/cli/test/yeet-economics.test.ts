@@ -1080,6 +1080,8 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics scope", (layerIt
         yield* writeOrigin(relative, "git@github.com:beep-effect/beep-effect.git");
       }
       yield* writeOrigin("beep/seats/other", "git@github.com:acme/other.git");
+      // A candidate with no readable git metadata has no origin, so it is never admitted.
+      yield* writeJournal(checkout("beep/seats/no-git"), "run-no-git", green53);
       const roots = A.join([`${projects}/beep-effect*`, checkout("beep/seats"), checkout("beep/lanes")], ":");
 
       const configured = yield* readScope(checkout("beep-effect7"), { fleet: true }).pipe(
@@ -1089,10 +1091,20 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics scope", (layerIt
         )
       );
       expect(A.map(configured, (entry) => entry.checkout)).toEqual(["beep-effect7", "beep/lanes/x", "beep/seats/main"]);
+      // Invoked from a checkout whose own origin is unreadable, the scope admits nothing beyond itself.
+      yield* writeJournal(checkout("beep-effect8"), "run-unknown-origin", green53);
+      const unknownOrigin = yield* readScope(checkout("beep-effect8"), { fleet: true }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { BEEP_FLEET_ROOTS: roots } })
+        )
+      );
+      expect(A.map(unknownOrigin, (entry) => entry.checkout)).toEqual(["beep-effect8"]);
       const derived = yield* readScope(checkout("beep-effect7"), { fleet: true }).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: {} }))
       );
-      expect(A.map(derived, (entry) => entry.checkout)).toEqual(["beep-effect7"]);
+      // The derived root keeps the pre-list rule: every `beep-effect*` sibling, origin unchecked.
+      expect(A.map(derived, (entry) => entry.checkout)).toEqual(["beep-effect7", "beep-effect8"]);
     })
   );
 

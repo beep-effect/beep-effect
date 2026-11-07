@@ -22,7 +22,7 @@ prose when they conflict.
 
 Scope:
 
-- In: `packages/tooling/tool/cli/src/commands/Goals/**` and `Explore/**` schemas, `scripts/references.json`, `goals/README.md`, `explorations/README.md`, the closeout skill, every tombstoned packet and inbound link, the archive repo.
+- In: `packages/tooling/tool/cli/src/commands/Goals/**` and `Explore/**` schemas, `packages/tooling/policy-pack/repo-configs/data/references.json`, `goals/README.md`, `explorations/README.md`, the closeout skill, every tombstoned packet and inbound link, the archive repo.
 - Out: judging the ledger; new statuses; archive branches or disk copies; reference, paused, parked, active packets; parallel batch PRs.
 
 Workflow:

@@ -32,7 +32,6 @@ import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
-import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -765,19 +764,19 @@ it.layer(platform, { timeout: "30 seconds" })("hosted admission route", (layerIt
       temporary((root) =>
         Effect.gen(function* () {
           const path = yield* writeEvent(root, payload([HEAVY_ADMISSION_LABEL]));
-          const fiber = yield* readHeavyAdmissionRoute(
-            HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root })
-          ).pipe(
-            Effect.provideService(
-              ChangeClassifier,
-              ChangeClassifier.of({ classify: Effect.fn("ChangeClassifier.classify")(() => Effect.never) })
-            ),
-            Effect.forkChild
+          // A short live bound instead of advancing the block's shared test clock (EV015): the
+          // classifier never completes, so only the read bound can end the route read.
+          const route = yield* TestClock.withLive(
+            readHeavyAdmissionRoute(
+              HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root }),
+              "200 millis"
+            ).pipe(
+              Effect.provideService(
+                ChangeClassifier,
+                ChangeClassifier.of({ classify: Effect.fn("ChangeClassifier.classify")(() => Effect.never) })
+              )
+            )
           );
-          // Let the real event-file read reach the stalled classifier before moving the test clock.
-          yield* TestClock.withLive(Effect.sleep("300 millis"));
-          yield* TestClock.adjust("3 minutes");
-          const route = yield* Fiber.join(fiber);
           expect([route.lanes, route.receipt]).toEqual([[], "route-unavailable"]);
         })
       )

@@ -97,10 +97,10 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   const path = yield* Path.Path;
   const assetPath = yield* path
     .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))
-    .pipe(Effect.mapError(() => failure("invalid-runtime")));
+    .pipe(Effect.mapError(invalidRuntime));
   const argument = yield* S.encodeEffect(WorkerStartupJson)(
     CitationHtmlWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath })
-  ).pipe(Effect.mapError(() => failure("invalid-runtime")));
+  ).pipe(Effect.mapError(invalidRuntime));
   const preparation = yield* makeCitationHtmlInput(limits);
   const worker = yield* makeCitationMarkupWorker(limits, runtime, argument, "clean", failure);
   const validateSource = Effect.fnUntraced(function* (input: unknown, kind: "raw" | "text" | "bytes" | "unicode") {
