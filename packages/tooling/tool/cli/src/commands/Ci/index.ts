@@ -25,6 +25,13 @@ export * from "./Ci.errors.ts";
  * @since 0.0.0
  */
 export * from "./CiAdmission.ts";
+/**
+ * Slim CI binary program export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiBinary.ts";
 export * from "./CiBootstrap.command.ts";
 export * from "./CiCompileBinary.ts";
 /**
