@@ -162,6 +162,7 @@ import {
   turboLaneDigestFromSummary,
   turboSecretSessionStepForTesting,
   turboStepLocalEnvForTesting,
+  unsplitIntegrationTaskArgsForTesting,
   validateCoverageTaskArgsForTesting,
   withoutUnusableRemoteCacheForTesting,
   workspaceCoverageScopeOwners,
@@ -1774,6 +1775,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:effect-imports-markdown",
         "lint:markdown-fences",
         "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
         "lint:holds",
@@ -1816,6 +1818,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:retired-effect-paths")).toEqual(
         expectedTurboArgs("lint:retired-effect-paths", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:entity-kit-freeze")).toEqual(
+        expectedTurboArgs("lint:entity-kit-freeze", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:retired-iri-authorities")).toEqual(
         expectedTurboArgs("lint:retired-iri-authorities", ["--summarize"])
@@ -3728,6 +3733,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const argument7 = expect(hashAtConcurrency28).not;
             const hashAtConcurrency7 = yield* hashAtConcurrency("3");
             argument7.toBe(hashAtConcurrency7);
+            const firstToolCall = yield* withEnvVarEffect("CODEX_TOOL_CALL_ID", "first", hashAtConcurrency("2"));
+            const nextToolCall = yield* withEnvVarEffect("CODEX_TOOL_CALL_ID", "next", hashAtConcurrency("2"));
+            expect(firstToolCall).toBe(nextToolCall);
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -5095,15 +5103,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:circular",
         "lint:effect-imports",
         "lint:effect-imports-markdown",
-        "lint:markdown-fences",
-        "lint:retired-effect-paths",
-        "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
         "lint:holds",
         "lint:tsconfig-overlay",
         "lint:package-test-typecheck",
         "lint:effect-vitest",
-        "lint:opaque-roundtrips",
         "lint:jsdoc",
         "lint:jsdoc:root",
         "lint:jsdoc-module-tags",
@@ -5118,6 +5122,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:oxlint",
         "lint:shadcn",
         "lint:typos",
+        "lint:markdown-fences",
+        "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
+        "lint:retired-iri-authorities",
+        "lint:opaque-roundtrips",
       ]);
       for (const index of [0, 1, 4]) {
         const step = O.getOrThrow(A.get(local, index));
@@ -5154,7 +5163,18 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "quality:test-tsgo",
       ]);
       expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
-        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(16)),
+        "lint:laws",
+        "lint:native-runtime:roots",
+        "lint:schema-first",
+        "lint:identity-registry",
+        "lint:circular",
+        "lint:effect-imports",
+        "lint:effect-imports-markdown",
+        "lint:schema-tag-idioms",
+        "lint:holds",
+        "lint:tsconfig-overlay",
+        "lint:package-test-typecheck",
+        "lint:effect-vitest",
         "knowledge:semantic-delta",
         "knowledge:refs-check",
         "lint:jsdoc-module-tags",
@@ -5164,6 +5184,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:typos",
         "jsdoc:inventory:check",
         "jsdoc:ratchet:check",
+        "lint:markdown-fences",
+        "lint:retired-effect-paths",
+        "lint:entity-kit-freeze",
+        "lint:retired-iri-authorities",
+        "lint:opaque-roundtrips",
       ]);
       // A local full-scope plan (no review base) leaves the two git-delta knowledge checks and the
       // knowledge doctor (report-only until the first seal) to the hosted plan; the changed-scope
@@ -5260,6 +5285,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:opaque-roundtrips",
           "lint:markdown-fences",
           "lint:retired-effect-paths",
+          "lint:entity-kit-freeze",
           "lint:retired-iri-authorities",
           "lint:schema-tag-idioms",
           "lint:holds",
@@ -10035,6 +10061,59 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         TestClock.withLive
       )
+    );
+
+    it.effect(
+      "keeps scoped unsplit integration owners without duplicating split owners or widening caller filters",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = process.cwd();
+            const manifest = yield* encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["packages/*"],
+            });
+            yield* fs.writeFileString(path.join(root, "package.json"), manifest);
+            const scriptsByDirectory = {
+              plain: { test: "vitest" },
+              unsplit: { "test:integration": "vitest run test/integration" },
+              serial: { "test:integration:serial": "vitest run test/integration" },
+              split: {
+                "test:integration": "bun run test:integration:parallel",
+                "test:integration:parallel": "vitest run test/integration",
+              },
+            };
+            for (const [directory, scripts] of R.toEntries(scriptsByDirectory)) {
+              const packageDirectory = path.join(root, "packages", directory);
+              yield* fs.makeDirectory(packageDirectory, { recursive: true });
+              const packageManifest = yield* encodeJson({ name: `@beep/${directory}`, private: true, scripts });
+              yield* fs.writeFileString(path.join(packageDirectory, "package.json"), packageManifest);
+            }
+            const unscoped = yield* unsplitIntegrationTaskArgsForTesting(root, []);
+            expect(unscoped).toEqual(["--filter=@beep/unsplit"]);
+            for (const args of [
+              ["--affected", "--summarize"],
+              ["--filter=@beep/unsplit"],
+              ["--filter=@beep/split"],
+              ["--filter=@beep/serial"],
+              ["--filter", "@beep/unsplit"],
+              ["--filter=!@beep/unsplit"],
+              ["--since=HEAD^"],
+              ["--filter=@beep/unsplit", "--", "--testNamePattern=fixture"],
+            ]) {
+              const selected = yield* unsplitIntegrationTaskArgsForTesting(root, args);
+              expect(selected).toEqual(["--filter=!@beep/serial", "--filter=!@beep/split", ...args]);
+            }
+            const noIntegration = yield* encodeJson({ name: "@beep/unsplit", private: true, scripts: {} });
+            yield* fs.writeFileString(path.join(root, "packages/unsplit/package.json"), noIntegration);
+            const absent = yield* unsplitIntegrationTaskArgsForTesting(root, ["--affected"]);
+            expect(absent).toEqual([]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
     it.effect("reads an object-form workspaces declaration without packages as no workspaces", () =>

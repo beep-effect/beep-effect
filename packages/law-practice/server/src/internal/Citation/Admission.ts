@@ -147,3 +147,19 @@ export const makeCitationOperationAdmission = Effect.fn("Citation.makeOperationA
     }),
   });
 });
+
+/** Reuse an already admitted parent's permit for private child stages. The
+ * owner must provide this Context only inside its admitted invocation; neither
+ * child services nor this bypass may escape that invocation.
+ * @internal @category operations @since 0.0.0
+ */
+export const captureCitationOperationChildren = Effect.fn("Citation.captureOperationChildren")(function* () {
+  const admission = yield* CitationOperationAdmission;
+  const nested = CitationOperationAdmission.of({
+    run: Effect.fn("Citation.reuseOperationPermit")(
+      <A, E>(_: CitationSafetyLimitExceeded["operation"], body: Effect.Effect<A, E>) => body
+    ),
+    snapshot: admission.snapshot,
+  });
+  return Context.make(CitationOperationAdmission, nested);
+});

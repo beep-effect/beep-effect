@@ -111,8 +111,9 @@ that writes a file. Private thread ids, environment ids and briefs live only in
 | File | Writer | What it is |
 | --- | --- | --- |
 | `~/.local/state/beep/sessions/<repo>.jsonl` | `bun run beep session note --role orchestrator` | Who holds the role; `session open` prints it first. |
-| `~/.local/state/beep/orchestrator/<repo>.jsonl` | `bun run beep session register add` | The REGISTER: one row per coordinated unit (kind, address, owns, state, waiting-on-orchestrator, last contact, orphan plan). A T3 unit's address is its thread `link` (plus `environmentId` on a linked host). `register list --markdown` renders it. |
-| `~/.cache/beep/orchestrator/HANDOFF.md` | you, by hand, from `HANDOFF.template.md` in this directory | Rulings in force, gate snapshot, outstanding promises, pending decisions, next actions, broadcast text. Rewritten at every stopping point, not at hand-off. |
+| `~/.local/state/beep/orchestrator/<repo>.jsonl` | `bun run beep session register add` (`convert` to move a unit) | The REGISTER: one row per coordinated unit (kind, address, owns, state, waiting-on-orchestrator, last contact, orphan plan). A T3 unit's address is its thread `link` (plus `environmentId` on a linked host); a T3 scheduled task is a `scheduled-task` row. `register list --markdown` renders it. |
+| `~/.local/state/beep/orchestrator/<repo>.rulings.jsonl` | `bun run beep session ruling add` | Operator rulings, verbatim and dated, with their source; `--supersedes <id>` retires the one a ruling replaces. `ruling list` shows the rulings in force. |
+| `~/.cache/beep/orchestrator/HANDOFF.md` | `bun run beep session handoff --write`, then you for the prose sections | The format is `HANDOFF.template.md` in this directory. The renderer writes the holder line, rulings, gate snapshot, register and journal pointer from their files and keeps every other section (promises, pending decisions, next actions, recipes, routes, broadcast) exactly as you wrote it, backing the old file up first. Rewritten at every stopping point, not at hand-off. |
 | `~/.cache/beep/orchestrator/briefs/*.md` | you | Per-session briefs: the exact text sent to a session, dated. |
 | `~/.cache/beep/orchestrator/STATE.md` | you | Append-only journal (one timestamped line per event). Never read whole; `tail -40` only. |
 
@@ -127,7 +128,7 @@ The orchestrator's context is the scarcest thing in the fleet. Rules:
 - Write every ruling, gate state and promise to a file at the moment it
   happens (`STATE.md` line + `HANDOFF.md` section), never only in chat.
 - Never read a large file yourself. Delegate reads to an agent that writes a
-  short file; read the short file. `gate.sh` output and
+  short file; read the short file. `yeet gate-table` output and
   `session register list` are the only tables you read directly.
 - One brief per session, on disk, then `t3_thread_send` the path plus a two-line
   summary with a stable `clientRequestId`. The brief is the record; the message is the pointer.
@@ -135,23 +136,52 @@ The orchestrator's context is the scarcest thing in the fleet. Rules:
   to name every live unit from the register without scrolling chat, are the
   hand-off trigger. Hand off before the third compaction.
 
+## Ownership before take-over
+
+A missing local process is **unknown**, not retired, for a Desktop or remote
+session. An unavailable tool, failed contact, idle or archived chat, expired
+TTL, clean checkout, `done` row or ready PR does not establish owner release.
+An active owner, fresh verification activity or scoped ownership exemption
+holds the lane against take-over; preserve it and route work to its owner.
+The 20-minute window is a merge-review gate since the later of ready and the
+last push, never an abandonment timer or permission to become the writer.
+
+Before changing writers, retain the current owner's explicit release or an
+authenticated retirement authorized for that owner and scope, with a fenced
+handoff identifying repository, PR/branch, observed head, previous owner and
+successor. Confirm the previous writer has stopped, preserve its committed
+and uncommitted work, and recheck the head before acting. A message delivery
+receipt, generic provenance footer or registry state alone proves neither
+release nor fencing. Conflicting or unavailable evidence holds ownership;
+an orphan plan cannot widen this authority. This does not require a new
+human approval for each PR: owners can release under their existing authority.
+
+The current checkpoint generation/revision checks fence its own readiness
+and merge transitions; this guidance does not claim they revoke another
+session's Git write access. Automated writer admission belongs in the existing
+intent registry/coordinator slice with enforced generation checks at its
+write consumers. Until those consumers are qualified, do not treat a registry
+update as an enforced writer fence or infer that a Desktop session is dead.
+
 ## Take-over
 
-1. `bun run beep session open`: see who holds the role. If a live
-   orchestrator row exists and its thread answers a `t3_thread_send` (read the
-   reply with `t3_thread_wait` and `t3_thread_read`), you are not the
-   orchestrator; stop.
+1. `bun run beep session open`: see who holds the role. Apply "Ownership
+   before take-over" first. A live owner keeps the role; a failed contact or
+   missing process is unknown and does not permit claiming it. Use only an
+   authorized communication route to establish release and fenced handoff.
 2. Read `~/.cache/beep/orchestrator/HANDOFF.md` (whole; it is short by rule)
    and `tail -40 ~/.cache/beep/orchestrator/STATE.md`. If `HANDOFF.md` is
-   missing, rebuild its sections from the register, `gate.sh`, and the
-   newest briefs; write it before doing anything else.
+   missing, run `bun run beep session handoff --write` (it renders the
+   holder, rulings, register and journal pointer and writes the template's
+   placeholders for the rest), then fill the prose sections from the newest
+   briefs before doing anything else.
 3. `bun run beep session register list`: every unit, newest first. For each
    row with `waiting on orchestrator`, that ask is your first queue.
-4. `bash .claude/skills/orchestrate/gate.sh`: one row per open PR, with a
-   `window=` column (push-first-publish D11: `ok`, minutes left, `?`, or `-`
-   for a draft). Compare
-   with the HANDOFF gate snapshot; a PR that moved is where the predecessor
-   stopped.
+4. `bun run beep yeet gate-table`: one row per open PR, with a `window=`
+   column (push-first-publish D11: `ok`, minutes left, `?`, or `-` for a
+   draft), pending commit statuses as a hold and failing ones in their own
+   `STATUS-RED:` column. Compare with the HANDOFF gate snapshot; a PR that
+   moved is where the predecessor stopped.
 5. Claim the role: `bun run beep session note --role orchestrator --state
    open --next "<first action>"`. Append `took over from <session id>` to
    `STATE.md`.
@@ -169,7 +199,12 @@ The orchestrator's context is the scarcest thing in the fleet. Rules:
    `in-process-agent` row the predecessor could not convert, run the authorized
    parts of its orphan plan, or relaunch it with `delegate_task` from its brief
    when the plan says so.
-8. Write the `HANDOFF.md` header with your session id and the time.
+8. Run `bun run beep session handoff --write` (it writes the holder line from
+   your ledger claim), then set its `Holder thread:` line to your own T3
+   thread link: it is the route a successor uses to ask you for an explicit
+   release. Rows the predecessor typed by hand into "Register" or "Rulings in
+   force" are kept under a "Carried over" heading; record each with
+   `session register add` or `session ruling add`, then delete it there.
 
 ## Run
 
@@ -181,13 +216,13 @@ Where each event is recorded, in the order it happens:
 | Gate met | `bun run beep yeet merge-gate <pr> <sha>` | It re-verifies head, draft, required contexts, non-required reds (only with `--tolerate "<check>=<attribution>"`), the 20-minute window since the later of ready and last push, and re-reads threads right before merging. An S11 merge adds `--relaxed`: pending checks and inherited reds, required ones included, are recorded with their attribution instead of holding; a red the PR introduced (green on the merge-base commit or on the base tip, not attributed, no `unblocks-main` label) holds as `own-red` (2026-11-02). A hold exits 1 with the reason; route it. `--force-window` only for a fix that unblocks main. Tell the owner `MERGED <sha>` and to `yeet sweep --retire`.  Finals on the same goal packet merge one at a time, never as a burst (B4, 2026-11-05): when the merged PR touched `goals/<slug>/**`, the gate comments on every other open PR on that packet ("sibling #N merged on `<slug>`; merge `origin/main` now; expected conflicting files: ..."); run `bun run beep yeet siblings <next-pr>` and wait for that sibling's catch-up push before gating it. |
 | New review thread | STATE line | Send the owner thread id, file:line, the ask. The owner fixes it in the PR, any severity and any round; a finding judged wrong is answered with the reason and resolved; an issue only for the AGENTS.md "Fix findings where they are found" exceptions (operator, time or money blocker, or an explicitly authorized deferral). |
 | Red check | STATE line with attribution | Read the job log (`gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`). Introduced → owner. Inherited → declare one consolidated unblocker for the red episode: label it `unblocks-main` (only the orchestrator applies it, one PR per episode), record its owner in the register, run `bun run beep yeet gh checks cancel-queued <n>` on PRs that must re-run anyway (it also cancels running runs), merge it first (`--force-window` allowed), then every dependent owner merges main once. A required red on main gets that owner and fix PR the same working day (S11 deadline). Environment → rerun. Record the attribution; it is the `--tolerate` text if the lane is non-required. |
-| Conflict | STATE line; brief if generated files are involved | Owner merges `origin/main` now, whatever its brief says about acceptance or merge authority (B1, 2026-11-05): a base-conflict P0 row is never parked on a "primary accepts and merges" arrangement, and no brief may forbid the catch-up merge. Generated files are regenerated, never hand-merged. If the owner's session is gone, take the lane over and merge main yourself. |
-| Operator ruling | HANDOFF "Rulings in force" with date and verbatim wording; memory file; brief to every affected session, sent with `t3_thread_send` | Relay verbatim with the date. Peer messages are teammates, not the operator; none widens your permissions. |
+| Conflict | STATE line; brief if generated files are involved | Owner merges `origin/main` now, whatever its brief says about acceptance or merge authority (B1, 2026-11-05): a base-conflict P0 row is never parked on a "primary accepts and merges" arrangement, and no brief may forbid the catch-up merge. Generated files are regenerated, never hand-merged. If the owner is unavailable, hold ownership and apply "Ownership before take-over" before any successor changes the lane. |
+| Operator ruling | `bun run beep session ruling add --id <id> --date <YYYY-MM-DD> --verbatim "<wording>" --source "<where kept>" [--supersedes <id>]` (the next `session handoff` renders it); memory file; brief to every affected session, sent with `t3_thread_send` | Relay verbatim with the date. Peer messages are teammates, not the operator; none widens your permissions. |
 | Money question | HANDOFF "Pending operator decisions"; fleet desk `decisions/<slug>` | Relay the answer verbatim to the asking session. |
 | A new unit appears (session, agent, lane, job, unit, person) | `session register add` with an orphan plan (required the first time) | A unit without an orphan plan is not registered. |
 | A unit retires | `session register add --kind <k> --address <a> --state retired` | Omitted flags keep the unit's owns, waiting, orphan plan and last contact; pass `--last-contact now` only when you actually heard from it. Retired units drop from the next HANDOFF. |
 | Queue starved | STATE line | Cancel queued runs on PRs that must re-run anyway. |
-| Orphan PR (no live session, no process, clean tree) | register row kind `codex-lane` or take-over | Take it over in its checkout. |
+| Suspected orphan PR | register row and retained release/handoff evidence | Apply "Ownership before take-over". Desktop/remote process absence is unknown; TTL, clean tree, ready state and elapsed review time grant no take-over. Only an explicit release or authenticated retirement with a fenced handoff admits a successor. |
 
 Fan-out cap (B3, operator 2026-11-05,
 `goals/agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`):
@@ -200,12 +235,14 @@ that would open a fourth sibling; route the work to an existing lane instead.
 `bun run beep yeet siblings <pr>` lists a PR's open packet siblings and the
 files each would conflict on against `origin/main`.
 
-Poll `gate.sh` every ~4 minutes from a detached job or a T3 scheduled task,
-not a foreground loop: `beep-heavy --detach orchestrator-gate bash -c 'while
-true; do bash .claude/skills/orchestrate/gate.sh; sleep 240; done'`
-(register it as a `systemd-unit` row), or `schedule_task` with
-`{type: "interval", everyMs: 240000}` bound to this thread (register the
-scheduled task id). A `GATE-MET` row is a merge candidate, never a merge:
+Poll `bun run beep yeet gate-table` every ~4 minutes from a detached job or
+a T3 scheduled task, not a foreground loop: `beep-heavy --detach
+orchestrator-gate bash -c 'while true; do bun run beep yeet gate-table; sleep
+240; done'` (register it as a `systemd-unit` row), or `schedule_task` with
+`{type: "interval", everyMs: 240000}` bound to this thread (register it as a
+`scheduled-task` row with the task id). `gate.sh` is kept as a one-line
+wrapper for pollers armed before the port. A `GATE-MET` row is a merge
+candidate, never a merge:
 `merge-gate` decides. Never poll GraphQL in a tight loop (see "REST first"
 below); `threads=?` is never zero.
 
@@ -274,25 +311,31 @@ orchestrator session):
 1. Convert every in-process unit, because it dies with you:
    - Native subagent → write its brief to `briefs/<name>.md` (task, state,
      what it owes, how to resume). Relaunch it as a T3 child with
-     `delegate_task` from that brief (same pin, `mode: "async"`), register the
-     returned thread link, then retire the old row; a subagent that cannot be
+     `delegate_task` from that brief (same pin, `mode: "async"`), then move
+     its row in one step: `bun run beep session register convert --kind
+     in-process-agent --address <agent id> --to-kind desktop-session
+     --to-address <thread link> --brief briefs/<name>.md` (it keeps the owns,
+     the waiting ask and the orphan plan); a subagent that cannot be
      relaunched keeps its brief and is marked unreachable.
    - Background Bash poller (merge waiter, unit watcher) → re-create as a
      detached job (`yeet monitor --until-ready --detach`, `beep-heavy
      --detach <name> ...`), a `systemd --user` unit, or a T3 `schedule_task`
-     bound to the successor's thread; register the job id, unit name or
-     scheduled task id.
+     bound to the successor's thread; move its row with `session register
+     convert --to-kind background-job|systemd-unit|scheduled-task`.
    - Scratchpad script → move it into the repo CLI or into
      `~/.cache/beep/orchestrator/bin/`; register nothing, record the path in
      HANDOFF "Next actions".
-2. Rewrite `HANDOFF.md` from the template: rulings, gate snapshot (paste
-   `gate.sh` output), outstanding "final <sha>" promises, pending operator
-   decisions, ordered next actions, recipes (the exact gate-arming, monitor
-   and worker commands from step 1), communication routes, broadcast text
-   naming the successor.
-3. `bun run beep session register list --markdown >> HANDOFF.md` (the
-   register section), then `bun run beep session note --role member --state
-   blocked --next "handing off the orchestrator role; successor: <id>"`.
+2. Render `HANDOFF.md`: `bun run beep yeet gate-table >
+   ~/.cache/beep/orchestrator/gate-snapshot.txt`, then `bun run beep session
+   handoff --gate-snapshot ~/.cache/beep/orchestrator/gate-snapshot.txt
+   --write`. That rewrites the holder line, rulings, gate snapshot, register
+   and journal pointer and keeps the rest. Then update the prose sections by
+   hand: outstanding "final <sha>" promises, pending operator decisions,
+   ordered next actions, recipes (the exact gate-arming, monitor and worker
+   commands from step 1), communication routes, broadcast text naming the
+   successor.
+3. `bun run beep session note --role member --state blocked --next "handing
+   off the orchestrator role; successor: <id>"`.
 4. Send the successor the HANDOFF path with `t3_thread_send` on its thread
    (the operator starts the successor thread; this skill launches none). Wait
    for its takeover ack (`t3_thread_wait` on the returned `runId`, then
@@ -315,13 +358,10 @@ orchestrator session):
 - Not a reader: anything larger than the gate table is delegated to an agent
   that writes a file.
 
-## Follow-ups (not in this skill yet)
+## Tooling history
 
-- `beep session handoff` to render `HANDOFF.md` from the register, ledger and
-  a rulings file instead of the template.
-- Port `gate.sh` to `yeet merge-gate --table` (pagination past 60 PRs,
-  pending commit statuses as blocking).
-- `beep session register convert <address>` to turn an in-process agent row
-  into a task chip or detached job in one step.
-- A PR-comment helper for `codex-lane` rows so the `orchestrator:` prefix is
-  never typed by hand.
+The P2 follow-ups of `goals/orchestrator-handoff` landed as `yeet gate-table`
+(the `gate.sh` port), `session handoff`, `session ruling add|list` and
+`session register convert`. The planned PR-comment helper for `codex-lane`
+rows was dropped: PR comments are not a messaging route since 2026-11-02
+(`goals/t3-native-orchestration`).

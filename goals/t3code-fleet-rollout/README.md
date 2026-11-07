@@ -33,12 +33,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — the host profiles landed (#2594), P0 host facts are recorded in `PLAN.md`; the DankStation publish step and the host pull timer are written under `ops/` and are being rolled to beep-worker and dankserver. tom-pc-1 (WSL distro) and the agent-plane links follow.
+P2 Verify complete — all four hosts on `0.1.7-fork.20261106.1401`, every link reachable, desktop pairings confirmed, one delegated turn per host (beep-worker after recording its project MCP approvals). Residual: tom-pc-1 reboot proof at the PC user's next sign-in (restart path already exercised). Next: P3 Yeet (this receipt PR to mergeable), then P4 Close.
 
 ## Latest Evidence
 
-2026-11-05: P0 live reads of beep-worker and dankserver (official `t3@0.1.5` services); publish and pull scripts in `ops/`; runbook `docs/runbooks/t3code-fleet.md`.
+2026-11-07: `history/2026-11-07-p2-verify.md` (version parity, reachability, per-host turns, beep-worker MCP-approval fix, tom-pc-1 restart-path proof).
+
+2026-11-06: `history/2026-11-06-dankserver-link.md` (Serve route and link) and `history/2026-11-06-tom-pc-1-wsl.md` (distro provisioned, keep-alive task, service, hub link, delegated turn); runbook gained the WSL host, client-plane pairing and gated tbk-worker sections.
 
 ## Notes
 
-Host order: beep-worker (already runs T3), dankserver, tom-pc-1 (new WSL distro; restore an access route first). tbk-worker is gated on the operator releasing its latch. grok-bot-box-1 is out of scope.
+Host order: beep-worker (done), dankserver (linked), tom-pc-1 (linked). tbk-worker is gated on the operator releasing its latch. grok-bot-box-1 is out of scope.

@@ -1,0 +1,12 @@
+library status: reports=3 sources=3 occurrences=3
+current source claims (least complete required version): readable=0 unavailable=0 ambiguous=0 incomplete=0 tool-blocked=0 internal=0 operational=0 non-reference=0 missing=3
+current source/version claims: readable=0 unavailable=0 ambiguous=0 incomplete=0 tool-blocked=0 internal=0 operational=0 non-reference=0 missing=3; readable claims require verify for integrity, reviewed categories are hash-bound and never read
+historical capture attempts running=0
+historical capture attempts interrupted=1
+historical capture attempts readable=1
+historical capture attempts blocked=1
+historical capture attempts failed=1
+historical capture attempts unsupported=0
+historical capture attempts unavailable=1
+historical capture attempts non-reference=0
+route probes verified=1 failed=1; run verify for the integrity gate

@@ -342,12 +342,12 @@ describe("renderPortfolioIndex", () => {
 
   it("renders a proposed closeout from the manifest alone, under the committed status group", () => {
     const content = renderPortfolioIndex(rows, []);
-    expect(content).toContain("| Packet | Title | Phases | Updated | Closeout | Mission |");
+    expect(content).toContain("| Packet | Title | Phases | Updated | Closeout | Archived | Mission |");
     expect(content).toContain(
-      "| [alpha](./alpha/README.md) | Alpha | — | — | proposed completed-retained via #2320 | — |"
+      "| [alpha](./alpha/README.md) | Alpha | — | — | proposed completed-retained via #2320 | — | — |"
     );
     expect(content).toContain(
-      "| [zeta](./zeta/README.md) | Zeta \\| Pipes | 1/3 | 2026-07-01 | — | Do the \\| thing |"
+      "| [zeta](./zeta/README.md) | Zeta \\| Pipes | 1/3 | 2026-07-01 | — | — | Do the \\| thing |"
     );
     // The proposal does not move the row: INDEX never reads the clone-scoped receipt.
     expect(content).toContain("## Active (2)");

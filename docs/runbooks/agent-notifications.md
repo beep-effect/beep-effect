@@ -96,4 +96,4 @@ wait-bracket resolution, storm damping, and the shared kill switch are unchanged
 A successful desktop receipt means the transport accepted the send (or the
 terminal accepted the OSC bytes); it does not prove a user saw or clicked it.
 Ghostty's surface-bound action is implemented in its
-[Linux notification sender](https://github.com/ghostty-org/ghostty/blob/v1.3.1/src/apprt/gtk/class/surface.zig#L1578).
+[Linux notification sender](https://github.com/ghostty-org/ghostty/blob/332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28/src/apprt/gtk/class/surface.zig#L1718).

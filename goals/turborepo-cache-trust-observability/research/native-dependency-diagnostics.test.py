@@ -62,6 +62,9 @@ class DependencyDiagnostics(unittest.TestCase):
         self.assertEqual(diagnostic["status"], "stable-match")
         self.assertTrue(diagnostic["snapshotsEqual"])
         self.assertTrue(diagnostic["declaredDigestMatches"])
+        self.assertEqual(diagnostic["revision"], "a" * 40)
+        self.assertEqual(diagnostic["sourceReportSha256"],
+                         PROBE.hashlib.sha256(PRODUCTION_FIXTURE.read_bytes()).hexdigest())
         self.assertEqual(diagnostic["second"]["changedCount"], 0)
         self.assertEqual(output.stat().st_mode & 0o777, 0o600)
         original = output.read_bytes()
@@ -89,6 +92,74 @@ class DependencyDiagnostics(unittest.TestCase):
         second_link = self.observe()
         self.assertEqual(first_link["first"]["groups"][1][4:6], second_link["first"]["groups"][1][4:6])
         self.assertNotEqual(first_link["first"]["groups"][1][6], second_link["first"]["groups"][1][6])
+
+    def test_selected_file_hashes_redact_names_and_payloads_and_locate_byte_changes(self):
+        package = self.root / "node_modules/node-gyp"
+        package.mkdir()
+        source = package / "PRIVATE_FILENAME_SENTINEL.py"
+        bytecode = package / "PRIVATE_BYTECODE_FILENAME_SENTINEL.pyc"
+        source.write_bytes(b"PRIVATE_SOURCE_PAYLOAD_SENTINEL")
+        bytecode.write_bytes(b"PRIVATE_BYTECODE_PAYLOAD_001")
+        (package / "outside").symlink_to("/etc/passwd")
+        before = self.observe()
+        details = before["first"]["fileDetails"]
+        self.assertEqual(details["group"], "node-gyp")
+        self.assertEqual(details["columns"], ["nameSha256", "kind", "bytes", "contentSha256"])
+        self.assertEqual(len(details["rows"]), 2)
+        rows = {row[0]: row for row in details["rows"]}
+        source_key = PROBE.hashlib.sha256(b"node_modules/node-gyp/PRIVATE_FILENAME_SENTINEL.py").hexdigest()
+        bytecode_key = PROBE.hashlib.sha256(b"node_modules/node-gyp/PRIVATE_BYTECODE_FILENAME_SENTINEL.pyc").hexdigest()
+        self.assertEqual(set(rows), {source_key, bytecode_key})
+        self.assertEqual(rows[source_key][1:], ["python-source", source.stat().st_size,
+                                              PROBE.hashlib.sha256(source.read_bytes()).hexdigest()])
+        self.assertEqual(rows[bytecode_key][1], "python-bytecode")
+        retained = json.dumps(before)
+        for private in [source.name, bytecode.name, "PRIVATE_SOURCE_PAYLOAD_SENTINEL",
+                        "PRIVATE_BYTECODE_PAYLOAD_001", "/etc/passwd"]:
+            self.assertNotIn(private, retained)
+        bytecode.write_bytes(b"PRIVATE_BYTECODE_PAYLOAD_002")
+        after = self.observe()
+        changed = {row[0]: row for row in after["first"]["fileDetails"]["rows"]}
+        self.assertEqual(rows[source_key], changed[source_key])
+        self.assertEqual(rows[bytecode_key][:3], changed[bytecode_key][:3])
+        self.assertNotEqual(rows[bytecode_key][3], changed[bytecode_key][3])
+        self.assertNotEqual(before["first"]["sha256"], after["first"]["sha256"])
+        self.assertLessEqual(len(PROBE.encoded(details["rows"])), PROBE.FILE_DETAIL_BYTES_LIMIT)
+
+    def test_selected_file_hash_entry_and_byte_limits_refuse_without_changing_digest_policy(self):
+        package = self.root / "node_modules/node-gyp"
+        package.mkdir()
+        (package / "one.pyc").write_bytes(b"first")
+        (package / "two.pyc").write_bytes(b"other")
+        with patch.object(PROBE, "FILE_DETAIL_ENTRY_LIMIT", 1):
+            with self.assertRaisesRegex(PROBE.Refusal, "file-detail-entry-bound"):
+                PROBE.snapshot(PROBE.time.monotonic() + 10)
+        with patch.object(PROBE, "FILE_DETAIL_BYTES_LIMIT", 1):
+            with self.assertRaisesRegex(PROBE.Refusal, "file-detail-byte-bound"):
+                PROBE.snapshot(PROBE.time.monotonic() + 10)
+
+    def test_import_cache_guard_preserves_source_and_raw_dependency_digest(self):
+        package = self.root / "node_modules/node-gyp"
+        package.mkdir()
+        source = package / "sample.py"
+        source.write_bytes(b"VALUE = 42\n")
+        source_digest = PROBE.hashlib.sha256(source.read_bytes()).hexdigest()
+        before = PROBE.snapshot(PROBE.time.monotonic() + 10)["sha256"]
+        command = [sys.executable, "-S", "-c", "import sample; print(sample.VALUE)"]
+        guarded = subprocess.run(command, cwd=package,
+                                 env={"PATH": "/usr/bin", "PYTHONDONTWRITEBYTECODE": "1"},
+                                 capture_output=True, timeout=10)
+        self.assertEqual(guarded.returncode, 0, guarded.stderr)
+        self.assertEqual(guarded.stdout, b"42\n")
+        self.assertFalse((package / "__pycache__").exists())
+        self.assertEqual(PROBE.snapshot(PROBE.time.monotonic() + 10)["sha256"], before)
+        ordinary = subprocess.run(command, cwd=package, env={"PATH": "/usr/bin"},
+                                  capture_output=True, timeout=10)
+        self.assertEqual(ordinary.returncode, 0, ordinary.stderr)
+        self.assertEqual(ordinary.stdout, guarded.stdout)
+        self.assertTrue(any((package / "__pycache__").glob("*.pyc")))
+        self.assertEqual(PROBE.hashlib.sha256(source.read_bytes()).hexdigest(), source_digest)
+        self.assertNotEqual(PROBE.snapshot(PROBE.time.monotonic() + 10)["sha256"], before)
 
     def test_timestamp_changes_do_not_change_normalized_digest(self):
         before = self.observe()
@@ -189,6 +260,59 @@ class DependencyDiagnostics(unittest.TestCase):
         os.mkfifo(fifo)
         with self.assertRaisesRegex(PROBE.Refusal, "source-not-regular"):
             PROBE.read_source(fifo)
+
+    def test_chunked_source_comparison_checks_every_byte_and_length(self):
+        original = b"a" * (128 * 1024) + b"tail"
+        self.source.write_bytes(original)
+        self.assertEqual(PROBE.read_source(self.source), original)
+        self.assertTrue(PROBE.read_source(self.source, original))
+        for index in [0, 64 * 1024, len(original) - 1]:
+            with self.subTest(changed_byte=index):
+                changed = bytearray(original)
+                changed[index] ^= 1
+                self.source.write_bytes(changed)
+                self.assertFalse(PROBE.read_source(self.source, original))
+        for changed in [original[:-1], original + b"extra"]:
+            self.source.write_bytes(changed)
+            self.assertFalse(PROBE.read_source(self.source, original))
+
+    def test_source_comparison_survives_pressure_that_refuses_a_full_report_read(self):
+        self.source.write_bytes(b"a" * (3 * 1024 * 1024))
+        script = """
+import importlib.util
+from pathlib import Path
+import resource
+import sys
+spec = importlib.util.spec_from_file_location("dependency_diagnostics", sys.argv[1])
+probe = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(probe)
+path = Path(sys.argv[2])
+original = probe.read_source(path)
+resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
+pressure = []
+try:
+    while True:
+        pressure.append(bytearray(1024 * 1024))
+except MemoryError:
+    pass
+assert len(pressure) >= 2, "Insufficient room to construct bounded pressure fixture"
+del pressure[-2:]
+try:
+    with path.open("rb") as handle:
+        handle.read(probe.ARTIFACT_LIMIT)
+except MemoryError:
+    pass
+else:
+    raise AssertionError("Pressure fixture did not refuse the full report allocation")
+assert probe.read_source(path, original) is True
+print("bounded-source-comparison-ok")
+"""
+        result = subprocess.run(
+            ["/usr/bin/python3", "-I", "-S", "-c", script, str(OBSERVER), str(self.source)],
+            env={"PATH": "/usr/bin"}, capture_output=True, timeout=10,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), b"bounded-source-comparison-ok")
 
     def test_refusal_codes_distinguish_failures_without_retaining_exception_details(self):
         private = "PRIVATE_EXCEPTION_PAYLOAD_SENTINEL"

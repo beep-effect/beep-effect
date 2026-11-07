@@ -5,13 +5,13 @@
  */
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -201,7 +201,7 @@ const response = (
     "cache-control": "no-store",
     connection: "close",
     ...(status === 503 ? { "retry-after": "1" } : {}),
-    ...(receiptId === undefined ? {} : { "x-observation-receipt": receiptId }),
+    ...O.getSomesStruct({ "x-observation-receipt": O.fromUndefinedOr(receiptId) }),
   };
   return contentType === "application/json"
     ? HttpServerResponse.json(value, { status, headers })

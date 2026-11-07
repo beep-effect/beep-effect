@@ -12,6 +12,7 @@ import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { toSortedRecord } from "@beep/repo-utils";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
@@ -652,7 +653,12 @@ export const runCiCoverageComparison = Effect.fn("CiCoverage.compare")(function*
       )}.`,
     });
   }
-  const discovered = yield* discoverCoveragePackages(repoRoot, plan.owners);
+  const [discoveryDuration, discovered] = yield* discoverCoveragePackages(repoRoot, plan.owners).pipe(Effect.timed);
+  yield* Effect.logInfo("Coverage expected test inventory resolved", {
+    milliseconds: Duration.toMillis(discoveryDuration),
+    packages: plan.owners.length,
+    invocations: discovered.length,
+  });
   const expectedPartitions = A.map(partitions, (partition) =>
     CoverageProducerPartition.make({
       partitionId: partition.id,

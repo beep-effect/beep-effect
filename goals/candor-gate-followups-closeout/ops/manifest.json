@@ -40,14 +40,7 @@
     "goals/patent-citation-candor-gate/README.md",
     "goals/patent-citation-candor-gate/research/01-gate-shape-check.md"
   ],
-  "researchReports": [
-    "research/01-identity-authority.md",
-    "research/02-query-plan-evidence.md",
-    "research/03-test-crypto-audit.md",
-    "research/DECISIONS.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -96,5 +89,13 @@
     "A gate integration would compute legal judgment or weaken fail-closed behavior.",
     "A database index is proposed without representative-volume planner evidence.",
     "Verification requires unnamed credentials, cost, destructive state, or policy approval."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/candor-gate-followups-closeout",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "651ee3bcc04a4067617f6a63f53044172e4d8c1c",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

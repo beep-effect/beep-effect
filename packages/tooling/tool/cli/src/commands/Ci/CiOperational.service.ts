@@ -137,9 +137,12 @@ export const CiOperationalLive = Layer.effect(
         const event = yield* text("GITHUB_EVENT_NAME");
         const paths =
           event === "pull_request"
-            ? yield* collectBaseRangeChangedFiles(path.resolve("."), { base, head: "HEAD", pathspecs: [] }).pipe(
-                Effect.provide(context)
-              )
+            ? yield* collectBaseRangeChangedFiles(path.resolve("."), {
+                base,
+                head: "HEAD",
+                pathspecs: [],
+                noRenames: true,
+              }).pipe(Effect.provide(context))
             : [];
         const scoped = event === "pull_request" && A.isReadonlyArrayNonEmpty(paths);
         const profile = CiChangeProfile.make({

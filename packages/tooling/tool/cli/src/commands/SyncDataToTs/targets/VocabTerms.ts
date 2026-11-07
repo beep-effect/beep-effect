@@ -2,7 +2,7 @@
  * Vocabulary term-inventory target definition.
  *
  * Generates the shared namespace term inventories
- * (`rdf`/`rdfs`/`skos`/`owl`/`dcterms`/`schema`) in `@beep/rdf` from the
+ * (`rdf`/`rdfs`/`skos`/`owl`/`dcterms`/`schema`/`dcat`) in `@beep/rdf` from the
  * `@beep/identity` `CoreVocab` registry, single-sourcing the inventories the
  * CURIE literal types are derived from. Curated named-node constants in the
  * hand-authored Vocab modules stay untouched.
@@ -25,7 +25,7 @@ const targetId = "vocab-terms" as const;
 const outputDir = "packages/foundation/modeling/rdf/src/Vocab/generated" as const;
 const canonicalPath = `${outputDir}/vocab-terms.data.json` as const;
 
-const SHARED_PREFIXES = ["rdf", "rdfs", "skos", "owl", "dcterms", "schema"] as const;
+const SHARED_PREFIXES = ["rdf", "rdfs", "skos", "owl", "dcterms", "schema", "dcat"] as const;
 
 type SharedPrefix = (typeof SHARED_PREFIXES)[number];
 
@@ -36,6 +36,7 @@ const moduleNames: Record<SharedPrefix, string> = {
   owl: "Owl",
   dcterms: "Dcterms",
   schema: "SchemaOrg",
+  dcat: "Dcat",
 };
 
 const displayNames: Record<SharedPrefix, string> = {
@@ -45,6 +46,7 @@ const displayNames: Record<SharedPrefix, string> = {
   owl: "OWL",
   dcterms: "DCMI Terms",
   schema: "Schema.org",
+  dcat: "DCAT",
 };
 
 const constantPrefixes: Record<SharedPrefix, string> = {
@@ -54,6 +56,7 @@ const constantPrefixes: Record<SharedPrefix, string> = {
   owl: "OWL",
   dcterms: "DCTERMS",
   schema: "SCHEMA_ORG",
+  dcat: "DCAT",
 };
 
 const sortedTerms = (prefix: SharedPrefix): ReadonlyArray<string> => pipe(CoreVocab[prefix].terms, A.sort(Str.Order));

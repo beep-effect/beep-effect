@@ -1,0 +1,173 @@
+import {
+  LibraryArtifact,
+  LibraryCapture,
+  LibraryCatalog,
+  LibraryDerivation,
+  LibrarySource,
+  resolveLibraryRoot,
+} from "@beep/repo-cli/commands/Research";
+import { encodeLibraryCaptureJson } from "@beep/repo-cli/test/ResearchLibrary";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
+const SUnknownJson = S.fromJsonString(S.Unknown);
+const LibraryCaptureJson = S.fromJsonString(LibraryCapture);
+const LibraryCatalogJson = S.fromJsonString(LibraryCatalog);
+
+const source = {
+  id: "source",
+  kind: "web",
+  canonicalUrl: "https://example.com",
+  identity: "example",
+  revision: "",
+  repository: "",
+  ownership: "external",
+  locators: ["https://example.com"],
+};
+const artifact = {
+  path: "objects/file",
+  sha256: Str.repeat(64)("a"),
+  bytes: 1,
+  mediaType: "text/plain",
+  role: "original",
+};
+const legacyCatalog = {
+  schema: "beep.research.library/v1",
+  documents: [],
+  sources: [source],
+  artifacts: [artifact],
+  occurrences: [],
+  captures: [],
+  qualifications: [],
+};
+
+describe("research library models", () => {
+  it.effect(
+    "schema encoder preserves legacy capture bytes and private artifact keys",
+    Effect.fnUntraced(function* () {
+      const legacy = {
+        id: "capture",
+        sourceId: "source",
+        status: "blocked",
+        method: "fixture",
+        recordedAt: "2026-10-06",
+        capturedRevision: "",
+        requestedRevision: "",
+        complete: false,
+        artifacts: [artifact],
+        reason: "fixture",
+      };
+      const original = yield* S.encodeEffect(SUnknownJson)(legacy);
+      const decoded = yield* S.decodeEffect(LibraryCaptureJson)(original);
+      const encoded = yield* encodeLibraryCaptureJson(decoded);
+      expect(encoded).toBe(original);
+      const privateText = yield* S.encodeEffect(SUnknownJson)({
+        ...legacy,
+        artifacts: [{ accessClass: "private", ...artifact }],
+      });
+      const privateCapture = yield* S.decodeEffect(LibraryCaptureJson)(privateText);
+      const privateEncoded = yield* encodeLibraryCaptureJson(privateCapture);
+      expect(privateEncoded).toBe(privateText);
+    })
+  );
+  it.effect(
+    "decodes v1 catalog JSON with public visibility and empty provenance collections",
+    Effect.fnUntraced(function* () {
+      const json = yield* S.encodeEffect(SUnknownJson)(legacyCatalog);
+      const catalog = yield* S.decodeEffect(LibraryCatalogJson)(json);
+      expect(S.is(LibraryCatalog)(catalog)).toBe(true);
+      expect(catalog.schema).toBe("beep.research.library/v1");
+      expect(S.is(LibrarySource)(catalog.sources[0])).toBe(true);
+      expect(S.is(LibraryArtifact)(catalog.artifacts[0])).toBe(true);
+      expect(catalog.sources[0]?.accessClass).toBe("public");
+      expect(catalog.artifacts[0]?.accessClass).toBe("public");
+      expect(catalog.findings).toEqual([]);
+      expect(catalog.derivations).toEqual([]);
+      expect(catalog.modelRuns).toEqual([]);
+    })
+  );
+  it.effect(
+    "decodes the v2 catalog tag",
+    Effect.fnUntraced(function* () {
+      const catalog = yield* S.decodeUnknownEffect(LibraryCatalog)({
+        ...legacyCatalog,
+        schema: "beep.research.library/v2",
+      });
+      expect(catalog.schema).toBe("beep.research.library/v2");
+    })
+  );
+  it.effect(
+    "rejects negative derivation depth",
+    Effect.fnUntraced(function* () {
+      const value = {
+        id: "edge",
+        derivedId: "derived",
+        sourceId: "source",
+        intakeId: "2026-10-06",
+        rootId: "report-1",
+        hopDepth: -1,
+        recordedAt: "2026-11-06",
+      };
+      const rejected = yield* S.decodeEffect(LibraryDerivation)(value).pipe(Effect.isFailure);
+      expect(rejected).toBe(true);
+      const valid = yield* S.decodeEffect(LibraryDerivation)({ ...value, hopDepth: 0 });
+      expect(valid.hopDepth).toBe(0);
+    })
+  );
+});
+
+const resolve = (flag: O.Option<string>, env: Readonly<Record<string, string>>) =>
+  resolveLibraryRoot(flag).pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
+
+it.layer(Path.layer)("research library root resolution", (it) => {
+  it.effect(
+    "prefers an explicit flag without requiring HOME",
+    Effect.fnUntraced(function* () {
+      const resolved = yield* resolve(O.some("/flag"), {
+        BEEP_RESEARCH_LIBRARY: "/configured",
+        XDG_DATA_HOME: "/data",
+      });
+      expect(resolved).toBe("/flag");
+    })
+  );
+  it.effect(
+    "prefers BEEP_RESEARCH_LIBRARY over XDG without requiring HOME",
+    Effect.fnUntraced(function* () {
+      const resolved = yield* resolve(O.none(), { BEEP_RESEARCH_LIBRARY: "/configured", XDG_DATA_HOME: "/data" });
+      expect(resolved).toBe("/configured");
+    })
+  );
+  it.effect(
+    "uses XDG_DATA_HOME before HOME",
+    Effect.fnUntraced(function* () {
+      const resolved = yield* resolve(O.none(), { XDG_DATA_HOME: "/data", HOME: "/user" });
+      expect(resolved).toBe("/data/beep/research-library");
+    })
+  );
+  it.effect(
+    "falls back to the user's local data directory",
+    Effect.fnUntraced(function* () {
+      const resolved = yield* resolve(O.none(), { HOME: "/user" });
+      expect(resolved).toBe("/user/.local/share/beep/research-library");
+    })
+  );
+});
+
+it.effect.prop(
+  "property: schema-generated LibraryCapture retains every field through JSON",
+  { value: Arbitrary.schema(LibraryCapture) },
+  Effect.fnUntraced(function* ({ value }) {
+    const encoded = yield* S.encodeEffect(LibraryCaptureJson)(value);
+    const decoded = yield* S.decodeEffect(LibraryCaptureJson)(encoded);
+    expect(decoded).toEqual(value);
+  }),
+  { arbitrary: fcRuns(32) }
+);

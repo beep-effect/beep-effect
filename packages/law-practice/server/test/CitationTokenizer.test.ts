@@ -1,8 +1,14 @@
+import {
+  CitationAdmissionFailure,
+  CitationAdmissionSnapshot,
+  CitationOperationAdmission,
+} from "@beep/law-practice-server/internal/Citation/Admission";
 import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationTokenizer } from "@beep/law-practice-server/internal/Citation/Tokenizer";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
@@ -15,6 +21,25 @@ import {
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned tokenizer composition", (it) => {
+  it.effect("translates a closed admission owner into a declared port refusal without native work", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const setup = yield* setupCitationMetadataRuntime("bun");
+      const closed = CitationOperationAdmission.of({
+        run: Effect.fn("TokenizerPortTest.closedAdmission")(() =>
+          Effect.fail(CitationAdmissionFailure.make({ reason: "closed" }))
+        ),
+        snapshot: Effect.succeed(CitationAdmissionSnapshot.make({ active: 0, queued: 0, closed: true })),
+      });
+      const tokenizer = yield* makeCitationTokenizer(setup.limits, setup.runtime, controls.configuration).pipe(
+        Effect.provideContext(Context.add(setup.provided, CitationOperationAdmission, closed))
+      );
+      const failure = yield* tokenizer.port.tokenize({ width: 1, bytes: new Uint8Array() }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationTokenizerFailure", reason: "stage-failed" });
+      const native = yield* setup.observed.snapshot;
+      expect(native).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("rejects extractor count ceilings and contradictory profiles before native work", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
@@ -57,7 +82,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       expect(invalidBindings).toMatchObject({ reason: "invalid-configuration" });
       const setup = yield* setupCitationTokenizer("bun", controls.configuration);
       for (const source of [{}, { width: 2, bytes: new Uint8Array([1]) }, { width: 3, bytes: new Uint8Array() }]) {
-        const failed = yield* setup.tokenizer.run(source).pipe(Effect.flip);
+        const failed = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);
         expect(failed).toMatchObject({ reason: "invalid-source" });
       }
       const observed = yield* setup.observed.snapshot;
@@ -124,7 +149,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         ]) {
           const setup = yield* setupCitationTokenizer("bun", controls.configuration, overrides);
           const source = { width: 1, bytes: new TextEncoder().encode("Id. x") };
-          const failure = yield* setup.tokenizer.run(source).pipe(Effect.flip);
+          const failure = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);
           expect(failure).toMatchObject({ limit });
           const snapshot = yield* setup.observed.snapshot;
           expect(snapshot.spawned).toBe(snapshot.confirmed);
@@ -133,8 +158,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
           yield* assertCitationTokenizerCase(setup, A.getUnsafe(controls.cases, 0));
         }
         const setup = yield* setupCitationTokenizer("bun", controls.configuration, { tokens: 1 });
-        const failure = yield* setup.tokenizer
-          .run({ width: 1, bytes: new TextEncoder().encode("a b") })
+        const failure = yield* setup.tokenizer.port
+          .tokenize({ width: 1, bytes: new TextEncoder().encode("a b") })
           .pipe(Effect.flip);
         expect(failure).toMatchObject({ limit: "tokens" });
         const snapshot = yield* setup.observed.snapshot;

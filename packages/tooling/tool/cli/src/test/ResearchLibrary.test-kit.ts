@@ -7,6 +7,7 @@
 export { acquireLibrarySource } from "../commands/Research/Library/Library.acquire.ts";
 export {
   decodeLibraryJson,
+  encodeLibraryCaptureJson,
   encodeLibraryJson,
   LibraryAdapterResult,
   runLibraryCommand,

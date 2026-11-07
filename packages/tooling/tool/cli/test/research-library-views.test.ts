@@ -1,3 +1,5 @@
+import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
+import * as Rdf from "@beep/rdf/Rdf";
 import {
   classifyLibraryReference,
   extractLibraryReferences,
@@ -14,7 +16,7 @@ import {
   LibraryProbeEvidence,
   LibraryQualification,
   LibrarySource,
-  LibraryVersion,
+  LibrarySourceVersion,
   loadCatalog,
   removedLibraryWebAdapter,
   renderLibrary,
@@ -30,6 +32,13 @@ import {
   librarySourceEvidenceValid,
   runLibraryCommand,
 } from "@beep/repo-cli/test/ResearchLibrary";
+import {
+  ShaclValidationError,
+  ShaclValidationResult,
+  ShaclValidationService,
+  ShaclValidationViolation,
+} from "@beep/semantic-web/services/shacl-validation";
+import { ShaclValidationServiceLive } from "@beep/shacl";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
@@ -38,6 +47,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -47,6 +57,9 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
+
+const decodeConsoleLines = S.decodeUnknownEffect(S.Array(S.String));
 
 const LibraryProbeEvidenceJson = S.fromJsonString(LibraryProbeEvidence);
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -57,7 +70,12 @@ const libraryArtifactEquivalent = S.toEquivalence(LibraryArtifact);
 const webSourceKinds: ReadonlyArray<LibrarySource["kind"]> = ["web", "docs", "registry", "endpoint"];
 const fixtureJson = S.Unknown.pipe(S.fromJsonString, S.encodeEffect);
 
-const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const services = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  OxigraphSparqlQueryServiceLive,
+  ShaclValidationServiceLive
+);
 const transcriptApiVariation = (scenario: string) => {
   const captionKind: Record<string, string> = { kind: "asr" };
   const base = {
@@ -356,7 +374,7 @@ const fixture = Effect.gen(function* () {
     })
   );
   const catalog = LibraryCatalog.make({
-    schema: "beep.research.library/v1",
+    schema: "beep.research.library/v2",
     documents: [document],
     sources: [source],
     occurrences: A.map(extractLibraryReferences("A report referencing https://example.com/source"), (reference) =>
@@ -397,6 +415,239 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
     Effect.gen(function* () {
       const { root } = yield* fixture;
       yield* verifyLibrary(root);
+    })
+  );
+
+  it.effect.each([true, false])(
+    "reports SHACL conforms=%s even when the integrity gate fails",
+    Effect.fnUntraced(function* (conforms) {
+      const { root, catalog } = yield* fixture;
+      yield* withCatalog(root, () => Effect.succeed(LibraryCatalog.make({ ...catalog, occurrences: [] })));
+      const validator = yield* ShaclValidationService;
+      let calls = 0;
+      const console = yield* TestConsole.make;
+      const result = yield* Effect.exit(
+        verifyLibrary(root).pipe(
+          Effect.provideService(Console.Console, console),
+          Effect.provideService(ShaclValidationService, {
+            validate: Effect.fnUntraced(function* (request) {
+              calls++;
+              expect(request.dataset.quads.length).toBeGreaterThan(0);
+              expect(request.shapes.length).toBeGreaterThan(0);
+              expect(request.shapesDataset._tag).toBe("Some");
+              const actual = yield* validator.validate(request);
+              expect(actual.conforms).toBe(true);
+              return ShaclValidationResult.make({
+                conforms,
+                violations: conforms
+                  ? []
+                  : [
+                      ShaclValidationViolation.cases.violation.make({
+                        focusNode: "urn:test:source",
+                        path: Rdf.makeNamedNode("urn:test:status"),
+                        message: "Injected constraint violation",
+                      }),
+                    ],
+                truncated: false,
+              });
+            }),
+          })
+        )
+      );
+      expect(calls).toBe(1);
+      expect(Exit.match(result, { onFailure: Cause.pretty, onSuccess: () => "" })).toContain(
+        "citation census mismatch"
+      );
+      const output = yield* TestConsole.logLines.pipe(Effect.provideService(Console.Console, console));
+      const lines = yield* decodeConsoleLines(output);
+      expect(A.join(lines, "\n")).toContain(`shacl: conforms=${conforms} violations=${conforms ? 0 : 1}`);
+      if (!conforms)
+        expect(A.join(lines, "\n")).toContain("urn:test:source urn:test:status: Injected constraint violation");
+    })
+  );
+
+  it.effect(
+    "rejects SHACL non-conformance after a successful integrity gate",
+    Effect.fnUntraced(function* () {
+      const { root } = yield* fixture;
+      const result = yield* Effect.exit(
+        verifyLibrary(root).pipe(
+          Effect.provideService(ShaclValidationService, {
+            validate: () =>
+              Effect.succeed(ShaclValidationResult.make({ conforms: false, violations: [], truncated: false })),
+          })
+        )
+      );
+      expect(Exit.match(result, { onFailure: Cause.pretty, onSuccess: () => "" })).toContain(
+        "Research library SHACL validation failed"
+      );
+    })
+  );
+
+  it.effect(
+    "wraps SHACL engine errors with library validation context",
+    Effect.fnUntraced(function* () {
+      const { root } = yield* fixture;
+      const result = yield* Effect.exit(
+        verifyLibrary(root).pipe(
+          Effect.provideService(ShaclValidationService, {
+            validate: () =>
+              Effect.fail(ShaclValidationError.make({ reason: "invalidShape", message: "Invalid fixture shape" })),
+          })
+        )
+      );
+      const message = Exit.match(result, { onFailure: Cause.pretty, onSuccess: () => "" });
+      expect(message).toContain("Cannot validate library SHACL");
+      expect(message).toContain("Invalid fixture shape");
+    })
+  );
+
+  it.effect(
+    "reports unresolved sources with no capture and unknown occurrence bindings",
+    Effect.fnUntraced(function* () {
+      const { root, catalog } = yield* fixture;
+      const source = LibrarySource.make({
+        ...A.getUnsafe(catalog.sources, 0),
+        kind: "unresolved",
+        ownership: "unresolved",
+      });
+      yield* withCatalog(root, () =>
+        Effect.succeed(
+          LibraryCatalog.make({
+            ...catalog,
+            sources: [source],
+            captures: [],
+            occurrences: [
+              ...catalog.occurrences,
+              LibraryOccurrence.make({
+                ...A.getUnsafe(catalog.occurrences, 0),
+                id: "unknown",
+                documentId: "unknown-report",
+                sourceId: "unknown-source",
+              }),
+            ],
+          })
+        )
+      );
+      const result = yield* Effect.exit(verifyLibrary(root));
+      const message = Exit.match(result, { onFailure: Cause.pretty, onSuccess: () => "" });
+      expect(message).toContain("s: unresolved source identity");
+      expect(message).toContain("s: no source capture or reviewed disposition");
+      expect(message).toContain("unknown: unknown report");
+      expect(message).toContain("unknown: unknown source");
+    })
+  );
+
+  it.effect(
+    "requires parseable intake files to match the complete report census",
+    Effect.fnUntraced(function* () {
+      const { root, catalog } = yield* fixture;
+      const document = A.getUnsafe(catalog.documents, 0);
+      const intake = LibraryIntake.make({
+        id: "census",
+        date: "2026-11-06",
+        createdAt: "2026-11-06",
+        repoCommit: "abc",
+        inputRoots: [],
+        manifestPath: "intakes/census.json",
+        files: [
+          LibraryIntakeFile.make({
+            originalPath: "unregistered.md",
+            snapshotPath: document.snapshotPath,
+            sha256: document.sha256,
+            bytes: document.bytes,
+            parseable: true,
+          }),
+        ],
+      });
+      const encoded = yield* S.encodeEffect(LibraryIntakeJson)(intake);
+      const manifest = LibraryArtifact.make({
+        ...(yield* saveImmutable(root, intake.manifestPath, new TextEncoder().encode(encoded))),
+        role: "intake-manifest",
+        mediaType: "application/json",
+      });
+      yield* withCatalog(root, () =>
+        Effect.succeed(LibraryCatalog.make({ ...catalog, intakes: [intake], artifacts: [manifest] }))
+      );
+      const result = yield* Effect.exit(verifyLibrary(root));
+      expect(Exit.match(result, { onFailure: Cause.pretty, onSuccess: () => "" })).toContain(
+        "unregistered.md: parseable intake input missing from report census"
+      );
+    })
+  );
+
+  it.effect(
+    "accepts a required probe URL bound to a source version",
+    Effect.fnUntraced(function* () {
+      const { root, catalog } = yield* fixture;
+      const source = A.getUnsafe(catalog.sources, 0);
+      const url = source.canonicalUrl;
+      const qualification = A.getUnsafe(catalog.qualifications, 0);
+      const probe = LibraryProbeEvidence.make({
+        adapter: qualification.adapter,
+        sourceId: source.id,
+        sourceUrl: url,
+        status: "verified",
+        captureId: "firecrawl",
+        complete: true,
+        artifacts: A.getUnsafe(catalog.captures, 0).artifacts,
+      });
+      const encoded = yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe);
+      const artifact = LibraryArtifact.make({
+        ...(yield* saveImmutable(root, "qualifications/version-probe.json", new TextEncoder().encode(encoded))),
+        role: "qualification-probe",
+        mediaType: "application/json",
+      });
+      yield* withCatalog(
+        root,
+        () =>
+          Effect.succeed(
+            LibraryCatalog.make({
+              ...catalog,
+              sources: [
+                LibrarySource.make({
+                  ...source,
+                  canonicalUrl: "https://example.com/latest",
+                  versions: [
+                    LibrarySourceVersion.make({
+                      revision: "abc",
+                      canonicalUrl: url,
+                      locators: source.locators,
+                    }),
+                  ],
+                }),
+              ],
+              qualifications: [
+                LibraryQualification.make({ ...qualification, evidence: [artifact] }),
+                ...A.drop(catalog.qualifications, 1),
+              ],
+            })
+          ),
+        false
+      );
+      yield* verifyLibrary(root);
+    })
+  );
+
+  it.effect(
+    "wraps report read failures after immutable byte verification",
+    Effect.fnUntraced(function* () {
+      const { root, catalog, fs, path } = yield* fixture;
+      const document = A.getUnsafe(catalog.documents, 0);
+      const result = yield* Effect.exit(
+        verifyLibrary(root).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFileString: (file, encoding) =>
+              file === path.resolve(root, document.snapshotPath)
+                ? fs.readFileString(path.join(root, "missing-report"))
+                : fs.readFileString(file, encoding),
+          })
+        )
+      );
+      expect(Exit.match(result, { onFailure: Cause.pretty, onSuccess: () => "" })).toContain(
+        "Cannot read verified report"
+      );
     })
   );
 
@@ -497,7 +748,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const source = LibrarySource.make({
         ...A.getUnsafe(catalog.sources, 0),
         versions: [
-          LibraryVersion.make({
+          LibrarySourceVersion.make({
             revision: "v2",
             canonicalUrl: "https://example.com/source?v2",
             locators: ["https://example.com/source"],
@@ -611,12 +862,12 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         const source = LibrarySource.make({
           ...A.getUnsafe(catalog.sources, 0),
           versions: [
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "abc",
               canonicalUrl: A.getUnsafe(catalog.sources, 0).canonicalUrl,
               locators: A.getUnsafe(catalog.sources, 0).locators,
             }),
-            LibraryVersion.make({
+            LibrarySourceVersion.make({
               revision: "other",
               canonicalUrl: A.getUnsafe(catalog.sources, 0).canonicalUrl,
               locators: A.getUnsafe(catalog.sources, 0).locators,
@@ -823,12 +1074,12 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const source = LibrarySource.make({
         ...A.getUnsafe(catalog.sources, 0),
         versions: [
-          LibraryVersion.make({
+          LibrarySourceVersion.make({
             revision: "abc",
             canonicalUrl: "https://example.com/source",
             locators: ["https://example.com/source"],
           }),
-          LibraryVersion.make({
+          LibrarySourceVersion.make({
             revision: "v2",
             canonicalUrl: "https://example.com/source?v2",
             locators: ["https://example.com/source?v2"],
@@ -969,7 +1220,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         canonicalUrl: `https://arxiv.org/abs/2609.12345${requested}`,
         revision: requested,
         versions: [
-          LibraryVersion.make({
+          LibrarySourceVersion.make({
             revision: requested,
             canonicalUrl: `https://arxiv.org/abs/2609.12345${requested}`,
             locators: A.getUnsafe(catalog.sources, 0).locators,
@@ -1671,7 +1922,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       yield* withCatalog(root, () =>
         Effect.succeed(
           LibraryCatalog.make({
-            schema: "beep.research.library/v1",
+            schema: "beep.research.library/v2",
             documents: [],
             sources: [source],
             occurrences: [],
@@ -1947,7 +2198,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         evidence: [probe],
       });
       const catalog = LibraryCatalog.make({
-        schema: "beep.research.library/v1",
+        schema: "beep.research.library/v2",
         documents: [],
         sources: [source],
         occurrences: [],

@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "harvested-alpha-triage",
+    "packetId": "goal-packet/v1:80776222992fb5ab2b4290fb17c6449844700a184e859678cfd590b5324e024e",
+    "title": "Harvested Alpha Triage",
+    "status": "active",
+    "created": "2026-11-06",
+    "updated": "2026-11-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/harvested-alpha-triage",
+  "lifecycle": "active",
+  "mission": "Judge the harvest ledger with three separate provider sessions (Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium) into row-keyed verdict JSONL, merge deterministically, and seed `explorations/harvested-alpha-2026-11` at stage `shape` so its MAP graduates the still-open alpha into concrete goals.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/packet-archive-and-alpha-harvest",
+    "graduated": "2026-11-06"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "explorations/packet-archive-and-alpha-harvest/DECISIONS.md",
+    "goals/harvested-alpha-triage/README.md",
+    "goals/harvested-alpha-triage/SPEC.md",
+    "goals/harvested-alpha-triage/PLAN.md",
+    "goals/harvested-alpha-triage/GOAL.md",
+    "goals/harvested-alpha-triage/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/harvested-alpha-triage/GOAL.md"
+    }
+  ],
+  "provides": ["goals/alpha-verdicts"],
+  "requires": ["goals/harvest"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Schema",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Panel",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Merge and seed",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/harvested-alpha-triage/GOAL.md)\" -le 4000",
+    "jq . goals/harvested-alpha-triage/ops/manifest.json",
+    "rg -n \"harvested-alpha-triage|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harvested-alpha-triage",
+    "git diff --check -- goals/harvested-alpha-triage",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep explore atlas --write"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

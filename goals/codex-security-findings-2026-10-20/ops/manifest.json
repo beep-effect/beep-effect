@@ -64,35 +64,7 @@
     "goals/codex-security-findings-2026-10-20/GOAL.md",
     "goals/codex-security-findings-2026-10-20/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/2026-10-28-cloud-refresh.md",
-    "research/2026-10-31-revalidation.md",
-    "research/DEPENDABOT.md",
-    "research/OPPORTUNITIES.md",
-    "research/PENDING-PROOF.md",
-    "research/SOURCES.md",
-    "research/WORKING-STATE.md",
-    "research/cheap-gate-triage.md",
-    "research/claim-budget-review-proof.md",
-    "research/claim-index-review-proof.md",
-    "research/cli-package-proof.md",
-    "research/cloud-proof.md",
-    "research/dependabot-fixtures-proof.md",
-    "research/dependabot-fixtures.md",
-    "research/dependabot-python.md",
-    "research/dependabot-rust.md",
-    "research/docx-review-proof.md",
-    "research/hosted-check-test-repair.md",
-    "research/hosted-ci.md",
-    "research/hub-native-crypto-proof.md",
-    "research/independent-security-review.md",
-    "research/labs-timeout-attribution.md",
-    "research/law-practice-coverage-proof.md",
-    "research/packet-state-reconciliation.md",
-    "research/pdf-container-consumer-proof.md",
-    "research/pdf-review-proof.md",
-    "research/round1-docs-proof.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -219,5 +191,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2488
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/codex-security-findings-2026-10-20",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "35f7c0c33f33da08de8e1a739c9a78ab8187f6ba",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
   }
 }

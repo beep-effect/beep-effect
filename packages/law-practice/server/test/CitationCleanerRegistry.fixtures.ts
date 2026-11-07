@@ -3,34 +3,37 @@ import {
   CitationBuiltinCleaners,
   makeCitationBuiltinCleaners,
 } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
-import {
-  CitationCleanerFailure,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationCleanerProtocols,
   makeCitationCleanerRegistry,
 } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
 import {
-  CitationBuiltinCleanerName,
   CitationCleanerValues,
   makeCitationCleanerValues,
 } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
+import {
+  CitationBuiltinCleanerName,
+  CitationCleaner,
+  CitationCleanerFailure,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
+import type { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type {
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationCleanerWork,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 
 type BuiltinObservation = (
   name: CitationBuiltinCleanerName,
@@ -47,7 +50,8 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"] = ChildProcessSpawner.make(() =>
     Effect.die("Registry unit tests must not start native workers")
   ),
-  observe: BuiltinObservation = (_name, _value, body) => body
+  observe: BuiltinObservation = (_name, _value, body) => body,
+  htmlRuntime?: CitationNativeProcessRuntime
 ) {
   const base = (yield* defaultCitationEnginePolicy).limits;
   const limits = {
@@ -56,8 +60,10 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     resolutionIterations: O.getOrElse(O.fromUndefinedOr(iterations), () => base.resolutionIterations),
   };
   const values = yield* makeCitationCleanerValues(limits);
-  const htmlRuntime = yield* citationHtmlWorkerTestRuntime();
-  const builtin = yield* makeCitationBuiltinCleaners(limits, htmlRuntime).pipe(
+  const selectedRuntime = htmlRuntime === undefined ? yield* citationHtmlWorkerTestRuntime() : htmlRuntime;
+  const paths = yield* Layer.build(Path.layer);
+  const builtin = yield* makeCitationBuiltinCleaners(limits, selectedRuntime).pipe(
+    Effect.provideContext(paths),
     Effect.provideService(CitationCleanerValues, values),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
   );
@@ -119,10 +125,12 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     Effect.provideService(CitationCleanerProtocols, protocols)
   );
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-    Effect.provideService(CitationCleanerRuntime, registry.runtime)
+    Effect.provideService(CitationCleaner, registry.runtime)
   );
   return {
     values,
+    protocols,
+    builtins: builtin,
     registry,
     pipeline,
     hashes: yield* makeCitationPythonHash(limits),

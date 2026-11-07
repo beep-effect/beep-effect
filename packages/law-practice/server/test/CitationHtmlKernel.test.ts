@@ -1,9 +1,7 @@
 import * as NodeURL from "node:url";
 import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
-import {
-  makeCitationClosedHtmlWasi,
-  makeCitationHtmlKernel,
-} from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import { makeCitationHtmlKernel } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
+import { makeCitationClosedNativeWasi } from "@beep/law-practice-server/internal/Citation/NativeWasm";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -53,7 +51,7 @@ const loadAsset = Effect.fn("HtmlKernelTest.loadAsset")(function* () {
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel", (it) => {
   it.effect("denies every descriptor/path call and supplies only empty environment and fixed time", () =>
     Effect.gen(function* () {
-      const host = yield* makeCitationClosedHtmlWasi();
+      const host = yield* makeCitationClosedNativeWasi();
       expect(R.keys(host.imports)).toEqual([
         "environ_get",
         "environ_sizes_get",
@@ -101,9 +99,23 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
       expect(A.fromIterable(bytes)).toEqual([...A.replicate(0, 16), ...A.replicate(7, 16)]);
     })
   );
-  it.effect(
-    "matches full source cleaner outcomes with the approved resource exception",
-    () =>
+  // Keep every pinned corpus row, but give bounded batches independent watchdogs
+  // and failure identities instead of making all 1,097 rows one timed test.
+  it.effect.each([
+    { offset: 0, expected: [91, 1, 5, 3] },
+    { offset: 100, expected: [99, 0, 1, 0] },
+    { offset: 200, expected: [97, 0, 3, 0] },
+    { offset: 300, expected: [94, 6, 0, 0] },
+    { offset: 400, expected: [64, 36, 0, 0] },
+    { offset: 500, expected: [62, 38, 0, 0] },
+    { offset: 600, expected: [60, 40, 0, 0] },
+    { offset: 700, expected: [61, 39, 0, 0] },
+    { offset: 800, expected: [64, 36, 0, 0] },
+    { offset: 900, expected: [62, 37, 1, 0] },
+    { offset: 1000, expected: [86, 5, 6, 0] },
+  ])(
+    "matches source cleaner outcomes for corpus batch starting at $offset",
+    ({ offset, expected }) =>
       Effect.gen(function* () {
         const citationResult2 = yield* FileSystem.FileSystem;
         const raw = yield* citationResult2.readFileString(
@@ -124,8 +136,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
         let declarations = 0;
         let parseErrors = 0;
         let resourceErrors = 0;
+        const cases = A.take(A.drop(corpus.cases, offset), 100);
+        expect(cases).toHaveLength(offset === 1000 ? 97 : 100);
         yield* Effect.forEach(
-          corpus.cases,
+          cases,
           Effect.fnUntraced(function* (row) {
             const text = yield* Effect.fromOption(HashMap.get(texts, row.text));
             if (row.outcome.kind === "error" && row.outcome.type === "builtins.ValueError") {
@@ -163,7 +177,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
           }),
           { concurrency: 1, discard: true }
         );
-        expect([successes, declarations, parseErrors, resourceErrors]).toEqual([840, 238, 16, 3]);
+        expect([successes, declarations, parseErrors, resourceErrors]).toEqual(expected);
       }),
     { timeout: 30_000 }
   );

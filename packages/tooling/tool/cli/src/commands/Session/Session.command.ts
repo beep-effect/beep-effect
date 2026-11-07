@@ -21,10 +21,12 @@ import { readGoalCloseoutViews } from "../Goals/Completion.ts";
 import { renderGoalCloseoutView } from "../Goals/Goals.schemas.ts";
 import { HOT_PARCELS_TIMEOUT, printHotParcels } from "../Palantiri/Palantiri.hot.ts";
 import { layerPalantiriRuntime } from "../Palantiri/Palantiri.runtime.ts";
-import { layerPalantiriSourcesLive } from "../Palantiri/Palantiri.service.ts";
+import { layerPalantiriSourcesHot } from "../Palantiri/Palantiri.service.ts";
 import { PrNumber } from "../Yeet/internal/Provenance.ts";
 import { sessionContinuityCommand } from "./Continuity.command.ts";
+import { sessionHandoffCommand } from "./Handoff.command.ts";
 import { sessionRegisterCommand } from "./Register.command.ts";
+import { sessionRulingCommand } from "./Rulings.command.ts";
 import { reportSessionFailure, SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
 import {
   openSessionRows,
@@ -253,7 +255,7 @@ export const sessionOpenCommand = Command.make(
     // own memory reader and HTTP client, so `session open` needs nothing more
     // than the ledger does.
     if (!json) {
-      yield* layerPalantiriSourcesLive.pipe(
+      yield* layerPalantiriSourcesHot.pipe(
         Layer.provide(Layer.mergeAll(MemoryStatsLive, FetchHttpClient.layer)),
         layerPalantiriRuntime(Layer.empty),
         printHotParcels(HOT_PARCELS_TIMEOUT)
@@ -287,12 +289,21 @@ export const sessionCommand = Command.make("session", {}, () =>
         '- bun run beep session note --state <open|blocked|done> --next "<one line>" [--summary "<one line>"] [--pr <n>] [--role orchestrator|member]',
         "- bun run beep session open [--json]",
         "- bun run beep session continuity --input <manifest.json>",
-        "- bun run beep session register add|list",
+        "- bun run beep session register add|list|convert",
+        "- bun run beep session ruling add|list",
+        "- bun run beep session handoff [--file <path>] [--gate-snapshot <file>] [--write]",
       ],
       "\n"
     )
   )
 ).pipe(
   Command.withDescription("Record and read where harness sessions stopped across every clone on this machine"),
-  Command.withSubcommands([sessionNoteCommand, sessionOpenCommand, sessionRegisterCommand, sessionContinuityCommand])
+  Command.withSubcommands([
+    sessionNoteCommand,
+    sessionOpenCommand,
+    sessionRegisterCommand,
+    sessionRulingCommand,
+    sessionHandoffCommand,
+    sessionContinuityCommand,
+  ])
 );

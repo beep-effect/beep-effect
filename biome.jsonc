@@ -33,7 +33,6 @@
       // vendored target is missing here. `skills-lock.json` is written only by
       // `beep skills`, whose rendering is the canonical byte form.
       "!.claude/skills/grill-me",
-      "!.claude/skills/oracle",
       "!.claude/skills/portless",
       "!.claude/skills/shadcn",
       "!.claude/skills/teach",
@@ -69,9 +68,17 @@
       // Only the CI knowledge mint writes the sealed baseline bytes.
       "!goals/knowledge-doctor.baseline.jsonc",
       "!**/fixtures/f1/documents",
+      // Retained archive inputs and generator-owned KPI bytes keep their original
+      // serialization; consumer regression/digest checks own these exact files.
+      "!packages/law-practice/server/test/fixtures/claim-element/positive-sampling.json",
+      "!packages/law-practice/server/test/fixtures/claim-element/allowed-sampling.json",
+      "!packages/law-practice/server/test/fixtures/claim-element/reference-freeze.json",
+      "!apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json",
       // Canonical Python payload bytes are hash-bound and deliberately retain
       // upstream text. ops/check-operations.ts validates this generated corpus.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
+      // Sealed generated diff corpus; dedicated schema/hash verification owns its bytes.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json",
       // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
       // Complete byte-source outcomes sealed by ops/verify-html-bytes.py.

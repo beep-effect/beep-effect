@@ -148,11 +148,27 @@ const usageAttributes = (span: NativeTraceMetadata) => {
     ...O.toArray(O.map(u.cacheWrite, (value) => integer("llm.token_count.prompt_details.cache_write", value))),
   ];
 };
+const streamName = (span: NativeTraceMetadata) => {
+  if (O.isSome(span.managedController)) return "managed-controller";
+  if (O.isSome(span.nativeLifecycle)) return "native-lifecycle";
+  return "native";
+};
+const timeBasis = (span: NativeTraceMetadata) => {
+  if (O.isSome(span.managedController)) return "controller-canary-interval";
+  if (O.isSome(span.startTimeUnixNano) || O.isSome(span.endTimeUnixNano)) return "source_event";
+  return "intake_observation";
+};
+const spanName = (span: NativeTraceMetadata) => {
+  if (O.isSome(span.fixtureSurface)) return `fixture.${span.fixtureSurface.value}.${Str.toLowerCase(span.kind)}`;
+  if (O.isSome(span.managedController)) return "managed.controller.canary";
+  if (O.isSome(span.nativeLifecycle)) return `cursor.${span.nativeLifecycle.value.kind}`;
+  return `agent.${Str.toLowerCase(span.kind)}`;
+};
 const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) => [
   text("openinference.span.kind", span.kind),
   text("ai_metrics.event_id", span.eventId),
   text("ai_metrics.route_id", span.routeId),
-  text("ai_metrics.stream", O.isSome(span.managedController) ? "managed-controller" : "native"),
+  text("ai_metrics.stream", streamName(span)),
   ...A.flatMap(O.toArray(span.managedController), (controller) => [
     text("ai_metrics.producer_origin", "managed-controller"),
     text("ai_metrics.launch_id", controller.launchId),
@@ -160,6 +176,23 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
     text("ai_metrics.process_instance_id", controller.processInstanceId),
     text("ai_metrics.evidence_id", controller.evidenceId),
     text("ai_metrics.controller_elapsed_nanos", controller.elapsedNanos),
+  ]),
+  ...A.flatMap(O.toArray(span.nativeLifecycle), (event) => [
+    text("ai_metrics.harness", "cursor"),
+    text("ai_metrics.lifecycle.kind", event.kind),
+    text("ai_metrics.lifecycle.assurance", event.assurance),
+    text("ai_metrics.lifecycle.source_timestamp", event.sourceTimestamp),
+    text("ai_metrics.lifecycle.runtime_instance_id", event.runtimeInstanceId),
+    text("ai_metrics.lifecycle.root_id", event.rootId),
+    text("ai_metrics.lifecycle.host_id", event.hostId),
+    ...O.toArray(O.map(event.generationHash, (value) => text("ai_metrics.lifecycle.generation_id", value))),
+    ...O.toArray(
+      O.map(event.reportedDurationMillis, (value) => integer("ai_metrics.lifecycle.native_reported_duration_ms", value))
+    ),
+    ...O.toArray(O.map(event.reportedReason, (value) => text("ai_metrics.lifecycle.native_reported_reason", value))),
+    ...O.toArray(O.map(event.reportedStatus, (value) => text("ai_metrics.lifecycle.native_reported_status", value))),
+    ...O.toArray(O.map(event.reportedModelId, (value) => text("ai_metrics.lifecycle.native_reported_model", value))),
+    ...O.toArray(O.map(event.reportedEffort, (value) => text("ai_metrics.lifecycle.native_reported_effort", value))),
   ]),
   ...O.toArray(O.map(span.fixtureSurface, (surface) => text("ai_metrics.fixture.surface", surface))),
   ...(O.isSome(span.fixtureSurface)
@@ -173,14 +206,7 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
       ]
     : []),
   flag("ai_metrics.duration_known", span.durationKnown),
-  text(
-    "ai_metrics.time_basis",
-    O.isSome(span.managedController)
-      ? "controller-canary-interval"
-      : O.isSome(span.startTimeUnixNano) || O.isSome(span.endTimeUnixNano)
-        ? "source_event"
-        : "intake_observation"
-  ),
+  text("ai_metrics.time_basis", timeBasis(span)),
   ...O.toArray(O.map(span.startTimeUnixNano, (value) => text("ai_metrics.source_start_time_unix_nano", value))),
   ...O.toArray(O.map(span.endTimeUnixNano, (value) => text("ai_metrics.source_end_time_unix_nano", value))),
   ...O.toArray(O.map(span.nameHash, (value) => text("ai_metrics.source_name_hash", value))),
@@ -225,11 +251,7 @@ export const encodeNativeTraceBatch = Effect.fn("AiMetrics.encodeNativeTraceBatc
         parentSpanId: O.isSome(span.parentSpanId)
           ? yield* Effect.fromResult(Hex.decode(span.parentSpanId.value))
           : undefined,
-        name: O.isSome(span.fixtureSurface)
-          ? `fixture.${span.fixtureSurface.value}.${Str.toLowerCase(span.kind)}`
-          : O.isSome(span.managedController)
-            ? "managed.controller.canary"
-            : `agent.${Str.toLowerCase(span.kind)}`,
+        name: spanName(span),
         kind: 1,
         startTimeUnixNano: point,
         endTimeUnixNano: span.durationKnown ? O.getOrElse(span.endTimeUnixNano, () => point) : point,

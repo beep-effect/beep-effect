@@ -6,9 +6,8 @@
  *
  * The session ledger answers "where did each checkout stop"; it is keyed by
  * checkout and only knows harness sessions. The orchestrator also coordinates
- * things that are not checkouts: in-process subagents, Codex lanes reachable
- * only through PR comments, detached jobs, user-level systemd units, and
- * people. The register is the one list of all of them, keyed by kind and
+ * things that are not checkouts: in-process subagents, Codex lanes, detached
+ * jobs, user-level systemd units, T3 scheduled tasks, and people. The register is the one list of all of them, keyed by kind and
  * address, with the plan a successor follows when a unit cannot be reached.
  *
  * @packageDocumentation
@@ -21,6 +20,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
@@ -34,16 +34,19 @@ const $I = $RepoCliId.create("commands/Session/Register.schemas");
  *
  * **Details**
  *
- * - `desktop-session`: a Claude desktop or Codex session; survives a hand-off
- *   and is reached by session id.
- * - `in-process-agent`: an Agent-tool subagent of the orchestrator; dies with
- *   it and must be converted to a brief plus a session or task chip before
- *   hand-off.
- * - `codex-lane`: a Codex checkout with no session; reached only through PR
- *   comments starting `orchestrator:`.
+ * - `desktop-session`: a Claude, Codex or other harness session; survives a
+ *   hand-off and is reached by its T3 thread link when T3 launched it.
+ * - `in-process-agent`: a native subagent of the orchestrator; dies with it
+ *   and must be converted (`session register convert`) to a brief plus a T3
+ *   thread, job, unit or scheduled task before hand-off.
+ * - `codex-lane`: a Codex checkout; reached by its T3 thread link when T3
+ *   launched it, otherwise not messageable and read through its PR, brief or
+ *   job receipt (PR comments are not a messaging route, 2026-11-02).
  * - `background-job`: a yeet proof job, monitor, or watcher; reached by job id.
  * - `systemd-unit`: a `systemd --user` unit; reached by unit name and survives
  *   any session.
+ * - `scheduled-task`: a T3 `schedule_task` bound to the orchestrator's thread;
+ *   reached by task id, and re-created on the successor's thread at take-over.
  * - `external-person`: the operator or the attorney; reached through the
  *   fleet desk, never chat.
  *
@@ -64,6 +67,7 @@ export const RegisterUnitKind = LiteralKit([
   "codex-lane",
   "background-job",
   "systemd-unit",
+  "scheduled-task",
   "external-person",
 ]).pipe($I.annoteSchema("RegisterUnitKind", { description: "Kind of unit the orchestrator coordinates." }));
 
@@ -138,7 +142,7 @@ export type RegisterUnitState = typeof RegisterUnitState.Type;
  *   state: "active",
  *   waitingOnOrchestrator: O.none(),
  *   lastContact: O.some(DateTime.makeUnsafe(0)),
- *   orphanPlan: "post 'orchestrator: ...' on the PR; after 2h silence take the PR over in its checkout",
+ *   orphanPlan: "read the PR and its job receipt; take over only after an explicit release",
  *   note: O.none(),
  *   recordedBy: O.none(),
  *   recordedAt: DateTime.makeUnsafe(0),
@@ -523,3 +527,206 @@ export const currentRegisterRow: {
     (row) => row.kind === unit.kind && row.address === unit.address
   )
 );
+
+/**
+ * Why `session register convert` refused: the source unit is not registered
+ * or already retired, the target would still die with the session, the
+ * target is the source, or the target already has a live row.
+ *
+ * **Example** (Narrow a refusal)
+ *
+ * ```ts
+ * import { RegisterConvertRefusal } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(RegisterConvertRefusal.is["target-in-process"]("target-in-process")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RegisterConvertRefusal = LiteralKit([
+  "not-registered",
+  "already-retired",
+  "target-in-process",
+  "same-unit",
+  "target-registered",
+]).pipe($I.annoteSchema("RegisterConvertRefusal", { description: "Why a register conversion was refused." }));
+
+/**
+ * Why a register conversion was refused.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RegisterConvertRefusal = typeof RegisterConvertRefusal.Type;
+
+/**
+ * The question `convertRegisterRow` answers: the source unit's current row,
+ * the target's current row, where the unit moves, the brief written for it,
+ * and the time now.
+ *
+ * **Example** (Describe a conversion)
+ *
+ * ```ts
+ * import { RegisterConvertInput } from "@beep/repo-cli/test/Session"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ *
+ * const input = RegisterConvertInput.make({
+ *   source: O.none(),
+ *   target: O.none(),
+ *   toKind: "background-job",
+ *   toAddress: "yeet job 94d95b04",
+ *   brief: O.none(),
+ *   now: DateTime.makeUnsafe(0),
+ * })
+ * console.log(input.toKind) // "background-job"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegisterConvertInput extends S.Opaque<RegisterConvertInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    source: S.Option(RegisterRow),
+    target: S.Option(RegisterRow),
+    toKind: RegisterUnitKind,
+    toAddress: S.NonEmptyString,
+    brief: S.Option(S.NonEmptyString),
+    now: S.DateTimeUtcFromString,
+  }).pipe(
+    $I.annoteSchema("RegisterConvertInput", {
+      description: "A register conversion: the unit's rows, where it moves, its brief, and the time now.",
+    })
+  )
+) {}
+
+/**
+ * The two appends one conversion makes: the source unit retired with a
+ * pointer to where it went, and the target registered with everything the
+ * source carried.
+ *
+ * **Example** (Read a conversion)
+ *
+ * ```ts
+ * import { RegisterConversion } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(typeof RegisterConversion.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegisterConversion extends S.Opaque<RegisterConversion, { readonly brand: unique symbol }>()(
+  S.Struct({ retire: RegisterNoteInput, successor: RegisterNoteInput }).pipe(
+    $I.annoteSchema("RegisterConversion", {
+      description: "The retire row for the source unit and the first row for the unit it became.",
+    })
+  )
+) {}
+
+const describeUnit = (unit: RegisterUnitRef): string => `${unit.kind} ${unit.address}`;
+
+const refuseWhen = (
+  condition: boolean,
+  refusal: RegisterConvertRefusal
+): Result.Result<void, RegisterConvertRefusal> => (condition ? Result.fail(refusal) : Result.void);
+
+/**
+ * Move a unit to a new kind and address in one step, so an in-process agent
+ * converted at hand-off keeps its owns, its pending ask and its orphan plan.
+ *
+ * **Details**
+ *
+ * The source row is retired with a note naming the target; the target row
+ * starts `active` with the source's name, owns, waiting ask and orphan plan,
+ * `now` as its last contact, and a note naming the source and the brief.
+ * Refused when the source has no row or is already retired, when the target
+ * kind is `in-process-agent` (that would still die with the session), when
+ * source and target are the same unit, or when the target already has a live
+ * row (a conversion never overwrites another unit).
+ *
+ * **Example** (An unregistered source is refused)
+ *
+ * ```ts
+ * import { convertRegisterRow, RegisterConvertInput } from "@beep/repo-cli/test/Session"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ * import * as Result from "effect/Result"
+ *
+ * const result = convertRegisterRow(
+ *   RegisterConvertInput.make({
+ *     source: O.none(),
+ *     target: O.none(),
+ *     toKind: "background-job",
+ *     toAddress: "yeet job 94d95b04",
+ *     brief: O.none(),
+ *     now: DateTime.makeUnsafe(0),
+ *   })
+ * )
+ * console.log(Result.isFailure(result) ? result.failure : "converted") // "not-registered"
+ * ```
+ *
+ * @param input - The unit's current rows, its target, its brief and the time now.
+ * @returns The two appends, or why the conversion was refused.
+ * @category models
+ * @since 0.0.0
+ */
+export const convertRegisterRow = (
+  input: RegisterConvertInput
+): Result.Result<RegisterConversion, RegisterConvertRefusal> =>
+  Result.fromOption(input.source, () => RegisterConvertRefusal.Enum["not-registered"]).pipe(
+    Result.flatMap((source) => {
+      const target: RegisterUnitRef = { kind: input.toKind, address: input.toAddress };
+      return Result.all([
+        refuseWhen(RegisterUnitState.is.retired(source.state), RegisterConvertRefusal.Enum["already-retired"]),
+        refuseWhen(
+          RegisterUnitKind.is["in-process-agent"](input.toKind),
+          RegisterConvertRefusal.Enum["target-in-process"]
+        ),
+        refuseWhen(
+          source.kind === target.kind && source.address === target.address,
+          RegisterConvertRefusal.Enum["same-unit"]
+        ),
+        refuseWhen(
+          O.exists(input.target, (row) => !RegisterUnitState.is.retired(row.state)),
+          RegisterConvertRefusal.Enum["target-registered"]
+        ),
+      ]).pipe(
+        Result.map(() =>
+          RegisterConversion.make({
+            retire: RegisterNoteInput.make({
+              kind: source.kind,
+              address: source.address,
+              name: source.name,
+              owns: source.owns,
+              state: RegisterUnitState.Enum.retired,
+              waitingOnOrchestrator: source.waitingOnOrchestrator,
+              lastContact: source.lastContact,
+              orphanPlan: source.orphanPlan,
+              note: O.some(`converted to ${describeUnit(target)}`),
+            }),
+            successor: RegisterNoteInput.make({
+              kind: target.kind,
+              address: target.address,
+              name: source.name,
+              owns: source.owns,
+              state: RegisterUnitState.Enum.active,
+              waitingOnOrchestrator: source.waitingOnOrchestrator,
+              lastContact: O.some(input.now),
+              orphanPlan: source.orphanPlan,
+              note: O.some(
+                A.join(
+                  [
+                    `converted from ${describeUnit(source)}`,
+                    ...O.match(input.brief, { onNone: A.empty<string>, onSome: (brief) => [`brief ${brief}`] }),
+                  ],
+                  "; "
+                )
+              ),
+            }),
+          })
+        )
+      );
+    })
+  );

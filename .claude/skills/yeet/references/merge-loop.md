@@ -99,7 +99,9 @@ planned: a push after the flip restarts the review window. Squash-message advice
 A head F with no receipt of its own may carry the receipt of an ancestor R
 (operator ruling 2026-10-28, `internal/FinalCheckRefresh.ts`), so taking a main
 merge after final-check does not force a second ~45 minute run. `yeet ready`
-applies the rule only when F has no receipt at all; a failing, partial or
+validates proof even when the PR is already ready, without repeating the flip
+or review-trigger push. Use it after a clean main merge before starting another
+full final-check. It applies the rule only when F has no receipt at all; a failing, partial or
 undecodable receipt file on F always refuses. It picks the nearest strict
 ancestor with a receipt file, by name before decoding, and refuses if that
 receipt does not decode, failed or was partial. For

@@ -1094,6 +1094,84 @@ links together to reverse this component; runtime configuration is unchanged.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug turborepo-quality-cache-adoption`; add a `kind: decision` file there, never edit this block._
 
+### Bind complete tracked source inventory before discovery qualification, 2026-11-06
+
+Extend the existing bounded tracked-discovery capture with the canonical Git ls-files stage command. Include the complete NUL-framed path, mode, object and merge-stage listing under the existing runtime digest, with a ten-second and 16777216-character cap. Keep scrubbed execution and sanitized failures. This is deliberately conservative: staged object changes also invalidate the shared runtime key. Working-tree contents, law scope, baseline and implementation still require native inputs; a snapshot does not freeze concurrent index edits. Historical schemas default the new optional digest to None, while current collection observes Some. Author cross-root, mode, content and failure controls for hosted CI. No local suites ran, no qualification is granted and both affected tasks remain cache false.
+
+Reverse: Remove the optional source-index digest and native env declaration while keeping affected tasks fresh and preserving failure evidence.
+
+### Bind tracked test paths through the existing runtime identity, 2026-11-06
+
+Prepare an optional tracked-test membership digest in the existing observed toolchain snapshot. Use bounded scrubbed Git discovery of the scanner pathspecs, NUL framing and digest-only retention. Reject incomplete captures and sanitize operational errors without their path-bearing tails. Declare the existing calculated runtime digest for this root command; keep caching off until full qualification. Shared identity conservatively invalidates other governed computations on tracking changes. Authored hosted controls are unrun locally; no activation or promotion is granted. Existing snapshot absence remains historical, not qualification for this newly reviewed input.
+
+Reverse: Remove the optional collector and native input declaration while preserving the fresh cache hold, historical evidence and qualification requirement.
+
+### Exclude external reference links from identity lint metadata inputs, 2026-11-06
+
+At source 68d37217c6ab10f6b1ca70316ab6544c87d23c38, real-root stable build/check/lint dry runs succeed, while pinned canary lint refuses an external .repos manifest link before strict entrypoint selection is enabled. Only identity lint contributes the observed broad manifest input. Its generated package command is biome check . and the reference tree contains no tracked files.
+
+Add only !$TURBO_ROOT$/.repos/** to identity lint inputs. Keep cache:false, all other inputs/exclusions, dependency graph and profile routing. The same canary dry run now succeeds. Stable retains every observed lint task ID and input path; only the edited identity turbo.json input content hash changes. Record the original refusal, exact client/source/config hashes and all actual metadata in research/real-root-entrypoint-and-reference-inputs-2026-11-06.json.
+
+Twelve candidate-bound root dry runs compare build/check/lint across both pinned clients with strict entrypoint selection absent/true. Both clients remove two build commands from check, so leave that flag absent until execution/caller/value proof is complete. This source repair requires hosted acceptance and a newly bound identity input profile before protected trials. No quality task, feature activation, qualification, credential or production setting changed. No manual local verify, publish, check, tests, docgen or package-quality suite.
+
+Lane `codex/cache-strict-entrypoint-review-20261106`
+
+Reverse: Remove the one .repos input exclusion while retaining the source-bound original refusal and candidate metadata observations.
+
+### Keep entity-kit discovery fresh pending complete index-state qualification, 2026-11-06
+
+The new check selects Git-tracked regular source files, but the native content key excludes Git metadata. Four additional isolated metadata plans keep the hash unchanged across changed source membership. Keep this check fresh until complete path/mode/scope/baseline/content discovery identity is qualified. The existing test-only collector is insufficient for general source and regular-mode discovery; do not promote this check through it. No law body was run and no final exclusion, baseline change or qualification is granted.
+
+Reverse: Restore caching only after path, regular-mode, scope, baseline and content discovery semantics are bound and qualified; retain the isolated metadata evidence.
+
+### Keep tracked-test discovery fresh until membership is bound, 2026-11-06
+
+The scanner selects tracked tests through git ls-files. Four native metadata fixture observations show that index membership can change while task inputs and hash stay equal in both pinned clients. Keep only this command fresh until portable discovery identity and membership perturbation controls are qualified. Preserve scanner behavior, dependency edges and every whole-goal obligation; this temporary hold is unfinished adoption work, not a final exclusion. No local task or quality suite ran; hosted CI and primary acceptance remain required.
+
+Reverse: Restore reuse only after portable discovery-state identity and membership controls are implemented and qualified; retain the failed-key evidence.
+
+### Prepare an unpublished local types pilot behind the recipe parent, 2026-11-06
+
+Prepare the next implementation while three owned PRs remain open. The publication cap does not forbid an unpublished dependent worktree: start from parent #2813 head 563b0b210647b6909ea9f3de8638a28c5513bf86, then replay only this unpublished work onto accepted main after the parent lands, before opening another PR. Select the reviewed recipe from the verified activation preview. Types lint has no dependency tasks, uses local-only observations, rejects identity scanner routing and signed execution, and does not fabricate a dependency-source control. Unknown computations fail before task execution. Existing input, native plan, runtime key, capture and integrity checks remain required; failed candidate comparisons remain failed observations. Nine process-boundary cases are authored but unrun locally: five named cases and four fault-refusal cases. No local verify, publish, tests, check, docgen, package verification or manual source generator is run, per operator instruction; ordinary hooks are allowed. Syntax parsing alone is not type or runtime proof. Types caching remains disabled, and no qualification, signing, credential or production grant changes. Types input-profile review and admitted native comparisons remain necessary before any adoption.
+
+Lane `codex/cache-types-pilot-20261106`
+
+Reverse: Revert local types observation support; identity remains the only execution recipe. No deployment or qualification state changes.
+
+### Bind pilot selection and mounts to one reviewed recipe, 2026-11-06
+
+Centralize the existing identity pilot computation, package filter, selected package path, and fresh dependency paths in one internal schema-backed recipe. Route activation, closure validation, native summary selection, filters, sandbox mounts, and mutation paths through that recipe. Identity remains the sole admitted recipe. This is the first implementation step toward additional reviewed computation recipes, beginning with dependency-free types lint; it does not add types execution or reuse authority. Static substitution of the unchanged recipe values reproduces the prior runner source exactly before formatting. Hosted CI remains required runtime and type-check evidence. No manual local verify, publish, tests, check, docgen or package verification was run, per operator instruction. Both whole goals and all qualification and rollout obligations remain open.
+
+Lane `codex/cache-pilot-recipes-20261106`
+
+Reverse: Revert the recipe refactor; no task cache setting or qualification state changes.
+
+### Prepare explicit types lint policy inputs from native invalidation evidence, 2026-11-06
+
+Twelve bounded native metadata-only plans show stable and canary ignore a root Git ignore-policy change under the inherited types lint inputs. Biome explicitly reads Git ignore files. Preserve package defaults and existing root Biome/plugin inputs, add root and possible ancestor ignore policies plus conservative root tsconfig coverage, and keep caching disabled. A separate JSONC comment control proves root tsconfig byte coverage only, not lint semantics. See research/types-lint-semantic-inputs-2026-11-06.json and its Markdown interpretation. No task execution or qualification is claimed. Keep this unpublished behind #2813; consume the independent toolchain-env input from #2816 after acceptance rather than copying an unlanded fix.
+
+Reverse: Revert the types input override and retain cache false; no qualification or rollout state changes.
+
+### Preserve external suite inputs across all CLI test consumers, 2026-11-06
+
+All three CLI test consumers execute the architecture proof suite, which reads
+the live external proof trees. Property tests lacked these inputs; coverage
+also lacked the two economics reports consumed by its gate-order suite. Extend
+the already reviewed input set consistently across all three tasks, retaining
+package inheritance and generated-output exclusions. Native Turbo metadata
+confirms seven actual external files are selected for each task, and coverage
+still inherits cache false. This repairs invalidation and affected selection;
+it grants no computation qualification or production trust. Hosted CI remains
+authoritative, with no local task bodies or quality suites executed.
+
+Reverse: Restore the prior property-test and coverage input arrays while retaining the diagnostic Python inputs, metadata receipt and unchanged coverage cache false policy.
+
+### Preserve unsplit integration owners in scoped quality execution, 2026-11-06
+
+The existing scoped branch drops the plain integration bucket, including current owners with integration source. Retain caller scope and prepend only split-owner exclusions; do not add positive unsplit filters to an affected selection because native Turbo unions them and could broaden scope. Keep the empty-owner no-op and existing unscoped owner filters. Twenty pinned native metadata plans (default and repository-enabled flag fixtures) validate the negative-filter behavior without task execution. The helper regression is authored but unrun; no local quality suites or source-generator entrypoints are used. Prepare unpublished until an owned PR slot opens, then consume accepted main and push for hosted proof. See research/scoped-unsplit-integration-selection-2026-11-06.json and its limitations.
+
+Reverse: Revert the integration argument resolver and its regression controls; retain uncached integration policy and all historical evidence.
+
 ### Count native query packages and bind prepared-source history, 2026-11-06
 
 After accepted PR #2695, nonempty affected-query summaries still reported zero packages. Count distinct valid package.name identities with existing Effect helpers; retain the accepted optional-array codec fix. Extend the three-task/two-package and explicit-empty assertions for hosted CI without running local quality suites. Bind the initial SCM report explicitly to f48bf842, whose two recorded hashes match, and preserve every historical hash and native capture. Record the current repair source separately. This changes diagnostic metadata only and grants no qualification, signing, capacity or whole-goal completion.
@@ -1101,5 +1179,41 @@ After accepted PR #2695, nonempty affected-query summaries still reported zero p
 Lane `codex/turbo-query-package-counts`
 
 Reverse: Revert the package counter and its assertions while preserving historical source and native evidence.
+
+### Recover stale GitHub CLI quota responses without changing credentials, 2026-11-06
+
+GitHub CLI 2.102.1 caches the pull-request feature probe for 24 hours. Two exact local HTTP 200 response-cache entries contained GraphQL RATE_LIMIT errors from the earlier exhausted window. Live REST and direct GraphQL quota reads had already recovered. Preserve byte-exact copies and digests privately, verify absence of authorization/cookie headers and error-only JSON bodies, then remove only those two verified entries. The unchanged check-list command succeeds immediately afterward; native Yeet remote status also reads complete required and optional check counts. Keep the existing monitor jobs instead of restarting them. No credential, quota, configuration or unrelated cache changes are involved. The private rollback restores an entry only if no fresh entry has replaced it.
+
+Reverse: Restore the two preserved response entries only if no newer entry exists; leave fresh responses, credentials and all other cache entries untouched.
+
+### Declare the types lint toolchain hash before qualification, 2026-11-06
+
+Prepare the dependency-free types lint computation for the existing pilot runtime-key guard by declaring BEEP_CACHE_TOOLCHAIN_DIGEST in the child task env list while retaining cache false. Eight bounded native metadata-only plans with the pinned stable and canary clients prove that synthetic digest changes were ignored before the edit and invalidate the task hash after it. Input paths, command, dependencies and outputs are unchanged; only the child config file input changes. Evidence is in research/types-lint-toolchain-key-2026-11-06.json and its companion report. No task body, remote cache operation, credential read or manual quality suite ran. This is not runtime-key enforcement, qualification, adoption or production activation; types-specific execution and the full trust/adoption contracts remain open.
+
+Lane `codex/cache-types-key-input-20261106`
+
+Reverse: Remove the hashed environment declaration or revert this change; types lint stays uncached.
+
+### Keep index-sensitive law discovery outside affected selection, 2026-11-07
+
+Hosted PR #2826 exposed three introduced defects: root cache/env assertions retained the previous policy, a Git fixture attempted index removal while its staged content differed from both HEAD and the working tree, and five tracked-discovery checks remained affected-filtered despite their cache hold. Move those five checks into the existing unfiltered one-slot state graph; preserve all input probes and total concurrency. Align the fixture index before removal and include sanitized Git argv in fixture failures. Author corrected exact planner/cache contracts; push to hosted CI without local quality execution. Coverage aggregation on the failed head refused UNIT_RESULT=failure; it is not an independent measured coverage regression. These corrections grant no cache qualification or final adoption.
+
+PR #2826
+
+Reverse: Restore affected selection only after complete tracked-discovery invalidation qualification passes.
+
+### Keep shared tracked scanners fresh until full discovery qualification, 2026-11-07
+
+Three additional root tasks use scanTrackedTextFiles: retired Effect paths, retired IRI authorities and Markdown fences. Four isolated Markdown metadata observations preserve task hashes across changed tracked membership. Keep those tasks cache false and declare the existing calculated BEEP_CACHE_TOOLCHAIN_DIGEST while retaining commands, baselines, content inputs and policy edges. The full staged-index digest is preparation, not qualification; scope, baseline, working-tree content, safe capture and isolation remain required. Effect-import Markdown uses tracked plus visible untracked paths and is not covered by this membership-only counterexample. No repository scanner or local quality suite ran; no final exclusion or qualification promotion is granted.
+
+Reverse: Restore each task cache only after complete native discovery and law-specific qualification; preserve metadata and failure receipts.
+
+### Withdraw an unproven Storybook alias candidate after source-bound control, 2026-11-07
+
+The original-resolution hosted Check passed on dependency-refreshed base d8f335ca with reported cache-hit prerequisites and fresh editor/Storybook checks. The earlier passing alias candidate ran on b0c9bab1. Their profiles and keys differ, so no historical causal or cache-corruption conclusion follows. Withdraw all proposed Storybook configuration changes rather than merging an unproven workaround. This supersedes the temporary checkpoint instruction to restore the candidate after the control. Retain the failure as a required full-goal qualification case; no reuse promotion, waiver, epoch activation or completion is granted. Consolidate the prepared source-repeatability report into this existing PR, preserving the three-open-PR cap. Final PR scope is evidence only. No local compiler, tests, verify, publish or quality suite.
+
+PR #2827
+
+Reverse: Restore the two schema aliases from 63f21c77 only after a matched current-profile reproduction establishes their need; retain all historical evidence.
 
 <!-- beep:decisions:end -->

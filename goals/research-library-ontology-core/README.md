@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,11 +31,25 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+Closed: `completed-retained`. `goals completion refresh` verified final PR #2787 (merge `34d6cd1309`); the work
+landed in #2771. Open follow-ups recorded by the foundational audit: split `LibrarySourceKind`, provenance for
+`expectedOccurrences`, and a SHACL coherence rule for capture status. A `toShacl` projection in `@beep/ontology`
+is the reflection's promotion candidate.
 
 ## Latest Evidence
 
-Not started.
+- Real library migrated (receipt `ops/migrations/2026-11-06T17-32-07.946Z-catalog-v2.json` in the library root):
+  validator `research-library-shapes/1`, v1→v2, catalog `e88cf958…`→`5cda99e5…`, `index.md` `1048b6e6…` unchanged on
+  disk (hash-equal re-render), intakes 2026-10-06 and 2026-10-14, SHACL violations 0. The pre-migration catalog is
+  backed up in `catalog/history/`, and a second `migrate` run is a no-op.
+- `research library ontology render`: `research-library.ttl` (`521755de…`, 580 triples) and
+  `research-library.shacl.ttl` (`267e1e0d…`, 778 triples), byte-identical to the lane's fold output; both re-parse
+  with `@beep/n3`.
+- `research library verify` on v2: `shacl: conforms=true violations=0`. Its integrity gate still reports the 10
+  inherited data-gap issues, identical to `main` before this goal.
+- `research library status`: 144 reports, 1203 sources, 5418 occurrences; private partition empty.
+- Golden replay of both intakes, local cheap-gates and `yeet final-check` (except coverage, fixed after merge in
+  `33bbb5ba32` and #2778) are recorded in [`history/`](./history/).
 
 ## Notes
 

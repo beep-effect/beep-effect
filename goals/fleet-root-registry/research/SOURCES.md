@@ -42,6 +42,7 @@ None. No code is ported; patterns only.
 | pnpm, git worktrees | https://pnpm.io/git-worktrees | bare store + worktree layout |
 | noqta, git worktrees for parallel AI agents (2026) | https://noqta.tn/en/blog/git-worktrees-parallel-ai-coding-agents-guide-2026 | bare-repo pattern |
 | Augment Code, worktrees for parallel agent execution | https://www.augmentcode.com/guides/git-worktrees-parallel-ai-agent-execution | conflicts move to merge time |
+| Ehrlich & Blackman, LCM: Lossless Context Management (2026) | https://arxiv.org/abs/2605.04050 | summary/pointer/expand split behind `fleet --join` and `fleet describe`; summary-DAG idea parked in `explorations/INBOX.md` |
 
 All other claims are workstation measurements recorded in `RESEARCH.md`
 "Workstation Census" and "Deferred Items Resolved".
@@ -53,7 +54,8 @@ All other claims are workstation measurements recorded in `RESEARCH.md`
 | Fleet mirror (derived checkout view) | `goals/fleet-mirror`, `packages/tooling/tool/cli/src/commands/Worktree/` | reuse (registry joins onto it) |
 | Worktree lifecycle | `packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts`, `Worktree.constants.ts` | extend (parameterize managed root) |
 | `yeet sweep --fleet` discovery | `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` | extend (fleet-root config) |
-| Residue reap | `packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts` | extend (drain-on-empty class) |
+| Residue reap | `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts` | extend (discovery roots here; drain-on-empty class in `legacy-drain`) |
+| Session ledger (lane, branch, PR, state per checkout) | `~/.local/state/beep/sessions/<repo-key>.jsonl`, `beep session` | reuse (joined view reads it; registry never duplicates it) |
 | Timer renderers (`--refresh` forms) | `docs/runbooks/systemd-timers.md` | reuse (re-render against ops seat) |
 | Worktree standard | `standards/git-worktrees.md` | rewrite in a graduated goal |
 | Seat/lane authored registry | — | NET-NEW |

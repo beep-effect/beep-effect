@@ -44,6 +44,14 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
+import {
+  hasReusableLaneProof,
+  persistLaneProofs,
+  prepareLaneProofSession,
+} from "../../Quality/internal/LaneProofReuse.ts";
+import { resolveLintPolicyScope } from "../../Quality/internal/LintPolicyScope.ts";
+import { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
+import { readLintPolicySweeps } from "../../Quality/Tasks.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
 import {
@@ -60,9 +68,12 @@ import {
   YeetChangedPathsQuery,
   yeetGitKitError,
 } from "./GitExec.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
+import type { LaneProofSession } from "../../Quality/internal/LaneProofReuse.ts";
+import type { LintPolicySweeps } from "../../Quality/Quality.schemas.ts";
 import type { ExpectationRewriteVerdict, YeetFinalCheckOptions } from "./FinalCheck.schemas.ts";
 
 /**
@@ -94,7 +105,11 @@ const EXPECTATION_REWRITE_CONTEXT = "Test Unit (expectations edited to match new
  * `beep ci local` and hosted CI run. Lint Policy keeps its affected law tasks
  * (`beep lint policy --base`) and adds the two repo-wide sweeps that the
  * affected local scope omits but the hosted `--full` lane runs: root docs
- * oxlint and the deprecated-API oxlint sweep. Lint adds the pre-commit Biome
+ * oxlint and the deprecated-API oxlint sweep. A caller that resolved full scope
+ * supplies the existing sweep configuration: the policy command explicitly
+ * runs `--full`, owns root docs once, and owns the full deprecated-API sweep
+ * when its configured engine is oxlint. Unknown/affected scope retains the
+ * standalone sweeps. Lint adds the pre-commit Biome
  * pass over the diff's changed files, because package `lint` tasks never see
  * paths outside a workspace package (#2187 landed an EF-40 GritQL violation in
  * `goals/` that no hosted lane flagged and lefthook then rejected on every
@@ -114,16 +129,32 @@ const EXPECTATION_REWRITE_CONTEXT = "Test Unit (expectations edited to match new
  * @param repoRoot - Checkout root used as every subprocess working directory.
  * @param mergeBase - Merge base of the branch with its base ref.
  * @param changedFiles - Files the diff adds or modifies, repo-relative.
+ * @param fullLintPolicySweeps - Validated sweep configuration when planning an explicit full policy run.
  * @returns Planned steps in gate order.
  * @category planning
  * @since 0.0.0
  */
 export const planFinalCheckSteps: {
-  (repoRoot: string, mergeBase: string, changedFiles: ReadonlyArray<string>): ReadonlyArray<FinalCheckPlannedStep>;
-  (mergeBase: string, changedFiles: ReadonlyArray<string>): (repoRoot: string) => ReadonlyArray<FinalCheckPlannedStep>;
+  (
+    repoRoot: string,
+    mergeBase: string,
+    changedFiles: ReadonlyArray<string>,
+    fullLintPolicySweeps?: LintPolicySweeps
+  ): ReadonlyArray<FinalCheckPlannedStep>;
+  (
+    mergeBase: string,
+    changedFiles: ReadonlyArray<string>,
+    fullLintPolicySweeps?: LintPolicySweeps
+  ): (repoRoot: string) => ReadonlyArray<FinalCheckPlannedStep>;
 } = dual(
-  3,
-  (repoRoot: string, mergeBase: string, changedFiles: ReadonlyArray<string>): ReadonlyArray<FinalCheckPlannedStep> => {
+  (args: IArguments) => Str.isString(args[1]),
+  (
+    repoRoot: string,
+    mergeBase: string,
+    changedFiles: ReadonlyArray<string>,
+    fullLintPolicySweeps?: LintPolicySweeps
+  ): ReadonlyArray<FinalCheckPlannedStep> => {
+    const fullPolicy = O.fromUndefinedOr(fullLintPolicySweeps);
     const plan = CiLocalStepPlan.make({ affected: true, base: mergeBase, onMainBranch: false });
     const lane = (gate: FinalCheckGate, hostedContext: string, laneId: CiLaneId) =>
       FinalCheckPlannedStep.make({
@@ -156,31 +187,38 @@ export const planFinalCheckSteps: {
         "cheap-gates",
         ["bun", "run", "beep", "quality", "github-checks", "cheap-gates"]
       ),
-      command("lint-policy", "Heavy / Lint Policy (affected law tasks)", "lint-policy:laws", [
-        "bun",
-        "run",
-        "beep",
-        "lint",
-        "policy",
-        "--base",
-        mergeBase,
-      ]),
-      command("lint-policy", "Heavy / Lint Policy (root docs oxlint)", "lint-policy:docs", [
-        "bunx",
-        "oxlint",
-        ".",
-        "--config",
-        ".oxlintrc.docs.json",
-        "--max-warnings=0",
-      ]),
-      command("lint-policy", "Heavy / Lint Policy (deprecated APIs)", "lint-policy:deprecated-apis", [
-        "bun",
-        "run",
-        "beep",
-        "lint",
-        "deprecated-apis",
-        "--full",
-      ]),
+      command(
+        "lint-policy",
+        O.isSome(fullPolicy)
+          ? "Heavy / Lint Policy (full law tasks and root sweeps)"
+          : "Heavy / Lint Policy (affected law tasks)",
+        "lint-policy:laws",
+        ["bun", "run", "beep", "lint", "policy", ...(O.isSome(fullPolicy) ? ["--full"] : []), "--base", mergeBase]
+      ),
+      ...(O.isSome(fullPolicy)
+        ? []
+        : [
+            command("lint-policy", "Heavy / Lint Policy (root docs oxlint)", "lint-policy:docs", [
+              "bunx",
+              "oxlint",
+              ".",
+              "--config",
+              ".oxlintrc.docs.json",
+              "--max-warnings=0",
+            ]),
+          ]),
+      ...(O.exists(fullPolicy, (sweeps) => sweeps.deprecatedApis === "oxlint")
+        ? []
+        : [
+            command("lint-policy", "Heavy / Lint Policy (deprecated APIs)", "lint-policy:deprecated-apis", [
+              "bun",
+              "run",
+              "beep",
+              "lint",
+              "deprecated-apis",
+              "--full",
+            ]),
+          ]),
       lane("lint", "Lint (package Biome, GritQL laws)", "lint"),
       ...(A.isReadonlyArrayEmpty(changedFiles)
         ? []
@@ -205,6 +243,20 @@ export const planFinalCheckSteps: {
       ),
     ];
   }
+);
+
+// Resolve scope before planning, then force --full so the child cannot silently
+// downgrade. A missing/failed probe keeps both standalone root guards.
+const resolveFullLintPolicySweeps = Effect.fn("Yeet.resolveFullLintPolicySweeps")(
+  function* (repoRoot: string, base: string) {
+    const scope = yield* resolveLintPolicyScope(repoRoot, base);
+    return scope._tag === "full" ? yield* Effect.asSome(readLintPolicySweeps(repoRoot)) : O.none<LintPolicySweeps>();
+  },
+  Effect.catch((error) =>
+    Console.log(
+      `[yeet] final-check lint-policy: scope probe unavailable; retaining standalone root sweeps (${error.message})`
+    ).pipe(Effect.as(O.none<LintPolicySweeps>()))
+  )
 );
 
 const renderCommand = (step: QualityTaskStep): string =>
@@ -423,6 +475,103 @@ const runStep = Effect.fn("Yeet.runFinalCheckStep")(function* (planned: FinalChe
   });
 });
 
+// Composite sanity/cheap gates include live external checks, which cannot be reused.
+// Expectation rewrites remain an in-process replay and never enter this path.
+const reusableFinalCheckGate = FinalCheckGate.pick(["lint-policy", "lint", "check", "docgen", "fallow", "coverage"]);
+
+const finalCheckProofLane = (planned: FinalCheckPlannedStep) =>
+  GithubCheckLaneSpec.make({
+    id: planned.step.label,
+    tier: "pre-push",
+    stage: "repo-quality",
+    wave: "heavy",
+    blockedBy: [],
+    // runStep inherits the ambient environment; hash it as part of the proof too.
+    step: QualityTaskStep.make({ ...planned.step, useLocalEnv: true }),
+  });
+
+// This runner belongs to one sequential final-check invocation. A post-command
+// session fences that command and identifies the following command's start.
+const makeFinalCheckStepRunner = (planned: ReadonlyArray<FinalCheckPlannedStep>, resume: boolean) => {
+  const lanes = pipe(
+    planned,
+    A.filter((entry) => S.is(reusableFinalCheckGate)(entry.gate)),
+    A.map(finalCheckProofLane)
+  );
+  let session = O.none<LaneProofSession>();
+  const prepare = () =>
+    prepareLaneProofSession(lanes, resume ? "active" : "shadow").pipe(
+      Effect.mapError(YeetCommandError.new("Failed to prepare final-check step proof."))
+    );
+  const invalidate = Effect.sync(() => {
+    session = O.none();
+  });
+  const execute = Effect.fn("Yeet.runFinalCheckStepWithProof")(function* (entry: FinalCheckPlannedStep) {
+    if (!S.is(reusableFinalCheckGate)(entry.gate)) {
+      yield* invalidate;
+      return yield* runStep(entry);
+    }
+    const lane = finalCheckProofLane(entry);
+    if (O.isNone(session)) session = yield* prepare();
+    const started = session;
+    if (O.isSome(started) && resume && hasReusableLaneProof(started.value, lane.id)) {
+      // A reused step executes no command, so there is no intervening command
+      // boundary to re-identify before the next reuse decision.
+      const reason = "reused completed step with matching source, head, base, command and environment";
+      yield* Console.log(`[yeet] final-check ${entry.gate}: ${reason}`);
+      return FinalCheckStepResult.make({
+        gate: entry.gate,
+        label: entry.step.label,
+        hostedContext: entry.hostedContext,
+        command: renderCommand(entry.step),
+        status: "passed",
+        durationMs: 0,
+        reason,
+      });
+    }
+    const result = yield* runStep(entry);
+    // A failed command can also move the tree or environment. Discard its
+    // start snapshot; a subsequent step must prepare a fresh boundary.
+    yield* invalidate;
+    if (O.isSome(started) && result.status === "passed") {
+      session = yield* prepare();
+      if (O.isSome(session)) {
+        yield* persistLaneProofs(started.value, [[lane, result.durationMs]], session.value).pipe(
+          Effect.ignore({ log: "Warn", message: "[yeet] final-check completed step could not be saved for resume" })
+        );
+      }
+    }
+    return result;
+  });
+  return { execute, invalidate };
+};
+
+/**
+ * Execute one planned step, recording a successful exact-input proof for a later resume.
+ *
+ * **Example** (Inspect a resumable step)
+ *
+ * ```ts
+ * import { planFinalCheckSteps, runFinalCheckStep } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * const step = planFinalCheckSteps("/repo", "base", [])[0]
+ * if (step) console.log(Effect.isEffect(runFinalCheckStep(step, true)))
+ * ```
+ *
+ * **Details**
+ * A failed command never saves proof. Live external checks always execute. The enclosing
+ * final-check command still owns clean-tree checks and the complete head-pinned receipt.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const runFinalCheckStep = Effect.fn("Yeet.runFinalCheckStepWithProof")(function* (
+  planned: FinalCheckPlannedStep,
+  resume: boolean
+) {
+  return yield* makeFinalCheckStepRunner([planned], resume).execute(planned);
+});
+
 const runExpectationRewriteGate = Effect.fn("Yeet.runExpectationRewriteGate")(function* (
   repoRoot: string,
   mergeBase: string
@@ -489,6 +638,7 @@ type FinalCheckRun = {
   readonly mergeBase: string;
   readonly planned: ReadonlyArray<FinalCheckPlannedStep>;
   readonly skips: ReadonlyArray<FinalCheckSkip>;
+  readonly resume: boolean;
 };
 
 type GateOutcome = {
@@ -519,17 +669,20 @@ const printGatePlan = (run: FinalCheckRun, gate: FinalCheckGate) =>
           }),
   });
 
-const runGate = (run: FinalCheckRun, gate: FinalCheckGate) =>
+const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<typeof makeFinalCheckStepRunner>) =>
   O.match(skipFor(run, gate), {
     onSome: (skip): Effect.Effect<GateOutcome> =>
       Effect.succeed({ steps: [skippedStep(skip, hostedContextFor(run, gate))], verdicts: [] }),
     onNone: () =>
       gate === "expectation-rewrite"
-        ? Effect.map(runExpectationRewriteGate(run.repoRoot, run.mergeBase), (result) => ({
-            steps: [result.step],
-            verdicts: result.verdicts,
-          }))
-        : Effect.map(Effect.forEach(plannedFor(run, gate), runStep), (steps) => ({ steps, verdicts: [] })),
+        ? Effect.map(
+            runner.invalidate.pipe(Effect.andThen(runExpectationRewriteGate(run.repoRoot, run.mergeBase))),
+            (result) => ({
+              steps: [result.step],
+              verdicts: result.verdicts,
+            })
+          )
+        : Effect.map(Effect.forEach(plannedFor(run, gate), runner.execute), (steps) => ({ steps, verdicts: [] })),
   });
 
 const hasFailure = (steps: ReadonlyArray<FinalCheckStepResult>): boolean =>
@@ -540,14 +693,35 @@ const runGates = Effect.fn("Yeet.runFinalCheckGates")(function* (
   gates: ReadonlyArray<FinalCheckGate>,
   failFast: boolean
 ) {
+  const runner = makeFinalCheckStepRunner(
+    A.filter(run.planned, (entry) => A.contains(gates, entry.gate) && O.isNone(skipFor(run, entry.gate))),
+    run.resume
+  );
   let outcome: GateOutcome = { steps: [], verdicts: [] };
   for (const gate of gates) {
     if (failFast && hasFailure(outcome.steps)) break;
-    const next = yield* runGate(run, gate);
+    const next = yield* runGate(run, gate, runner);
     outcome = { steps: A.appendAll(outcome.steps, next.steps), verdicts: A.appendAll(outcome.verdicts, next.verdicts) };
   }
   return outcome;
 });
+
+/**
+ * Exercise the sequential final-check gate runner with controlled subprocess plans.
+ *
+ * **Example** (Run an empty controlled plan)
+ *
+ * ```ts
+ * import { runFinalCheckGatesForTesting } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * const run = { repoRoot: "/repo", mergeBase: "base", planned: [], skips: [], resume: true }
+ * console.log(Effect.isEffect(runFinalCheckGatesForTesting(run, [], false))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runFinalCheckGatesForTesting = runGates;
 
 // Untracked, non-ignored files count: the gates read them (check typechecks
 // every file), so a receipt for the committed head cannot cover them.
@@ -624,7 +798,12 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
 ): Effect.fn.Return<
   O.Option<FinalCheckReceipt>,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
+  | SecureRandom.SecureRandom
+  | Digest.Digest
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > {
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const gates = yield* parseFinalCheckGates(options.gates);
@@ -635,11 +814,16 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     repoRoot,
     YeetChangedPathsQuery.make({ base: mergeBase, head: "HEAD", diffFilter: "d" })
   );
+  const fullPolicySweeps =
+    A.contains(gates, "lint-policy") && !A.some(skips, (skip) => skip.gate === "lint-policy")
+      ? yield* resolveFullLintPolicySweeps(repoRoot, mergeBase)
+      : O.none<LintPolicySweeps>();
   const run: FinalCheckRun = {
     repoRoot,
     mergeBase,
-    planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles),
+    planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles, O.getOrUndefined(fullPolicySweeps)),
     skips,
+    resume: options.resume,
   };
 
   if (options.dryRun) {

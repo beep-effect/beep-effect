@@ -1,3 +1,5 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { CheckRun, CheckRunRef } from "@beep/github/CheckRun";
 import {
   dispatchOwnerCheckpointMerge,
   ExpectationRewriteVerdict,
@@ -6,14 +8,18 @@ import {
   FinalCheckStepResult,
   MergeGateCheckRun,
   MergeGateRead,
+  makeOwnerCheckpointPublisher,
   makeOwnerCheckpointStore,
   OwnerCheckpointBinding,
   OwnerCheckpointClassicStatus,
   OwnerCheckpointCommand,
+  OwnerCheckpointDelivery,
   OwnerCheckpointError,
   OwnerCheckpointEvidence,
+  OwnerCheckpointIntent,
   OwnerCheckpointObserver,
   OwnerCheckpointPolicy,
+  OwnerCheckpointReceiptRef,
   OwnerCheckpointRecord,
   OwnerCheckpointRequest,
   OwnerCheckpointSnapshot,
@@ -24,29 +30,61 @@ import {
   projectOwnerCheckpointSelfCheck,
   qualifyOwnerCheckpointEvidence,
   qualifyOwnerCheckpointSnapshot,
+  RepoRunContext,
+  readOwnerCheckpointEvidenceReceipts,
+  readOwnerCheckpointSnapshot,
   SquashCommitlintPass,
   SquashCommitlintReport,
   SquashCommitMessage,
+  sameOwnerCheckpointBinding,
   transitionOwnerCheckpoint,
   YeetReviewWindowElapsed,
 } from "@beep/repo-cli/test/Yeet";
+import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { Sha256Hex } from "@beep/schema";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { describe, expect, it, vi } from "@effect/vitest";
+import { assertFailure, assertNone, assertSuccess, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as SqlClient from "effect/sql/SqlClient";
+import * as SqlError from "effect/sql/SqlError";
 import * as TestClock from "effect/testing/TestClock";
 import pullFixture from "./fixtures/yeet-merge-gate/pull.json" with { type: "json" };
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { recordedGithub } from "./support/YeetGithub.ts";
+import type { OwnerCheckpointOutbox } from "@beep/repo-cli/test/Yeet";
+import type { GithubAnswer, GithubCall, GithubRoutes } from "./support/YeetGithub.ts";
+
+const UnknownJson = S.fromJsonString(S.Unknown);
+const encodeUnknownJson = S.encodeUnknownEffect(UnknownJson);
+const PaginationBody = S.Struct({ variables: S.Struct({ after: S.String.pipe(S.NullOr, S.optionalKey) }) });
+const decodePaginationBody = S.decodeUnknownResult(PaginationBody);
+const ExternalCheckBody = S.Struct({ external_id: S.String });
+const decodeExternalCheckBody = S.decodeUnknownResult(ExternalCheckBody);
+const CompletedCheckBody = S.Struct({ external_id: S.String, conclusion: S.String });
+const decodeCompletedCheckBody = S.decodeUnknownResult(CompletedCheckBody);
+const ObserverJson = S.toCodecJson(OwnerCheckpointObserver);
+const encodeObserverJson = S.encodeEffect(ObserverJson);
+const UnknownRecord = S.Record(S.String, S.Unknown);
+const decodeUnknownRecord = S.decodeUnknownEffect(UnknownRecord);
+const SnapshotJson = S.toCodecJson(OwnerCheckpointSnapshot);
+const encodeSnapshotJson = S.encodeEffect(SnapshotJson);
+const FinalCheckJson = S.toCodecJson(FinalCheckReceipt);
+const encodeFinalCheckJson = S.encodeEffect(FinalCheckJson);
 
 const head = Str.repeat(40)("a");
 const merge = Str.repeat(40)("b");
@@ -63,7 +101,7 @@ const binding = OwnerCheckpointBinding.make({
   head,
   generation: 0,
 });
-const policy = OwnerCheckpointPolicy.make({ applicationId: 123, context: "Owner checkpoint", maxAgeMillis: 1000 });
+const policy = OwnerCheckpointPolicy.make({ applicationId: 123, maxAgeMillis: 1000 });
 const read = (offset = -10, ownSuccess = false) =>
   MergeGateRead.make({
     prNumber: 42,
@@ -99,6 +137,7 @@ const read = (offset = -10, ownSuccess = false) =>
 const snapshot = (offset = -10, ownSuccess = false) =>
   OwnerCheckpointSnapshot.make({
     repository: binding.repository,
+    base: { repository: binding.repository, ref: "main", sha: merge },
     state: "open",
     read: read(offset, ownSuccess),
     selfCheck: { id: 2, applicationId: 123, run: O.getOrThrow(A.get(read(offset, ownSuccess).checkRuns, 1)) },
@@ -126,8 +165,6 @@ const finalCheck = FinalCheckReceipt.make({
 });
 const evidence = OwnerCheckpointEvidence.make({
   observer: OwnerCheckpointObserver.make({
-    phase: "finished",
-    outcome: "success",
     finalizedAt: at(-20),
     snapshot: snapshot(-30),
     digest,
@@ -152,12 +189,7 @@ const sqlite = (filename: string) =>
     })
   );
 const withDb = <Value, Error, Requirements>(filename: string, effect: Effect.Effect<Value, Error, Requirements>) =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      const services = yield* Layer.build(sqlite(filename));
-      return yield* Effect.provideContext(effect, services);
-    })
-  );
+  provideTestLayer(sqlite(filename))(effect);
 const inMemory = <Value, Error, Requirements>(effect: Effect.Effect<Value, Error, Requirements>) =>
   withDb(":memory:", effect);
 const releasedStore = Effect.gen(function* () {
@@ -184,10 +216,43 @@ const livePull = (merged = false) => ({
   merged,
   merged_at: merged ? DateTime.formatIso(now) : null,
   draft: false,
+  title: "feat: fixed fixture",
+  mergeable_state: "clean",
+  base: { ...pullFixture.base, repo: { full_name: binding.repository } },
   head: { ...pullFixture.head, sha: head },
 });
 
 // All source/HTTP/storage data in this file are fixed synthetic fixtures.
+const mergeGithub = (
+  routes: GithubRoutes,
+  base: GithubRoutes = () => ({ body: { object: { type: "commit", sha: merge } } })
+) => recordedGithub((call) => (Str.startsWith("{repo}/git/ref/heads/")(call.path) ? base(call) : routes(call)));
+
+const JsonBinding = S.fromJsonString(OwnerCheckpointBinding);
+const JsonRecord = S.fromJsonString(OwnerCheckpointRecord);
+const JsonPolicy = S.fromJsonString(OwnerCheckpointPolicy);
+const sameRecord = S.toEquivalence(OwnerCheckpointRecord);
+const samePolicy = S.toEquivalence(OwnerCheckpointPolicy);
+it.effect.prop(
+  "round-trips schema-derived owner bindings, records and policies through JSON",
+  [
+    Arbitrary.schema(OwnerCheckpointBinding),
+    Arbitrary.schema(OwnerCheckpointRecord),
+    Arbitrary.schema(OwnerCheckpointPolicy),
+  ],
+  ([ownerBinding, record, ownerPolicy]) =>
+    Effect.gen(function* () {
+      const bindingJson = yield* S.encodeEffect(JsonBinding)(ownerBinding);
+      const recordJson = yield* S.encodeEffect(JsonRecord)(record);
+      const policyJson = yield* S.encodeEffect(JsonPolicy)(ownerPolicy);
+      const bindingAgain = yield* S.decodeEffect(JsonBinding)(bindingJson);
+      const recordAgain = yield* S.decodeEffect(JsonRecord)(recordJson);
+      const policyAgain = yield* S.decodeEffect(JsonPolicy)(policyJson);
+      assertTrue(sameOwnerCheckpointBinding(bindingAgain, ownerBinding));
+      assertTrue(sameRecord(recordAgain, record));
+      assertTrue(samePolicy(policyAgain, ownerPolicy));
+    })
+);
 describe("offline owner checkpoint", () => {
   it.effect("qualifies upstream while its own App check is still pending, without circular readiness", () =>
     Effect.gen(function* () {
@@ -402,7 +467,7 @@ describe("offline owner checkpoint", () => {
         const store = yield* claimedStore;
         const sync = request(2, OwnerCheckpointCommand.cases.Synchronize.make({ head: Str.repeat(40)("f") }));
         expect((yield* Effect.flip(store.apply(sync, policy, now))).reason).toBe("state");
-        yield* store.prepareDispatch(binding, 2);
+        yield* store.prepareDispatch(binding, 2, snapshot().base);
         yield* store.apply(request(2, OwnerCheckpointCommand.cases.Unknown.make({ claimId })), policy, now);
         expect(
           (yield* Effect.flip(
@@ -441,7 +506,7 @@ describe("offline owner checkpoint", () => {
         filename,
         Effect.gen(function* () {
           const store = yield* claimedStore;
-          yield* store.prepareDispatch(binding, 2);
+          yield* store.prepareDispatch(binding, 2, snapshot().base);
         })
       );
       yield* withDb(
@@ -450,7 +515,7 @@ describe("offline owner checkpoint", () => {
           const store = yield* makeOwnerCheckpointStore();
           const found4 = yield* store.outbox(binding, 2);
           expect(O.getOrThrow(found4).delivery._tag).toBe("Dispatched");
-          expect((yield* Effect.flip(store.prepareDispatch(binding, 2))).reason).toBe("conflict");
+          expect((yield* Effect.flip(store.prepareDispatch(binding, 2, snapshot().base))).reason).toBe("conflict");
           const found3 = yield* store.read(binding);
           expect(O.getOrThrow(found3).state._tag).toBe("Claimed");
         })
@@ -458,7 +523,7 @@ describe("offline owner checkpoint", () => {
     })
   );
   it.effect("serializes the full expected SHA into exactly one native merge request", () => {
-    const github = recordedGithub((call) =>
+    const github = mergeGithub((call) =>
       call.method === "PUT" ? { body: { merged: true, sha: merge, message: "merged" } } : { body: livePull() }
     );
     return github.provide(
@@ -473,12 +538,13 @@ describe("offline owner checkpoint", () => {
           const puts = A.filter(github.calls, (call) => call.method === "PUT");
           expect(puts).toHaveLength(1);
           expect(puts[0]?.body).toEqual({ sha: head, merge_method: "squash" });
+          expect(A.filter(github.calls, (call) => call.path === "{repo}/git/ref/heads/main")).toHaveLength(1);
         })
       )
     );
   });
   it.effect("retains uncertain dispatch when result persistence fails and never retries merge", () => {
-    const github = recordedGithub((call) =>
+    const github = mergeGithub((call) =>
       call.method === "PUT" ? { unreachable: "PRIVATE_NATIVE_FAILURE" } : { body: livePull() }
     );
     return github.provide(
@@ -503,13 +569,13 @@ describe("offline owner checkpoint", () => {
     );
   });
   it.effect("recovers a confirmed same-PR/head merge by readback alone, retaining unknown commit SHA", () => {
-    const github = recordedGithub(() => ({ body: livePull(true) }));
+    const github = mergeGithub(() => ({ body: livePull(true) }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
           yield* TestClock.setTime(ms);
           const store = yield* claimedStore;
-          yield* store.prepareDispatch(binding, 2);
+          yield* store.prepareDispatch(binding, 2, snapshot().base);
           const result = yield* observeOwnerCheckpointMerge(store, binding, policy);
           expect(result._tag).toBe("Confirmed");
           if (result._tag === "Confirmed") assertNone(result.mergeCommit);
@@ -568,7 +634,7 @@ describe("owner checkpoint refusal and recovery boundaries", () => {
       });
       const released = OwnerCheckpointRecord.make({
         ...held,
-        state: OwnerCheckpointState.cases.Released.make({ releaseId, evidenceDigest: digest }),
+        state: OwnerCheckpointState.cases.Released.make({ releaseId, evidenceDigest: digest, base: snapshot().base }),
       });
       const claimed = OwnerCheckpointRecord.make({
         ...held,
@@ -641,15 +707,17 @@ describe("owner checkpoint refusal and recovery boundaries", () => {
         yield* Effect.forEach(
           [-1, 0.5, Number.NaN],
           Effect.fnUntraced(function* (revision) {
-            expect((yield* Effect.flip(store.prepareDispatch(binding, revision))).reason).toBe("conflict");
+            expect((yield* Effect.flip(store.prepareDispatch(binding, revision, snapshot().base))).reason).toBe(
+              "conflict"
+            );
             expect((yield* Effect.flip(store.acknowledgePublication(binding, revision, 2))).reason).toBe("publication");
           }),
           { concurrency: 1, discard: true }
         );
         expect((yield* Effect.flip(store.acknowledgePublication(binding, 0, 0))).reason).toBe("publication");
         expect((yield* Effect.flip(store.acknowledgePublication(binding, 0, 2))).reason).toBe("conflict");
-        expect((yield* Effect.flip(store.prepareDispatch(binding, 0))).reason).toBe("conflict");
-        expect((yield* Effect.flip(store.prepareDispatch(binding, 1))).reason).toBe("conflict");
+        expect((yield* Effect.flip(store.prepareDispatch(binding, 0, snapshot().base))).reason).toBe("conflict");
+        expect((yield* Effect.flip(store.prepareDispatch(binding, 1, snapshot().base))).reason).toBe("conflict");
         yield* store.apply(release(), policy, now);
         yield* store.acknowledgePublication(binding, 1, 2);
         expect((yield* Effect.flip(store.acknowledgePublication(binding, 1, 2))).reason).toBe("conflict");
@@ -669,7 +737,7 @@ describe("owner checkpoint refusal and recovery boundaries", () => {
 
 describe("owner merge native outcomes", () => {
   it.effect("rejects another repository before reading or dispatching GitHub", () => {
-    const github = recordedGithub(() => ({ body: livePull() }));
+    const github = mergeGithub(() => ({ body: livePull() }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
@@ -684,7 +752,7 @@ describe("owner merge native outcomes", () => {
     );
   });
   it.effect("sanitizes a failed prerequisite read without dispatching", () => {
-    const github = recordedGithub(() => ({ status: 403, body: { message: "PRIVATE_READ_FAILURE" } }));
+    const github = mergeGithub(() => ({ status: 403, body: { message: "PRIVATE_READ_FAILURE" } }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
@@ -701,7 +769,7 @@ describe("owner merge native outcomes", () => {
   for (const mismatch of ["number", "head", "closed", "merged", "draft"]) {
     it.effect(`refuses a live PR with mismatched ${mismatch} before fencing`, () => {
       const pull = livePull();
-      const github = recordedGithub(() => ({
+      const github = mergeGithub(() => ({
         body: {
           ...pull,
           number: mismatch === "number" ? 43 : pull.number,
@@ -733,7 +801,7 @@ describe("owner merge native outcomes", () => {
     { merged: true, sha: "short", message: "incomplete identity" },
   ]) {
     it.effect(`retains a durable uncertain intent after ${result.message}`, () => {
-      const github = recordedGithub((call) => (call.method === "PUT" ? { body: result } : { body: livePull() }));
+      const github = mergeGithub((call) => (call.method === "PUT" ? { body: result } : { body: livePull() }));
       return github.provide(
         inMemory(
           Effect.gen(function* () {
@@ -752,7 +820,7 @@ describe("owner merge native outcomes", () => {
     });
   }
   it.effect("retains a confirmed native result when its recording transaction fails", () => {
-    const github = recordedGithub((call) =>
+    const github = mergeGithub((call) =>
       call.method === "PUT" ? { body: { merged: true, sha: merge, message: "merged" } } : { body: livePull() }
     );
     return github.provide(
@@ -771,7 +839,7 @@ describe("owner merge native outcomes", () => {
     );
   });
   it.effect("refuses recovery without a merge claim", () => {
-    const github = recordedGithub(() => ({ body: livePull(true) }));
+    const github = mergeGithub(() => ({ body: livePull(true) }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
@@ -785,7 +853,7 @@ describe("owner merge native outcomes", () => {
     );
   });
   it.effect("preserves pending versus recorded uncertainty during readback without redispatch", () => {
-    const github = recordedGithub(() => ({ body: livePull() }));
+    const github = mergeGithub(() => ({ body: livePull() }));
     return github.provide(
       inMemory(
         Effect.gen(function* () {
@@ -804,7 +872,7 @@ describe("owner merge native outcomes", () => {
           });
           const sql = yield* SqlClient.SqlClient;
           yield* sql`CREATE TRIGGER refuse_recovery BEFORE UPDATE ON yeet_owner_checkpoint WHEN NEW.revision = 4 BEGIN SELECT RAISE(ABORT, 'FIXTURE'); END`;
-          const mergedGithub = recordedGithub(() => ({ body: livePull(true) }));
+          const mergedGithub = mergeGithub(() => ({ body: livePull(true) }));
           const recovered = yield* observeOwnerCheckpointMerge(store, binding, policy).pipe(mergedGithub.provide);
           deepStrictEqual(recovered, { _tag: "Confirmed", recording: "pending", mergeCommit: O.none() });
           expect(A.filter([...github.calls, ...mergedGithub.calls], (call) => call.method === "PUT")).toHaveLength(0);
@@ -888,7 +956,40 @@ it.effect("rejects failed, unexplained skipped, and unrelated rewritten prerequi
       policy,
       now
     );
+    const wrongBase = yield* qualifyOwnerCheckpointEvidence(
+      binding,
+      OwnerCheckpointEvidence.make({
+        ...evidence,
+        finalCheck: FinalCheckReceipt.make({ ...finalCheck, base: "origin/another-branch" }),
+      }),
+      policy,
+      now
+    ).pipe(Effect.flip);
+    expect(wrongBase.reason).toBe("binding");
   })
+);
+
+it.effect("refuses a changed release base at claim and a malformed base at dispatch", () =>
+  inMemory(
+    Effect.gen(function* () {
+      const store = yield* releasedStore;
+      yield* store.acknowledgePublication(binding, 1, 2);
+      const changed = OwnerCheckpointSnapshot.make({ ...snapshot(-10, true), base: { ...snapshot().base, sha: head } });
+      const error = yield* store
+        .apply(request(1, OwnerCheckpointCommand.cases.Claim.make({ claimId, snapshot: changed })), policy, now)
+        .pipe(Effect.flip);
+      expect(error.reason).toBe("binding");
+      const released = yield* store.read(binding);
+      expect(O.getOrThrow(released).state._tag).toBe("Released");
+      yield* store.apply(claim(), policy, now);
+      const malformed = yield* store
+        .prepareDispatch(binding, 2, { ...snapshot().base, sha: "short" })
+        .pipe(Effect.flip);
+      expect(malformed.reason).toBe("conflict");
+      const pending = yield* store.outbox(binding, 2);
+      expect(O.getOrThrow(pending).delivery._tag).toBe("Pending");
+    })
+  )
 );
 
 it.effect("rejects a foreign outbox binding and rolls back both failed compare-and-swap writes", () =>
@@ -925,7 +1026,7 @@ it.effect("fails closed when the explicitly owned database scope has been releas
       store.register(binding).pipe(Effect.asVoid),
       store.apply(request(2, OwnerCheckpointCommand.cases.Unknown.make({ claimId })), policy, now).pipe(Effect.asVoid),
       store.acknowledgePublication(binding, 2, 2).pipe(Effect.asVoid),
-      store.prepareDispatch(binding, 2).pipe(Effect.asVoid),
+      store.prepareDispatch(binding, 2, snapshot().base).pipe(Effect.asVoid),
     ];
     yield* Effect.forEach(
       operations,
@@ -937,4 +1038,2082 @@ it.effect("fails closed when the explicitly owned database scope has been releas
       { concurrency: 1, discard: true }
     );
   })
+);
+
+const assertPendingMerge = Effect.fnUntraced(function* (
+  store: Effect.Success<ReturnType<typeof makeOwnerCheckpointStore>>,
+  calls: ReadonlyArray<GithubCall>
+) {
+  const pending = yield* store.outbox(binding, 2);
+  expect(O.getOrThrow(pending).delivery._tag).toBe("Pending");
+  const current = yield* store.read(binding);
+  expect(O.getOrThrow(current).revision).toBe(2);
+  expect(O.getOrThrow(current).state._tag).toBe("Claimed");
+  expect(A.filter(calls, (call) => call.method === "PUT")).toHaveLength(0);
+});
+
+describe("dispatch actual base and causal release fence", () => {
+  it.effect("refuses a retargeted live PR before reading its new base or fencing", () => {
+    const github = mergeGithub(() => ({ body: { ...livePull(), base: { ...livePull().base, ref: "other" } } }));
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      const error = yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
+      expect(error.reason).toBe("binding");
+      expect(A.filter(github.calls, (call) => Str.includes("/git/ref/")(call.path))).toHaveLength(0);
+      yield* assertPendingMerge(store, github.calls);
+    }).pipe(inMemory, github.provide);
+  });
+  for (const fixture of [
+    { name: "moved commit", answer: { body: { object: { type: "commit", sha: head } } }, reason: "binding" },
+    { name: "short commit", answer: { body: { object: { type: "commit", sha: "short" } } }, reason: "evidence" },
+    { name: "noncommit", answer: { body: { object: { type: "tag", sha: merge } } }, reason: "evidence" },
+    { name: "missing object", answer: { body: {} }, reason: "evidence" },
+    { name: "permission refusal", answer: { status: 403, body: { message: "PRIVATE_BASE_READ" } }, reason: "evidence" },
+    { name: "transport failure", answer: { unreachable: "PRIVATE_BASE_READ" }, reason: "evidence" },
+  ]) {
+    it.effect(`keeps dispatch pending for actual base ${fixture.name}`, () => {
+      const github = mergeGithub(
+        () => ({ body: livePull() }),
+        () => fixture.answer
+      );
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const store = yield* claimedStore;
+        const error = yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
+        expect(error.reason).toBe(fixture.reason);
+        expect(String(error)).not.toContain("PRIVATE_BASE_READ");
+        yield* assertPendingMerge(store, github.calls);
+      }).pipe(inMemory, github.provide);
+    });
+  }
+  it.effect("refuses a fresh changed-base snapshot against the earlier published release", () => {
+    const github = mergeGithub(
+      () => ({ body: livePull() }),
+      () => ({ body: { object: { type: "commit", sha: head } } })
+    );
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      const changed = OwnerCheckpointSnapshot.make({ ...snapshot(-10, true), base: { ...snapshot().base, sha: head } });
+      const error = yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, changed, policy));
+      expect(error.reason).toBe("conflict");
+      yield* assertPendingMerge(store, github.calls);
+    }).pipe(inMemory, github.provide);
+  });
+  it.effect("rechecks prerequisite freshness after the actual base network read", () => {
+    const started = Promise.withResolvers<void>();
+    const resume = Promise.withResolvers<void>();
+    const github = mergeGithub(
+      () => ({ body: livePull() }),
+      () => {
+        started.resolve();
+        return resume.promise.then(() => ({ body: { object: { type: "commit", sha: merge } } }));
+      }
+    );
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const store = yield* claimedStore;
+      const fiber = yield* dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy).pipe(
+        Effect.result,
+        Effect.forkChild
+      );
+      yield* Effect.promise(() => started.promise);
+      yield* TestClock.setTime(ms + policy.maxAgeMillis + 1);
+      resume.resolve();
+      const outcome = yield* Fiber.join(fiber);
+      const error = Result.getFailure(outcome);
+      expect(O.getOrThrow(error).reason).toBe("freshness");
+      yield* assertPendingMerge(store, github.calls);
+    }).pipe(inMemory, github.provide);
+  });
+  for (const fixture of [
+    {
+      name: "foreign binding",
+      edit: (entry: OwnerCheckpointOutbox) => ({ ...entry, binding: { ...entry.binding, generation: 1 } }),
+    },
+    { name: "wrong payload revision", edit: (entry: OwnerCheckpointOutbox) => ({ ...entry, revision: 0 }) },
+    {
+      name: "wrong release intent",
+      edit: (entry: OwnerCheckpointOutbox) => ({ ...entry, intent: OwnerCheckpointIntent.cases.CheckHeld.make({}) }),
+    },
+    {
+      name: "wrong release ID",
+      edit: (entry: OwnerCheckpointOutbox) => ({
+        ...entry,
+        intent: OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId: digest, base: snapshot().base }),
+      }),
+    },
+    {
+      name: "unpublished release",
+      edit: (entry: OwnerCheckpointOutbox) => ({ ...entry, delivery: OwnerCheckpointDelivery.cases.Pending.make({}) }),
+    },
+    {
+      name: "foreign base repository",
+      edit: (entry: OwnerCheckpointOutbox) => ({
+        ...entry,
+        intent: OwnerCheckpointIntent.cases.CheckReleased.make({
+          releaseId,
+          base: { ...snapshot().base, repository: "other/repo" },
+        }),
+      }),
+    },
+    {
+      name: "different base ref",
+      edit: (entry: OwnerCheckpointOutbox) => ({
+        ...entry,
+        intent: OwnerCheckpointIntent.cases.CheckReleased.make({
+          releaseId,
+          base: { ...snapshot().base, ref: "other" },
+        }),
+      }),
+    },
+    {
+      name: "different base commit",
+      edit: (entry: OwnerCheckpointOutbox) => ({
+        ...entry,
+        intent: OwnerCheckpointIntent.cases.CheckReleased.make({ releaseId, base: { ...snapshot().base, sha: head } }),
+      }),
+    },
+  ]) {
+    it.effect(`refuses a causal predecessor with ${fixture.name} without fencing`, () => {
+      const github = mergeGithub(() => ({ body: livePull() }));
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const store = yield* claimedStore;
+        const sql = yield* SqlClient.SqlClient;
+        const priorOption = yield* store.outbox(binding, 1);
+        const payload = yield* encodeUnknownJson(fixture.edit(O.getOrThrow(priorOption)));
+        yield* sql`UPDATE yeet_owner_checkpoint_outbox SET payload=${payload} WHERE revision=1`;
+        yield* Effect.flip(store.prepareDispatch(binding, 2, snapshot().base));
+        yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
+        yield* assertPendingMerge(store, github.calls);
+      }).pipe(inMemory, github.provide);
+    });
+  }
+  for (const malformed of [false, true]) {
+    it.effect(`refuses a ${malformed ? "malformed" : "missing"} immediate release predecessor`, () => {
+      const github = mergeGithub(() => ({ body: livePull() }));
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const store = yield* claimedStore;
+        const sql = yield* SqlClient.SqlClient;
+        if (malformed) yield* sql`UPDATE yeet_owner_checkpoint_outbox SET payload='{' WHERE revision=1`;
+        else yield* sql`DELETE FROM yeet_owner_checkpoint_outbox WHERE revision=1`;
+        yield* Effect.flip(dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy));
+        yield* assertPendingMerge(store, github.calls);
+      }).pipe(inMemory, github.provide);
+    });
+  }
+});
+
+const context = RepoRunContext.make({
+  base: "origin/main",
+  branch: "fixture",
+  cwd: ".",
+  head,
+  originalArgv: [],
+  packetDir: ".beep/yeet",
+  repoRoot: ".",
+  turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+});
+const nativeOwn = (externalId = "fixture-external") => ({
+  id: 2,
+  name: "Owner checkpoint",
+  status: "in_progress",
+  conclusion: O.getOrNull(O.none<string>()),
+  head_sha: head,
+  app: { id: policy.applicationId },
+  external_id: externalId,
+  html_url: "https://example.invalid/check/2",
+});
+const lintRun = {
+  id: 1,
+  name: "Lint",
+  status: "completed",
+  conclusion: "success",
+  head_sha: head,
+  app: { id: 7 },
+  external_id: null,
+};
+const upstreamReadinessRoute = (call: GithubCall): GithubAnswer | undefined => {
+  if (Str.endsWith("/statuses")(call.path)) return { body: [] };
+  if (Str.endsWith("/rules/branches/main")(call.path))
+    return {
+      body: [
+        {
+          type: "required_status_checks",
+          parameters: { required_status_checks: [{ context: "Lint" }, { context: "Owner checkpoint" }] },
+        },
+      ],
+    };
+  if (call.path === "{repo}")
+    return {
+      body: {
+        id: 1,
+        name: "beep-effect",
+        full_name: binding.repository,
+        private: false,
+        default_branch: "main",
+        owner: { login: "beep-effect", id: 1 },
+        squash_merge_commit_title: "PR_TITLE",
+        squash_merge_commit_message: "PR_BODY",
+      },
+    };
+  if (Str.endsWith("/commits")(call.path)) return { body: [{ commit: { message: "feat: fixed fixture" } }] };
+  if (Str.startsWith("{repo}/compare/")(call.path))
+    return { body: { merge_base_commit: { sha: merge }, base_commit: { sha: merge } } };
+  return undefined;
+};
+const upstreamRoute = (call: GithubCall, own = nativeOwn()): GithubAnswer | undefined => {
+  if (call.path === "{repo}/pulls/42") return { body: livePull() };
+  if (call.path === "{repo}/git/ref/heads/main") return { body: { object: { type: "commit", sha: merge } } };
+  if (call.path === `{repo}/commits/${head}/check-runs`)
+    return { body: { total_count: 2, check_runs: [lintRun, own] } };
+  const readiness = upstreamReadinessRoute(call);
+  if (readiness !== undefined) return readiness;
+  if (call.path === `{repo}/commits/${merge}/check-runs`) return { body: { total_count: 1, check_runs: [lintRun] } };
+  if (Str.endsWith("/timeline")(call.path))
+    return { body: [{ event: "ready_for_review", created_at: "2026-11-05T00:00:00Z" }] };
+  if (Str.endsWith("/check-suites")(call.path))
+    return { body: { total_count: 1, check_suites: [{ created_at: "2026-11-05T00:00:00Z" }] } };
+  if (call.path === "/graphql")
+    return {
+      body: {
+        data: {
+          repository: {
+            pullRequest: {
+              author: { login: "owner" },
+              reviewThreads: { totalCount: 0, nodes: [], pageInfo: { hasNextPage: false, endCursor: null } },
+            },
+          },
+        },
+      },
+    };
+  return undefined;
+};
+const provideTestLayer =
+  <Out, Error, In>(layer: Layer.Layer<Out, Error, In>) =>
+  <Value, Failure, Requirements>(effect: Effect.Effect<Value, Failure, Requirements>) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const services = yield* Layer.build(layer);
+        return yield* Effect.provideContext(effect, services);
+      })
+    );
+const offline = <Value, Error, Requirements>(effect: Effect.Effect<Value, Error, Requirements>) =>
+  effect.pipe(
+    provideSpawner(ScriptedSpawner.make(() => ({ stdout: "✔ found 0 problems, 0 warnings" }))),
+    provideTestLayer(NodeCrypto.layer)
+  );
+
+const unsupportedStatusFixture = (call: GithubCall, move: string): GithubAnswer | undefined => {
+  if (move !== "status-only") return undefined;
+  if (Str.endsWith("/rules/branches/main")(call.path))
+    return {
+      body: [{ type: "required_status_checks", parameters: { required_status_checks: [{ context: "classic-only" }] } }],
+    };
+  if (Str.endsWith("/statuses")(call.path))
+    return {
+      body: [
+        {
+          id: 12,
+          context: "classic-only",
+          state: "success",
+          creator: { login: "vendor" },
+          description: null,
+          target_url: null,
+          updated_at: DateTime.formatIso(at(-1)),
+        },
+      ],
+    };
+  return undefined;
+};
+const movedOwnFixture = (move: string) =>
+  move === "wrong-app"
+    ? { ...nativeOwn(), app: { id: 999 }, applicationId: 123 }
+    : move === "wrong-external"
+      ? nativeOwn("wrong-pr")
+      : move === "malformed"
+        ? { ...nativeOwn(), app: null }
+        : nativeOwn();
+const movedBaseFixture = (call: GithubCall, move: string, reads: number): GithubAnswer | undefined => {
+  if (call.path !== "{repo}/git/ref/heads/main" || move !== "base") return undefined;
+  return { body: { object: { type: "commit", sha: reads === 0 ? merge : head } } };
+};
+const movedPullFixture = (move: string, pulls: number): GithubAnswer | undefined => {
+  if (pulls > 2 && move === "head") return { body: { ...livePull(), head: { ...livePull().head, sha: merge } } };
+  if (pulls > 2 && move === "closed") return { body: livePull(true) };
+  if (move === "base-repository")
+    return { body: { ...livePull(), base: { ref: "main", repo: { full_name: "other/repo" } } } };
+  return undefined;
+};
+const nativeCheckPage = (page2: boolean, failedPage: boolean): GithubAnswer =>
+  page2
+    ? failedPage
+      ? { status: 503 }
+      : { body: { total_count: 2, check_runs: [nativeOwn()] } }
+    : {
+        body: { total_count: 2, check_runs: [lintRun] },
+        headers: {
+          link: ` <https://api.github.com/repos/beep-effect/beep-effect/commits/${head}/check-runs?page=2>; rel="next"`,
+        },
+      };
+describe("inert owner native adapter", () => {
+  for (const fault of [
+    "overflow",
+    "duplicate-check",
+    "missing-rule-parameters",
+    "changed-rule-census",
+    "closed-before-read",
+    "draft-after-read",
+    "head-after-statuses",
+    "duplicate-status",
+    "different-repository",
+  ]) {
+    it.effect(`refuses inconsistent native snapshot boundaries: ${fault}`, () => {
+      let checks = 0;
+      let rules = 0;
+      let pulls = 0;
+      let afterStatuses = false;
+      const github = recordedGithub((call) => {
+        const override = Match.value(call.path).pipe(
+          Match.when("{repo}/pulls/42", () => {
+            pulls++;
+            return Match.value(fault).pipe(
+              Match.when("closed-before-read", () => ({ body: livePull(true) })),
+              Match.when("draft-after-read", () => (pulls > 4 ? { body: { ...livePull(), draft: true } } : undefined)),
+              Match.when("head-after-statuses", () =>
+                afterStatuses ? { body: { ...livePull(), head: { ...livePull().head, sha: merge } } } : undefined
+              ),
+              Match.orElse(() => undefined)
+            );
+          }),
+          Match.when(`{repo}/commits/${head}/check-runs`, () => {
+            if (++checks <= 1) return undefined;
+            return Match.value(fault).pipe(
+              Match.when("overflow", () => {
+                const runs = A.map(A.range(1, 2001), (id) => ({ ...lintRun, id }));
+                return { body: { total_count: runs.length, check_runs: runs } };
+              }),
+              Match.when("duplicate-check", () => ({
+                body: { total_count: 3, check_runs: [lintRun, lintRun, nativeOwn()] },
+              })),
+              Match.orElse(() => undefined)
+            );
+          }),
+          Match.when(Str.endsWith("/rules/branches/main"), () => {
+            if (++rules <= 1) return undefined;
+            return Match.value(fault).pipe(
+              Match.when("missing-rule-parameters", () => ({ body: [{ type: "required_status_checks" }] })),
+              Match.when("changed-rule-census", () => ({
+                body: [
+                  { type: "required_status_checks", parameters: { required_status_checks: [{ context: "Lint" }] } },
+                ],
+              })),
+              Match.orElse(() => undefined)
+            );
+          }),
+          Match.when(Str.endsWith("/statuses"), () => {
+            afterStatuses = true;
+            if (fault !== "duplicate-status") return undefined;
+            const row = {
+              id: 12,
+              context: "vendor",
+              state: "success",
+              creator: { login: "vendor" },
+              description: null,
+              target_url: null,
+              updated_at: DateTime.formatIso(at(-1)),
+            };
+            return { body: [row, row] };
+          }),
+          Match.orElse(() => undefined)
+        );
+        return O.getOrElse(O.fromUndefinedOr(override), () => upstreamRoute(call));
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const selected =
+          fault === "different-repository"
+            ? OwnerCheckpointBinding.make({ ...binding, repository: "other/repository" })
+            : binding;
+        const result = yield* Effect.flip(
+          readOwnerCheckpointSnapshot(context, selected, 2, policy, "fixture-external")
+        );
+        expect(result.reason).toBe(
+          A.contains(["closed-before-read", "draft-after-read", "head-after-statuses", "different-repository"], fault)
+            ? "binding"
+            : "evidence"
+        );
+        expect(
+          A.some(
+            github.calls,
+            (call) => call.path !== "/graphql" && (call.method === "POST" || call.method === "PATCH")
+          )
+        ).toBe(false);
+      }).pipe(offline, github.provide);
+    });
+  }
+
+  it.effect("refuses a snapshot whose complete native read exceeds its freshness budget", () => {
+    const started = Promise.withResolvers<void>();
+    const resume = Promise.withResolvers<GithubAnswer>();
+    const github = recordedGithub((call) => {
+      if (Str.endsWith("/statuses")(call.path)) {
+        started.resolve();
+        return resume.promise;
+      }
+      return upstreamRoute(call);
+    });
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const fiber = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
+        Effect.forkChild
+      );
+      yield* Effect.promise(() => started.promise);
+      yield* TestClock.adjust("2 seconds");
+      resume.resolve({ body: [] });
+      const error = yield* Fiber.join(fiber).pipe(Effect.flip);
+      expect(error.reason).toBe("freshness");
+    }).pipe(offline, github.provide);
+  });
+
+  it.effect("keeps the newest required App check when native rows arrive newest first", () => {
+    const github = recordedGithub((call) => {
+      if (call.path === `{repo}/commits/${head}/check-runs`)
+        return { body: { total_count: 3, check_runs: [{ ...lintRun, id: 3 }, lintRun, nativeOwn()] } };
+      if (Str.endsWith("/rules/branches/main")(call.path))
+        return {
+          body: [
+            { type: "pull_request" },
+            {
+              type: "required_status_checks",
+              parameters: {
+                required_status_checks: [{ context: "Lint", integration_id: 7 }, { context: "Owner checkpoint" }],
+              },
+            },
+          ],
+        };
+      return upstreamRoute(call);
+    });
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const selected = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external");
+      expect(selected.selfCheck.id).toBe(2);
+      expect(selected.read.checkRuns).toHaveLength(3);
+    }).pipe(offline, github.provide);
+  });
+
+  for (const fault of ["latest-app-pending", "latest-app-failed", "conflicting-app-rules"]) {
+    it.effect(`refuses App-bound context ambiguity: ${fault}`, () => {
+      const runs = [
+        lintRun,
+        {
+          ...lintRun,
+          id: 3,
+          status: fault === "latest-app-pending" ? "in_progress" : "completed",
+          conclusion: fault === "latest-app-pending" ? null : "failure",
+        },
+        { ...lintRun, id: 4, app: { id: 999 } },
+        nativeOwn(),
+      ];
+      const github = recordedGithub((call) => {
+        if (Str.endsWith("/rules/branches/main")(call.path))
+          return {
+            body: [
+              {
+                type: "required_status_checks",
+                parameters: {
+                  required_status_checks: [
+                    { context: "Lint", integration_id: 7 },
+                    { context: "Owner checkpoint" },
+                    ...(fault === "conflicting-app-rules" ? [{ context: "Lint", integration_id: 999 }] : []),
+                  ],
+                },
+              },
+            ],
+          };
+        if (call.path === `{repo}/commits/${head}/check-runs`)
+          return { body: { total_count: runs.length, check_runs: runs } };
+        return upstreamRoute(call);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const error = yield* Effect.flip(readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external"));
+        expect(error.reason).toBe("gate");
+      }).pipe(offline, github.provide);
+    });
+  }
+
+  for (const app of [7, 999, null, "malformed", "wrong-owner"]) {
+    it.effect(`binds upstream required checks to their native rule App: ${app}`, () => {
+      const github = recordedGithub((call) => {
+        if (app === "wrong-owner" && call.path === `{repo}/commits/${head}/check-runs`)
+          return {
+            body: {
+              total_count: 3,
+              check_runs: [
+                lintRun,
+                nativeOwn(),
+                { ...nativeOwn(), id: 5, app: { id: 999 }, status: "completed", conclusion: "success" },
+              ],
+            },
+          };
+        if (Str.endsWith("/rules/branches/main")(call.path))
+          return {
+            body: [
+              {
+                type: "required_status_checks",
+                parameters: {
+                  required_status_checks: [
+                    { context: "Lint", integration_id: app === "wrong-owner" ? 7 : app },
+                    { context: "Owner checkpoint", integration_id: app === "wrong-owner" ? 999 : policy.applicationId },
+                  ],
+                },
+              },
+            ],
+          };
+        return upstreamRoute(call);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
+          Effect.result
+        );
+        deepStrictEqual(Result.isSuccess(result), app === 7 || app === null);
+        if (Result.isFailure(result)) expect(result.failure.reason).toBe(app === "malformed" ? "evidence" : "gate");
+      }).pipe(offline, github.provide);
+    });
+  }
+
+  for (const failedPage of [false, true]) {
+    it.effect(`consumes native checks, statuses and review thread pages; second page failure=${failedPage}`, () => {
+      const github = recordedGithub((call) => {
+        const page2 = call.query.get("page") === "2";
+        if (call.path === `{repo}/commits/${head}/check-runs`) return nativeCheckPage(page2, failedPage);
+        if (Str.endsWith("/statuses")(call.path))
+          return page2
+            ? { body: [] }
+            : {
+                body: [
+                  {
+                    id: 8,
+                    context: "classic",
+                    state: "success",
+                    creator: { login: "vendor" },
+                    description: null,
+                    target_url: null,
+                    updated_at: DateTime.formatIso(at(-1)),
+                  },
+                ],
+                headers: {
+                  link: `<https://api.github.com/repos/beep-effect/beep-effect/commits/${head}/statuses?page=2>; rel="next"`,
+                },
+              };
+        if (call.path === "/graphql") {
+          const body = Result.getOrThrow(decodePaginationBody(call.body));
+          const last = body.variables.after === "page-2";
+          return {
+            body: {
+              data: {
+                repository: {
+                  pullRequest: {
+                    author: { login: "owner" },
+                    reviewThreads: {
+                      totalCount: 0,
+                      nodes: [],
+                      pageInfo: { hasNextPage: !last, endCursor: last ? null : "page-2" },
+                    },
+                  },
+                },
+              },
+            },
+          };
+        }
+        return upstreamRoute(call);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
+          Effect.result
+        );
+        deepStrictEqual(Result.isSuccess(result), !failedPage);
+        expect(A.some(github.calls, (call) => call.query.get("page") === "2")).toBe(true);
+        if (!failedPage) {
+          expect(A.filter(github.calls, (call) => Str.endsWith("/statuses")(call.path))).toHaveLength(2);
+          expect(A.filter(github.calls, (call) => call.path === "/graphql")).toHaveLength(2);
+        }
+      }).pipe(offline, github.provide);
+    });
+  }
+
+  it.effect("reads native App identity and actual base ref independently of stale PR base.sha", () => {
+    const github = recordedGithub(upstreamRoute);
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external");
+      expect(result.base.sha).toBe(merge);
+      expect(result.base.sha).not.toBe(pullFixture.base.sha);
+      expect(result.selfCheck.applicationId).toBe(123);
+      expect(A.filter(github.calls, (call) => call.path === "{repo}/git/ref/heads/main")).toHaveLength(2);
+    }).pipe(offline, github.provide);
+  });
+  for (const move of [
+    "head",
+    "base",
+    "base-repository",
+    "closed",
+    "wrong-app",
+    "wrong-external",
+    "malformed",
+    "threads-failed",
+    "status-only",
+  ]) {
+    it.effect(`refuses ${move} without treating unread evidence as success`, () => {
+      let refs = 0;
+      let pulls = 0;
+      const github = recordedGithub((call) => {
+        if (call.path === "{repo}/pulls/42") {
+          pulls++;
+          const moved = movedPullFixture(move, pulls);
+          if (moved !== undefined) return moved;
+        }
+        const movedBase = movedBaseFixture(call, move, refs);
+        if (movedBase !== undefined) {
+          refs++;
+          return movedBase;
+        }
+        if (call.path === `/graphql` && move === "threads-failed") return { status: 503 };
+        const unsupported = unsupportedStatusFixture(call, move);
+        if (unsupported !== undefined) return unsupported;
+        if (call.path === `{repo}/commits/${head}/check-runs`) {
+          const own = movedOwnFixture(move);
+          return { body: { total_count: 2, check_runs: [lintRun, own] } };
+        }
+        return upstreamRoute(call);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const error = yield* Effect.flip(readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external"));
+        expect(OwnerCheckpointError.make({ reason: error.reason }).reason).toBe(error.reason);
+      }).pipe(offline, github.provide);
+    });
+  }
+});
+
+const reconciledPublicationFixture = (
+  fault: string,
+  created: boolean,
+  own: ReturnType<typeof nativeOwn>
+): GithubAnswer =>
+  Match.value(fault).pipe(
+    Match.when("reconcile-failed", () => ({ unreachable: "PRIVATE_RECONCILE" })),
+    Match.when("reconcile-overflow", () => ({
+      body: { total_count: 2001, check_runs: A.map(A.range(1, 2001), (id) => ({ ...own, id })) },
+    })),
+    Match.when("reconcile-malformed", () => ({ body: { total_count: 1, check_runs: [{ ...own, external_id: 123 }] } })),
+    Match.orElse(() => ({
+      body: {
+        total_count: fault === "duplicates" ? 2 : fault === "zero" ? 0 : 1,
+        check_runs: !created || fault === "zero" ? [] : fault === "duplicates" ? [own, { ...own, id: 3 }] : [own],
+      },
+    }))
+  );
+const createPublicationFixture = (fault: string, own: ReturnType<typeof nativeOwn>): GithubAnswer =>
+  fault === "lost-response" || fault === "zero" || fault === "duplicates" || Str.startsWith("reconcile-")(fault)
+    ? { unreachable: "PRIVATE_LOST_RESPONSE" }
+    : { body: own };
+const releaseCompensationFixture = (fault: string) => {
+  let own = nativeOwn();
+  let released = false;
+  let observedAfterWrite = false;
+  let baseReads = 0;
+  const started = Promise.withResolvers<void>();
+  const resume = Promise.withResolvers<GithubAnswer | undefined>();
+  const movedBase = A.contains(
+    [
+      "base-moved",
+      "lost-success-response",
+      "lost-failure-response",
+      "compensation-timeout",
+      "base-advanced-consistently",
+      "base-advanced-before-ack",
+    ],
+    fault
+  );
+  const patch = (call: GithubCall): GithubAnswer => {
+    const data = Result.getOrThrow(decodeCompletedCheckBody(call.body));
+    own = {
+      ...own,
+      id: fault === "lost-success-new-identity" && data.conclusion === "success" ? 3 : own.id,
+      external_id: data.external_id,
+      status: "completed",
+      conclusion: data.conclusion,
+    };
+    released = data.conclusion === "success";
+    const ambiguous =
+      data.conclusion === "success"
+        ? A.contains(["lost-success-response", "lost-success-new-identity"], fault)
+        : fault === "lost-failure-response";
+    return ambiguous ? { unreachable: "PRIVATE_PATCH_RESPONSE" } : { body: own };
+  };
+  const readOwn = (): GithubAnswer | Promise<GithubAnswer | undefined> => {
+    if (released && !observedAfterWrite && (fault === "observe-timeout" || fault === "compensation-timeout")) {
+      observedAfterWrite = true;
+      started.resolve();
+      return resume.promise;
+    }
+    if (released && !observedAfterWrite && fault === "observe-failed") {
+      observedAfterWrite = true;
+      return { unreachable: "PRIVATE_POST_WRITE_GET" };
+    }
+    return { body: own };
+  };
+  const readBase = (call: GithubCall): GithubAnswer | Promise<GithubAnswer | undefined> | undefined => {
+    if (fault === "snapshot-timeout") {
+      started.resolve();
+      return resume.promise;
+    }
+    if (fault === "snapshot-failed") return { unreachable: "PRIVATE_POST_WRITE_BASE" };
+    const changed = fault !== "base-advanced-before-ack" || baseReads > 2;
+    if (movedBase) return { body: { object: { type: "commit", sha: changed ? head : merge } } };
+    return upstreamRoute(call, own);
+  };
+  const postWriteBase = (call: GithubCall): GithubAnswer | Promise<GithubAnswer | undefined> | undefined => {
+    if (!released) return undefined;
+    if (call.path === "{repo}/git/ref/heads/main") {
+      baseReads++;
+      return readBase(call);
+    }
+    if (
+      A.contains(["base-advanced-consistently", "base-advanced-before-ack"], fault) &&
+      Str.startsWith("{repo}/compare/")(call.path)
+    ) {
+      const changed = fault !== "base-advanced-before-ack" || baseReads > 2;
+      const sha = changed ? head : merge;
+      return { body: { merge_base_commit: { sha }, base_commit: { sha } } };
+    }
+    return undefined;
+  };
+  const github = recordedGithub((call) =>
+    Match.value(call).pipe(
+      Match.when(
+        (call) => call.method === "POST" && call.path === "{repo}/check-runs",
+        (call) => {
+          own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+          return { body: own };
+        }
+      ),
+      Match.when(
+        (call) => call.method === "PATCH",
+        () => patch(call)
+      ),
+      Match.when((call) => call.path === "{repo}/check-runs/2", readOwn),
+      Match.orElse(() => postWriteBase(call) ?? upstreamRoute(call, own))
+    )
+  );
+  return {
+    github,
+    native: () => own,
+    started: started.promise,
+    changeNative: (next: typeof own) => {
+      own = next;
+    },
+    resume: (answer: GithubAnswer = { body: { object: { type: "commit", sha: merge } } }) => resume.resolve(answer),
+  };
+};
+const failReleaseDurability = Effect.fnUntraced(function* (fault: string) {
+  const sql = yield* SqlClient.SqlClient;
+  if (fault === "remember-failed")
+    yield* sql`CREATE TRIGGER refuse_release_anchor BEFORE INSERT ON yeet_owner_checkpoint_anchor BEGIN SELECT RAISE(ABORT, 'PRIVATE_REMEMBER'); END`;
+  if (fault === "ack-failed")
+    yield* sql`CREATE TRIGGER refuse_release_ack BEFORE UPDATE ON yeet_owner_checkpoint_outbox BEGIN SELECT RAISE(ABORT, 'PRIVATE_ACK'); END`;
+});
+describe("inert owner publication fence", () => {
+  for (const phase of ["fence", "remember"]) {
+    it.effect(`sanitizes transaction-boundary failure during ${phase} and retains retry safety`, () => {
+      let own = nativeOwn();
+      const github = recordedGithub((call) => {
+        if (call.method === "POST" && call.path === "{repo}/check-runs") {
+          own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+          return { body: own };
+        }
+        if (call.path === "{repo}/check-runs/2") return { body: own };
+        return upstreamRoute(call, own);
+      });
+      return Effect.gen(function* () {
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        const sql = yield* SqlClient.SqlClient;
+        const transaction = sql.withTransaction;
+        const failed = () =>
+          Effect.fail(
+            SqlError.SqlError.make({
+              reason: SqlError.ConnectionError.make({ cause: "PRIVATE_TRANSACTION_FAILURE" }),
+            })
+          );
+        const spy = vi.spyOn(sql, "withTransaction").mockImplementation(transaction);
+        if (phase === "remember") spy.mockImplementationOnce(transaction).mockImplementationOnce(transaction);
+        spy.mockImplementationOnce(failed);
+        const outcome = yield* publisher
+          .publish(binding, 0)
+          .pipe(Effect.result, Effect.ensuring(Effect.sync(() => spy.mockRestore())));
+        if (phase === "fence") {
+          assertFailure(outcome, OwnerCheckpointError.make({ reason: "storage" }));
+          expect(github.calls).toHaveLength(0);
+        } else {
+          assertSuccess(outcome, { _tag: "Unknown" });
+          const anchors = yield* sql`SELECT payload FROM yeet_owner_checkpoint_anchor`;
+          expect(anchors).toHaveLength(0);
+        }
+        expect((yield* publisher.publish(binding, 0))._tag).toBe("Published");
+        expect(
+          A.filter(github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(1);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+    });
+  }
+  for (const fault of [
+    "lost-response",
+    "failed-remember",
+    "duplicates",
+    "zero",
+    "wrong-identity",
+    "reconcile-failed",
+    "reconcile-overflow",
+    "reconcile-malformed",
+  ]) {
+    it.effect(`reconciles ${fault} without a second create`, () => {
+      let own = nativeOwn();
+      let created = false;
+      const github = recordedGithub((call) => {
+        if (call.method === "POST" && call.path === "{repo}/check-runs") {
+          created = true;
+          const body = decodeExternalCheckBody(call.body);
+          own = nativeOwn(Result.getOrThrow(body).external_id);
+          return createPublicationFixture(fault, own);
+        }
+        if (call.path === "{repo}/check-runs/2")
+          return { body: fault === "wrong-identity" ? { ...own, id: 999 } : own };
+        if (Str.endsWith("/check-runs")(call.path)) return reconciledPublicationFixture(fault, created, own);
+        return upstreamRoute(call, own);
+      });
+      return Effect.gen(function* () {
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        const sql = yield* SqlClient.SqlClient;
+        if (fault === "failed-remember")
+          yield* sql`CREATE TRIGGER refuse_anchor BEFORE INSERT ON yeet_owner_checkpoint_anchor BEGIN SELECT RAISE(ABORT, 'PRIVATE_DB_FAILURE'); END`;
+        const first = yield* publisher.publish(binding, 0);
+        if (fault === "failed-remember") yield* sql`DROP TRIGGER refuse_anchor`;
+        const second = yield* publisher.publish(binding, 0);
+        expect(
+          A.filter(github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(1);
+        expect(second._tag).toBe(
+          fault === "duplicates" || fault === "wrong-identity"
+            ? "Held"
+            : fault === "zero" || Str.startsWith("reconcile-")(fault)
+              ? "Unknown"
+              : "Published"
+        );
+        const output = yield* encodeUnknownJson([first, second]);
+        expect(output).not.toContain("PRIVATE_");
+        expect(output).not.toContain(binding.owner);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+    });
+  }
+  for (const fault of ["unregistered", "foreign-repository", "claimed-state", "missing-anchor", "corrupt-fence"]) {
+    it.effect(`refuses publication without consistent authority state: ${fault}`, () => {
+      let own = nativeOwn();
+      const github = recordedGithub((call) => {
+        if (call.method === "POST" && call.path === "{repo}/check-runs") {
+          own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+          return { body: own };
+        }
+        if (call.path === "{repo}/check-runs/2") return { body: own };
+        return upstreamRoute(call, own);
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        if (fault !== "unregistered") yield* publisher.owner.register(binding);
+        yield* Match.value(fault).pipe(
+          Match.when("corrupt-fence", () =>
+            Effect.gen(function* () {
+              yield* publisher.publish(binding, 0);
+              const sql = yield* SqlClient.SqlClient;
+              yield* sql`UPDATE yeet_owner_checkpoint_publication SET payload=json_set(payload, '$.externalId', 'foreign-correlation')`;
+            })
+          ),
+          Match.when("claimed-state", () =>
+            Effect.gen(function* () {
+              yield* publisher.owner.apply(release(), policy, now);
+              yield* publisher.owner.acknowledgePublication(binding, 1, 2);
+              yield* publisher.owner.apply(claim(), policy, now);
+            })
+          ),
+          Match.when("missing-anchor", () => publisher.owner.apply(release(), policy, now).pipe(Effect.asVoid)),
+          Match.orElse(() => Effect.void)
+        );
+        const revision = Match.value(fault).pipe(
+          Match.when("claimed-state", () => 2),
+          Match.when("missing-anchor", () => 1),
+          Match.orElse(() => 0)
+        );
+        const selected =
+          fault === "foreign-repository"
+            ? OwnerCheckpointBinding.make({ ...binding, repository: "other/repository" })
+            : binding;
+        if (fault === "missing-anchor") {
+          const outcome = yield* publisher.publish(selected, revision);
+          expect(outcome).toEqual({ _tag: "Held", reason: "anchor-missing" });
+        } else {
+          const error = yield* publisher.publish(selected, revision).pipe(Effect.flip);
+          expect(error.reason).toBe(
+            Match.value(fault).pipe(
+              Match.when("unregistered", () => "missing"),
+              Match.when("foreign-repository", () => "binding"),
+              Match.when("claimed-state", () => "state"),
+              Match.orElse(() => "conflict")
+            )
+          );
+        }
+        expect(
+          A.filter(github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(fault === "corrupt-fence" ? 1 : 0);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+    });
+  }
+  for (const fault of [
+    "read-failed",
+    "foreign-anchor",
+    "missing-native-identity",
+    "null-native-correlation",
+    "base-before-write",
+    "wrong-ack",
+    "recovery-wrong-id",
+    "uncertain-revoke",
+  ]) {
+    it.effect(`retains the publication fence after ${fault}`, () => {
+      let own = nativeOwn();
+      let updating = false;
+      let patched = false;
+      const moved = fault === "base-before-write";
+      const github = recordedGithub((call) =>
+        Match.value(call).pipe(
+          Match.when(
+            (call) => call.method === "POST" && call.path === "{repo}/check-runs",
+            (call) => {
+              own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+              return { body: own };
+            }
+          ),
+          Match.when(
+            (call) => call.method === "PATCH",
+            (call) => {
+              patched = true;
+              const body = Result.getOrThrow(decodeCompletedCheckBody(call.body));
+              own = { ...own, external_id: body.external_id, status: "completed", conclusion: body.conclusion };
+              return A.contains(["recovery-wrong-id", "uncertain-revoke"], fault)
+                ? { unreachable: "PRIVATE_AMBIGUOUS_PATCH" }
+                : { body: own };
+            }
+          ),
+          Match.when(
+            (call) => call.path === "{repo}/check-runs/2",
+            () => {
+              if (!updating) return { body: own };
+              return Match.value(fault).pipe(
+                Match.when("read-failed", () => ({ unreachable: "PRIVATE_ANCHOR_READ" })),
+                Match.when("null-native-correlation", () => ({ body: { ...own, external_id: null } })),
+                Match.orElse(() => ({ body: own }))
+              );
+            }
+          ),
+          Match.when(
+            (call) =>
+              updating && patched && call.path === `{repo}/commits/${head}/check-runs` && fault === "recovery-wrong-id",
+            () => ({ body: { total_count: 2, check_runs: [lintRun, { ...own, id: 3 }] } })
+          ),
+          Match.when(
+            (call) => updating && call.path === `{repo}/commits/${head}/check-runs` && fault === "uncertain-revoke",
+            () => ({ unreachable: "PRIVATE_RECONCILE" })
+          ),
+          Match.when(
+            (call) => updating && moved && call.path === "{repo}/git/ref/heads/main",
+            () => ({ body: { object: { type: "commit", sha: head } } })
+          ),
+          Match.when(
+            (call) => updating && moved && Str.startsWith("{repo}/compare/")(call.path),
+            () => ({ body: { merge_base_commit: { sha: merge }, base_commit: { sha: head } } })
+          ),
+          Match.orElse((call) => upstreamRoute(call, own))
+        )
+      );
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const native = yield* CheckRun;
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy).pipe(
+          Effect.provideService(CheckRun, {
+            ...native,
+            get: (id) =>
+              native
+                .get(id)
+                .pipe(
+                  Effect.map((row) =>
+                    updating && fault === "missing-native-identity"
+                      ? CheckRunRef.make(Struct.omit(row, ["nativeIdentity"]))
+                      : row
+                  )
+                ),
+          })
+        );
+        yield* publisher.owner.register(binding);
+        yield* publisher.publish(binding, 0);
+        yield* publisher.owner.apply(
+          fault === "uncertain-revoke" ? request(0, OwnerCheckpointCommand.cases.Revoke.make({})) : release(),
+          policy,
+          now
+        );
+        if (fault === "wrong-ack") yield* publisher.owner.acknowledgePublication(binding, 1, 3);
+        if (fault === "foreign-anchor") own = { ...own, app: { id: 999 } };
+        updating = true;
+        const outcome = yield* publisher.publish(binding, 1);
+        expect(outcome._tag).toBe(
+          A.contains(["read-failed", "wrong-ack", "uncertain-revoke"], fault) ? "Unknown" : "Held"
+        );
+        expect(
+          A.filter(github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(1);
+        const retry = yield* publisher.owner.outbox(binding, 1);
+        expect(O.getOrThrow(retry).delivery._tag).toBe(fault === "wrong-ack" ? "Published" : "Pending");
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+    });
+  }
+
+  for (const fault of [
+    "base-moved",
+    "base-advanced-consistently",
+    "base-advanced-before-ack",
+    "observe-failed",
+    "snapshot-failed",
+    "remember-failed",
+    "ack-failed",
+    "lost-success-response",
+    "lost-failure-response",
+  ]) {
+    it.effect(`invalidates an unsettled successful release after ${fault}`, () => {
+      const fixture = releaseCompensationFixture(fault);
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        expect((yield* publisher.publish(binding, 0))._tag).toBe("Published");
+        yield* publisher.owner.apply(release(), policy, now);
+        yield* failReleaseDurability(fault);
+        const outcome = yield* publisher.publish(binding, 1).pipe(Effect.result);
+        if (Result.isSuccess(outcome)) expect(outcome.success._tag).not.toBe("Published");
+        expect(fixture.native().conclusion).toBe("failure");
+        const outbox = yield* publisher.owner.outbox(binding, 1);
+        expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+        const sql = yield* SqlClient.SqlClient;
+        const fence = yield* sql<{
+          settled: number;
+        }>`SELECT settled FROM yeet_owner_checkpoint_publication WHERE revision=1`;
+        expect(fence).toEqual([{ settled: 0 }]);
+        yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+        expect((yield* Effect.flip(publisher.publish(binding, 2))).reason).toBe("uncertain");
+        const patches = A.filter(fixture.github.calls, (call) => call.method === "PATCH");
+        expect(A.map(patches, (call) => Result.getOrThrow(decodeCompletedCheckBody(call.body)).conclusion)).toEqual([
+          "success",
+          "failure",
+        ]);
+        expect(
+          A.filter(fixture.github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(1);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+    });
+  }
+  for (const stop of ["snapshot-timeout", "outer-timeout", "interruption"]) {
+    it.effect(`invalidates a successful release during post-write ${stop}`, () => {
+      const fixture = releaseCompensationFixture(stop === "outer-timeout" ? "observe-timeout" : "snapshot-timeout");
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        yield* publisher.publish(binding, 0);
+        yield* publisher.owner.apply(release(), policy, now);
+        const fiber = yield* publisher.publish(binding, 1).pipe(Effect.forkChild);
+        yield* Effect.promise(() => fixture.started);
+        if (stop === "interruption") yield* Fiber.interrupt(fiber);
+        else {
+          yield* TestClock.adjust("31 seconds");
+          const outcome = yield* Fiber.join(fiber).pipe(Effect.result);
+          if (Result.isSuccess(outcome)) expect(outcome.success._tag).toBe("Unknown");
+          else expect(outcome.failure.reason).toBe("evidence");
+        }
+        expect(fixture.native().conclusion).toBe("failure");
+        const outbox = yield* publisher.owner.outbox(binding, 1);
+        expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+        const conclusions = A.map(
+          A.filter(fixture.github.calls, (call) => call.method === "PATCH"),
+          (call) => Result.getOrThrow(decodeCompletedCheckBody(call.body)).conclusion
+        );
+        expect(conclusions).toEqual(["success", "failure"]);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+    });
+  }
+  it.effect("bounds uncertain compensation without claiming a red check or settling the fence", () => {
+    const fixture = releaseCompensationFixture("compensation-timeout");
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      yield* publisher.publish(binding, 0);
+      yield* publisher.owner.apply(release(), policy, now);
+      const fiber = yield* publisher.publish(binding, 1).pipe(Effect.forkChild);
+      yield* Effect.promise(() => fixture.started);
+      yield* TestClock.adjust("4 seconds");
+      const outcome = yield* Fiber.join(fiber).pipe(Effect.result);
+      assertFailure(outcome, OwnerCheckpointError.make({ reason: "binding" }));
+      expect(fixture.native().conclusion).toBe("success");
+      const outbox = yield* publisher.owner.outbox(binding, 1);
+      expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+      const sql = yield* SqlClient.SqlClient;
+      const fence = yield* sql<{
+        settled: number;
+      }>`SELECT settled FROM yeet_owner_checkpoint_publication WHERE revision=1`;
+      expect(fence).toEqual([{ settled: 0 }]);
+      yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+      expect((yield* Effect.flip(publisher.publish(binding, 2))).reason).toBe("uncertain");
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+  });
+  for (const move of ["correlation", "application", "head", "generation", "revoke"]) {
+    it.effect(`guards compensating a release after concurrent ${move}`, () => {
+      const fixture = releaseCompensationFixture("snapshot-timeout");
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        yield* publisher.publish(binding, 0);
+        yield* publisher.owner.apply(release(), policy, now);
+        const fiber = yield* publisher.publish(binding, 1).pipe(Effect.result, Effect.forkChild);
+        yield* Effect.promise(() => fixture.started);
+        const native = fixture.native();
+        if (move === "correlation") fixture.changeNative({ ...native, external_id: "newer-publication" });
+        if (move === "application") fixture.changeNative({ ...native, app: { id: 999 } });
+        if (move === "head") fixture.changeNative({ ...native, head_sha: merge });
+        if (move === "generation")
+          yield* publisher.owner.apply(
+            request(1, OwnerCheckpointCommand.cases.Synchronize.make({ head: merge })),
+            policy,
+            now
+          );
+        if (move === "revoke")
+          yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+        fixture.resume();
+        const outcome = yield* Fiber.join(fiber);
+        if (Result.isSuccess(outcome)) expect(outcome.success._tag).not.toBe("Published");
+        expect(fixture.native().conclusion).toBe(move === "revoke" ? "failure" : "success");
+        const patches = A.filter(fixture.github.calls, (call) => call.method === "PATCH");
+        expect(patches).toHaveLength(move === "revoke" ? 2 : 1);
+        expect(
+          A.filter(fixture.github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+        ).toHaveLength(1);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+    });
+  }
+  for (const corruption of [
+    "deleted",
+    "native-id",
+    "binding",
+    "pending-external",
+    "authority-revision",
+    "remember-native-id",
+  ]) {
+    it.effect(`refuses compensation after defensive authority-anchor ${corruption} corruption`, () => {
+      const fixture = releaseCompensationFixture("snapshot-timeout");
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        yield* publisher.publish(binding, 0);
+        yield* publisher.owner.apply(release(), policy, now);
+        const fiber = yield* publisher.publish(binding, 1).pipe(Effect.result, Effect.forkChild);
+        yield* Effect.promise(() => fixture.started);
+        const sql = yield* SqlClient.SqlClient;
+        yield* Match.value(corruption).pipe(
+          Match.when("deleted", () => sql`DELETE FROM yeet_owner_checkpoint_anchor`),
+          Match.whenOr(
+            "native-id",
+            "remember-native-id",
+            () => sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.nativeId', 3)`
+          ),
+          Match.when(
+            "pending-external",
+            () =>
+              sql`UPDATE yeet_owner_checkpoint_publication SET payload=json_set(payload, '$.externalId', 'foreign-correlation') WHERE revision=1`
+          ),
+          Match.when(
+            "authority-revision",
+            () => sql`UPDATE yeet_owner_checkpoint SET payload=json_set(payload, '$.revision', 0)`
+          ),
+          Match.orElse(
+            () => sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.binding.generation', 1)`
+          )
+        );
+        fixture.resume({
+          body: { object: { type: "commit", sha: corruption === "remember-native-id" ? merge : head } },
+        });
+        const outcome = yield* Fiber.join(fiber);
+        if (corruption === "remember-native-id") assertSuccess(outcome, { _tag: "Unknown" });
+        else outcome.pipe(Result.isFailure, assertTrue);
+        expect(fixture.native().conclusion).toBe("success");
+        const outbox = yield* publisher.owner.outbox(binding, 1);
+        expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+        const fence = yield* sql<{
+          settled: number;
+        }>`SELECT settled FROM yeet_owner_checkpoint_publication WHERE revision=1`;
+        expect(fence).toEqual([{ settled: 0 }]);
+        expect(A.filter(fixture.github.calls, (call) => call.method === "PATCH")).toHaveLength(1);
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+    });
+  }
+  it.effect("updates one native identity across release and revoke and rejects stale revisions", () => {
+    let own = nativeOwn();
+    const github = recordedGithub((call) => {
+      if (call.method === "POST" && call.path === "{repo}/check-runs") {
+        const data = Result.getOrThrow(decodeExternalCheckBody(call.body));
+        own = nativeOwn(data.external_id);
+        return { body: own };
+      }
+      if (call.method === "PATCH") {
+        const data = Result.getOrThrow(decodeCompletedCheckBody(call.body));
+        own = { ...own, external_id: data.external_id, status: "completed", conclusion: data.conclusion };
+        return { body: own };
+      }
+      if (call.path === "{repo}/check-runs/2") return { body: own };
+      return upstreamRoute(call, own);
+    });
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      expect((yield* publisher.publish(binding, 0))._tag).toBe("Published");
+      yield* publisher.owner.apply(release(), policy, now);
+      expect((yield* publisher.publish(binding, 1))._tag).toBe("Published");
+      expect((yield* publisher.publish(binding, 1))._tag).toBe("Published");
+      const outbox = yield* publisher.owner.outbox(binding, 1);
+      expect(O.getOrThrow(outbox).delivery).toEqual({ _tag: "Published", checkRunId: 2 });
+      own = { ...own, conclusion: "failure" };
+      const nonsuccess = yield* publisher.publish(binding, 1);
+      expect(nonsuccess).toEqual({ _tag: "Held", reason: "native-status" });
+      own = { ...own, conclusion: "success" };
+      yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+      expect((yield* publisher.publish(binding, 2))._tag).toBe("Published");
+      expect((yield* Effect.flip(publisher.publish(binding, 1))).reason).toBe("conflict");
+      expect(
+        A.filter(github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+      ).toHaveLength(1);
+      expect(
+        A.map(
+          A.filter(github.calls, (call) => call.method === "PATCH"),
+          (call) => call.path
+        )
+      ).toEqual(["{repo}/check-runs/2", "{repo}/check-runs/2"]);
+      expect(own.conclusion).toBe("failure");
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+  });
+});
+
+const mutateReceiptFixtureFile = Effect.fnUntraced(function* (
+  root: string,
+  observer: OwnerCheckpointReceiptRef,
+  fault: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  if (fault === "hash") yield* fs.writeFileString(`${root}/${observer.name}`, "{}");
+  if (fault === "permissions") yield* fs.chmod(`${root}/${observer.name}`, 0o644);
+  if (fault === "symlink") {
+    yield* fs.rename(`${root}/${observer.name}`, `${root}/original.json`);
+    yield* fs.symlink(`${root}/original.json`, `${root}/${observer.name}`);
+  }
+  if (fault === "root-permissions") yield* fs.chmod(root, 0o755);
+});
+const observerReceiptFixture = Effect.fnUntraced(function* (fault: string) {
+  const rawObserver = yield* encodeObserverJson(evidence.observer);
+  const encodedObserver = yield* decodeUnknownRecord(rawObserver);
+  return {
+    ...encodedObserver,
+    ...(fault === "unfinished" ? { phase: "running" } : {}),
+    ...(fault === "stopped-monitor" ? { mode: "publisher-submitted", outcome: "stopped" } : {}),
+  };
+});
+describe("authority receipt root", () => {
+  for (const fault of [
+    "none",
+    "hash",
+    "symlink",
+    "permissions",
+    "unfinished",
+    "stopped-monitor",
+    "post-finalization",
+    "wrong-binding",
+    "wrong-checkout",
+    "missing-family",
+    "base-moved",
+    "reference-name",
+    "root-permissions",
+    "noncanonical-root",
+    "file-root",
+    "missing-uid",
+    "changed-during-read",
+    "crypto-timeout",
+  ]) {
+    it.effect(`hashes bounded receipt bytes before decoding: ${fault}`, () =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "checkpoint-receipts-" });
+        yield* fs.chmod(root, 0o700);
+        const write = Effect.fnUntraced(function* (value: unknown) {
+          const text = yield* encodeUnknownJson(value);
+          const hash = yield* sha256Hex(text);
+          const sha256 = Sha256Hex.make(hash);
+          const ref = OwnerCheckpointReceiptRef.make({ name: `${sha256}.json`, sha256 });
+          yield* fs.writeFileString(`${root}/${ref.name}`, text);
+          yield* fs.chmod(`${root}/${ref.name}`, 0o600);
+          return ref;
+        });
+        const observerValue = yield* observerReceiptFixture(fault);
+        const observer = yield* write(observerValue);
+        const encodedClassic = yield* encodeSnapshotJson(
+          fault === "base-moved"
+            ? OwnerCheckpointSnapshot.make({ ...evidence.classic, base: { ...evidence.classic.base, sha: head } })
+            : evidence.classic
+        );
+        const classic = yield* write(encodedClassic);
+        const encodedFinal = yield* encodeFinalCheckJson(
+          FinalCheckReceipt.make({
+            ...finalCheck,
+            ...(fault === "post-finalization" ? { finishedAt: DateTime.formatIso(now) } : {}),
+            ...(fault === "missing-family" ? { steps: [] } : {}),
+          })
+        );
+        const final = yield* write(encodedFinal);
+        const manifest = yield* write({
+          version: "owner-checkpoint-receipts/v1",
+          checkout: fault === "wrong-checkout" ? releaseId : digest,
+          binding: fault === "wrong-binding" ? { ...binding, prNumber: 999 } : binding,
+          observer,
+          classic,
+          finalCheck: final,
+        });
+        yield* mutateReceiptFixtureFile(root, observer, fault);
+        const selectedRoot = Match.value(fault).pipe(
+          Match.when("noncanonical-root", () => `${root}/.`),
+          Match.when("file-root", () => `${root}/${manifest.name}`),
+          Match.orElse(() => root)
+        );
+        const selectedManifest = Match.value(fault).pipe(
+          Match.when("reference-name", () =>
+            OwnerCheckpointReceiptRef.make({ ...manifest, name: `${releaseId}.json` })
+          ),
+          Match.orElse(() => manifest)
+        );
+        const operation = readOwnerCheckpointEvidenceReceipts(selectedRoot, binding, selectedManifest, policy, digest);
+        const guarded = Match.value(fault).pipe(
+          Match.when("missing-uid", () =>
+            Effect.acquireUseRelease(
+              Effect.sync(() => vi.stubGlobal("process", { ...process, getuid: undefined })),
+              () => operation,
+              () => Effect.sync(vi.unstubAllGlobals)
+            )
+          ),
+          Match.when("changed-during-read", () =>
+            Effect.acquireUseRelease(
+              Effect.sync(() => {
+                const native = process.getBuiltinModule("node:fs");
+                const read = native.readSync;
+                return vi.spyOn(native, "readSync").mockImplementationOnce((...args) => {
+                  const count = read(...args);
+                  native.utimesSync(`${root}/${manifest.name}`, 0, 1);
+                  return count;
+                });
+              }),
+              () => operation,
+              (spy) => Effect.sync(() => spy.mockRestore())
+            )
+          ),
+          Match.when("crypto-timeout", () =>
+            Effect.gen(function* () {
+              const fiber = yield* operation.pipe(
+                Effect.provideService(Digest.Digest, {
+                  digest: () => Effect.never,
+                  digestHex: () => Effect.never,
+                }),
+                Effect.forkChild
+              );
+              yield* TestClock.adjust("5 seconds");
+              return yield* Fiber.join(fiber);
+            })
+          ),
+          Match.orElse(() => operation)
+        );
+        const result = yield* guarded.pipe(Effect.result);
+        deepStrictEqual(Result.isSuccess(result), fault === "none");
+        if (Result.isFailure(result))
+          expect(result.failure.reason).toBe(fault === "base-moved" ? "binding" : "evidence");
+      }).pipe(provideTestLayer(NodeFileSystem.layer), offline)
+    );
+  }
+});
+
+describe("publication crash and revision serialization", () => {
+  it.effect("retains an ambiguous create fence after reopen and refuses a later revision overtaking it", () => {
+    const github = recordedGithub((call) =>
+      call.method === "POST" ? { unreachable: "PRIVATE_LOST_RESPONSE" } : { body: { total_count: 0, check_runs: [] } }
+    );
+    return Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "publication-fence-" });
+      const filename = `${directory}/owner.sqlite`;
+      yield* withDb(
+        filename,
+        Effect.gen(function* () {
+          const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+          yield* publisher.owner.register(binding);
+          expect((yield* publisher.publish(binding, 0))._tag).toBe("Unknown");
+        }).pipe(provideTestLayer(CheckRun.layer))
+      );
+      yield* withDb(
+        filename,
+        Effect.gen(function* () {
+          const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+          expect((yield* publisher.publish(binding, 0))._tag).toBe("Unknown");
+          yield* publisher.owner.apply(request(0, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+          expect((yield* Effect.flip(publisher.publish(binding, 1))).reason).toBe("uncertain");
+        }).pipe(provideTestLayer(CheckRun.layer))
+      );
+      expect(A.filter(github.calls, (call) => call.method === "POST")).toHaveLength(1);
+    }).pipe(provideTestLayer(NodeFileSystem.layer), offline, github.provide);
+  });
+});
+
+describe("owner authority public boundary refusal", () => {
+  it.effect("refuses final proof for a different base before authorizing a release", () =>
+    Effect.gen(function* () {
+      const wrongBase = OwnerCheckpointEvidence.make({
+        ...evidence,
+        finalCheck: FinalCheckReceipt.make({ ...finalCheck, base: "origin/other" }),
+      });
+      const error = yield* Effect.flip(qualifyOwnerCheckpointEvidence(binding, wrongBase, policy, now));
+      expect(error.reason).toBe("binding");
+    })
+  );
+  it.effect("refuses a claim after the actual base changes without advancing the released record", () =>
+    Effect.gen(function* () {
+      const held = OwnerCheckpointRecord.make({
+        binding,
+        revision: 0,
+        state: OwnerCheckpointState.cases.Held.make({ reason: "registered" }),
+      });
+      const released = yield* transitionOwnerCheckpoint(held, release(), policy, now);
+      const moved = OwnerCheckpointSnapshot.make({ ...snapshot(), base: { ...snapshot().base, sha: head } });
+      const error = yield* Effect.flip(
+        transitionOwnerCheckpoint(
+          released.record,
+          request(1, OwnerCheckpointCommand.cases.Claim.make({ claimId, snapshot: moved })),
+          policy,
+          now
+        )
+      );
+      expect(error.reason).toBe("binding");
+      expect(released.record.state._tag).toBe("Released");
+    })
+  );
+  it.effect("refuses a malformed public dispatch base before reading or writing an outbox", () =>
+    Effect.gen(function* () {
+      const store = yield* makeOwnerCheckpointStore();
+      const malformed = { ...snapshot().base };
+      Reflect.deleteProperty(malformed, "sha");
+      const error = yield* Effect.flip(store.prepareDispatch(binding, 2, malformed));
+      expect(error.reason).toBe("conflict");
+      const missing = yield* store.read(binding);
+      missing.pipe(assertNone);
+    }).pipe(inMemory)
+  );
+});
+
+const adapterBoundaryPull = (call: GithubCall, fault: string, refReads: number): GithubAnswer | undefined => {
+  if (call.path !== "{repo}/pulls/42") return undefined;
+  if (fault === "initial-closed") return { body: livePull(true) };
+  if (refReads >= 2 && fault === "late-base-ref")
+    return { body: { ...livePull(), base: { ...livePull().base, ref: "other" } } };
+  if (refReads >= 2 && fault === "late-draft") return { body: { ...livePull(), draft: true } };
+  return undefined;
+};
+const adapterBoundaryRules = (call: GithubCall, fault: string, ruleReads: number): GithubAnswer | undefined => {
+  if (!Str.endsWith("/rules/branches/main")(call.path)) return undefined;
+  if (fault === "missing-rule-parameters") return { body: [{ type: "required_status_checks" }] };
+  if (fault === "rules-moved" && ruleReads > 1)
+    return {
+      body: [{ type: "required_status_checks", parameters: { required_status_checks: [{ context: "new-context" }] } }],
+    };
+  if (fault === "unordered-app-results")
+    return {
+      body: [
+        { type: "pull_request" },
+        {
+          type: "required_status_checks",
+          parameters: {
+            required_status_checks: [{ context: "Lint", integration_id: 7 }, { context: "Owner checkpoint" }],
+          },
+        },
+      ],
+    };
+  return undefined;
+};
+const adapterBoundaryChecks = (call: GithubCall, fault: string, checkReads: number): GithubAnswer | undefined => {
+  if (call.path !== `{repo}/commits/${head}/check-runs`) return undefined;
+  if (fault === "overflow" && checkReads > 1)
+    return { body: { total_count: 2001, check_runs: A.map(A.range(1, 2001), (id) => ({ ...lintRun, id })) } };
+  if (fault === "duplicate-native" && checkReads > 1)
+    return { body: { total_count: 3, check_runs: [lintRun, lintRun, nativeOwn()] } };
+  if (fault === "missing-own") return { body: { total_count: 1, check_runs: [lintRun] } };
+  if (fault === "unordered-app-results")
+    return {
+      body: { total_count: 3, check_runs: [{ ...lintRun, id: 3 }, { ...lintRun, conclusion: "failure" }, nativeOwn()] },
+    };
+  return undefined;
+};
+const adapterBoundaryStatuses = (call: GithubCall, fault: string): GithubAnswer | undefined => {
+  if (fault !== "duplicate-status" || !Str.endsWith("/statuses")(call.path)) return undefined;
+  const row = {
+    id: 12,
+    context: "optional",
+    state: "success",
+    creator: { login: "vendor" },
+    description: null,
+    target_url: null,
+    updated_at: DateTime.formatIso(at(-1)),
+  };
+  return { body: [row, row] };
+};
+const adapterBoundaryFixture = (fault: string) => {
+  let checkReads = 0;
+  let ruleReads = 0;
+  let refReads = 0;
+  return recordedGithub((call) => {
+    if (call.path === "{repo}/git/ref/heads/main") refReads++;
+    if (Str.endsWith("/rules/branches/main")(call.path)) ruleReads++;
+    if (call.path === `{repo}/commits/${head}/check-runs`) checkReads++;
+    return (
+      adapterBoundaryPull(call, fault, refReads) ??
+      adapterBoundaryRules(call, fault, ruleReads) ??
+      adapterBoundaryChecks(call, fault, checkReads) ??
+      adapterBoundaryStatuses(call, fault) ??
+      upstreamRoute(call)
+    );
+  });
+};
+describe("native authority metadata races and bounds", () => {
+  for (const fault of [
+    "initial-closed",
+    "late-base-ref",
+    "late-draft",
+    "missing-rule-parameters",
+    "rules-moved",
+    "unordered-app-results",
+    "overflow",
+    "duplicate-native",
+    "missing-own",
+    "duplicate-status",
+  ]) {
+    it.effect(`keeps authority read-only across ${fault}`, () => {
+      const github = adapterBoundaryFixture(fault);
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const result = yield* readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external").pipe(
+          Effect.result
+        );
+        deepStrictEqual(Result.isSuccess(result), fault === "unordered-app-results");
+        if (Result.isFailure(result))
+          expect(result.failure.reason).toBe(
+            A.contains(["initial-closed", "late-base-ref", "late-draft"], fault) ? "binding" : "evidence"
+          );
+        expect(A.filter(github.calls, (call) => call.method !== "GET" && call.path !== "/graphql")).toHaveLength(0);
+      }).pipe(offline, github.provide);
+    });
+  }
+});
+
+describe("publisher exact-identity and recovery boundaries", () => {
+  it.effect("refuses a foreign repository before any native operation", () => {
+    const github = recordedGithub(upstreamRoute);
+    return Effect.gen(function* () {
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      const foreign = OwnerCheckpointBinding.make({ ...binding, repository: "other/repo" });
+      const error = yield* Effect.flip(publisher.publish(foreign, 0));
+      expect(error.reason).toBe("binding");
+      expect(github.calls).toHaveLength(0);
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+  });
+  it.effect("holds release before an initial pending check has established an anchor", () => {
+    const github = recordedGithub(upstreamRoute);
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      yield* publisher.owner.apply(release(), policy, now);
+      const result = yield* publisher.publish(binding, 1);
+      expect(result).toEqual({ _tag: "Held", reason: "anchor-missing" });
+      const entry = yield* publisher.owner.outbox(binding, 1);
+      expect(O.getOrThrow(entry).delivery._tag).toBe("Pending");
+      expect(github.calls).toHaveLength(0);
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+  });
+  for (const fault of ["unreadable-anchor", "foreign-anchor", "changed-base"]) {
+    it.effect(`does not write success when its prerequisite is ${fault}`, () => {
+      let own = nativeOwn();
+      let active = false;
+      const prerequisiteNative = (): GithubAnswer =>
+        fault === "unreadable-anchor"
+          ? { status: 503 }
+          : { body: fault === "foreign-anchor" ? { ...own, external_id: "foreign" } : own };
+      const prerequisite = (call: GithubCall): GithubAnswer | undefined => {
+        if (!active) return undefined;
+        if (call.path === "{repo}/check-runs/2") return prerequisiteNative();
+        if (fault !== "changed-base") return undefined;
+        if (call.path === "{repo}/git/ref/heads/main") return { body: { object: { type: "commit", sha: head } } };
+        if (Str.startsWith("{repo}/compare/")(call.path))
+          return { body: { merge_base_commit: { sha: head }, base_commit: { sha: head } } };
+        return undefined;
+      };
+      const github = recordedGithub((call) => {
+        if (call.method === "POST" && call.path === "{repo}/check-runs") {
+          own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+          return { body: own };
+        }
+        return prerequisite(call) ?? (call.path === "{repo}/check-runs/2" ? { body: own } : upstreamRoute(call, own));
+      });
+      return Effect.gen(function* () {
+        yield* TestClock.setTime(ms);
+        const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+        yield* publisher.owner.register(binding);
+        yield* publisher.publish(binding, 0);
+        yield* publisher.owner.apply(release(), policy, now);
+        active = true;
+        const result = yield* publisher.publish(binding, 1).pipe(Effect.result);
+        if (Result.isSuccess(result)) expect(result.success._tag).not.toBe("Published");
+        expect(A.filter(github.calls, (call) => call.method === "PATCH")).toHaveLength(0);
+        const entry = yield* publisher.owner.outbox(binding, 1);
+        expect(O.getOrThrow(entry).delivery._tag).toBe("Pending");
+      }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+    });
+  }
+  it.effect("refuses an overflowing reconciliation without replaying an ambiguous check creation", () => {
+    let externalId = "";
+    const github = recordedGithub((call) => {
+      if (call.method === "POST" && call.path === "{repo}/check-runs") {
+        externalId = Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id;
+        return { unreachable: "PRIVATE_AMBIGUOUS_CREATE" };
+      }
+      return {
+        body: { total_count: 2001, check_runs: A.map(A.range(1, 2001), (id) => ({ ...nativeOwn(externalId), id })) },
+      };
+    });
+    return Effect.gen(function* () {
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      const first = yield* publisher.publish(binding, 0);
+      const second = yield* publisher.publish(binding, 0);
+      expect(first).toEqual({ _tag: "Unknown" });
+      expect(second).toEqual({ _tag: "Unknown" });
+      expect(
+        A.filter(github.calls, (call) => call.method === "POST" && call.path === "{repo}/check-runs")
+      ).toHaveLength(1);
+      expect(A.filter(github.calls, (call) => call.method === "PATCH")).toHaveLength(0);
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+  });
+  it.effect("refuses a corrupt durable publication correlation before retrying native IO", () => {
+    let own = nativeOwn();
+    const github = recordedGithub((call) => {
+      if (call.method === "POST" && call.path === "{repo}/check-runs") {
+        own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+        return { body: own };
+      }
+      if (call.path === "{repo}/check-runs/2") return { body: own };
+      return upstreamRoute(call, own);
+    });
+    return Effect.gen(function* () {
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      yield* publisher.publish(binding, 0);
+      const calls = github.calls.length;
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`UPDATE yeet_owner_checkpoint_publication SET payload=json_set(payload, '$.externalId', 'foreign-publication')`;
+      const error = yield* Effect.flip(publisher.publish(binding, 0));
+      expect(error.reason).toBe("conflict");
+      expect(github.calls).toHaveLength(calls);
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+  });
+  it.effect("reconciles an already settled release without another PATCH or duplicate ACK", () => {
+    let own = nativeOwn();
+    const github = recordedGithub((call) => {
+      if (call.method === "POST" && call.path === "{repo}/check-runs") {
+        own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+        return { body: own };
+      }
+      if (call.method === "PATCH") {
+        const data = Result.getOrThrow(decodeCompletedCheckBody(call.body));
+        own = { ...own, external_id: data.external_id, status: "completed", conclusion: data.conclusion };
+        return { body: own };
+      }
+      if (call.path === "{repo}/check-runs/2") return { body: own };
+      return upstreamRoute(call, own);
+    });
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      yield* publisher.publish(binding, 0);
+      yield* publisher.owner.apply(release(), policy, now);
+      const first = yield* publisher.publish(binding, 1);
+      const second = yield* publisher.publish(binding, 1);
+      expect(second).toEqual(first);
+      expect(A.filter(github.calls, (call) => call.method === "PATCH")).toHaveLength(1);
+      const entry = yield* publisher.owner.outbox(binding, 1);
+      expect(O.getOrThrow(entry).delivery).toEqual({ _tag: "Published", checkRunId: 2 });
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+  });
+});
+
+describe("installed receipt IO refusal boundaries", () => {
+  for (const fault of ["symlink-root", "file-root", "public-root", "wrong-reference"]) {
+    it.effect(`refuses ${fault} before trusting receipt bytes`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const parent = yield* fs.makeTempDirectoryScoped({ prefix: "receipt-boundary-" });
+        const root = `${parent}/root`;
+        if (fault === "file-root") yield* fs.writeFileString(root, "not a directory");
+        else {
+          yield* fs.makeDirectory(root);
+          yield* fs.chmod(root, fault === "public-root" ? 0o755 : 0o700);
+        }
+        let selected = root;
+        if (fault === "symlink-root") {
+          selected = `${parent}/alias`;
+          yield* fs.symlink(root, selected);
+        }
+        const ref = OwnerCheckpointReceiptRef.make({ name: `${releaseId}.json`, sha256: digest });
+        const error = yield* Effect.flip(readOwnerCheckpointEvidenceReceipts(selected, binding, ref, policy, digest));
+        expect(error.reason).toBe("evidence");
+        const entries = yield* fs.readDirectory(parent);
+        expect(entries).toEqual(fault === "symlink-root" ? ["alias", "root"] : ["root"]);
+      }).pipe(provideTestLayer(NodeFileSystem.layer), offline)
+    );
+  }
+});
+
+const raceReceiptFixture = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "receipt-race-" });
+  yield* fs.chmod(root, 0o700);
+  const write = Effect.fnUntraced(function* (value: unknown) {
+    const text = yield* encodeUnknownJson(value);
+    const hash = yield* sha256Hex(text);
+    const sha256 = Sha256Hex.make(hash);
+    const ref = OwnerCheckpointReceiptRef.make({ name: `${sha256}.json`, sha256 });
+    yield* fs.writeFileString(`${root}/${ref.name}`, text);
+    yield* fs.chmod(`${root}/${ref.name}`, 0o600);
+    return ref;
+  });
+  const observerValue = yield* observerReceiptFixture("none");
+  const observer = yield* write(observerValue);
+  const classicValue = yield* encodeSnapshotJson(evidence.classic);
+  const classic = yield* write(classicValue);
+  const finalValue = yield* encodeFinalCheckJson(finalCheck);
+  const final = yield* write(finalValue);
+  const manifest = yield* write({
+    version: "owner-checkpoint-receipts/v1",
+    checkout: digest,
+    binding,
+    observer,
+    classic,
+    finalCheck: final,
+  });
+  return { root, observer, manifest };
+});
+it.effect("refuses a receipt that grows after descriptor validation without decoding the new bytes", () =>
+  Effect.gen(function* () {
+    yield* TestClock.setTime(ms);
+    const fixture = yield* raceReceiptFixture();
+    const native = process.getBuiltinModule("node:fs");
+    const original = native.fstatSync;
+    let changed = false;
+    yield* Effect.acquireRelease(
+      Effect.sync(() =>
+        vi.spyOn(native, "fstatSync").mockImplementation((...args) => {
+          const stat = Reflect.apply(original, native, args);
+          if (
+            !changed &&
+            native.readlinkSync(`/proc/self/fd/${args[0]}`) === `${fixture.root}/${fixture.observer.name}`
+          ) {
+            changed = true;
+            native.appendFileSync(`${fixture.root}/${fixture.observer.name}`, " ");
+          }
+          return stat;
+        })
+      ),
+      (spy) => Effect.sync(() => spy.mockRestore())
+    );
+    const result = yield* readOwnerCheckpointEvidenceReceipts(
+      fixture.root,
+      binding,
+      fixture.manifest,
+      policy,
+      digest
+    ).pipe(Effect.result);
+    result.pipe(Result.isFailure, assertTrue);
+    expect(changed).toBe(true);
+    if (Result.isFailure(result)) expect(result.failure.reason).toBe("evidence");
+  }).pipe(provideTestLayer(NodeFileSystem.layer), offline)
+);
+
+it.effect("refuses an authority snapshot whose actual read exceeds its freshness budget", () => {
+  const started = Promise.withResolvers<void>();
+  const resume = Promise.withResolvers<GithubAnswer>();
+  let delayed = false;
+  const github = recordedGithub((call) => {
+    if (!delayed && call.path === "{repo}/git/ref/heads/main") {
+      delayed = true;
+      started.resolve();
+      return resume.promise;
+    }
+    return upstreamRoute(call);
+  });
+  return Effect.gen(function* () {
+    yield* TestClock.setTime(ms);
+    const strict = OwnerCheckpointPolicy.make({ ...policy, maxAgeMillis: 1 });
+    const fiber = yield* readOwnerCheckpointSnapshot(context, binding, 2, strict, "fixture-external").pipe(
+      Effect.result,
+      Effect.forkChild
+    );
+    yield* Effect.promise(() => started.promise);
+    yield* TestClock.adjust("1 second");
+    resume.resolve({ body: { object: { type: "commit", sha: merge } } });
+    const result = yield* Fiber.join(fiber);
+    result.pipe(Result.isFailure, assertTrue);
+    if (Result.isFailure(result)) expect(result.failure.reason).toBe("freshness");
+    expect(A.filter(github.calls, (call) => call.method === "PATCH")).toHaveLength(0);
+  }).pipe(offline, github.provide);
+});
+
+it.effect("rejects a repository mismatch before reading native authority metadata", () => {
+  const github = recordedGithub(upstreamRoute);
+  return Effect.gen(function* () {
+    const foreign = OwnerCheckpointBinding.make({ ...binding, repository: "other/repo" });
+    const error = yield* Effect.flip(readOwnerCheckpointSnapshot(context, foreign, 2, policy, "fixture-external"));
+    expect(error.reason).toBe("binding");
+    expect(github.calls).toHaveLength(0);
+  }).pipe(offline, github.provide);
+});
+it.effect("does not publish a merge revision as a check release", () => {
+  const github = recordedGithub(upstreamRoute);
+  return Effect.gen(function* () {
+    const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+    yield* publisher.owner.register(binding);
+    yield* publisher.owner.apply(release(), policy, now);
+    yield* publisher.owner.acknowledgePublication(binding, 1, 2);
+    yield* publisher.owner.apply(
+      request(1, OwnerCheckpointCommand.cases.Claim.make({ claimId, snapshot: snapshot(-1, true) })),
+      policy,
+      now
+    );
+    const error = yield* Effect.flip(publisher.publish(binding, 2));
+    expect(error.reason).toBe("state");
+    expect(github.calls).toHaveLength(0);
+  }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+});
+for (const target of ["anchor", "pending-correlation", "regressed-authority"]) {
+  it.effect(`holds recovery when the durable ${target} changes after native success`, () => {
+    const fixture = releaseCompensationFixture("snapshot-timeout");
+    return Effect.gen(function* () {
+      yield* TestClock.setTime(ms);
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      yield* publisher.publish(binding, 0);
+      yield* publisher.owner.apply(release(), policy, now);
+      const fiber = yield* publisher.publish(binding, 1).pipe(Effect.result, Effect.forkChild);
+      yield* Effect.promise(() => fixture.started);
+      const sql = yield* SqlClient.SqlClient;
+      if (target === "anchor")
+        yield* sql`UPDATE yeet_owner_checkpoint_anchor SET payload=json_set(payload, '$.nativeId', 3)`;
+      else if (target === "pending-correlation")
+        yield* sql`UPDATE yeet_owner_checkpoint_publication SET payload=json_set(payload, '$.externalId', 'foreign') WHERE revision=1`;
+      else yield* sql`UPDATE yeet_owner_checkpoint SET payload=json_set(payload, '$.revision', 0)`;
+      fixture.resume(
+        target === "pending-correlation" ? { body: { object: { type: "commit", sha: head } } } : undefined
+      );
+      const result = yield* Fiber.join(fiber);
+      if (Result.isSuccess(result)) expect(result.success._tag).toBe("Unknown");
+      expect(fixture.native().conclusion).toBe("success");
+      const outbox = yield* publisher.owner.outbox(binding, 1);
+      expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+      expect(A.filter(fixture.github.calls, (call) => call.method === "PATCH")).toHaveLength(1);
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+  });
+}
+
+it.effect("does not redirect uncertain success recovery to a different native identity", () => {
+  const fixture = releaseCompensationFixture("lost-success-new-identity");
+  return Effect.gen(function* () {
+    yield* TestClock.setTime(ms);
+    const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+    yield* publisher.owner.register(binding);
+    yield* publisher.publish(binding, 0);
+    yield* publisher.owner.apply(release(), policy, now);
+    const result = yield* publisher.publish(binding, 1);
+    expect(result).toEqual({ _tag: "Held", reason: "native-identity" });
+    expect(fixture.native().id).toBe(3);
+    const outbox = yield* publisher.owner.outbox(binding, 1);
+    expect(O.getOrThrow(outbox).delivery._tag).toBe("Pending");
+    const patches = A.filter(fixture.github.calls, (call) => call.method === "PATCH");
+    expect(A.map(patches, (call) => call.path)).toEqual(["{repo}/check-runs/2"]);
+  }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+});
+it.effect("rejects a corrupt settled release acknowledgement without rewriting native success", () => {
+  const fixture = releaseCompensationFixture("none");
+  return Effect.gen(function* () {
+    yield* TestClock.setTime(ms);
+    const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+    yield* publisher.owner.register(binding);
+    yield* publisher.publish(binding, 0);
+    yield* publisher.owner.apply(release(), policy, now);
+    yield* publisher.publish(binding, 1);
+    const sql = yield* SqlClient.SqlClient;
+    yield* sql`UPDATE yeet_owner_checkpoint_outbox SET payload=json_set(payload, '$.delivery.checkRunId', 3) WHERE revision=1`;
+    const result = yield* publisher.publish(binding, 1);
+    expect(result).toEqual({ _tag: "Unknown" });
+    expect(fixture.native().conclusion).toBe("success");
+    expect(A.filter(fixture.github.calls, (call) => call.method === "PATCH")).toHaveLength(1);
+    const error = yield* Effect.flip(
+      publisher.owner.apply(
+        request(1, OwnerCheckpointCommand.cases.Claim.make({ claimId, snapshot: snapshot(-1, true) })),
+        policy,
+        now
+      )
+    );
+    expect(error.reason).toBe("publication");
+    const outbox = yield* publisher.owner.outbox(binding, 1);
+    expect(O.getOrThrow(outbox).delivery).toEqual({ _tag: "Published", checkRunId: 3 });
+  }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, fixture.github.provide);
+});
+
+it.effect("refuses publication for an unenrolled owner without native IO", () => {
+  const github = recordedGithub(upstreamRoute);
+  return Effect.gen(function* () {
+    const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+    const error = yield* Effect.flip(publisher.publish(binding, 0));
+    expect(error.reason).toBe("missing");
+    expect(github.calls).toHaveLength(0);
+  }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+});
+for (const fault of ["unavailable", "malformed"]) {
+  it.effect(`retains an ambiguous creation fence when reconciliation is ${fault}`, () => {
+    const github = recordedGithub((call) =>
+      call.method === "POST"
+        ? { unreachable: "PRIVATE_LOST_CREATE" }
+        : fault === "unavailable"
+          ? { status: 503 }
+          : { body: { total_count: 1, check_runs: [{ id: 2, external_id: 42 }] } }
+    );
+    return Effect.gen(function* () {
+      const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+      yield* publisher.owner.register(binding);
+      const first = yield* publisher.publish(binding, 0);
+      const retry = yield* publisher.publish(binding, 0);
+      expect(first).toEqual({ _tag: "Unknown" });
+      expect(retry).toEqual(first);
+      expect(A.filter(github.calls, (call) => call.method === "POST")).toHaveLength(1);
+      expect(A.filter(github.calls, (call) => call.method === "PATCH")).toHaveLength(0);
+    }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+  });
+}
+it.effect("holds an uncertain revocation without replaying its failure write or authorizing a claim", () => {
+  let own = nativeOwn();
+  let revoked = false;
+  const github = recordedGithub((call) => {
+    if (call.method === "POST" && call.path === "{repo}/check-runs") {
+      own = nativeOwn(Result.getOrThrow(decodeExternalCheckBody(call.body)).external_id);
+      return { body: own };
+    }
+    if (call.method === "PATCH") {
+      if (revoked) return { unreachable: "PRIVATE_UNCERTAIN_REVOCATION" };
+      const data = Result.getOrThrow(decodeCompletedCheckBody(call.body));
+      own = { ...own, external_id: data.external_id, status: "completed", conclusion: data.conclusion };
+      return { body: own };
+    }
+    if (call.path === "{repo}/check-runs/2") return { body: own };
+    return upstreamRoute(call, own);
+  });
+  return Effect.gen(function* () {
+    yield* TestClock.setTime(ms);
+    const publisher = yield* makeOwnerCheckpointPublisher(context, policy);
+    yield* publisher.owner.register(binding);
+    yield* publisher.publish(binding, 0);
+    yield* publisher.owner.apply(release(), policy, now);
+    yield* publisher.publish(binding, 1);
+    yield* publisher.owner.apply(request(1, OwnerCheckpointCommand.cases.Revoke.make({})), policy, now);
+    revoked = true;
+    const first = yield* publisher.publish(binding, 2);
+    const retry = yield* publisher.publish(binding, 2);
+    expect(first).toEqual({ _tag: "Unknown" });
+    expect(retry).toEqual(first);
+    expect(own.conclusion).toBe("success");
+    expect(A.filter(github.calls, (call) => call.method === "PATCH")).toHaveLength(2);
+    const record = yield* publisher.owner.read(binding);
+    expect(O.getOrThrow(record).state).toEqual({ _tag: "Held", reason: "revoked" });
+    const error = yield* Effect.flip(
+      publisher.owner.apply(
+        request(2, OwnerCheckpointCommand.cases.Claim.make({ claimId, snapshot: snapshot(-1, true) })),
+        policy,
+        now
+      )
+    );
+    expect(error.reason).toBe("publication");
+  }).pipe(inMemory, provideTestLayer(CheckRun.layer), offline, github.provide);
+});
+it.effect("bounds a stalled receipt digest provider and closes its owned descriptors", () =>
+  Effect.gen(function* () {
+    yield* TestClock.setTime(ms);
+    const fixture = yield* raceReceiptFixture();
+    const crypto = yield* Digest.Digest;
+    const started = Promise.withResolvers<void>();
+    const read = readOwnerCheckpointEvidenceReceipts(fixture.root, binding, fixture.manifest, policy, digest).pipe(
+      Effect.provideService(Digest.Digest, {
+        ...crypto,
+        digest: () => Effect.sync(() => started.resolve()).pipe(Effect.andThen(Effect.never)),
+      }),
+      Effect.result
+    );
+    const fiber = yield* read.pipe(Effect.forkChild);
+    yield* Effect.promise(() => started.promise);
+    yield* TestClock.adjust("6 seconds");
+    const result = yield* Fiber.join(fiber);
+    result.pipe(Result.isFailure, assertTrue);
+    if (Result.isFailure(result)) expect(result.failure.reason).toBe("evidence");
+    const native = process.getBuiltinModule("node:fs");
+    const leaked = A.some(native.readdirSync("/proc/self/fd"), (fd) => {
+      try {
+        return Str.startsWith(fixture.root)(native.readlinkSync(`/proc/self/fd/${fd}`));
+      } catch {
+        return false;
+      }
+    });
+    expect(leaked).toBe(false);
+  }).pipe(provideTestLayer(NodeFileSystem.layer), offline)
 );

@@ -53,6 +53,14 @@ export class OwnerCheckpointBinding extends S.Opaque<OwnerCheckpointBinding, { r
   )
 ) {}
 
+const BaseProvenance = S.Struct({
+  repository: OwnerCheckpointBinding.fields.repository,
+  ref: S.NonEmptyString,
+  sha: OwnerCheckpointHead,
+}).pipe(
+  $I.annoteSchema("BaseProvenance", { description: "Authenticated actual base git ref at prerequisite observation." })
+);
+
 /**
  * Finite owner and merge lifecycle; uncertainty never authorizes another dispatch.
  *
@@ -66,7 +74,7 @@ export class OwnerCheckpointBinding extends S.Opaque<OwnerCheckpointBinding, { r
  */
 export const OwnerCheckpointState = S.TaggedUnion({
   Held: { reason: S.Literals(["registered", "synchronized", "revoked"]) },
-  Released: { releaseId: Sha256Hex, evidenceDigest: Sha256Hex },
+  Released: { releaseId: Sha256Hex, evidenceDigest: Sha256Hex, base: BaseProvenance },
   Claimed: { releaseId: Sha256Hex, claimId: Sha256Hex },
   Uncertain: { releaseId: Sha256Hex, claimId: Sha256Hex },
   Merged: { claimId: Sha256Hex, mergeCommit: S.OptionFromNullOr(OwnerCheckpointHead) },
@@ -200,6 +208,7 @@ export class OwnerCheckpointSelfCheck extends S.Opaque<OwnerCheckpointSelfCheck,
 export class OwnerCheckpointSnapshot extends S.Opaque<OwnerCheckpointSnapshot, { readonly brand: unique symbol }>()(
   S.Struct({
     repository: OwnerCheckpointBinding.fields.repository,
+    base: BaseProvenance,
     state: S.Literals(["open", "closed", "merged"]),
     read: MergeGateRead,
     selfCheck: OwnerCheckpointSelfCheck,
@@ -350,7 +359,7 @@ export class OwnerCheckpointRequest extends S.Opaque<OwnerCheckpointRequest, { r
  */
 export const OwnerCheckpointIntent = S.TaggedUnion({
   CheckHeld: {},
-  CheckReleased: { releaseId: Sha256Hex },
+  CheckReleased: { releaseId: Sha256Hex, base: BaseProvenance },
   Merge: { claimId: Sha256Hex },
 }).pipe(
   $I.annoteSchema("OwnerCheckpointIntent", {

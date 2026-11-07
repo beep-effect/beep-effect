@@ -16,6 +16,7 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 import { emptyWhenNotFound } from "./WorkstationState.ts";
 import type * as PlatformError from "effect/PlatformError";
@@ -249,3 +250,46 @@ export const makeJsonLinesStore = Effect.fn("JsonLinesStore.make")(function* <Ro
   };
   return store;
 });
+
+/**
+ * An in-memory append-only store with the same two operations, for test
+ * layers: rows are kept in order and `list` returns those of one partition.
+ *
+ * **Example** (Append and list)
+ *
+ * ```ts
+ * import { makeMemoryJsonLinesStore } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ *
+ * const rows = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const store = yield* makeMemoryJsonLinesStore<{ readonly repo: string }, string>({
+ *       partitionOf: (row) => row.repo,
+ *       samePartition: (a, b) => a === b,
+ *     })
+ *     yield* store.append({ repo: "a" })
+ *     yield* store.append({ repo: "b" })
+ *     return yield* store.list("a")
+ *   })
+ * )
+ * console.log(rows.length) // 1
+ * ```
+ *
+ * @param options - How a row maps to its partition and when two partitions are the same.
+ * @returns A store that never fails.
+ * @category testing
+ * @since 0.0.0
+ */
+export const makeMemoryJsonLinesStore = <Row, Partition>(options: {
+  readonly partitionOf: (row: Row) => Partition;
+  readonly samePartition: (self: Partition, that: Partition) => boolean;
+}): Effect.Effect<JsonLinesStore<Row, Partition, never>> =>
+  Ref.make(A.empty<Row>()).pipe(
+    Effect.map(
+      (rows): JsonLinesStore<Row, Partition, never> => ({
+        append: (row) => Ref.update(rows, A.append(row)),
+        list: (partition) =>
+          Ref.get(rows).pipe(Effect.map(A.filter((row) => options.samePartition(options.partitionOf(row), partition)))),
+      })
+    )
+  );

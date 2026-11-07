@@ -14,15 +14,15 @@ import {
   OwnerCheckpointIntent,
   OwnerCheckpointOutbox,
   OwnerCheckpointRecord,
+  OwnerCheckpointSnapshot,
   OwnerCheckpointState,
 } from "./OwnerCheckpoint.schemas.ts";
-import { transitionOwnerCheckpoint } from "./OwnerCheckpoint.ts";
+import { sameOwnerCheckpointBinding, transitionOwnerCheckpoint } from "./OwnerCheckpoint.ts";
 import type * as DateTime from "effect/DateTime";
 import type {
   OwnerCheckpointBinding,
   OwnerCheckpointPolicy,
   OwnerCheckpointRequest,
-  OwnerCheckpointSnapshot,
 } from "./OwnerCheckpoint.schemas.ts";
 
 const RecordJson = S.fromJsonString(OwnerCheckpointRecord);
@@ -33,14 +33,10 @@ const decodeRecord = S.decodeUnknownEffect(RecordJson);
 const decodeOutbox = S.decodeUnknownEffect(OutboxJson);
 const storage = () => OwnerCheckpointError.make({ reason: "storage" });
 const conflict = () => OwnerCheckpointError.make({ reason: "conflict" });
+const sameBase = S.toEquivalence(OwnerCheckpointSnapshot.fields.base);
+const isBase = S.is(OwnerCheckpointSnapshot.fields.base);
 const requiredValue = <Value>(value: O.Option<Value>) =>
   Effect.fromOption(value).pipe(Effect.mapError(() => OwnerCheckpointError.make({ reason: "missing" })));
-const sameBinding = (a: OwnerCheckpointBinding, b: OwnerCheckpointBinding) =>
-  a.repository === b.repository &&
-  a.prNumber === b.prNumber &&
-  a.owner === b.owner &&
-  a.head === b.head &&
-  a.generation === b.generation;
 
 /**
  * Open the offline owner tables in an explicitly provided SQLite service.
@@ -74,7 +70,8 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
       WHERE repository=${binding.repository} AND pr=${binding.prNumber}`.pipe(Effect.mapError(storage));
     if (rows.length === 0) return O.none<OwnerCheckpointRecord>();
     const found = yield* decodeRecord((yield* requiredValue(A.head(rows))).payload).pipe(Effect.mapError(storage));
-    if (!sameBinding(found.binding, binding)) return yield* OwnerCheckpointError.make({ reason: "binding" });
+    if (!sameOwnerCheckpointBinding(found.binding, binding))
+      return yield* OwnerCheckpointError.make({ reason: "binding" });
     return O.some(found);
   });
   const outbox = Effect.fn("OwnerCheckpoint.outbox")(function* (binding: OwnerCheckpointBinding, revision: number) {
@@ -84,7 +81,8 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
     );
     if (rows.length === 0) return O.none<OwnerCheckpointOutbox>();
     const found = yield* decodeOutbox((yield* requiredValue(A.head(rows))).payload).pipe(Effect.mapError(storage));
-    if (!sameBinding(found.binding, binding)) return yield* OwnerCheckpointError.make({ reason: "binding" });
+    if (!sameOwnerCheckpointBinding(found.binding, binding))
+      return yield* OwnerCheckpointError.make({ reason: "binding" });
     return O.some(found);
   });
   const append = Effect.fnUntraced(function* (entry: OwnerCheckpointOutbox) {
@@ -169,7 +167,8 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
   });
   const readRevision = Effect.fnUntraced(function* (binding: OwnerCheckpointBinding, revision: number) {
     const current = yield* read(binding).pipe(Effect.flatMap(requiredValue));
-    if (!sameBinding(current.binding, binding) || current.revision !== revision) return yield* conflict();
+    if (!sameOwnerCheckpointBinding(current.binding, binding) || current.revision !== revision)
+      return yield* conflict();
     return current;
   });
   const apply = Effect.fn("OwnerCheckpoint.apply")(function* (
@@ -221,28 +220,48 @@ export const makeOwnerCheckpointStore = Effect.fn("OwnerCheckpoint.makeStore")(f
       )
       .pipe(Effect.mapError((error) => (S.is(OwnerCheckpointError)(error) ? error : storage())));
   });
+  const qualifyDispatchPredecessor = Effect.fnUntraced(function* (
+    current: OwnerCheckpointRecord & { readonly state: typeof OwnerCheckpointState.cases.Claimed.Type },
+    expectedBase: OwnerCheckpointSnapshot["base"]
+  ) {
+    // Claim is the single revision immediately after Released. Publication does
+    // not advance revisions; never search older releases to repair this link.
+    const previous = yield* outbox(current.binding, current.revision - 1).pipe(Effect.flatMap(requiredValue));
+    if (
+      previous.revision + 1 !== current.revision ||
+      previous.intent._tag !== "CheckReleased" ||
+      previous.intent.releaseId !== current.state.releaseId ||
+      previous.delivery._tag !== "Published" ||
+      !sameBase(previous.intent.base, expectedBase)
+    )
+      return yield* conflict();
+  });
   const prepareDispatch = Effect.fn("OwnerCheckpoint.prepareDispatch")(function* (
     binding: OwnerCheckpointBinding,
-    revision: number
+    revision: number,
+    expectedBase: OwnerCheckpointSnapshot["base"]
   ) {
     if (!Number.isSafeInteger(revision) || revision < 0) return yield* conflict();
+    if (!isBase(expectedBase)) return yield* conflict();
     return yield* sql
       .withTransaction(
         Effect.gen(function* () {
           const current = yield* readRevision(binding, revision);
           if (current.state._tag !== "Claimed") return yield* conflict();
+          const prepared: OwnerCheckpointRecord & { readonly state: typeof OwnerCheckpointState.cases.Claimed.Type } = {
+            ...current,
+            state: current.state,
+          };
+          yield* qualifyDispatchPredecessor(prepared, expectedBase);
           const entry = yield* outbox(binding, revision).pipe(Effect.flatMap(requiredValue));
           if (
+            entry.revision !== revision ||
             entry.intent._tag !== "Merge" ||
             entry.intent.claimId !== current.state.claimId ||
             entry.delivery._tag !== "Pending"
           )
             return yield* conflict();
           yield* replaceDelivery(entry, OwnerCheckpointDelivery.cases.Dispatched.make({}));
-          const prepared: OwnerCheckpointRecord & { readonly state: typeof OwnerCheckpointState.cases.Claimed.Type } = {
-            ...current,
-            state: current.state,
-          };
           return prepared;
         })
       )

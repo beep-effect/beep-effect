@@ -29,9 +29,10 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUsptoConfigInputResult = S.decodeResult(UsptoConfigInput);
+const encodeEnvelopeResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const applicationEnvelope = Result.getOrThrowWith(
-  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+  encodeEnvelopeResult({
     count: 1,
     patentFileWrapperDataBag: [
       {
@@ -52,7 +53,7 @@ const applicationEnvelope = Result.getOrThrowWith(
 );
 
 const continuityEnvelope = Result.getOrThrowWith(
-  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+  encodeEnvelopeResult({
     patentFileWrapperDataBag: [
       {
         childContinuityBag: [{ childApplicationNumberText: "17999999" }],
@@ -235,6 +236,86 @@ describe("Uspto service", () => {
       })
     );
   });
+
+  for (const fixture of [
+    {
+      name: "keeps both-field continuity rows in their bag's direction",
+      childContinuityBag: [{ parentApplicationNumberText: "16295098", childApplicationNumberText: "16295260" }],
+      parentContinuityBag: [{ parentApplicationNumberText: "15111111", childApplicationNumberText: "16295098" }],
+      children: ["16295260"],
+      parents: ["15111111"],
+    },
+    {
+      name: "prefers directional continuity identifiers over generic identifiers",
+      childContinuityBag: [{ applicationNumberText: "16295098", childApplicationNumberText: "16295260" }],
+      parentContinuityBag: [{ applicationNumberText: "16295098", parentApplicationNumberText: "15111111" }],
+      children: ["16295260"],
+      parents: ["15111111"],
+    },
+    {
+      name: "uses valid generic continuity fallbacks without borrowing opposite identifiers",
+      childContinuityBag: [
+        { applicationNumberText: "16295260" },
+        { parentApplicationNumberText: "16295098" },
+        { childApplicationNumberText: "invalid", parentApplicationNumberText: "16295098" },
+        { childApplicationNumberText: 16295260 },
+        { childApplicationNumberText: "invalid", applicationNumberText: "17707996" },
+        { applicationNumberText: "invalid" },
+        {},
+      ],
+      parentContinuityBag: [
+        { applicationNumberText: "15111111" },
+        { childApplicationNumberText: "16295098" },
+        { parentApplicationNumberText: "invalid", childApplicationNumberText: "16295098" },
+        { parentApplicationNumberText: 15111111 },
+        { parentApplicationNumberText: "invalid", applicationNumberText: "15111112" },
+        { applicationNumberText: "invalid" },
+        {},
+      ],
+      children: ["16295260", "17707996"],
+      parents: ["15111111", "15111112"],
+    },
+  ]) {
+    const envelope = Result.getOrThrowWith(
+      encodeEnvelopeResult({
+        patentFileWrapperDataBag: [
+          { childContinuityBag: fixture.childContinuityBag, parentContinuityBag: fixture.parentContinuityBag },
+        ],
+      }),
+      identity
+    );
+    it.layer(usptoLayer(respondWith(envelope)), { timeout: "5 seconds" })((it) => {
+      it.effect(
+        fixture.name,
+        Effect.fnUntraced(function* () {
+          const uspto = yield* Uspto;
+          const continuity = yield* uspto.getContinuity("16295098");
+          expect(continuity.childApplicationNumbers).toStrictEqual(fixture.children);
+          expect(continuity.parentApplicationNumbers).toStrictEqual(fixture.parents);
+        })
+      );
+    });
+  }
+
+  for (const malformed of [
+    { name: "malformed continuity JSON", body: "not JSON" },
+    {
+      name: "a continuity bag with an invalid wire shape",
+      body: '{"patentFileWrapperDataBag":[{"childContinuityBag":{}}]}',
+    },
+  ]) {
+    it.layer(usptoLayer(respondWith(malformed.body)), { timeout: "5 seconds" })((it) => {
+      it.effect(
+        `rejects ${malformed.name} instead of reporting an empty family`,
+        Effect.fnUntraced(function* () {
+          const uspto = yield* Uspto;
+          const error = yield* uspto.getContinuity("16295098").pipe(Effect.flip);
+          expect(error._tag).toBe("UsptoError");
+          expect(error.reason).toBe("response-decoding");
+        })
+      );
+    });
+  }
 
   it.layer(usptoLayer(respondWith(documentsEnvelope)), { timeout: "5 seconds" })((it) => {
     it.effect(

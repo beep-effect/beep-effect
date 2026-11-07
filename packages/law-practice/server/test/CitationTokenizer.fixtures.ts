@@ -139,7 +139,8 @@ export const assertCitationTokenizerCase = Effect.fn("TokenizerTest.case")(funct
   setup: Effect.Success<ReturnType<typeof setupCitationTokenizer>>,
   row: (typeof Corpus.Type.cases)[number]
 ) {
-  const output = yield* setup.tokenizer.run(row.source);
+  const output = yield* setup.tokenizer.port.tokenize(row.source);
+  expect(output.patternsChecked).toBe(row.selected.length);
   const prepare = yield* makeCitationRegexInput(setup.limits);
   const source = yield* prepare.prepareUnicode(output.source, () => Effect.void);
   const items = yield* Effect.forEach(

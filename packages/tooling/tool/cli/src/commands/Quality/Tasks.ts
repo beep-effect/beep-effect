@@ -612,21 +612,52 @@ const SPLIT_INTEGRATION_SCRIPTS = ["test:integration:parallel", "test:integratio
 // Packages that predate the parallel/serial integration split still ship a plain
 // `test:integration`; without this bucket they would be silently dropped from the
 // root integration lane instead of running alongside the bounded-parallel packages.
-const unsplitIntegrationTaskFilters = Effect.fn("QualityTasks.unsplitIntegrationTaskFilters")(function* (
-  repoRoot: string
+const unsplitIntegrationTaskArgs = Effect.fn("QualityTasks.unsplitIntegrationTaskArgs")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
   const owners = yield* workspaceTaskOwners(repoRoot);
-
-  return pipe(
+  const unsplit = A.filter(
     owners,
-    A.filter(
-      (owner) =>
-        ownerDefinesScript("test:integration")(owner) &&
-        !A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))
-    ),
-    A.map(ownerFilter)
+    (owner) =>
+      ownerDefinesScript("test:integration")(owner) &&
+      !A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))
   );
+  return A.match(unsplit, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (unsplitOwners) =>
+      A.some(args, isExplicitTurboAffectedOrScopeArg)
+        ? [
+            ...pipe(
+              owners,
+              A.filter((owner) => A.some(SPLIT_INTEGRATION_SCRIPTS, (script) => ownerDefinesScript(script)(owner))),
+              A.map((owner) => `--filter=!${owner.packageName}`)
+            ),
+            ...args,
+          ]
+        : [...A.map(unsplitOwners, ownerFilter), ...args],
+  });
 });
+
+/**
+ * Resolve the plain integration lane without broadening explicit caller scope.
+ *
+ * **Example** (Prepare affected integration arguments)
+ *
+ * ```ts
+ * import { unsplitIntegrationTaskArgsForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(unsplitIntegrationTaskArgsForTesting(".", ["--affected"]))) // true
+ * ```
+ *
+ * @param repoRoot - Root whose workspace manifests define integration script owners.
+ * @param args - Caller scope and task arguments, preserved after any owner exclusions.
+ * @returns No arguments when there are no unsplit owners; otherwise the plain lane's scoped arguments.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const unsplitIntegrationTaskArgsForTesting = unsplitIntegrationTaskArgs;
 
 const requireWorkspaceTaskFilters = Effect.fn("QualityTasks.requireWorkspaceTaskFilters")(function* (
   repoRoot: string,
@@ -3221,14 +3252,19 @@ const policyMediumTasks = [
   "lint:circular",
   "lint:effect-imports",
   "lint:effect-imports-markdown",
-  "lint:markdown-fences",
-  "lint:retired-effect-paths",
-  "lint:retired-iri-authorities",
   "lint:schema-tag-idioms",
   "lint:holds",
   "lint:tsconfig-overlay",
   "lint:package-test-typecheck",
   "lint:effect-vitest",
+];
+// Index-only membership changes cannot drive native affected selection until
+// the complete discovery boundary is qualified, even with result caching off.
+const policyTrackedDiscoveryTasks = [
+  "lint:markdown-fences",
+  "lint:retired-effect-paths",
+  "lint:entity-kit-freeze",
+  "lint:retired-iri-authorities",
   "lint:opaque-roundtrips",
 ];
 // The git-delta checks compare the merge-base archive with HEAD. They are uncached by
@@ -3245,6 +3281,7 @@ const policyStateTasks = [
   "lint:typos",
   "jsdoc:inventory:check",
   "jsdoc:ratchet:check",
+  ...policyTrackedDiscoveryTasks,
 ];
 const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
   hosted ? policyStateTasks : A.filter(policyStateTasks, (task) => !A.contains(policyGitDeltaTasks, task));
@@ -3256,8 +3293,8 @@ const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
 // single full-scope graph.
 const policyCachedStateTasks = ["lint:jsdoc-module-tags", "jsdoc:inventory:check", "jsdoc:ratchet:check"];
 const policyUnscopedStateTasks = A.filter(policyStateTasks, (task) => !A.contains(policyCachedStateTasks, task));
-// The unfiltered state graph is a handful of single-process tasks whose serial sum stays under
-// the medium graph's long pole, so one slot of the budget is enough for it.
+// Retain one slot of the existing width for state checks, independently of
+// changed-file selection. Tracked discovery remains unfiltered until qualified.
 const POLICY_UNSCOPED_STATE_WIDTH = 1;
 // Root documentation lint always runs oxlint; Turbo owns package/incremental caches.
 const rootDocsArgs = (docsConfig: string): ReadonlyArray<string> => [
@@ -4371,9 +4408,7 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   let integrationFailures = A.empty<QualityTaskFailed>();
   if (lanes.integration) {
     const parallelArgs = yield* workspaceTaskArgs(repoRoot, "test:integration:parallel", lanes.args);
-    const unsplitFilters = A.some(lanes.args, isExplicitTurboAffectedOrScopeArg)
-      ? A.empty<string>()
-      : yield* unsplitIntegrationTaskFilters(repoRoot);
+    const unsplitArgs = yield* unsplitIntegrationTaskArgs(repoRoot, lanes.args);
     const parallelFailures = yield* collectStreamingStepFailures("test:integration:parallel", [
       turboStep(
         repoRoot,
@@ -4382,14 +4417,9 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
         boundedRootTurboArgs(parallelArgs, plan)
       ),
       ...optionalQualityTaskStep({
-        enabled: A.isReadonlyArrayNonEmpty(unsplitFilters),
+        enabled: A.isReadonlyArrayNonEmpty(unsplitArgs),
         step: () =>
-          turboStep(
-            repoRoot,
-            "test:integration",
-            ["test:integration"],
-            boundedRootTurboArgs([...unsplitFilters, ...lanes.args], plan)
-          ),
+          turboStep(repoRoot, "test:integration", ["test:integration"], boundedRootTurboArgs(unsplitArgs, plan)),
       }),
     ]);
     const serialFailures = yield* Effect.scoped(

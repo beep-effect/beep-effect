@@ -14,6 +14,7 @@ import {
 import { CitationResolutionWork, makeCitationResolutionWork } from "./CallbackSession.ts";
 import { runPreparedDefaultCitationCallbackSession } from "./DefaultCallbacks.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
+import { failCitationResolverBoundary } from "./PortFailure.ts";
 import { makeCitationRegisteredSessionDescriptors } from "./SessionDescriptors.ts";
 import { CitationSessionResourceDescriptors, makeCitationSessionDocumentProjector } from "./SessionDocument.ts";
 
@@ -50,6 +51,21 @@ export const makeCitationRegisteredResolver = Effect.fn("Citation.makeRegistered
       },
       Effect.provideService(Digest.Digest, crypto),
       Effect.provideService(CitationFrozenEditions, editions)
+    ),
+  };
+});
+
+/** Capture the registered resolver and close only its method failure surface.
+ * This preserves the original private resolver for adapter diagnostics/tests.
+ * Admission and whole-operation timing belong to the enclosing engine owner.
+ * Every returned method requires no services.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationResolverBoundary = Effect.fn("Citation.makeResolverBoundary")(function* () {
+  const resolver = yield* makeCitationRegisteredResolver();
+  return {
+    resolve: Effect.fn("Citation.resolveBoundary")((input: unknown) =>
+      resolver.resolve(input).pipe(Effect.catch(failCitationResolverBoundary))
     ),
   };
 });

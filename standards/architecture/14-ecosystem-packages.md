@@ -41,9 +41,12 @@ and proven — it is not allowed to make its consumers depend on any of it.
 
 The gate belongs in two places: a package-local boundary test inside the
 member, and a repo lint lane so a violating import fails repo-wide checks, not
-just the member's own suite. Enforcement is pending automation until the first
-member lands: the boundary test and lint lane ship with the member-creation
-phase of `goals/effect-drizzle-graduation` (P1).
+just the member's own suite. `packages/ecosystem/effect-drizzle` is an existing
+member, and the repo lint command is `bun run beep lint ecosystem-polarity`.
+Each member still requires its package-local boundary test and configured CI
+proof; the existence of the lint command alone does not establish that those
+obligations ran. See `goals/effect-drizzle-graduation` for member-specific
+delivery evidence.
 
 ## Style-Law Scoping
 

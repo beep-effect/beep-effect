@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-06T05:14:13.665Z",
-  "git_sha": "0fa1c6d0b4ef0452b624553e07b51ffe7193b798",
-  "command": "bun run coverage -- --filter=@beep/law-practice-server --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-06T17:35:48.798Z",
+  "git_sha": "dacbd1a55ad3d0fcf99363d0e55fe6c6dbe71074",
+  "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -1500,6 +1500,69 @@
             "statements": 13,
             "branches": 7,
             "functions": 6
+          }
+        }
+      }
+    },
+    "@beep/alchemy-postgres": {
+      "path": "packages/drivers/alchemy-postgres",
+      "lines": 98.36,
+      "statements": 97.72,
+      "branches": 86.95,
+      "functions": 95.53,
+      "uncovered": {
+        "lines": 4,
+        "statements": 6,
+        "branches": 3,
+        "functions": 5
+      },
+      "files": {
+        "packages/drivers/alchemy-postgres/src/AlchemyPostgres.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/AlchemyPostgres.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/AlchemyPostgresPlatform.ts": {
+          "lines": 98.15,
+          "statements": 97.44,
+          "branches": 86.95,
+          "functions": 95.09,
+          "uncovered": {
+            "lines": 4,
+            "statements": 6,
+            "branches": 3,
+            "functions": 5
+          }
+        },
+        "packages/drivers/alchemy-postgres/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         }
       }
@@ -27878,19 +27941,7 @@
         "functions": 4
       },
       "files": {
-        "packages/party/domain/src/values/Contradiction/Contradiction.model.ts": {
-          "lines": 97.56,
-          "statements": 97.56,
-          "branches": 100,
-          "functions": 50,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/party/domain/src/values/Projection/Projection.behavior.ts": {
+        "packages/party/domain/src/policies/Projection/Projection.behavior.ts": {
           "lines": 98.78,
           "statements": 98.83,
           "branches": 100,
@@ -27902,7 +27953,7 @@
             "functions": 1
           }
         },
-        "packages/party/domain/src/values/Resolution/Resolution.behavior.ts": {
+        "packages/party/domain/src/policies/Resolution/Resolution.behavior.ts": {
           "lines": 97.82,
           "statements": 97.95,
           "branches": 93.75,
@@ -35798,6 +35849,42 @@
             "functions": 2
           }
         },
+        "packages/tooling/tool/cli/src/commands/Goals/Archive.service.ts": {
+          "lines": 96.58,
+          "statements": 95.45,
+          "branches": 92.3,
+          "functions": 90,
+          "uncovered": {
+            "lines": 4,
+            "statements": 6,
+            "branches": 3,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/Archive.ts": {
+          "lines": 96.8,
+          "statements": 95.95,
+          "branches": 91.66,
+          "functions": 87.09,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 2,
+            "functions": 4
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/ArchiveExecution.service.ts": {
+          "lines": 93.33,
+          "statements": 91.14,
+          "branches": 90.9,
+          "functions": 76.05,
+          "uncovered": {
+            "lines": 12,
+            "statements": 17,
+            "branches": 2,
+            "functions": 17
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -35940,6 +36027,30 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/Harvest.service.ts": {
+          "lines": 93.24,
+          "statements": 92.47,
+          "branches": 86.84,
+          "functions": 84.32,
+          "uncovered": {
+            "lines": 20,
+            "statements": 24,
+            "branches": 5,
+            "functions": 21
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/Harvest.ts": {
+          "lines": 97.43,
+          "statements": 95.23,
+          "branches": 87.5,
+          "functions": 84.61,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 1,
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts": {
@@ -36672,6 +36783,18 @@
             "statements": 46,
             "branches": 65,
             "functions": 13
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.ts": {
+          "lines": 96.9,
+          "statements": 97.16,
+          "branches": 87.5,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 4,
+            "functions": 3
           }
         },
         "packages/tooling/tool/cli/src/commands/Laws/FrozenGrantSet.ts": {
@@ -42419,6 +42542,126 @@
             "lines": 0,
             "statements": 0,
             "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.migrate.ts": {
+          "lines": 100,
+          "statements": 96.66,
+          "branches": 82.35,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 3,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.ontology.ts": {
+          "lines": 98.14,
+          "statements": 98.38,
+          "branches": 98.43,
+          "functions": 97.5,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.paths.ts": {
+          "lines": 74.19,
+          "statements": 75,
+          "branches": 75,
+          "functions": 28.57,
+          "uncovered": {
+            "lines": 8,
+            "statements": 9,
+            "branches": 2,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.projection.ts": {
+          "lines": 100,
+          "statements": 98.38,
+          "branches": 94.33,
+          "functions": 97.29,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 3,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.views.ts": {
+          "lines": 90.9,
+          "statements": 90.14,
+          "branches": 87.5,
+          "functions": 81.48,
+          "uncovered": {
+            "lines": 11,
+            "statements": 14,
+            "branches": 4,
+            "functions": 10
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.adapter.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.publisher.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.receipts.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.store.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/OwnerCheckpoint.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         }

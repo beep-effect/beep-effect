@@ -87,7 +87,7 @@ export const removedLibraryWebAdapter = "firecrawl";
  * **Example** (Keep deep research required for an empty catalog)
  * ```ts
  * import { requiredLibraryAdapters, LibraryCatalog } from "@beep/repo-cli/commands/Research"
- * const catalog = LibraryCatalog.make({schema: "beep.research.library/v1", documents: [], sources: [], occurrences: [], captures: [], qualifications: []})
+ * const catalog = LibraryCatalog.make({schema: "beep.research.library/v2", documents: [], sources: [], occurrences: [], captures: [], qualifications: []})
  * console.log(requiredLibraryAdapters(catalog)) // ["grok-deep-research"]
  * ```
  *

@@ -39,6 +39,7 @@ import {
   CitationCallbackResource,
   CitationCallbackResourceOrigin,
   CitationCallbackResult,
+  copyCitationCallbackFailure,
 } from "./CallbackResource.ts";
 
 export { CitationCallbackFailure, CitationCallbackResource } from "./CallbackResource.ts";
@@ -49,6 +50,7 @@ import { CitationCallbackRuntimeIndexFactory } from "./CallbackRuntimeIndex.ts";
 import { captureCitationMentionReceiptData } from "./Mention.ts";
 import { PreparedCitationResolution } from "./ResolutionInput.ts";
 import { CitationResourceIdentity, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
+import type { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import type { CitationCallbackRuntimeIndex } from "./CallbackRuntimeIndex.ts";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
@@ -216,7 +218,8 @@ export const makeCitationResolutionWork = Effect.fn("Citation.makeResolutionWork
   return CitationResolutionWork.of({
     maximum,
     step: Effect.suspend(() => {
-      if (iterations >= maximum) return Effect.fail(CitationCallbackFailure.make({ reason: "limit-exceeded" }));
+      if (iterations >= maximum)
+        return Effect.fail(CitationCallbackFailure.make({ reason: "limit-exceeded", limit: "resolutionIterations" }));
       iterations += 1;
       return Effect.void;
     }),
@@ -363,8 +366,8 @@ const ResourceJson = S.fromJsonString(CitationCallbackResource);
 const CallbackResultJson = S.fromJsonString(CitationCallbackResult);
 const isFull = S.is(FullCitation);
 const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
-const callbackFailed = (error: CitationCallbackFailure) => CitationCallbackFailure.make({ reason: error.reason });
-const limit = () => CitationCallbackFailure.make({ reason: "limit-exceeded" });
+const callbackFailed = copyCitationCallbackFailure;
+const limit = (limit: CitationSafetyBudget) => CitationCallbackFailure.make({ reason: "limit-exceeded", limit });
 
 /**
  * Operation-owned list handle. Structural decoding cannot register a handle in
@@ -548,7 +551,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   const membersSnapshot = Effect.fn("Citation.dictionaryMembers")(function* (
     members: ReadonlyArray<CitationGroupMember>
   ) {
-    if (A.length(members) > limits.resolutionEdges) return yield* limit();
+    if (A.length(members) > limits.resolutionEdges) return yield* limit("resolutionEdges");
     const citationResult4 = yield* S.encodeEffect(MembersJson)(members).pipe(Effect.mapError(invalid));
     const snapshot = yield* S.decodeEffect(MembersJson)(citationResult4).pipe(Effect.mapError(invalid));
     if (
@@ -612,15 +615,15 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   const allocate = Effect.fn("Citation.dictionaryAllocate")(function* (members: ReadonlyArray<CitationGroupMember>) {
     const snapshot = yield* membersSnapshot(members);
     // Retained detached lists consume the same bounded edge/node budget.
+    if (nextSlot + nextPairSlot >= limits.resolutionIterations) return yield* limit("resolutionIterations");
     if (
-      nextSlot + nextPairSlot >= limits.resolutionIterations ||
       A.reduce(
         lists.pipe(HashMap.values, A.fromIterable),
         A.length(snapshot),
         (count, list) => count + A.length(list)
       ) > limits.resolutionEdges
     )
-      return yield* limit();
+      return yield* limit("resolutionEdges");
     const slot = nextSlot;
     nextSlot += 1;
     lists = HashMap.set(lists, slot, snapshot);
@@ -639,7 +642,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
         (count, [id, list]) => count + (id === slot ? A.length(snapshot) : A.length(list))
       ) > limits.resolutionEdges
     )
-      return yield* limit();
+      return yield* limit("resolutionEdges");
     if (
       A.reduce(
         entries,
@@ -651,11 +654,13 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
             : O.getOrElse(O.map(HashMap.get(lists, entry.slot), A.length), () => 0))
       ) > limits.resolutionEdges
     )
-      return yield* limit();
+      return yield* limit("resolutionEdges");
     lists = HashMap.set(lists, slot, snapshot);
   });
   const reserveEntrySlot = Effect.suspend(() =>
-    nextEntrySlot >= limits.resolutionIterations ? Effect.fail(limit()) : Effect.succeed(nextEntrySlot++)
+    nextEntrySlot >= limits.resolutionIterations
+      ? Effect.fail(limit("resolutionIterations"))
+      : Effect.succeed(nextEntrySlot++)
   );
   const getRuntimeLocated = Effect.fnUntraced(function* (
     input: CitationCallbackResource,
@@ -665,7 +670,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     let handle: CitationCallbackList;
     if (O.isSome(selected)) handle = yield* Effect.fromOption(HashMap.get(bySlot, selected.value.slot), invalid);
     else {
-      if (A.length(entries) >= limits.authorities) return yield* limit();
+      if (A.length(entries) >= limits.authorities) return yield* limit("authorities");
       handle = yield* allocate([]);
       const citationResult6 = yield* slotOf(handle);
       const citationResult7 = yield* selectedRuntime.set(input, citationResult6);
@@ -687,7 +692,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
         handle: yield* Effect.fromOption(HashMap.get(bySlot, existing.value.slot), invalid),
         entry: existing.value,
       };
-    if (A.length(entries) >= limits.authorities) return yield* limit();
+    if (A.length(entries) >= limits.authorities) return yield* limit("authorities");
     const handle = yield* allocate([]);
     const entry = { ...value, entrySlot: yield* reserveEntrySlot, slot: yield* slotOf(handle) };
     entries = A.append(entries, entry);
@@ -708,7 +713,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     }
     const value = yield* fingerprint(input);
     const existing = yield* find(value.key);
-    if (O.isNone(existing) && A.length(entries) >= limits.authorities) return yield* limit();
+    if (O.isNone(existing) && A.length(entries) >= limits.authorities) return yield* limit("authorities");
     const updated = O.isNone(existing)
       ? A.append(entries, { ...value, entrySlot: nextEntrySlot, slot })
       : A.map(entries, (entry) => (entry.key === value.key ? { ...entry, slot } : entry));
@@ -719,7 +724,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
         (count, entry) => count + O.getOrElse(O.map(HashMap.get(lists, entry.slot), A.length), () => 0)
       ) > limits.resolutionEdges
     )
-      return yield* limit();
+      return yield* limit("resolutionEdges");
     if (O.isNone(existing)) yield* reserveEntrySlot;
     entries = updated;
   });
@@ -759,7 +764,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
                 () => 0
               )
           );
-          return total > limits.resolutionEdges ? Effect.fail(limit()) : Effect.void;
+          return total > limits.resolutionEdges ? Effect.fail(limit("resolutionEdges")) : Effect.void;
         })
       ),
     });
@@ -771,7 +776,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     const decoded = yield* S.decodeEffect(CitationType)(input).pipe(Effect.mapError(invalid));
     const existing = O.fromUndefinedOr(detachedObjects.get(input));
     if (O.isSome(existing)) return CitationGroupMember.cases.Detached.make({ detachedId: existing.value });
-    if (HashMap.size(known) + detachedSlot >= limits.mentions) return yield* limit();
+    if (HashMap.size(known) + detachedSlot >= limits.mentions) return yield* limit("mentions");
     const citationResult9 = yield* S.encodeEffect(CitationJson)(decoded).pipe(Effect.mapError(invalid));
     const citation = yield* S.decodeEffect(CitationJson)(citationResult9).pipe(Effect.mapError(invalid));
     const preimage = yield* S.encodeEffect(DetachedKey)([
@@ -816,7 +821,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     const citationResult10 = yield* S.encodeEffect(CitationGroupMemberJson)(citation).pipe(Effect.mapError(invalid));
     const reference = yield* S.decodeEffect(CitationGroupMemberJson)(citationResult10).pipe(Effect.mapError(invalid));
     yield* citationOf(reference);
-    if (nextPairSlot + nextSlot + nextPairSlot >= limits.resolutionIterations) return yield* limit();
+    if (nextPairSlot + nextSlot + nextPairSlot >= limits.resolutionIterations)
+      return yield* limit("resolutionIterations");
     const citationResult11 = yield* S.encodeEffect(ResourceJson)(resource).pipe(Effect.mapError(invalid));
     const snapshot = yield* S.decodeEffect(ResourceJson)(citationResult11).pipe(Effect.mapError(invalid));
     yield* validateResource(snapshot);
@@ -829,7 +835,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   });
   const writeFulls = Effect.fn("Citation.writeFulls")(function* (input: ReadonlyArray<CitationCallbackFull>) {
     yield* alive;
-    if (A.length(input) > limits.mentions) return yield* limit();
+    if (A.length(input) > limits.mentions) return yield* limit("mentions");
     const citationResult13 = yield* S.encodeEffect(PairsJson)(input).pipe(Effect.mapError(invalid));
     const snapshot = yield* S.decodeEffect(PairsJson)(citationResult13).pipe(Effect.mapError(invalid));
     if (
@@ -1268,7 +1274,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
     );
     const finalGroups = yield* dictionary.read;
     if (A.reduce(finalGroups, 0, (count, group) => count + A.length(group.members)) > prepared.limits.resolutionEdges)
-      return yield* limit();
+      return yield* limit("resolutionEdges");
   });
   return yield* Effect.acquireUseRelease(
     dictionary.start,

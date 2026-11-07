@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -28,6 +29,19 @@ import type { makeOwnerCheckpointStore } from "./OwnerCheckpoint.store.ts";
 
 type Store = Effect.Success<ReturnType<typeof makeOwnerCheckpointStore>>;
 const decodeHead = S.decodeUnknownResult(OwnerCheckpointHead);
+const NativeDispatchBase = S.Struct({ object: S.Struct({ type: S.tag("commit"), sha: OwnerCheckpointHead }) });
+const qualifyDispatchBase = Effect.fnUntraced(function* (snapshot: OwnerCheckpointSnapshot) {
+  const repository = yield* Repo;
+  const client = yield* GitHubClient;
+  const actual = yield* client
+    .requestDecoded(
+      "GET /repos/{owner}/{repo}/git/ref/{ref}",
+      { owner: repository.owner, repo: repository.repo, ref: `heads/${snapshot.base.ref}` },
+      NativeDispatchBase
+    )
+    .pipe(Effect.mapError(() => OwnerCheckpointError.make({ reason: "evidence" })));
+  if (actual.object.sha !== snapshot.base.sha) return yield* OwnerCheckpointError.make({ reason: "binding" });
+});
 const unknown = Effect.fnUntraced(function* (
   store: Store,
   record: Effect.Success<ReturnType<Store["prepareDispatch"]>>,
@@ -62,7 +76,10 @@ const assertRepository = Effect.fnUntraced(function* (binding: OwnerCheckpointBi
  * The future isolated broker must authenticate the owner and provide fresh,
  * verified prerequisite metadata. Any uncertain native response is recorded as
  * uncertainty; failed diagnostic persistence leaves the prior dispatched intent
- * intact. No caller is wired to this function by this offline source slice.
+ * intact. The live base ref and actual commit must still match the published
+ * release before its transactional fence. GitHub's expected-SHA merge binds
+ * only the head: a base change after the final read remains a non-atomic gap.
+ * No caller is wired to this function by this offline source slice.
  *
  * **Example** (Inspect the expected-head boundary)
  * ```ts
@@ -85,9 +102,9 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
   snapshot: OwnerCheckpointSnapshot,
   policy: OwnerCheckpointPolicy
 ) {
-  const now = yield* DateTime.now;
   yield* assertRepository(binding);
-  yield* qualifyOwnerCheckpointSnapshot(binding, snapshot, policy, now);
+  const started = yield* DateTime.now;
+  yield* qualifyOwnerCheckpointSnapshot(binding, snapshot, policy, started);
   const rest = yield* GithubRest;
   const live = yield* rest
     .pullRequest(binding.prNumber)
@@ -95,14 +112,18 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
   if (
     live.number !== binding.prNumber ||
     live.headSha !== binding.head ||
+    live.baseRef !== snapshot.base.ref ||
     live.state !== "open" ||
     live.merged ||
     live.draft
   )
     return yield* OwnerCheckpointError.make({ reason: "binding" });
+  yield* qualifyDispatchBase(snapshot);
+  const now = yield* DateTime.now;
+  yield* qualifyOwnerCheckpointSnapshot(binding, snapshot, policy, now);
   // Nothing may call merge before this durable fence. A crash afterward is
   // deliberately uncertain even if the HTTP request had not started yet.
-  const record = yield* store.prepareDispatch(binding, revision);
+  const record = yield* store.prepareDispatch(binding, revision, snapshot.base);
   const result = yield* rest
     .mergePullRequest(binding.prNumber, { sha: binding.head, method: "squash" })
     .pipe(Effect.result);

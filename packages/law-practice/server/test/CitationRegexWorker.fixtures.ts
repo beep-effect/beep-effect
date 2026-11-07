@@ -7,10 +7,10 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { CitationPythonUnicodeStorage } from "@beep/law-practice-server/internal/Citation/PythonHash";
 import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -205,6 +205,16 @@ export const assertCitationWorkerCompositionReleased = Effect.fn("RegexWorkerTes
   const native = yield* admission.snapshot;
   expect(native).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
 });
+/** Retain non-vacuous observed-exit and zero-capacity assertions for composed replays. */
+export const assertCitationWorkerCompositionObserved = Effect.fn("RegexWorkerTest.compositionObserved")(function* (
+  operation: CitationOperationAdmission["Service"],
+  admission: CitationNativeProcessAdmission["Service"],
+  observed: Effect.Effect<CitationNativeExitCounts>
+) {
+  const counts = yield* observed;
+  expect(counts.spawned).toBeGreaterThan(0);
+  yield* assertCitationWorkerCompositionReleased(operation, admission, observed, counts.spawned);
+});
 /** Observe both independent native exit acknowledgement and released capacity. */
 export const assertCitationRegexRuntimeReleased = Effect.fn("RegexWorkerTest.runtimeReleased")(function* (
   admission: CitationNativeProcessAdmission["Service"],
@@ -321,4 +331,31 @@ export const assertCitationMetadataFixtureLifetime = Effect.fn("RegexWorkerTest.
   yield* assertCitationWorkerCapturedDeadline(timed.stage.apply({ ...row.request, words }), timed.timer.trigger);
   const observed = yield* timed.observed.snapshot;
   expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+});
+
+/** Shared malformed-install controls retain each actual stage factory and exact
+ * policy/runtime/pattern changes. Returned stage methods still require R=never.
+ * @internal @category testing @since 0.0.0
+ */
+export const assertCitationMetadataInstallControls = Effect.fn("MetadataTest.installControls")(function* <
+  A,
+  E,
+  R,
+  C extends object,
+>(
+  install: (policy: unknown, runtime: unknown, configuration: unknown) => Effect.Effect<A, E, R>,
+  setup: Effect.Success<ReturnType<typeof setupCitationMetadataRuntime>>,
+  configuration: C
+) {
+  const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
+  const attempts: ReadonlyArray<readonly [unknown, unknown, unknown]> = [
+    [{}, setup.runtime, configuration],
+    [setup.limits, setup.runtime, {}],
+    [setup.limits, {}, configuration],
+    [setup.limits, setup.runtime, { ...configuration, pattern: changedPattern }],
+  ];
+  for (const [policy, runtime, changed] of attempts) {
+    const failed = yield* install(policy, runtime, changed).pipe(Effect.provideContext(setup.provided), Effect.flip);
+    expect(failed).toMatchObject({ reason: "invalid-configuration" });
+  }
 });

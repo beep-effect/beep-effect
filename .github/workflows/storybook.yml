@@ -13,6 +13,11 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Classify the PR itself; HEAD remains the synthetic merge used for proof.
+  BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
 jobs:
   storybook:
     # Quality-lane audit D13: the lane body lives in the beep CLI
@@ -52,7 +57,7 @@ jobs:
           # affected is the lane's own decision: under --affected it probes
           # Turbo's dependency-aware plan and skips itself when nothing in
           # Storybook's closure changed. Pushes run.
-          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          eval "$(scripts/ci-change-profile.sh)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi

@@ -4,6 +4,31 @@ Read when a monitor exits for a reason you do not expect, when you consume `--wa
 
 ## Resume and stream commands
 
+### One remote poller per pull request
+
+The existing readiness monitor owns recurring GitHub reads. Do not start a second
+`gh pr checks` loop, a Python watcher, or repeated `status --remote` calls beside
+it. Wait on its recorded job/session; consume its branch-scoped
+`.beep/yeet/runs/<run-id>/status.json` for progress between meaningful events.
+This removes duplicate API calls and repeated status text from agent context.
+
+Before reporting that snapshot, check `createdAt`, `remote.headSha` and the
+monitor's process/job state. A snapshot older than two configured poll intervals,
+or one for another head, is historical evidence, not current readiness. Check
+the owning monitor's failure/output first; if a fresh read is necessary, make
+one bounded read and let the same monitor continue. Do not overwrite its remote
+snapshot by repeatedly running a local-only status command into the same run.
+
+Targeted reads remain necessary for new failed-job logs, review threads and the
+final merge gate. An old snapshot never substitutes for the fresh thread read
+immediately before merging. A terminal monitor can be restarted once after its
+reported cause is handled; a pending tool/session ID is still a live request.
+
+During the November 6 performance work, an attached monitor, a separate watcher
+and manual check polls overlapped. The operating change is three polling paths
+to one, not a measured token-percentage saving. Compare request counts over the
+same observation interval before making a numerical API or context claim.
+
 - Resume the newest publishing agent recorded for a pull request:
 
 ```bash
@@ -190,3 +215,26 @@ Rollout: `review-thread` rows that an earlier wave superseded read live again
 under the wave-exempt rule. Clear the answered ones once: list them with
 `bun run beep yeet inbox list --unacked` and acknowledge each with
 `bun run beep yeet inbox ack <id> --thread-url <url>`.
+
+## PR closeout loop (moved from `AGENTS.md`)
+
+PR closeout: flip the PR ready at content-final, then, from the checkout you
+are working in, run
+`bun run beep yeet monitor --until-ready --detach` and block on
+`bun run beep yeet job wait <jobId>` (attached `--until-ready` when the user
+manager is unreachable; re-submit after a reboot) until it exits 0 with
+`merge-ready: yes`. Required reds and base conflicts do not end the
+monitor: it writes them as inbox rows and keeps polling, so pass
+`--job-max-runtime "<duration>"` when it may be abandoned. Exit 2 is a wave
+(new P0/P1 rows on the PR): act on the rows, push any fix, and re-run
+`job wait` on the same job; the attached fallback also exits 2, so re-run it
+after the push. Any other non-zero exit ended the job: read its summary,
+fix, and re-submit. A code PR must carry the `ready-for-heavy` label before
+the `Heavy / *` matrix runs (docs-only PRs skip it); `yeet publish` applies
+it when it creates the draft PR, so add it by hand only for a PR that
+already existed or whose label edit failed — `--until-ready` prints the
+`gh pr edit` command while it holds.
+Unanswered review threads are a hard merge gate — answer every one and resolve
+every actionable one via `bun run beep yeet reply`
+(drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
+them.

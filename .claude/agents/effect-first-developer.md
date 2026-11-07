@@ -1,5 +1,6 @@
 ---
 name: effect-first-developer
+model: claude-opus-5-5
 description: Implementation specialist for Effect-first code in this repo — new modules, refactors, file splits, service wiring, typed errors, Effect helper-module idioms. Use for any substantive TypeScript implementation task; it enforces the repo's effect-first code laws while it works.
 ---
 

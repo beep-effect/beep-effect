@@ -32,6 +32,7 @@ export * from "../commands/Yeet/internal/FinalCheck.ts";
 export * from "../commands/Yeet/internal/FinalCheckRefresh.schemas.ts";
 export * from "../commands/Yeet/internal/FinalCheckRefresh.ts";
 export * from "../commands/Yeet/internal/GateStaleness.ts";
+export * from "../commands/Yeet/internal/GateTable.ts";
 export * from "../commands/Yeet/internal/GhOps.ts";
 export * from "../commands/Yeet/internal/GitErrorAdapter.ts";
 export {
@@ -72,7 +73,10 @@ export * from "../commands/Yeet/internal/MonitorComments.schemas.ts";
 export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/MonitorLoop.ts";
 export * from "../commands/Yeet/internal/MonitorPolicy.ts";
+export * from "../commands/Yeet/internal/OwnerCheckpoint.adapter.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.merge.ts";
+export * from "../commands/Yeet/internal/OwnerCheckpoint.publisher.ts";
+export * from "../commands/Yeet/internal/OwnerCheckpoint.receipts.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.schemas.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.store.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.ts";
