@@ -112,3 +112,15 @@ belong to canonical law/journal citation families and receive no invented
 case-reporter IDs. Current vocabulary metadata must not replace frozen parser
 bounds or selection order. This clears the earlier unproved data-coverage
 question only; engine behavior and the remaining P0 gates stay open.
+
+## Primary occurrence integration — 2026-11-06
+
+The engine now calls the existing public code-point converter and verified-source
+anchor operation for builtin primary occurrences. The converter's internal scan
+avoids whole-source arrays and prefix joins and yields during long work; public
+symbols, schemas, normalization version and error categories are unchanged.
+Forty prerequisite tests and both-runtime connected source checks pass. Exact
+tokenizer text must match the genuine source proof. This does not authorize
+anchors into a different pre-cleaning artifact. Production derived source
+identity, component evidence and final service composition remain open; see
+[the occurrence receipt](./2026-11-06-occurrence-projection.md).

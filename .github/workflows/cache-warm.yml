@@ -32,7 +32,9 @@ jobs:
     name: Warm Turbo cache
     if: github.ref == 'refs/heads/main'
     runs-on: beep-ec2-heavy
-    timeout-minutes: 60
+    # The warm runs build/check/lint and then a bounded-concurrency test pass (#1858), so it needs
+    # more wall time than the old single starved pass.
+    timeout-minutes: 90
     environment: turbo-cache-write
     env:
       TURBO_API: ${{ vars.TURBO_API }}

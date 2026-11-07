@@ -4,14 +4,17 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { makeCitationPythonUnicode, measureCitationPythonSlice, sliceCitationPythonStorage } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { captureCitationTextReservation } from "./TextBudget.ts";
@@ -177,8 +180,6 @@ export interface CitationPreparedRegexInput {
   readonly value: CitationPythonUnicodeValue;
 }
 const fail = (reason: CitationRegexInputFailure["reason"]) => CitationRegexInputFailure.make({ reason });
-const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
-  CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const unitsOf = (point: number) => (point > 0xffff ? 2 : 1);
 const widthOf = (largest: number): 1 | 2 | 4 => (largest > 0xffff ? 4 : largest > 255 ? 2 : 1);
 const readPoint = (storage: typeof NativeInput.Type, index: number) => {
@@ -194,6 +195,8 @@ const boundary = (text: string, offset: number) =>
 /** Capture policy/Clock. Borrowed native storage must remain immutable through
  * preparation, as in the HTML transport adapter. The trusted server preflight
  * receives exact sizes before any receiving payload/projection/map allocation;
+ * an optional native grant runs after the text reservation and before copying,
+ * so a caller never holds native capacity while waiting for text authority.
  * no callable is request data. Returned operations have R = never.
  * @internal @category operations @since 0.0.0
  */
@@ -209,13 +212,17 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
   const producedMaximum = role === "pattern" ? limits.patternUtf16 : limits.producedTextUtf16;
   const sourceLimit = role === "pattern" ? "patternUtf16" : "sourceUtf16";
   const producedLimit = role === "pattern" ? "patternUtf16" : "producedTextUtf16";
-  const { deadline, deadlineLimit, timed } = yield* makeCitationRegexTiming(limits, true);
-  // The shared Unicode helper's timer is parameterized for this extract stage.
-  const unicode = yield* makeCitationPythonUnicode({
-    ...limits,
-    producedTextUtf16: producedMaximum,
-    cleanDeadline: deadline,
-  }).pipe(Effect.mapError(() => fail("invalid-policy")));
+  const { operation, deadlineLimit, timed } = yield* makeCitationRegexTiming(limits, true);
+  const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
+    CitationSafetyLimitExceeded.make({ operation, limit });
+  // Unicode and all preparation timers capture the same selected operation.
+  const unicode = yield* makeCitationPythonUnicode(
+    {
+      ...limits,
+      producedTextUtf16: producedMaximum,
+    },
+    operation
+  ).pipe(Effect.mapError(() => fail("invalid-policy")));
   const finish = Effect.fn("Citation.finishRegexInput")(function* (
     value: CitationPythonUnicodeValue,
     expected: CitationRegexInputLayout
@@ -350,7 +357,8 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
   });
   const prepareUnicode = Effect.fn("Citation.prepareRegexUnicode")(function* <E>(
     input: unknown,
-    beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
+    beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>,
+    grant: Effect.Effect<void, E> = Effect.void
   ) {
     const source = yield* S.decodeUnknownEffect(NativeInput)(input).pipe(Effect.mapError(() => fail("invalid-input")));
     const byteLength = source.bytes.byteLength;
@@ -361,6 +369,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     const layout = yield* measureNative(source);
     yield* beforeAllocate(layout);
     yield* reserve(layout.utf16Units);
+    yield* grant;
     const citationResult2 = yield* capture(unicode.fromStorage(source));
     return yield* finish(citationResult2, layout);
   });
@@ -373,9 +382,10 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     }, timed),
     prepareUnicode: Effect.fn("Citation.captureRegexUnicode")(function* <E>(
       input: unknown,
-      beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
+      beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>,
+      grant: Effect.Effect<void, E> = Effect.void
     ) {
-      return yield* prepareUnicode(input, beforeAllocate);
+      return yield* prepareUnicode(input, beforeAllocate, grant);
     }, timed),
   };
 });

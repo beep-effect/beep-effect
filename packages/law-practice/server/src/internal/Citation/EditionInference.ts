@@ -39,6 +39,9 @@ export class CitationEditionInferenceFailure extends S.TaggedError<
     description: "Edition inference failed without source values or nested causes.",
   })
 ) {}
+const PythonYear = S.Union([S.Int, S.BigInt]).pipe(
+  $I.annoteSchema("PythonYear", { description: "Lossless Python integer year from native date extraction." })
+);
 /** Source sequences preserve duplicates and exact-before-variation priority.
  * @internal @category models @since 0.0.0
  */
@@ -46,7 +49,12 @@ export class CitationEditionInferenceInput extends S.Opaque<
   CitationEditionInferenceInput,
   { readonly brand: unique symbol }
 >()(
-  S.Struct({ exact: Refs, variation: Refs, year: S.NullOr(S.Int), prior: S.NullOr(CitationEditionRef) }).pipe(
+  S.Struct({
+    exact: Refs,
+    variation: Refs,
+    year: S.NullOr(PythonYear),
+    prior: S.NullOr(CitationEditionRef),
+  }).pipe(
     $I.annoteSchema("CitationEditionInferenceInput", {
       description: "Source citation state before guess_edition, including an existing guess.",
     })
@@ -86,7 +94,7 @@ export const makeCitationEditionInference = Effect.fn("Citation.makeEditionInfer
     const ref = yield* S.decodeUnknownEffect(CitationEditionRef)(reference).pipe(
       Effect.mapError(() => fail("invalid-input"))
     );
-    const year = yield* S.decodeUnknownEffect(S.Int)(yearInput).pipe(Effect.mapError(() => fail("invalid-input")));
+    const year = yield* S.decodeUnknownEffect(PythonYear)(yearInput).pipe(Effect.mapError(() => fail("invalid-input")));
     const now = yield* DateTime.nowInCurrentZone.pipe(Effect.provideService(DateTime.CurrentTimeZone, zone));
     const current = yield* S.decodeEffect(CurrentYear)(DateTime.getPart(now, "year")).pipe(
       Effect.mapError(() => fail("invalid-clock"))
@@ -101,7 +109,7 @@ export const makeCitationEditionInference = Effect.fn("Citation.makeEditionInfer
     const request = yield* prepareCitationEditionInferenceInput(limits, raw);
     const selected = request.exact.length > 0 ? request.exact : request.variation;
     const candidates =
-      selected.length > 1 && request.year !== null && request.year !== 0
+      selected.length > 1 && request.year !== null && request.year !== 0 && request.year !== BigInt(0)
         ? yield* Effect.filter(selected, (ref) => includesYear(ref, request.year), { concurrency: 1 })
         : selected;
     return candidates.length === 1 ? A.getUnsafe(candidates, 0) : request.prior;

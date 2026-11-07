@@ -170,6 +170,70 @@ Lane `explore/research-library-ontology`
 
 Reverse: Remove the driver package and the native web route; web sources fall back to session-scrape plus import-result under the unchanged Library.web validator
 
+### Box files are private docs sources whose Box version id is the source revision, 2026-11-07
+
+LibrarySourceKind is ontology-core's vocabulary, so Box files are kind docs at https://app.box.com/file/<id> and route to box by locator. The version id is the source revision so a new Box version is acquired once and old captures stay valid; capturedRevision is <fileId>:<versionId>. Sources and artifacts default to private (--box-public opts out). An explicit DMS_BOX_USER_ID wins over the enterprise subject because the service account returned an error for a user-owned file in the live probe.
+
+Lane `feat/research-library-routes`
+
+Reverse: Model Box files under a new source kind via an ontology-core change, or record the version only in capturedRevision
+
+### Explicit Box CCG subjects win over CLOUD_BOX_TOKEN, 2026-11-07
+
+Intake review found that Bun loads a worktree .env holding an expired desktop CLOUD_BOX_TOKEN, so every acquire --route box failed with 'Box file lookup failed: sdk thrown' even with DMS_BOX_USER_ID set. libraryBoxAuthMode now selects the CCG user subject, then an explicit enterprise subject, then a non-empty developer token, then the BEEP_SECRETS enterprise subject. A live probe with a bogus CLOUD_BOX_TOKEN plus DMS_BOX_USER_ID captured readable.
+
+Lane `feat/research-library-routes`
+
+Reverse: Give CLOUD_BOX_TOKEN first precedence again in libraryBoxAuthMode
+
+### firecrawl is a live required route again; the removed-adapter carve-out is gone, 2026-11-07
+
+libraryAdapterFor sends web, docs and registry sources to firecrawl, so requiredLibraryAdapters requires a verified firecrawl qualification and verify fails when its latest probe fails. Native captures use method firecrawl like October's imports, so both verify through the unchanged webResponseValid path; the October replay still passes byte for byte.
+
+Lane `feat/research-library-routes`
+
+Reverse: Restore removedLibraryWebAdapter: route web/docs/registry to disposition, refuse qualify --adapter firecrawl, and exempt failed firecrawl receipts in verify
+
+### Gate details: GitHub parents, arXiv on demand and the cap count, 2026-11-07
+
+GitHub is never transitive in either direction: a GitHub child and any child of a GitHub parent are refused. arXiv hop 2 is admitted only when --source names it. The 25-per-domain-per-intake cap counts hop-2 sources already captured plus this run's admissions, in canonical-URL order, so reruns stay within the cap. Policy values are LibraryHopPolicy, a typed config outside the catalog schema; --hop2-domain-cap overrides the cap.
+
+Lane `feat/research-library-routes`
+
+Reverse: Change libraryHopGate: allow children of GitHub parents, admit arXiv without --source, or count only this run
+
+### Hop edges are recorded for the intake each inventory run records, and verify counts catalogued hop-2 identities apart, 2026-11-07
+
+Library.evidence imports Library.import, so hops run as a composed step (inventoryLibraryWithHops) rather than inside inventoryLibrary. The step derives edges only for the intake that run recorded (the intake whose input roots equal the run's roots, or the newest intake when default roots were used). The first version re-derived every historical intake, which rewrote October's accounting on the real library (about 3k hop-1 and 87k hop-2 edges per October intake) and made status and the gate quadratic; the fix was cherry-picked from c860570375c on feat/research-intake-2026-11. Edge ids hash intake, depth, parent and child, so a rerun on the same roots adds no duplicates, and hop lookups use one index per catalog. Hop-2-only sources with no capture are catalogued identities, not reading obligations; verify reports them as cataloguedHop2 instead of missing.
+
+Lane `feat/research-library-routes`
+
+Reverse: Re-derive hops for every intake on each inventory, and treat hop-2 sources without captures as missing
+
+### Recreate @beep/firecrawl as a small v2 scrape driver, not the retired SDK wrapper, 2026-11-07
+
+The name was retired 2026-10-21 when an unused SDK wrapper was removed (71d48a5c50). This goal needs one capability: a bounded v2 /scrape for markdown plus rawHtml with the exact response bytes retained. A ~300-line HTTP driver (config, errors, models, service with makeLayer, lazy makeLayerWithKey, Config layer and test layer) covers it; reusing the old SDK surface would re-import unused API. create-package --reuse-retired-name removed the guard entry.
+
+Lane `feat/research-library-routes`
+
+Reverse: Delete packages/drivers/firecrawl, restore its standards/changesets.retired-packages.json entry, and drop the route
+
+### status appends per-hop totals after the October output, 2026-11-07
+
+The replay goldens are October's status text byte for byte. Hop lines follow the existing output so the goldens stay untouched; the replay test asserts the legacy prefix and the three hop lines separately.
+
+Lane `feat/research-library-routes`
+
+Reverse: Insert the hop lines elsewhere and re-record the replay goldens
+
+### VidBee and alphaXiv imports are new tagged manifests beside the legacy provider imports, 2026-11-07
+
+kind: vidbee and kind: alphaxiv manifests decode first in importLibraryRoutedResult; everything else falls through to the existing importer, so the MCP-event alphaXiv path and October imports are unchanged. VidBee FAQ frontmatter has model but no effort key on disk today, so effort comes from an effort key or a model(effort) pin and is otherwise recorded as unrecorded.
+
+Lane `feat/research-library-routes`
+
+Reverse: Fold them into LibraryImportPayload with provider vidbee or alphaxiv
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

@@ -3,7 +3,7 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationCleanerRuntime } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationCleaner, CitationInputError } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -19,10 +19,7 @@ import {
   makeCitationReplayCleanerOperation,
 } from "./CitationCleanerOperation.fixtures.ts";
 import { loadCitationCleanerSource } from "./CitationCleanerSource.fixtures.ts";
-import type {
-  CitationCleanerObject,
-  CitationCleanerWork,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const Outcome = S.Union([
@@ -48,16 +45,6 @@ const ObservableEvent = S.Union([
 ]).pipe(S.toTaggedUnion("kind"));
 const JsonArray = S.Array(S.Json);
 const SourceInput = S.Struct({ kind: S.tag("text"), text: S.String, subtype: S.Literals(["plain", "marked"]) });
-const expectedReason = (scene: string) => {
-  if (scene === "dispatch:delete-second-hash") return "lookup-key-missing";
-  if (scene === "dispatch:hash-raises" || scene === "dispatch:equality-raises") return "callback-failed";
-  if (A.contains(["unknown-stops", "registry-delete", "integer-step", "bytes-step", "steps-string"], scene))
-    return "unknown-step";
-  if (scene === "registry-noncallable") return "not-callable";
-  if (A.contains(["callback-raises", "unhashable-stops", "unhashable-callable"], scene)) return "callback-failed";
-  if (A.contains(["steps-none", "iterator-raises", "iterator-raises-first"], scene)) return "iteration-failed";
-  return "builtin-input-type";
-};
 const sourceFailureType = (scene: string) =>
   scene === "dispatch:delete-second-hash"
     ? "builtins.KeyError"
@@ -111,7 +98,7 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
     const text = O.getOrThrow(HashMap.get(artifacts, input.text));
     let initial = O.none<CitationCleanerObject>();
     let lastWork = O.none<CitationCleanerWork>();
-    const runtime = CitationCleanerRuntime.of({
+    const runtime = CitationCleaner.of({
       ...owned.h.registry.runtime,
       open: Effect.fn("CleanerCustomCorpusTest.open")((plan, value, work) => {
         lastWork = O.some(work);
@@ -138,7 +125,9 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
       } else if (outcome.kind === "failure") {
         expect(outcome.pythonType).toBe(sourceFailureType(row.name));
         const failure = yield* Effect.flip(operation.run({ text, plan: row.name }));
-        expect(failure, row.name).toMatchObject({ reason: expectedReason(row.name) });
+        expect({ ...failure }, row.name).toEqual({ ...CitationInputError.make({ operation: "clean" }) });
+        expect(failure, row.name).not.toHaveProperty("reason");
+        expect(failure, row.name).not.toHaveProperty("cause");
       } else {
         const result = yield* operation.run({ text, plan: row.name });
         const citationResult2 = yield* owned.present(result.value);

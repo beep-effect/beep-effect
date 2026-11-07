@@ -56,8 +56,8 @@ const nominativeNames = HashSet.fromIterable([
 ]);
 const failure = () => CitationTokenAssemblyFailure.make({ reason: "host-failed" });
 const probeFailure = (error: CitationRuntimeDictionaryFailure) =>
-  error.reason === "limit-exceeded"
-    ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternEvaluations" })
+  error.reason === "limit-exceeded" && error.limit !== undefined
+    ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: error.limit })
     : failure();
 
 /** Capture a frozen source edition hash profile. Python None/date hashes are
@@ -102,6 +102,7 @@ export const makeCitationTokenEditions = Effect.fn("Citation.makeTokenEditions")
     const result = yield* makeCitationRuntimeSet({
       entries: bindings.length > 0 ? bindings.length : 1,
       iterations: limits.patternEvaluations,
+      iterationLimit: "patternEvaluations",
     }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison), Effect.mapError(probeFailure));
     for (const id of ids) {
       const row = yield* read(id);

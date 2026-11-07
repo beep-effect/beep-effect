@@ -1,0 +1,15 @@
+{
+  "previous": "e80439cb42aaca29aa2255486ff8c77d24f914440f8e45af46f7ac7b25b09cec",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (research-library-routes lane, feat/research-library-routes)",
+    "reason": "Record root drift from resealing the policy-tools fingerprint after @beep/repo-cli gained driver dependencies; no qualification is granted.",
+    "basis": {
+      "path": "goals/research-library-routes/research/cache-baseline-review-routes-policy.md",
+      "sha256": "f19991185442544dc295cbef54d42d00bdf470d0048e6be6e22d9f53044c4f7b"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}

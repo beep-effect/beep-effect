@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { CitationCallbackResourceOrigin } from "./CallbackResource.ts";
 import { CitationCallbackFailure, CitationResolutionWork, readCapturedCitationSession } from "./CallbackSession.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
@@ -27,6 +28,7 @@ import {
 } from "./ResourceObjects.ts";
 import { CitationSessionResourceDescriptors } from "./SessionDocument.ts";
 import type { CitationGroupMember } from "@beep/law-practice-domain/values";
+import type { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import type { CitationCallbackResource } from "./CallbackResource.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SessionDescriptors");
@@ -51,8 +53,11 @@ const Scope = S.fromJsonString(
 const Key = S.fromJsonString(S.Tuple([S.tag("eyecite-resource-current-hash/v1"), S.BigIntFromString]));
 const failed = () => CitationCallbackFailure.make({ reason: "identity-failed" });
 const modelFailed = () => CitationResourceObjectFailure.make({ reason: "model-failed" });
-const mapped = (error: { readonly reason: string }) =>
-  CitationCallbackFailure.make({ reason: error.reason === "limit-exceeded" ? "limit-exceeded" : "identity-failed" });
+const mapped = (error: { readonly reason: string; readonly limit?: CitationSafetyBudget }) =>
+  CitationCallbackFailure.make({
+    reason: error.reason === "limit-exceeded" ? "limit-exceeded" : "identity-failed",
+    ...Struct.pick(error, ["limit"]),
+  });
 /**
  * Derive canonical descriptors from final immutable semantics and authenticated
  * edition payloads. No dispatch key, host hash, equality or truth method runs.
@@ -94,12 +99,17 @@ export const makeCitationRegisteredSessionDescriptors = Effect.fn("Citation.make
     let work = 0;
     const localStep = Effect.suspend(() =>
       work++ >= state.limits.resolutionIterations
-        ? Effect.fail(CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))
+        ? Effect.fail(CitationResourceObjectFailure.make({ reason: "limit-exceeded", limit: "resolutionIterations" }))
         : Effect.void
     );
     const step = O.isSome(sharedWork)
       ? sharedWork.value.step.pipe(
-          Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))
+          Effect.mapError((error) =>
+            CitationResourceObjectFailure.make({
+              reason: "limit-exceeded",
+              ...Struct.pick(error, ["limit"]),
+            })
+          )
         )
       : localStep;
     const models = CitationResourceModels.of({

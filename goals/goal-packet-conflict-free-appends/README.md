@@ -31,9 +31,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Implementation merged in #2702 (2026-11-06, merge 072748d024). Closeout
-re-final PR in lane docs/goal-packet-conflict-free-appends-closeout carries the
-reflection and `proposedCloseout`; adoption follows its merge.
+Implementation merged in #2702 (2026-11-06, merge 072748d024). Two closeout
+PRs merged before their readiness monitors recorded `merge-ready: yes` and
+cannot verify: #2794, and #2869, which also merged at a commit naming a
+predicted PR number (#2848) that belonged to another PR. The third re-final
+PR, from lane gpcfa-refinal3, now carries `proposedCloseout`. It is held until
+its own monitor reports `merge-ready: yes`. Adoption follows after it merges.
 
 ## Latest Evidence
 

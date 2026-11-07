@@ -28,6 +28,13 @@ safety, and public representation.
 
 ## Pinned repositories
 
+The default annotation diff also uses the original fast-diff-match-patch 2.0.1
+[published source archive](https://pypi.org/project/fast-diff-match-patch/2.0.1/)
+under Apache-2.0. Its unchanged C++ header, source archive digest, private ABI,
+WASI runtime notices and exact-step comparisons are recorded in
+[diff-core evidence](../history/evidence/2026-11-05-diff-kernel.md). The target
+reuses that algorithm; this does not qualify builtin difflib or the full worker.
+
 | Repository | Commit | Tree | License | Local reference | Disposition |
 | --- | --- | --- | --- | --- | --- |
 | [freelawproject/eyecite](https://github.com/freelawproject/eyecite) | `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e` | `a35a58fac03400f71a93a93485b77f1d56f2b02f` | BSD-2-Clause | `$HOME/YeeBois/research/law_stuff/repos/eyecite` | Normative pinned oracle; port/reimplement with attribution |
@@ -204,6 +211,12 @@ approval remain absent. A separately cached matching-version WASI build is
 research only and has no HTML parity or runtime acceptance. Existing eyecite
 attribution covers the source-derived observations; no native asset is added.
 
+The [unchecked annotation assembly evidence](
+../history/evidence/2026-11-06-annotation-assembly.md) binds 214 original outputs
+and 719 annotation tuples to the pinned annotate.py and producer. The target
+reuses native range concatenation and captured allocation authority. Target
+sorting, HTML/callback modes and final annotation service remain open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.
@@ -245,3 +258,28 @@ attribution covers the source-derived observations; no native asset is added.
 - [Legal parser landscape](../../../explorations/citation-grounding-hallucination-guard/research/legal-citation-parser-landscape.md)
 - [Verified-span sources](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/citation-verified-span-substrate/research/SOURCES.md)
 - [Court/reporter vocabulary audit](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/court-reporter-vocabulary/research/EYECITE_DATA_AUDIT.md)
+
+## Annotation replacement-template reference
+
+The private fixed one-capture template adapter derives from CPython 3.11.15
+[`Lib/re/_parser.py`](https://github.com/python/cpython/blob/v3.11.15/Lib/re/_parser.py),
+SHA-256 `4748e39c77d6dc14f81af80e68a62ad99031a8182d5e0b219a6666d0cfb1626f`.
+The existing complete PSF notice applies; THIRD_PARTY_NOTICES.md records the
+Effect/native-range modifications. Original `wrap_html_tags` observations call
+the unchanged eyecite helper with an explicitly cold template cache per case.
+See [replacement-template evidence](../history/evidence/2026-11-06-annotation-template.md).
+This component proof does not establish native match execution, warm-cache
+warning behavior, full wrap dispatch, custom annotators or engine completion.
+
+The [native wrap evidence](../history/evidence/2026-11-06-annotation-wrap.md)
+uses the same original helper/pattern with actual Bun/Node regex and XML workers.
+Its separate 162-case original annotation corpus retains actual parser/helper
+observations and invalid-template results. Existing BSD-2-Clause/PSF notices
+apply; warm-cache warning and final engine qualification remain open.
+
+The [callback evidence](../history/evidence/2026-11-06-annotation-callback.md)
+records actual callable arguments and deferred-join/immediate failures from
+unchanged annotate_citations. Its 144-case corpus retains Unicode and all three
+markup modes; original string-subclass coercion hooks remain uncalled. Existing
+BSD-2-Clause/PSF attribution applies. Arbitrary host values, callback protocols
+and final engine qualification remain open.

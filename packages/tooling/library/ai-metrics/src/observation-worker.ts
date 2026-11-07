@@ -16,10 +16,12 @@ import { makeNativeDelivery, NativeDeliveryPolicy } from "./native-delivery.ts";
 import { makeNativeHttpIntake, NativeHttpPolicy } from "./native-http.ts";
 import { makeNativeReadback } from "./native-readback.ts";
 import { makeNativeDeliveryScheduler, NativeSchedulePolicy } from "./native-schedule.ts";
+import { makeObservationAvailability } from "./observation-availability.ts";
 import { captureObservationBackup } from "./observation-backup.ts";
 import { makeObservationControl, ObservationControlPolicy } from "./observation-control.ts";
 import { makeObservationLaunchFacts } from "./observation-launch-facts.ts";
 import { makeObservationLaunchHttp, ObservationLaunchHttpPolicy } from "./observation-launch-http.ts";
+import { makeObservationOutcomes } from "./observation-outcomes.ts";
 import { makePayloadReclaimer, PayloadRetentionPolicy } from "./payload-reclamation.ts";
 import { runDiscoveredTranscriptSweep } from "./transcript-discovery.ts";
 import { TranscriptAcceptance, TranscriptIntakeConfig, TranscriptIntakeError } from "./transcript-intake.ts";
@@ -118,6 +120,8 @@ export const makeObservationWorker = Effect.fn("AiMetrics.makeObservationWorker"
   );
   const payloads = yield* makePayloadReclaimer(config.intake, config.ledger, config.payloadRetention);
   const launches = yield* makeObservationLaunchFacts(config.intake);
+  const availability = yield* makeObservationAvailability(config.intake);
+  const outcomes = yield* makeObservationOutcomes(config.intake);
   const launchHttp = O.isSome(config.launchHttp)
     ? yield* Effect.asSome(makeObservationLaunchHttp(config.intake, config.launchHttp.value, control))
     : O.none();
@@ -139,6 +143,9 @@ export const makeObservationWorker = Effect.fn("AiMetrics.makeObservationWorker"
     intakeHealth: intake.health,
     recordLaunch: (fact: ObservationLaunchFact, epoch: number) => control.run(launches.record(fact, epoch)),
     launchFacts: launches.read,
+    recordAvailability: (input: unknown, epoch: number) => control.run(availability.record(input, epoch)),
+    launchOutcome: outcomes.launch,
+    availabilityOutcome: outcomes.availability,
     window: evidence.window,
     eventState: delivery.ledger.state,
     tick: control.run(scheduler.tick),
