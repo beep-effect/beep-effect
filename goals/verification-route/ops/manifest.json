@@ -23,7 +23,36 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2414,
+        "role": "supporting"
+      },
+      {
+        "number": 2856,
+        "role": "supporting"
+      },
+      {
+        "number": 2879,
+        "role": "supporting"
+      },
+      {
+        "number": 2884,
+        "role": "supporting"
+      },
+      {
+        "number": 2885,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_verification-route-hosted-proof-94fc99dd9ec7/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -64,22 +93,22 @@
     {
       "id": "P1",
       "name": "Slice 2: refinements, both layers, final-check",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Slice 3: hosted per lane",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -94,5 +123,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2885
+  }
 }
