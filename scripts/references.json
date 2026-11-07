@@ -48,6 +48,10 @@
     {
       "name": "alchemy",
       "url": "https://github.com/alchemy-run/alchemy.git"
+    },
+    {
+      "name": "goals-archive",
+      "url": "git@github.com:beep-effect/beep-effect-goals-archive.git"
     }
   ]
 }
