@@ -2,14 +2,14 @@
 goal: citation-extraction-engine
 agent: codex
 date: 2026-11-07
-trigger: implementation-checkpoint
+trigger: on-demand
 confidence: high
 findings:
-  - category: implementation-sequencing
+  - category: implementation-improvement
     confidence: high
     instruction: Exercise original raw inputs through the assembled public engine before expanding isolated proof infrastructure.
     explanation: Hosted canonical replay exposed missing-page groups that earlier component suites had not caught.
-  - category: fixture-contracts
+  - category: implementation-improvement
     confidence: high
     instruction: Keep source behavior assertions at the correct private boundary and test public error redaction separately.
     explanation: Public cleaner failure redaction made historical cleaner fixture assumptions stale without invalidating the underlying source expectations.
