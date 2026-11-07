@@ -331,7 +331,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-reference-markup.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-edition-years.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-resolution-assertions.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-07-bun-xml-startup.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-bun-xml-startup.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-xml-worker-entry-reachability.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

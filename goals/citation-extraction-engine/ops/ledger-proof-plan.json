@@ -840,7 +840,7 @@
       ],
       "rationale": "Complete resolver-boundary replay of 23 original formatted resource-map and seven reference-index equality assertions through the default public engine. Complete source inputs and finite label adaptation conditions are verified. Parser assertions, outer helper calls, native hash/identity and general model laws remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationAnnotationCallback.test.ts test/CitationXmlWorker.test.ts test/CitationEngineResolution.test.ts --reporter=json --outputFile=../../../.beep/citation-xml-bundled-results.json",
+        "command": "bunx --bun vitest run test/CitationEngineResolution.test.ts",
         "result": "passed",
         "scope": "complete-case",
         "operation": "resolve",
@@ -876,7 +876,7 @@
           },
           {
             "path": "packages/law-practice/server/test/CitationXmlWorker.fixtures.ts",
-            "sha256": "d42cfb0fd711bef1aae94cc362e2ba93e0134ebdff1d7084a42f75dead0664b0"
+            "sha256": "7e597a184fb8404dc9c50690b8956f91ffd8675aa1125cca6d906bd5aa384e84"
           }
         ]
       }

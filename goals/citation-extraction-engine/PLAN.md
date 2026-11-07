@@ -1683,6 +1683,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional private limit metadata and its producers/translators together, retaining source corpora and exact-category regression evidence without weakening any acceptance requirement.
 
+### Preserve static XML worker entry reachability after Bun startup repair, 2026-11-07
+
+Fix the three source-backed unused-file findings from hosted Fallow run 42353625579 by selecting literal URL constructors. Preserve actual worker paths, limits, redaction and assertions. All six callback/XML tests and both original resolution assertion tests pass; hosted unit-d and exhaustive acceptance remain open. Evidence: history/evidence/2026-11-07-xml-worker-entry-reachability.md.
+
+Reverse: Revisit when the scanner can follow conditional URL arguments without explicit literal constructors.
+
 ### Qualify all original edition-year assertions against authenticated production data, 2026-11-07
 
 Replay all eight original Edition.includes_year assertions through the existing production inference service using authenticated frozen editions and the captured Effect TestClock date. The retained test passes in 6.08 seconds; lint/types and Fallow pass. Bind only these exact original model-method cases as complete, without claiming whole-document extraction or a parent model capability. See history/evidence/2026-11-07-canonical-edition-years.md.
