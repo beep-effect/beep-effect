@@ -2606,3 +2606,18 @@ checking absence in both inventories. Keep raw digest, source, complete group,
 resource-bound and artifact-authentication checks unchanged. A missing detail
 section with a present target group must still refuse. Do not manufacture a
 file-level pass or relabel older evidence from a different dependency profile.
+
+### 2026-11-07 — In-memory scheduled command can lose an early wake
+
+- Work: qualify the CI diagnostic prerequisite on PR #2871.
+- Evidence: hosted unit-b job 128331156278 fails the unchanged Alchemy InMemory
+  scheduling conformance case at its three-second eventual-state bound. Source
+  inspection finds one sleep followed by one wall-clock due check; an early wake
+  leaves the timer pending with no next notification. This mechanism is supported
+  by source, but its attribution to the observed timeout awaits hosted regression.
+- Repair: extend the existing pinned domain patch in both TypeScript and JavaScript
+  entrypoints to repeat the remaining sleep until the actual deadline. Add a
+  separate TestClock regression with an independently controlled wall clock;
+  retain the existing live conformance case, its timeout and all assertions.
+- Prevention: timer notification and due-time checks must share a rearm contract.
+  No local test suite, timeout increase, baseline change or suppression is used.
