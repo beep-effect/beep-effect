@@ -143,14 +143,20 @@ Slice 2:
 
 Slice 3:
 
-- [ ] A hosted lane the route excludes starts, routes, and completes
+- [x] A hosted lane the route excludes starts, routes, and completes
       `skip-satisfied` success with the receipt in its job summary; the
-      required-context set on `main`'s ruleset is unchanged.
+      required-context set on `main`'s ruleset is unchanged. Proven on #2885 (packet markdown only),
+      `heavy-admit.yml` run 42364996454: Heavy / Build (job 128381390298) and Heavy / Check (job
+      128381390311) ran admitted with `ROUTE_SKIPS: build,check`, wrote the route receipt to their
+      job summaries and succeeded, while the other Heavy lanes ran; no ruleset or required context
+      changed (#2879, #2884).
 
 All slices:
 
-- [ ] `bun run beep quality package-verify @beep/repo-cli` green on each PR.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `bun run beep quality package-verify @beep/repo-cli` green on each PR, with named skips where
+      the workstation's OOM killer stopped a local gate; hosted CI proved each skipped gate, and each
+      PR body records the skips.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

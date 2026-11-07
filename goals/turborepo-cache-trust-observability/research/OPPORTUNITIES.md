@@ -2606,3 +2606,42 @@ checking absence in both inventories. Keep raw digest, source, complete group,
 resource-bound and artifact-authentication checks unchanged. A missing detail
 section with a present target group must still refuse. Do not manufacture a
 file-level pass or relabel older evidence from a different dependency profile.
+
+### Bounded output hid the failed-test footer, 2026-11-07
+
+PR #2850 unit-d job 128316306058 failed in law-practice-server, but the repo-run
+capture stopped at its 524288-character prefix before the final failure summary.
+The older job 128292107919 had the same diagnostic loss. Preserve both raw
+receipts privately; the actual assertion cause remains unknown. Add an opt-in
+head-and-tail retention policy to the existing shared output fold, keeping the
+repo-run character budget unchanged and the default head-only policy for other
+callers. Existing prefix behavior, legacy decoding, chunk partitioning and final
+footer retention receive hosted controls. Do not rerun the unchanged failed
+source merely to obtain the same truncated prefix; accepted diagnostic changes
+are a prerequisite for the next observation. No test failure is waived by this
+logging repair and no local quality suite was run.
+
+### 2026-11-07 — Select bounded capture retention before folding chunks
+
+- Work: preserve bounded CI failure footers in PR #2871.
+- Evidence: hosted Fallow Advisory Envelopes job 128329601764 reported one introduced
+  cognitive-complexity finding in `boundedChunkReducer`; authenticated audit and
+  health artifacts identify the same callback at cognitive score 9.
+- Repair: choose the prefix or rolling head-tail fold once per bound rather than
+  branch on retention inside every chunk callback. Preserve both algorithms,
+  character budgets, defaults, notices and existing authored controls.
+- Prevention: keep independent retention policies outside the per-chunk state
+  transition. Hosted CI remains the proof; no local suite or baseline rewrite.
+
+### 2026-11-07 — Exercise the output-bound schema with derived inputs
+
+- Work: validate the bounded failure-footer capture on PR #2871.
+- Evidence: hosted Lint Policy job 128335882521 rejects the changed output-bound
+  test file under SFV4-arbitrary-tests: three codec assertions without derived
+  property coverage. Existing deterministic fold and stream controls remain.
+- Repair: generate OutputBound values from the schema and prove encoded round
+  trips preserve every field while legacy inputs without retention default to
+  head-only capture across arbitrary finite caps and notices. Keep codecs hoisted.
+- Prevention: accompany schema boundary changes with schema-derived property
+  coverage, not only fixed examples. Hosted CI is authoritative; no local suite,
+  baseline rewrite or suppression is used.
