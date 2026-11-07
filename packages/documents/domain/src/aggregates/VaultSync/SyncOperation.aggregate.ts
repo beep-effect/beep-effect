@@ -22,10 +22,11 @@ const retarget = (s: C.OperationState, c: C.OperationInput) =>
 /**
  * SyncOperation vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Address one aggregate stream)
  * ```ts
- * import { SyncOperation } from "@beep/documents-domain/aggregates/VaultSync";
- * void SyncOperation;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const ref=V.SyncOperation.ref(V.OperationId.make("documents_sync_operation_a1"));
+ * console.log(ref.id);
  * ```
  * @category aggregates
  * @since 0.0.0
@@ -57,7 +58,11 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
               : [C.OperationRetargeted.make(Struct.omit(c, ["_tag"]))]
             : refused("not-retargetable"),
     SquashOperation: (s, c) =>
-      retarget(s, c.input) ? [C.OperationSquashed.make(Struct.omit(c, ["_tag"]))] : refused("not-retargetable"),
+      retarget(s, c.input)
+        ? s !== null && c.input.generation < s.input.generation
+          ? []
+          : [C.OperationSquashed.make(Struct.omit(c, ["_tag"]))]
+        : refused("not-retargetable"),
     LeaseOperation: (s, c, { now }) => {
       if (s === null || s.status !== "queued") return refused("not-queued");
       if (s.input.parentRequired && c.parentRemoteId === null) return refused("parent-remote-id");
@@ -76,8 +81,12 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
       s !== null && s.status === "leased" && s.leaseEpoch === c.attempt && DateTime.toEpochMillis(now) >= s.expiresAt
         ? [C.OperationLeaseExpired.make(Struct.omit(c, ["_tag"]))]
         : [],
-    CompleteOperation: (s, c) =>
-      s !== null && s.status === "leased" && s.holder === c.holder && s.leaseEpoch === c.attempt
+    CompleteOperation: (s, c, { now }) =>
+      s !== null &&
+      s.status === "leased" &&
+      s.holder === c.holder &&
+      s.leaseEpoch === c.attempt &&
+      DateTime.toEpochMillis(now) < s.expiresAt
         ? [C.OperationSucceeded.make(Struct.omit(c, ["_tag"]))]
         : refused("stale-lease"),
     FailOperation: (s, c, { now }) =>

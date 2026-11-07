@@ -12,10 +12,11 @@ import * as V from "./Values.ts";
 /**
  * LeaseOperation vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { LeaseOperation } from "@beep/documents-domain/aggregates/VaultSync";
- * void LeaseOperation;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.LeaseOperation.make({holder:"worker",leaseMillis:30000,parentRemoteId:null,itemRemoteId:null});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

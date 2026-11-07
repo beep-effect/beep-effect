@@ -14,10 +14,11 @@ import * as V from "./Values.ts";
 /**
  * DestinationNameReservation vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Address one aggregate stream)
  * ```ts
- * import { DestinationNameReservation } from "@beep/documents-domain/aggregates/VaultSync";
- * void DestinationNameReservation;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const ref=V.DestinationNameReservation.ref(V.ReservationKey.make("1:vault"));
+ * console.log(ref.id);
  * ```
  * @category aggregates
  * @since 0.0.0
@@ -34,7 +35,9 @@ export class DestinationNameReservation extends Domain.Aggregate("DestinationNam
         : s === null
           ? [C.DestinationNameClaimed.make(Struct.omit(c, ["_tag"]))]
           : s.destinationId === c.claim.destinationId
-            ? []
+            ? s.name === c.claim.name
+              ? []
+              : [C.DestinationNameClaimed.make(Struct.omit(c, ["_tag"]))]
             : SyncRuleViolation.make({ rule: "name-held", evidence: id }),
     ReleaseDestinationName: (s, c) =>
       s?.destinationId === c.destinationId ? [C.DestinationNameReleased.make(Struct.omit(c, ["_tag"]))] : [],

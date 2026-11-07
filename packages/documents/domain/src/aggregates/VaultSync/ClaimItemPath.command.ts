@@ -11,10 +11,11 @@ import * as V from "./Values.ts";
 /**
  * ClaimItemPath vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { ClaimItemPath } from "@beep/documents-domain/aggregates/VaultSync";
- * void ClaimItemPath;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.ClaimItemPath.make({path:V.VaultRelPath.make("file.txt"),itemId:V.ItemId.make("documents_sync_item_a1")});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

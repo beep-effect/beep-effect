@@ -11,10 +11,11 @@ import * as V from "./Values.ts";
 /**
  * RecordConflict vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { RecordConflict } from "@beep/documents-domain/aggregates/VaultSync";
- * void RecordConflict;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.RecordConflict.make({record:{publicId:V.ConflictId.make("documents_sync_conflict_a1"),destinationId:V.DestinationId.make("vault"),workspaceId:1,remoteEventId:"event1",itemId:V.ItemId.make("documents_sync_item_a1"),evidence:"remote rename",reviewed:false}});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

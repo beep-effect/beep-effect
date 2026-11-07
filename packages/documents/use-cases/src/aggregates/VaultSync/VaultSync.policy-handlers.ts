@@ -48,27 +48,39 @@ export const VaultSyncPolicies = Layer.mergeAll(
     Effect.gen(function* () {
       const destinations = yield* V.SyncDestination;
       const claims = yield* V.DestinationNameReservation;
-      return Effect.fn(function* ({ event, envelope }) {
+      return Effect.fn(function* ({ event, source, envelope }) {
         const c = event.claim;
         const options = { commandId: `${envelope.stream}:${envelope.seq}:destination` };
-        if (c.previousName === null)
-          yield* destinations.send(
-            c.destinationId,
-            V.RegisterDestination.make({ orgId: c.orgId, workspaceId: c.workspaceId, name: c.name }),
-            options
-          );
-        else {
-          yield* destinations.send(
-            c.destinationId,
-            V.RenameDestination.make({ name: c.name, previousName: c.previousName }),
-            options
-          );
-          const old = V.ReservationKey.make(`${c.orgId}:${Str.toLowerCase(Str.trim(c.previousName))}`);
-          if (old !== V.ReservationKey.make(`${c.orgId}:${Str.toLowerCase(Str.trim(c.name))}`))
-            yield* claims.send(old, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
-              commandId: `${envelope.stream}:${envelope.seq}:release`,
-            });
-        }
+        const command =
+          c.previousName === null
+            ? V.RegisterDestination.make({ orgId: c.orgId, workspaceId: c.workspaceId, name: c.name })
+            : V.RenameDestination.make({
+                orgId: c.orgId,
+                workspaceId: c.workspaceId,
+                name: c.name,
+                previousName: c.previousName,
+              });
+        const accepted = yield* destinations.send(c.destinationId, command, options).pipe(
+          Effect.matchEffect({
+            onSuccess: () => Effect.succeed(true),
+            onFailure: Effect.fnUntraced(function* () {
+              const current = yield* destinations.state(c.destinationId);
+              const currentKey =
+                current._tag === "Registered" ? `${current.orgId}:${Str.toLowerCase(Str.trim(current.name))}` : null;
+              if (currentKey !== source.id)
+                yield* claims.send(source.id, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
+                  commandId: `${envelope.stream}:${envelope.seq}:release-rejected`,
+                });
+              return false;
+            }),
+          })
+        );
+        if (!accepted || c.previousName === null) return;
+        const old = V.ReservationKey.make(`${c.orgId}:${Str.toLowerCase(Str.trim(c.previousName))}`);
+        if (old !== source.id)
+          yield* claims.send(old, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
+            commandId: `${envelope.stream}:${envelope.seq}:release`,
+          });
       }, Effect.orDie);
     })
   ),
@@ -181,9 +193,13 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const items = yield* V.SyncItem;
       return Effect.fn(function* ({ state, envelope }) {
         if (state === null) return;
-        yield* items.send(state.input.itemId, V.MarkItemPushFailed.make({ terminal: true }), {
-          commandId: `${envelope.stream}:${envelope.seq}:error`,
-        });
+        yield* items.send(
+          state.input.itemId,
+          V.MarkItemPushFailed.make({ terminal: true, generation: state.input.generation }),
+          {
+            commandId: `${envelope.stream}:${envelope.seq}:error`,
+          }
+        );
       }, Effect.orDie);
     })
   ),

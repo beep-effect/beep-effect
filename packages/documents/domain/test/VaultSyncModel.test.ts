@@ -78,7 +78,10 @@ layer(hosted, { excludeTestServices: true })("pure read contracts", (it) => {
         })
       );
       yield* destinations.send(destination, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "vault" }));
-      yield* destinations.send(destination, V.RenameDestination.make({ name: "renamed", previousName: "vault" }));
+      yield* destinations.send(
+        destination,
+        V.RenameDestination.make({ orgId: 1, workspaceId: 1, name: "renamed", previousName: "vault" })
+      );
       yield* names.send(key, V.ReleaseDestinationName.make({ destinationId: destination }));
       yield* destinations.send(destination, V.ResolveDestinationRoot.make({ rootId: remote }));
       yield* destinations.send(destination, V.PauseDestination.make({}));
@@ -93,10 +96,10 @@ layer(hosted, { excludeTestServices: true })("pure read contracts", (it) => {
         item,
         V.ObserveItem.make({ observation: { ...observation, generation: 3, path: V.VaultRelPath.make("moved.txt") } })
       );
-      yield* items.send(item, V.MarkItemPushed.make({ remoteId: remote, generation: 3 }));
+      yield* items.send(item, V.MarkItemPushed.make({ remoteId: remote, generation: 3, operationId: operation }));
       yield* items.send(item, V.FlagItemDrift.make({}));
-      yield* items.send(item, V.MarkItemPushFailed.make({ terminal: true }));
-      yield* items.send(item, V.MarkItemPushFailed.make({ terminal: false }));
+      yield* items.send(item, V.MarkItemPushFailed.make({ terminal: true, generation: 3 }));
+      yield* items.send(item, V.MarkItemPushFailed.make({ terminal: false, generation: 3 }));
       yield* items.send(
         item,
         V.ReturnItemToPending.make({ operationId: V.OperationId.make("documents_sync_operation_aheal") })

@@ -11,10 +11,11 @@ import * as V from "./Values.ts";
 /**
  * ResolveDestinationRoot vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { ResolveDestinationRoot } from "@beep/documents-domain/aggregates/VaultSync";
- * void ResolveDestinationRoot;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.ResolveDestinationRoot.make({rootId:V.RemoteItemId.make("box1")});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

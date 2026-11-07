@@ -16,10 +16,11 @@ const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "dest
 /**
  * SyncDestination vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Address one aggregate stream)
  * ```ts
- * import { SyncDestination } from "@beep/documents-domain/aggregates/VaultSync";
- * void SyncDestination;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const ref=V.SyncDestination.ref(V.DestinationId.make("vault"));
+ * console.log(ref.id);
  * ```
  * @category aggregates
  * @since 0.0.0
@@ -48,11 +49,13 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
     RenameDestination: (s, c) =>
       s._tag !== "Registered"
         ? refused("not-registered")
-        : s.name === c.name
-          ? []
-          : s.name !== c.previousName
-            ? refused("stale-name")
-            : [C.DestinationRenamed.make(Struct.omit(c, ["_tag"]))],
+        : s.orgId !== c.orgId || s.workspaceId !== c.workspaceId
+          ? refused("destination-scope")
+          : s.name === c.name
+            ? []
+            : s.name !== c.previousName
+              ? refused("stale-name")
+              : [C.DestinationRenamed.make(Struct.omit(c, ["_tag"]))],
     ResolveDestinationRoot: (s, c) =>
       s._tag === "Registered" ? [C.RootFolderResolved.make(Struct.omit(c, ["_tag"]))] : refused("not-registered"),
     PauseDestination: (s) =>

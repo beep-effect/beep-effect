@@ -64,6 +64,26 @@ describe("vault sync pure transitions", () => {
     );
     expect(events).toEqual([V.OperationLeased.make({ holder: "next", expiresAt: 6000, attempt: 2 })]);
   });
+  it("a completed deadline cannot be bypassed by a delayed expiry worker", () => {
+    const events = V.SyncOperation.definition.decide.CompleteOperation(
+      leased,
+      V.CompleteOperation.make({ holder: "worker", attempt: 1 }),
+      { ...ctx, now: DateTime.makeUnsafe(2000) }
+    );
+    expect(events).toMatchObject({ rule: "stale-lease" });
+  });
+  it("squash ignores stale input and a new stream cannot reuse another idempotency key", () => {
+    const current = queued === null ? queued : { ...queued, input: { ...input, generation: 2 } };
+    expect(V.SyncOperation.definition.decide.SquashOperation(current, V.SquashOperation.make({ input }), ctx)).toEqual(
+      []
+    );
+    expect(
+      V.SyncOperation.definition.decide.QueueOperation(null, V.QueueOperation.make({ input }), {
+        ...ctx,
+        id: V.OperationId.make("documents_sync_operation_a2"),
+      })
+    ).toMatchObject({ rule: "operation-key" });
+  });
   it("evolve is total for events following an absent state", () => {
     expect(
       V.SyncOperation.definition.evolve.OperationSucceeded(null, V.OperationSucceeded.make({ attempt: 1 }), envelope)
@@ -78,6 +98,36 @@ describe("vault sync pure transitions", () => {
       { ...ctx, id: V.ReservationKey.make("vault") }
     );
     expect(result).toMatchObject({ rule: "wrong-key" });
+  });
+  it("push acknowledgements preserve other operation slots and ignore stale failures", () => {
+    const observation: V.ItemObservation = {
+      destinationId: destination,
+      workspaceId: 1,
+      path: input.path,
+      kind: "file",
+      digest: "sha:b",
+      generation: 2,
+      operationId: id,
+      type: "uploadFile",
+      parentRequired: false,
+    };
+    const move = V.OperationId.make("documents_sync_operation_amove");
+    const state: V.ItemState = {
+      observation,
+      remoteId: null,
+      status: "pending",
+      slots: H.make(["uploadFile", id], ["moveItem", move]),
+    };
+    const event = V.ItemPushed.make({ remoteId: V.RemoteItemId.make("box1"), generation: 2, operationId: id });
+    const next = V.SyncItem.definition.evolve.ItemPushed(state, event, { ...envelope, id: itemId });
+    expect(next !== null && H.size(next.slots)).toBe(1);
+    expect(
+      V.SyncItem.definition.decide.MarkItemPushFailed(
+        state,
+        V.MarkItemPushFailed.make({ terminal: true, generation: 1 }),
+        { ...ctx, id: itemId }
+      )
+    ).toEqual([]);
   });
   it("path release is scoped to its current owner", () => {
     const state: V.DestinationState = {

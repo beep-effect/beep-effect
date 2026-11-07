@@ -95,6 +95,50 @@ export const scenarios = <E>({
         })
       );
       it.effect(
+        "stale and cross-org renames release only the rejected claim; case-only renames keep their reservation",
+        () =>
+          Effect.gen(function* () {
+            const names = yield* V.DestinationNameReservation;
+            const destinations = yield* V.SyncDestination;
+            const id = V.DestinationId.make("vault-race");
+            const old = V.ReservationKey.make("1:raceold");
+            yield* names.send(
+              old,
+              V.ClaimDestinationName.make({
+                claim: { destinationId: id, orgId: 1, workspaceId: 1, name: "raceold", previousName: null },
+              })
+            );
+            yield* eventually(destinations.state(id), (s) => s._tag === "Registered");
+            const rejected = V.ReservationKey.make("1:racenew");
+            yield* names.send(
+              rejected,
+              V.ClaimDestinationName.make({
+                claim: { destinationId: id, orgId: 1, workspaceId: 1, name: "racenew", previousName: "stale" },
+              })
+            );
+            yield* eventually(names.state(rejected), (s) => s === null);
+            yield* names.send(
+              old,
+              V.ClaimDestinationName.make({
+                claim: { destinationId: id, orgId: 1, workspaceId: 1, name: "RACEOLD", previousName: "raceold" },
+              })
+            );
+            yield* eventually(destinations.state(id), (s) => s._tag === "Registered" && s.name === "RACEOLD");
+            const otherOrg = V.ReservationKey.make("2:foreign");
+            yield* names.send(
+              otherOrg,
+              V.ClaimDestinationName.make({
+                claim: { destinationId: id, orgId: 2, workspaceId: 1, name: "foreign", previousName: "RACEOLD" },
+              })
+            );
+            yield* eventually(names.state(otherOrg), (s) => s === null);
+            const state = yield* destinations.state(id);
+            const reservation = yield* names.state(old);
+            expect(state).toMatchObject({ name: "RACEOLD", orgId: 1 });
+            expect(reservation).not.toBe(null);
+          })
+      );
+      it.effect(
         "cursor failures retain the durable position, pause/resume is explicit, and paths have one owner (I6,I7,I21)",
         () =>
           Effect.gen(function* () {

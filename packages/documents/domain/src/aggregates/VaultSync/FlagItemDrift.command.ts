@@ -11,10 +11,11 @@ import * as V from "./Values.ts";
 /**
  * FlagItemDrift vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { FlagItemDrift } from "@beep/documents-domain/aggregates/VaultSync";
- * void FlagItemDrift;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.FlagItemDrift.make({});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

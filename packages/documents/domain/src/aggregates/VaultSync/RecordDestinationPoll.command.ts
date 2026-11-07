@@ -12,10 +12,11 @@ import * as V from "./Values.ts";
 /**
  * RecordDestinationPoll vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { RecordDestinationPoll } from "@beep/documents-domain/aggregates/VaultSync";
- * void RecordDestinationPoll;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.RecordDestinationPoll.make({position:"cursor-1",error:null});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

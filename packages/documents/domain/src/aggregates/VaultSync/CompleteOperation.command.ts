@@ -12,10 +12,11 @@ import * as V from "./Values.ts";
 /**
  * CompleteOperation vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { CompleteOperation } from "@beep/documents-domain/aggregates/VaultSync";
- * void CompleteOperation;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.CompleteOperation.make({holder:"worker",attempt:1});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

@@ -13,10 +13,11 @@ import * as V from "./Values.ts";
 /**
  * ConflictEventRegistry vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Address one aggregate stream)
  * ```ts
- * import { ConflictEventRegistry } from "@beep/documents-domain/aggregates/VaultSync";
- * void ConflictEventRegistry;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const ref=V.ConflictEventRegistry.ref(V.DestinationId.make("vault"));
+ * console.log(ref.id);
  * ```
  * @category aggregates
  * @since 0.0.0

@@ -135,7 +135,11 @@ export class ItemKindReplaced extends Domain.Event("ItemKindReplaced", {
  * @category aggregates
  * @since 0.0.0
  */
-export class ItemPushed extends Domain.Event("ItemPushed", { remoteId: V.RemoteItemId, generation: S.Int }) {
+export class ItemPushed extends Domain.Event("ItemPushed", {
+  remoteId: V.RemoteItemId,
+  generation: S.Int,
+  operationId: V.OperationId,
+}) {
   static readonly schemaVersion = 1;
 }
 /**
@@ -149,7 +153,7 @@ export class ItemPushed extends Domain.Event("ItemPushed", { remoteId: V.RemoteI
  * @category aggregates
  * @since 0.0.0
  */
-export class ItemPushFailed extends Domain.Event("ItemPushFailed", { terminal: S.Boolean }) {
+export class ItemPushFailed extends Domain.Event("ItemPushFailed", { terminal: S.Boolean, generation: S.Int }) {
   static readonly schemaVersion = 1;
 }
 /**

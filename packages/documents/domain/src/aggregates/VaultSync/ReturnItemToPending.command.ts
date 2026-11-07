@@ -11,10 +11,11 @@ import * as V from "./Values.ts";
 /**
  * ReturnItemToPending vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { ReturnItemToPending } from "@beep/documents-domain/aggregates/VaultSync";
- * void ReturnItemToPending;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.ReturnItemToPending.make({operationId:V.OperationId.make("documents_sync_operation_a1")});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

@@ -12,10 +12,11 @@ import * as V from "./Values.ts";
 /**
  * RegisterDestination vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { RegisterDestination } from "@beep/documents-domain/aggregates/VaultSync";
- * void RegisterDestination;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.RegisterDestination.make({orgId:1,workspaceId:1,name:"vault"});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

@@ -11,10 +11,11 @@ import * as V from "./Values.ts";
 /**
  * ExpireLease vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { ExpireLease } from "@beep/documents-domain/aggregates/VaultSync";
- * void ExpireLease;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.ExpireLease.make({attempt:1});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

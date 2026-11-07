@@ -11,10 +11,11 @@ import * as V from "./Values.ts";
 /**
  * ReleaseDestinationName vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { ReleaseDestinationName } from "@beep/documents-domain/aggregates/VaultSync";
- * void ReleaseDestinationName;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.ReleaseDestinationName.make({destinationId:V.DestinationId.make("vault")});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

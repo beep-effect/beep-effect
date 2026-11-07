@@ -12,17 +12,18 @@ import * as V from "./Values.ts";
 /**
  * RenameDestination vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { RenameDestination } from "@beep/documents-domain/aggregates/VaultSync";
- * void RenameDestination;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.RenameDestination.make({orgId:1,workspaceId:1,name:"renamed",previousName:"vault"});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0
  */
 export class RenameDestination extends Domain.Command("RenameDestination", {
   target: V.DestinationId,
-  input: { name: S.NonEmptyString, previousName: S.String },
+  input: { orgId: S.Int, workspaceId: S.Int, name: S.NonEmptyString, previousName: S.String },
   events: [E.DestinationRenamed],
   rejects: [SyncRuleViolation],
 }) {}

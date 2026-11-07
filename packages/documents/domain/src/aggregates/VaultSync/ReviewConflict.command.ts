@@ -13,10 +13,11 @@ import * as V from "./Values.ts";
 /**
  * ReviewConflict vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { ReviewConflict } from "@beep/documents-domain/aggregates/VaultSync";
- * void ReviewConflict;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.ReviewConflict.make({remoteEventId:"event1",workspaceId:1,destinationId:V.DestinationId.make("vault"),correction:null,healOperationId:V.OperationId.make("documents_sync_operation_a1")});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

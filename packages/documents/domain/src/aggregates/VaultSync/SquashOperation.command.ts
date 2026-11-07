@@ -11,10 +11,11 @@ import * as V from "./Values.ts";
 /**
  * SquashOperation vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { SquashOperation } from "@beep/documents-domain/aggregates/VaultSync";
- * void SquashOperation;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.SquashOperation.make({input:{destinationId:V.DestinationId.make("vault"),itemId:V.ItemId.make("documents_sync_item_a1"),type:"uploadFile",path:V.VaultRelPath.make("file.txt"),digest:"sha256:a",generation:1,parentRequired:false,idempotencyKey:V.OperationId.make("documents_sync_operation_a1")}});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

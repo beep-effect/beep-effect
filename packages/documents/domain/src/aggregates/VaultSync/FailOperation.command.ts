@@ -12,10 +12,11 @@ import * as V from "./Values.ts";
 /**
  * FailOperation vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Build a command for dispatch)
  * ```ts
- * import { FailOperation } from "@beep/documents-domain/aggregates/VaultSync";
- * void FailOperation;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const command=V.FailOperation.make({holder:"worker",attempt:1,retryable:true,maxAttempts:3,backoffMillis:1000,reason:"provider unavailable"});
+ * console.log(command._tag);
  * ```
  * @category aggregates
  * @since 0.0.0

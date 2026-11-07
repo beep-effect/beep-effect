@@ -26,10 +26,11 @@ const observed = (s: C.ItemState, e: { readonly observation: C.ItemObservation }
 /**
  * SyncItem vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Address one aggregate stream)
  * ```ts
- * import { SyncItem } from "@beep/documents-domain/aggregates/VaultSync";
- * void SyncItem;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const ref=V.SyncItem.ref(V.ItemId.make("documents_sync_item_a1"));
+ * console.log(ref.id);
  * ```
  * @category aggregates
  * @since 0.0.0
@@ -46,6 +47,8 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
       if (s.observation.destinationId !== o.destinationId || s.observation.workspaceId !== o.workspaceId)
         return refused("item-scope");
       if (o.generation <= s.observation.generation) return [];
+      if (s.observation.kind !== o.kind && H.some(s.slots, (id) => id === o.operationId))
+        return refused("operation-slot-held");
       if (s.observation.kind !== o.kind)
         return [C.ItemKindReplaced.make({ observation: c.observation, previousSlots: s.slots })];
       const slot = H.get(s.slots, o.type);
@@ -61,7 +64,11 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
           ? refused("stale-generation")
           : [C.ItemPushed.make(Struct.omit(c, ["_tag"]))],
     MarkItemPushFailed: (s, c) =>
-      s === null ? refused("not-tracked") : [C.ItemPushFailed.make(Struct.omit(c, ["_tag"]))],
+      s === null
+        ? refused("not-tracked")
+        : c.generation !== s.observation.generation
+          ? []
+          : [C.ItemPushFailed.make(Struct.omit(c, ["_tag"]))],
     FlagItemDrift: (s) => (s === null ? refused("not-tracked") : [C.ItemDriftFlagged.make({})]),
     ReturnItemToPending: (s, c) =>
       s === null
@@ -89,7 +96,9 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
     ItemMoved: observed,
     ItemKindReplaced: observed,
     ItemPushed: (s, e): C.ItemState =>
-      s === null ? s : { ...s, remoteId: e.remoteId, status: "synced", slots: H.empty() },
+      s === null
+        ? s
+        : { ...s, remoteId: e.remoteId, status: "synced", slots: H.filter(s.slots, (id) => id !== e.operationId) },
     ItemPushFailed: (s, e): C.ItemState => (s === null ? s : { ...s, status: e.terminal ? "error" : "pending" }),
     ItemDriftFlagged: (s): C.ItemState => (s === null ? s : { ...s, status: "drifted" }),
     ItemReturnedToPending: (s, e): C.ItemState => {

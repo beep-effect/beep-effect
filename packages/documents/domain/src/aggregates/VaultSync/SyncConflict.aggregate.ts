@@ -13,10 +13,11 @@ import * as V from "./Values.ts";
 /**
  * SyncConflict vault sync contract.
  *
- * **Example** (Inspect contract)
+ * **Example** (Address one aggregate stream)
  * ```ts
- * import { SyncConflict } from "@beep/documents-domain/aggregates/VaultSync";
- * void SyncConflict;
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync";
+ * const ref=V.SyncConflict.ref(V.ConflictId.make("documents_sync_conflict_a1"));
+ * console.log(ref.id);
  * ```
  * @category aggregates
  * @since 0.0.0
