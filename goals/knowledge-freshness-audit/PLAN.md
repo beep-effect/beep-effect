@@ -236,6 +236,14 @@ Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
 
 Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
 
+### Make the slow-winner cache fixture publish atomically, 2026-11-07
+
+A local final-check coverage run exposed ProviderCacheCorrupt in the Semantica healthy slow-winner fixture. The same source passed in a parallel run. The fixture wrote JSON directly to its published path, while the production writer stages and atomically renames. A controlled pause in that direct-write window reproduced the same schema decode failure. The fixture now stages its bytes and renames after the write; the retained observer asserts that lookup sees no entry during the incomplete staging write. All 22 provider-cache tests pass, while the direct-write negative control fails. Production cache code, corruption handling, retry schedule, 30-second test deadline and four-second watchdog are unchanged. The original failing run did not capture the partial bytes, so this validates and repairs the fixture race without claiming it is the exclusive cause of every historical failure. The touched fixture now builds its runtime through it.layer and uses the explicitly provided test clock that the bounded retry driver advances. Native test-policy analysis resolves two existing findings (14 to 12) with zero introduced findings and no baseline changes. Full package verification passes after that harness change (lint and audit; app docgen is not applicable), and package coverage passes all 140 tests across 16 files. Hosted proof remains pending. PM and ADHD holds are separate; no cloud admission or spending.
+
+Lane `codex/audit-semantica-winner`
+
+Reverse: Revert the fixture-only commit; production cache behavior is unchanged.
+
 ### Pin the notification sender citation to the verified source, 2026-11-07
 
 Read the current 99-line notification guide and checked bounded hook, worker and upstream source context. The URI override is forwarded before its environment name is removed, and desktop markup is escaped before delivery; those suspected discrepancies were rejected. The cited Ghostty v1.3.1 line 1578 handles environment setup, while the notification sender begins at line 1718. Pin that link to verified commit 332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28 and the actual sender. This is a source-citation repair, not proof of installed desktop behavior, focus, receipt visibility or clicks. No hooks, services or billing changed. P4 remains partial; PM and ADHD holds remain separate. Raw source and parent review receipts stay in the private archive.
