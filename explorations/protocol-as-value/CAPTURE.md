@@ -38,7 +38,6 @@ by git hashes."
 
 ### The One Mechanism artifact (this session's deliverable, sent to Mepuka)
 
-<!-- beep:historical commit=cf46c700488b6950ea7340369e0d0508e596cd1e -->
 - Live: https://claude.ai/code/artifact/81a980d8-2861-44a5-b173-424e5e257fc5
 - Local copy: [assets/one-mechanism.html](./assets/one-mechanism.html)
 - Act I — the mechanism has a name: journal = initial algebra μF (a log is
@@ -48,10 +47,10 @@ by git hashes."
   of "programs live in the same value universe as data."
 - Act II — the audit: beep-effect independently built the
   journal/register/fold/digest stack FIVE times, plus exhibit A:
-  1. Execution ledger — `packages/epistemic/domain/src/values/ExecutionRecord/`
+  1. Execution ledger — `packages/execution-authority/domain/src/entities/ExecutionRecord/`
      (hash-chained write-ahead decisions, seal = SHA-256 over versioned
      canonical JSON, verify = recompute every seal)
-  2. Governed tier gate — `packages/epistemic/server/src/GovernedTierGate/`
+  2. Governed tier gate — `packages/execution-authority/server/src/GovernedTierGate/`
      ("no record, no action"; closed literal-domain refusals; free text is a
      payload-smuggling channel)
   3. Goal-packet event core — `packages/tooling/tool/cli/src/commands/Goals/PacketCore/`
@@ -146,6 +145,8 @@ composer + annote convention + CURIE/IRI codecs; proven small instance:
 
 ## 2026-11-07
 
-- Two audit exhibits above moved in `goals/execution-authority-slice` P1 (#2853): the
-  execution ledger is now `packages/execution-authority/domain/src/entities/ExecutionRecord/`
-  and the governed tier gate is now `packages/execution-authority/server/src/GovernedTierGate/`.
+- Path rewrite: audit exhibits 1 and 2 in the 2026-08-23 entry originally cited the execution
+  ledger in `@beep/epistemic-domain` and the governed tier gate in `@beep/epistemic-server`.
+  `goals/execution-authority-slice` P1 (#2853) moved both to the execution-authority slice, and
+  the paths were updated in place because the knowledge refs gate rejects broken tracked paths
+  in live exploration docs.

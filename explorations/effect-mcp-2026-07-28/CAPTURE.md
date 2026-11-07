@@ -38,7 +38,6 @@ Mid-session operator notes:
 
 Grounding facts gathered before the grill (orchestrator, read-only):
 
-<!-- beep:historical commit=cf46c700488b6950ea7340369e0d0508e596cd1e -->
 - Effect-TS/effect#7265 "feat: add v2026-07-28 protocol adapter" merged 2026-09-11T23:23:35Z
   (+10342/-1627, 51 files). Follow-ups on main: #8228 (tool strictness, server `instructions`,
   prompt titles, merged 2026-09-14) and #8242 (migration guidance for MCP handlers, tool results,
@@ -63,7 +62,7 @@ Grounding facts gathered before the grill (orchestrator, read-only):
   `packages/drivers/gov-legal-mcp`, `packages/law-practice/server` (run by `apps/practice-kg-mcp`),
   and the HTTP sidecar `apps/professional-desktop/server/OntologyMcpTransport.ts`.
 - `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` reads `McpServerClient` and the
-  `mcp-session-id` header to build `McpCallerIdentity`; `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
+  `mcp-session-id` header to build `McpCallerIdentity`; `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
   keys per-session grant state and hash chains on that session id. The 2026-07-28 adapter creates
   no session id; `McpRequestContext` carries `clientId`, `protocolVersion`, `clientCapabilities`,
   `clientInfo`, `requestMetadata`, `inputResponses`, and `requestState`.
@@ -76,6 +75,7 @@ Grounding facts gathered before the grill (orchestrator, read-only):
 
 ## 2026-11-07
 
-- The governed tier gate cited in the 2026-09-16 entry now lives at
-  `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
-  (`goals/execution-authority-slice` P1, #2853).
+- Path rewrite: the 2026-09-16 entry originally cited the governed tier gate in
+  `@beep/epistemic-server`. `goals/execution-authority-slice` P1 (#2853) moved it to
+  `@beep/execution-authority-server`, and the entry's path was updated in place because the
+  knowledge refs gate rejects broken tracked paths in live exploration docs.
