@@ -204,6 +204,12 @@ export const libraryReferenceClass: {
   (key: string): (name: string) => O.Option<string>;
 } = dual(2, referenceClass);
 
+// References whose target class varies. A derivation's parent is a hop-0 Report on hop 1 and a Source
+// on hop 2, so its class is open like derivedId.
+const openReferenceClass = (name: string, key: string): boolean =>
+  A.contains(["findingId", "occurrenceId", "modelRunId", "intakeId", "derivedId"], key) ||
+  (name === "Derivation" && key === "sourceId");
+
 /**
  * Derive typed shapes from decoded field ASTs and assembled predicate identities.
  * **Details**
@@ -239,10 +245,7 @@ export const libraryShapes = (assembled: AssembledOntology): ReadonlyArray<Shacl
     const ast = fieldAst(cls.name, predicate.key);
     const ref = referenceClass(cls.name, predicate.key);
     const scalar = A.head(leaves(ast));
-    // A derivation's parent is a hop-0 Report on hop 1 and a Source on hop 2, so its class is open like derivedId.
-    const flexible =
-      A.contains(["findingId", "occurrenceId", "modelRunId", "intakeId", "derivedId"], predicate.key) ||
-      (cls.name === "Derivation" && predicate.key === "sourceId");
+    const flexible = openReferenceClass(cls.name, predicate.key);
     return ShaclPropertyShape.make({
       path: nn(predicate.termIri),
       minCount:

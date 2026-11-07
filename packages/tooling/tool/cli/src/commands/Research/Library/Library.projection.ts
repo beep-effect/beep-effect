@@ -124,6 +124,11 @@ export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: st
   return topics;
 });
 
+// Keys whose value names any catalogued record. A derivation's parent is a Report on hop 1 and a
+// Source on hop 2, so the projection links whichever record the id names.
+const linksKnownRecord = (name: string, key: string): boolean =>
+  A.contains(["derivedId", "intakeId"], key) || (name === "Derivation" && key === "sourceId");
+
 /**
  * Project decoded catalog records using predicate IRIs supplied by the fold.
  * **Details**
@@ -192,9 +197,7 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
   const reference = (name: string, key: string, value: unknown): Rdf.ObjectTerm => {
     if (!P.isString(value)) return literal(value);
     const matched = HashMap.get(key === "intakeId" ? intakeNodes : known, value);
-    // A derivation's parent is a Report on hop 1 and a Source on hop 2: link whichever record the id names.
-    const derivationParent = name === "Derivation" && key === "sourceId";
-    if ((A.contains(["derivedId", "intakeId"], key) || derivationParent) && O.isSome(matched)) return matched.value;
+    if (linksKnownRecord(name, key) && O.isSome(matched)) return matched.value;
     const ref = libraryReferenceClass(name, key);
     if (O.isNone(ref) || !Str.isNonEmpty(value)) return literal(value);
     if (ref.value === "Source") return O.getOrElse(HashMap.get(sourcesByAlias, value), () => iri("Source", value));
