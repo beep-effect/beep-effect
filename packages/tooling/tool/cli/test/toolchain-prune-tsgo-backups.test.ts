@@ -2,11 +2,14 @@ import { pruneTsgoBackups } from "@beep/repo-cli/commands/Toolchain";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
 // The root `prepare` lifecycle runs `beep toolchain prune-tsgo-backups` from the install root,
@@ -77,7 +80,11 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("beep toolchain prune-ts
       // A 3 MiB rotation proves the reclaimed size is reported in rounded MB.
       yield* fs.writeFile(path.join(directories[0] ?? root, "tsc.original.7"), new Uint8Array(3 * 1024 * 1024));
       yield* pruneTsgoBackups(root);
-      const reported = yield* TestConsole.logLines;
+      // CI runners also route effect-vitest lifecycle events through the test console.
+      const reported = yield* Effect.map(
+        TestConsole.logLines,
+        A.filter((line) => P.isString(line) && Str.startsWith("[prune-tsgo-backups]")(line))
+      );
       expect(reported).toEqual(["[prune-tsgo-backups] reclaimed ~3 MB of stale binary backups"]);
       yield* Effect.forEach(directories, expectPrunedDirectory, { discard: true });
       const rerun = yield* runCli(root);
