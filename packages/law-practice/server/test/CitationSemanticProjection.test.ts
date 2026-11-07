@@ -1,8 +1,10 @@
 import * as NodeURL from "node:url";
 import { Citation, CitationEditionRef, CitationShortCaseMetadata } from "@beep/law-practice-domain/values";
 import { getCitationExtractionShortcut } from "@beep/law-practice-server/internal/Citation/ExtractionShortcut";
+import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationSemanticProjection } from "@beep/law-practice-server/internal/Citation/SemanticProjection";
 import { makeCitationSemanticVocabulary } from "@beep/law-practice-server/internal/Citation/SemanticVocabulary";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -12,6 +14,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
+import { makeCitationVocabularyAssertion } from "./CitationSemanticVocabulary.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import { CitationNativeUnicodeHex, CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
 
@@ -230,13 +233,27 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic ci
           editions: corpus.bindings,
           vocabulary: raw,
         }).pipe(Effect.provideContext(setup.provided));
+        const assertVocabulary = yield* makeCitationVocabularyAssertion();
+        const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(setup.provided));
         const rows = A.flatMap(corpus.cases, (document) => document.before);
         for (const row of rows) {
-          const actual = yield* stage.project(sourceModel(row)).pipe(Effect.flatMap(encodeCitation));
+          const meaning = yield* stage.project(sourceModel(row));
+          const actual = yield* encodeCitation(meaning);
+          yield* assertVocabulary(unicode, [meaning], [row]);
           expect(actual.type).toBe(O.getOrThrow(R.get(sourceTypes, row.kind)));
           expect(actual.components).toEqual(R.map(row.token.groups, ascii));
           yield* assertSourceMetadata(actual.metadata, row);
           assertSourcePublication(actual, row, corpus.bindings);
+        }
+        const original = yield* Effect.fromOption(A.findFirst(rows, (row) => row.kind === "FullCaseCitation"));
+        for (const label of ["no-such-fixture-court", "", null]) {
+          const court =
+            label === null
+              ? null
+              : CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(label) });
+          const changed = { ...original, metadata: { ...original.metadata, court } };
+          const meaning = yield* stage.project(sourceModel(changed));
+          yield* assertVocabulary(unicode, [meaning], [changed]);
         }
         expect(rows).toHaveLength(80);
         const observed = yield* setup.observed.snapshot;

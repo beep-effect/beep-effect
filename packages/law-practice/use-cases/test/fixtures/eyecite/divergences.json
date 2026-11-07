@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "3f3b7444c70352b350bab69987ea6ff84fa5ce5f3c248566ce9aab999e6119a9",
+  "planSha256": "0abd39dc0ba46bf6dc16ca8b02ec8344512eba053ef4152b3a68bb5f2c2afd1a",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1072,7 +1072,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticProjection.test.ts",
-          "sha256": "7b57021d8417ef81f96d5fdd00e9e9b988db2f21d6548791c97bdd5d5c314ef7"
+          "sha256": "172b0debe04536e775384a3565eb51bfa4ba110ea85806b444deab817affed86"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-06-semantic-extraction.md",
@@ -1084,7 +1084,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticExtraction.fixtures.ts",
-          "sha256": "1e21cb7019fc73459e20251359bb4423cdbf3a9f9131a8e13b0f955a7833016b"
+          "sha256": "180a466cf976f92b250860aa8e984b02a488e73c2de1ecd4217d74d5653f5799"
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticExtraction.test.ts",
@@ -1668,7 +1668,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineCorpus.fixtures.ts",
-          "sha256": "84a14af8f15ad00e817822a09c3aa279f9bd712aff8e6c3c0da22785589e77c1"
+          "sha256": "8f5d3cc029ace8654d4c9a00063e5757606af6b7c82eee63a61282297c6c9516"
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineCorpus.test.ts",
@@ -1697,6 +1697,14 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-verified-pincite-components.md",
           "sha256": "0c62d983e04a4fd66158b200831002986d0942feec95662739ad24a261f7042d"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-public-vocabulary-identities.md",
+          "sha256": "fffdce9c521d259bc929b9a0a6d5268c022435fd06187d289dfbf7e274b490fa"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationSemanticVocabulary.fixtures.ts",
+          "sha256": "0add4f712e10d620242a66b2f8331206b5643a7dc7fd0aed12a57dab45dd6950"
         }
       ],
       "workflowState": "audit",

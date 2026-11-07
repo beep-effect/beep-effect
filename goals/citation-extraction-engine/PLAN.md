@@ -1541,6 +1541,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the extraction wrapper and typed translator together, preserving native corpora and every unfinished acceptance requirement.
 
+### Compare public court and reporter identities with sealed evidence, 2026-11-07
+
+The public extraction corpus and private semantic replay independently compare case reporter ids, publication/court artifact versions and known/unmapped court objects against the sealed vocabulary mapping. All eighty original projection models and explicit unknown/empty/null controls are covered. Seven public/projection tests pass; the factored projection replay passes five tests. Prior head 50a493cef5 now passes hosted Labs and Fallow envelopes. See history/evidence/2026-11-07-public-vocabulary-identities.md. All full-goal proof rows remain open.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Remove the additional identity assertions while retaining original source/mapping artifacts and unfinished vocabulary obligations.
+
 ### Compare public semantic metadata and publication observations, 2026-11-07
 
 Strengthen the shared public/private semantic comparator with whole represented metadata-record equality, preserved court labels and original ordered candidate/selected edition references. The original source fixture is unchanged. Coordinate metadata, vocabulary classification/version mapping and exhaustive capability proof remain separate obligations. See history/evidence/2026-11-07-public-semantic-metadata.md.

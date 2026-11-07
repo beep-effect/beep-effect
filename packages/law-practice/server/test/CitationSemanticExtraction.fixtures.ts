@@ -16,6 +16,7 @@ import { installCitationDefaultConfigurationFixture } from "./CitationDefaultCon
 import { invokeCitationRawExtraction } from "./CitationExtractionEntry.fixtures.ts";
 import { makeCitationOccurrenceTestAdapter } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
+import { makeCitationVocabularyAssertion } from "./CitationSemanticVocabulary.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
@@ -146,6 +147,7 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
     translated,
     provided,
   } = yield* installCitationDefaultConfigurationFixture(kind);
+  const assertVocabulary = yield* makeCitationVocabularyAssertion();
   const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 14, 18, 20, 22, 26, 32], row.id));
   const install = (limits: typeof setup.limits, input = config) =>
     makeCitationSemanticExtraction(limits, setup.runtime, input).pipe(
@@ -190,6 +192,7 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
       row.expected,
       corpus.bindings
     );
+    yield* assertVocabulary(unicode, result.citations, row.expected);
     expect(result.reservedUnits).toBe(result.raw.reservedUnits + projectedUnits);
     yield* occurrences.verify(unicode, result, row);
   }

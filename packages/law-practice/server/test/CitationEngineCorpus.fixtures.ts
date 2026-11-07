@@ -17,6 +17,7 @@ import { buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationSemanticDocument } from "./CitationSemanticExtraction.fixtures.ts";
+import { makeCitationVocabularyAssertion } from "./CitationSemanticVocabulary.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
@@ -34,6 +35,7 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
 ) {
   const installed = yield* installCitationDefaultConfigurationFixture(kind);
   const { setup, corpus, provided } = installed;
+  const assertVocabulary = yield* makeCitationVocabularyAssertion();
   const registered = yield* Ref.make<ReadonlyArray<VerifiedSourceText>>([]);
   const resolver = SourceTextResolver.of({
     resolve: Effect.fn("EngineCorpusTest.resolve")(function* (request) {
@@ -78,6 +80,7 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
     });
     const result = yield* engine.extract(input);
     yield* assertCitationSemanticDocument(unicode, result.citations, row.expected, corpus.bindings);
+    yield* assertVocabulary(unicode, result.citations, row.expected);
     expect(result.source.source.sourceText, `source case ${row.id}`).toBe(plain.text);
     expect(result.diagnostics.unverified, `source case ${row.id}`).toEqual([]);
     expect(result.diagnostics.unverifiedComponents, `source case ${row.id}`).toEqual([]);
