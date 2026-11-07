@@ -39,22 +39,9 @@ const TRANSIENT_GITHUB_ERROR_MESSAGES: ReadonlyArray<string> = [
   "GITHUB_TOKEN",
 ];
 
-/**
- * A changelog formatter rejected; `cause` is the formatter's own rejection value.
- *
- * **Example** (Wrap a formatter rejection)
- *
- * ```ts
- * import { ChangelogLineError } from "@beep/repo-cli/ChangesetChangelog"
- *
- * const error = ChangelogLineError.make({ cause: new Error("GITHUB_TOKEN missing") })
- * console.log(error._tag) // "ChangelogLineError"
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class ChangelogLineError extends S.TaggedError<ChangelogLineError, { readonly brand: unique symbol }>()(
+// A changelog formatter rejected; `cause` is the formatter's own rejection value. Module-private:
+// the promise boundary below rethrows `cause`, so callers never see this error.
+class ChangelogLineError extends S.TaggedError<ChangelogLineError, { readonly brand: unique symbol }>()(
   "ChangelogLineError",
   { cause: S.Defect({ includeStack: true }) }
 ) {}

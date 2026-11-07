@@ -4,7 +4,6 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/repo-cli",
   "entries": [
-    {"file":"packages/tooling/tool/cli/src/ChangesetChangelog.ts","symbol":"ChangelogLineError","kind":"tagged-error","owner":"@beep/repo-cli"},
     {"file":"packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts","symbol":"AiMetricsCommandError","kind":"tagged-error","owner":"@beep/repo-cli","identity":"AiMetricsCommandError"},
     {"file":"packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts","symbol":"AiMetricsProgramError","kind":"tagged-union","owner":"@beep/repo-cli","identity":"AiMetricsProgramError","description":"Unified typed failure channel for AI metrics command programs."},
     {"file":"packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts","symbol":"AiMetricsStatusExit","kind":"tagged-error","owner":"@beep/repo-cli","identity":"AiMetricsStatusExit"},
