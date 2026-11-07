@@ -383,7 +383,9 @@
         "packages/law-practice/server/test/CitationAnnotationFailure.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-11-06-connected-source-document.md",
         "packages/law-practice/server/src/internal/Citation/SourceDocument.ts",
-        "packages/law-practice/server/test/CitationSourceDocument.test.ts"
+        "packages/law-practice/server/test/CitationSourceDocument.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-resolution-limit-diagnostics.md",
+        "packages/law-practice/server/test/CitationResolutionLimit.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

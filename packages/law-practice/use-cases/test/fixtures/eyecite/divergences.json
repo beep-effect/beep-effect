@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "a7b32348d8ef6ca31ab2a019fcb3f8090a03e17e4f7531a049eb8798caaec26e",
+  "planSha256": "ff446c4f9ae0ab0a261f1d153bd291268d3bdcca7a1db46c6ef952d46666a665",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1529,6 +1529,14 @@
         {
           "path": "packages/law-practice/server/test/CitationSourceDocument.test.ts",
           "sha256": "341e4a7cfce74604785c3ddeea344ba7b39a9795a6e47b96ccb6ff09443af987"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-resolution-limit-diagnostics.md",
+          "sha256": "42924c6ef9760e89a4e47e324d59a70bf12d360a874c9c2a39a1e89a449f4704"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationResolutionLimit.test.ts",
+          "sha256": "0a78f0e27dcfe56b8390a061fcabf1af3a1a2da2ccde26b895b4602482b2b1b1"
         }
       ],
       "workflowState": "audit",
@@ -1757,7 +1765,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SessionDocument.ts",
-          "sha256": "1f2c84aa21392a7ca6852dcb03e0e459318b71f492a64fa875439eabddc8c2eb"
+          "sha256": "1840d6cbda57611ff40b20854c6e23912c7c22c768324828b27ff394d8562167"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-canonical-session-descriptors.md",
@@ -1765,7 +1773,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SessionDescriptors.ts",
-          "sha256": "4cf9febb6b0ddf7b1d2fc7c93a0f12c44415fd85fe74242982585344a8f62558"
+          "sha256": "c0e5307fed20b956ff2c39f7ab35bd65acca117a747162540aa753d51ca6c769"
         },
         {
           "path": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
@@ -2513,7 +2521,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SessionDocument.ts",
-          "sha256": "1f2c84aa21392a7ca6852dcb03e0e459318b71f492a64fa875439eabddc8c2eb"
+          "sha256": "1840d6cbda57611ff40b20854c6e23912c7c22c768324828b27ff394d8562167"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-canonical-session-descriptors.md",
@@ -2521,7 +2529,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SessionDescriptors.ts",
-          "sha256": "4cf9febb6b0ddf7b1d2fc7c93a0f12c44415fd85fe74242982585344a8f62558"
+          "sha256": "c0e5307fed20b956ff2c39f7ab35bd65acca117a747162540aa753d51ca6c769"
         },
         {
           "path": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",

@@ -17,10 +17,12 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import {
   CitationCallbackFailure,
   CitationCallbackResource,
   CitationCallbackResourceOrigin,
+  copyCitationCallbackFailure,
 } from "./CallbackResource.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import {
@@ -43,7 +45,7 @@ import {
 } from "./RuntimeDictionary.ts";
 import { makeCitationRuntimeSet } from "./RuntimeSet.ts";
 import type { Citation } from "@beep/law-practice-domain/values";
-import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineLimits, CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import type { CitationHostResourceAdapter } from "./HostResources.ts";
 import type { CitationRuntimeDictionaryEntry } from "./RuntimeDictionary.ts";
 
@@ -199,14 +201,20 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             return CitationResourceModelInput.make({ citation, missingPageIdentityHash });
           }),
           step: owner.step.pipe(
-            Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))
+            Effect.mapError((error) =>
+              CitationResourceObjectFailure.make({
+                reason: "limit-exceeded",
+                ...Struct.pick(error, ["limit"]),
+              })
+            )
           ),
         });
-        const mapped = (error: { readonly reason: string }) =>
+        const mapped = (error: { readonly reason: string; readonly limit?: CitationSafetyBudget }) =>
           S.is(CitationCallbackFailure)(error)
-            ? CitationCallbackFailure.make({ reason: error.reason })
+            ? copyCitationCallbackFailure(error)
             : CitationCallbackFailure.make({
                 reason: error.reason === "limit-exceeded" ? "limit-exceeded" : "identity-failed",
+                ...Struct.pick(error, ["limit"]),
               });
         const objects = yield* makeCitationResourceObjects(owner.limits).pipe(
           Effect.provideService(Digest.Digest, crypto),
@@ -248,6 +256,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
         const comparisonError = (error: CitationCallbackFailure) =>
           CitationRuntimeDictionaryFailure.make({
             reason: error.reason === "limit-exceeded" ? "limit-exceeded" : "comparison-failed",
+            ...Struct.pick(error, ["limit"]),
           });
         const operand = (slot: number, record: typeof Record.Type): CitationHostComparisonOperand =>
           record._tag === "Canonical"
@@ -277,7 +286,12 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
         }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison), Effect.mapError(mapped));
         const issueSlot = Effect.suspend(() => {
           if (closed || nextSlot >= owner.limits.resolutionIterations)
-            return Effect.fail(CitationCallbackFailure.make({ reason: closed ? "identity-failed" : "limit-exceeded" }));
+            return Effect.fail(
+              CitationCallbackFailure.make({
+                reason: closed ? "identity-failed" : "limit-exceeded",
+                ...(closed ? {} : { limit: "resolutionIterations" }),
+              })
+            );
           return Effect.succeed(nextSlot++);
         });
         const resourceEquivalent = S.toEquivalence(CitationCallbackResource);

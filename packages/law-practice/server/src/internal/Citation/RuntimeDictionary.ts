@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import { CitationEngineLimits, CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
@@ -20,6 +20,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RuntimeDictionary");
@@ -109,7 +110,7 @@ export class CitationRuntimeDictionaryFailure extends S.TaggedError<
   { readonly brand: unique symbol }
 >($I`CitationRuntimeDictionaryFailure`)(
   "CitationRuntimeDictionaryFailure",
-  { reason: Reason },
+  { reason: Reason, limit: S.optionalKey(CitationSafetyBudget) },
   $I.annoteError<CitationRuntimeDictionaryFailure>("CitationRuntimeDictionaryFailure", {
     description: "Runtime key comparison or bounded table operation failed without caller payloads.",
   })
@@ -197,7 +198,10 @@ const textAdvance = (value: string | CitationPythonUnicodeStorage, point: number
 const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 const exceeded = () => CitationRuntimeDictionaryFailure.make({ reason: "limit-exceeded" });
 const freshFailure = (failure: CitationRuntimeDictionaryFailure) =>
-  CitationRuntimeDictionaryFailure.make({ reason: failure.reason });
+  CitationRuntimeDictionaryFailure.make({
+    reason: failure.reason,
+    ...Struct.pick(failure, ["limit"]),
+  });
 const copyEntry = (entry: CitationRuntimeDictionaryEntry) => CitationRuntimeDictionaryEntry.make({ ...entry });
 const unsigned = (hash: bigint) => BigInt.asUintN(64, hash);
 const indexOfHash = (hash: bigint, size: number) => Number(hash & BigInt(size - 1));
