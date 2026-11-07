@@ -38,7 +38,8 @@ const LocalObservationCount = S.Natural.check(S.isLessThanOrEqualTo(1024)).pipe(
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  *
- * const decodeSummary = S.decodeUnknownEffect(S.fromJsonString(CacheLocalPilotSummary))
+ * const SummaryJson = S.fromJsonString(CacheLocalPilotSummary)
+ * const decodeSummary = S.decodeEffect(SummaryJson)
  * const pendingValidation = decodeSummary("{}")
  * console.assert(Effect.isEffect(pendingValidation))
  * ```
@@ -48,8 +49,8 @@ const LocalObservationCount = S.Natural.check(S.isLessThanOrEqualTo(1024)).pipe(
  */
 export class CacheLocalPilotSummary extends S.Opaque<CacheLocalPilotSummary, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.Literal("cache-local-observation-summary/v1"),
-    authority: S.Literal("local-observation-only"),
+    schemaVersion: S.tag("cache-local-observation-summary/v1"),
+    authority: S.tag("local-observation-only"),
     sourceRevision: GitObjectId,
     channel: CacheClientChannel,
     computation: CacheQualificationKey.fields.computation,
@@ -68,7 +69,7 @@ export class CacheLocalPilotSummary extends S.Opaque<CacheLocalPilotSummary, { r
     allChecksPassed: S.Boolean,
     failedLabelSha256: S.Array(Sha256Hex).check(S.isMaxLength(64)),
     omittedFailedLabels: LocalObservationCount,
-    qualificationGranted: S.Literal(false),
+    qualificationGranted: S.tag(false),
   }).pipe(
     $I.annoteSchema("CacheLocalPilotSummary", {
       description: "Allowlisted local-observation metadata; explicitly not a qualification or producer receipt.",

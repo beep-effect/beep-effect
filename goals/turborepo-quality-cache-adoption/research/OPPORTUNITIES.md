@@ -1419,3 +1419,19 @@ assertion required it before. Both conjunctions were present. Align the workflow
 ordering with the existing assertion; retain every guard and the unchanged test.
 No local quality command was run. Review exact workflow-expression assertions
 alongside the corresponding YAML edits to avoid another hosted repair wave.
+
+### Hosted schema and layer policy repair, 2026-11-07
+
+PR #2850 Heavy Lint Policy job 128307512992 found literal fields that require
+Schema.tag and an inline JSON schema compilation; the new layer-backed test also
+needs an explicit acquisition timeout. Use constructor-default tags, preserving
+required decoding, hoist the JSON codec/decoder and bound layer acquisition.
+Existing CitationBluebook findings belong to the consolidated main unblocker;
+do not duplicate its repair or refresh a baseline to conceal either finding.
+No local suite or generator was run.
+
+GitHub review/census reads were rate limited, ending the existing monitor after
+its bounded read-error budget while CI continued. The canonical one-point quota
+probe confirmed exhausted budgets, and reads resumed only after reset. Reuse
+the existing five-minute monitor interval on recovery to reduce polling demand;
+failed reads remain unknown, never zero threads or a passing check.
