@@ -179,10 +179,12 @@ immediately after `enable --now`; read its journal rather than waiting for the
 next tick.
 
 The same replay happens seconds after a reboot that crossed a scheduled tick,
-before NetworkManager is online, so each service carries
+before NetworkManager is online. The research services carry
 `ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"`:
 where `nm-online` exists the run waits up to 90 seconds for connectivity, and
 the `-` prefix keeps a missing helper or a timed-out wait from failing the unit.
+The reference-refresh service uses a frozen dependency-install preflight instead;
+its renderer does not currently add this network-online wait.
 
 The daily vault capture commits with `commit.gpgsign=false`. A user unit has no
 desktop signing agent, so a global SSH signer such as the 1Password helper fails

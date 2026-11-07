@@ -72,24 +72,30 @@ the test. If unintentional, revert the change.
 
 ### 5. Label Coverage
 
-Target: 100% of classes have `rdfs:label`.
+Target: 100% of classes have `rdfs:label`. Count each class once, even
+when it has labels in several languages.
 
 ```sparql
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
-SELECT (COUNT(?c) AS ?total)
-       (COUNT(?label) AS ?labeled)
+SELECT (COUNT(DISTINCT ?c) AS ?total)
+       (COUNT(DISTINCT ?labeledClass) AS ?labeled)
 WHERE {
   ?c a owl:Class .
   FILTER(!isBlank(?c))
-  OPTIONAL { ?c rdfs:label ?label }
+  OPTIONAL {
+    ?c rdfs:label ?label .
+    BIND(?c AS ?labeledClass)
+  }
 }
 ```
 
 ### 6. Definition Coverage
 
 Target: ≥80% of classes have `skos:definition` or `obo:IAO_0000115`.
+Count each class once, including when it has several definitions or uses
+both properties.
 
 ```sparql
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -97,8 +103,8 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX obo: <http://purl.obolibrary.org/obo/>
 
-SELECT (COUNT(?c) AS ?total)
-       (COUNT(?def) AS ?defined)
+SELECT (COUNT(DISTINCT ?c) AS ?total)
+       (COUNT(DISTINCT ?definedClass) AS ?defined)
 WHERE {
   ?c a owl:Class .
   FILTER(!isBlank(?c))
@@ -106,6 +112,7 @@ WHERE {
     { ?c skos:definition ?def }
     UNION
     { ?c obo:IAO_0000115 ?def }
+    BIND(?c AS ?definedClass)
   }
 }
 ```

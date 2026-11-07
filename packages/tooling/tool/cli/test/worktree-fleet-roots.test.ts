@@ -19,6 +19,7 @@ import {
 } from "@beep/repo-cli/test/Session";
 import {
   adoptFleetRegistryRows,
+  canonicalFleetOrigin,
   describeFleetCheckout,
   EMPTY_FLEET_REGISTRY,
   FleetAdoptionCandidate,
@@ -32,6 +33,7 @@ import {
   loadFleetJoin,
   originUrlFromGitConfig,
   parseFleetRootsPathList,
+  readConfiguredFleetRoots,
   registerFleetRegistryRow,
 } from "@beep/repo-cli/test/Worktree";
 import { CommandJsonOutput } from "@beep/repo-cli-kit/cli/Json";
@@ -623,10 +625,35 @@ describe("fleet discovery roots", () => {
         ),
       SCAN_TIMEOUT_MILLIS
     );
+
+    it.effect(
+      "roots resolution: a known repository without roots.json reads as unset, and an unreadable state file fails loudly",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const stateRoot = yield* fs.makeTempDirectoryScoped();
+        const withState = Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { BEEP_FLEET_STATE_ROOT: stateRoot } })
+        );
+        const unset = yield* readConfiguredFleetRoots(O.some(repository)).pipe(withState);
+        expect(O.isNone(unset)).toBe(true);
+        // A directory where the state file should be is not "missing": the read fails instead of reading as unset.
+        const blocked = path.join(stateRoot, "github.com__beep-effect__beep-effect", "roots.json");
+        yield* fs.makeDirectory(blocked, { recursive: true });
+        const refused = yield* readConfiguredFleetRoots(O.some(repository)).pipe(withState, Effect.flip);
+        expect(refused.message).toContain(`Failed to read ${blocked}.`);
+      }),
+      SCAN_TIMEOUT_MILLIS
+    );
   });
 });
 
 describe("fleet roots and registry documents", () => {
+  it("canonicalizes a local origin path with a trailing slash and a .git suffix", () => {
+    expect(canonicalFleetOrigin("/srv/git/beep-effect.git/")).toBe("/srv/git/beep-effect");
+    expect(canonicalFleetOrigin("/srv/git/beep-effect")).toBe("/srv/git/beep-effect");
+  });
   it("falls back to an adopted row for a mirror checkout the registry does not know", () => {
     const checkout = FleetCheckout.make({
       path: "/p/beep/lanes/unregistered",

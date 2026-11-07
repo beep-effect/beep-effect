@@ -2,8 +2,9 @@
 
 Import every Effect module from its dedicated public leaf path, including nested
 modules such as `effect/cli/Command` and `effect/http/HttpClient`. This file is the
-only place in the repository (outside `patches/`) that spells out the retired
-`unstable` paths, so agents searching for an old path land here.
+canonical mapping from retired `unstable` paths to current public leaves.
+The enforcement exceptions below preserve vendor patches, historical
+fingerprints, and the retirement law's own implementation and fixtures.
 
 ## The move
 
@@ -48,7 +49,9 @@ replacement. It also fails on a Markdown link fragment (`](#…)`, `](file.md#�
 or a `]: #…` reference definition) that holds a retired path's heading slug,
 such as `#atom-effectunstablereactivityatom`, and prints the current slug
 (`effectreactivityatom`; `effecthttp-api` for `httpapi`). Allowlisted: this
-file, `patches/`, and `.gitleaksignore`. A
+file, `patches/`, `.gitleaksignore`, the retirement law's
+`RetiredEffectPaths.model.ts` and `RetiredEffectPaths.ts`, and its
+`laws-retired-effect-paths.test.ts` regression fixtures. A
 patch's removed and context lines are the vendor's published bytes and must
 match upstream for the patch to apply; a `.gitleaksignore` entry is a
 `commit:path:rule:line` fingerprint of a historical commit, where the old path
