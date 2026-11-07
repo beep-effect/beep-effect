@@ -309,6 +309,10 @@ const mineFlags = {
     Flag.withDefault(false),
     Flag.withDescription("Skip private-partition artifacts")
   ),
+  onlyPrivate: Flag.Boolean("only-private").pipe(
+    Flag.withDefault(false),
+    Flag.withDescription("Run only private-partition artifacts, so a private-capable profile can share an intake")
+  ),
   repo: Flag.String("repo").pipe(
     Flag.optional,
     Flag.withDescription("Repository whose goal and exploration packets supply topic ids; default: enclosing repo")
@@ -322,11 +326,17 @@ const mineOptions = Effect.fn("ResearchLibrary.mineOptions")(function* (
     readonly concurrency: number;
     readonly dryRun: boolean;
     readonly excludePrivate: boolean;
+    readonly onlyPrivate: boolean;
     readonly repo: O.Option<string>;
   }
 ) {
   if (flags.concurrency < 1 || flags.concurrency > 8)
     return yield* LibraryError.make({ message: "Concurrency must be between 1 and 8.", cause: flags.concurrency });
+  if (flags.excludePrivate && flags.onlyPrivate)
+    return yield* LibraryError.make({
+      message: "--exclude-private and --only-private exclude each other.",
+      cause: "flags",
+    });
   if (O.isSome(flags.limit) && flags.limit.value < 1)
     return yield* LibraryError.make({ message: "Limit must be at least 1.", cause: flags.limit.value });
   return LibraryMineOptions.make({
@@ -336,6 +346,7 @@ const mineOptions = Effect.fn("ResearchLibrary.mineOptions")(function* (
     concurrency: flags.concurrency,
     dryRun: flags.dryRun,
     excludePrivate: flags.excludePrivate,
+    onlyPrivate: flags.onlyPrivate,
     repoRoot: flags.repo,
   });
 });

@@ -975,7 +975,8 @@ const pendingJobs = Effect.fn("Library.mine.pendingJobs")(function* (
     planned,
     (job) =>
       O.match(selected, { onNone: () => true, onSome: (ids) => HashSet.has(ids, job.artifactId) }) &&
-      !(options.excludePrivate && job.accessClass === "private")
+      !(options.excludePrivate && job.accessClass === "private") &&
+      !(options.onlyPrivate && job.accessClass !== "private")
   );
   const done = yield* Effect.filter(eligible, (job) => recordExists(root, tier, job.key));
   const doneKeys = HashSet.fromIterable(A.map(done, (job) => job.key));

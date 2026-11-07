@@ -576,6 +576,10 @@ export class LibraryMineOptions extends S.Opaque<LibraryMineOptions, { readonly 
     concurrency: S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(8)),
     dryRun: S.Boolean,
     excludePrivate: S.Boolean,
+    onlyPrivate: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
     repoRoot: S.Option(S.String),
   }).pipe($I.annoteSchema("LibraryMineOptions", { description: "Options shared by mine triage and read." }))
 ) {}
