@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet — implementation landed on `feat/research-library-routes`; PR in review.
+P4 Close — final PR [#2868](https://github.com/beep-effect/beep-effect/pull/2868) carries the reflection and `proposedCloseout` (`completed-retained`); adoption follows its merge.
 
 ## Latest Evidence
 
