@@ -9,6 +9,7 @@ import { chatProtocolLayerAtom } from "@beep/agents-client";
 import {
   GetVaultSyncStatusPayload,
   MarkVaultSyncConflictReviewedPayload,
+  TriggerVaultSyncPayload,
   VaultSyncRpcs,
   VaultSyncWorkspacePayload,
 } from "@beep/documents-use-cases/public";
@@ -16,6 +17,9 @@ import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
+import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
@@ -27,6 +31,14 @@ import * as Stream from "effect/Stream";
 import * as Tuple from "effect/Tuple";
 import { failureMessageOr } from "@/lib/failureMessage";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import {
+  enqueueIntent,
+  intentsOf,
+  mintIntentId,
+  VaultSyncIntent,
+  vaultSyncIntentQueueAtom,
+  withoutIntent,
+} from "./VaultSyncIntents.ts";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const $I = $ProfessionalDesktopId.create("sync/Sync.atoms");
@@ -82,6 +94,17 @@ class VaultSyncReviewingState extends S.Opaque<VaultSyncReviewingState, { readon
   )
 ) {}
 
+class VaultSyncQueuedState extends S.Opaque<VaultSyncQueuedState, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.tag("queued"),
+    message: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("VaultSyncQueuedState", {
+      description: "The sidecar is unreachable: the latest action is queued and replays on reconnect.",
+    })
+  )
+) {}
+
 class VaultSyncSucceededState extends S.Opaque<VaultSyncSucceededState, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("succeeded"),
@@ -104,7 +127,7 @@ class VaultSyncFailedState extends S.Opaque<VaultSyncFailedState, { readonly bra
   )
 ) {}
 
-const VaultSyncPanelStateKind = LiteralKit(["idle", "syncing", "reviewing", "succeeded", "failed"]).pipe(
+const VaultSyncPanelStateKind = LiteralKit(["idle", "syncing", "reviewing", "queued", "succeeded", "failed"]).pipe(
   $I.annoteSchema("VaultSyncPanelStateKind", {
     description: "Lifecycle variants for the vault sync operator controls.",
   })
@@ -130,6 +153,7 @@ export const VaultSyncPanelState = VaultSyncPanelStateKind.mapMembers(
     () => VaultSyncIdleState,
     () => VaultSyncRunningState,
     () => VaultSyncReviewingState,
+    () => VaultSyncQueuedState,
     () => VaultSyncSucceededState,
     () => VaultSyncFailedState,
   ])
@@ -179,7 +203,18 @@ class ReviewVaultSyncConflictCommand extends S.Opaque<
   )
 ) {}
 
-const VaultSyncCommandKind = LiteralKit(["trigger", "review"]).pipe(
+class ReplayVaultSyncIntentsCommand extends S.Opaque<
+  ReplayVaultSyncIntentsCommand,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ kind: S.tag("replay") }).pipe(
+    $I.annoteSchema("ReplayVaultSyncIntentsCommand", {
+      description: "Deliver the workspace's queued intents, oldest first, until the sidecar is unreachable.",
+    })
+  )
+) {}
+
+const VaultSyncCommandKind = LiteralKit(["trigger", "review", "replay"]).pipe(
   $I.annoteSchema("VaultSyncCommandKind", {
     description: "Commands accepted by one workspace vault sync state machine.",
   })
@@ -201,7 +236,11 @@ const VaultSyncCommandKind = LiteralKit(["trigger", "review"]).pipe(
  * @since 0.0.0
  */
 export const VaultSyncCommand = VaultSyncCommandKind.mapMembers(
-  Tuple.evolve([() => TriggerVaultSyncCommand, () => ReviewVaultSyncConflictCommand])
+  Tuple.evolve([
+    () => TriggerVaultSyncCommand,
+    () => ReviewVaultSyncConflictCommand,
+    () => ReplayVaultSyncIntentsCommand,
+  ])
 ).pipe(
   $I.annoteSchema("VaultSyncCommand", {
     description: "Serialized operator commands for one workspace vault sync state machine.",
@@ -357,111 +396,181 @@ export const vaultSyncConflictsAtom = Atom.family((workspaceId: WorkspaceIdentit
   })
 );
 
-const handleVaultSyncFailure = Effect.fnUntraced(function* (
-  failure: unknown,
-  command: VaultSyncCommand["kind"],
-  fallbackMessage: string,
-  stateAtom: Atom.Writable<VaultSyncPanelState>,
-  ctx: Atom.FnContext
-) {
-  yield* logRedactedCause(
-    failure,
-    LogRedactedCauseOptions.make({
-      message: `professional desktop vault sync ${command} failed`,
-      level: "Warn",
-      attributes: {
-        "documents.vault_sync.command": command,
-        subsystem: "vault_sync",
-      },
-    })
-  );
-  yield* Effect.annotateCurrentSpan({
-    "documents.vault_sync.outcome": "failed",
-  });
-  ctx.set(
-    stateAtom,
-    VaultSyncPanelState.cases.failed.make({
-      message: failureMessageOr(fallbackMessage)(failure),
-    })
-  );
+const DeliveryOutcome = S.TaggedUnion({
+  Accepted: {},
+  Rejected: { message: S.NonEmptyString },
+  Unreachable: {},
+}).pipe(
+  $I.annoteSchema("VaultSyncDeliveryOutcome", {
+    description: "How one delivery attempt of a queued intent ended; a rejection keeps the server's safe message.",
+  })
+);
+type DeliveryOutcome = typeof DeliveryOutcome.Type;
+
+/** How often a mounted panel replays queued intents while any are queued. */
+const replayInterval = Duration.seconds(2);
+
+const succeededMessage = VaultSyncIntent.match({
+  trigger: () => "Sync complete.",
+  review: () => "Conflict marked reviewed.",
 });
 
-const triggerVaultSync = Effect.fn("documents.vault_sync.trigger")(function* (
+const rejectedMessage = VaultSyncIntent.match({
+  trigger: () => "The server refused the sync request. Nothing changed.",
+  review: () => "The server refused the review. The conflict is open again.",
+});
+
+const queuedMessage = VaultSyncIntent.match({
+  trigger: () => "Sidecar unreachable. Sync is queued and runs when it reconnects.",
+  review: () => "Sidecar unreachable. The review is queued and replays when it reconnects.",
+});
+
+/**
+ * Send one intent. A typed `VaultSyncActionError` is the server deciding
+ * against it; any other failure (the RPC transport, a sidecar that is gone)
+ * means it never reached the server.
+ */
+const deliverIntent = (intent: VaultSyncIntent, client: DesktopSyncClient["Service"]): Effect.Effect<DeliveryOutcome> =>
+  VaultSyncIntent.match(intent, {
+    trigger: ({ intentId, workspaceId }) =>
+      Effect.asVoid(client("TriggerVaultSync", TriggerVaultSyncPayload.make({ intentId, workspaceId }))),
+    review: ({ conflictId, workspaceId }) =>
+      Effect.asVoid(
+        client("MarkVaultSyncConflictReviewed", MarkVaultSyncConflictReviewedPayload.make({ conflictId, workspaceId }))
+      ),
+  }).pipe(
+    Effect.as(DeliveryOutcome.cases.Accepted.make({})),
+    Effect.catchTag("VaultSyncActionError", (failure) =>
+      logRedactedCause(
+        failure,
+        LogRedactedCauseOptions.make({
+          message: `professional desktop vault sync ${intent.kind} rejected`,
+          level: "Warn",
+          attributes: { "documents.vault_sync.command": intent.kind, subsystem: "vault_sync" },
+        })
+      ).pipe(
+        Effect.as(DeliveryOutcome.cases.Rejected.make({ message: failureMessageOr(rejectedMessage(intent))(failure) }))
+      )
+    ),
+    Effect.catchCause(() => Effect.succeed(DeliveryOutcome.cases.Unreachable.make({}))),
+    Effect.tap((outcome) => Effect.annotateCurrentSpan({ "documents.vault_sync.outcome": outcome._tag }))
+  );
+
+/**
+ * Deliver one queued intent and settle it: an accepted or rejected intent
+ * leaves the queue (a rejection reverts its prediction with it); an
+ * unreachable one stays. Returns whether the sidecar answered.
+ */
+const settleIntent = Effect.fnUntraced(function* (
+  intent: VaultSyncIntent,
+  client: DesktopSyncClient["Service"],
+  registry: AtomRegistry.AtomRegistry
+) {
+  const reactivity = yield* Reactivity.Reactivity;
+  const stateAtom = vaultSyncPanelStateAtoms(intent.workspaceId);
+  const outcome = yield* deliverIntent(intent, client);
+  if (DeliveryOutcome.guards.Unreachable(outcome)) {
+    registry.set(stateAtom, VaultSyncPanelState.cases.queued.make({ message: queuedMessage(intent) }));
+    return false;
+  }
+  registry.set(vaultSyncIntentQueueAtom, withoutIntent(registry.get(vaultSyncIntentQueueAtom), intent.intentId));
+  registry.set(
+    stateAtom,
+    DeliveryOutcome.match(outcome, {
+      Accepted: () => VaultSyncPanelState.cases.succeeded.make({ message: succeededMessage(intent) }),
+      Rejected: ({ message }) => VaultSyncPanelState.cases.failed.make({ message }),
+      Unreachable: () => VaultSyncPanelState.cases.queued.make({ message: queuedMessage(intent) }),
+    })
+  );
+  yield* reactivity.invalidate([vaultSyncStatusKey(intent.workspaceId), vaultSyncConflictsKey(intent.workspaceId)]);
+  return true;
+});
+
+/** Record an intent (its prediction shows at once), then try to deliver it. */
+const submitIntent = Effect.fnUntraced(function* (
+  intent: VaultSyncIntent,
+  client: DesktopSyncClient["Service"],
+  registry: AtomRegistry.AtomRegistry
+) {
+  yield* Effect.annotateCurrentSpan({ "documents.vault_sync.workspace_id": intent.workspaceId });
+  registry.set(
+    vaultSyncPanelStateAtoms(intent.workspaceId),
+    VaultSyncIntent.match(intent, {
+      trigger: () => VaultSyncPanelState.cases.syncing.make({}),
+      review: ({ conflictId }) => VaultSyncPanelState.cases.reviewing.make({ conflictId }),
+    })
+  );
+  registry.set(vaultSyncIntentQueueAtom, enqueueIntent(registry.get(vaultSyncIntentQueueAtom), intent));
+  yield* settleIntent(intent, client, registry);
+});
+
+/** Deliver intents oldest first; stop at the first one the sidecar cannot take. */
+const settleInOrder = (
+  intents: ReadonlyArray<VaultSyncIntent>,
+  client: DesktopSyncClient["Service"],
+  registry: AtomRegistry.AtomRegistry
+): Effect.Effect<void, never, Reactivity.Reactivity> =>
+  A.match(intents, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: ([head, ...rest]) =>
+      Effect.flatMap(settleIntent(head, client, registry), (answered) =>
+        answered ? settleInOrder(rest, client, registry) : Effect.void
+      ),
+  });
+
+const replayIntents = Effect.fn("documents.vault_sync.replay")(function* (
   workspaceId: WorkspaceIdentity.WorkspaceId,
   client: DesktopSyncClient["Service"],
-  ctx: Atom.FnContext
+  registry: AtomRegistry.AtomRegistry
 ) {
-  const stateAtom = vaultSyncPanelStateAtoms(workspaceId);
+  const queued = intentsOf(registry.get(vaultSyncIntentQueueAtom), workspaceId);
   yield* Effect.annotateCurrentSpan({
     "documents.vault_sync.workspace_id": workspaceId,
+    "documents.vault_sync.queued": queued.length,
   });
-  ctx.set(stateAtom, VaultSyncPanelState.cases.syncing.make({}));
-  yield* Reactivity.mutation(client("TriggerVaultSync", VaultSyncWorkspacePayload.make({ workspaceId })), [
-    vaultSyncStatusKey(workspaceId),
-    vaultSyncConflictsKey(workspaceId),
-  ]).pipe(
-    Effect.matchEffect({
-      onFailure: (failure) => handleVaultSyncFailure(failure, "trigger", "Vault sync failed.", stateAtom, ctx),
-      onSuccess: () =>
-        Effect.annotateCurrentSpan({
-          "documents.vault_sync.outcome": "succeeded",
-        }).pipe(
-          Effect.andThen(
-            Effect.sync(() =>
-              ctx.set(
-                stateAtom,
-                VaultSyncPanelState.cases.succeeded.make({
-                  message: "Sync complete.",
-                })
-              )
-            )
-          )
-        ),
-    })
-  );
+  yield* settleInOrder(queued, client, registry);
 });
 
-const reviewVaultSyncConflict = Effect.fn("documents.vault_sync.review")(function* (
+const triggerIntent = Effect.fn("documents.vault_sync.trigger")(function* (
+  workspaceId: WorkspaceIdentity.WorkspaceId,
+  client: DesktopSyncClient["Service"],
+  registry: AtomRegistry.AtomRegistry
+) {
+  const intentId = yield* mintIntentId;
+  const queuedAt = yield* Clock.currentTimeMillis;
+  yield* submitIntent(VaultSyncIntent.cases.trigger.make({ intentId, workspaceId, queuedAt }), client, registry);
+});
+
+const reviewIntent = Effect.fn("documents.vault_sync.review")(function* (
   workspaceId: WorkspaceIdentity.WorkspaceId,
   conflictId: SyncConflictId,
   client: DesktopSyncClient["Service"],
-  ctx: Atom.FnContext
+  registry: AtomRegistry.AtomRegistry
 ) {
-  const stateAtom = vaultSyncPanelStateAtoms(workspaceId);
-  yield* Effect.annotateCurrentSpan({
-    "documents.vault_sync.conflict_id": conflictId,
-    "documents.vault_sync.workspace_id": workspaceId,
-  });
-  ctx.set(stateAtom, VaultSyncPanelState.cases.reviewing.make({ conflictId }));
-  yield* Reactivity.mutation(
-    client(
-      "MarkVaultSyncConflictReviewed",
-      MarkVaultSyncConflictReviewedPayload.make({
-        conflictId,
-        workspaceId,
-      })
-    ),
-    [vaultSyncConflictsKey(workspaceId), vaultSyncStatusKey(workspaceId)]
-  ).pipe(
-    Effect.matchEffect({
-      onFailure: (failure) =>
-        handleVaultSyncFailure(failure, "review", "Marking the conflict reviewed failed.", stateAtom, ctx),
-      onSuccess: () =>
-        Effect.annotateCurrentSpan({
-          "documents.vault_sync.outcome": "succeeded",
-        }).pipe(Effect.andThen(Effect.sync(() => ctx.set(stateAtom, VaultSyncPanelState.cases.idle.make({}))))),
-    })
+  yield* Effect.annotateCurrentSpan({ "documents.vault_sync.conflict_id": conflictId });
+  const intentId = yield* mintIntentId;
+  const queuedAt = yield* Clock.currentTimeMillis;
+  yield* submitIntent(
+    VaultSyncIntent.cases.review.make({ intentId, workspaceId, queuedAt, conflictId }),
+    client,
+    registry
   );
 });
 
 /**
- * Per-workspace command state machine for sync and conflict review.
+ * Per-workspace command state machine for sync, conflict review and replay
+ * of queued intents.
  *
  * **Details**
  *
- * Commands for different workspaces run independently. Commands for the same
- * workspace share one semaphore and execute in FIFO order, so a review cannot
- * race a sync pass or overwrite its state transition.
+ * Every command is an intent first: it is persisted in
+ * {@link vaultSyncIntentQueueAtom} and shown as predicted before it is sent.
+ * An unreachable sidecar leaves it queued (panel state `queued`); `replay`
+ * delivers the queue in order once the sidecar answers, and a typed rejection
+ * reverts the prediction (panel state `failed`). Commands for different
+ * workspaces run independently. Commands for the same workspace share one
+ * semaphore and execute in FIFO order, so a review cannot race a sync pass or
+ * a replay.
  *
  * **Example** (Command atoms function check)
  *
@@ -479,7 +588,7 @@ export const vaultSyncCommandAtoms = Atom.family((workspaceId: WorkspaceIdentity
   const stateAtom = vaultSyncPanelStateAtoms(workspaceId);
 
   return DesktopSyncClient.runtime.fn<VaultSyncCommand>()(
-    Effect.fnUntraced(function* (command, ctx) {
+    Effect.fnUntraced(function* (command) {
       const client = yield* DesktopSyncClient;
       const registry = yield* AtomRegistry.AtomRegistry;
       const resetInterruptedCommand = Effect.sync(() =>
@@ -487,8 +596,9 @@ export const vaultSyncCommandAtoms = Atom.family((workspaceId: WorkspaceIdentity
       );
 
       const operation = VaultSyncCommand.match(command, {
-        trigger: () => triggerVaultSync(workspaceId, client, ctx),
-        review: ({ conflictId }) => reviewVaultSyncConflict(workspaceId, conflictId, client, ctx),
+        trigger: () => triggerIntent(workspaceId, client, registry),
+        review: ({ conflictId }) => reviewIntent(workspaceId, conflictId, client, registry),
+        replay: () => replayIntents(workspaceId, client, registry),
       });
 
       yield* commandSemaphore.withPermit(operation).pipe(Effect.onInterrupt(() => resetInterruptedCommand));
@@ -496,3 +606,33 @@ export const vaultSyncCommandAtoms = Atom.family((workspaceId: WorkspaceIdentity
     { concurrent: true }
   );
 });
+
+/**
+ * Per-workspace replay loop: while mounted, it asks for a replay every two
+ * seconds whenever intents of the workspace are queued.
+ *
+ * **Example** (Replay atom check)
+ *
+ * ```ts
+ * import { vaultSyncIntentReplayAtom } from "@/sync/Sync.atoms"
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ *
+ * console.log(typeof vaultSyncIntentReplayAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID) === "object") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const vaultSyncIntentReplayAtom = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
+  DesktopSyncClient.runtime.atom(
+    Effect.gen(function* () {
+      const registry = yield* AtomRegistry.AtomRegistry;
+      const replay = vaultSyncCommandAtoms(workspaceId);
+      const askForReplay = Effect.sync(() => {
+        if (A.isReadonlyArrayNonEmpty(intentsOf(registry.get(vaultSyncIntentQueueAtom), workspaceId)))
+          registry.set(replay, VaultSyncCommand.cases.replay.make({}));
+      });
+      return yield* Effect.sleep(replayInterval).pipe(Effect.andThen(askForReplay), Effect.forever);
+    })
+  )
+);

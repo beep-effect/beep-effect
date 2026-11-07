@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
@@ -48,6 +49,50 @@ export class VaultSyncWorkspacePayload extends S.Class<VaultSyncWorkspacePayload
   },
   $I.annote("VaultSyncWorkspacePayload", {
     description: "Workspace-scoped payload shared by the vault sync RPCs.",
+  })
+) {}
+
+/**
+ * Payload of the vault sync trigger: the workspace, and the intent id an
+ * offline-capable client minted for this request.
+ *
+ * **Details**
+ *
+ * A client that queues the trigger while the sidecar is unreachable sends the
+ * same `intentId` on every delivery attempt; the server uses it as the request
+ * identity, so a replayed intent requests one pass, not one per attempt. A
+ * caller that omits it gets a fresh identity per call.
+ *
+ * **Example** (Make trigger payload with an intent id)
+ *
+ * ```ts
+ * import { TriggerVaultSyncPayload } from "@beep/documents-use-cases/public"
+ * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
+ * import * as S from "effect/Schema"
+ *
+ * const payload = TriggerVaultSyncPayload.make({
+ *   workspaceId: S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(1),
+ *   intentId: "intent-1",
+ * })
+ * console.log(payload.intentId) // "intent-1"
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export class TriggerVaultSyncPayload extends S.Class<TriggerVaultSyncPayload, { readonly brand: unique symbol }>(
+  $I`TriggerVaultSyncPayload`
+)(
+  {
+    workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+      description: "Workspace whose vault mirror the RPC addresses.",
+    }),
+    intentId: S.optionalKey(V.RequestToken).annotateKey({
+      description: "Client-minted intent id, stable across replays of one queued trigger.",
+    }),
+  },
+  $I.annote("TriggerVaultSyncPayload", {
+    description: "Workspace-scoped trigger payload carrying the client intent id for idempotent replay.",
   })
 ) {}
 
@@ -146,7 +191,7 @@ export class GetVaultSyncStatusPayload extends VaultSyncWorkspacePayload.extend<
  * @since 0.0.0
  */
 export const TriggerVaultSyncRpc = Rpc.make("TriggerVaultSync", {
-  payload: VaultSyncWorkspacePayload,
+  payload: TriggerVaultSyncPayload,
   success: VaultSyncStatus,
   error: VaultSyncActionError,
 });

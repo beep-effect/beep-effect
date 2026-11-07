@@ -198,10 +198,16 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
       WatchVaultSyncStatus: ({ workspaceId }, { headers }) =>
         watchStatus(workspaceId, headers).pipe(Stream.catch(flow(dropped("WatchVaultSyncStatus"), Stream.fromEffect))),
       TriggerVaultSync: Effect.fn("VaultSyncRpcsApi.trigger")(
-        function* ({ workspaceId }, { headers }) {
+        function* ({ workspaceId, intentId }, { headers }) {
           const destinationId = yield* destinationOf(workspaceId, headers);
-          const id = yield* requestId;
-          yield* client.RequestVaultSync(destinationId, { requestId: id }, { headers });
+          // A replayed offline intent keeps its id and command id: the destination dedupes the
+          // command, so one pass is requested however often the intent is delivered.
+          const id = intentId ?? (yield* requestId);
+          yield* client.RequestVaultSync(
+            destinationId,
+            { requestId: id },
+            intentId === undefined ? { headers } : { headers, commandId: `vault-sync-intent:${intentId}` }
+          );
           return yield* status(destinationId, headers, false);
         },
         Effect.catch(dropped("TriggerVaultSync"))

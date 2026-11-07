@@ -50,6 +50,7 @@
     {"name":"desktop.ipc.decode_inbound","owner":"@beep/professional-desktop","family":"app","conforms":false},
     {"name":"desktop.ipc.listen","owner":"@beep/professional-desktop","family":"app","conforms":false},
     {"name":"documents.vault_sync.force_probe","owner":"@beep/professional-desktop","family":"app","conforms":false},
+    {"name":"documents.vault_sync.replay","owner":"@beep/professional-desktop","family":"app","conforms":false},
     {"name":"documents.vault_sync.review","owner":"@beep/professional-desktop","family":"app","conforms":false},
     {"name":"documents.vault_sync.trigger","owner":"@beep/professional-desktop","family":"app","conforms":false},
     {"name":"professional_desktop.bootstrap.load_renderer_observability_config","owner":"@beep/professional-desktop","family":"app","conforms":false},

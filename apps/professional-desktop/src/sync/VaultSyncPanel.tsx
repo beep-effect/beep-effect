@@ -12,7 +12,7 @@ import { Button } from "@beep/ui/components/button";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import { thunkNull } from "@beep/utils/thunk";
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as DateTime from "effect/DateTime";
 import { pipe } from "effect/Function";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
@@ -22,10 +22,12 @@ import {
   VaultSyncPanelState,
   vaultSyncCommandAtoms,
   vaultSyncConflictsAtom,
+  vaultSyncIntentReplayAtom,
   vaultSyncPanelStateAtoms,
   vaultSyncRetryConnectionAtoms,
   vaultSyncStatusAtom,
 } from "./Sync.atoms.ts";
+import { intentsOf, reviewQueued, triggerQueued, vaultSyncIntentQueueAtom } from "./VaultSyncIntents.ts";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 import type { JSX } from "react";
@@ -197,6 +199,11 @@ const VaultSyncActionStatus = ({ state }: { readonly state: VaultSyncPanelState 
     idle: thunkNull,
     syncing: thunkNull,
     reviewing: thunkNull,
+    queued: ({ message }) => (
+      <span className="text-xs text-warning-text" role="status" data-testid="vault-sync-queued">
+        {message}
+      </span>
+    ),
     succeeded: ({ message }) => (
       <span className="text-xs text-muted-foreground" role="status" data-testid="vault-sync-complete">
         {message}
@@ -214,8 +221,11 @@ const VaultSyncConflictsList = ({
   onRetry,
   onReview,
   busy,
+  pendingReview,
 }: {
   readonly busy: boolean;
+  /** Whether a review of the conflict is queued: shown as predicted, reviewed. */
+  readonly pendingReview: (conflict: SyncConflict) => boolean;
   readonly conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown>;
   readonly onRetry: () => void;
   readonly onReview: (conflict: SyncConflict) => void;
@@ -246,16 +256,22 @@ const VaultSyncConflictsList = ({
         <li key={conflict.id} className="rounded-sm border border-warning/40 p-2" data-testid="vault-sync-conflict-row">
           <div className="flex items-center justify-between gap-2">
             <span className="font-medium">{conflict.conflictKind}</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onReview(conflict)}
-              disabled={busy}
-              data-testid="vault-sync-conflict-review"
-            >
-              Mark reviewed
-            </Button>
+            {pendingReview(conflict) ? (
+              <span className="text-xs text-muted-foreground" data-testid="vault-sync-conflict-pending">
+                Reviewed, waiting to sync
+              </span>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onReview(conflict)}
+                disabled={busy}
+                data-testid="vault-sync-conflict-review"
+              >
+                Mark reviewed
+              </Button>
+            )}
           </div>
           <p className="mt-1 break-all text-xs text-muted-foreground">
             {O.getOrElse(conflict.localRelPath, () => "(no local path)")}
@@ -303,8 +319,16 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
   const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   const panelState = useAtomValue(vaultSyncPanelStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
   const runCommand = useAtomSet(vaultSyncCommandAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const queue = useAtomValue(vaultSyncIntentQueueAtom);
+  // Replays queued intents while the panel is mounted.
+  useAtomMount(vaultSyncIntentReplayAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
   const connected = AsyncResult.isSuccess(status) && status.value.connected;
+  // Box answered as not configured: a pass cannot run. An unreachable sidecar is not that: the
+  // trigger is queued as an intent and replays when the sidecar is back.
+  const unconfigured = AsyncResult.isSuccess(status) && !status.value.connected;
+  const queuedCount = intentsOf(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID).length;
+  const passQueued = triggerQueued(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID);
   const syncing = VaultSyncPanelState.guards.syncing(panelState);
   const busy = syncing || VaultSyncPanelState.guards.reviewing(panelState);
 
@@ -340,15 +364,21 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
           type="button"
           size="sm"
           onClick={() => runCommand(VaultSyncCommand.cases.trigger.make({}))}
-          disabled={busy || !connected}
+          disabled={busy || unconfigured || passQueued}
           data-testid="vault-sync-trigger"
         >
-          {syncing ? "Syncing" : "Sync now"}
+          {syncing ? "Syncing" : passQueued ? "Sync queued" : "Sync now"}
         </Button>
         <VaultSyncActionStatus state={panelState} />
       </div>
+      {queuedCount > 0 ? (
+        <p className="mt-2 text-xs text-muted-foreground" data-testid="vault-sync-intents">
+          {queuedCount === 1 ? "1 action waiting for the sidecar" : `${queuedCount} actions waiting for the sidecar`}
+        </p>
+      ) : null}
       <VaultSyncConflictsList
         busy={busy}
+        pendingReview={(conflict) => reviewQueued(queue, DEFAULT_PROFESSIONAL_WORKSPACE_ID, conflict.id)}
         conflicts={conflicts}
         onRetry={refreshConflicts}
         onReview={(conflict) =>

@@ -1,4 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
+import { Internals } from "@alchemy.run/domain/Model";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import {
@@ -192,6 +193,30 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       yield* sql`UPDATE shared_membership SET deleted_at = 1`;
       const revoked = yield* Effect.flip(client.TriggerVaultSync({ workspaceId }, headers));
       expect(revoked._tag).toBe("VaultSyncActionError");
+    }).pipe(TestClock.withLive)
+  );
+
+  it.effect("a trigger replayed with one intent id requests one pass", () =>
+    Effect.gen(function* () {
+      const { client, context, sql } = yield* setup();
+      yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
+      yield* client
+        .GetVaultSyncStatus({ workspaceId, forceProbe: false }, headers)
+        .pipe(Effect.retry({ schedule: Schedule.spaced("10 millis"), times: 300 }));
+      // An offline client delivers its queued trigger until the sidecar answers: same intent id each time.
+      yield* client.TriggerVaultSync({ workspaceId, intentId: "intent-a" }, headers);
+      yield* client.TriggerVaultSync({ workspaceId, intentId: "intent-a" }, headers);
+      yield* client.TriggerVaultSync({ workspaceId, intentId: "intent-b" }, headers);
+      const store = yield* Effect.fromOption(
+        O.fromUndefinedOr(Context.get(context, Internals).aggregates.get("SyncDestination"))
+      );
+      const events = yield* Effect.fromOption(O.fromUndefinedOr(store.events)).pipe(
+        Effect.flatMap((read) => read(own))
+      );
+      const requested = A.filter(events, ({ event }) =>
+        S.is(S.Struct({ _tag: S.Literal("VaultSyncRequested") }))(event)
+      );
+      expect(requested).toHaveLength(2);
     }).pipe(TestClock.withLive)
   );
 
