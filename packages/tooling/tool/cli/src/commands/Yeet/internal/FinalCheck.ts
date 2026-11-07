@@ -39,11 +39,18 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
+import { ChangeAtomKind, RouteSentinel } from "../../Ci/Route.schemas.ts";
+import { ChangeClassifier, ClassifyInput } from "../../Ci/Route.service.ts";
+import { ChangeClassifierLive } from "../../Ci/RouteClassify.ts";
+import { routeFootprintCanonicalJson, routeLaneDecision } from "../../Ci/RouteFootprints.ts";
+import { sha256Hex } from "../../Goals/PacketCore/PacketDigest.ts";
 import {
   hasReusableLaneProof,
   persistLaneProofs,
@@ -58,6 +65,8 @@ import {
   FinalCheckGate,
   FinalCheckPlannedStep,
   FinalCheckReceipt,
+  FinalCheckRoute,
+  FinalCheckRouteGate,
   FinalCheckSkip,
   FinalCheckStepResult,
 } from "./FinalCheck.schemas.ts";
@@ -68,10 +77,17 @@ import {
   YeetChangedPathsQuery,
   yeetGitKitError,
 } from "./GitExec.ts";
+import {
+  appendYeetInboxRowOnce,
+  YeetLocalShardFailedRow,
+  YeetLocalShardFailureCapsule,
+  yeetLocalShardFailedRowId,
+} from "./Inbox.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
+import type { ChangeAtom } from "../../Ci/Route.schemas.ts";
 import type { LaneProofSession } from "../../Quality/internal/LaneProofReuse.ts";
 import type { LintPolicySweeps } from "../../Quality/Quality.schemas.ts";
 import type { ExpectationRewriteVerdict, YeetFinalCheckOptions } from "./FinalCheck.schemas.ts";
@@ -91,6 +107,102 @@ export const YEET_FINAL_CHECK_COMMAND = "bun run beep yeet final-check";
  * @since 0.0.0
  */
 export const FINAL_CHECK_RECEIPT_DIR = ".beep/yeet/final-check";
+
+const gateLane = {
+  "expectation-rewrite": "none",
+  "cheap-gates": "none",
+  "lint-policy": "lint-policy",
+  lint: "lint",
+  "repo-sanity": "repo-sanity",
+  check: "check",
+  docgen: "docgen",
+  fallow: "fallow",
+  coverage: "coverage",
+} as const satisfies Record<FinalCheckGate, CiLaneId | "none">;
+
+const selectedRouteGate = (gate: FinalCheckGate, reason: string) =>
+  FinalCheckRouteGate.make({ gate, lane: gateLane[gate], decision: "selected", refinements: [], reason });
+
+const atomCounts = (atoms: ReadonlyArray<ChangeAtom>) =>
+  R.map(ChangeAtomKind.Enum, (_value, kind) => A.length(A.filter(atoms, (atom) => atom.kind === kind)));
+
+/**
+ * Build final-check gate evidence from the shared refinement registry.
+ *
+ * **Example** (Always select the cheap guard)
+ * ```ts
+ * import { planFinalCheckRoute } from "@beep/repo-cli/test/Yeet"
+ * planFinalCheckRoute([], "digest", []).gates[1]?.decision // => "selected"
+ * ```
+ * @category planning
+ * @since 0.0.0
+ */
+export const planFinalCheckRoute: {
+  (atoms: ReadonlyArray<ChangeAtom>, footprintDigest: string, revoked: ReadonlyArray<string>): FinalCheckRoute;
+  (footprintDigest: string, revoked: ReadonlyArray<string>): (atoms: ReadonlyArray<ChangeAtom>) => FinalCheckRoute;
+} = dual(
+  3,
+  (atoms: ReadonlyArray<ChangeAtom>, footprintDigest: string, revoked: ReadonlyArray<string>): FinalCheckRoute =>
+    FinalCheckRoute.make({
+      footprintDigest,
+      atomsByKind: atomCounts(atoms),
+      reason: "classified",
+      shadowMisses: [],
+      gates: A.map(FinalCheckGate.literals, (gate) => {
+        const lane = gateLane[gate];
+        if (lane === "none") return selectedRouteGate(gate, "always-selected");
+        const verdict = routeLaneDecision(atoms, lane, revoked);
+        return FinalCheckRouteGate.make({
+          gate,
+          ...verdict,
+          reason: verdict.decision === "selected" ? "required-lane" : `route:${A.join(verdict.refinements, ",")}`,
+          ...(verdict.decision === "selected" ? {} : { proofKey: "key-change" }),
+        });
+      }),
+    })
+);
+
+/**
+ * Classify the requested head and read its revocation sentinel, selecting every gate on route errors.
+ *
+ * **Example** (Build a head-pinned classification)
+ * ```ts
+ * import { collectFinalCheckRoute } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * Effect.isEffect(collectFinalCheckRoute("/repo", "base", "head")) // => true
+ * ```
+ * @category io
+ * @since 0.0.0
+ */
+export const collectFinalCheckRoute = Effect.fn("Yeet.collectFinalCheckRoute")(
+  function* (repoRoot: string, mergeBase: string, headSha: string) {
+    const classifier = yield* ChangeClassifier;
+    const changeSet = yield* classifier.classify(ClassifyInput.make({ repoRoot, base: mergeBase, head: headSha }));
+    const git = yield* Git;
+    const sentinelText = yield* git.show(repoRoot, headSha, "standards/verification-route.sentinel.json");
+    const sentinel = yield* O.match(sentinelText, {
+      onNone: () => Effect.succeed({ revoked: [] }),
+      onSome: S.decodeUnknownEffect(S.fromJsonString(RouteSentinel)),
+    });
+    const digest = yield* sha256Hex(routeFootprintCanonicalJson());
+    return planFinalCheckRoute(
+      changeSet.atoms,
+      digest,
+      A.map(sentinel.revoked, (entry) => entry.id)
+    );
+  },
+  Effect.catchCause(() =>
+    Effect.succeed(
+      FinalCheckRoute.make({
+        footprintDigest: "unavailable",
+        atomsByKind: atomCounts([]),
+        gates: A.map(FinalCheckGate.literals, (gate) => selectedRouteGate(gate, "route-unavailable")),
+        shadowMisses: [],
+        reason: "route-unavailable",
+      })
+    )
+  )
+);
 
 const EXPECTATION_REWRITE_CONTEXT = "Test Unit (expectations edited to match new output)";
 
@@ -639,11 +751,14 @@ type FinalCheckRun = {
   readonly planned: ReadonlyArray<FinalCheckPlannedStep>;
   readonly skips: ReadonlyArray<FinalCheckSkip>;
   readonly resume: boolean;
+  readonly route?: FinalCheckRoute;
+  readonly headSha?: string;
 };
 
 type GateOutcome = {
   readonly steps: ReadonlyArray<FinalCheckStepResult>;
   readonly verdicts: ReadonlyArray<ExpectationRewriteVerdict>;
+  readonly shadowMisses: ReadonlyArray<FinalCheckRouteGate>;
 };
 
 const plannedFor = (run: FinalCheckRun, gate: FinalCheckGate) => A.filter(run.planned, (entry) => entry.gate === gate);
@@ -656,7 +771,18 @@ const hostedContextFor = (run: FinalCheckRun, gate: FinalCheckGate): string =>
         "; "
       );
 
-const skipFor = (run: FinalCheckRun, gate: FinalCheckGate) => A.findFirst(run.skips, (entry) => entry.gate === gate);
+const routeFor = (run: FinalCheckRun, gate: FinalCheckGate) =>
+  O.fromUndefinedOr(run.route).pipe(O.flatMap((route) => A.findFirst(route.gates, (entry) => entry.gate === gate)));
+
+const skipFor = (run: FinalCheckRun, gate: FinalCheckGate) =>
+  A.findFirst(run.skips, (entry) => entry.gate === gate).pipe(
+    O.orElse(() =>
+      routeFor(run, gate).pipe(
+        O.filter((entry) => entry.decision === "skipped"),
+        O.map((entry) => FinalCheckSkip.make({ gate, reason: entry.reason }))
+      )
+    )
+  );
 
 const printGatePlan = (run: FinalCheckRun, gate: FinalCheckGate) =>
   O.match(skipFor(run, gate), {
@@ -672,7 +798,7 @@ const printGatePlan = (run: FinalCheckRun, gate: FinalCheckGate) =>
 const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<typeof makeFinalCheckStepRunner>) =>
   O.match(skipFor(run, gate), {
     onSome: (skip): Effect.Effect<GateOutcome> =>
-      Effect.succeed({ steps: [skippedStep(skip, hostedContextFor(run, gate))], verdicts: [] }),
+      Effect.succeed({ steps: [skippedStep(skip, hostedContextFor(run, gate))], verdicts: [], shadowMisses: [] }),
     onNone: () =>
       gate === "expectation-rewrite"
         ? Effect.map(
@@ -680,9 +806,14 @@ const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<ty
             (result) => ({
               steps: [result.step],
               verdicts: result.verdicts,
+              shadowMisses: [],
             })
           )
-        : Effect.map(Effect.forEach(plannedFor(run, gate), runner.execute), (steps) => ({ steps, verdicts: [] })),
+        : Effect.map(Effect.forEach(plannedFor(run, gate), runner.execute), (steps) => ({
+            steps,
+            verdicts: [],
+            shadowMisses: [],
+          })),
   });
 
 const hasFailure = (steps: ReadonlyArray<FinalCheckStepResult>): boolean =>
@@ -697,11 +828,39 @@ const runGates = Effect.fn("Yeet.runFinalCheckGates")(function* (
     A.filter(run.planned, (entry) => A.contains(gates, entry.gate) && O.isNone(skipFor(run, entry.gate))),
     run.resume
   );
-  let outcome: GateOutcome = { steps: [], verdicts: [] };
+  let outcome: GateOutcome = { steps: [], verdicts: [], shadowMisses: [] };
   for (const gate of gates) {
     if (failFast && hasFailure(outcome.steps)) break;
     const next = yield* runGate(run, gate, runner);
-    outcome = { steps: A.appendAll(outcome.steps, next.steps), verdicts: A.appendAll(outcome.verdicts, next.verdicts) };
+    const miss = routeFor(run, gate).pipe(
+      O.filter((entry) => entry.decision === "shadow-skipped" && hasFailure(next.steps))
+    );
+    if (O.isSome(miss)) {
+      for (const refinement of miss.value.refinements) {
+        const capsule = YeetLocalShardFailureCapsule.make({
+          headSha: run.headSha ?? run.mergeBase,
+          shard: `route-shadow-miss:${refinement}:${gate}`,
+          command: `Revoke refinement ${refinement} in standards/verification-route.sentinel.json; final-check ${gate} failed`,
+          exitCode: 1,
+        });
+        const id = yield* yeetLocalShardFailedRowId(capsule);
+        yield* appendYeetInboxRowOnce(
+          run.repoRoot,
+          YeetLocalShardFailedRow.make({
+            capsule,
+            id,
+            checkout: run.repoRoot,
+            severity: "P0",
+            ts: yield* nowIso,
+          })
+        );
+      }
+    }
+    outcome = {
+      steps: A.appendAll(outcome.steps, next.steps),
+      verdicts: A.appendAll(outcome.verdicts, next.verdicts),
+      shadowMisses: A.appendAll(outcome.shadowMisses, O.toArray(miss)),
+    };
   }
   return outcome;
 });
@@ -818,12 +977,21 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     A.contains(gates, "lint-policy") && !A.some(skips, (skip) => skip.gate === "lint-policy")
       ? yield* resolveFullLintPolicySweeps(repoRoot, mergeBase)
       : O.none<LintPolicySweeps>();
+  const route = yield* Effect.scopedWith((scope) =>
+    Layer.buildWithScope(ChangeClassifierLive, scope).pipe(
+      Effect.flatMap((context) =>
+        collectFinalCheckRoute(repoRoot, mergeBase, headSha).pipe(Effect.provideContext(context))
+      )
+    )
+  );
   const run: FinalCheckRun = {
     repoRoot,
     mergeBase,
     planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles, O.getOrUndefined(fullPolicySweeps)),
     skips,
     resume: options.resume,
+    route,
+    headSha,
   };
 
   if (options.dryRun) {
@@ -836,7 +1004,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
 
   yield* refuseDirtyTree(repoRoot);
   const startedAt = yield* nowIso;
-  const { steps, verdicts } = yield* runGates(run, gates, options.failFast);
+  const { steps, verdicts, shadowMisses } = yield* runGates(run, gates, options.failFast);
   yield* refuseMovedTree(repoRoot, headSha);
   const ranGates = A.dedupe(A.map(steps, (step) => step.gate));
   const receipt = FinalCheckReceipt.make({
@@ -850,6 +1018,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     finishedAt: yield* nowIso,
     steps,
     expectationRewrites: verdicts,
+    route: FinalCheckRoute.make({ ...route, shadowMisses }),
   });
   const file = yield* writeReceipt(repoRoot, receipt);
   yield* Console.log(renderSummary(receipt));

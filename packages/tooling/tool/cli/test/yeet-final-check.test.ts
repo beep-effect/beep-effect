@@ -2,32 +2,40 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
+import { ChangeAtom, ChangeClassifier, ChangeSet, RouteError } from "@beep/repo-cli/commands/Ci";
 import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality/Quality.schemas";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
   collectExpectationRewrites,
+  collectFinalCheckRoute,
   EXPECTATION_DIFF_OVERFLOW,
   ExpectationRewrite,
   FINAL_CHECK_RECEIPT_DIR,
   FinalCheckGate,
+  FinalCheckPlannedStep,
   FinalCheckReceipt,
   FinalCheckStepResult,
   finalCheckRefusal,
   findExpectationRewrites,
   parseFinalCheckGates,
   parseFinalCheckSkips,
+  planFinalCheckRoute,
   planFinalCheckSteps,
   readFinalCheckReceipt,
   rewrittenTestFiles,
+  runFinalCheckGatesForTesting,
   verifyExpectationRewrites,
   vitestReplayArgs,
+  YeetInboxRowJson,
 } from "@beep/repo-cli/test/Yeet";
+import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -35,6 +43,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { NodeCommandTestLayer } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 import type { FinalCheckVerdict } from "@beep/repo-cli/test/Yeet";
@@ -736,4 +745,205 @@ it.layer(platformWith(), { timeout: "30 seconds" })("final-check receipts on dis
       expect(verifyExpectationRewrites7).toEqual([]);
     })
   );
+});
+
+const packetAtom = ChangeAtom.make({
+  kind: "packet",
+  path: "goals/demo/README.md",
+  digest: "packet",
+  pkg: O.none(),
+  detail: O.none(),
+});
+const refinementId = "packet-markdown-out-of-build-check";
+const routedGateRun = Effect.fn("FinalCheckTest.routedGateRun")(function* (
+  revoked: ReadonlyArray<string>,
+  exitCode: number
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "final-check-route-" });
+  const route = planFinalCheckRoute([packetAtom], "footprint", revoked);
+  const result = yield* runFinalCheckGatesForTesting(
+    {
+      repoRoot: root,
+      headSha: HEAD,
+      mergeBase: BASE,
+      planned: [
+        FinalCheckPlannedStep.make({
+          gate: "check",
+          hostedContext: "Heavy / Check",
+          step: QualityTaskStep.make({
+            label: "final-check:check",
+            command: "sh",
+            args: ["-c", `echo ran > ran; exit ${exitCode}`],
+            cwd: root,
+          }),
+        }),
+      ],
+      skips: [],
+      resume: false,
+      route,
+    },
+    ["check"],
+    false
+  );
+  return { root, route, result };
+});
+
+describe("final-check verification routing", () => {
+  it.effect("old receipt without route still decodes", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeEffect(FinalCheckReceipt)(receiptOf());
+      expect(decoded.route).toBeUndefined();
+      expect(decoded.schemaVersion).toBe("yeet-final-check/v1");
+    })
+  );
+
+  it.layer(NodeCommandTestLayer)("gate execution and shadow sentinel", (it) => {
+    it.effect("enforced skip records the route reason without running the gate", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { root, route, result } = yield* routedGateRun([], 7);
+        expect(result.steps[0]?.status).toBe("skipped");
+        expect(result.steps[0]?.reason).toBe(`route:${refinementId}`);
+        const ran = yield* fs.exists(`${root}/ran`);
+        expect(ran).toBe(false);
+        expect(A.findFirst(route.gates, (gate) => gate.gate === "check")).toMatchObject({
+          value: { proofKey: "key-change" },
+        });
+      })
+    );
+
+    it.effect("shadow-skip that passes runs the gate without recording a miss", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { root, route, result } = yield* routedGateRun([refinementId], 0);
+        expect(A.findFirst(route.gates, (gate) => gate.gate === "check")).toMatchObject({
+          value: { decision: "shadow-skipped" },
+        });
+        expect(result.steps[0]?.status).toBe("passed");
+        expect(result.shadowMisses).toEqual([]);
+        const ran = yield* fs.exists(`${root}/ran`);
+        expect(ran).toBe(true);
+        const inboxExists = yield* fs.exists(`${root}/.beep/inbox/failures.ndjson`);
+        expect(inboxExists).toBe(false);
+      })
+    );
+
+    it.effect("shadow-skip that fails records a key-change miss and a refinement inbox row", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { root, result } = yield* routedGateRun([refinementId], 7);
+        expect(result.steps[0]?.status).toBe("failed");
+        expect(result.shadowMisses).toHaveLength(1);
+        expect(result.shadowMisses[0]).toMatchObject({
+          gate: "check",
+          refinements: [refinementId],
+          proofKey: "key-change",
+        });
+        const text = yield* fs.readFileString(`${root}/.beep/inbox/failures.ndjson`);
+        const row = yield* YeetInboxRowJson.decode(Str.trim(text));
+        expect(row).toMatchObject({
+          severity: "P0",
+          kind: "local-shard-failed",
+          capsule: { headSha: HEAD, shard: `route-shadow-miss:${refinementId}:check` },
+        });
+      })
+    );
+
+    it.effect("revoked refinement runs the gate after reading the sentinel at the requested head", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const text = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))({
+          revoked: [{ id: refinementId, reason: "shadow miss" }],
+        });
+        const route = yield* collectFinalCheckRoute("/repo", BASE, HEAD).pipe(
+          Effect.provideService(
+            ChangeClassifier,
+            ChangeClassifier.of({
+              classify: Effect.fn("ChangeClassifier.classify")((input) => {
+                expect(input.head).toBe(HEAD);
+                expect(input.base).toBe(BASE);
+                return Effect.succeed(
+                  ChangeSet.make({ base: BASE, head: HEAD, atoms: [packetAtom], changedPaths: [packetAtom.path] })
+                );
+              }),
+            })
+          ),
+          Effect.provideService(
+            Git,
+            Git.of({
+              ...git,
+              show: dual(
+                3,
+                Effect.fn("Git.show")((_root: string, revision: string, path: string) => {
+                  expect(revision).toBe(HEAD);
+                  expect(path).toBe("standards/verification-route.sentinel.json");
+                  return Effect.succeedSome(text);
+                })
+              ),
+            })
+          )
+        );
+        expect(A.findFirst(route.gates, (entry) => entry.gate === "check")).toMatchObject({
+          value: { decision: "shadow-skipped" },
+        });
+        const { result } = yield* routedGateRun([refinementId], 0);
+        expect(result.steps[0]?.status).toBe("passed");
+      })
+    );
+
+    it.effect("route error selects every gate with route-unavailable evidence", () =>
+      Effect.gen(function* () {
+        const route = yield* collectFinalCheckRoute("/repo", BASE, HEAD).pipe(
+          Effect.provideService(
+            ChangeClassifier,
+            ChangeClassifier.of({
+              classify: Effect.fn("ChangeClassifier.classify")(() =>
+                Effect.fail(RouteError.new("classify", "fixture classification failed"))
+              ),
+            })
+          )
+        );
+        expect(route.reason).toBe("route-unavailable");
+        expect(A.map(route.gates, (entry) => entry.gate)).toEqual(FinalCheckGate.literals);
+        expect(
+          A.every(route.gates, (entry) => entry.decision === "selected" && entry.reason === "route-unavailable")
+        ).toBe(true);
+      })
+    );
+
+    it.effect("absent sentinel preserves enforced decisions", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const route = yield* collectFinalCheckRoute("/repo", BASE, HEAD).pipe(
+          Effect.provideService(
+            ChangeClassifier,
+            ChangeClassifier.of({
+              classify: Effect.fn("ChangeClassifier.classify")(() =>
+                Effect.succeed(
+                  ChangeSet.make({ base: BASE, head: HEAD, atoms: [packetAtom], changedPaths: [packetAtom.path] })
+                )
+              ),
+            })
+          ),
+          Effect.provideService(
+            Git,
+            Git.of({
+              ...git,
+              show: dual(3, (_root: string, _revision: string, _path: string) => Effect.succeedNone),
+            })
+          )
+        );
+        expect(A.findFirst(route.gates, (entry) => entry.gate === "check")).toMatchObject({
+          value: { decision: "skipped" },
+        });
+        expect(
+          A.map(
+            A.filter(route.gates, (entry) => entry.lane === "none"),
+            (entry) => entry.decision
+          )
+        ).toEqual(["selected", "selected"]);
+      })
+    );
+  });
 });
