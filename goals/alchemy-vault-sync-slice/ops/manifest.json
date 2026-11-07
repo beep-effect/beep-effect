@@ -39,7 +39,9 @@
     "research/02-postgres-platform-design.md",
     "research/03-current-vault-sync-flows.md",
     "research/SOURCES.md",
+    "research/cache-baseline-request-pr2a.json",
     "research/cache-baseline-request.json",
+    "research/cache-baseline-review-pr2a.md",
     "research/cache-baseline-review.md"
   ],
   "agentLaunchers": [
