@@ -61,3 +61,18 @@ jq . goals/legacy-drain/ops/manifest.json
 rg -n "legacy-drain|GOAL.md|agentLaunchers|packetAnchorDocument" goals/legacy-drain
 git diff --check -- goals/legacy-drain
 ```
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug legacy-drain`; add a `kind: checkpoint` file there, never edit this block._
+
+### beep-effect-cutover archived by goals/history-message-overlay, 2026-11-06
+
+SPEC.md's line that beep-effect-cutover is archived is done: on 2026-11-06 goals/history-message-overlay tracked the reviewed commit-message map at docs/history/ and moved the whole folder (1.3 MB: census, cutover, research) to $HOME/.local/state/beep/archive/beep-effect-cutover/. Nothing was deleted.
+
+Lane `git-history-rewrite` · PR #2785
+
+Reverse: mv $HOME/.local/state/beep/archive/beep-effect-cutover $HOME/YeeBois/projects/beep-effect-cutover
+
+<!-- beep:decisions:end -->

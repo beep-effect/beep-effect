@@ -125,6 +125,17 @@ const operations: ReadonlyArray<readonly [string, (git: GitModule.GitShape) => E
   ["mergeTree", (git) => git.mergeTree(cwd, "main", "HEAD")],
   ["updateRef", (git) => git.updateRef(cwd, "refs/archive/x", { create: "HEAD" })],
   ["diffPatch", (git) => git.diffPatch(cwd, { base: "main" })],
+  ["notesList", (git) => git.notesList(cwd, "refs/notes/history")],
+  [
+    "replaceNotes",
+    (git) =>
+      git.replaceNotes(
+        cwd,
+        "refs/notes/history",
+        [],
+        GitModule.NotesCommit.make({ message: "notes", name: "bot", email: "bot@example.com", timestamp: 0 })
+      ),
+  ],
 ];
 
 describe("Git service error contracts", () => {

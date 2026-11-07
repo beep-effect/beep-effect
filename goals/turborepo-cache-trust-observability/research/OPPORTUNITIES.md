@@ -2582,3 +2582,27 @@ changes. This repair is not complete task or production qualification.
 ### Bind repeatability evidence to the measured revision, 2026-11-07
 
 The accepted dependency refresh changed the root manifest and lockfile after a real matching pair at b0c9bab1. Calling the old pair current would overstate its profile applicability. Publish the measured revision and artifact hashes, compare the thirteen controls, and require a fresh pair for the changed profile. Preserve the old successful and failed observations. The adapter candidate has four unchanged declared build inputs, so avoid a redundant build based only on commit movement.
+
+## 2026-11-07: align packet closeout with the current adoption law
+
+Preparing the current dependency evidence exposed contradictory closeout directions:
+both Turbo launchers, acceptance criteria and P6 checklists still demanded lifecycle
+adoption in the implementation PR, while the Agent Guide requires a verified proposal
+followed by a separate packet-state PR. This could lead a later agent to mark the
+initiative complete before the landed implementation is verified. Correct the six
+packet documents, retain all unchecked acceptance and observation requirements, and
+record the reversal in native per-decision files. No lifecycle status changes here.
+Prevent recurrence by treating the governing closeout sequence as a shared contract
+when updating launchers and phase templates.
+
+## 2026-11-07: retain optional-detail absence without weakening raw comparison
+
+The dependency evidence collector retained a successful raw snapshot comparison but
+reported its historical node-gyp detail check false on the refreshed installation.
+The production diagnostic emits that optional section only when target regular
+files exist; neither complete package-group inventory contains node-gyp. Preserve
+the original receipts and record detail analysis as not applicable only after
+checking absence in both inventories. Keep raw digest, source, complete group,
+resource-bound and artifact-authentication checks unchanged. A missing detail
+section with a present target group must still refuse. Do not manufacture a
+file-level pass or relabel older evidence from a different dependency profile.

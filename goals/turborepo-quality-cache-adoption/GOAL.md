@@ -41,6 +41,10 @@ Record friction in research/OPPORTUNITIES.md; keep raw evidence bounded.
 
 Drive the final implementation PR through Yeet repair, verify, publish and
 monitor until `merge-ready: yes`, including required checks and reviews.
-Land evidence, a reflect-skill closeout and completed-retained lifecycle in
-that same PR. Partial or blocked observation is not completion.
+Land final evidence, a reflect-skill closeout and proposedCloseout in the final
+implementation PR, keeping the goal active or paused. After that PR merges,
+verify it with goals completion refresh and adopt completed-retained in a
+separate packet-state PR. Completion requires the adoption PR to merge and
+origin/main to show matching closeout and initiative statuses. Partial or
+blocked observation is not completion.
 SPEC is normative; this launcher is navigation.

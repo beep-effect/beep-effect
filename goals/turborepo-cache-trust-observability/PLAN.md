@@ -36,7 +36,7 @@ unchanged source. Both goals and all whole-goal criteria remain incomplete.
 | P3 Production hardening and observation | pending | Prepare and execute scoped incumbent hardening after concrete rollout gates; coordinate cohort wiring with adoption. | Seven-day nonprod, seven-day cohort and fourteen-day broader evidence plus rollback, where production hardening is deployed. |
 | P4 Verify and hand off | pending | Run package/Lambda/contract tests, direct fault attribution and key/epoch rollback drills. | Trust-readiness receipts are reproducible and available to adoption. |
 | P5 Yeet: PR to mergeable | pending | Publish through Yeet and close reviews/hosted failures. | Yeet monitor reports merge-ready: yes on final head. |
-| P6 Close | pending | Land trust evidence, reflection and lifecycle with final implementation work. | Same-PR closeout; deployed limitations remain explicit. |
+| P6 Close | pending | Land trust evidence, reflection and proposal with implementation; verify and adopt after merge. | Merged lifecycle adoption; deployed limitations remain explicit. |
 
 ## First action
 
@@ -88,17 +88,22 @@ admission/worktree workflows for heavy experiments.
 
 ## P6 closeout checklist
 
-P6 preparation can occur during P5 so final reflection/lifecycle land with the
-final implementation. Acceptance still requires final Yeet proof. Do not defer
-closeout to an unrelated state-only PR.
+P6 preparation can occur during P5. Land final evidence, reflection and
+proposedCloseout with the final implementation while the goal stays active or
+paused. After that PR merges, verify and adopt its proposal through the
+required separate packet-state PR. Acceptance still requires final Yeet proof
+and the merged adoption; a proposal alone is not completion.
 
 1. Confirm every SPEC criterion and applicable representative observation.
 2. Use the reflect skill and copied reflection template to record tooling
    friction, implementation opportunities and prompt critique.
 3. Run `bun run beep lint reflection-artifacts`.
-4. Update phase evidence and use
-   `bun run beep goals set-status turborepo-cache-trust-observability completed-retained` only once
-   completion conditions hold, in the final implementation PR.
+4. After the final implementation PR merges, run
+   `bun run beep goals completion refresh --slug turborepo-cache-trust-observability`.
+   Only after verification succeeds, use
+   `bun run beep goals set-status turborepo-cache-trust-observability completed-retained`
+   in a separate packet-state PR, updating README and statusNote prose too.
+   Merge it and confirm origin/main has matching closeout and initiative statuses.
 5. Regenerate/check the goal index and preserve exploration links. Completion
    of this goal alone does not establish the whole cache program's completion.
 
@@ -1549,6 +1554,14 @@ Retain source-bound run/job/artifact identities and hashes in research/guarded-d
 Lane `codex/cache-guarded-evidence-20261106`
 
 Reverse: Remove the checkpoint projection while retaining both immutable successful observations and the earlier failed comparisons.
+
+### Two accepted-cf46 installations preserve the same raw dependency identity, 2026-11-07
+
+Serial source-only inspection runs 42332185638 and 42333355378 passed at accepted source cf46c700488b6950ea7340369e0d0508e596cd1e with exact caller and resolved Heavy revision. Authenticated source reports are byte-identical; raw dependency digest c112ea17c1f7526a0d6a43583ca3d27179220c00d1ba706e8ef941ea1e11ab3d, all 2194 package groups, thirteen control hashes and resource bounds agree. Diagnostic times are 43.781 and 44.406 seconds; each combined report pair is 3411533 bytes under 4 MiB. Neither complete group inventory contains node-gyp, so its optional file-detail comparison is not applicable, not a file-level pass. Retain research/current-dependency-inspection-2026-11-07.json and narrative. No exclusions, normalization or cleanup produced equality. This establishes dependency repeatability only for that exact source/profile; independent producer approval, signed execution/publication/import, task qualification, representative windows and both whole-goal acceptance gates remain open. No signing, capability, production or lifecycle change and no local quality suite.
+
+Lane `codex/cache-current-dependency-evidence-20261107`
+
+Reverse: Retain the immutable observations and mark this profile prerequisite unproven if a later authenticated comparison contradicts it; do not normalize digests or reuse it for an unreviewed profile.
 
 ### Retain measured repeatability without extending it to a changed profile, 2026-11-07
 
