@@ -3,14 +3,22 @@
   "schemaVersion": "instrumentation-catalog-shard/v1",
   "generatedBy": "bun run beep observability catalog --write",
   "package": "@beep/alchemy-postgres",
-  "attributes": [],
-  "instruments": [],
+  "attributes": [
+    {"key":"beep.alchemy.aggregate","type":"string","signals":["span"],"cardinality":"bounded","minTier":"shape-only","owner":"@beep/alchemy-postgres","description":"Aggregate a send commits to, as the model names it."},
+    {"key":"beep.alchemy.target_kind","type":"string","signals":["span"],"cardinality":"static","minTier":"shape-only","values":["view","policy","projection"],"owner":"@beep/alchemy-postgres","description":"Kind of consumer an outbox delivery targets."},
+    {"key":"beep.alchemy.target_name","type":"string","signals":["span"],"cardinality":"bounded","minTier":"shape-only","owner":"@beep/alchemy-postgres","description":"View, policy or projection an outbox delivery targets, as the model names it."}
+  ],
+  "instruments": [
+    {"_tag":"SpanInstrument","name":"AlchemyPostgres.Outbox.deliver","owner":"@beep/alchemy-postgres","family":"driver","attributes":["beep.alchemy.target_kind","beep.alchemy.target_name"],"minTier":"shape-only","description":"Delivers one outbox row to its view, policy or projection.","kind":"consumer","protocol":false,"origin":"declared","conforms":true},
+    {"_tag":"SpanInstrument","name":"AlchemyPostgresPlatform.send","owner":"@beep/alchemy-postgres","family":"driver","attributes":["beep.alchemy.aggregate"],"minTier":"shape-only","description":"Commits one command to an aggregate instance in Postgres.","kind":"internal","protocol":false,"origin":"declared","conforms":true}
+  ],
   "spans": [
-    {"name":"AlchemyPostgres.backfill.schedule","owner":"@beep/alchemy-postgres","family":"driver","conforms":false},
+    {"name":"AlchemyPostgres.Backfill.schedule","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
+    {"name":"AlchemyPostgres.Outbox.deliver","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
+    {"name":"AlchemyPostgres.Projection.receive","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
+    {"name":"AlchemyPostgres.View.markLive","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
+    {"name":"AlchemyPostgres.View.receive","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
     {"name":"AlchemyPostgres.migrate","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
-    {"name":"AlchemyPostgres.projection.receive","owner":"@beep/alchemy-postgres","family":"driver","conforms":false},
-    {"name":"AlchemyPostgres.view.markLive","owner":"@beep/alchemy-postgres","family":"driver","conforms":false},
-    {"name":"AlchemyPostgres.view.receive","owner":"@beep/alchemy-postgres","family":"driver","conforms":false},
     {"name":"AlchemyPostgresPlatform.make","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
     {"name":"AlchemyPostgresPlatform.model","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},
     {"name":"AlchemyPostgresPlatform.send","owner":"@beep/alchemy-postgres","family":"driver","conforms":true},

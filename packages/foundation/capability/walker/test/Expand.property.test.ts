@@ -1,5 +1,5 @@
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
-import { GlobPattern, GlobPatternOptions } from "@beep/glob";
+import { GlobPattern, GlobPatternError, GlobPatternOptions } from "@beep/glob";
 import { CompileAndExpandOptions, compileAndExpand, GlobExpansionError } from "@beep/walker/Expand";
 import { assert, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -8,9 +8,14 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import { descendErrorSample } from "./support/arbitraries.ts";
 import { platform } from "./support/fixtures.ts";
 
 const runs = { arbitrary: fcRuns(100) };
+const expansionErrorSample = GlobExpansionError.mapFields((fields) => ({
+  ...fields,
+  cause: S.Union([GlobPatternError, descendErrorSample]),
+}));
 
 it.effect.prop(
   "CompileAndExpandOptions: decode(encode(x)) equals x and decoding never fails",
@@ -28,9 +33,10 @@ it.effect.prop(
 
 it.effect.prop(
   "GlobExpansionError: decode(encode(x)) preserves the cause, stage and message",
-  [Arbitrary.schema(GlobExpansionError)],
-  ([value]) =>
+  [Arbitrary.schema(expansionErrorSample)],
+  ([sample]) =>
     Effect.gen(function* () {
+      const value = GlobExpansionError.make(sample);
       const encoded = yield* S.encodeEffect(GlobExpansionError)(value);
       const decoded = yield* S.decodeEffect(GlobExpansionError)(encoded);
       assertTrue(S.toEquivalence(GlobExpansionError)(decoded, value));
