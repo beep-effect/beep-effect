@@ -63,6 +63,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
+import { defaultJSDocTotalsBaselinePath } from "./internal/JSDocRatchet.ts";
 import { listSourceFiles, readJsonc } from "./internal/QualityArtifactSupport.ts";
 import type { LsTreeEntry } from "@beep/git/Git";
 
@@ -2292,25 +2293,47 @@ const ordinaryTrackedScannerInputs = Effect.fn("QualityTasks.ordinaryTrackedScan
 const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScannerInputsTracked")(
   function* (root: string, git: GitShape) {
     const fs = yield* FsUtils;
+    const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const options = GlobOptions.make({ cwd: root, absolute: true, ignore: ["**/node_modules/**"] });
     // JSDoc inventory follows source-directory links. Preserve lexical names
     // to refuse linked ancestors before reading any source or configuration.
     const projectOptions = GlobOptions.make({ ...options, dot: true, followSymlinks: true });
-    const metadata = yield* fs.globFiles(
+    // Read only configuration locations the selected consumers actually use.
+    // Local docs/build outputs may contain other ignored JSON files.
+    const rootMetadata = yield* fs.globFiles(
       [
-        "*.{json,jsonc}",
-        "{apps,packages,infra,tools,scratchpad}/**/{package.json,docgen.json,tsconfig*.json,tsconfig*.jsonc,tsdoc.json}",
-        "standards/{effect-vitest*,schema-first*,schema-crispening*,jsdoc*}.{json,jsonc}",
+        "package.json",
+        "docgen.json",
+        "tsdoc.json",
+        "tsconfig*.{json,jsonc}",
+        "pnpm-workspace.yaml",
+        defaultJSDocTotalsBaselinePath,
       ],
-      GlobOptions.make({ ...projectOptions, dot: true, ignore: ["**/node_modules/**", "**/.beep/**", "**/.turbo/**"] })
+      projectOptions
     );
-    if (!(yield* ordinaryTrackedScannerInputs(root, metadata, git))) return false;
+    if (!(yield* ordinaryTrackedScannerInputs(root, rootMetadata, git))) return false;
+    const patterns = yield* WorkspacePatterns.read(root);
+    const globs = yield* GlobSet.compile(WorkspacePatterns.forMatching(patterns));
+    const workspaces = yield* enumerate(root, globs, { containWithinRoot: true, skipMissingBaseDirs: true });
+    const directories = [root, ...A.map(workspaces, (workspace) => workspace.path)];
+    const metadata = yield* Effect.forEach(
+      directories,
+      (directory) =>
+        fs.globFiles(
+          ["package.json", "docgen.json", "tsdoc.json", "tsconfig*.{json,jsonc}"],
+          GlobOptions.make({ ...projectOptions, cwd: directory })
+        ),
+      { concurrency: 4 }
+    );
+    if (!(yield* ordinaryTrackedScannerInputs(root, A.flatten(metadata), git))) return false;
     const customSources = yield* Effect.forEach(
-      A.filter(metadata, (file) => path.basename(file) === "docgen.json"),
-      Effect.fnUntraced(function* (file) {
-        const config = yield* readJsonc(file);
-        const source = path.resolve(path.dirname(file), P.isString(config.srcDir) ? config.srcDir : "src");
+      directories,
+      Effect.fnUntraced(function* (directory) {
+        const configPath = path.join(directory, "docgen.json");
+        const hasConfig = yield* fileSystem.exists(configPath);
+        const config = hasConfig ? yield* readJsonc(configPath) : {};
+        const source = path.resolve(directory, P.isString(config.srcDir) ? config.srcDir : "src");
         const lexicalSources = yield* fs.globFiles(path.join(source, "**/*.{ts,tsx}"), projectOptions);
         if (!(yield* ordinaryTrackedScannerInputs(root, lexicalSources, git))) return lexicalSources;
         return yield* listSourceFiles(source, path);
@@ -2319,17 +2342,8 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
     );
     // Semantic scanners remain live: their transitive module inputs cannot be
     // proven from this bounded names-only discovery. No AST/project is built.
-    const sources = yield* Effect.all(
-      [
-        discoverEffectImportSourceFiles(EffectImportRulesOptions.make({ excludePaths: [] }), root),
-        fs.globFiles(
-          ["{apps,packages,infra,tools,scratchpad}/**/src/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
-          projectOptions
-        ),
-      ],
-      { concurrency: 1 }
-    );
-    return yield* ordinaryTrackedScannerInputs(root, [...A.flatten(sources), ...A.flatten(customSources)], git);
+    const sources = yield* discoverEffectImportSourceFiles(EffectImportRulesOptions.make({ excludePaths: [] }), root);
+    return yield* ordinaryTrackedScannerInputs(root, [...sources, ...A.flatten(customSources)], git);
   },
   (effect) =>
     Effect.scoped(

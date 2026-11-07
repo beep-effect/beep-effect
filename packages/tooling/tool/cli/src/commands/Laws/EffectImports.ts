@@ -1779,7 +1779,7 @@ const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(funct
  *
  * @param options - The run options whose mode, include paths and prefixes bound the corpus.
  * @param root - Explicit discovery root; defaults to the process working directory.
- * @returns Sorted working-directory-relative POSIX paths of the sources the run reads.
+ * @returns Sorted discovery-root-relative POSIX paths of the sources the run reads.
  * @category queries
  * @since 0.0.0
  */

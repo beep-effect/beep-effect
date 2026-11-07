@@ -48,8 +48,8 @@ success list or proof-shadow observations. First-red, precise/imprecise scheduli
 and `not-run-early-stop` accounting retain their meaning. Set
 `BEEP_QUALITY_REPORT_ONLY_SKIP=0` to disable selection.
 
-Qualification locks the exact two IDs, raw selected Turbo task declarations,
-their complete dependency closures, and global/future configuration. Each task
+Qualification locks the exact two IDs, selected Turbo task declarations,
+their complete dependency structure, and global/future configuration. Each task
 must exist, enable caching, and declare explicit nondefault inputs. Unknown edges
 or input expansion require renewed review. Five real Turbo report-edit probes
 also keep both selected source-task hashes equal, including nested, Unicode, newline,
@@ -93,16 +93,41 @@ hashed, and dependency/tool cache trees are not globally inventoried.
 
 Focused controls include ordinary reports, unsafe paths/modes, hidden index
 flags, ignored source/configuration, relevant file and directory links, benign
-YAML links, retained failures, mixed checkouts, and generator changes. Workspace
-patterns are part of the frozen qualification contract, so future root expansion
-requires review alongside the selected Turbo input/dependency closure.
+YAML links, retained failures, mixed checkouts, and generator changes. Supported workspace root domains are part of the qualification contract.
+Generated seal inputs normalize only compiler-proven literal source paths and
+literal workspace manifests that cannot match an accepted Markdown report.
+Other inputs, configuration, glob/negation patterns, task settings and dependency
+edges stay exact. Normal package/source additions within a supported root no
+longer require hand-updating a checksum; unknown roots or report-related inputs
+still require review.
+
+The guard obtains workspace configuration from the existing workspace pattern
+reader and enumerator. It checks only actual root and declared-workspace scanner
+configuration locations, including pnpm's workspace preference and the JSDoc
+baseline. Unrelated generated `.oxlintrc.docs.prebuilt.json` and nested build
+`package.json` outputs stay outside this metadata set. Regression controls keep
+both selected skips with these normal artifacts present while refusing ignored
+real package/docgen/tsdoc/tsconfig/pnpm inputs. The final comparison includes the
+actual generated prebuilt docs configuration and an ignored build manifest.
 
 ## Current two-lane measurement
 
 Pending the matched cold-cache qualification on the reviewed two-lane source.
 Acceptance remains **at least 30% and at least 60 seconds**, with exactly two
-reasoned skips and **24 equivalent retained outcomes**. Earlier measurements
-below cannot satisfy this gate.
+reasoned skips and **25 equivalent retained outcomes**. Earlier measurements
+below cannot satisfy this gate. The current command has 27 actual lanes: the static
+catalog plus the dynamic changeset preflight. Historical 26-lane runs also had
+the changeset preflight but predated the entity-kit-freeze lane; no retained lane
+is omitted from the current comparison.
+
+Before the final representative pair, a test-only inline decoder violation
+invalidated one partial baseline and was fixed with the actual root oxlint rule.
+A subsequent 27-lane green baseline exposed a harness expectation of 26; its
+monotonic wall time had not been written before the assertion, so no elapsed
+time was reconstructed. A separately recorded 274.060-second green baseline
+used the older metadata guard; its candidate was stopped when review proved that
+ordinary generated docs metadata unnecessarily disabled selection. These are
+failure-path/control history, not accepted paired performance evidence.
 
 ## Historical four-lane method and acceptance
 

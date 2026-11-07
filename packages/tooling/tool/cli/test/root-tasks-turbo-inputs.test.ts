@@ -1,3 +1,4 @@
+import { GlobPattern } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   EffectVitestInventoryPath,
@@ -8,6 +9,7 @@ import { ReportOnlyInertLaneId } from "@beep/repo-cli/commands/Quality";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { isPackageSourceFile, TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -19,6 +21,7 @@ import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -35,6 +38,86 @@ const nonInput = ".beep/c3-fixture-excluded.bin";
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const isProofTaskName = S.is(TurboConfigProofTaskName);
 const Strings = S.Array(S.String).pipe(S.withDecodingDefaultKey(Effect.succeed([])));
+
+// These domains are disjoint from accepted docs/reports/*.md changes. The
+// shared glob compiler proves literalness; patterns and every other config
+// input remain exact, including literal Markdown outside the accepted roots.
+const GeneratedSourceInput = S.String.check(
+  S.isPattern(
+    /^\$TURBO_ROOT\$\/(?:apps|packages|infra|scratchpad|tools|scripts|goals|explorations|research|\.claude|\.github)\/.*\.(?:[cm]?[jt]sx?)$/u
+  ),
+  S.isTrimmed()
+).pipe(
+  $I.annoteSchema("GeneratedSourceInput", {
+    description: "One generated source literal outside accepted report paths.",
+  })
+);
+const GeneratedWorkspaceManifestInput = S.String.check(
+  S.isPattern(
+    /^\$TURBO_ROOT\$\/(?:apps|packages|infra|scratchpad|tools)\/(?:[\p{L}\p{N}_-][\p{L}\p{N}_.-]*\/)*package\.json$/u
+  ),
+  S.isTrimmed()
+).pipe(
+  $I.annoteSchema("GeneratedWorkspaceManifestInput", {
+    description: "One literal workspace package.json, disjoint from Markdown report changes.",
+  })
+);
+const SupportedWorkspacePattern = S.String.check(
+  S.isPattern(/^!?(?:apps|packages|infra|scratchpad|tools)(?:\/(?:[\p{L}\p{N}_-][\p{L}\p{N}_.-]*|\*|\*\*))*$/u),
+  S.isTrimmed()
+).pipe(
+  $I.annoteSchema("SupportedWorkspacePattern", {
+    description: "Workspace pattern confined to the scanner guard's existing root domains.",
+  })
+);
+const isGeneratedSourceInput = S.is(GeneratedSourceInput);
+const isGeneratedWorkspaceManifestInput = S.is(GeneratedWorkspaceManifestInput);
+const isSupportedWorkspacePattern = S.is(SupportedWorkspacePattern);
+const workspaceRootDomains = (patterns: ReadonlyArray<string>) => {
+  const normalized = WorkspacePatterns.forMatching(patterns);
+  if (!A.every(normalized, isSupportedWorkspacePattern)) return O.none<ReadonlyArray<string>>();
+  return O.some(
+    A.sort(
+      A.dedupe(A.map(normalized, (pattern) => Str.split(Str.replace(/^!/u, "")(pattern), "/")[0] ?? "")),
+      Order.String
+    )
+  );
+};
+const DeclarationRecord = S.Record(S.String, S.Unknown).pipe(
+  $I.annoteSchema("DeclarationRecord", {
+    description: "Raw task declaration retaining unknown configuration fields in the qualification contract.",
+  })
+);
+const decodeDeclarationRecord = S.decodeUnknownEffect(DeclarationRecord);
+const normalizeReportOnlyDeclaration = Effect.fn("normalizeReportOnlyDeclaration")(function* (
+  id: string,
+  raw: unknown,
+  inputs: ReadonlyArray<string>
+) {
+  if (!isSealId(id)) return raw;
+  const task = yield* decodeDeclarationRecord(raw);
+  const classified = yield* Effect.forEach(inputs, (input) =>
+    GlobPattern.compile(input).pipe(
+      Effect.map((pattern) => {
+        const kind = pattern.literalPath.pipe(
+          O.filter((literal) => isGeneratedSourceInput(literal) || isGeneratedWorkspaceManifestInput(literal)),
+          O.map((literal) => (isGeneratedSourceInput(literal) ? "source" : "workspace-manifest"))
+        );
+        return Tuple.make(input, kind);
+      })
+    )
+  );
+  return {
+    task: {
+      ...task,
+      inputs: A.map(
+        A.filter(classified, ([, kind]) => O.isNone(kind)),
+        Tuple.get(0)
+      ),
+    },
+    reportDisjointLiteralInputClasses: A.sort(A.dedupe(A.getSomes(A.map(classified, Tuple.get(1)))), Order.String),
+  };
+});
 
 class RootTask extends S.Opaque<RootTask, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -74,8 +157,6 @@ const Configuration = S.Struct({
   agentGuidance: S.Boolean,
 });
 const Manifest = S.Struct({ scripts: S.Record(S.String, S.String) });
-const WorkspaceManifest = S.Struct({ workspaces: S.Array(S.String) });
-const decodeWorkspaceManifest = S.decodeEffect(S.fromJsonString(WorkspaceManifest));
 const Summary = S.Struct({ tasks: S.Array(TaskSummary) });
 const decodeConfiguration = S.decodeEffect(S.fromJsonString(Configuration));
 const decodeManifest = S.decodeEffect(S.fromJsonString(Manifest));
@@ -387,6 +468,80 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
   );
 
   it.layer(PlatformLayer, { timeout: "30 seconds" })("report-only source input contract", (it) => {
+    it.effect("accepts ordinary future source and package additions within supported roots", () =>
+      Effect.gen(function* () {
+        const id = "@beep/repo-cli#lint:policy-fingerprint:fixture";
+        const inputs = [
+          "$TURBO_ROOT$/packages/existing/src/index.ts",
+          "$TURBO_ROOT$/packages/existing/package.json",
+          "tsconfig.json",
+        ];
+        const raw = { cache: true, inputs, dependsOn: ["shared"], unknownConfig: "preserved" };
+        const before = yield* normalizeReportOnlyDeclaration(id, raw, inputs);
+        const future = [
+          "$TURBO_ROOT$/apps/future/src/index.ts",
+          "$TURBO_ROOT$/apps/future/package.json",
+          ...inputs,
+          "$TURBO_ROOT$/packages/existing/src/index.ts",
+          "$TURBO_ROOT$/packages/existing/package.json",
+        ];
+        const after = yield* normalizeReportOnlyDeclaration(id, { ...raw, inputs: future }, future);
+        expect(after).toEqual(before);
+        expect(workspaceRootDomains(["apps/existing", "packages/existing"])).toEqual(
+          workspaceRootDomains(["apps/existing", "packages/existing", "packages/future", "apps/*"])
+        );
+      })
+    );
+
+    for (const input of [
+      "$TURBO_ROOT$/docs/reports/probe.md",
+      "$TURBO_ROOT$/docs/reports/**",
+      "$TURBO_DEFAULT$",
+      "$TURBO_ROOT$/packages/*/src/*.ts",
+      "$TURBO_ROOT$/standards/future-config.json",
+      "$TURBO_ROOT$/new-root/future.ts",
+      "!$TURBO_ROOT$/packages/existing/src/index.ts",
+      "$TURBO_ROOT$/packages/{one,two}/src/index.ts",
+    ]) {
+      it.effect(`keeps unknown or report-related generated input exact: ${input}`, () =>
+        Effect.gen(function* () {
+          const id = "@beep/repo-cli#lint:policy-fingerprint:fixture";
+          const inputs = ["$TURBO_ROOT$/packages/existing/src/index.ts"];
+          const before = yield* normalizeReportOnlyDeclaration(id, { cache: true, inputs }, inputs);
+          const future = [...inputs, input];
+          const after = yield* normalizeReportOnlyDeclaration(id, { cache: true, inputs: future }, future);
+          expect(after).not.toEqual(before);
+        })
+      );
+    }
+    it.effect("preserves command structure and refuses unsupported workspace roots", () =>
+      Effect.gen(function* () {
+        const id = "@beep/repo-cli#lint:policy-fingerprint:fixture";
+        const inputs = ["$TURBO_ROOT$/packages/existing/src/index.ts"];
+        const before = yield* normalizeReportOnlyDeclaration(
+          id,
+          { cache: true, inputs, dependsOn: ["shared"] },
+          inputs
+        );
+        const changed = yield* normalizeReportOnlyDeclaration(
+          id,
+          { cache: false, inputs, dependsOn: ["other"], futureConfig: true },
+          inputs
+        );
+        expect(changed).not.toEqual(before);
+        const direct = yield* normalizeReportOnlyDeclaration("//#lint:effect-imports", { inputs }, inputs);
+        expect(direct).toEqual({ inputs });
+        for (const pattern of [
+          "future-root/*",
+          "docs/reports/*",
+          "packages/../../outside",
+          "packages/{..,safe}",
+          "packages/future\n",
+        ])
+          expect(O.isNone(workspaceRootDomains([pattern]))).toBe(true);
+      })
+    );
+
     it.effect("locks the selected source tasks and every dependency against prose input expansion", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -425,17 +580,19 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           expect(task.cache, id).toBe(true);
           expect(A.isReadonlyArrayNonEmpty(task.inputs), id).toBe(true);
           expect(A.contains(task.inputs, "$TURBO_DEFAULT$"), id).toBe(false);
-          closure = A.append(closure, [id, raw]);
+          const normalized = yield* normalizeReportOnlyDeclaration(id, raw, task.inputs);
+          closure = A.append(closure, [id, normalized]);
           pending = A.appendAll(pending, task.dependsOn);
         }
-        // A declaration or dependency change requires renewed qualification,
-        // including specific new report inputs a handful of probes cannot see.
+        // Structural declarations, patterns, config and dependency edges stay
+        // exact. Generated literal sources/manifests are name-disjoint from
+        // reports, so ordinary source/package additions need no manual hash.
         const manifestText = yield* fs.readFileString(path.join(repo, "package.json"));
         const rootManifest = yield* decodeManifest(manifestText);
         expect(rootManifest.scripts["lint:effect-imports"]).toBe("bun run beep laws effect-imports --check");
-        const manifest = yield* decodeWorkspaceManifest(manifestText);
+        const workspacePatterns = yield* WorkspacePatterns.read(repo);
         const encoded = yield* jsonStringifyPretty({
-          workspaces: manifest.workspaces,
+          workspaceRoots: O.getOrThrow(workspaceRootDomains(workspacePatterns)),
           global: configuration.global,
           futureFlags: configuration.futureFlags,
           agentGuidance: configuration.agentGuidance,
@@ -443,7 +600,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("5add99c2ac1a56067775a2071fe3e6e0c765eda81a1d97273abb0bbce2797f59");
+        expect(Hex.encode(bytes)).toBe("3c1c3f57a81bddbf72b2e7c70da5fe2d87d3712a1b92c1ea9f477fb4d2ede767");
       })
     );
   });

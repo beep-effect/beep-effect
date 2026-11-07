@@ -1701,6 +1701,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/DocsOxlintPlugin.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",

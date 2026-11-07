@@ -2969,6 +2969,24 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     describe("report-only cheap gate selection", () => {
+      const initializeReportOnlyRepository = Effect.fn("initializeReportOnlyRepository")(function* (root: string) {
+        yield* initializeLaneProofRepository(root);
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.join(root, "packages/example"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(root, "package.json"),
+          '{"name":"report-fixture","workspaces":["packages/*"]}'
+        );
+        yield* fs.writeFileString(
+          path.join(root, "packages/example/package.json"),
+          '{"name":"@beep/example","version":"0.0.0"}'
+        );
+        yield* runGit(root, ["add", "."]);
+        yield* runGit(root, ["commit", "-m", "report workspace base"]);
+        yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+      });
+
       const reportLane = (
         root: string,
         id: string,
@@ -2995,7 +3013,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-gates-" });
-            yield* initializeLaneProofRepository(root);
+            yield* initializeReportOnlyRepository(root);
             yield* fs.makeDirectory(path.dirname(path.join(root, changedPath)), { recursive: true });
             yield* fs.writeFileString(path.join(root, changedPath), "report\n");
             yield* runGit(root, ["add", "."]);
@@ -3065,7 +3083,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-control-" });
-            yield* initializeLaneProofRepository(root);
+            yield* initializeReportOnlyRepository(root);
             yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
             yield* fs.writeFileString(path.join(root, "source.ts"), "baseline\n");
             yield* fs.writeFileString(path.join(root, "docs/reports/existing.md"), "baseline\n");
@@ -3152,10 +3170,50 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         }
       });
 
+      const writeScannerInputFixture = Effect.fn("writeScannerInputFixture")(function* (
+        root: string,
+        control: string,
+        badSource: string
+      ) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const write = (file: string, text: string) => fs.writeFileString(path.join(root, file), text);
+        const sourceIn = (directory: string, file: string) =>
+          fs
+            .makeDirectory(path.join(root, directory), { recursive: true })
+            .pipe(Effect.andThen(write(`${directory}/${file}`, badSource)));
+        return yield* Match.value(control).pipe(
+          Match.when("ignored test", () => write("packages/example/test/ignored.test.ts", badSource)),
+          Match.when("ignored build test", () => sourceIn("packages/example/build/test", "probe.ts")),
+          Match.when("ignored hidden source", () => sourceIn("packages/example/src/.internal", "probe.ts")),
+          Match.when("ignored root tsdoc", () => write("tsdoc.json", "{}")),
+          Match.when("ignored workspace config", () => write("packages/example/tsconfig.json", "{}")),
+          Match.when("ignored pnpm config", () => write("pnpm-workspace.yaml", "packages: []\n")),
+          Match.when("ignored config", () => write("packages/example/docgen.json", "{}")),
+          Match.when("ordinary generated artifacts", () =>
+            Effect.gen(function* () {
+              yield* write(".oxlintrc.docs.prebuilt.json", "{}");
+              yield* fs.makeDirectory(path.join(root, "packages/example/.next"), { recursive: true });
+              yield* write("packages/example/.next/package.json", "{}");
+            })
+          ),
+          Match.when("ignored directory link", () =>
+            fs
+              .makeDirectory(path.join(root, "packages/example/src"), { recursive: true })
+              .pipe(Effect.andThen(fs.symlink("../../../.beep/targets", path.join(root, "packages/example/src/test"))))
+          ),
+          Match.orElse(() => Effect.void)
+        );
+      });
+
       for (const control of [
         "ignored test",
         "ignored build test",
         "ignored config",
+        "ignored root tsdoc",
+        "ignored workspace config",
+        "ignored pnpm config",
+        "ordinary generated artifacts",
         "ignored hidden source",
         "tracked source link",
         "tracked directory link",
@@ -3167,7 +3225,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-scanner-inputs-" });
-            yield* initializeLaneProofRepository(root);
+            yield* initializeReportOnlyRepository(root);
             yield* fs.makeDirectory(path.join(root, "packages/example/test"), { recursive: true });
             yield* fs.makeDirectory(path.join(root, ".beep/targets"), { recursive: true });
             const badSource =
@@ -3182,7 +3240,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.some(findings, (finding) => finding.ruleId === "EV001")).toBe(true);
             yield* fs.writeFileString(
               path.join(root, ".git/info/exclude"),
-              ".beep/\npackages/example/src/\npackages/example/build/\npackages/example/test/ignored.test.ts\npackages/example/docgen.json\n"
+              ".beep/\n.oxlintrc.docs.prebuilt.json\ntsdoc.json\npnpm-workspace.yaml\npackages/example/tsconfig.json\npackages/example/.next/\npackages/example/src/\npackages/example/build/\npackages/example/test/ignored.test.ts\npackages/example/docgen.json\n"
             );
             yield* fs.writeFileString(path.join(root, ".beep/targets/target.test.ts"), badSource);
             yield* prepareScannerLinkFixture(root, control);
@@ -3193,28 +3251,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
             yield* runGit(root, ["add", "."]);
             yield* runGit(root, ["commit", "-m", "scanner report"]);
-            if (control === "ignored test")
-              yield* fs.writeFileString(path.join(root, "packages/example/test/ignored.test.ts"), badSource);
-            if (control === "ignored build test") {
-              yield* fs.makeDirectory(path.join(root, "packages/example/build/test"), { recursive: true });
-              yield* fs.writeFileString(path.join(root, "packages/example/build/test/probe.ts"), badSource);
-            }
-            if (control === "ignored hidden source") {
-              yield* fs.makeDirectory(path.join(root, "packages/example/src/.internal"), { recursive: true });
-              yield* fs.writeFileString(path.join(root, "packages/example/src/.internal/probe.ts"), badSource);
-            }
-            if (control === "ignored config")
-              yield* fs.writeFileString(path.join(root, "packages/example/docgen.json"), "{}");
-            if (control === "ignored directory link") {
-              yield* fs.makeDirectory(path.join(root, "packages/example/src"), { recursive: true });
-              yield* fs.symlink("../../../.beep/targets", path.join(root, "packages/example/src/test"));
-            }
+            yield* writeScannerInputFixture(root, control, badSource);
             const run = collectGithubCheckLaneWavesForTesting(
               "scanner-inputs",
               [
                 GithubCheckLaneWaveSpec.make({
                   wave: "preflight",
-                  lanes: [reportLane(root, "quality:jsdoc-ratchet:regenerated")],
+                  lanes: [
+                    reportLane(root, "quality:jsdoc-ratchet:regenerated"),
+                    reportLane(root, "lint:effect-imports"),
+                  ],
                 }),
               ],
               "collect-all",
@@ -3225,9 +3271,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               undefined,
               withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
             );
-            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual([
-              control === "benign directory link" || control === "ignored build test" ? "skipped" : "failed",
-            ]);
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(
+              A.replicate(
+                control === "benign directory link" ||
+                  control === "ignored build test" ||
+                  control === "ordinary generated artifacts"
+                  ? "skipped"
+                  : "failed",
+                2
+              )
+            );
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
         );
       }
@@ -3250,7 +3303,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-revalidation-" });
-            yield* initializeLaneProofRepository(root);
+            yield* initializeReportOnlyRepository(root);
             yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
             yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
             yield* runGit(root, ["add", "."]);

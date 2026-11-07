@@ -1938,6 +1938,7 @@
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
         "packages/tooling/tool/cli/src/commands/Quality/internal/DocsOxlintPlugin.ts",
         "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
+        "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
         "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
         "packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts",
         "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
