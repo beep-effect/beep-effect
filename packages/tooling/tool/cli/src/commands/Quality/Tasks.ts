@@ -2334,9 +2334,16 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
         const hasConfig = yield* fileSystem.exists(configPath);
         const config = hasConfig ? yield* readJsonc(configPath) : {};
         const source = path.resolve(directory, P.isString(config.srcDir) ? config.srcDir : "src");
-        const lexicalSources = yield* fs.globFiles(path.join(source, "**/*.{ts,tsx}"), projectOptions);
-        if (!(yield* ordinaryTrackedScannerInputs(root, lexicalSources, git))) return lexicalSources;
-        return yield* listSourceFiles(source, path);
+        if (!(yield* fileSystem.exists(source))) return [];
+        // Anchor configuration paths literally: brackets are directory names,
+        // and an explicitly selected root may itself sit under node_modules.
+        const lexicalSources = yield* fs.globFiles(
+          "**/*.{ts,tsx}",
+          GlobOptions.make({ ...projectOptions, cwd: source })
+        );
+        // Keep this walk: unlike glob expansion, it propagates entry-stat errors.
+        const canonicalSources = yield* listSourceFiles(source, path);
+        return [source, ...lexicalSources, ...canonicalSources];
       }),
       { concurrency: 4 }
     );

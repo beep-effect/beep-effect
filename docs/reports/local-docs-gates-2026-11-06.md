@@ -87,8 +87,8 @@ entry, out-of-root path, failed read, or malformed configuration restores full
 execution. Configuration metadata is checked before docgen source-directory
 redirection is read. Source names follow directory links where JSDoc does, then
 reject relevant links before reading source contents. Benign linked YAML
-fixtures remain eligible because they contain no matching source/configuration
-inputs. No ignored contents or external target file contents are printed or
+fixtures outside source roots remain eligible because they contain no matching
+source/configuration inputs. Source roots themselves remain checked. No ignored contents or external target file contents are printed or
 hashed, and dependency/tool cache trees are not globally inventoried.
 
 Focused controls include ordinary reports, unsafe paths/modes, hidden index
@@ -128,6 +128,31 @@ time was reconstructed. A separately recorded 274.060-second green baseline
 used the older metadata guard; its candidate was stopped when review proved that
 ordinary generated docs metadata unnecessarily disabled selection. These are
 failure-path/control history, not accepted paired performance evidence.
+
+The first completed artifact-present two-lane pair was functionally green but
+**rejected on performance**: **258.977 → 201.831 seconds**, saving **57.146 seconds
+(22.066%)**, below both declared floors. All 25 retained lanes passed, both skips
+had no proof fields, and all 20 → 17 observed Turbo tasks were cold misses. Shared
+host load varied; it does not waive the floor or justify repeating that version
+for a better result.
+
+That version left 20.036 seconds outside the union of timed candidate lane spans,
+versus 0.933 seconds in its baseline. Most was at the initial eligibility edge;
+this is not a dedicated guard timer, and overlap hides later guard work. Review
+identified repeated per-workspace lstat/checkIgnore calls followed by another
+combined check. The distinct revision batches source identity validation once per
+eligibility epoch while retaining initial and per-skip revalidation. It also
+anchors source globs at literal configured directories. The canonical walk stays:
+a real entry-stat refusal propagates there while glob expansion alone can omit
+the refused file. Tests cover bracket-containing roots, explicitly configured
+node_modules roots, known missing roots, linked roots, and PermissionDenied.
+The replacement revision requires its own single artifact-present comparison
+with the unchanged performance floors; this rejected result is not acceptance.
+
+A separate representative attempt was invalidated by introduced EV006 in a new
+test's Option matcher. It was corrected to the canonical assertion on the
+original Option; the exact-file detector and full retained Effect Vitest command
+then passed without changing any inventory or baseline.
 
 ## Historical four-lane method and acceptance
 

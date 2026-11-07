@@ -107,6 +107,7 @@ import {
   githubCheckWaveSegments,
   LaneProofSession,
   lintFixChangedStepForTesting,
+  listSourceFiles,
   localQualityConcurrencyPlan,
   missingTestTsgoTaskMessageForTesting,
   parseQualityTaskInvocation,
@@ -211,6 +212,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
@@ -3165,8 +3167,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* fs.remove(path.join(root, ".beep/targets/target.test.ts"));
             yield* fs.writeFileString(path.join(root, ".beep/targets/data.yaml"), "fixture: true\n");
           }
-          yield* fs.symlink("../../.beep/targets", path.join(root, "packages/example/src"));
-          yield* runGit(root, ["add", "-f", "packages/example/src"]);
+          const link =
+            control === "benign directory link" ? "packages/example/fixtures/linked" : "packages/example/src";
+          const absoluteLink = path.join(root, link);
+          yield* fs.makeDirectory(path.dirname(absoluteLink), { recursive: true });
+          yield* fs.symlink(path.relative(path.dirname(absoluteLink), path.join(root, ".beep/targets")), absoluteLink);
+          yield* runGit(root, ["add", "-f", link]);
         }
       });
 
@@ -3280,6 +3286,101 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   : "failed",
                 2
               )
+            );
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+
+      for (const [name, srcDir, kind] of [
+        ["literal metachar root", "src[one]", "tracked"],
+        ["ignored metachar source", "src[one]", "ignored"],
+        ["linked metachar root", "src[one]", "linked"],
+        ["explicit node_modules root", "node_modules/custom", "ignored"],
+        ["known missing custom root", "missing[one]", "missing"],
+        ["entry stat refusal", "src", "denied"],
+      ] as const) {
+        it.effect(`preserves actual JSDoc discovery for ${name}`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-custom-source-" });
+            yield* initializeReportOnlyRepository(root);
+            const source = path.join(root, "packages/example", srcDir);
+            const file = path.join(source, "ordinary.ts");
+            const config = yield* encodeJson({ srcDir });
+            yield* fs.writeFileString(path.join(root, "packages/example/docgen.json"), config);
+            yield* fs.writeFileString(path.join(root, ".git/info/exclude"), ".beep/\nordinary.ts\n");
+            if (kind === "tracked" || kind === "denied") {
+              yield* fs.makeDirectory(source, { recursive: true });
+              yield* fs.writeFileString(file, "export const value = 1;\n");
+              yield* runGit(root, ["add", "-f", path.relative(root, file)]);
+            }
+            if (kind === "linked") {
+              yield* fs.makeDirectory(path.join(root, ".beep/custom"), { recursive: true });
+              yield* fs.writeFileString(path.join(root, ".beep/custom/ordinary.ts"), "export const value = 1;\n");
+              yield* fs.symlink("../../.beep/custom", source);
+              yield* runGit(root, ["add", "-f", path.relative(root, source)]);
+            }
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "custom source base"]);
+            yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
+            yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "custom source report"]);
+            if (kind === "ignored") {
+              yield* fs.makeDirectory(source, { recursive: true });
+              yield* fs.writeFileString(file, "export const value = 1;\n");
+            }
+            const run = Effect.gen(function* () {
+              if (kind === "denied") {
+                const error = yield* listSourceFiles(source, path).pipe(Effect.flip);
+                expect(error.message).toContain("Failed to stat");
+              } else {
+                const actual = yield* listSourceFiles(source, path);
+                expect(A.length(actual)).toBe(kind === "missing" ? 0 : 1);
+              }
+              return yield* collectGithubCheckLaneWavesForTesting(
+                "custom-source",
+                [
+                  GithubCheckLaneWaveSpec.make({
+                    wave: "preflight",
+                    lanes: [
+                      reportLane(root, "quality:jsdoc-ratchet:regenerated"),
+                      reportLane(root, "lint:effect-imports"),
+                    ],
+                  }),
+                ],
+                "collect-all",
+                undefined
+              );
+            });
+            const checked =
+              kind === "denied"
+                ? run.pipe(
+                    Effect.provideService(FileSystem.FileSystem, {
+                      ...fs,
+                      stat: (target) =>
+                        target === file
+                          ? Effect.fail(
+                              PlatformError.systemError({
+                                _tag: "PermissionDenied",
+                                module: "FileSystem",
+                                method: "stat",
+                                pathOrDescriptor: file,
+                              })
+                            )
+                          : fs.stat(target),
+                    })
+                  )
+                : run;
+            const result = yield* withEnvVarEffect(
+              "BEEP_YEET_PROOF_BASE",
+              undefined,
+              withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", checked)
+            );
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(
+              A.replicate(kind === "tracked" || kind === "missing" ? "skipped" : "failed", 2)
             );
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
         );
