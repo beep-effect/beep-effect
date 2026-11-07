@@ -305,18 +305,28 @@ describe("research library ontology", () => {
         const nextShapes = yield* fs.readFileString(shapesPath);
         expect(nextTbox).toBe(tbox);
         expect(nextShapes).toBe(shapes);
-        for (const kind of ["goals", "explorations"]) {
+        const manifests = [
+          ["goals", { initiative: { id: "example", title: "Example" }, ignored: "extra metadata" }],
+          [
+            "explorations",
+            {
+              schemaVersion: "exploration-manifest/v1",
+              exploration: { slug: "example-exploration", title: "Example exploration", status: "active" },
+            },
+          ],
+        ] as const;
+        for (const [kind, manifest] of manifests) {
           const dir = path.join(root, kind, "example", "ops");
           yield* fs.makeDirectory(dir, { recursive: true });
-          const json = yield* S.encodeEffect(SUnknownJson)({
-            initiative: { id: "example", title: "Example" },
-            ignored: "extra metadata",
-          });
+          const json = yield* S.encodeEffect(SUnknownJson)(manifest);
           yield* fs.writeFileString(path.join(dir, "manifest.json"), json);
         }
         yield* fs.makeDirectory(path.join(root, "goals/broken"), { recursive: true });
         const topics = yield* libraryTopics(root);
-        expect(A.map(topics, (topic) => topic.id)).toEqual(["goals/example", "explorations/example"]);
+        expect(A.map(topics, (topic) => [topic.id, topic.initiativeId, topic.title])).toEqual([
+          ["goals/example", "example", "Example"],
+          ["explorations/example", "example-exploration", "Example exploration"],
+        ]);
       })
     );
   });

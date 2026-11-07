@@ -24,6 +24,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { encodeLibraryJson } from "./Library.adapter.ts";
@@ -360,6 +361,12 @@ const now = DateTime.now.pipe(Effect.map(DateTime.formatIso));
 /**
  * Check every span is a verbatim substring of the bound capture text.
  *
+ * **Details**
+ *
+ * A span that differs from the text only in whitespace runs (PDF line breaks a
+ * reader rendered as spaces) resolves to the exact slice of the text, so the
+ * returned spans are always verbatim. Any other difference is an offender.
+ *
  * **Example** (Reject an invented span)
  * ```ts
  * import { checkLibraryMineSpans } from "@beep/repo-cli/test/ResearchLibrary"
@@ -372,7 +379,7 @@ const now = DateTime.now.pipe(Effect.map(DateTime.formatIso));
  * @param artifactId - Mining unit the spans are bound to.
  * @param text - Full bound capture text.
  * @param spans - Spans proposed by a runner or synthesis.
- * @returns Success when every span is verbatim, otherwise a span error naming the offenders.
+ * @returns The verbatim text slice for each span, otherwise a span error naming the offenders.
  * @category validation
  * @since 0.0.0
  */
@@ -381,14 +388,27 @@ export const checkLibraryMineSpans = Effect.fn("Library.mine.checkSpans")(functi
   text: string,
   spans: ReadonlyArray<string>
 ) {
-  const offenders = A.filter(spans, (span) => !Str.isNonEmpty(span) || !Str.includes(span)(text));
+  const resolved = A.map(spans, (span) => [span, resolveSpan(text, span)] as const);
+  const offenders = A.filterMap(resolved, ([span, slice]) =>
+    O.isNone(slice) ? Result.succeed(span) : Result.failVoid
+  );
   if (A.isReadonlyArrayNonEmpty(offenders))
     return yield* LibraryMineSpanError.make({
       artifactId,
       spans: offenders,
       message: `${offenders.length} finding span(s) are not verbatim in the bound capture text.`,
     });
+  return A.map(resolved, ([span, slice]) => O.getOrElse(slice, () => span));
 });
+
+const escapeRegExp = Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const resolveSpan = (text: string, span: string): O.Option<string> => {
+  const words = A.filter(Str.split(Str.trim(span), /\s+/), Str.isNonEmpty);
+  if (!A.isReadonlyArrayNonEmpty(words)) return O.none();
+  if (Str.includes(span)(text)) return O.some(span);
+  return O.map(O.fromNullishOr(new RegExp(A.join(A.map(words, escapeRegExp), "\\s+")).exec(text)), (match) => match[0]);
+};
 
 type JobContext = {
   readonly root: string;
@@ -532,14 +552,14 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
         LibraryMineRunnerError.make({ quota: false, message: `T2 answer failed its schema: ${cause.message}` })
       )
     );
-    yield* checkLibraryMineSpans(
+    const spans = yield* checkLibraryMineSpans(
       job.artifactId,
       text,
       A.map(reading.findings, (finding) => finding.span)
     );
     const coverage = reading.coverage === "complete" && text.length > T2_TEXT_CAP ? "partial" : reading.coverage;
     const kept = A.filter(
-      reading.findings,
+      A.zipWith(reading.findings, spans, (finding, span) => ({ ...finding, span })),
       (finding) => coverage === "complete" || !isAffirmative(finding.citoRelation)
     );
     const dropped = A.flatMap(kept, (finding) => partitionTopics(context.known, finding.topicIds).dropped);
@@ -895,13 +915,17 @@ export const mineLibrarySynthesize = Effect.fn("Library.mine.synthesize")(functi
           message: `Capture ${finding.captureId} has no bound text artifact.`,
         });
       const text = yield* readBoundText(root, artifact.value);
-      yield* checkLibraryMineSpans(`${finding.captureId}:${artifact.value.sha256}`, text, [finding.span]);
+      const [span = finding.span] = yield* checkLibraryMineSpans(
+        `${finding.captureId}:${artifact.value.sha256}`,
+        text,
+        [finding.span]
+      );
       return LibraryFinding.make({
         id: `mine:t3:${synthesis.id}:${index}`,
         sourceId: source.value.id,
         captureId: finding.captureId,
         citoRelation: finding.citoRelation,
-        span: finding.span,
+        span,
         summary: finding.summary,
         topicIds: partitionTopics(known, finding.topicIds).kept,
         modelRunId: runId,

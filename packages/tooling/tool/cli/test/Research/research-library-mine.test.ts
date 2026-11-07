@@ -298,6 +298,19 @@ describe("research library mine", () => {
       yield* checkLibraryMineSpans("capture:a", publicText, ["valid time"]);
     })
   );
+
+  it.effect("resolves a whitespace-only span difference to the verbatim capture slice", () =>
+    Effect.gen(function* () {
+      const text = "Analysis confirms that 98% of\nparent-child relationships (p < 0.05) occur locally.";
+      const spans = yield* checkLibraryMineSpans("capture:a", text, [
+        "98% of parent-child relationships (p < 0.05)",
+        "occur locally.",
+      ]);
+      expect(spans).toStrictEqual(["98% of\nparent-child relationships (p < 0.05)", "occur locally."]);
+      const error = yield* Effect.flip(checkLibraryMineSpans("capture:a", text, ["98% of parent child relationships"]));
+      expect(error.spans).toStrictEqual(["98% of parent child relationships"]);
+    })
+  );
 });
 
 it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it) => {

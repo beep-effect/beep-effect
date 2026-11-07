@@ -32,13 +32,28 @@ const text = (value: unknown, key: string): string => {
   const item = get(value, key);
   return P.isString(item) ? item : "";
 };
-class Packet extends S.Opaque<Packet, { readonly brand: unique symbol }>()(
+class GoalPacket extends S.Opaque<GoalPacket, { readonly brand: unique symbol }>()(
   S.Struct({
     initiative: S.Struct({ id: S.String, title: S.String }),
-  }).pipe($I.annoteSchema("TopicPacket", { description: "Minimal packet topic metadata." }))
+  }).pipe($I.annoteSchema("TopicPacket", { description: "Minimal goal packet topic metadata." }))
 ) {}
 
-const PacketJson = S.fromJsonString(Packet);
+class ExplorationPacket extends S.Opaque<ExplorationPacket, { readonly brand: unique symbol }>()(
+  S.Struct({
+    exploration: S.Struct({ slug: S.String, title: S.String }),
+  }).pipe($I.annoteSchema("TopicExplorationPacket", { description: "Minimal exploration packet topic metadata." }))
+) {}
+
+const PacketJson = S.fromJsonString(S.Union([GoalPacket, ExplorationPacket]));
+
+const packetTopic = (kind: string, slug: string, packet: GoalPacket | ExplorationPacket) =>
+  "initiative" in packet
+    ? LibraryTopic.make({ id: `${kind}/${slug}`, initiativeId: packet.initiative.id, title: packet.initiative.title })
+    : LibraryTopic.make({
+        id: `${kind}/${slug}`,
+        initiativeId: packet.exploration.slug,
+        title: packet.exploration.title,
+      });
 
 /**
  * Packet-backed SKOS concept metadata.
@@ -80,20 +95,17 @@ export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: st
     const directory = path.join(repoRoot, kind);
     const entries = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(() => []));
     for (const slug of A.sort(entries, Str.Order)) {
+      const manifest = path.join(directory, slug, "ops/manifest.json");
+      // Loose files and template folders beside the packets carry no manifest and are not topics.
+      if (!(yield* fs.exists(manifest).pipe(Effect.orElseSucceed(() => false)))) continue;
       const packet = yield* fs
-        .readFileString(path.join(directory, slug, "ops/manifest.json"))
+        .readFileString(manifest)
         .pipe(Effect.flatMap(S.decodeUnknownEffect(PacketJson)), Effect.option);
       if (O.isNone(packet)) {
         warnings++;
         continue;
       }
-      topics.push(
-        LibraryTopic.make({
-          id: `${kind}/${slug}`,
-          initiativeId: packet.value.initiative.id,
-          title: packet.value.initiative.title,
-        })
-      );
+      topics.push(packetTopic(kind, slug, packet.value));
     }
   }
   if (warnings > 0 && reportWarnings === true)
