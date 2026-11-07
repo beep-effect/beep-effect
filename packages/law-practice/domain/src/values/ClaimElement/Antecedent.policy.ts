@@ -1023,7 +1023,7 @@ const enhancedContextReady = (
   for (const decomposition of numbered) {
     const claim = decomposition.qualification.claim;
     const parents = PatentClaim.match(claim, {
-      independent: () => A.empty<number>(),
+      independent: A.empty<number>,
       dependent: ({ claimReferences }) => claimReferences,
     });
     remaining -= parents.length * 2 + 1;

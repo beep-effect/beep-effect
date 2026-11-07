@@ -59,3 +59,5 @@ export {
   projectClaimRoleTerms,
   validateClaimSourceOwnership,
 } from "./values/ClaimElement/ClaimClauseRole.projection.ts";
+/** Source-only transition scope controls through the canonical test entrypoint. */
+export { rawClaimTransitionScope } from "./values/PatentDocument/PatentDocument.transition.ts";

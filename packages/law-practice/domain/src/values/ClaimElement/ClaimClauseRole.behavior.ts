@@ -11,10 +11,12 @@ import { dual } from "effect/Function";
 import * as Graph from "effect/Graph";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { rawClaimTransitionScope } from "../PatentDocument/PatentDocument.transition.ts";
 import {
   ClaimArgumentCoverage,
   ClaimClauseRolePlan,
@@ -609,23 +611,19 @@ const finiteBodyScopeMatches = (claim: PatentClaim, extent: TextAnchor): boolean
   extent.startChar === claim.claimText.length - claim.body.length &&
   extent.endChar === claim.claimText.length &&
   extent.quote === claim.body;
-const finiteTransitionScopeMatches = (claim: PatentClaim, extent: TextAnchor): boolean => {
-  const text = claim.claimText;
-  return (
-    extent.startChar >= claim.preamble.length &&
-    extent.endChar <= text.length - claim.body.length &&
-    extent.quote === claim.transition &&
-    Str.trim(Str.slice(claim.preamble.length, extent.startChar)(text)) === "" &&
-    Str.trim(Str.slice(extent.endChar, text.length - claim.body.length)(text)) === ""
-  );
-};
+const finiteTransitionScopeMatches = (
+  claim: PatentClaim,
+  extent: TextAnchor,
+  charge: (amount: number) => boolean
+): boolean => O.exists(rawClaimTransitionScope(claim, charge), (raw) => sourceAnchorEqual(raw, extent));
 const finiteScopeMatches = (
   claim: PatentClaim,
-  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>,
+  charge: (amount: number) => boolean
 ): boolean => {
   if (proof.role === "preamble") return finitePreambleScopeMatches(claim, proof.extent);
   if (proof.role === "body") return finiteBodyScopeMatches(claim, proof.extent);
-  return finiteTransitionScopeMatches(claim, proof.extent);
+  return finiteTransitionScopeMatches(claim, proof.extent, charge);
 };
 
 /**
@@ -920,42 +918,21 @@ type FiniteProofValidationContext = {
   readonly resolve: (ref: ClaimSourceProofRef) => O.Option<ClaimFiniteSourceProof>;
 };
 
-const originalScopeStart = (text: string, start: number, end: number, charge: (amount: number) => boolean): number => {
-  while (start < end) {
-    if (!charge(3)) return -1;
-    if (!O.isSome(Str.match(/\s/u)(Str.slice(start, start + 1)(text)))) break;
-    start++;
-  }
-  return start;
-};
-const originalScopeEnd = (text: string, start: number, end: number, charge: (amount: number) => boolean): number => {
-  while (end > start) {
-    if (!charge(3)) return -1;
-    if (!O.isSome(Str.match(/\s/u)(Str.slice(end - 1, end)(text)))) break;
-    end--;
-  }
-  return end;
-};
 const originalQualifiedScopes = (
   claim: PatentClaim,
   charge: (amount: number) => boolean
 ): O.Option<ClaimOriginalQualifiedScopes> => {
-  const text = claim.claimText;
-  if (!charge(text.length * 2 + 48) || !Str.startsWith(claim.preamble)(text) || !Str.endsWith(claim.body)(text))
-    return O.none();
-  let start = claim.preamble.length;
-  let end = text.length - claim.body.length;
-  if (end <= start) return O.none();
-  start = originalScopeStart(text, start, end, charge);
-  if (start < 0) return O.none();
-  end = originalScopeEnd(text, start, end, charge);
-  if (end < 0) return O.none();
-  if (Str.slice(start, end)(text) !== claim.transition) return O.none();
+  const transition = rawClaimTransitionScope(claim, charge);
+  if (O.isNone(transition) || !charge(claim.preamble.length + claim.body.length + 48)) return O.none();
   return O.some(
     ClaimOriginalQualifiedScopes.make({
       preamble: TextAnchor.make({ startChar: 0, endChar: claim.preamble.length, quote: claim.preamble }),
-      transition: TextAnchor.make({ startChar: start, endChar: end, quote: claim.transition }),
-      body: TextAnchor.make({ startChar: text.length - claim.body.length, endChar: text.length, quote: claim.body }),
+      transition: transition.value,
+      body: TextAnchor.make({
+        startChar: claim.claimText.length - claim.body.length,
+        endChar: claim.claimText.length,
+        quote: claim.body,
+      }),
     })
   );
 };
@@ -2115,7 +2092,8 @@ const validateFiniteScopeProof = (
   context: FiniteProofValidationContext,
   proof: Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>
 ): boolean => {
-  if (HashSet.has(context.scopes, proof.role) || !finiteScopeMatches(context.claim, proof)) return false;
+  if (HashSet.has(context.scopes, proof.role) || !finiteScopeMatches(context.claim, proof, context.charge))
+    return false;
   context.scopes = HashSet.add(context.scopes, proof.role);
   return true;
 };
@@ -2256,11 +2234,6 @@ const isAlignedLexicalInput = (
   input: O.Option<ClaimLexicalEvidence>
 ): input is O.Some<Extract<ClaimLexicalEvidence, { readonly status: "aligned" }>> =>
   O.isSome(input) && input.value.status === "aligned";
-const sourceEnvelopeMatches = (claim: PatentClaim, preambleEnd: number, bodyStart: number): boolean =>
-  Str.startsWith(claim.preamble)(claim.claimText) &&
-  Str.endsWith(claim.body)(claim.claimText) &&
-  bodyStart > preambleEnd;
-
 // Operational parser state owns one source and one shared reservation. It is not
 // persisted domain data; emitted data is constructed through the schemas above.
 class RoleCompiler {
@@ -2380,20 +2353,18 @@ class RoleCompiler {
   };
   private readSourceFacts = (): boolean => {
     const text = this.claim.claimText;
-    if (!this.charge(text.length + this.tokens.length * 8 + 8)) return false;
     const preambleEnd = this.claim.preamble.length;
     const bodyStart = text.length - this.claim.body.length;
-    if (!sourceEnvelopeMatches(this.claim, preambleEnd, bodyStart)) return false;
-    const gap = Str.slice(preambleEnd, bodyStart)(text);
-    if (Str.trim(gap) !== this.claim.transition) return false;
-    let transitionStart = preambleEnd;
-    while (
-      transitionStart < bodyStart &&
-      O.isSome(Str.match(/\s/u)(Str.slice(transitionStart, transitionStart + 1)(text)))
+    const gapLength = Num.max(0, bodyStart - preambleEnd);
+    // The resolver performs and reserves the envelope comparison once. On valid
+    // disjoint fields these reservations retain the previous total plus 16.
+    if (!this.charge(gapLength + this.tokens.length * 8 + 8)) return false;
+    const transition = rawClaimTransitionScope(this.claim, this.charge);
+    if (O.isNone(transition)) return false;
+    if (
+      !this.readSourceScopes(preambleEnd, transition.value.startChar, transition.value.endChar, bodyStart) ||
+      !this.readSourceTokens()
     )
-      transitionStart++;
-    const transitionEnd = transitionStart + this.claim.transition.length;
-    if (!this.readSourceScopes(preambleEnd, transitionStart, transitionEnd, bodyStart) || !this.readSourceTokens())
       return false;
     this.sourceFactsReady = true;
     return true;
