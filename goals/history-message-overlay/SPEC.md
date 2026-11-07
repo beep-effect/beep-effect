@@ -66,17 +66,17 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `docs/history/commit-message-map.json` is tracked and decodes; it covers
+- [x] `docs/history/commit-message-map.json` is tracked and decodes; it covers
       every `saving` commit on `main` (the July map missed one).
-- [ ] `bun run beep history notes --check` passes on `main` and against origin's ref.
-- [ ] `git log` in a freshly bootstrapped worktree shows `Notes (history):` on a
+- [x] `bun run beep history notes --check` passes on `main` and against origin's ref.
+- [x] `git log` in a freshly bootstrapped worktree shows `Notes (history):` on a
       mapped commit with no manual config.
-- [ ] The post-merge workflow published `refs/notes/history` to origin.
-- [ ] `$HOME/YeeBois/projects/beep-effect-cutover` is archived under
+- [x] The post-merge workflow published `refs/notes/history` to origin.
+- [x] `$HOME/YeeBois/projects/beep-effect-cutover` is archived under
       `$HOME/.local/state/beep/archive/beep-effect-cutover/` and removed;
       `goals/legacy-drain` is told its archive line is done.
-- [ ] Docs explain the overlay and the `--filter=blob:none` clone recipe.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Docs explain the overlay and the `--filter=blob:none` clone recipe.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

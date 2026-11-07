@@ -74,4 +74,12 @@ Lane `git-history-rewrite` · PR #2785
 
 Reverse: Delete .github/workflows/history-notes-publish.yml and restore the folder from the archive
 
+### Post-merge publication proven; #2858 re-finals the closeout, 2026-11-07
+
+History Notes Publish run 42339731476 on 12ba0fe044 published refs/notes/history at b40fd076d8 (identical to the pre-merge scratch write). sync plus check with require-published: 940 of 940 notes match. #2785 merged before its until-ready monitor recorded merge-ready, so completion refresh reported unsatisfied; #2858 fixes the 14 semantic-delta findings #2785 put on main (lane names rendered as docs/ paths, a bare upstream man-page path) and is the goal's final PR.
+
+Lane `git-history-rewrite` · PR #2858
+
+Reverse: Revert #2858; the overlay ref stays published and can be deleted with git push origin :refs/notes/history
+
 <!-- beep:decisions:end -->
