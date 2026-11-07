@@ -959,6 +959,7 @@
       "name": "@beep/documents-domain",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/domain": "catalog:",
         "@beep/identity": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
@@ -1027,6 +1028,7 @@
       "name": "@beep/documents-use-cases",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/domain": "catalog:",
         "@beep/documents-domain": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
@@ -1034,6 +1036,8 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/alchemy-postgres": "workspace:^",
+        "@beep/pglite": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",

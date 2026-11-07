@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as S from "effect/Schema";
@@ -12,7 +18,7 @@ import { SyncDestination } from "./SyncDestination.aggregate.ts";
  * import { OpenConflicts } from "@beep/documents-domain/aggregates/VaultSync";
  * void OpenConflicts.definition;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export class OpenConflicts extends Domain.View("OpenConflicts", {
@@ -20,7 +26,7 @@ export class OpenConflicts extends Domain.View("OpenConflicts", {
   key: SyncDestination,
   state: S.HashMap(S.String, ConflictRecord),
   initial: H.empty(),
-  keyOf: { SyncConflict: ({ source }) => SyncDestination.ref(source.id) },
+  keyOf: { SyncConflict: ({ event }) => SyncDestination.ref(event.record.destinationId) },
   evolve: {
     ConflictRecorded: (s, e) => H.set(s, e.record.remoteEventId, e.record),
     ConflictReviewed: (s, e) => H.remove(s, e.record.remoteEventId),

@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
 import * as DateTime from "effect/DateTime";
 import * as Struct from "effect/Struct";
@@ -21,7 +27,7 @@ const retarget = (s: C.OperationState, c: C.OperationInput) =>
  * import { SyncOperation } from "@beep/documents-domain/aggregates/VaultSync";
  * void SyncOperation;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export class SyncOperation extends Domain.Aggregate("SyncOperation", {
@@ -40,14 +46,16 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
     C.ReviveOperation,
   ],
   decide: {
-    QueueOperation: (s, c) =>
-      s === null
-        ? [C.OperationQueued.make(Struct.omit(c, ["_tag"]))]
-        : retarget(s, c.input)
-          ? c.input.generation <= s.input.generation
-            ? []
-            : [C.OperationRetargeted.make(Struct.omit(c, ["_tag"]))]
-          : refused("not-retargetable"),
+    QueueOperation: (s, c, { id }) =>
+      c.input.idempotencyKey !== id
+        ? refused("operation-key")
+        : s === null
+          ? [C.OperationQueued.make(Struct.omit(c, ["_tag"]))]
+          : retarget(s, c.input)
+            ? c.input.generation <= s.input.generation
+              ? []
+              : [C.OperationRetargeted.make(Struct.omit(c, ["_tag"]))]
+            : refused("not-retargetable"),
     SquashOperation: (s, c) =>
       retarget(s, c.input) ? [C.OperationSquashed.make(Struct.omit(c, ["_tag"]))] : refused("not-retargetable"),
     LeaseOperation: (s, c, { now }) => {
@@ -60,31 +68,31 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
         C.OperationLeased.make({
           holder: c.holder,
           expiresAt: DateTime.toEpochMillis(now) + c.leaseMillis,
-          attempt: s.attempts + 1,
+          attempt: s.leaseEpoch + 1,
         }),
       ];
     },
     ExpireLease: (s, c, { now }) =>
-      s !== null && s.status === "leased" && s.attempts === c.attempt && DateTime.toEpochMillis(now) >= s.expiresAt
+      s !== null && s.status === "leased" && s.leaseEpoch === c.attempt && DateTime.toEpochMillis(now) >= s.expiresAt
         ? [C.OperationLeaseExpired.make(Struct.omit(c, ["_tag"]))]
         : [],
     CompleteOperation: (s, c) =>
-      s !== null && s.status === "leased" && s.holder === c.holder && s.attempts === c.attempt
+      s !== null && s.status === "leased" && s.holder === c.holder && s.leaseEpoch === c.attempt
         ? [C.OperationSucceeded.make(Struct.omit(c, ["_tag"]))]
         : refused("stale-lease"),
     FailOperation: (s, c, { now }) =>
-      s === null || s.status !== "leased" || s.holder !== c.holder || s.attempts !== c.attempt
+      s === null || s.status !== "leased" || s.holder !== c.holder || s.leaseEpoch !== c.attempt
         ? refused("stale-lease")
         : !c.retryable || s.attempts >= c.maxAttempts
           ? [C.OperationFailed.make({ reason: c.reason })]
           : [
               C.OperationRetryScheduled.make({
                 retryAt: DateTime.toEpochMillis(now) + c.backoffMillis,
-                attempt: s.attempts,
+                attempt: s.leaseEpoch,
               }),
             ],
     RetryOperation: (s, c, { now }) =>
-      s !== null && s.status === "retrying" && s.attempts === c.attempt && DateTime.toEpochMillis(now) >= s.retryAt
+      s !== null && s.status === "retrying" && s.leaseEpoch === c.attempt && DateTime.toEpochMillis(now) >= s.retryAt
         ? [C.OperationRequeued.make({})]
         : [],
     SupersedeOperation: (s, c) =>
@@ -98,6 +106,7 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
       input: e.input,
       status: "queued",
       attempts: 0,
+      leaseEpoch: 0,
       holder: null,
       expiresAt: 0,
       retryAt: 0,
@@ -105,14 +114,23 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
     OperationRetargeted: (s, e): C.OperationState => (s === null ? s : { ...s, input: e.input }),
     OperationSquashed: (s, e): C.OperationState => (s === null ? s : { ...s, input: e.input }),
     OperationLeased: (s, e): C.OperationState =>
-      s === null ? s : { ...s, status: "leased", holder: e.holder, expiresAt: e.expiresAt, attempts: e.attempt },
+      s === null
+        ? s
+        : {
+            ...s,
+            status: "leased",
+            holder: e.holder,
+            expiresAt: e.expiresAt,
+            attempts: s.attempts + 1,
+            leaseEpoch: e.attempt,
+          },
     OperationLeaseExpired: (s): C.OperationState => (s === null ? s : { ...s, status: "queued", holder: null }),
     OperationSucceeded: (s): C.OperationState => (s === null ? s : { ...s, status: "succeeded", holder: null }),
     OperationRetryScheduled: (s, e): C.OperationState =>
       s === null ? s : { ...s, status: "retrying", holder: null, retryAt: e.retryAt },
     OperationFailed: (s): C.OperationState => (s === null ? s : { ...s, status: "failed", holder: null }),
     OperationSuperseded: (s): C.OperationState => (s === null ? s : { ...s, status: "superseded", holder: null }),
-    OperationRevived: (s): C.OperationState => (s === null ? s : { ...s, status: "queued" }),
+    OperationRevived: (s): C.OperationState => (s === null ? s : { ...s, status: "queued", attempts: 0 }),
     OperationRequeued: (s): C.OperationState => (s === null ? s : { ...s, status: "queued" }),
   },
 }) {}

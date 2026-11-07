@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
 import { SyncOperation } from "./SyncOperation.aggregate.ts";
 import { OperationState } from "./SyncOperation.command.ts";
@@ -9,7 +15,7 @@ import { OperationState } from "./SyncOperation.command.ts";
  * import { SyncOperationSnapshot } from "@beep/documents-domain/aggregates/VaultSync";
  * void SyncOperationSnapshot.definition;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export class SyncOperationSnapshot extends Domain.View("SyncOperationSnapshot", {

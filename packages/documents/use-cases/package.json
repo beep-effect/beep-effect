@@ -69,6 +69,7 @@
     }
   },
   "dependencies": {
+    "@alchemy.run/domain": "catalog:",
     "@beep/documents-domain": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
@@ -76,6 +77,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/alchemy-postgres": "workspace:^",
+    "@beep/pglite": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",

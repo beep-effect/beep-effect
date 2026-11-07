@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as S from "effect/Schema";
@@ -17,7 +23,7 @@ import * as V from "./Values.ts";
  * import { VaultSyncStatus } from "@beep/documents-domain/aggregates/VaultSync";
  * void VaultSyncStatus.definition;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export class VaultSyncStatus extends Domain.View("VaultSyncStatus", {

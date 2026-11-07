@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as O from "effect/Option";
@@ -15,7 +21,7 @@ const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "dest
  * import { SyncDestination } from "@beep/documents-domain/aggregates/VaultSync";
  * void SyncDestination;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export class SyncDestination extends Domain.Aggregate("SyncDestination", {

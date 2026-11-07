@@ -1,5 +1,10 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
-import * as H from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as C from "./SyncConflict.command.ts";
@@ -13,26 +18,28 @@ import * as V from "./Values.ts";
  * import { SyncConflict } from "@beep/documents-domain/aggregates/VaultSync";
  * void SyncConflict;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export class SyncConflict extends Domain.Aggregate("SyncConflict", {
-  id: V.DestinationId,
-  state: S.HashMap(S.String, C.ConflictRecord),
-  initial: H.empty(),
-  commands: [C.RecordConflict, C.ReviewConflict, C.ConfirmConflictReview],
+  id: V.ConflictId,
+  state: S.NullOr(C.ConflictRecord),
+  initial: null,
+  commands: [C.ConfirmConflict, C.ReviewConflict, C.ConfirmConflictReview],
   decide: {
-    RecordConflict: (s, c, { id }) =>
-      c.record.destinationId !== id
-        ? SyncRuleViolation.make({ rule: "conflict-scope", evidence: id })
-        : H.has(s, c.record.remoteEventId)
-          ? []
-          : [C.ConflictRecorded.make({ record: { ...c.record, reviewed: false } })],
+    ConfirmConflict: (s, c, { id }) =>
+      id !== c.record.publicId
+        ? SyncRuleViolation.make({ rule: "conflict-id", evidence: id })
+        : s === null
+          ? [C.ConflictRecorded.make({ record: { ...c.record, reviewed: false } })]
+          : [],
     ReviewConflict: (s, c) =>
-      O.match(H.get(s, c.remoteEventId), {
+      O.match(O.fromNullOr(s), {
         onNone: () => SyncRuleViolation.make({ rule: "conflict-not-found", evidence: c.remoteEventId }),
         onSome: (record) =>
-          record.workspaceId !== c.workspaceId
+          record.workspaceId !== c.workspaceId ||
+          record.destinationId !== c.destinationId ||
+          record.remoteEventId !== c.remoteEventId
             ? SyncRuleViolation.make({ rule: "conflict-not-found", evidence: c.remoteEventId })
             : record.reviewed
               ? []
@@ -40,13 +47,21 @@ export class SyncConflict extends Domain.Aggregate("SyncConflict", {
                   (c.correction.input.destinationId !== record.destinationId ||
                     c.correction.input.itemId !== record.itemId)
                 ? SyncRuleViolation.make({ rule: "correction-scope", evidence: c.remoteEventId })
-                : [C.ConflictReviewRequested.make({ record, correction: c.correction })],
+                : [
+                    C.ConflictReviewRequested.make({
+                      record,
+                      correction: c.correction,
+                      healOperationId: c.healOperationId,
+                    }),
+                  ],
       }),
     ConfirmConflictReview: (s, c) =>
-      O.match(H.get(s, c.remoteEventId), {
+      O.match(O.fromNullOr(s), {
         onNone: () => SyncRuleViolation.make({ rule: "conflict-not-found", evidence: c.remoteEventId }),
         onSome: (record) =>
-          record.workspaceId !== c.workspaceId
+          record.workspaceId !== c.workspaceId ||
+          record.destinationId !== c.destinationId ||
+          record.remoteEventId !== c.remoteEventId
             ? SyncRuleViolation.make({ rule: "conflict-not-found", evidence: c.remoteEventId })
             : record.reviewed
               ? []
@@ -55,7 +70,7 @@ export class SyncConflict extends Domain.Aggregate("SyncConflict", {
   },
   evolve: {
     ConflictReviewRequested: (s) => s,
-    ConflictRecorded: (s, e) => H.set(s, e.record.remoteEventId, e.record),
-    ConflictReviewed: (s, e) => H.set(s, e.record.remoteEventId, e.record),
+    ConflictRecorded: (_s, e) => e.record,
+    ConflictReviewed: (_s, e) => e.record,
   },
 }) {}

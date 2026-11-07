@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as O from "effect/Option";
@@ -25,7 +31,7 @@ const observed = (s: C.ItemState, e: { readonly observation: C.ItemObservation }
  * import { SyncItem } from "@beep/documents-domain/aggregates/VaultSync";
  * void SyncItem;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export class SyncItem extends Domain.Aggregate("SyncItem", {
@@ -57,16 +63,38 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
     MarkItemPushFailed: (s, c) =>
       s === null ? refused("not-tracked") : [C.ItemPushFailed.make(Struct.omit(c, ["_tag"]))],
     FlagItemDrift: (s) => (s === null ? refused("not-tracked") : [C.ItemDriftFlagged.make({})]),
-    ReturnItemToPending: (s) => (s === null ? refused("not-tracked") : [C.ItemReturnedToPending.make({})]),
+    ReturnItemToPending: (s, c) =>
+      s === null
+        ? refused("not-tracked")
+        : [
+            C.ItemReturnedToPending.make({
+              previousSlots: s.slots,
+              observation: {
+                ...s.observation,
+                operationId: c.operationId,
+                generation: s.observation.generation + 1,
+                type:
+                  s.observation.kind === "folder"
+                    ? "ensureFolder"
+                    : s.remoteId === null
+                      ? "uploadFile"
+                      : "uploadFileVersion",
+              },
+            }),
+          ],
   },
   evolve: {
     ItemTracked: observed,
     ItemEdited: observed,
     ItemMoved: observed,
     ItemKindReplaced: observed,
-    ItemPushed: (s, e): C.ItemState => (s === null ? s : { ...s, remoteId: e.remoteId, status: "synced" }),
+    ItemPushed: (s, e): C.ItemState =>
+      s === null ? s : { ...s, remoteId: e.remoteId, status: "synced", slots: H.empty() },
     ItemPushFailed: (s, e): C.ItemState => (s === null ? s : { ...s, status: e.terminal ? "error" : "pending" }),
     ItemDriftFlagged: (s): C.ItemState => (s === null ? s : { ...s, status: "drifted" }),
-    ItemReturnedToPending: (s): C.ItemState => (s === null ? s : { ...s, status: "pending" }),
+    ItemReturnedToPending: (s, e): C.ItemState => {
+      const next = observed(s, e);
+      return next === null ? next : { ...next, slots: H.make([e.observation.type, e.observation.operationId]) };
+    },
   },
 }) {}

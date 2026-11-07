@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $DocumentsDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
@@ -6,6 +12,7 @@ import * as S from "effect/Schema";
 
 export { RemoteItemId, SyncItemKind, VaultRelPath } from "../../values/Sync/Sync.values.ts";
 
+const utf8 = new TextEncoder();
 const $I = $DocumentsDomainId.create("aggregates/VaultSync/Values");
 /**
  * ItemId vault sync contract.
@@ -15,11 +22,16 @@ const $I = $DocumentsDomainId.create("aggregates/VaultSync/Values");
  * import { ItemId } from "@beep/documents-domain/aggregates/VaultSync";
  * void ItemId;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const ItemId = PublicEntityId.factory(SyncItemId);
-/** Runtime value accepted by {@link ItemId}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link ItemId}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type ItemId = typeof ItemId.Type;
 /**
  * OperationId vault sync contract.
@@ -29,11 +41,16 @@ export type ItemId = typeof ItemId.Type;
  * import { OperationId } from "@beep/documents-domain/aggregates/VaultSync";
  * void OperationId;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const OperationId = PublicEntityId.factory(SyncOperationId);
-/** Runtime value accepted by {@link OperationId}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link OperationId}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type OperationId = typeof OperationId.Type;
 /**
  * ConflictId vault sync contract.
@@ -43,11 +60,16 @@ export type OperationId = typeof OperationId.Type;
  * import { ConflictId } from "@beep/documents-domain/aggregates/VaultSync";
  * void ConflictId;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const ConflictId = PublicEntityId.factory(SyncConflictId);
-/** Runtime value accepted by {@link ConflictId}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link ConflictId}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type ConflictId = typeof ConflictId.Type;
 /**
  * DestinationId vault sync contract.
@@ -57,14 +79,19 @@ export type ConflictId = typeof ConflictId.Type;
  * import { DestinationId } from "@beep/documents-domain/aggregates/VaultSync";
  * void DestinationId;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const DestinationId = S.NonEmptyString.pipe(
   S.brand("SyncDestinationId"),
   $I.annoteSchema("DestinationId", { description: "Stable vault sync destination identity." })
 );
-/** Runtime value accepted by {@link DestinationId}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link DestinationId}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type DestinationId = typeof DestinationId.Type;
 /**
  * ReservationKey vault sync contract.
@@ -74,14 +101,19 @@ export type DestinationId = typeof DestinationId.Type;
  * import { ReservationKey } from "@beep/documents-domain/aggregates/VaultSync";
  * void ReservationKey;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const ReservationKey = S.NonEmptyString.pipe(
   S.brand("DestinationNameReservationKey"),
   $I.annoteSchema("ReservationKey", { description: "Org-qualified normalized destination name." })
 );
-/** Runtime value accepted by {@link ReservationKey}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link ReservationKey}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type ReservationKey = typeof ReservationKey.Type;
 /**
  * OrgKey vault sync contract.
@@ -91,14 +123,19 @@ export type ReservationKey = typeof ReservationKey.Type;
  * import { OrgKey } from "@beep/documents-domain/aggregates/VaultSync";
  * void OrgKey;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const OrgKey = S.NonEmptyString.pipe(
   S.brand("VaultSyncOrgKey"),
   $I.annoteSchema("OrgKey", { description: "Organization view key." })
 );
-/** Runtime value accepted by {@link OrgKey}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link OrgKey}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type OrgKey = typeof OrgKey.Type;
 /**
  * OperationType vault sync contract.
@@ -108,7 +145,7 @@ export type OrgKey = typeof OrgKey.Type;
  * import { OperationType } from "@beep/documents-domain/aggregates/VaultSync";
  * void OperationType;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const OperationType = LiteralKit([
@@ -120,7 +157,12 @@ export const OperationType = LiteralKit([
 ]).pipe(
   $I.annoteSchema("OperationType", { description: "One-way mirror operations; deletion is deliberately absent." })
 );
-/** Runtime value accepted by {@link OperationType}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link OperationType}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type OperationType = typeof OperationType.Type;
 /**
  * OperationStatus vault sync contract.
@@ -130,13 +172,18 @@ export type OperationType = typeof OperationType.Type;
  * import { OperationStatus } from "@beep/documents-domain/aggregates/VaultSync";
  * void OperationStatus;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const OperationStatus = LiteralKit(["queued", "leased", "retrying", "succeeded", "failed", "superseded"]).pipe(
   $I.annoteSchema("OperationStatus", { description: "Distinct terminal failure and supersession." })
 );
-/** Runtime value accepted by {@link OperationStatus}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link OperationStatus}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type OperationStatus = typeof OperationStatus.Type;
 /**
  * ItemStatus vault sync contract.
@@ -146,11 +193,44 @@ export type OperationStatus = typeof OperationStatus.Type;
  * import { ItemStatus } from "@beep/documents-domain/aggregates/VaultSync";
  * void ItemStatus;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export const ItemStatus = LiteralKit(["pending", "synced", "drifted", "error"]).pipe(
   $I.annoteSchema("ItemStatus", { description: "Local mirror progress." })
 );
-/** Runtime value accepted by {@link ItemStatus}. @category vault-sync @since 0.0.0 */
+/**
+ * Runtime value accepted by {@link ItemStatus}.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
 export type ItemStatus = typeof ItemStatus.Type;
+/**
+ * Remote evidence limited to 8 KiB of UTF-8, including multibyte characters.
+ *
+ * **Example** (Validate bounded evidence)
+ * ```ts
+ * import {RemoteEvidence} from "@beep/documents-domain/aggregates/VaultSync";
+ * import * as S from "effect/Schema";
+ * const valid=S.is(RemoteEvidence)("remote rename");
+ * void valid;
+ * ```
+ * @category aggregates
+ * @since 0.0.0
+ */
+export const RemoteEvidence = S.String.check(
+  S.makeFilter((value) => utf8.encode(value).byteLength <= 8192, {
+    identifier: "RemoteEvidenceBytes",
+    title: "Bounded remote evidence",
+    description: "At most 8192 UTF-8 bytes.",
+    message: "Remote evidence exceeds 8 KiB.",
+  })
+).pipe($I.annoteSchema("RemoteEvidence", { description: "Bounded remote evidence snapshot." }));
+/**
+ * Remote evidence value.
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export type RemoteEvidence = typeof RemoteEvidence.Type;

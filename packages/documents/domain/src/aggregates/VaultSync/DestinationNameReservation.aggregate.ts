@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -13,7 +19,7 @@ import * as V from "./Values.ts";
  * import { DestinationNameReservation } from "@beep/documents-domain/aggregates/VaultSync";
  * void DestinationNameReservation;
  * ```
- * @category vault-sync
+ * @category aggregates
  * @since 0.0.0
  */
 export class DestinationNameReservation extends Domain.Aggregate("DestinationNameReservation", {

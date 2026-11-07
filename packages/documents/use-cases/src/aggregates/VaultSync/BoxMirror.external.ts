@@ -1,3 +1,9 @@
+/**
+ * Vault sync declarations for the event-sourced documents slice.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@alchemy.run/domain";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
@@ -13,7 +19,7 @@ const $I = $DocumentsUseCasesId.create("aggregates/VaultSync/BoxMirror.external"
  * import { DisconnectReason } from "@beep/documents-use-cases/aggregates/VaultSync";
  * void DisconnectReason;
  * ```
- * @category vault-sync
+ * @category use-cases
  * @since 0.0.0
  */
 export const DisconnectReason = LiteralKit(["credentials-missing", "auth-failed", "probe-failed", "unavailable"]).pipe(
@@ -27,12 +33,13 @@ export const DisconnectReason = LiteralKit(["credentials-missing", "auth-failed"
  * import { BoxMirrorUnavailable } from "@beep/documents-use-cases/aggregates/VaultSync";
  * void BoxMirrorUnavailable;
  * ```
- * @category vault-sync
+ * @category use-cases
  * @since 0.0.0
  */
 export class BoxMirrorUnavailable extends S.TaggedError<BoxMirrorUnavailable, { readonly brand: unique symbol }>()(
   "BoxMirrorUnavailable",
-  { retryable: S.Boolean, disconnectReason: S.NullOr(DisconnectReason), operation: S.String }
+  { retryable: S.Boolean, disconnectReason: S.NullOr(DisconnectReason), operation: S.String },
+  $I.annote("BoxMirrorUnavailable", { description: "A declared Box boundary failure." })
 ) {}
 const destination = { destinationId: V.DestinationId };
 const remote = { remoteId: V.RemoteItemId };
@@ -46,7 +53,7 @@ const error = BoxMirrorUnavailable;
  * import { BoxMirror } from "@beep/documents-use-cases/aggregates/VaultSync";
  * void BoxMirror;
  * ```
- * @category vault-sync
+ * @category use-cases
  * @since 0.0.0
  */
 export class BoxMirror extends Domain.ExternalSystem("BoxMirror", {
@@ -73,7 +80,7 @@ export class BoxMirror extends Domain.ExternalSystem("BoxMirror", {
           remoteEventId: S.String,
           remoteId: V.RemoteItemId,
           kind: S.String,
-          evidence: S.String.check(S.isMaxLength(8192)),
+          evidence: V.RemoteEvidence,
         })
       ),
     },
