@@ -26,7 +26,10 @@ const $I = $RepoCliId.create("commands/Worktree/internal/FleetRoots.schemas");
  * **Details**
  *
  * Discovery reads exactly one directory level under `path`, never recurses and
- * never follows symlinks. A child counts only when its origin matches the
+ * never follows symlinks. `path` must be absolute: a relative entry (for
+ * example an unexpanded `~/projects` in a timer unit's environment) is
+ * refused at decode instead of resolving against the process cwd and silently
+ * shrinking the fleet. A child counts only when its origin matches the
  * invoking repository. `namePrefix`, when present, also filters children by
  * name: the legacy projects directory uses `beep-effect` so unrelated projects
  * next to the clones are never probed.
@@ -45,7 +48,9 @@ const $I = $RepoCliId.create("commands/Worktree/internal/FleetRoots.schemas");
  */
 export class FleetRootEntry extends S.Opaque<FleetRootEntry, { readonly brand: unique symbol }>()(
   S.Struct({
-    path: S.String,
+    path: S.String.check(
+      S.isPattern(/^\//u, { description: "An absolute path; a relative root would resolve against the cwd." })
+    ),
     namePrefix: S.optionalKey(S.String),
   }).pipe(
     $I.annoteSchema("FleetRootEntry", {

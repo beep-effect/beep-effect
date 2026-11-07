@@ -25,6 +25,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { resolveWorkstationStateDir } from "../../../internal/state/WorkstationState.ts";
+import { canonicalRepositoryIdentity } from "../../Yeet/internal/ArtifactPaths.ts";
 import { PrRepository } from "../../Yeet/internal/Provenance.ts";
 import { WorktreeCommandError } from "../Worktree.errors.ts";
 import { ConfiguredFleetRoots, FleetRootEntry, FleetRootsDocument } from "./FleetRoots.schemas.ts";
@@ -48,14 +49,14 @@ export const FLEET_ROOTS_ENV = "BEEP_FLEET_ROOTS";
 export const FLEET_STATE_ROOT_ENV = "BEEP_FLEET_STATE_ROOT";
 
 // `/p/beep-effect*` is the root `/p` with prefix `beep-effect`; any other entry is an unfiltered root.
-const parseRootEntry = (entry: string): FleetRootEntry =>
+// Entries stay in encoded form: `readConfiguredFleetRoots` decodes them, which refuses a relative path.
+const parseRootEntry = (entry: string): typeof FleetRootEntry.Encoded =>
   pipe(
     Str.lastIndexOf("/")(entry),
     O.filter((slash) => slash > 0 && Str.endsWith("*")(entry)),
     O.match({
-      onNone: () => FleetRootEntry.make({ path: entry }),
-      onSome: (slash) =>
-        FleetRootEntry.make({ path: Str.slice(0, slash)(entry), namePrefix: Str.slice(slash + 1, -1)(entry) }),
+      onNone: () => ({ path: entry }),
+      onSome: (slash) => ({ path: Str.slice(0, slash)(entry), namePrefix: Str.slice(slash + 1, -1)(entry) }),
     })
   );
 
@@ -81,11 +82,13 @@ const parseRootEntry = (entry: string): FleetRootEntry =>
  * ```
  *
  * @param value - Raw `BEEP_FLEET_ROOTS` value.
- * @returns The parsed roots, or `O.none()` when the list holds no entry.
+ * @returns The parsed, not yet validated roots, or `O.none()` when the list holds no entry.
  * @category parsing
  * @since 0.0.0
  */
-export const parseFleetRootsPathList = (value: string): O.Option<A.NonEmptyReadonlyArray<FleetRootEntry>> => {
+export const parseFleetRootsPathList = (
+  value: string
+): O.Option<A.NonEmptyReadonlyArray<typeof FleetRootEntry.Encoded>> => {
   const entries = pipe(Str.split(value, ":"), A.map(Str.trim), A.filter(Str.isNonEmpty), A.map(parseRootEntry));
   return A.isReadonlyArrayNonEmpty(entries) ? O.some(entries) : O.none();
 };
@@ -137,6 +140,7 @@ export const fleetStateDirectory = Effect.fn("FleetRoots.stateDirectory")(functi
 });
 
 const decodeRootsDocument = S.decodeUnknownEffect(S.fromJsonString(FleetRootsDocument));
+const decodeRootEntries = S.decodeUnknownEffect(S.NonEmptyArray(FleetRootEntry));
 
 /**
  * Read a fleet state file; a missing file is `O.none()`, any other failure is typed.
@@ -214,7 +218,10 @@ export const readConfiguredFleetRoots = Effect.fn("FleetRoots.readConfigured")(f
   );
   const envRoots = O.flatMap(fromEnv, parseFleetRootsPathList);
   if (O.isSome(envRoots)) {
-    return O.some(ConfiguredFleetRoots.make({ source: "env", roots: envRoots.value }));
+    const roots = yield* decodeRootEntries(envRoots.value).pipe(
+      Effect.mapError(WorktreeCommandError.new(`${FLEET_ROOTS_ENV} must list absolute directories.`))
+    );
+    return O.some(ConfiguredFleetRoots.make({ source: "env", roots }));
   }
   return O.isSome(repository) ? yield* readRootsFile(repository.value) : O.none();
 });
@@ -277,6 +284,55 @@ export const fleetRepositoryFromOriginUrl = (url: string): O.Option<PrRepository
       decodeRepository({ host: "github.com", owner: Str.toLowerCase(owner), name: Str.toLowerCase(name) })
     )
   );
+
+/**
+ * Canonicalize an origin URL for fleet membership: SCP and URL spellings of
+ * one remote compare equal, and a local path keeps only its trailing slash and
+ * `.git` stripped.
+ *
+ * **Example** (Two spellings, one origin)
+ *
+ * ```ts
+ * import { canonicalFleetOrigin } from "@beep/repo-cli/test/Worktree"
+ *
+ * console.log(canonicalFleetOrigin("git@github.com:o/r.git") === canonicalFleetOrigin("https://github.com/o/r"))
+ * // true
+ * ```
+ *
+ * @param url - A remote URL, SCP-style remote, or local path.
+ * @returns The comparison key for fleet origin matching.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const canonicalFleetOrigin = (url: string): string => {
+  const trimmed = canonicalRepositoryIdentity(url);
+  const withoutSlash = Str.endsWith("/")(trimmed) ? Str.slice(0, -1)(trimmed) : trimmed;
+  return Str.endsWith(".git")(withoutSlash) ? Str.slice(0, -4)(withoutSlash) : withoutSlash;
+};
+
+/**
+ * Read a clone's canonical origin from its `.git/config` without spawning git.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { readCloneFleetOrigin } from "@beep/repo-cli/test/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readCloneFleetOrigin("/p/beep-effect"))) // true
+ * ```
+ *
+ * @param clone - The clone root (the directory holding `.git/`).
+ * @returns The canonical origin, or `O.none()` when the config or its origin is unreadable.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readCloneFleetOrigin = Effect.fn("FleetRoots.readCloneOrigin")(function* (clone: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const config = yield* fs.readFileString(path.join(clone, ".git", "config")).pipe(Effect.option);
+  return pipe(config, O.flatMap(originUrlFromGitConfig), O.map(canonicalFleetOrigin));
+});
 
 /**
  * Resolve a clone's fleet repository identity from its `.git/config`.

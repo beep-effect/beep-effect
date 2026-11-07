@@ -42,10 +42,9 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { parseAdmissionProcStatStartTime } from "../../internal/repo-run/index.ts";
-import { canonicalRepositoryIdentity } from "../Yeet/internal/ArtifactPaths.ts";
 import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
 import { ConfiguredFleetRoots, FleetRootEntry } from "./internal/FleetRoots.schemas.ts";
-import { FleetRootsStore, FleetRootsStoreLive } from "./internal/FleetRoots.ts";
+import { canonicalFleetOrigin, FleetRootsStore, FleetRootsStoreLive } from "./internal/FleetRoots.ts";
 import { selectFleetScannerDir } from "./internal/FleetScannerDir.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import {
@@ -417,11 +416,7 @@ type ScannerContext = {
 
 // SCP and URL spellings of one remote compare equal (`git@host:o/r.git` vs `https://host/o/r`);
 // a local path falls through the canonicalizer unchanged and keeps the slash and `.git` strip.
-const normalizeOriginUrl = (url: string): string => {
-  const trimmed = canonicalRepositoryIdentity(url);
-  const withoutSlash = Str.endsWith("/")(trimmed) ? Str.slice(0, -1)(trimmed) : trimmed;
-  return Str.endsWith(".git")(withoutSlash) ? Str.slice(0, -4)(withoutSlash) : withoutSlash;
-};
+const normalizeOriginUrl: (url: string) => string = canonicalFleetOrigin;
 
 const platformErrorTag = (error: PlatformError.PlatformError): string => error.reason._tag;
 

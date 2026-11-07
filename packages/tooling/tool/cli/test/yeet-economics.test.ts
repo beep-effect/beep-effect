@@ -1067,6 +1067,20 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics scope", (layerIt
       yield* writeJournal(checkout("other-repo"), "run-other", green53);
       yield* writeJournal(checkout("beep/seats/main"), "run-seat", green53);
       yield* writeJournal(checkout("beep/lanes/x"), "run-lane", green53);
+      // A foreign repository under an unfiltered root is skipped by origin, as the fleet mirror skips it.
+      yield* writeJournal(checkout("beep/seats/other"), "run-foreign", green53);
+      const writeOrigin = (relative: string, url: string) =>
+        Effect.gen(function* () {
+          yield* fs.makeDirectory(path.join(checkout(relative), ".git"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(checkout(relative), ".git", "config"),
+            `[core]\n\tbare = false\n[remote "origin"]\n\turl = ${url}\n`
+          );
+        });
+      for (const relative of ["beep-effect7", "beep/seats/main", "beep/lanes/x"]) {
+        yield* writeOrigin(relative, "git@github.com:beep-effect/beep-effect.git");
+      }
+      yield* writeOrigin("beep/seats/other", "git@github.com:acme/other.git");
       const roots = A.join([`${projects}/beep-effect*`, checkout("beep/seats"), checkout("beep/lanes")], ":");
 
       const configured = yield* readScope(checkout("beep-effect7"), { fleet: true }).pipe(

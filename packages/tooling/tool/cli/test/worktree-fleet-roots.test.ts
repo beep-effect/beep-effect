@@ -300,6 +300,12 @@ describe("fleet discovery roots", () => {
           .pipe(withEnv({ BEEP_FLEET_STATE_ROOT: stateRoot, BEEP_FLEET_ROOTS: envList }));
         expect(envCheckouts).toEqual(allFleetCheckouts(fixture));
 
+        // An unexpanded `~` (or any relative entry) would resolve against the cwd and shrink the fleet silently.
+        const relative = yield* service
+          .roots(options)
+          .pipe(withEnv({ BEEP_FLEET_STATE_ROOT: stateRoot, BEEP_FLEET_ROOTS: "~/projects/beep/seats" }), Effect.flip);
+        expect(relative.message).toContain("absolute");
+
         yield* fs.writeFileString(path.join(stateDir, "roots.json"), '{"schemaVersion":"fleet-roots/v1","roots":[]}\n');
         const refused = yield* service.roots(options).pipe(withEnv({ BEEP_FLEET_STATE_ROOT: stateRoot }), Effect.flip);
         expect(refused.message).toContain("fleet roots document");

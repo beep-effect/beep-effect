@@ -47,11 +47,15 @@ projects directory:
 }
 ```
 
-With a configured list, a root that does not exist yet contributes nothing
+Every root must be an absolute path. A relative entry, such as an unexpanded
+`~/projects` in a timer unit's environment file, is refused instead of
+resolving against the working directory. With a configured list, a root that does not exist yet contributes nothing
 instead of failing. A linked worktree directly under a root (a `beep/lanes`
 lane) brings in the clone that owns its `.git`. `roots.json` that does not
 decode makes `worktree fleet` fail, and makes `yeet economics --fleet` warn and
-fall back to the derived root.
+fall back to the derived root. Economics reads each candidate's origin from its
+clone's `.git/config` and admits only checkouts that share the invoking
+clone's origin, the same membership rule the mirror applies.
 
 Check what a scan will read:
 

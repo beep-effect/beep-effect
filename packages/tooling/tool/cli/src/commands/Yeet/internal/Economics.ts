@@ -43,7 +43,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
-import { readCloneFleetRepository, readConfiguredFleetRoots } from "../../Worktree/internal/FleetRoots.ts";
+import {
+  readCloneFleetOrigin,
+  readCloneFleetRepository,
+  readConfiguredFleetRoots,
+} from "../../Worktree/internal/FleetRoots.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "../../Worktree/Worktree.constants.ts";
 import {
   EconomicsAttempt,
@@ -719,16 +723,22 @@ const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, proj
       )
     )
   );
-  return yield* O.match(configured, {
-    onNone: () => fleetCandidates(projectsRoot),
-    onSome: ({ roots }) =>
-      Effect.map(
-        Effect.forEach(roots, (root) =>
-          fleetCandidates(root.path, root.namePrefix === undefined ? constTrue : Str.startsWith(root.namePrefix))
-        ),
-        A.flatten
-      ),
-  });
+  if (O.isNone(configured)) {
+    return yield* fleetCandidates(projectsRoot);
+  }
+  const nested = yield* Effect.forEach(configured.value.roots, (root) =>
+    fleetCandidates(root.path, root.namePrefix === undefined ? constTrue : Str.startsWith(root.namePrefix))
+  );
+  // Configured roots may hold other repositories: admit only candidates whose owning clone shares our origin,
+  // the rule the fleet mirror applies. Without a readable origin of our own, nothing else is admitted.
+  const ownOrigin = yield* readCloneFleetOrigin(O.getOrElse(clone, () => repoRoot));
+  return yield* Effect.filter(A.flatten(nested), (candidate) =>
+    Effect.gen(function* () {
+      const candidateClone = yield* cloneRootOf(candidate);
+      const origin = yield* readCloneFleetOrigin(O.getOrElse(candidateClone, () => candidate));
+      return O.isSome(ownOrigin) && O.contains(origin, ownOrigin.value);
+    })
+  );
 });
 
 // The checkout roots a scope reads: the checkout alone, or with `--fleet`
