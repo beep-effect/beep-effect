@@ -1700,7 +1700,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-public-vocabulary-identities.md",
-          "sha256": "fffdce9c521d259bc929b9a0a6d5268c022435fd06187d289dfbf7e274b490fa"
+          "sha256": "3955817d6ce714f7e7eed8e97571e72fa7ec4fdda5d3a7b7e5e9c93635417693"
         },
         {
           "path": "packages/law-practice/server/test/CitationSemanticVocabulary.fixtures.ts",

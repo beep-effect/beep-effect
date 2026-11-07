@@ -1340,3 +1340,20 @@ PR #2824 hosted coverage measured Cache.pilot.ts functions at 87.30 against the 
 ### Separate Effect execution from assertion construction, 2026-11-07
 
 PR #2824 hosted Check rejected the new observation-absence assertion with TS377171: yield in call argument. Bind the filesystem result before asserting it. The negative control and coverage floor remain unchanged. Prevent this with the existing Effect test-authoring checklist; hosted CI remains authoritative and no local quality suite was run.
+
+## 2026-11-07 — Packet archive removed executable fixture inputs
+
+After merging accepted main containing the first fifty-goal archive, hosted
+Fallow jobs 128271849277 and 128272196751 rejected four unresolved imports from
+three law-practice corpus manifests. Labs job 128272196429 failed five CI Ops
+reading/replay cases because four retained evidence files had moved out of the
+live tree. Both consumer groups were unchanged by the Turbo PRs. Promote the
+seven consumed files to package-owned fixture directories and update their
+consumers, rather than restoring archived packets or suppressing checks. Five
+files retain exact bytes; two KPI render goldens change only the adoption-table
+locator, with measurements and source/digest pins preserved. A scan of literal
+source references across all fifty archived slugs found no other live file-read
+consumer beyond these paths; historical citations remain historical. A
+consumer-edge inventory before archive would have prevented this inherited red.
+No local tests, quality suites, compiler or evidence generator ran. Hosted CI
+will prove the consolidated repair.

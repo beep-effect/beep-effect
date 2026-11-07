@@ -73,7 +73,7 @@
       "!packages/law-practice/server/test/fixtures/claim-element/positive-sampling.json",
       "!packages/law-practice/server/test/fixtures/claim-element/allowed-sampling.json",
       "!packages/law-practice/server/test/fixtures/claim-element/reference-freeze.json",
-      "!apps/labs/ciops/fixtures/retained-evidence/kpi-reading.json",
+      "!apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json",
       // Canonical Python payload bytes are hash-bound and deliberately retain
       // upstream text. ops/check-operations.ts validates this generated corpus.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",

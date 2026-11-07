@@ -29,7 +29,7 @@ const run4FleetPin = "explorations/beep-ci-operational-ontology/ontology/extract
  * ```ts
  * import { kpiOutputPaths } from "@/kpi/Pins"
  *
- * console.log(kpiOutputPaths.readingJson) // "apps/labs/ciops/fixtures/retained-evidence/kpi-reading.json"
+ * console.log(kpiOutputPaths.readingJson) // "apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json"
  * ```
  *
  * @category constants
@@ -40,9 +40,9 @@ export const kpiOutputPaths: {
   readonly readingJson: RepoRelativePath;
   readonly readingMarkdown: RepoRelativePath;
 } = {
-  adoptionTable: "apps/labs/ciops/fixtures/retained-evidence/kpi-adoption-table.json",
-  readingJson: "apps/labs/ciops/fixtures/retained-evidence/kpi-reading.json",
-  readingMarkdown: "apps/labs/ciops/fixtures/retained-evidence/kpi-reading.md",
+  adoptionTable: "apps/labs/ciops/test/fixtures/retained-evidence/kpi-adoption-table.json",
+  readingJson: "apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json",
+  readingMarkdown: "apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.md",
 };
 
 /**

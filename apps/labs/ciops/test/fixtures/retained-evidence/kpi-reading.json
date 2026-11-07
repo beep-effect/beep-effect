@@ -24,7 +24,7 @@
     },
     {
       "role": "adoption-table",
-      "path": "apps/labs/ciops/fixtures/retained-evidence/kpi-adoption-table.json",
+      "path": "apps/labs/ciops/test/fixtures/retained-evidence/kpi-adoption-table.json",
       "sha256": "c61b29d4bae157405336f041d8c071bb14adb7cb0b00cd6ef3486c6f2887e9e4"
     }
   ],

@@ -58,3 +58,15 @@ cd ../../..
 bun run beep quality package-verify @beep/law-practice-server --quick
 bun run beep lint laws --package packages/law-practice/server
 ```
+
+## Main integration
+
+Main commit 121b1a3a23 (PR 2836) independently retains the same executable
+archive consumers. The merge adopts its ciops test/fixtures location and
+retires this branch's duplicate lab fixture directory. All four data artifacts
+are equal after normalizing only that directory path; claim fixtures are
+identical, with their original hashes retained in the shared README.
+The four-file formatter ownership list and generated identity profile follow
+the canonical retained path. After conflict resolution, all 106 lab tests pass
+again in 1.57 seconds; KPI and live evidence checks retain their original
+metrics and verdicts. No citation source expectation or full-goal duty changes.

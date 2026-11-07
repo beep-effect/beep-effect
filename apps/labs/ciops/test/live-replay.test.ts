@@ -97,7 +97,7 @@ const pinnedPathsLiteral = LiveEvidencePaths.make({
   goldenJournal: goldenJournalPath,
   journal: `${pin}/admission/canonical/journal.ndjson`,
   manifest: `${pin}/MANIFEST.yaml`,
-  evidence: "apps/labs/ciops/fixtures/retained-evidence/s7-live-replay-evidence.md",
+  evidence: "apps/labs/ciops/test/fixtures/retained-evidence/s7-live-replay-evidence.md",
 });
 
 const encodeWindow = S.encodeEffect(ReplayWindow);
