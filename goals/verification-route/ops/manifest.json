@@ -23,7 +23,36 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2414,
+        "role": "supporting"
+      },
+      {
+        "number": 2856,
+        "role": "supporting"
+      },
+      {
+        "number": 2879,
+        "role": "supporting"
+      },
+      {
+        "number": 2884,
+        "role": "supporting"
+      },
+      {
+        "number": 2885,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_verification-route-hosted-proof-94fc99dd9ec7/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
