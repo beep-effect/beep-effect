@@ -62,3 +62,70 @@ export class NativeLifecycleMetadata extends S.Opaque<NativeLifecycleMetadata, {
       })
     )
 ) {}
+
+/** Receiver-minted host-local Cowork occurrence; ordinary chat and Code are separate.
+ * **Example** (Inspect the inert API)
+ * ```ts
+ * import { ClaudeCoworkLifecycleMetadata } from "@beep/repo-ai-metrics/native-lifecycle"
+ * console.log(typeof ClaudeCoworkLifecycleMetadata.make)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class ClaudeCoworkLifecycleMetadata extends S.Opaque<
+  ClaudeCoworkLifecycleMetadata,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    ...NativeLifecycleMetadata.fields,
+    harness: S.tag("claude-desktop"),
+    surface: S.tag("cowork"),
+    sourceVersion: S.tag("4.23118.0/2.1.317"),
+    engineBinding: S.tag("kernel-executable-sha256"),
+    appScriptBinding: S.tag("Unproved"),
+    callbackScriptBinding: S.tag("Unproved"),
+    occurrenceHash: Sha256Hex,
+    enrollmentId: Sha256Hex,
+    reportedSource: S.OptionFromOptionalKey(S.Literals(["startup", "resume", "clear", "compact", "fork"])),
+    reportedReason: S.OptionFromOptionalKey(S.Literals(["clear", "resume", "logout", "prompt_input_exit", "other"])),
+  })
+    .check(
+      S.makeFilter(
+        (value) =>
+          O.isNone(value.reportedDurationMillis) &&
+          O.isNone(value.reportedStatus) &&
+          O.isNone(value.reportedModelId) &&
+          O.isNone(value.reportedEffort) &&
+          O.isNone(value.generationHash) &&
+          (value.kind === "sessionStart"
+            ? O.isSome(value.reportedSource) && O.isNone(value.reportedReason)
+            : O.isNone(value.reportedSource) && O.isSome(value.reportedReason)),
+        { identifier: "CoworkLifecycleShape", message: "Cowork reports only its event-specific native lifecycle field" }
+      )
+    )
+    .pipe(
+      $I.annoteSchema("ClaudeCoworkLifecycleMetadata", {
+        description: "Host-local Cowork source evidence with unknown usage/time and same-UID nonexclusive assurance.",
+      })
+    )
+) {}
+/** Disjoint native source variants; existing Cursor wire values are preserved.
+ * **Example** (Inspect the inert API)
+ * ```ts
+ * import { NativeLifecycleObservation } from "@beep/repo-ai-metrics/native-lifecycle"
+ * console.log(typeof NativeLifecycleObservation)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NativeLifecycleObservation = S.Union([NativeLifecycleMetadata, ClaudeCoworkLifecycleMetadata]).pipe(
+  S.toTaggedUnion("harness"),
+  $I.annoteSchema("NativeLifecycleObservation", {
+    description: "Cursor CLI or host-local Claude Cowork lifecycle; never ordinary chat.",
+  })
+);
+/** Decoded native lifecycle source variant.
+ * @category types
+ * @since 0.0.0
+ */
+export type NativeLifecycleObservation = typeof NativeLifecycleObservation.Type;
