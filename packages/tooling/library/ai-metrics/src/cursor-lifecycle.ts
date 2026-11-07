@@ -49,6 +49,7 @@ const nativeSourceContract = CursorLifecycleSourceContract.make({
 export const makeCursorLifecycleReceiver = (policy: CursorLifecyclePolicy) =>
   makeCursorLifecycleCore(policy, nativeSourceContract);
 
+const callbackFailure = (_error: unknown) => failure("callback");
 /**
  * Project bounded native callback input without opening a socket or writing to disk.
  * **Example** (Inspect the transient input projector)
@@ -65,8 +66,8 @@ export const projectCursorLifecycleHookInput = Effect.fn("AiMetrics.cursorLifecy
   body: string
 ) {
   if (new TextEncoder().encode(body).byteLength > 8192) return yield* failure("callback");
-  const native = yield* decodeCallback(body).pipe(Effect.mapError(() => failure("callback")));
-  return yield* encodeCallback(native).pipe(Effect.mapError(() => failure("callback")));
+  const native = yield* decodeCallback(body).pipe(Effect.mapError(callbackFailure));
+  return yield* encodeCallback(native).pipe(Effect.mapError(callbackFailure));
 });
 
 /** Project and forward one callback; this function never prints hook output.

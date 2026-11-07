@@ -92,7 +92,6 @@ const sealRuntimeCopy = Effect.fnUntraced(function* () {
   yield* fs.chmod(executable, 0o500);
   const copied = yield* fs.stat(executable);
   const uid = process.getuid?.();
-  if (uid === undefined) return yield* failure("runtime");
   const copiedBytes = yield* fs.readFile(executable);
   const sha256 = yield* hashObservationPayload(copiedBytes);
   const sourceBytes = yield* fs.readFile(source);
@@ -103,7 +102,7 @@ const sealRuntimeCopy = Effect.fnUntraced(function* () {
     [
       copied.type === "File",
       (copied.mode & 0o022) === 0,
-      O.contains(uid)(copied.uid),
+      O.exists(copied.uid, (owner) => owner === uid),
       O.contains(BigInt(1))(copied.nlink),
       O.isSome(before.ino),
       O.isSome(copied.ino),
