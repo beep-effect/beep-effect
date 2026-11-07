@@ -30,14 +30,14 @@
         "role": "supporting"
       },
       {
-        "number": 2848,
+        "number": 2869,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_goal-packet-conflict-free-appends-refinal-efcf3ce970af/verdict.json",
+        "ref": ".beep/yeet/runs/docs_goal-packet-conflict-free-appends-refinal3-357a4af6e750/verdict.json",
         "gating": true
       }
     ]
@@ -51,7 +51,7 @@
     "goals/goal-packet-conflict-free-appends/GOAL.md",
     "goals/goal-packet-conflict-free-appends/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -104,6 +104,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2848
+    "finalPullRequest": 2869
   }
 }
