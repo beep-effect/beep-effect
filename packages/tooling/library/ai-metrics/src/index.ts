@@ -58,6 +58,8 @@ export * from "./compose.ts";
  * @since 0.0.0
  */
 export * from "./config-snapshot.ts";
+/** Passive native Cursor lifecycle bridge; host activation is separate. @since 0.0.0 */
+export * from "./cursor-lifecycle.ts";
 /**
  * Canonical data-root precedence: `--data-root`, `BEEP_AI_METRICS_DATA_ROOT`,
  * then the XDG state store. Examples live on the owning declarations in
@@ -276,6 +278,8 @@ export * from "./native-http.ts";
  * @since 0.0.0
  */
 export * from "./native-intake.ts";
+/** Content-free lifecycle metadata. @since 0.0.0 */
+export * from "./native-lifecycle.ts";
 /**
  * Verified native backend observations linked to original send attempts.
  * Examples live in `./native-readback.ts`.
@@ -300,6 +304,13 @@ export * from "./native-schedule.ts";
  * @since 0.0.0
  */
 export * from "./native-trace.ts";
+/**
+ * Separately attributed historical availability receipts, without invocation causation.
+ * Examples live in `./observation-availability.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-availability.ts";
 /**
  * Bounded independent physical snapshots and fresh-destination restoration.
  * Examples live in `./observation-backup.ts`.
@@ -355,6 +366,13 @@ export * from "./observation-launch-http.ts";
  * @since 0.0.0
  */
 export * from "./observation-maintenance-http.ts";
+/**
+ * Independent process outcomes and receipt-consistent historical availability views.
+ * Examples live in `./observation-outcomes.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-outcomes.ts";
 /**
  * Bounded declared-root inventory producer and retained observation evidence.
  *

@@ -1,0 +1,229 @@
+{
+  "cases": [
+    {
+      "error": null,
+      "events": [],
+      "id": 0,
+      "label": "plain",
+      "plain": "eyecite",
+      "sameCitation": true,
+      "shortcut": true
+    },
+    {
+      "error": null,
+      "events": [],
+      "id": 1,
+      "label": "ambiguous",
+      "plain": "eyecite",
+      "sameCitation": true,
+      "shortcut": true
+    },
+    {
+      "error": null,
+      "events": [],
+      "id": 2,
+      "label": "ignored-poison",
+      "plain": "eyecite",
+      "sameCitation": true,
+      "shortcut": true
+    },
+    {
+      "error": null,
+      "events": [],
+      "id": 3,
+      "label": "ignored-none",
+      "plain": "eyecite",
+      "sameCitation": true,
+      "shortcut": true
+    },
+    {
+      "error": null,
+      "events": ["Document"],
+      "id": 4,
+      "label": "control",
+      "plain": "eyecite ",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": null,
+      "events": ["Document"],
+      "id": 5,
+      "label": "control",
+      "plain": " eyecite",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": null,
+      "events": ["Document"],
+      "id": 6,
+      "label": "control",
+      "plain": "Eyecite",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": null,
+      "events": ["Document"],
+      "id": 7,
+      "label": "control",
+      "plain": "EYECITE",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": null,
+      "events": ["Document"],
+      "id": 8,
+      "label": "control",
+      "plain": "eyecite\n",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": null,
+      "events": ["Document"],
+      "id": 9,
+      "label": "control",
+      "plain": "eyecite\u0000",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": null,
+      "events": ["Document"],
+      "id": 10,
+      "label": "control",
+      "plain": "eyecite\ud83d\ude00",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": "ValueError",
+      "events": ["Document"],
+      "id": 11,
+      "label": "control",
+      "plain": "",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": "ValueError",
+      "events": ["Document"],
+      "id": 12,
+      "label": "control",
+      "plain": null,
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": "ValueError",
+      "events": ["Document"],
+      "id": 13,
+      "label": "defaults",
+      "plain": "",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": "TypeError",
+      "events": ["Document"],
+      "id": 14,
+      "label": "markup-default-steps",
+      "plain": "",
+      "sameCitation": false,
+      "shortcut": false
+    },
+    {
+      "error": null,
+      "events": ["Document"],
+      "id": 15,
+      "label": "plain-default-steps",
+      "plain": "35 U.S.C. \u00a7 101",
+      "sameCitation": false,
+      "shortcut": false
+    }
+  ],
+  "formatter": "Version: 2.5.6",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "producerSha256": "3845143687fc8bd675020078e1e630f16f365db8a46f5a506c2dd23d4964474c",
+  "python": "3.11.15",
+  "schemaVersion": "citation-extraction-shortcut/v1",
+  "scope": "Actual primitive-string shortcut and bypass order; arbitrary equality overrides and mutable host/model behavior remain open.",
+  "snapshot": {
+    "documentAttached": false,
+    "editionGuess": null,
+    "fullSpan": [0, 99],
+    "fullSpanEnd": null,
+    "fullSpanStart": null,
+    "groupsAliasToken": true,
+    "index": 0,
+    "kind": "FullCaseCitation",
+    "metadata": {
+      "antecedent_guess": null,
+      "court": null,
+      "day": null,
+      "defendant": null,
+      "extra": {
+        "bytes": "45796563697465206973206120636f6c6c61626f72617469766520636f6d6d756e697479206566666f72742e",
+        "width": 1
+      },
+      "month": null,
+      "parenthetical": null,
+      "pin_cite": null,
+      "pin_cite_span_end": null,
+      "pin_cite_span_start": null,
+      "plaintiff": null,
+      "resolved_case_name": null,
+      "resolved_case_name_short": null,
+      "year": {
+        "bytes": "32303231",
+        "width": 1
+      }
+    },
+    "span": [0, 99],
+    "token": {
+      "data": {
+        "bytes": "3120464c502031",
+        "width": 1
+      },
+      "end": 99,
+      "exact": [],
+      "groups": {
+        "page": {
+          "bytes": "31",
+          "width": 1
+        },
+        "reporter": {
+          "bytes": "464c50",
+          "width": 1
+        },
+        "volume": {
+          "bytes": "31",
+          "width": 1
+        }
+      },
+      "kind": "CitationToken",
+      "short": false,
+      "start": 0,
+      "variation": []
+    },
+    "year": null
+  },
+  "sources": {
+    "find.py": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d",
+    "helpers.py": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297",
+    "models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a"
+  },
+  "versions": {
+    "courts-db": "0.10.22",
+    "eyecite": "2.7.6",
+    "lxml": "5.1.0",
+    "regex": "2023.12.25",
+    "reporters-db": "3.2.53"
+  }
+}

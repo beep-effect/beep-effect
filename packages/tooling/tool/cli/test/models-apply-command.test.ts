@@ -858,7 +858,31 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
     })
   );
 
-  it.effect("reports operator-adjacent assignments and unsupported forms through both check commands", () =>
+  // Each group owns a fresh fixture and the same 30-second test deadline.
+  it.effect.each([
+    {
+      name: "operator-adjacent assignments",
+      checkOwnedDriftDiagnostic: false,
+      texts: A.map(
+        [";", "&&", "||", "|", "&", "(", "\n"],
+        (operator) =>
+          `:${operator}ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n`
+      ),
+    },
+    {
+      name: "unsupported forms",
+      checkOwnedDriftDiagnostic: true,
+      texts: [
+        "export 'ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong'; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n",
+        'export "ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong"; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n',
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\nANTHROPIC_DEFAULT_HAIKU_MODEL+=wrong\n",
+        ":;ANTHROPIC_DEFAULT_HAIKU_MODEL+=wrong\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
+        "# ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
+        "x\\ ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
+        "cat <<'EOF'\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\nEOF\n",
+      ],
+    },
+  ])("reports $name through both check commands", ({ texts, checkOwnedDriftDiagnostic }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -891,23 +915,7 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       yield* fs.writeFileString(shellFile, "ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n");
       yield* run(["apply", ...flags, "--check"]);
       yield* run(["check", ...flags]);
-      for (const operator of [";", "&&", "||", "|", "&", "(", "\n"]) {
-        const text = `:${operator}ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n`;
-        yield* fs.writeFileString(shellFile, text);
-        yield* Effect.flip(run(["apply", ...flags, "--check"]));
-        yield* Effect.flip(run(["check", ...flags]));
-        const readFileString53 = yield* fs.readFileString(shellFile);
-        expect(readFileString53).toBe(text);
-      }
-      for (const text of [
-        "export 'ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong'; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n",
-        'export "ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong"; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n',
-        "ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\nANTHROPIC_DEFAULT_HAIKU_MODEL+=wrong\n",
-        ":;ANTHROPIC_DEFAULT_HAIKU_MODEL+=wrong\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
-        "# ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
-        "x\\ ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\n",
-        "cat <<'EOF'\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna\nEOF\n",
-      ]) {
+      for (const text of texts) {
         yield* fs.writeFileString(shellFile, text);
         yield* Effect.flip(run(["apply", ...flags, "--check"]));
         yield* Effect.flip(run(["check", ...flags]));
@@ -915,16 +923,20 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         expect(readFileString54).toBe(text);
       }
       const errorLines55 = yield* TestConsole.errorLines;
-      expect(
-        A.some(
-          errorLines55,
-          (line) =>
-            P.isString(line) &&
-            /models: refused synthetic.shell: Unsupported shell form: line [0-9]+: owned configuration drift detected/.test(
-              line
-            )
-        )
-      ).toBe(true);
+      // The owned-drift diagnostic belongs to unsupported assignment forms;
+      // operator-adjacent refusal is checked by both command failures above.
+      yield* Effect.sync(() => {
+        expect(
+          A.some(
+            errorLines55,
+            (line) =>
+              P.isString(line) &&
+              /models: refused synthetic.shell: Unsupported shell form: line [0-9]+: owned configuration drift detected/.test(
+                line
+              )
+          )
+        ).toBe(true);
+      }).pipe(Effect.when(Effect.succeed(checkOwnedDriftDiagnostic)));
       const exists56 = yield* fs.exists(path.join(home, ".config-backups"));
       expect(exists56).toBe(false);
     })

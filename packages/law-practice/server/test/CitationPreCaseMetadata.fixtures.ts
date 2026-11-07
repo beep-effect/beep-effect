@@ -6,7 +6,8 @@ import {
   CitationPreCaseMetadataPatch,
   makeCitationPreCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PreCaseMetadata";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -18,6 +19,7 @@ import * as S from "effect/Schema";
 import {
   assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFixtureLifetime,
+  assertCitationMetadataInstallControls,
   assertCitationMetadataRefusal,
   assertCitationWorkerCompositionReleased,
   citationMetadataDeadlineText,
@@ -63,7 +65,8 @@ const Corpus = S.fromJsonString(
     description: "Original pre-case helper skips, native matches and exact source field updates.",
   })
 );
-const load = Effect.fn("PreCaseMetadataTest.load")(function* () {
+/** Read authenticated original helper configuration and state observations. */
+export const readCitationPreCaseMetadataCorpus = Effect.fn("PreCaseMetadataTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/pre-case-metadata.json", import.meta.url))
@@ -72,7 +75,7 @@ const load = Effect.fn("PreCaseMetadataTest.load")(function* () {
   expect(hash).toBe("6cfd521369b960f677231e9e5c9ca2981c6dc0ca6c0f7e9edf551f01c3dda4bd");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
-const install = makeCitationMetadataFixtureInstaller(makeCitationPreCaseMetadata)(load());
+const install = makeCitationMetadataFixtureInstaller(makeCitationPreCaseMetadata)(readCitationPreCaseMetadataCorpus());
 /** Compare every early skip locally plus actual backward matching through both runtimes. */
 export const replayCitationPreCaseMetadata = Effect.fn("PreCaseMetadataTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -136,21 +139,9 @@ export const assertCitationPreCaseLifetime = Effect.fn("PreCaseMetadataTest.life
 
 /** Installation rejects malformed policy/configuration and mismatched fixed patterns before spawning. */
 export const assertCitationPreCaseMetadataConfiguration = Effect.fn("PreCaseMetadataTest.configuration")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* readCitationPreCaseMetadataCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
-  const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
-  for (const [policy, runtime, configuration] of [
-    [{}, setup.runtime, corpus.configuration],
-    [setup.limits, setup.runtime, {}],
-    [setup.limits, {}, corpus.configuration],
-    [setup.limits, setup.runtime, { ...corpus.configuration, pattern: changedPattern }],
-  ]) {
-    const failed = yield* makeCitationPreCaseMetadata(policy, runtime, configuration).pipe(
-      Effect.provideContext(setup.provided),
-      Effect.flip
-    );
-    expect(failed).toMatchObject({ reason: "invalid-configuration" });
-  }
+  yield* assertCitationMetadataInstallControls(makeCitationPreCaseMetadata, setup, corpus.configuration);
   const oversized = yield* makeCitationTextBudget({
     ...setup.limits,
     producedTextUtf16: setup.limits.producedTextUtf16 + 1,

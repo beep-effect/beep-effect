@@ -47,6 +47,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
@@ -177,6 +178,7 @@ const canonicalRowKeys = [
   "harnessHash",
   "sessionRole",
   "sessionStartSource",
+  "agentId",
 ];
 
 // Pulls a `def <name>: [ "a", "b" ];` allowlist back out of the writer. The
@@ -797,6 +799,108 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
 
       expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["cursor-cli"]);
       expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PreToolUse);
+    })
+  );
+
+  // The writer's `$sessionRole` jq table and the codec's `deriveSessionRole` are
+  // two implementations of one rule; each case runs both and compares them.
+  const claudeRootTranscript = "/home/dev/.claude/projects/repo/12345678-1234-1234-1234-123456789abc.jsonl";
+  const codexRolloutTranscript =
+    "/home/dev/.codex/sessions/2026/11/06/rollout-2026-11-06T12-00-00-12345678-1234-1234-1234-123456789abc.jsonl";
+  const roleCases: ReadonlyArray<{
+    readonly label: string;
+    readonly agentKind: HookPulseAgentKind;
+    readonly writer: string;
+    readonly payload: Record<string, unknown>;
+    readonly role: O.Option<string>;
+  }> = [
+    {
+      label: "a Claude subagent hook on the root transcript",
+      agentKind: "claude-code",
+      writer: writerPath,
+      payload: { ...preToolUsePayload, transcript_path: claudeRootTranscript, agent_id: "agent-writer-1" },
+      role: O.some("subagent"),
+    },
+    {
+      label: "a Claude root hook",
+      agentKind: "claude-code",
+      writer: writerPath,
+      payload: { ...preToolUsePayload, transcript_path: claudeRootTranscript },
+      role: O.some("primary"),
+    },
+    {
+      label: "a Codex root rollout",
+      agentKind: "codex-cli",
+      writer: codexWriterPath,
+      payload: { ...preToolUsePayload, transcript_path: codexRolloutTranscript },
+      role: O.some("primary"),
+    },
+    {
+      label: "a Codex subagent hook",
+      agentKind: "codex-cli",
+      writer: codexWriterPath,
+      payload: { ...preToolUsePayload, transcript_path: codexRolloutTranscript, agent_id: "thread-writer-2" },
+      role: O.some("subagent"),
+    },
+    {
+      label: "a Cursor hook without an ancestry signal",
+      agentKind: "cursor-cli",
+      writer: cursorWriterPath,
+      payload: { ...preToolUsePayload, hook_event_name: "preToolUse" },
+      role: O.some("unknown"),
+    },
+  ];
+  A.forEach(roleCases, ({ label, agentKind, writer, payload, role }) => {
+    it.effect(`derives the codec's session role for ${label}`, () =>
+      Effect.gen(function* () {
+        const stdin = yield* encodeJson(payload);
+        const run = yield* runWriter(stdin, { writerPath: writer });
+        // Cursor answers its permission protocol on stdout, so read the row directly.
+        expect(run.rows).toHaveLength(1);
+        const line = pipe(A.head(run.rows), O.getOrThrow);
+        const writerRow = yield* decodeHookPulseRow(line);
+        const codecRow = yield* withSaltEnv(
+          {},
+          decodeHookPulseFromRaw({
+            event: { ...payload, hook_event_name: HookPulseEvent.Enum.PreToolUse },
+            notifierRev: "log-only-0",
+            instrumentClass: HookPulseInstrumentClass.Enum.production,
+            agentKind,
+            evidenceTier: HookPulseEvidenceTier.Enum.derived,
+            ts: "2026-08-01T06:40:07.000Z",
+          })
+        );
+
+        expect(writerRow.sessionRole).toEqual(role);
+        expect(codecRow.sessionRole).toEqual(writerRow.sessionRole);
+        expect(codecRow.agentId).toEqual(writerRow.agentId);
+        // The raw agent id is a private identifier: only its salted digest is written.
+        const raw = O.filter(O.fromNullishOr(payload.agent_id), P.isString);
+        const expectedAgentId = yield* Effect.transposeOption(O.map(raw, privateDigest));
+        expect(writerRow.agentId).toEqual(expectedAgentId);
+        A.forEach(A.getSomes([raw]), (agentId) => expect(line).not.toContain(agentId));
+      })
+    );
+  });
+
+  it.effect("drops a Cursor event delivered through the Claude hook entry without a claude-code refusal", () =>
+    Effect.gen(function* () {
+      // Cursor's Claude-compatibility loader runs `.claude/settings.json` hooks too, so the
+      // Claude entry sees each Cursor event a second time. The Cursor adapter owns that event.
+      const cursorStdin = yield* encodeJson({
+        ...preToolUsePayload,
+        conversation_id: "cursor-conversation-writer-2",
+        cursor_version: "2026.11.05",
+        hook_event_name: "sessionStart",
+      });
+      const run = yield* runWriter(cursorStdin);
+      expect(run.exitCode).toBe(0);
+      expect(run.rows).toHaveLength(0);
+      expect(run.refusals).toHaveLength(0);
+      // A Claude payload that merely mentions the key inside content is still recorded.
+      const claudeStdin = yield* encodeJson({ ...preToolUsePayload, tool_input: { command: '"cursor_version"' } });
+      const claude = yield* runWriter(claudeStdin);
+      expect(claude.rows).toHaveLength(1);
     })
   );
 

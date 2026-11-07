@@ -25,8 +25,8 @@ import * as Str from "effect/String";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import type { CitationHtmlInputFailure } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
-import type { CitationHtmlWorkerSnapshot } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
 import type { CitationHtmlWorkerFailure } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+import type { CitationMarkupWorkerSnapshot } from "@beep/law-practice-server/internal/Citation/MarkupWorker";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
 const ready = '{"_tag":"Ready","version":"citation-html-worker/v1"}\\n';
@@ -240,7 +240,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const failed = yield* Effect.flip(worker.clean("private input"));
         expect(failed._tag).toBe("CitationSafetyLimitExceeded");
         if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("cleanupDeadline");
-        const state: CitationHtmlWorkerSnapshot = yield* worker.snapshot;
+        const state: CitationMarkupWorkerSnapshot = yield* worker.snapshot;
         expect(state.quarantined).toBe(1);
         expect(state.active).toBe(1);
         const next = yield* Effect.flip(worker.clean("replacement"));
@@ -369,7 +369,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const failed = yield* Effect.flip(worker.clean("private input"));
         expect(failed._tag).toBe("CitationSafetyLimitExceeded");
         if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("operationDeadline");
-        const state: CitationHtmlWorkerSnapshot = yield* worker.snapshot;
+        const state: CitationMarkupWorkerSnapshot = yield* worker.snapshot;
         expect(state.quarantined).toBe(1);
         expect(state.active).toBe(1);
         const next = yield* Effect.flip(worker.clean("replacement"));

@@ -5,17 +5,24 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import {
+  CitationBuiltinCleanerName,
+  CitationCleanerFailure,
+  CitationCleanerProduced,
+} from "@beep/law-practice-use-cases/server";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationCleanerFailure, CitationCleanerProduced } from "./CleanerPipeline.ts";
-import { CitationBuiltinCleanerName, CitationCleanerValues } from "./CleanerValues.ts";
+import { CitationCleanerValues } from "./CleanerValues.ts";
 import { makeCitationHtmlWorker } from "./HtmlWorker.ts";
 import { makeCitationLiteralCleaners } from "./LiteralCleaners.ts";
-import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import type { CitationCleanerObject, CitationCleanerWork } from "./CleanerPipeline.ts";
+import type {
+  CitationCleanerObject,
+  CitationCleanerWork,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import type { CitationHtmlCompletionFailure } from "./HtmlCompletion.ts";
 import type { CitationHtmlInputFailure } from "./HtmlInput.ts";
 import type { CitationHtmlKernelFailure } from "./HtmlKernel.ts";

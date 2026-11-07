@@ -116,14 +116,14 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
         if (mode === "allocate") {
           yield* dictionary.allocate(A.take(members, 1));
           const refused = yield* dictionary.allocate(members).pipe(Effect.flip);
-          expect(refused.reason).toBe("limit-exceeded");
+          expect(refused).toMatchObject({ reason: "limit-exceeded", limit: "resolutionEdges" });
           const lists = yield* dictionary.readListNodes;
           expect(lists).toEqual([A.take(members, 1)]);
         } else if (mode === "write") {
           yield* dictionary.allocate(A.take(members, 1));
           const target = yield* dictionary.allocate([]);
           const refused = yield* dictionary.write(target, members).pipe(Effect.flip);
-          expect(refused.reason).toBe("limit-exceeded");
+          expect(refused).toMatchObject({ reason: "limit-exceeded", limit: "resolutionEdges" });
           const lists = yield* dictionary.readListNodes;
           expect(lists).toEqual([A.take(members, 1), []]);
         } else {
@@ -134,7 +134,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
           yield* dictionary.write(list, A.take(members, 1));
           yield* dictionary.set(alias, list);
           const refused = yield* dictionary.set(third, list).pipe(Effect.flip);
-          expect(refused.reason).toBe("limit-exceeded");
+          expect(refused).toMatchObject({ reason: "limit-exceeded", limit: "resolutionEdges" });
           const groups = yield* dictionary.read;
           expect(A.map(groups, (group) => group.members)).toEqual([A.take(members, 1), A.take(members, 1)]);
           const baseKey = yield* dictionary.resourceKey(base);
@@ -241,7 +241,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
           yield* dictionary.write(list, members);
           const attempt = authorities === 1 ? dictionary.get(second).pipe(Effect.asVoid) : dictionary.set(second, list);
           const failure = yield* attempt.pipe(Effect.flip);
-          expect(failure.reason).toBe("limit-exceeded");
+          expect(failure).toMatchObject({
+            reason: "limit-exceeded",
+            limit: authorities === 1 ? "authorities" : "resolutionEdges",
+          });
           const groups = yield* dictionary.read;
           expect(A.map(groups, (group) => group.members)).toEqual([members]);
           yield* dictionary.close;
@@ -270,13 +273,13 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       yield* dictionary.set(alias, list);
       const members = A.map(prepared.mentions, (mention) => member(mention.id));
       const rejected = yield* dictionary.write(list, members).pipe(Effect.flip);
-      expect(rejected.reason).toBe("limit-exceeded");
+      expect(rejected).toMatchObject({ reason: "limit-exceeded", limit: "resolutionEdges" });
       const groups = yield* dictionary.read;
       expect(A.map(groups, (group) => group.members)).toEqual([[], []]);
       const getOverflow = yield* dictionary.get(third).pipe(Effect.flip);
       const setOverflow = yield* dictionary.set(third, list).pipe(Effect.flip);
-      expect(getOverflow.reason).toBe("limit-exceeded");
-      expect(setOverflow.reason).toBe("limit-exceeded");
+      expect(getOverflow).toMatchObject({ reason: "limit-exceeded", limit: "authorities" });
+      expect(setOverflow).toMatchObject({ reason: "limit-exceeded", limit: "authorities" });
       yield* dictionary.write(list, A.take(members, 1));
       const accepted = yield* dictionary.read;
       expect(A.map(accepted, (group) => group.members)).toEqual([A.take(members, 1), A.take(members, 1)]);
@@ -301,7 +304,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       const second = yield* dictionary.createFullPair(ref, none());
       expect(second.pairSlot).not.toBe(first.pairSlot);
       const rejected = yield* dictionary.createFullPair(ref, none()).pipe(Effect.flip);
-      expect(rejected.reason).toBe("limit-exceeded");
+      expect(rejected).toMatchObject({ reason: "limit-exceeded", limit: "resolutionIterations" });
       const wrongKind = yield* dictionary.canonicalResource(ref).pipe(Effect.flip);
       expect(wrongKind.reason).toBe("invalid-input");
       yield* dictionary.close;
@@ -407,7 +410,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
           Effect.provideService(CitationResolutionCallbacks, callbacks)
         )
       );
-      expect(exceeded.reason).toBe("limit-exceeded");
+      expect(exceeded).toMatchObject({ reason: "limit-exceeded", limit: "resolutionIterations" });
       expect(calls).toBe(1);
     })
   );
@@ -571,7 +574,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
             onFailure: (cause) => cause.pipe(Cause.findErrorOption, O.getOrThrow),
             onSuccess: () => expect.fail("Expected the aliased mutation to fail"),
           });
-          expect(failure.reason).toBe("limit-exceeded");
+          expect(failure).toMatchObject({ reason: "limit-exceeded", limit: "resolutionEdges" });
         }),
         { concurrency: 1, discard: true }
       );
@@ -702,7 +705,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       const citationResult36 = yield* dictionary.registerDetached(model);
       expect(citationResult36).toEqual(reference);
       const citationResult37 = yield* Effect.flip(dictionary.registerDetached(copy));
-      expect(citationResult37.reason).toBe("limit-exceeded");
+      expect(citationResult37).toMatchObject({ reason: "limit-exceeded", limit: "mentions" });
       const citationResult38 = yield* dictionary.detachedCitations;
       expect(citationResult38).toHaveLength(1);
       expect(prepared.mentions).toHaveLength(2);

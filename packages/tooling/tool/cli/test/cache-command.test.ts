@@ -76,26 +76,62 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })("cache command", (it) => {
     })
   );
   it.effect(
-    "warms with a write-only cache spec instead of pairing --cache with --force",
+    "warms in two write-only passes: static tasks first, then bounded tests",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-cache-warm-command-" });
         yield* initializeWarmRepository(root);
-        let observed: ReadonlyArray<string> = [];
+        let observed: ReadonlyArray<ReadonlyArray<string>> = [];
         const receipt = yield* Effect.scoped(
           Effect.andThen(
             warmEnvironment(validWarmEnvironment),
             runCacheWarmForTesting(root, O.none(), (command) => {
-              observed = command;
+              observed = A.append(observed, command);
               return Effect.succeed(CacheWarmLane.make({ command, durationMs: S.Natural.make(0), exitCode: 0 }));
             })
           )
         );
-        expect(observed).toContain("--cache=local:w,remote:w");
-        expect(observed).not.toContain("--force");
-        expect(A.filter(observed, Str.startsWith("--cache=")).length).toBe(1);
-        expect(receipt.lanes[0]?.command).toEqual(observed);
+        expect(observed.length).toBe(2);
+        const [staticPass = [], testPass = []] = observed;
+        expect(A.take(staticPass, 7)).toEqual(["bun", "x", "turbo", "run", "build", "check", "lint"]);
+        expect(staticPass).not.toContain("test");
+        expect(A.filter(staticPass, Str.startsWith("--concurrency")).length).toBe(0);
+        expect(A.take(testPass, 5)).toEqual(["bun", "x", "turbo", "run", "test"]);
+        expect(testPass).toContain("--concurrency=4");
+        for (const command of observed) {
+          expect(command).toContain("--cache=local:w,remote:w");
+          expect(command).toContain("--summarize");
+          expect(command).not.toContain("--force");
+          expect(A.filter(command, Str.startsWith("--cache=")).length).toBe(1);
+        }
+        expect(A.map(receipt.lanes, (lane) => lane.command)).toEqual(observed);
+      }),
+    15000
+  );
+  it.effect(
+    "stops before the test pass and writes no receipt when the static pass fails",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-cache-warm-static-fail-" });
+        yield* initializeWarmRepository(root);
+        const output = path.join(root, "cache-warm.json");
+        let calls = 0;
+        const error = yield* Effect.scoped(
+          Effect.andThen(
+            warmEnvironment(validWarmEnvironment),
+            runCacheWarmForTesting(root, O.some(output), (command) => {
+              calls += 1;
+              return Effect.fail(CacheCommandError.new(`${A.join(command, " ")} exited 1.`));
+            })
+          )
+        ).pipe(Effect.flip);
+        expect(calls).toBe(1);
+        expect(error.message).toContain("build check lint");
+        const receiptWritten = yield* fs.exists(output);
+        expect(receiptWritten).toBe(false);
       }),
     15000
   );

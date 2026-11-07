@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationPythonUnicodeStorage, CitationTokenSeed } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -10,9 +11,7 @@ import * as S from "effect/Schema";
 import { CitationLawMetadataResult } from "./LawMetadata.ts";
 import { makeCitationPublicationMetadataOperation, matchCitationMetadataContext } from "./MetadataComposition.ts";
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
-import { CitationTokenSeed } from "./TokenObjects.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -79,7 +78,10 @@ export class CitationPinExtractionResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationPinExtractionInput);
-const prepare = Effect.fn("Citation.preparePinExtraction")(function* (
+/** Reuse the exact pin helper inside an enclosing operation.
+ * @internal @category operations @since 0.0.0
+ */
+export const extractCitationPinCite = Effect.fn("Citation.preparePinExtraction")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationPublicationMetadataConfiguration,
@@ -128,7 +130,7 @@ export const makeCitationPinExtraction = Effect.fn("Citation.makePinExtraction")
     runtimeInput,
     configurationInput,
     "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
-    prepare,
+    extractCitationPinCite,
     () => fail("invalid-configuration")
   );
   const apply = Effect.fn("Citation.extractPinCite")(

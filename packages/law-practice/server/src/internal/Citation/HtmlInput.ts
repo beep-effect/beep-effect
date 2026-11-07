@@ -10,6 +10,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineAbsoluteMaxima,
   CitationEngineLimits,
+  CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -22,7 +23,6 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import type { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 

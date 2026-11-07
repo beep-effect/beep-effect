@@ -1,16 +1,16 @@
 import * as NodeURL from "node:url";
-import {
-  CitationCleanerFailure,
-  CitationCleanerObject,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  CitationCleanerTextCharge,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import {
   CitationLiteralCleaner,
   makeCitationLiteralCleaners,
 } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
+import {
+  CitationCleaner,
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerTextCharge,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -36,8 +36,8 @@ import * as TestClock from "effect/testing/TestClock";
 import type {
   CitationCleanerCursor,
   CitationCleanerWork,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
-import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 
 const CorpusJson = S.fromJsonString(
   S.Struct({
@@ -95,7 +95,7 @@ const harness = Effect.gen(function* () {
       }),
     };
   };
-  const runtime = CitationCleanerRuntime.of({
+  const runtime = CitationCleaner.of({
     fromText: Effect.fn("CleanerTest.fromText")((text: string) =>
       Effect.sync(() => {
         record("fromText");
@@ -172,7 +172,7 @@ const pipeline = Effect.fn("CleanerTest.pipeline")(function* (
 ) {
   const citationResult1 = yield* defaultCitationEnginePolicy;
   return yield* makeCitationCleanerPipeline({ ...citationResult1.limits, ...overrides }).pipe(
-    Effect.provideService(CitationCleanerRuntime, h.runtime)
+    Effect.provideService(CitationCleaner, h.runtime)
   );
 });
 it.effect("consumes a live cursor and performs membership before a separate value lookup", () =>
@@ -660,7 +660,7 @@ it.effect("rejects malformed policy, reservation amounts and nested plan names",
   Effect.gen(function* () {
     const h = yield* harness;
     const invalidPolicy = yield* makeCitationCleanerPipeline(null).pipe(
-      Effect.provideService(CitationCleanerRuntime, h.runtime),
+      Effect.provideService(CitationCleaner, h.runtime),
       Effect.flip
     );
     expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
@@ -684,7 +684,7 @@ it.effect("rejects negative text accounting from unchanged and produced runtime 
     const h = yield* harness;
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const p = yield* makeCitationCleanerPipeline(limits).pipe(
-      Effect.provideService(CitationCleanerRuntime, {
+      Effect.provideService(CitationCleaner, {
         ...h.runtime,
         textUnits: () => Effect.succeedSome(-1),
       })

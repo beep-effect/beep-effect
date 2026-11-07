@@ -7,6 +7,7 @@ import {
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { isPackageSourceFile, TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -15,6 +16,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
@@ -85,12 +87,18 @@ const fixtureArbitrary = Arbitrary.all([Arbitrary.schema(TaskSummary), Arbitrary
 
 // One direct read per §2.2 row, including expanded Fallow rows. These are independent
 // probes, not strings derived from the input globs whose behavior we are testing.
-// `goals:doctor` reads `git log --since` (clock and git history). The five tracked-file
-// law scans and `lint:holds` cache since 2026-11-02 (quality audit G10): their check
-// paths read declared files only (listed through `git ls-files`), no clock, no network.
-// The Fallow rows cache since 2026-11-02 (quality audit K2) except `fallow:audit:check`,
-// which diffs against the commit behind a base ref name that can move under its key.
+// Goals doctor reads history and clock; tracked-file discovery also remains
+// fresh until its index state and actual scanner behavior are qualified.
+// Fallow rows retain their existing cache policy except the base-ref-dependent audit.
+const trackedDiscoveryTasks = LiteralKit([
+  "lint:opaque-roundtrips",
+  "lint:entity-kit-freeze",
+  "lint:retired-effect-paths",
+  "lint:retired-iri-authorities",
+  "lint:markdown-fences",
+]);
 const nonReusableTasks: ReadonlyArray<string> = [
+  ...trackedDiscoveryTasks.literals,
   "knowledge:semantic-delta",
   "knowledge:refs-check",
   "lint:oxlint",
@@ -199,7 +207,12 @@ const expectRootTaskContract = (id: string, task: RootTask, scripts: Readonly<Re
     ).toEqual(id === "//#jsdoc:ratchet:check" ? ["//#jsdoc:inventory:check"] : []);
   }
   expect(task.cache, id).toBe(!A.contains(nonReusableTasks, name));
-  expect(task.env, id).toEqual(isFallowEnvelope(name) ? ["BEEP_PROOF_BASE"] : []);
+  const environment = Match.value(name).pipe(
+    Match.when(isFallowEnvelope, () => ["BEEP_PROOF_BASE"]),
+    Match.when(S.is(trackedDiscoveryTasks), () => ["BEEP_CACHE_TOOLCHAIN_DIGEST"]),
+    Match.orElse(() => [])
+  );
+  expect(task.env, id).toEqual(environment);
   expect(task.passThroughEnv, id).toEqual(id === "//#knowledge:semantic-delta" ? ["GITHUB_EVENT_PATH"] : []);
   expect(task.outputs, id).toEqual(expectedOutputs(id, name));
 };

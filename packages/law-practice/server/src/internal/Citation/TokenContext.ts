@@ -3,18 +3,21 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTokenSeed,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constVoid } from "effect/Function";
 import * as Num from "effect/Number";
 import * as S from "effect/Schema";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { concatCitationPythonRanges, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { captureCitationTextReservation } from "./TextBudget.ts";
-import { CitationTokenSeed } from "./TokenObjects.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenContext");
 const Kind = LiteralKit(["Text", ...CitationTokenSeed.fields.kind.literals]);

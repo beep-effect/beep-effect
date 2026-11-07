@@ -1,0 +1,17 @@
+# Preserve fresh tracked-test discovery until its key is complete
+
+`//#lint:opaque-roundtrips` currently allows cached completion, but its scanner first selects files through `git ls-files` for tracked test paths. The same on-disk test bytes can therefore produce a different discovery list after an index-only membership change. Its declared inputs and scriptless policy-fingerprint chain bind source/configuration content, not Git membership.
+
+Four bounded native metadata-only observations in an isolated Git fixture compare an unchanged candidate test before and after `git add`, using pinned stable 2.11.10 and canary 2.11.11-canary.1. In both clients the tracked list changes from one test to two, the declared input paths stay equal, and the task hash stays equal. The fixture task is never executed. This isolates Turbo file hashing; it does not execute the repository scanner or its full policy-fingerprint chain, and does not claim an observed stale repository result.
+
+Keep only this root command fresh with `cache: false`, preserving its implementation, selected tests, inputs, policy edges and fresh hosted status. This is a temporary correctness boundary, not a final exclusion, qualification, or completed adoption. Restore reuse only after a reviewed portable discovery-state input or equivalent scanner semantics is implemented and qualified with tracked/untracked membership controls across supported profiles. Never assume `.git/index` is a portable worktree input or accept a caller-supplied digest as verified state.
+
+Source and raw metadata digests are retained in the JSON report. No local verify, publish, tests, check, docgen, package verification, scanner, or source-generator entrypoint ran. Ordinary hooks and canonical worktree bootstrap remain allowed. Hosted CI and primary acceptance remain required; signing, credentials, runtime grants and whole-goal acceptance are unchanged.
+
+## Prepared runtime binding
+
+The existing observed toolchain snapshot now has an optional tracked-test membership digest; historical missing values remain absent. A bounded Git probe observes cached, deduplicated, NUL-delimited test paths under a scrubbed environment and hashes them without retaining path text. It uses ten seconds and at most 1,048,576 captured characters. Failed, truncated or unterminated output refuses; operational errors discard capture tails so timeouts cannot expose discovery paths. Empty discovery is valid. The probe does not freeze concurrent index changes.
+
+The affected root task declares the existing `BEEP_CACHE_TOOLCHAIN_DIGEST` input while retaining `cache: false`. This reuses the existing final-child calculated-key path and caller-override rejection. The conservative shared runtime identity also changes for other governed tasks after test tracking membership changes; no new task is promoted. No separate caller-provided discovery key or raw `.git/index` input is introduced.
+
+Hosted controls are authored for empty/untracked/add/remove membership, separate linked-worktree indexes, location-independent matching paths, whitespace/newline names, content-only changes, changed toolchain hashes, malformed/truncated/failed capture and timeout path redaction. They have not run locally. The four original native metadata observations remain the only executed fixture evidence in this report; they do not execute this collector, prove its wiring, or qualify caching. Actual qualification and reuse restoration remain unfinished.
