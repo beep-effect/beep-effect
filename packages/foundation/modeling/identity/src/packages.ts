@@ -174,7 +174,6 @@ const generatedComposers = $I.compose(
   "tailscale",
   "agents-tables",
   "graph-3d",
-  "epistemic-config",
   "law-practice-tables",
   "practice-kg-mcp",
   "openclaw",
@@ -248,7 +247,12 @@ const generatedComposers = $I.compose(
   "party-server",
   "repo-cli-kit",
   "alchemy-postgres",
-  "firecrawl"
+  "firecrawl",
+  "execution-authority-domain",
+  "execution-authority-use-cases",
+  "execution-authority-tables",
+  "execution-authority-server",
+  "execution-authority-config"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2383,23 +2387,6 @@ export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = compos
 export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = composers.$AgentsTablesId;
 
 /**
- * Identity composer for `@beep/epistemic-config`.
- *
- * **Example** (Make epistemic config package ID)
- *
- * ```ts import.meta.vitest name="Make epistemic config package ID"
- * import { $EpistemicConfigId } from "@beep/identity/packages"
- *
- * const id = $EpistemicConfigId.make("EpistemicConfig")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $EpistemicConfigId: Identity.IdentityComposer<"@beep/epistemic-config"> = composers.$EpistemicConfigId;
-
-/**
  * Identity composer for `@beep/law-practice-tables`.
  *
  * **Example** (Make law practice tables package ID)
@@ -3657,3 +3644,93 @@ export const $AlchemyPostgresId: Identity.IdentityComposer<"@beep/alchemy-postgr
  * @since 0.0.0
  */
 export const $FirecrawlId: Identity.IdentityComposer<"@beep/firecrawl"> = composers.$FirecrawlId;
+
+/**
+ * Identity composer for `@beep/execution-authority-domain`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $ExecutionAuthorityDomainId } from "@beep/identity/packages"
+ *
+ * const id = $ExecutionAuthorityDomainId.make("ExecutionAuthorityDomain")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $ExecutionAuthorityDomainId: Identity.IdentityComposer<"@beep/execution-authority-domain"> =
+  composers.$ExecutionAuthorityDomainId;
+
+/**
+ * Identity composer for `@beep/execution-authority-use-cases`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $ExecutionAuthorityUseCasesId } from "@beep/identity/packages"
+ *
+ * const id = $ExecutionAuthorityUseCasesId.make("ExecutionAuthorityUseCases")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $ExecutionAuthorityUseCasesId: Identity.IdentityComposer<"@beep/execution-authority-use-cases"> =
+  composers.$ExecutionAuthorityUseCasesId;
+
+/**
+ * Identity composer for `@beep/execution-authority-tables`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $ExecutionAuthorityTablesId } from "@beep/identity/packages"
+ *
+ * const id = $ExecutionAuthorityTablesId.make("ExecutionAuthorityTables")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $ExecutionAuthorityTablesId: Identity.IdentityComposer<"@beep/execution-authority-tables"> =
+  composers.$ExecutionAuthorityTablesId;
+
+/**
+ * Identity composer for `@beep/execution-authority-server`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $ExecutionAuthorityServerId } from "@beep/identity/packages"
+ *
+ * const id = $ExecutionAuthorityServerId.make("ExecutionAuthorityServer")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $ExecutionAuthorityServerId: Identity.IdentityComposer<"@beep/execution-authority-server"> =
+  composers.$ExecutionAuthorityServerId;
+
+/**
+ * Identity composer for `@beep/execution-authority-config`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $ExecutionAuthorityConfigId } from "@beep/identity/packages"
+ *
+ * const id = $ExecutionAuthorityConfigId.make("ExecutionAuthorityConfig")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $ExecutionAuthorityConfigId: Identity.IdentityComposer<"@beep/execution-authority-config"> =
+  composers.$ExecutionAuthorityConfigId;

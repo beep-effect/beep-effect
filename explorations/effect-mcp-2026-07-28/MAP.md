@@ -58,7 +58,7 @@ the Origin policy owned by config.
 1. Run key (app-composed): digest of the bearer verified by
    `apps/professional-desktop/server/RpcSessionAuth.ts`, provided in
    `apps/professional-desktop/server/OntologyMcpTransport.ts` as the kit's dispatch anchor,
-   read by `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts` (`runIdOf`)
+   read by `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts` (`runIdOf`)
    and by `OntologyChangeActor`; the kit's `mcp-session-id` read is deleted here. Bricks:
    `requireRpcSessionToken`, `GovernedTierGateLive`, the Goal A anchor.
 2. Tests: delete "keys the run on the session, not the per-request client id"; add "keys the run

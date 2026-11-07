@@ -8,7 +8,6 @@
     {"file":"packages/epistemic/tables/src/entities/ClaimDisposition/ClaimDisposition.errors.ts","symbol":"ClaimDispositionConverterError","kind":"tagged-error","owner":"@beep/epistemic-tables","identity":"ClaimDispositionConverterError"},
     {"file":"packages/epistemic/tables/src/entities/EdgeVersion/EdgeVersion.errors.ts","symbol":"EdgeVersionConverterError","kind":"tagged-error","owner":"@beep/epistemic-tables","identity":"EdgeVersionConverterError"},
     {"file":"packages/epistemic/tables/src/entities/Evidence/Evidence.errors.ts","symbol":"EvidenceConverterError","kind":"tagged-error","owner":"@beep/epistemic-tables","identity":"EvidenceConverterError"},
-    {"file":"packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.errors.ts","symbol":"UsageRecordConverterError","kind":"tagged-error","owner":"@beep/epistemic-tables","identity":"UsageRecordConverterError"},
-    {"file":"packages/epistemic/tables/src/values/ExecutionRecord/ExecutionRecord.errors.ts","symbol":"ExecutionRecordConverterError","kind":"tagged-error","owner":"@beep/epistemic-tables","identity":"ExecutionRecordConverterError"}
+    {"file":"packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.errors.ts","symbol":"UsageRecordConverterError","kind":"tagged-error","owner":"@beep/epistemic-tables","identity":"UsageRecordConverterError"}
   ]
 }

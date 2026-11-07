@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Re-verify the RESEARCH §1-§3 inventory against current main, search for an `OptionalDefect` equivalent, and record pre-move observable state (bound address, ledger row counts, column pins) plus a seeded PGlite fixture. | Facts, the helper decision and the pre-move recordings are recorded. |
-| P1 Implement | pending | P1 move: create the five packages, move the code unchanged, add the rename migration and down-migration, rename the env keys, repoint consumers and pins, retire `@beep/epistemic-config`. Then P2 link: add `authorizedBy` to the Session change journal. | The P1 and P2 acceptance criteria in `SPEC.md` are met, each in its own PR. |
+| P0 Research | complete | Re-verify the RESEARCH §1-§3 inventory against current main, search for an `OptionalDefect` equivalent, and record pre-move observable state (bound address, ledger row counts, column pins) plus a seeded PGlite fixture. | Facts, the helper decision and the pre-move recordings are recorded. |
+| P1 Implement | in-progress | P1 move: create the five packages, move the code unchanged, add the rename migration and down-migration, rename the env keys, repoint consumers and pins, retire `@beep/epistemic-config`. Then P2 link: add `authorizedBy` to the Session change journal. | The P1 and P2 acceptance criteria in `SPEC.md` are met, each in its own PR. |
 | P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |

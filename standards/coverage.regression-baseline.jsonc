@@ -5313,15 +5313,15 @@
     },
     "@beep/db-admin": {
       "path": "packages/_internal/db-admin",
-      "lines": 93.1,
-      "statements": 93.54,
+      "lines": 100,
+      "statements": 100,
       "branches": 100,
-      "functions": 80,
+      "functions": 100,
       "uncovered": {
-        "lines": 4,
-        "statements": 4,
+        "lines": 0,
+        "statements": 0,
         "branches": 0,
-        "functions": 1
+        "functions": 0
       },
       "files": {
         "packages/_internal/db-admin/src/index.ts": {
@@ -5337,15 +5337,15 @@
           }
         },
         "packages/_internal/db-admin/src/migrate.ts": {
-          "lines": 42.85,
-          "statements": 42.85,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 0,
+          "functions": 100,
           "uncovered": {
-            "lines": 4,
-            "statements": 4,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
           }
         },
         "packages/_internal/db-admin/src/migrations/ArchitectureLab.ts": {
@@ -5396,7 +5396,7 @@
             "functions": 0
           }
         },
-        "packages/_internal/db-admin/src/migrations/EpistemicExecutionLedger.ts": {
+        "packages/_internal/db-admin/src/migrations/EpistemicUsage.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -5408,7 +5408,7 @@
             "functions": 0
           }
         },
-        "packages/_internal/db-admin/src/migrations/EpistemicUsage.ts": {
+        "packages/_internal/db-admin/src/migrations/ExecutionAuthorityLedger.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -9427,129 +9427,6 @@
         }
       }
     },
-    "@beep/epistemic-config": {
-      "path": "packages/epistemic/config",
-      "lines": 96,
-      "statements": 96.15,
-      "branches": 100,
-      "functions": 100,
-      "uncovered": {
-        "lines": 1,
-        "statements": 1,
-        "branches": 0,
-        "functions": 0
-      },
-      "files": {
-        "packages/epistemic/config/src/Audience.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/config/src/ServerConfig.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/config/src/TestLayer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/config/src/index.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/config/src/layer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/config/src/public.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/config/src/secrets.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/config/src/server.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/config/src/test.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        }
-      }
-    },
     "@beep/epistemic-domain": {
       "path": "packages/epistemic/domain",
       "lines": 100,
@@ -9672,15 +9549,15 @@
           }
         },
         "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts": {
-          "lines": 16.66,
-          "statements": 12.5,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 0,
+          "functions": 100,
           "uncovered": {
-            "lines": 20,
-            "statements": 28,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 28
+            "functions": 0
           }
         },
         "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts": {
@@ -9815,6 +9692,42 @@
             "functions": 0
           }
         },
+        "packages/epistemic/domain/src/internal/PosInt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/values/ClaimEvidenceReview/ClaimEvidenceReview.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/values/ClaimEvidenceReview/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/epistemic/domain/src/values/ClaimLifecycle/ClaimLifecycle.errors.ts": {
           "lines": 100,
           "statements": 100,
@@ -9876,15 +9789,15 @@
           }
         },
         "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts": {
-          "lines": 96.15,
-          "statements": 95.7,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 92.18,
+          "functions": 100,
           "uncovered": {
-            "lines": 6,
-            "statements": 7,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 5
+            "functions": 0
           }
         },
         "packages/epistemic/domain/src/values/Contradiction/index.ts": {
@@ -9899,16 +9812,52 @@
             "functions": 0
           }
         },
-        "packages/epistemic/domain/src/values/EdgeEndpoint/EdgeEndpoint.model.ts": {
-          "lines": 85.71,
-          "statements": 86.66,
+        "packages/epistemic/domain/src/values/ContradictionDetection/ContradictionDetection.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 66.66,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 2
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/values/ContradictionDetection/ContradictionDetection.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/values/ContradictionDetection/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/values/EdgeEndpoint/EdgeEndpoint.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/epistemic/domain/src/values/EdgeEndpoint/index.ts": {
@@ -9971,114 +9920,6 @@
             "functions": 0
           }
         },
-        "packages/epistemic/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/values/ExecutionGrant/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/values/ExecutionRecord/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/values/ExecutionVerdict/ExecutionVerdict.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/values/ExecutionVerdict/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/values/GrantSet/GrantSet.errors.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/values/GrantSet/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/epistemic/domain/src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts": {
           "lines": 100,
           "statements": 100,
@@ -10092,6 +9933,42 @@
           }
         },
         "packages/epistemic/domain/src/values/LogicalEdgeIdentity/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/values/Retention/Retention.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/values/Retention/Retention.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/values/Retention/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -10131,15 +10008,15 @@
     },
     "@beep/epistemic-server": {
       "path": "packages/epistemic/server",
-      "lines": 79.26,
-      "statements": 79.51,
-      "branches": 84.61,
-      "functions": 63.2,
+      "lines": 81.66,
+      "statements": 81.77,
+      "branches": 86.25,
+      "functions": 68.61,
       "uncovered": {
-        "lines": 147,
-        "statements": 152,
-        "branches": 24,
-        "functions": 117
+        "lines": 108,
+        "statements": 111,
+        "branches": 18,
+        "functions": 86
       },
       "files": {
         "packages/epistemic/server/src/ClaimDisposition/ClaimDisposition.layer.ts": {
@@ -10155,15 +10032,15 @@
           }
         },
         "packages/epistemic/server/src/ClaimDisposition/ClaimDisposition.repo.ts": {
-          "lines": 40.9,
-          "statements": 39.13,
+          "lines": 82.6,
+          "statements": 79.16,
           "branches": 100,
-          "functions": 16.66,
+          "functions": 76.92,
           "uncovered": {
-            "lines": 13,
-            "statements": 14,
+            "lines": 4,
+            "statements": 5,
             "branches": 0,
-            "functions": 10
+            "functions": 3
           }
         },
         "packages/epistemic/server/src/ClaimDisposition/index.ts": {
@@ -10191,15 +10068,15 @@
           }
         },
         "packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.repo.ts": {
-          "lines": 93.07,
-          "statements": 93.16,
+          "lines": 93.3,
+          "statements": 93.2,
           "branches": 89.47,
-          "functions": 89.79,
+          "functions": 90.1,
           "uncovered": {
-            "lines": 18,
-            "statements": 19,
+            "lines": 17,
+            "statements": 18,
             "branches": 10,
-            "functions": 10
+            "functions": 9
           }
         },
         "packages/epistemic/server/src/ContradictionTriage/ContradictionTriage.rpc-handlers.ts": {
@@ -10239,126 +10116,18 @@
           }
         },
         "packages/epistemic/server/src/EdgeAuthority/EdgeAuthority.repo.ts": {
-          "lines": 75,
-          "statements": 74.72,
+          "lines": 78.94,
+          "statements": 78.57,
           "branches": 62.5,
-          "functions": 60.46,
+          "functions": 65.21,
           "uncovered": {
-            "lines": 22,
-            "statements": 23,
+            "lines": 20,
+            "statements": 21,
             "branches": 3,
-            "functions": 17
-          }
-        },
-        "packages/epistemic/server/src/EdgeAuthority/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/server/src/ExecutionLedger/ExecutionLedger.layer.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/server/src/ExecutionLedger/ExecutionLedger.repo.ts": {
-          "lines": 35.71,
-          "statements": 34.48,
-          "branches": 100,
-          "functions": 5.88,
-          "uncovered": {
-            "lines": 18,
-            "statements": 19,
-            "branches": 0,
             "functions": 16
           }
         },
-        "packages/epistemic/server/src/ExecutionLedger/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/server/src/GovernedEgress/GovernedEgress.fetch.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 80,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 2,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/server/src/GovernedEgress/GovernedEgress.layer.ts": {
-          "lines": 50,
-          "statements": 50,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/epistemic/server/src/GovernedEgress/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts": {
-          "lines": 94.04,
-          "statements": 93.1,
-          "branches": 87.5,
-          "functions": 86.48,
-          "uncovered": {
-            "lines": 5,
-            "statements": 6,
-            "branches": 1,
-            "functions": 5
-          }
-        },
-        "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.layer.ts": {
-          "lines": 50,
-          "statements": 50,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/epistemic/server/src/GovernedTierGate/index.ts": {
+        "packages/epistemic/server/src/EdgeAuthority/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -10382,16 +10151,52 @@
             "functions": 0
           }
         },
-        "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts": {
-          "lines": 93.18,
-          "statements": 93.33,
-          "branches": 81.81,
-          "functions": 93.33,
+        "packages/epistemic/server/src/Retention/Retention.reader.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 6,
-            "functions": 1
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/server/src/Retention/Retention.store.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/server/src/Retention/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts": {
+          "lines": 97.01,
+          "statements": 97.1,
+          "branches": 86.36,
+          "functions": 94.44,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 3,
+            "functions": 2
           }
         },
         "packages/epistemic/server/src/ShaclValidation/index.ts": {
@@ -10407,13 +10212,37 @@
           }
         },
         "packages/epistemic/server/src/index.ts": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/server/src/internal/PosInt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/server/src/internal/retentionReadFailureKind.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
             "functions": 0
           }
@@ -10457,6 +10286,18 @@
             "functions": 0
           }
         },
+        "packages/epistemic/tables/src/entities/CandidateClaim/CandidateClaim.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/epistemic/tables/src/entities/CandidateClaim/CandidateClaim.table.ts": {
           "lines": 100,
           "statements": 100,
@@ -10482,6 +10323,18 @@
           }
         },
         "packages/epistemic/tables/src/entities/ClaimDisposition/ClaimDisposition.converters.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/tables/src/entities/ClaimDisposition/ClaimDisposition.errors.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -10565,6 +10418,18 @@
             "functions": 0
           }
         },
+        "packages/epistemic/tables/src/entities/EdgeVersion/EdgeVersion.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/epistemic/tables/src/entities/EdgeVersion/EdgeVersion.table.ts": {
           "lines": 100,
           "statements": 100,
@@ -10590,6 +10455,18 @@
           }
         },
         "packages/epistemic/tables/src/entities/Evidence/Evidence.converters.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/tables/src/entities/Evidence/Evidence.errors.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -10673,6 +10550,18 @@
             "functions": 0
           }
         },
+        "packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.table.ts": {
           "lines": 100,
           "statements": 100,
@@ -10710,54 +10599,6 @@
           }
         },
         "packages/epistemic/tables/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/tables/src/values/ExecutionRecord/ExecutionRecord.converters.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/tables/src/values/ExecutionRecord/ExecutionRecord.table.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/tables/src/values/ExecutionRecord/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/tables/src/values/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -10848,15 +10689,15 @@
     },
     "@beep/epistemic-use-cases": {
       "path": "packages/epistemic/use-cases",
-      "lines": 97.31,
-      "statements": 97.4,
+      "lines": 99.31,
+      "statements": 99.36,
       "branches": 100,
-      "functions": 98.14,
+      "functions": 100,
       "uncovered": {
-        "lines": 4,
-        "statements": 4,
+        "lines": 2,
+        "statements": 2,
         "branches": 0,
-        "functions": 1
+        "functions": 0
       },
       "files": {
         "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.commands.ts": {
@@ -10884,18 +10725,54 @@
           }
         },
         "packages/epistemic/use-cases/src/ClaimDisposition/ClaimDisposition.service.ts": {
-          "lines": 93.75,
-          "statements": 93.75,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 90.9,
+          "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
           }
         },
         "packages/epistemic/use-cases/src/ClaimDisposition/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/ClaimEvidenceReview/ClaimEvidenceReview.commands.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/ClaimEvidenceReview/ClaimEvidenceReview.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/ClaimEvidenceReview/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -10980,6 +10857,66 @@
           }
         },
         "packages/epistemic/use-cases/src/ClaimProjection/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/ContradictionDetection/ContradictionDetection.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/ContradictionDetection/ContradictionDetection.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/ContradictionDetection/ContradictionDetection.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/ContradictionDetection/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/ContradictionDetection/server.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -11088,8 +11025,8 @@
           }
         },
         "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.errors.ts": {
-          "lines": 87.5,
-          "statements": 87.5,
+          "lines": 84.61,
+          "statements": 84.61,
           "branches": 100,
           "functions": 100,
           "uncovered": {
@@ -11123,7 +11060,7 @@
             "functions": 0
           }
         },
-        "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts": {
+        "packages/epistemic/use-cases/src/Retention/Retention.ports.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -11135,7 +11072,7 @@
             "functions": 0
           }
         },
-        "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.ports.ts": {
+        "packages/epistemic/use-cases/src/Retention/Retention.service.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -11147,7 +11084,7 @@
             "functions": 0
           }
         },
-        "packages/epistemic/use-cases/src/ExecutionLedger/index.ts": {
+        "packages/epistemic/use-cases/src/Retention/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -11160,13 +11097,25 @@
           }
         },
         "packages/epistemic/use-cases/src/index.ts": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/use-cases/src/internal/PosInt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
             "functions": 0
           }
@@ -11631,6 +11580,609 @@
           }
         },
         "packages/foundation/modeling/epistemics/src/internal/CanonicalJson.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/execution-authority-config": {
+      "path": "packages/execution-authority/config",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/execution-authority/config/src/Audience.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/config/src/ServerConfig.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/config/src/TestLayer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/config/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/config/src/layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/config/src/public.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/config/src/secrets.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/config/src/server.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/config/src/test.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/execution-authority-domain": {
+      "path": "packages/execution-authority/domain",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/execution-authority/domain/src/entities/ExecutionRecord/ExecutionRecord.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/entities/ExecutionRecord/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/entities/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/internal/CanonicalJson.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/values/ExecutionGrant/ExecutionGrant.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/values/ExecutionGrant/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/values/ExecutionVerdict/ExecutionVerdict.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/values/ExecutionVerdict/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/values/GrantSet/GrantSet.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/values/GrantSet/GrantSet.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/values/GrantSet/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/domain/src/values/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/execution-authority-server": {
+      "path": "packages/execution-authority/server",
+      "lines": 89.18,
+      "statements": 88.71,
+      "branches": 83.33,
+      "functions": 81.81,
+      "uncovered": {
+        "lines": 20,
+        "statements": 22,
+        "branches": 3,
+        "functions": 16
+      },
+      "files": {
+        "packages/execution-authority/server/src/ExecutionLedger/ExecutionLedger.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/server/src/ExecutionLedger/ExecutionLedger.repo.ts": {
+          "lines": 53.57,
+          "statements": 51.72,
+          "branches": 100,
+          "functions": 47.05,
+          "uncovered": {
+            "lines": 13,
+            "statements": 14,
+            "branches": 0,
+            "functions": 9
+          }
+        },
+        "packages/execution-authority/server/src/ExecutionLedger/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/server/src/GovernedEgress/GovernedEgress.fetch.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 80,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/server/src/GovernedEgress/GovernedEgress.layer.ts": {
+          "lines": 50,
+          "statements": 50,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/execution-authority/server/src/GovernedEgress/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts": {
+          "lines": 93.9,
+          "statements": 92.94,
+          "branches": 87.5,
+          "functions": 86.84,
+          "uncovered": {
+            "lines": 5,
+            "statements": 6,
+            "branches": 1,
+            "functions": 5
+          }
+        },
+        "packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.layer.ts": {
+          "lines": 50,
+          "statements": 50,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/execution-authority/server/src/GovernedTierGate/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/server/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/execution-authority-tables": {
+      "path": "packages/execution-authority/tables",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/execution-authority/tables/src/Schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/tables/src/entities/ExecutionRecord/ExecutionRecord.converters.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/tables/src/entities/ExecutionRecord/ExecutionRecord.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/tables/src/entities/ExecutionRecord/ExecutionRecord.table.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/tables/src/entities/ExecutionRecord/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/tables/src/entities/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/tables/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/execution-authority-use-cases": {
+      "path": "packages/execution-authority/use-cases",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/execution-authority/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/use-cases/src/ExecutionLedger/ExecutionLedger.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/use-cases/src/ExecutionLedger/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/use-cases/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/execution-authority/use-cases/src/server.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

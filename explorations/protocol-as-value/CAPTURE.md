@@ -47,10 +47,10 @@ by git hashes."
   of "programs live in the same value universe as data."
 - Act II — the audit: beep-effect independently built the
   journal/register/fold/digest stack FIVE times, plus exhibit A:
-  1. Execution ledger — `packages/epistemic/domain/src/values/ExecutionRecord/`
+  1. Execution ledger — `packages/execution-authority/domain/src/entities/ExecutionRecord/`
      (hash-chained write-ahead decisions, seal = SHA-256 over versioned
      canonical JSON, verify = recompute every seal)
-  2. Governed tier gate — `packages/epistemic/server/src/GovernedTierGate/`
+  2. Governed tier gate — `packages/execution-authority/server/src/GovernedTierGate/`
      ("no record, no action"; closed literal-domain refusals; free text is a
      payload-smuggling channel)
   3. Goal-packet event core — `packages/tooling/tool/cli/src/commands/Goals/PacketCore/`
@@ -142,3 +142,11 @@ composer + annote convention + CURIE/IRI codecs; proven small instance:
 - Effect workflow engine powered by git hashes / content-addressed
   continuations + fenced resumption ("Unison-for-effects").
 - Some or all of this jointly with Mepuka (foldlab convergence), shape TBD.
+
+## 2026-11-07
+
+- Path rewrite: audit exhibits 1 and 2 in the 2026-08-23 entry originally cited the execution
+  ledger in `@beep/epistemic-domain` and the governed tier gate in `@beep/epistemic-server`.
+  `goals/execution-authority-slice` P1 (#2853) moved both to the execution-authority slice, and
+  the paths were updated in place because the knowledge refs gate rejects broken tracked paths
+  in live exploration docs.

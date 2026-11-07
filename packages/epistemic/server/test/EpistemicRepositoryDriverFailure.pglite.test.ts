@@ -8,14 +8,11 @@
  * failure into its own typed error rather than leak the raw cause.
  */
 
-import { ExecutionRunKey } from "@beep/epistemic-domain/values/ExecutionRecord";
 import {
   makeDrizzleClaimDispositionRepository,
   makeInMemoryClaimDispositionRepository,
 } from "@beep/epistemic-server/ClaimDisposition";
-import { makeDrizzleExecutionLedger } from "@beep/epistemic-server/ExecutionLedger";
 import { ClaimDispositionRepositoryUnavailable } from "@beep/epistemic-use-cases/ClaimDisposition";
-import { ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { makeDrizzleLayer } from "@beep/postgres";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { it } from "@beep/test-runner";
@@ -27,12 +24,9 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const decodeCandidateClaimId = S.decodeUnknownEffect(Epistemic.CandidateClaimId);
-
-const runKey = ExecutionRunKey.make(Str.repeat(64)("a"));
 
 const UnmigratedDrizzleLayer = makeDrizzleLayer().pipe(
   Layer.provideMerge(Layer.fresh(makePgliteSqlTestLayer({ mode: "in-process" })))
@@ -58,28 +52,6 @@ describe("Epistemic repository driver failures", { concurrent: false }, () => {
 
         pipe(ClaimDispositionRepositoryUnavailable.is(failure), assertTrue);
         expect(failure.operation).toBe("listByClaim");
-      })
-    );
-
-    it.effect(
-      "redacts every execution ledger read to ExecutionLedgerUnavailable",
-      Effect.fnUntraced(function* () {
-        const ledger = yield* makeDrizzleExecutionLedger();
-
-        const decisions = yield* ledger.readDecisions(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
-        const outcomes = yield* ledger.readOutcomes(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
-        const unsettled = yield* ledger.readUnsettledAllowed(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
-
-        expect(A.map([decisions, outcomes, unsettled], (error) => ExecutionLedgerUnavailable.is(error))).toEqual([
-          true,
-          true,
-          true,
-        ]);
-        expect(A.map([decisions, outcomes, unsettled], (error) => error.operation)).toEqual([
-          "readDecisions",
-          "readOutcomes",
-          "readUnsettledAllowed",
-        ]);
       })
     );
   });
