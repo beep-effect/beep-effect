@@ -248,4 +248,8 @@ Reverse: Revert this citation repair and checkpoint together if the pinned upstr
 
 Reverse: Revert the wording clarification; retain the original source and parent qualification in the private archive.
 
+### Scope timer network waits to research services, 2026-11-07
+
+Reverse: Restore the prior paragraph only if both service renderers add the documented wait
+
 <!-- beep:decisions:end -->
