@@ -1,0 +1,14 @@
+{
+  "previous": "62a23a82591df70ff19d9b3121e62a9c1989039ce0d8076eaea19bb96dc27fe4",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+    "reason": "Restore the @beep/postgres dev-dependency edge record for @beep/alchemy-postgres on top of #2881's re-recorded baseline; re-stamp the root turbo.json source review row. No command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b-main.md",
+      "sha256": "54c4e0290bd5f7e9967b8a95f609040f65cdb19ba2fe63de416450c06701213d"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
