@@ -127,7 +127,7 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
   ratification, CQ, control-intervention or ciops change.
 
 - 2026-09-16: Reconciled inherited citation-line drift for security closeout;
-  [receipt](../../goals/codex-security-findings-2026-09-08/research/citation-refresh-2026-09-16.json)
+  [receipt](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/codex-security-findings-2026-09-08/research/citation-refresh-2026-09-16.json)
   maps unchanged source blocks from capture to current HEAD. No auditor run or
   corpus recapture was performed.
 

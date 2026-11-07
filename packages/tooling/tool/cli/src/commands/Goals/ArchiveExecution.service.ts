@@ -43,6 +43,7 @@ import { decodeGoalManifest, renderGoalCloseoutRecord, renderGoalProposedCloseou
 import { parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
 import { GoalManifestFormatter } from "./Manifest.service.ts";
 import { biomeManifestFormatter } from "./Manifest.ts";
+import { planResearchProjection, projectResearchReports } from "./ManifestProjection.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
@@ -778,6 +779,16 @@ const stubFor = Effect.fnUntraced(function* (
   });
 });
 
+// A goal tombstone keeps only part of research/, so its generated researchReports projection is recomputed from the kept files.
+const reprojectResearch = (manifestText: string, packetDir: string, keep: ReadonlyArray<string>): string =>
+  O.getOrElse(
+    planResearchProjection(
+      manifestText,
+      projectResearchReports(A.map(keep, (file) => Str.slice(Str.length(packetDir) + 1)(file)))
+    ),
+    () => manifestText
+  );
+
 const tombstoneEntry = Effect.fnUntraced(function* (
   workspace: ArchiveWorkspaceShape,
   entry: ArchivePlanEntry,
@@ -802,9 +813,10 @@ const tombstoneEntry = Effect.fnUntraced(function* (
   const stub = yield* stubFor(workspace, entry, manifestValue, readmeText, record);
   const encodedRecord = yield* encodeRecord(record).pipe(Effect.orDie);
   const archivePath = entry.root === "goals" ? ["archive"] : ["exploration", "archive"];
-  const nextManifest = applyJsoncModification(
+  const withArchive = applyJsoncModification(
     JsoncModification.make({ content: manifestText, path: archivePath, value: encodedRecord })
   );
+  const nextManifest = entry.root === "goals" ? reprojectResearch(withArchive, relative, entry.keep) : withArchive;
   yield* Effect.forEach(
     entry.remove,
     (file) =>
