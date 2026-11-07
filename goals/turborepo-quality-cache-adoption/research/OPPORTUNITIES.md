@@ -1383,3 +1383,18 @@ consumer beyond these paths; historical citations remain historical. A
 consumer-edge inventory before archive would have prevented this inherited red.
 No local tests, quality suites, compiler or evidence generator ran. Hosted CI
 will prove the consolidated repair.
+
+## 2026-11-07: observe local recipes without waiting for protected issuer material
+
+The existing local pilot needs neither the signed issuer nor backend capabilities,
+but the only real hosted execution entrypoint required all protected-producer
+records. Keep those trust gates intact and add a separate exact-main, credential-free
+observation leaf to the existing Heavy workflow. Share the existing preparation and
+cleanup adapters; the signed caller retains identity-only selection. Bound one job
+to twenty minutes and native execution to fifteen minutes. Keep full receipts private
+and publish only the schema-backed, bounded digest/count projection with no
+qualification authority. Hosted fixture controls cover redaction, exclusive output,
+invalid records, request framing, mode refusal and foreign cleanup paths. No local
+quality suite or real pilot has run for this change; its runtime observations remain
+pending accepted source and the bounded hosted dispatch. This prevents credential
+provisioning from serializing independent local observation work.

@@ -20,6 +20,62 @@ import { CacheDependencyTree, CacheExecutablePin, CacheRuntimeLinkerSnapshot } f
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.schemas");
 
+const LocalObservationCount = S.Natural.check(S.isLessThanOrEqualTo(1024)).pipe(
+  $I.annoteSchema("LocalObservationCount", { description: "Bounded detailed-receipt observation count." })
+);
+
+/**
+ * Public digest/count projection of a private local observation, without qualification authority.
+ *
+ * **Example** (Decode an untrusted observation summary)
+ * ```ts
+ * import { CacheLocalPilotSummary } from "@beep/repo-cli/commands/Cache"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decodeSummary = S.decodeUnknownEffect(S.fromJsonString(CacheLocalPilotSummary))
+ * const pendingValidation = decodeSummary("{}")
+ * console.assert(Effect.isEffect(pendingValidation))
+ * ```
+ *
+ * **Details**
+ * The isolated CI adapter emits this contract. It retains hashes and counts;
+ * raw receipts, labels, paths and task output remain private. Decoding this
+ * summary never promotes a qualification tuple or proves protected publication.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheLocalPilotSummary extends S.Opaque<CacheLocalPilotSummary, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.Literal("cache-local-observation-summary/v1"),
+    authority: S.Literal("local-observation-only"),
+    sourceRevision: GitObjectId,
+    channel: CacheClientChannel,
+    computation: CacheQualificationKey.fields.computation,
+    client: S.Struct({ version: CacheClientPin.fields.version, sha256: Sha256Hex }),
+    privateReceipt: S.Struct({
+      bytes: S.Natural.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(16 * 1024 * 1024)),
+      sha256: Sha256Hex,
+    }),
+    counts: S.Struct({
+      checks: LocalObservationCount,
+      failedChecks: LocalObservationCount,
+      runs: LocalObservationCount,
+      mutations: LocalObservationCount,
+      nonExecutions: LocalObservationCount,
+    }),
+    allChecksPassed: S.Boolean,
+    failedLabelSha256: S.Array(Sha256Hex).check(S.isMaxLength(64)),
+    omittedFailedLabels: LocalObservationCount,
+    qualificationGranted: S.Literal(false),
+  }).pipe(
+    $I.annoteSchema("CacheLocalPilotSummary", {
+      description: "Allowlisted local-observation metadata; explicitly not a qualification or producer receipt.",
+    })
+  )
+) {}
+
 /**
  * Select two read-only registered worktrees and exact local experiment tools.
  *

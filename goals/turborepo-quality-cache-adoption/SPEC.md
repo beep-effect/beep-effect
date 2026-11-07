@@ -1194,6 +1194,14 @@ Lane `codex/cache-types-key-input-20261106`
 
 Reverse: Remove the hashed environment declaration or revert this change; types lint stays uncached.
 
+### Observe existing local pilot recipes on bounded credential-free hosted runners, 2026-11-07
+
+Independent producer approvals remain separate from the existing credential-free local pilot. Add an exact-main manual caller through the already admitted Heavy workflow, with no protected environment, cache or application secrets, remote cache, issuer or publication capability. Reuse the existing pilot CLI and extract its existing input preparation for both signed and local callers; retain signed identity-only restrictions. Local observations select only reviewed identity/types lint and pinned stable/canary clients. One workflow job at a time, maximum twenty job minutes and fifteen execution minutes; no capacity increase. Keep full local receipts private with a sixteen MiB read bound, a 256 MiB/ten-second publication worker, publish only a maximum sixty-four KiB allowlisted digest/count summary for one day, and remove only owned worktrees/scratch. The summary cannot promote a qualification tuple. Add hosted security/control regressions; no manual local tests or quality suites. Dispatch only after accepted source and preview review. This enables actual local observation independently of signed grants and does not reduce any full-goal acceptance, portability, trust or representative-window requirement.
+
+Lane `codex/cache-local-observation-hosted-20261107`
+
+Reverse: Remove the manual local-observation caller and Heavy leaf; keep signed producer gates, inactive grants and previously retained observations unchanged.
+
 ### Keep index-sensitive law discovery outside affected selection, 2026-11-07
 
 Hosted PR #2826 exposed three introduced defects: root cache/env assertions retained the previous policy, a Git fixture attempted index removal while its staged content differed from both HEAD and the working tree, and five tracked-discovery checks remained affected-filtered despite their cache hold. Move those five checks into the existing unfiltered one-slot state graph; preserve all input probes and total concurrency. Align the fixture index before removal and include sanitized Git argv in fixture failures. Author corrected exact planner/cache contracts; push to hosted CI without local quality execution. Coverage aggregation on the failed head refused UNIT_RESULT=failure; it is not an independent measured coverage regression. These corrections grant no cache qualification or final adoption.
