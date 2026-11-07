@@ -23,9 +23,11 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -374,7 +376,7 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
             Effect.gen(function* () {
               const report = yield* readSquashCommitlint(context, pullFacts);
               expect(report.verdict._tag).toBe(expected);
-              expect(A.every(Str.split(report.message.body, "\n"), (line) => Str.length(line) < 100)).toBe(true);
+              pipe(report.message.body, Str.split("\n"), A.every((line) => Str.length(line) < 100), assertTrue);
               const predicted = predictSquashCommitMessage(source(["fix(x): one", subject]));
               expect(predicted.body).toContain(`* ${subject}`);
               expect(Str.replaceAll(report.message.body, "\n", " ")).toContain(subject);

@@ -45,7 +45,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow, identity } from "effect/Function";
+import { flow, identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
@@ -1215,7 +1215,7 @@ const withoutHostMergeReservation = Effect.map(FileSystem.FileSystem, (fs) =>
 // that form), so a test can prove the merge was or was not sent.
 const withScriptedGh = <A, E, R>(
   script: GhScript,
-  use: (calls: Ref.Ref<ReadonlyArray<string>>) => Effect.Effect<A, E, R>
+  use: (calls: Ref.Ref<ReadonlyArray<string>>, github: ReadonlyArray<GithubCall>) => Effect.Effect<A, E, R>
 ) =>
   // The test clock starts at the epoch; put "now" a minute past the recorded window.
   windowClosed.pipe(
@@ -1228,7 +1228,7 @@ const withScriptedGh = <A, E, R>(
         MutableRef.update(calls.ref, A.append(line));
         return githubAnswer(script, call, line);
       });
-      return use(calls).pipe(
+      return use(calls, github.calls).pipe(
         github.provide,
         Effect.provideService(GithubTransportFetch, O.some(scriptedGithub(script, calls).fetch)),
         Effect.provideServiceEffect(Git, Git.make),
@@ -1690,6 +1690,52 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             expect(merge.value).toContain("commit_message=The one commit.");
           }
         })
+      )
+    );
+
+    it.effect("the folded historical body sent to GitHub exactly equals the linted message and decision", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          pull: { ...pullFixture, title: "fix(yeet): lint the explicit squash message" },
+          commits: ["fix(x): one\n\nBody.", Str.slice(2)(longBullet)],
+        },
+        (_calls, github) =>
+          Effect.gen(function* () {
+            const read = yield* readMergeGate(context, pullFixture.number);
+            const linted = read.squashCommitlint.message;
+            expect(read.squashCommitlint.verdict._tag).toBe("pass");
+            expect(linted.body).not.toContain(longBullet);
+            pipe(linted.body, Str.split("\n"), A.every((line) => Str.length(line) < 100), assertTrue);
+            const decision = yield* runMergeGate(
+              context,
+              MergeGateRunOptions.make({
+                prNumber: pullFixture.number,
+                wantSha: headSha,
+                tolerate: [],
+                forceWindow: false,
+                relaxed: false,
+                dryRun: false,
+              })
+            );
+            expect(decision._tag).toBe("merge");
+            if (decision._tag === "merge") {
+              expect(decision.commitTitle).toBe(linted.header);
+              expect(decision.commitMessage).toBe(linted.body);
+              const request = A.findFirst(
+                github,
+                (call) => call.method === "PUT" && call.path === `{repo}/pulls/${pullFixture.number}/merge`
+              );
+              request.pipe(O.isSome, assertTrue);
+              if (O.isSome(request))
+                expect(request.value.body).toEqual({
+                  sha: headSha,
+                  merge_method: "squash",
+                  commit_title: linted.header,
+                  commit_message: linted.body,
+                });
+            }
+          })
       )
     );
 
