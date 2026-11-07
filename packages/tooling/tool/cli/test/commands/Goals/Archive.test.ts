@@ -111,7 +111,11 @@ const REFLECTION = (instruction: string): string =>
 const FIXTURE: ReadonlyArray<readonly [string, string]> = [
   [
     "goals/done/ops/manifest.json",
-    goalManifest("done", "completed-retained", { mission: "Ship the done packet.", provides: ["archive/done"] }),
+    goalManifest("done", "completed-retained", {
+      mission: "Ship the done packet.",
+      provides: ["archive/done"],
+      researchReports: ["research/OPPORTUNITIES.md", "research/notes.md"],
+    }),
   ],
   ["goals/done/README.md", "# Done\n\nSee [plan](./PLAN.md).\n"],
   ["goals/done/PLAN.md", "# Plan\n"],
@@ -636,6 +640,7 @@ describe("goals archive", () => {
         assert.strictEqual(manifest.archive?.commit, archiveCommit);
         assert.strictEqual(manifest.archive?.contentHash, archivedTree);
         assert.strictEqual(manifest.archive?.path, "goals/done");
+        assert.deepStrictEqual(manifest.researchReports, ["research/OPPORTUNITIES.md"]);
         const explorationText = yield* readText(root, "explorations/gone/ops/manifest.json");
         assertSome(
           O.map(decodeExplorationManifestText(explorationText), (value) => value.exploration.archive?.path),

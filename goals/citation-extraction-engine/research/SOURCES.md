@@ -256,8 +256,8 @@ sorting, HTML/callback modes and final annotation service remain open.
 - [`EYECITE_BASELINE.md`](./EYECITE_BASELINE.md)
 - [Source exploration](../../../explorations/citation-grounding-hallucination-guard/README.md)
 - [Legal parser landscape](../../../explorations/citation-grounding-hallucination-guard/research/legal-citation-parser-landscape.md)
-- [Verified-span sources](../../citation-verified-span-substrate/research/SOURCES.md)
-- [Court/reporter vocabulary audit](../../court-reporter-vocabulary/research/EYECITE_DATA_AUDIT.md)
+- [Verified-span sources](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/citation-verified-span-substrate/research/SOURCES.md)
+- [Court/reporter vocabulary audit](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/court-reporter-vocabulary/research/EYECITE_DATA_AUDIT.md)
 
 ## Annotation replacement-template reference
 
