@@ -15,7 +15,8 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { SessionLedgerRow, SessionLedgerState } from "../../Session/Session.schemas.ts";
-import { FleetCheckout, FleetCheckoutKind, FleetLiveness } from "../Worktree.schemas.ts";
+import { FleetCheckout, FleetCheckoutKind, FleetLiveness, FleetSnapshot } from "../Worktree.schemas.ts";
+import { ConfiguredFleetRoots } from "./FleetRoots.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/internal/FleetRegistry.schemas");
 
@@ -224,6 +225,67 @@ export class FleetCheckoutDescription extends S.Opaque<FleetCheckoutDescription,
   }).pipe(
     $I.annoteSchema("FleetCheckoutDescription", {
       description: "Full mirror record, registry row and latest session-ledger rows for one fleet checkout.",
+    })
+  )
+) {}
+
+/**
+ * One checkout the scan saw, with the role adoption would give it.
+ *
+ * **Example** (A lane owned by a seat)
+ *
+ * ```ts
+ * import { FleetAdoptionCandidate } from "@beep/repo-cli/test/Worktree"
+ *
+ * const candidate = FleetAdoptionCandidate.make({
+ *   checkout: "/p/beep/lanes/x",
+ *   role: "adopted",
+ *   owningSeat: "/p/beep/seats/main",
+ * })
+ * console.log(candidate.role) // "adopted"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FleetAdoptionCandidate extends S.Opaque<FleetAdoptionCandidate, { readonly brand: unique symbol }>()(
+  S.Struct({
+    checkout: S.String,
+    role: FleetSeatRole,
+    owningSeat: S.NullOr(S.String),
+  }).pipe(
+    $I.annoteSchema("FleetAdoptionCandidate", {
+      description: "A scanned checkout with the seat role and owning seat adoption would record for it.",
+    })
+  )
+) {}
+
+/**
+ * Everything the joined views read from one scan: the roots, the mirror
+ * snapshot, the persisted registry, the rows this scan adopted, and the
+ * repository's session-ledger rows.
+ *
+ * **Example** (Reference the model)
+ *
+ * ```ts
+ * import { FleetJoin } from "@beep/repo-cli/test/Worktree"
+ *
+ * console.log(typeof FleetJoin.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FleetJoin extends S.Opaque<FleetJoin, { readonly brand: unique symbol }>()(
+  S.Struct({
+    roots: ConfiguredFleetRoots,
+    snapshot: FleetSnapshot,
+    registry: FleetRegistryDocument,
+    adopted: S.Array(FleetRegistryRow),
+    ledger: S.Array(SessionLedgerRow),
+  }).pipe(
+    $I.annoteSchema("FleetJoin", {
+      description: "Roots, mirror snapshot, persisted registry, adopted rows and ledger rows read by one joined scan.",
     })
   )
 ) {}

@@ -460,15 +460,23 @@ const gitProbe = <A, E>(read: Effect.Effect<A, E>): Effect.Effect<O.Option<A>> =
 
 const nulPaths = (stdout: string): ReadonlyArray<string> => A.filter(Str.split(stdout, "\0"), Str.isNonEmpty);
 
+// Whether `<candidate>/.git` exists with the given type: a directory for a clone, a file for a linked worktree.
+const hasGitEntry = Effect.fn("Fleet.hasGitEntry")(function* (
+  candidate: string,
+  type: "Directory" | "File"
+): Effect.fn.Return<boolean, never, FleetMirrorServiceRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const gitInfo = yield* fs.stat(path.join(candidate, ".git")).pipe(Effect.option);
+  return O.exists(gitInfo, (info) => info.type === type);
+});
+
 /** A sibling directory counts as a fleet clone only when it holds a `.git` directory whose origin normalizes to ours. */
 const cloneMatchesOrigin = Effect.fn("Fleet.cloneMatchesOrigin")(function* (
   candidate: string,
   normalizedOrigin: string
 ): Effect.fn.Return<boolean, never, FleetMirrorServiceRequirements> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const gitInfo = yield* fs.stat(path.join(candidate, ".git")).pipe(Effect.option);
-  if (O.isNone(gitInfo) || gitInfo.value.type !== "Directory") {
+  if (!(yield* hasGitEntry(candidate, "Directory"))) {
     return false;
   }
   const git = yield* Git;
@@ -484,12 +492,10 @@ const cloneMatchesOrigin = Effect.fn("Fleet.cloneMatchesOrigin")(function* (
 const linkedCheckoutClone = Effect.fn("Fleet.linkedCheckoutClone")(function* (
   candidate: string
 ): Effect.fn.Return<O.Option<string>, never, FleetMirrorServiceRequirements> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const gitInfo = yield* fs.stat(path.join(candidate, ".git")).pipe(Effect.option);
-  if (O.isNone(gitInfo) || gitInfo.value.type !== "File") {
+  if (!(yield* hasGitEntry(candidate, "File"))) {
     return O.none();
   }
+  const path = yield* Path.Path;
   const git = yield* Git;
   const commonDir = yield* gitProbe(git.commonDir(candidate));
   return O.map(commonDir, (output) => path.dirname(path.resolve(candidate, Str.trim(output))));

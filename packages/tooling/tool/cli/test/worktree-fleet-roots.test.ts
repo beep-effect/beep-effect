@@ -12,6 +12,7 @@ import {
   adoptFleetRegistryRows,
   describeFleetCheckout,
   EMPTY_FLEET_REGISTRY,
+  FleetAdoptionCandidate,
   FleetRegistryDocument,
   FleetRegistryRow,
   FleetRegistryStore,
@@ -438,8 +439,8 @@ describe("fleet roots and registry documents", () => {
       expect(S.isSchemaError(refused)).toBe(true);
 
       const candidates = [
-        { checkout: "/p/beep/seats/main", role: "adopted" as const, owningSeat: null },
-        { checkout: "/p/beep/lanes/x", role: "adopted" as const, owningSeat: "/p/beep/seats/main" },
+        FleetAdoptionCandidate.make({ checkout: "/p/beep/seats/main", role: "adopted", owningSeat: null }),
+        FleetAdoptionCandidate.make({ checkout: "/p/beep/lanes/x", role: "adopted", owningSeat: "/p/beep/seats/main" }),
       ];
       const once = adoptFleetRegistryRows(document, candidates);
       expect(A.map(once.adopted, (row) => row.checkout)).toEqual(["/p/beep/lanes/x"]);

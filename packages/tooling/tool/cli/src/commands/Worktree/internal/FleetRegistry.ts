@@ -31,17 +31,19 @@ import { SessionLedger } from "../../Session/SessionLedger.service.ts";
 import { FleetMirrorService } from "../Fleet.service.ts";
 import { WorktreeCommandError } from "../Worktree.errors.ts";
 import {
+  FleetAdoptionCandidate,
   FleetCheckoutDescription,
+  FleetJoin,
   FleetJoinedRow,
   FleetRegistryDocument,
   FleetRegistryRow,
   FleetSeatRole,
 } from "./FleetRegistry.schemas.ts";
-import { fleetStateDirectory } from "./FleetRoots.ts";
+import { fleetStateDirectory, readOptionalFleetStateFile } from "./FleetRoots.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type { SessionLedgerRow } from "../../Session/Session.schemas.ts";
 import type { PrRepository } from "../../Yeet/internal/Provenance.ts";
-import type { FleetCheckout, FleetScanOptions, FleetSnapshot } from "../Worktree.schemas.ts";
+import type { FleetCheckout, FleetScanOptions } from "../Worktree.schemas.ts";
 import type { ConfiguredFleetRoots } from "./FleetRoots.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/internal/FleetRegistry");
@@ -61,18 +63,6 @@ const sortRows = (rows: ReadonlyArray<FleetRegistryRow>): ReadonlyArray<FleetReg
   A.sortWith(rows, (row) => row.checkout, Order.String);
 
 /**
- * One checkout the scan saw, with the role adoption would give it.
- *
- * @category models
- * @since 0.0.0
- */
-export type FleetAdoptionCandidate = {
-  readonly checkout: string;
-  readonly role: FleetSeatRole;
-  readonly owningSeat: string | null;
-};
-
-/**
  * Add a row for every candidate the registry does not know yet.
  *
  * **Details**
@@ -88,6 +78,7 @@ export type FleetAdoptionCandidate = {
  * import {
  *   adoptFleetRegistryRows,
  *   EMPTY_FLEET_REGISTRY,
+ *   FleetAdoptionCandidate,
  *   FleetRegistryDocument,
  *   FleetRegistryRow,
  * } from "@beep/repo-cli/test/Worktree"
@@ -96,7 +87,9 @@ export type FleetAdoptionCandidate = {
  *   schemaVersion: "fleet-registry/v1",
  *   rows: [FleetRegistryRow.make({ checkout: "/p/beep-effect0", seatRole: "main" })],
  * })
- * const result = adoptFleetRegistryRows(registered, [{ checkout: "/p/beep-effect0", role: "legacy", owningSeat: null }])
+ * const result = adoptFleetRegistryRows(registered, [
+ *   FleetAdoptionCandidate.make({ checkout: "/p/beep-effect0", role: "legacy", owningSeat: null }),
+ * ])
  * console.log(result.document.rows[0]?.seatRole, result.adopted.length) // "main" 0
  * console.log(EMPTY_FLEET_REGISTRY.rows.length) // 0
  * ```
@@ -254,13 +247,13 @@ export const fleetAdoptionCandidates = Effect.fn("FleetRegistry.adoptionCandidat
     Effect.fnUntraced(function* (row): Effect.fn.Return<FleetAdoptionCandidate> {
       const role = fleetAdoptionRole({ roots, checkout: row.path, kind: row.kind });
       if (row.kind === "clone") {
-        return { checkout: row.path, role, owningSeat: null };
+        return FleetAdoptionCandidate.make({ checkout: row.path, role, owningSeat: null });
       }
       const commonDir = yield* git.commonDir(row.path).pipe(Effect.option);
       const owningSeat = O.getOrNull(
         O.map(commonDir, (output) => path.dirname(path.resolve(row.path, Str.trim(output))))
       );
-      return { checkout: row.path, role, owningSeat };
+      return FleetAdoptionCandidate.make({ checkout: row.path, role, owningSeat });
     }),
     { concurrency: 8 }
   );
@@ -471,16 +464,8 @@ const registryFile = Effect.fn("FleetRegistry.file")(function* (repository: PrRe
 });
 
 const readRegistry = Effect.fn("FleetRegistryStore.read")(function* (repository: PrRepository) {
-  const fs = yield* FileSystem.FileSystem;
   const { file } = yield* registryFile(repository);
-  const content = yield* fs.readFileString(file).pipe(
-    Effect.asSome,
-    Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "NotFound"
-        ? Effect.succeedNone
-        : Effect.fail(WorktreeCommandError.make({ message: `Failed to read ${file}.`, path: file, cause: error }))
-    )
-  );
+  const content = yield* readOptionalFleetStateFile(file);
   if (O.isNone(content)) {
     return EMPTY_FLEET_REGISTRY;
   }
@@ -540,20 +525,6 @@ export const FleetRegistryStoreLive: Layer.Layer<
 );
 
 /**
- * Everything the joined views read from one scan.
- *
- * @category models
- * @since 0.0.0
- */
-export type FleetJoin = {
-  readonly roots: ConfiguredFleetRoots;
-  readonly snapshot: FleetSnapshot;
-  readonly registry: FleetRegistryDocument;
-  readonly adopted: ReadonlyArray<FleetRegistryRow>;
-  readonly ledger: ReadonlyArray<SessionLedgerRow>;
-};
-
-/**
  * Scan the fleet, adopt unregistered checkouts into the registry, and read
  * the repository's session ledger.
  *
@@ -600,5 +571,5 @@ export const loadFleetJoin = Effect.fn("FleetRegistry.loadJoin")(function* (
   const ledger = yield* ledgerStore
     .list(repository)
     .pipe(Effect.mapError(WorktreeCommandError.new("Failed to read the session ledger.")));
-  return { roots, snapshot, registry: document, adopted, ledger };
+  return FleetJoin.make({ roots, snapshot, registry: document, adopted, ledger });
 });

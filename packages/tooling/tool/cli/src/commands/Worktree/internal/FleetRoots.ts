@@ -138,12 +138,26 @@ export const fleetStateDirectory = Effect.fn("FleetRoots.stateDirectory")(functi
 
 const decodeRootsDocument = S.decodeUnknownEffect(S.fromJsonString(FleetRootsDocument));
 
-const readRootsFile = Effect.fn("FleetRoots.readFile")(function* (repository: PrRepository) {
+/**
+ * Read a fleet state file; a missing file is `O.none()`, any other failure is typed.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { readOptionalFleetStateFile } from "@beep/repo-cli/test/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readOptionalFleetStateFile("/state/fleet/x/roots.json"))) // true
+ * ```
+ *
+ * @param file - Absolute path of the state file.
+ * @returns The file's text, or `O.none()` when it does not exist.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readOptionalFleetStateFile = Effect.fn("FleetRoots.readOptionalStateFile")(function* (file: string) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const directory = yield* fleetStateDirectory(repository);
-  const file = path.join(directory, "roots.json");
-  const content = yield* fs.readFileString(file).pipe(
+  return yield* fs.readFileString(file).pipe(
     Effect.asSome,
     Effect.catchTag("PlatformError", (error) =>
       error.reason._tag === "NotFound"
@@ -151,6 +165,13 @@ const readRootsFile = Effect.fn("FleetRoots.readFile")(function* (repository: Pr
         : Effect.fail(WorktreeCommandError.make({ message: `Failed to read ${file}.`, path: file, cause: error }))
     )
   );
+});
+
+const readRootsFile = Effect.fn("FleetRoots.readFile")(function* (repository: PrRepository) {
+  const path = yield* Path.Path;
+  const directory = yield* fleetStateDirectory(repository);
+  const file = path.join(directory, "roots.json");
+  const content = yield* readOptionalFleetStateFile(file);
   if (O.isNone(content)) {
     return O.none<ConfiguredFleetRoots>();
   }
@@ -200,9 +221,9 @@ export const readConfiguredFleetRoots = Effect.fn("FleetRoots.readConfigured")(f
 
 const decodeRepository = S.decodeUnknownOption(PrRepository);
 const GITHUB_REPOSITORY = /github\.com[/:]([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/u;
-const REMOTE_SECTION = /^\s*\[\s*remote\s+"([^"]*)"\s*\]\s*$/u;
-const SECTION = /^\s*\[/u;
-const URL_ENTRY = /^\s*url\s*=\s*(.+?)\s*$/u;
+// The `[remote "origin"]` section body runs to the next `[` section header or the end of the text.
+const ORIGIN_SECTION = /^\s*\[\s*remote\s+"origin"\s*\]\s*$([^[]*)/mu;
+const URL_ENTRY = /^\s*url\s*=\s*(.+?)\s*$/mu;
 
 /**
  * Read the `origin` URL from git config text without spawning git.
@@ -222,25 +243,13 @@ const URL_ENTRY = /^\s*url\s*=\s*(.+?)\s*$/u;
  * @category parsing
  * @since 0.0.0
  */
-export const originUrlFromGitConfig = (config: string): O.Option<string> => {
-  let inOrigin = false;
-  for (const line of Str.split(config, "\n")) {
-    const remote = Str.match(REMOTE_SECTION)(line);
-    if (O.isSome(remote)) {
-      inOrigin = remote.value[1] === "origin";
-      continue;
-    }
-    if (O.isSome(Str.match(SECTION)(line))) {
-      inOrigin = false;
-      continue;
-    }
-    const url = inOrigin ? Str.match(URL_ENTRY)(line) : O.none();
-    if (O.isSome(url) && url.value[1] !== undefined) {
-      return O.some(url.value[1]);
-    }
-  }
-  return O.none();
-};
+export const originUrlFromGitConfig = (config: string): O.Option<string> =>
+  pipe(
+    Str.match(ORIGIN_SECTION)(config),
+    O.flatMap((section) => O.fromUndefinedOr(section[1])),
+    O.flatMap(Str.match(URL_ENTRY)),
+    O.flatMap((entry) => O.fromUndefinedOr(entry[1]))
+  );
 
 /**
  * Parse a github.com remote into the repository identity that keys fleet state.
