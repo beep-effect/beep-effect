@@ -70,16 +70,16 @@ in `beep lint laws`.
 
 ## Acceptance Criteria
 
-- [ ] `ls scripts` shows only `cloud/bootstrap.sh` (and `cloud/` itself).
+- [x] `ls scripts` shows only `cloud/bootstrap.sh` (and `cloud/` itself).
 - [ ] `check.yml`, `heavy.yml`, `storybook.yml`, `release-desktop.yml` and
       `setup-monorepo-ci/action.yml` call `beep ci ...` through the fetched binary; a hosted run
       is green on each.
-- [ ] `beep github app mint --help` exists and a dry-run reproduces today's manifests byte for byte.
-- [ ] `bun run beep lint laws` fails on a tracked `.sh` outside the allowlist (fixture test) and
+- [x] `beep github app mint --help` exists and a dry-run reproduces today's manifests byte for byte.
+- [x] `bun run beep lint laws` fails on a tracked `.sh` outside the allowlist (fixture test) and
       passes on `main`.
-- [ ] Root `prepare`, `.changeset/config.json` and the merge-driver assertion reference beep
+- [x] Root `prepare`, `.changeset/config.json` and the merge-driver assertion reference beep
       commands, not `scripts/`.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
