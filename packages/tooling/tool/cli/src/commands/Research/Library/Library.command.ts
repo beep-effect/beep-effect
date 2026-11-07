@@ -304,11 +304,22 @@ const ontologyRender = Command.make(
 const ontology = Command.make("ontology").pipe(Command.withSubcommands([ontologyRender]));
 const status = Command.make(
   "status",
-  { library, includePrivate },
-  Effect.fn("ResearchLibrary.statusCommand")(function* ({ library, includePrivate }) {
+  {
+    library,
+    includePrivate,
+    summary: Flag.Boolean("summary").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print only the per-hop and private-partition lines, without the SPARQL views")
+    ),
+    intake: Flag.String("intake").pipe(
+      Flag.optional,
+      Flag.withDescription("Scope the summary's hop and partition counts to one intake id or unique date")
+    ),
+  },
+  Effect.fn("ResearchLibrary.statusCommand")(function* ({ library, includePrivate, summary, intake }) {
     const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
-    yield* research.status(root, includePrivate);
+    yield* research.status(root, includePrivate, summary, intake);
   })
 ).pipe(Command.provide(ResearchLibraryLive), Command.withDescription("Report coverage and provider health separately"));
 

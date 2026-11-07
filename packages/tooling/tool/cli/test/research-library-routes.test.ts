@@ -458,6 +458,16 @@ describe("research library routes", () => {
         const added = A.filter(second.derivations, (edge) => edge.intakeId !== octoberIntake.id);
         expect(added.length).toBeGreaterThan(0);
         expect(A.every(added, (edge) => A.contains(novemberIds, edge.intakeId))).toBe(true);
+        // Status scoped to the earlier intake counts only its own documents and hop-1 identities.
+        const scoped = yield* libraryHopTotals(root, second, undefined, O.some(octoberIntake.id));
+        const octoberHopOne = A.dedupe(
+          A.map(
+            A.filter(octoberEdges, (edge) => edge.hopDepth === 1),
+            (edge) => edge.derivedId
+          )
+        );
+        expect(scoped[0]).toMatch(/^hop 0: documents=1 /);
+        expect(scoped[1]).toBe(`hop 1: identities=${octoberHopOne.length} readable=0`);
       })
     );
 

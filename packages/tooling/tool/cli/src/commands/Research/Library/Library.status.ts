@@ -8,7 +8,10 @@
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
+import { LibraryError } from "./Library.errors.ts";
 import { libraryHopTotals } from "./Library.hopStatus.ts";
 import { loadCatalog } from "./Library.store.ts";
 import {
@@ -34,8 +37,43 @@ import {
  * @category use-cases
  * @since 0.0.0
  */
-export const libraryStatus = Effect.fn("Research.Library.status")(function* (root: string, includePrivate = false) {
+export const libraryStatus = Effect.fn("Research.Library.status")(function* (
+  root: string,
+  includePrivate = false,
+  summary = false,
+  intakeId: O.Option<string> = O.none()
+) {
   const catalog = yield* loadCatalog(root);
+  if (summary === true) {
+    // The per-hop and partition lines straight from the catalog, without the SPARQL view dataset.
+    const resolved = O.flatMap(intakeId, (wanted) =>
+      A.findFirst(catalog.intakes, (intake) => intake.id === wanted || intake.date === wanted)
+    );
+    if (O.isSome(intakeId) && O.isNone(resolved))
+      return yield* LibraryError.make({ message: `No intake matches ${intakeId.value}.`, cause: intakeId.value });
+    const scope = O.map(resolved, (intake) => intake.id);
+    const files = O.match(resolved, {
+      onNone: () => A.flatMap(catalog.intakes, (i) => i.files),
+      onSome: (i) => i.files,
+    });
+    const privateFiles = A.filter(files, (file) => file.accessClass === "private").length;
+    const snapshots = HashSet.fromIterable(A.map(files, (file) => file.snapshotPath));
+    const referenced = A.filter(files, (file) => file.retention === "referenced").length;
+    yield* Console.log(
+      `library status (summary${O.isSome(scope) ? `, intake ${scope.value}` : ""}): intake files=${files.length} private=${privateFiles} referenced media=${referenced}`
+    );
+    const scoped = HashSet.fromIterable(
+      A.map(
+        A.filter(catalog.derivations, (d) => O.match(scope, { onNone: () => true, onSome: (id) => d.intakeId === id })),
+        (d) => d.derivedId
+      )
+    );
+    yield* Console.log(
+      `private partition: documents=${A.filter(catalog.documents, (d) => d.accessClass === "private" && HashSet.has(snapshots, d.snapshotPath)).length} sources=${A.filter(catalog.sources, (s) => s.accessClass === "private" && (O.isNone(scope) || HashSet.has(scoped, s.id))).length}`
+    );
+    const hops = yield* libraryHopTotals(root, catalog, undefined, scope);
+    return yield* Effect.forEach(hops, (line) => Console.log(line), { discard: true });
+  }
   const dataset = yield* libraryViewDataset(root, catalog);
   const counts = yield* runView(dataset, statusCounts, LibraryCountRow, includePrivate);
   const partition = yield* runView(dataset, privatePartition, LibraryCountRow, true);

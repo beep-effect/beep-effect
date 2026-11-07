@@ -449,6 +449,18 @@ To reverse, copy the receipt's `catalog/history/<beforeCatalogSha256>.json` over
 `catalog/library.json`. The reader continues to accept v1. Preserve the receipt
 and backup for audit and do not edit historical artifacts.
 
+### Status summary for a large catalog
+
+`status` builds the SPARQL view dataset, which takes tens of minutes and many
+gigabytes at the November intake's size (78k sources). `status --summary` prints
+only the per-hop and private-partition lines straight from the catalog, in
+seconds; `--intake <id-or-date>` scopes them to one intake's documents and
+derivation edges:
+
+```sh
+bun run beep research library status --summary --intake <intake-id>
+```
+
 ## Mining (T1/T2/T3)
 
 `mine` turns an intake's readable sources and its own hop-0 documents into
