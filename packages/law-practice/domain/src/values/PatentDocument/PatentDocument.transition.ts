@@ -75,6 +75,12 @@ export const parseClaimTransition: (value: string) => PatentClaimTransition = fl
 export const trimClaimTransitionPreamble = flow(Str.trim, Str.replace(/,?\s+further$/iu, ""), Str.trim);
 
 type TransitionEligibility = (match: RegExpMatchArray) => O.Option<boolean>;
+type TransitionDisposition = (
+  text: string,
+  match: RegExpMatchArray,
+  charge: ((amount: number) => boolean) | undefined,
+  eligible: TransitionEligibility | undefined
+) => number;
 
 const reserveTransitionWork = (charge: ((amount: number) => boolean) | undefined, amount: number): boolean =>
   charge === undefined || charge(amount);
@@ -86,12 +92,7 @@ const transitionEligibility = (match: RegExpMatchArray, eligible: TransitionElig
   if (O.isNone(accepted)) return -1;
   return accepted.value ? 1 : 0;
 };
-const lexicalTransitionDisposition = (
-  text: string,
-  match: RegExpMatchArray,
-  charge: ((amount: number) => boolean) | undefined,
-  eligible: TransitionEligibility | undefined
-): number => {
+const lexicalTransitionDisposition: TransitionDisposition = (text, match, charge, eligible) => {
   const disposition = transitionEligibility(match, eligible);
   if (disposition !== 1) return disposition;
   if (!reserveTransitionWork(charge, match[0].length * 2 + 4)) return -1;
@@ -118,12 +119,7 @@ const lexicalTransitionMatches = (
   }
   return O.some(matches);
 };
-const implicitTransitionDisposition = (
-  text: string,
-  match: RegExpMatchArray,
-  charge: ((amount: number) => boolean) | undefined,
-  eligible: TransitionEligibility | undefined
-): number => {
+const implicitTransitionDisposition: TransitionDisposition = (text, match, charge, eligible) => {
   const disposition = transitionEligibility(match, eligible);
   if (disposition !== 1) return disposition;
   const index = O.getOrElse(O.fromUndefinedOr(match.index), constant(0));
