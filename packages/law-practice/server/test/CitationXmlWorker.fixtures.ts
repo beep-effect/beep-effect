@@ -24,12 +24,9 @@ export const makeCitationXmlTestRuntime = Effect.fn("XmlWorkerTest.runtime")(fun
   return yield* makeCitationBundledTestRuntime(
     kind,
     NodeURL.fileURLToPath(
-      new URL(
-        kind === "node"
-          ? "../src/internal/Citation/XmlWorker.node.entry.ts"
-          : "../src/internal/Citation/XmlWorker.entry.ts",
-        import.meta.url
-      )
+      kind === "node"
+        ? new URL("../src/internal/Citation/XmlWorker.node.entry.ts", import.meta.url)
+        : new URL("../src/internal/Citation/XmlWorker.entry.ts", import.meta.url)
     ),
     cwd
   );
