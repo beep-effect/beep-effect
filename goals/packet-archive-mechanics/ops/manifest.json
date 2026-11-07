@@ -35,7 +35,7 @@
     "goals/packet-archive-mechanics/GOAL.md",
     "goals/packet-archive-mechanics/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/P0-DESIGN.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -51,17 +51,17 @@
     {
       "id": "P0",
       "name": "Tooling",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Archive repo",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Sweep",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

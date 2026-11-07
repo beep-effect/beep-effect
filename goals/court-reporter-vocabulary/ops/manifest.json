@@ -39,11 +39,7 @@
     "explorations/court-vocabulary-resolver/MAP.md",
     "explorations/court-vocabulary-resolver/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/EYECITE_DATA_AUDIT.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -80,5 +76,13 @@
     "Stable-ID fixtures expose reassignment, silent removal, or ambiguous succession.",
     "Implementation would require public raw files, runtime mutation or networking, AGPL transcription, or sync-engine redesign.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/court-reporter-vocabulary",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "aea9820ef96f9b2851ad7ecd957c85870796c8d7",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

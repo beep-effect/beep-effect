@@ -86,5 +86,12 @@
     "The dependency packet (desktop-chat-surface) is not closed."
   ],
   "mission": "Bring `apps/professional-desktop`'s chat surface to **full feature parity** with the `effect-lexical-chat` POC. The prior `desktop-chat-surface` packet shipped the surface (atoms, turn kernel, `ChatRpcs`, PGlite persistence) but a POC→port audit found three buckets of dropped parity:",
-  "researchReports": ["research/2026-06-15-poc-parity-audit.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/chat-surface-parity",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "bc15959f00c11d23a51128b07b74efe3a6f9e55e",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

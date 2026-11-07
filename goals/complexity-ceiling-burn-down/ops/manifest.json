@@ -41,12 +41,7 @@
     "goals/complexity-ceiling-burn-down/history/reflections/2026-09-08-codex.md",
     "goals/complexity-ceiling-burn-down/history/reflections/2026-09-09-codex.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/calibration.md",
-    "research/tail-inventory.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -103,5 +98,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation.",
     "A refactor would degrade code quality to satisfy a threshold (appeasement) - record an override with reason + review date instead."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/complexity-ceiling-burn-down",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "a38aafb4f2d7d99226f9421f9054e855b518ac3d",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

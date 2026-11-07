@@ -31,12 +31,7 @@
     "goals/codex-security-findings-2026-09-16/GOAL.md",
     "goals/codex-security-findings-2026-09-16/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/issue-1137.md",
-    "research/verification.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -159,5 +154,13 @@
     "A remediation requires an architecture or product decision outside packet scope.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "2026-09-21: closed. The four findings and the scheduler synchronization repair merged in PR #1160 on 2026-09-16 and #1174 closed the coverage gaps; the closeout reflection landed the same day. P6 and P7 are complete on those receipts. P8 keeps the merge receipt but the Codex Cloud dashboard closure of the four findings has no receipt in the repo, so it stays open until the operator records it; P9 is the lifecycle flip in this PR."
+  "statusNote": "2026-09-21: closed. The four findings and the scheduler synchronization repair merged in PR #1160 on 2026-09-16 and #1174 closed the coverage gaps; the closeout reflection landed the same day. P6 and P7 are complete on those receipts. P8 keeps the merge receipt but the Codex Cloud dashboard closure of the four findings has no receipt in the repo, so it stays open until the operator records it; P9 is the lifecycle flip in this PR.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/codex-security-findings-2026-09-16",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "ec7c1d9887801eb3bbb1a2b475d1977c8aeb2294",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

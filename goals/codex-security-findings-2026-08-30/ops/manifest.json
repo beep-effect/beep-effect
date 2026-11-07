@@ -33,7 +33,7 @@
     "goals/codex-security-findings-2026-08-30/research/SOURCES.md",
     "goals/codex-security-findings-2026-08-30/research/OPPORTUNITIES.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -156,5 +156,13 @@
     "Tracked evidence contains secrets, auth values, signed URLs, email addresses, or raw developer-local paths.",
     "A remediation requires an architecture or product decision outside packet scope.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/codex-security-findings-2026-08-30",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "76406a396874154e88d88cea55ea35b118564efc",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }
