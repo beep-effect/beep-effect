@@ -1,0 +1,479 @@
+{
+  "artifacts": [
+    {
+      "eventSeqs": [2, 3, 4, 5],
+      "fileSizeBytes": 117378,
+      "kind": "frame",
+      "relativePath": "frames/transition-w0_00000.png"
+    },
+    {
+      "eventSeqs": [2, 3, 4, 5],
+      "fileSizeBytes": 175925,
+      "kind": "frame",
+      "relativePath": "frames/transition-w0_00001.png"
+    },
+    {
+      "eventSeqs": [2, 3, 4, 5],
+      "fileSizeBytes": 177346,
+      "kind": "frame",
+      "relativePath": "frames/transition-w0_00002.png"
+    },
+    {
+      "eventSeqs": [2, 3, 4, 5],
+      "fileSizeBytes": 113182,
+      "kind": "gif",
+      "relativePath": "clips/transition-w0.gif"
+    },
+    {
+      "eventSeqs": [8, 10],
+      "fileSizeBytes": 195349,
+      "kind": "frame",
+      "relativePath": "frames/click-w1_00000.png"
+    },
+    {
+      "eventSeqs": [8, 10],
+      "fileSizeBytes": 195457,
+      "kind": "frame",
+      "relativePath": "frames/click-w1_00001.png"
+    },
+    {
+      "eventSeqs": [8, 10],
+      "fileSizeBytes": 196708,
+      "kind": "frame",
+      "relativePath": "frames/click-w1_00002.png"
+    },
+    {
+      "eventSeqs": [6, 21],
+      "fileSizeBytes": 195361,
+      "kind": "frame",
+      "relativePath": "frames/hover-w2_00000.png"
+    },
+    {
+      "eventSeqs": [6, 21],
+      "fileSizeBytes": 195457,
+      "kind": "frame",
+      "relativePath": "frames/hover-w2_00001.png"
+    },
+    {
+      "eventSeqs": [6, 21],
+      "fileSizeBytes": 229034,
+      "kind": "frame",
+      "relativePath": "frames/hover-w2_00002.png"
+    },
+    {
+      "eventSeqs": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "fileSizeBytes": 195584,
+      "kind": "frame",
+      "relativePath": "frames/transition-w3_00000.png"
+    },
+    {
+      "eventSeqs": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "fileSizeBytes": 235747,
+      "kind": "frame",
+      "relativePath": "frames/transition-w3_00001.png"
+    },
+    {
+      "eventSeqs": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "fileSizeBytes": 236542,
+      "kind": "frame",
+      "relativePath": "frames/transition-w3_00002.png"
+    },
+    {
+      "eventSeqs": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "fileSizeBytes": 236677,
+      "kind": "frame",
+      "relativePath": "frames/transition-w3_00003.png"
+    },
+    {
+      "eventSeqs": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "fileSizeBytes": 236309,
+      "kind": "frame",
+      "relativePath": "frames/transition-w3_00004.png"
+    },
+    {
+      "eventSeqs": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "fileSizeBytes": 236758,
+      "kind": "frame",
+      "relativePath": "frames/transition-w3_00005.png"
+    },
+    {
+      "eventSeqs": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "fileSizeBytes": 249426,
+      "kind": "gif",
+      "relativePath": "clips/transition-w3.gif"
+    },
+    {
+      "eventSeqs": [24, 25],
+      "fileSizeBytes": 227602,
+      "kind": "frame",
+      "relativePath": "frames/transition-w4_00000.png"
+    },
+    {
+      "eventSeqs": [24, 25],
+      "fileSizeBytes": 222631,
+      "kind": "frame",
+      "relativePath": "frames/transition-w4_00001.png"
+    },
+    {
+      "eventSeqs": [24, 25],
+      "fileSizeBytes": 222667,
+      "kind": "frame",
+      "relativePath": "frames/transition-w4_00002.png"
+    },
+    {
+      "eventSeqs": [24, 25],
+      "fileSizeBytes": 196860,
+      "kind": "gif",
+      "relativePath": "clips/transition-w4.gif"
+    },
+    {
+      "eventSeqs": [34, 35],
+      "fileSizeBytes": 50542,
+      "kind": "frame",
+      "relativePath": "frames/marker-w5_00000.png"
+    },
+    {
+      "eventSeqs": [34, 35],
+      "fileSizeBytes": 232873,
+      "kind": "frame",
+      "relativePath": "frames/marker-w5_00001.png"
+    },
+    {
+      "eventSeqs": [34, 35],
+      "fileSizeBytes": 537328,
+      "kind": "gif",
+      "relativePath": "clips/marker-w5.gif"
+    },
+    {
+      "eventSeqs": [49, 52],
+      "fileSizeBytes": 246049,
+      "kind": "frame",
+      "relativePath": "frames/click-w6_00000.png"
+    },
+    {
+      "eventSeqs": [49, 52],
+      "fileSizeBytes": 246266,
+      "kind": "frame",
+      "relativePath": "frames/click-w6_00001.png"
+    },
+    {
+      "eventSeqs": [49, 52],
+      "fileSizeBytes": 245931,
+      "kind": "frame",
+      "relativePath": "frames/click-w6_00002.png"
+    },
+    {
+      "eventSeqs": [55, 58],
+      "fileSizeBytes": 246101,
+      "kind": "frame",
+      "relativePath": "frames/transition-w7_00000.png"
+    },
+    {
+      "eventSeqs": [55, 58],
+      "fileSizeBytes": 246643,
+      "kind": "frame",
+      "relativePath": "frames/transition-w7_00001.png"
+    },
+    {
+      "eventSeqs": [55, 58],
+      "fileSizeBytes": 56757,
+      "kind": "frame",
+      "relativePath": "frames/transition-w7_00002.png"
+    },
+    {
+      "eventSeqs": [55, 58],
+      "fileSizeBytes": 136948,
+      "kind": "gif",
+      "relativePath": "clips/transition-w7.gif"
+    },
+    {
+      "eventSeqs": [54, 56, 57, 63],
+      "fileSizeBytes": 246513,
+      "kind": "frame",
+      "relativePath": "frames/hover-w8_00000.png"
+    },
+    {
+      "eventSeqs": [54, 56, 57, 63],
+      "fileSizeBytes": 246643,
+      "kind": "frame",
+      "relativePath": "frames/hover-w8_00001.png"
+    },
+    {
+      "eventSeqs": [54, 56, 57, 63],
+      "fileSizeBytes": 57115,
+      "kind": "frame",
+      "relativePath": "frames/hover-w8_00002.png"
+    },
+    {
+      "eventSeqs": [54, 56, 57, 63],
+      "fileSizeBytes": 56156,
+      "kind": "frame",
+      "relativePath": "frames/hover-w8_00003.png"
+    },
+    {
+      "eventSeqs": [54, 56, 57, 63],
+      "fileSizeBytes": 55671,
+      "kind": "frame",
+      "relativePath": "frames/hover-w8_00004.png"
+    },
+    {
+      "eventSeqs": [54, 56, 57, 63],
+      "fileSizeBytes": 244515,
+      "kind": "frame",
+      "relativePath": "frames/hover-w8_00005.png"
+    },
+    {
+      "eventSeqs": [60],
+      "fileSizeBytes": 242954,
+      "kind": "frame",
+      "relativePath": "frames/marker-w9_00000.png"
+    },
+    {
+      "eventSeqs": [60],
+      "fileSizeBytes": 316915,
+      "kind": "gif",
+      "relativePath": "clips/marker-w9.gif"
+    },
+    {
+      "eventSeqs": [72],
+      "fileSizeBytes": 252490,
+      "kind": "frame",
+      "relativePath": "frames/transition-w10_00000.png"
+    },
+    {
+      "eventSeqs": [72],
+      "fileSizeBytes": 252705,
+      "kind": "frame",
+      "relativePath": "frames/transition-w10_00001.png"
+    },
+    {
+      "eventSeqs": [72],
+      "fileSizeBytes": 252887,
+      "kind": "frame",
+      "relativePath": "frames/transition-w10_00002.png"
+    },
+    {
+      "eventSeqs": [72],
+      "fileSizeBytes": 142209,
+      "kind": "gif",
+      "relativePath": "clips/transition-w10.gif"
+    },
+    {
+      "eventSeqs": [74, 76],
+      "fileSizeBytes": 252812,
+      "kind": "frame",
+      "relativePath": "frames/click-w11_00000.png"
+    },
+    {
+      "eventSeqs": [74, 76],
+      "fileSizeBytes": 59112,
+      "kind": "frame",
+      "relativePath": "frames/click-w11_00001.png"
+    },
+    {
+      "eventSeqs": [74, 76],
+      "fileSizeBytes": 59057,
+      "kind": "frame",
+      "relativePath": "frames/click-w11_00002.png"
+    },
+    {
+      "eventSeqs": [79],
+      "fileSizeBytes": 81376,
+      "kind": "frame",
+      "relativePath": "frames/marker-w12_00000.png"
+    },
+    {
+      "eventSeqs": [79],
+      "fileSizeBytes": 92775,
+      "kind": "gif",
+      "relativePath": "clips/marker-w12.gif"
+    },
+    {
+      "eventSeqs": [80, 81, 82, 83],
+      "fileSizeBytes": 129222,
+      "kind": "frame",
+      "relativePath": "frames/transition-w13_00000.png"
+    },
+    {
+      "eventSeqs": [80, 81, 82, 83],
+      "fileSizeBytes": 129177,
+      "kind": "frame",
+      "relativePath": "frames/transition-w13_00001.png"
+    },
+    {
+      "eventSeqs": [80, 81, 82, 83],
+      "fileSizeBytes": 129978,
+      "kind": "frame",
+      "relativePath": "frames/transition-w13_00002.png"
+    },
+    {
+      "eventSeqs": [80, 81, 82, 83],
+      "fileSizeBytes": 68151,
+      "kind": "gif",
+      "relativePath": "clips/transition-w13.gif"
+    },
+    {
+      "eventSeqs": [86, 88],
+      "fileSizeBytes": 194282,
+      "kind": "frame",
+      "relativePath": "frames/click-w14_00000.png"
+    },
+    {
+      "eventSeqs": [86, 88],
+      "fileSizeBytes": 197406,
+      "kind": "frame",
+      "relativePath": "frames/click-w14_00001.png"
+    },
+    {
+      "eventSeqs": [86, 88],
+      "fileSizeBytes": 196604,
+      "kind": "frame",
+      "relativePath": "frames/click-w14_00002.png"
+    },
+    {
+      "eventSeqs": [84, 91],
+      "fileSizeBytes": 194319,
+      "kind": "frame",
+      "relativePath": "frames/hover-w15_00000.png"
+    },
+    {
+      "eventSeqs": [84, 91],
+      "fileSizeBytes": 196221,
+      "kind": "frame",
+      "relativePath": "frames/hover-w15_00001.png"
+    },
+    {
+      "eventSeqs": [84, 91],
+      "fileSizeBytes": 236570,
+      "kind": "frame",
+      "relativePath": "frames/hover-w15_00002.png"
+    },
+    {
+      "eventSeqs": [89, 90],
+      "fileSizeBytes": 197406,
+      "kind": "frame",
+      "relativePath": "frames/transition-w16_00000.png"
+    },
+    {
+      "eventSeqs": [89, 90],
+      "fileSizeBytes": 197134,
+      "kind": "frame",
+      "relativePath": "frames/transition-w16_00001.png"
+    },
+    {
+      "eventSeqs": [89, 90],
+      "fileSizeBytes": 197867,
+      "kind": "frame",
+      "relativePath": "frames/transition-w16_00002.png"
+    },
+    {
+      "eventSeqs": [89, 90],
+      "fileSizeBytes": 173545,
+      "kind": "gif",
+      "relativePath": "clips/transition-w16.gif"
+    },
+    {
+      "eventSeqs": [94, 95],
+      "fileSizeBytes": 235554,
+      "kind": "frame",
+      "relativePath": "frames/transition-w17_00000.png"
+    },
+    {
+      "eventSeqs": [94, 95],
+      "fileSizeBytes": 234591,
+      "kind": "frame",
+      "relativePath": "frames/transition-w17_00001.png"
+    },
+    {
+      "eventSeqs": [94, 95],
+      "fileSizeBytes": 221515,
+      "kind": "frame",
+      "relativePath": "frames/transition-w17_00002.png"
+    },
+    {
+      "eventSeqs": [94, 95],
+      "fileSizeBytes": 194536,
+      "kind": "gif",
+      "relativePath": "clips/transition-w17.gif"
+    },
+    {
+      "eventSeqs": [96],
+      "fileSizeBytes": 247525,
+      "kind": "frame",
+      "relativePath": "frames/marker-w18_00000.png"
+    },
+    {
+      "eventSeqs": [96],
+      "fileSizeBytes": 386673,
+      "kind": "gif",
+      "relativePath": "clips/marker-w18.gif"
+    },
+    {
+      "eventSeqs": [97],
+      "fileSizeBytes": 244616,
+      "kind": "frame",
+      "relativePath": "frames/transition-w19_00000.png"
+    },
+    {
+      "eventSeqs": [97],
+      "fileSizeBytes": 245477,
+      "kind": "frame",
+      "relativePath": "frames/transition-w19_00001.png"
+    },
+    {
+      "eventSeqs": [97],
+      "fileSizeBytes": 246301,
+      "kind": "frame",
+      "relativePath": "frames/transition-w19_00002.png"
+    },
+    {
+      "eventSeqs": [97],
+      "fileSizeBytes": 154270,
+      "kind": "gif",
+      "relativePath": "clips/transition-w19.gif"
+    },
+    {
+      "eventSeqs": [98],
+      "fileSizeBytes": 61851,
+      "kind": "frame",
+      "relativePath": "frames/marker-w20_00000.png"
+    },
+    {
+      "eventSeqs": [98],
+      "fileSizeBytes": 22831,
+      "kind": "gif",
+      "relativePath": "clips/marker-w20.gif"
+    },
+    {
+      "eventSeqs": [],
+      "fileSizeBytes": 84862,
+      "kind": "sheet",
+      "relativePath": "sheets/contact-sheet.jpg"
+    }
+  ],
+  "clockSync": {
+    "confidence": "low",
+    "method": "beacon",
+    "offsetMs": -1794094962505.8665,
+    "residualRmsMs": 283.88660042918525,
+    "slope": 1
+  },
+  "eventsPath": "~/YeeBois/projects/beep-effect-worktrees/vault-sync-offline-intents/.beep/qa/round-5/events.ndjson",
+  "schemaVersion": "beep.qa.capture-session.v1",
+  "session": {
+    "commitDirty": true,
+    "commitSha": "481d212e43fdcb2c442970e2c378998a2962b244",
+    "id": "qa-round-5-1794094962561",
+    "lane": "playwright",
+    "round": 5,
+    "scenario": ".beep/qa-capture-vault-sync.mjs",
+    "startedAtEpochMs": 1794094962561,
+    "toolVersions": {
+      "bun": "1.4.4",
+      "ffmpeg": "ffmpeg version 8.0.1-3ubuntu2 Copyright (c) 2000-2025 the FFmpeg developers"
+    },
+    "url": "https://professional-desktop-vsoi.beep.localhost:1355/",
+    "viewport": { "height": 1000, "width": 1600 }
+  },
+  "videoPath": "~/YeeBois/projects/beep-effect-worktrees/vault-sync-offline-intents/.beep/qa/round-5/video/page@cab37a921bcdfb5f64288484fda313e4.webm"
+}

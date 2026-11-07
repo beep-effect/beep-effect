@@ -1,0 +1,170 @@
+{
+  "round": "5",
+  "url": "https://professional-desktop-vsoi.beep.localhost:1355/",
+  "scenarios": [
+    {
+      "name": "online-baseline",
+      "screenshots": ["online-baseline--online.png"],
+      "assertions": [
+        {
+          "name": "connected badge",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "one open conflict row",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "no intents queued",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "notes": []
+    },
+    {
+      "name": "offline-trigger-queued",
+      "screenshots": ["offline-trigger-queued--queued.png"],
+      "assertions": [
+        {
+          "name": "queued notice",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "one action waiting",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "trigger reads Sync queued",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "pill reads sidecar offline",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "queued ops shows local waiting",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [],
+      "notes": ["queued after 596 ms"]
+    },
+    {
+      "name": "offline-review-predicted",
+      "screenshots": ["offline-review-predicted--predicted.png"],
+      "assertions": [
+        {
+          "name": "row predicted reviewed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "two actions waiting",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "open conflicts shows pending review",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [],
+      "notes": []
+    },
+    {
+      "name": "offline-reload-keeps-queue",
+      "screenshots": ["offline-reload-keeps-queue--reloaded.png"],
+      "assertions": [
+        {
+          "name": "queue persisted across reload",
+          "ok": true,
+          "detail": "[{\"kind\":\"trigger\",\"intentId\":\"1794094991057-594650787477148\",\"workspaceId\":1,\"queuedAt\":1794094991058},{\"kind\":\"review\""
+        },
+        {
+          "name": "two actions still waiting",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "one offline notice, no red status error",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "pending review row kept",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "row keeps its path",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "pill reads sidecar offline",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "notes": []
+    },
+    {
+      "name": "reconnect-replay-and-revert",
+      "screenshots": ["reconnect-replay-and-revert--reverted.png"],
+      "assertions": [
+        {
+          "name": "rejection message shown on its row",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "no sync-level error for the review",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "rejection message fully visible",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "intent queue drained",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "review prediction reverted",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "status reconnected after replay",
+          "ok": true,
+          "detail": "connected"
+        },
+        {
+          "name": "trigger replayed with one intent id",
+          "ok": true,
+          "detail": "[[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"offline\",\"1794094991057-594650787477148\"],[\"reject-reviews\",\"1794094991057-594650787477148\"]]"
+        }
+      ],
+      "consoleErrors": [],
+      "notes": []
+    }
+  ]
+}
