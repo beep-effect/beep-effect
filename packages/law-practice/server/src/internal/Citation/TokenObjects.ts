@@ -3,70 +3,29 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import { LiteralKit } from "@beep/schema";
+import {
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTokenSeed,
+} from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
-import * as Equivalence from "effect/Equivalence";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Tuple from "effect/Tuple";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationAssemblyView, CitationTokenAssemblyFailure } from "./TokenAssembly.ts";
 import { makeCitationTokenEditions } from "./TokenEditions.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenObjects");
-const Kind = LiteralKit([
-  "Token",
-  "CitationToken",
-  "SectionToken",
-  "SupraToken",
-  "IdToken",
-  "ParagraphToken",
-  "StopWordToken",
-  "PlaceholderCitationToken",
-  "CaseReferenceToken",
-]);
-const Position = S.Int.check(
-  S.isBetween({
-    minimum: -CitationEngineAbsoluteMaxima.producedTextUtf16,
-    maximum: CitationEngineAbsoluteMaxima.producedTextUtf16,
-  })
-);
-const Native = S.NullOr(
-  CitationPythonUnicodeStorage.pipe(
-    S.overrideToEquivalence(() => Equivalence.Struct({ width: Equivalence.Number, bytes: Bytes.Equivalence }))
-  )
-);
-const Groups = S.Record(S.String.check(S.isMaxLength(256)), Native);
-const Editions = S.Array(S.Natural).check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates));
-/** Normalized constructor fields. The match/extra adapter supplies these fields;
- * this is private state, not the public semantic citation or a request codec.
- * @internal @category models @since 0.0.0
- */
-export class CitationTokenSeed extends S.Opaque<CitationTokenSeed, { readonly brand: unique symbol }>()(
-  S.Struct({
-    kind: Kind,
-    data: Native,
-    start: Position,
-    end: Position,
-    groups: Groups,
-    exact: Editions,
-    variation: Editions,
-    short: S.Boolean,
-  }).pipe(
-    $I.annoteSchema("CitationTokenSeed", {
-      description:
-        "Owned native source token fields; absent/null group keys and literal surrogate words stay distinct.",
-    })
-  )
-) {}
+const Position = CitationTokenSeed.fields.start;
+const Native = CitationTokenSeed.fields.data;
+const Groups = CitationTokenSeed.fields.groups;
 /** @internal @category models @since 0.0.0 */
 export class CitationTokenConstruction extends S.Opaque<CitationTokenConstruction, { readonly brand: unique symbol }>()(
   S.Struct({ seed: CitationTokenSeed, offset: Position }).pipe(

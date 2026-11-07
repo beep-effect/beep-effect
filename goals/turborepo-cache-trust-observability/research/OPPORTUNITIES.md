@@ -2563,3 +2563,22 @@ that it does not enter issuer, execution or publication steps. Keep independent
 source/profile approval and actual protected execution as separate requirements.
 A paired policy assertion before the first producer-readiness review would have
 prevented this mismatch. No protected dispatch or credential change occurred.
+
+## 2026-11-07 — Pilot cleanliness omitted the frozen producer profile
+
+While tracing ambient environment inputs before protected qualification, source
+review found that `Cache.pilot.ts` checked ordinary Git cleanliness but did not
+call the existing `assertCacheProducerWorkflowProfile` guard. Ignored source
+overrides and root dotenv names could therefore pass that narrower check before
+source copying and sandbox mounting. No actual secret exposure was observed.
+The producer workflow already rejects ignored declared-source entries and root
+dotenv names without reading their contents, including dangling aliases. Reuse
+that guard for both registered pilot source roots before tool probes or sandbox
+execution. Local regular-file and signed dangling-alias refusal controls are
+authored for hosted CI; they were not run locally. A shared source-eligibility
+checklist at the pilot boundary would have prevented this omission. No source
+worktree is cleaned automatically, and no credential, signing or reuse grant
+changes. This repair is not complete task or production qualification.
+### Bind repeatability evidence to the measured revision, 2026-11-07
+
+The accepted dependency refresh changed the root manifest and lockfile after a real matching pair at b0c9bab1. Calling the old pair current would overstate its profile applicability. Publish the measured revision and artifact hashes, compare the thirteen controls, and require a fresh pair for the changed profile. Preserve the old successful and failed observations. The adapter candidate has four unchanged declared build inputs, so avoid a redundant build based only on commit movement.

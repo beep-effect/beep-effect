@@ -74,18 +74,12 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": [
-    "research/chrome-feature-map.md",
-    "research/deep-research-lexical-chat-composer.md",
-    "research/palette.md",
-    "research/references/design-references.md",
-    "research/references/implementation-surface.md",
-    "research/references/project-context.md",
-    "research/references/theming.md",
-    "research/seed/USER_PROMPT_INITIAL.md",
-    "research/seed/assets/EditorComposer_story.png",
-    "research/seed/assets/Lobehub_editor_chat_interface_experience.png",
-    "research/seed/assets/UserChatInput.png",
-    "research/seed/palette.json"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/chat-input-and-theming",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "dd2dc908168a1ab0706b62a1fc81c9a6ee593980",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

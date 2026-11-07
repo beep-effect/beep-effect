@@ -215,6 +215,11 @@ describe("lint policy plan stages", () => {
       "lint:oxlint",
       "lint:shadcn",
       "lint:typos",
+      "lint:markdown-fences",
+      "lint:retired-effect-paths",
+      "lint:entity-kit-freeze",
+      "lint:retired-iri-authorities",
+      "lint:opaque-roundtrips",
     ]);
   });
 

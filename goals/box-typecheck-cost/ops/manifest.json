@@ -217,5 +217,12 @@
     "attribution": "apps/professional-desktop has 168 typecheck errors both before and after this change (byte-identical error sets) - inherited, not introduced. @beep/box and @beep/documents-server are clean.",
     "incidentalFix": "resolveBoxPaths hardcoded repoRoot/node_modules/box-node-sdk, which does not exist in a git worktree; it now walks up for the installed SDK."
   },
-  "researchReports": ["research/measurements.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/box-typecheck-cost",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "0dd318e31cdd21eb2871ed6b38cf642f6679c7de",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

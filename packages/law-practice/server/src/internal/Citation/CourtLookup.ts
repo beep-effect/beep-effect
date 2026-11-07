@@ -8,7 +8,12 @@ import {
   findCourtById,
   isCurrentCourtReporterArtifactVersion,
 } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -16,12 +21,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationPythonLower } from "./PythonCase.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { filterCitationPythonStorage, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { citationRegexCellFor } from "./RegexAlphabet.ts";
 import { makeCitationRegexPointSets } from "./RegexPointSets.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationTextBudget, makeCitationTextBudget } from "./TextBudget.ts";
+import { makeCitationTextBudget } from "./TextBudget.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CourtLookup");
 const Reason = LiteralKit(["invalid-policy", "invalid-table", "incompatible-vocabulary"]).pipe(

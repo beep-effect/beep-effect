@@ -103,7 +103,7 @@ also carries typed parent/source lineage, transformation/engine version,
 coordinate mapping, and quality status/warnings. Until that lineage is stable
 and its quality authorizes evidence, its offsets cannot authorize a candidate.
 The concrete verified-anchor fields remain owned by
-[`citation-verified-span-substrate`](../../goals/citation-verified-span-substrate/SPEC.md);
+[`citation-verified-span-substrate`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/citation-verified-span-substrate/SPEC.md);
 shape sign-off ratifies the identity this packet requires at its boundary.
 
 ## Rabbit Holes

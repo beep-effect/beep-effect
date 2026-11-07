@@ -10,7 +10,8 @@ import {
   CitationPinExtractionResult,
   makeCitationPinExtraction,
 } from "@beep/law-practice-server/internal/Citation/PinExtraction";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -22,6 +23,7 @@ import {
   assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFailure,
   assertCitationMetadataFixtureLifetime,
+  assertCitationMetadataInstallControls,
   assertCitationMetadataRefusal,
   assertCitationWorkerCompositionReleased,
   citationMetadataDeadlineText,
@@ -78,7 +80,8 @@ const Corpus = S.fromJsonString(
     description: "Original pin tuple results, Python indexing failures and shared right-trim length observations.",
   })
 );
-const load = Effect.fn("PinExtractionTest.load")(function* () {
+/** Read authenticated original pin-helper configuration and tuple observations. */
+export const readCitationPinExtractionCorpus = Effect.fn("PinExtractionTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(
     NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/pin-extraction.json", import.meta.url))
@@ -87,7 +90,7 @@ const load = Effect.fn("PinExtractionTest.load")(function* () {
   expect(digest).toBe("0874170bf716c53337fbb17f75819b2af7ed890b999de4d86b0b585902c82f75");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
-const install = makeCitationMetadataFixtureInstaller(makeCitationPinExtraction)(load());
+const install = makeCitationMetadataFixtureInstaller(makeCitationPinExtraction)(readCitationPinExtractionCorpus());
 /** Full source replay is hosted; smoke retains source errors and both actual runtimes. */
 export const replayCitationPinExtraction = Effect.fn("PinExtractionTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -153,21 +156,9 @@ export const assertCitationPinExtractionLifetime = Effect.fn("PinExtractionTest.
 
 /** Installation rejects malformed policy/configuration and mismatched fixed patterns before spawning. */
 export const assertCitationPinExtractionConfiguration = Effect.fn("PinExtractionTest.configuration")(function* () {
-  const corpus = yield* load();
+  const corpus = yield* readCitationPinExtractionCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
-  const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
-  for (const [policy, runtime, configuration] of [
-    [{}, setup.runtime, corpus.configuration],
-    [setup.limits, setup.runtime, {}],
-    [setup.limits, {}, corpus.configuration],
-    [setup.limits, setup.runtime, { ...corpus.configuration, pattern: changedPattern }],
-  ]) {
-    const failed = yield* makeCitationPinExtraction(policy, runtime, configuration).pipe(
-      Effect.provideContext(setup.provided),
-      Effect.flip
-    );
-    expect(failed).toMatchObject({ reason: "invalid-configuration" });
-  }
+  yield* assertCitationMetadataInstallControls(makeCitationPinExtraction, setup, corpus.configuration);
   const oversized = yield* makeCitationTextBudget({
     ...setup.limits,
     producedTextUtf16: setup.limits.producedTextUtf16 + 1,

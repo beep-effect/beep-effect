@@ -3,7 +3,7 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationCleanerRuntime } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -19,10 +19,7 @@ import {
   makeCitationReplayCleanerOperation,
 } from "./CitationCleanerOperation.fixtures.ts";
 import { loadCitationCleanerSource } from "./CitationCleanerSource.fixtures.ts";
-import type {
-  CitationCleanerObject,
-  CitationCleanerWork,
-} from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
+import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const Outcome = S.Union([
@@ -111,7 +108,7 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
     const text = O.getOrThrow(HashMap.get(artifacts, input.text));
     let initial = O.none<CitationCleanerObject>();
     let lastWork = O.none<CitationCleanerWork>();
-    const runtime = CitationCleanerRuntime.of({
+    const runtime = CitationCleaner.of({
       ...owned.h.registry.runtime,
       open: Effect.fn("CleanerCustomCorpusTest.open")((plan, value, work) => {
         lastWork = O.some(work);

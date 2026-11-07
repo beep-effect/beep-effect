@@ -33,11 +33,6 @@
     "goals/effect-child-process-hardening/research/2026-07-29-inventory.md",
     "goals/effect-child-process-hardening/research/2026-07-30-verification.md"
   ],
-  "researchReports": [
-    "research/2026-07-29-inventory.md",
-    "research/2026-07-30-verification.md",
-    "research/SOURCES.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -86,5 +81,13 @@
     "The implementation would exceed the effect/process consumer scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, publication, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/effect-child-process-hardening",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "3cd22955898b7881c6e57ed275591aac57cd56cc",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

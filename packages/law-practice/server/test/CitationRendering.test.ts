@@ -1,7 +1,8 @@
 import { CitationFrozenEditions } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationRendering } from "@beep/law-practice-server/internal/Citation/Rendering";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
