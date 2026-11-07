@@ -2,7 +2,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationSafetyLimitExceeded,
+  CitationTokenSeed,
+} from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -12,7 +16,6 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationTokenSeed } from "./TokenObjects.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractorRecipes");
 const References = S.Array(Sha256Hex).check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates));

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "citation-diff-kernel-build/v1",
+  "sourceArchiveSha256": "ec335bbd9780d2182c351b5c486e5c80d8975ea91772eaf02014dfe9e9907a5d",
+  "headerSha256": "21673ce2b946697105edcffd86b860fc508e97d8815b7ebb7f09fa116bfe187a",
+  "sdkArchiveSha256": "b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4",
+  "sdkVersion": "34.0\nwasi-libc: 2e6fb9d8ee0c\nllvm: 895aa2c896ad\nllvm-version: 23.1.0\nconfig: f992bcc08219",
+  "kernelSourceSha256": "73be1dccf370a4d7cb94539cf1c2bbe3469c04e69762fc5bac61e22d470c5ef0",
+  "producerSha256": "29e793e5878ae51a6f6bdb7fdd007182670020bd6205aea6c6e66ef881537368",
+  "target": "wasm32-wasip1",
+  "optimization": "-O2 --no-wasm-opt",
+  "exceptions": "WebAssembly exceptions (non-legacy); libc++abi and libunwind",
+  "canonicalBuildPrefix": "/citation-diff-build",
+  "memoryMaximumBytes": 536870912,
+  "exports": [
+    "citation_diff_version",
+    "citation_diff_run",
+    "citation_diff_output",
+    "citation_diff_steps",
+    "citation_diff_required_steps",
+    "citation_diff_release",
+    "malloc",
+    "free"
+  ],
+  "wcharBytes": 4,
+  "diffTimeout": 0,
+  "checklines": false,
+  "cleanup": "No",
+  "wasmBytes": 874218,
+  "wasmSha256": "eede49e6c281c6d4735ce8dea2a0d218fd39364008cf3c811e12efda491df2bf"
+}

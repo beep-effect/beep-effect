@@ -6,6 +6,8 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"Bluebook.fromFull","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
+    {"name":"Bluebook.parseText","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"ClaimElement.decomposeClaim","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"ClaimElement.decomposeClaimInput","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"ClaimElement.inspectClaimInput","owner":"@beep/law-practice-domain","family":"slice","conforms":true},

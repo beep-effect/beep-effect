@@ -6,6 +6,63 @@
  * @since 0.0.0
  */
 
+/** Server-only native annotation tuples and named raw-source modes.
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  CitationAnnotationMode,
+  CitationAnnotationReplacement,
+  CitationEngineAnnotationInput,
+} from "./CitationEngine/CitationEngine.annotation.ts";
+/** Server-only captured cleaner port and runtime capabilities; not raw request callbacks.
+ * @category services
+ * @since 0.0.0
+ */
+export {
+  CitationCleaner,
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerRun,
+  CitationCleanerTextCharge,
+  CitationCleanerWorkSnapshot,
+  CitationLiveCleanerObject,
+} from "./CitationEngine/CitationEngine.cleaner.ts";
+/**
+ * Closed server citation failures; raw sources and private causes are excluded.
+ * @category errors
+ * @since 0.0.0
+ */
+export {
+  CitationAnnotationError,
+  CitationEngineFailure,
+  CitationInputError,
+  CitationOperationUnsupported,
+  CitationPrerequisiteError,
+} from "./CitationEngine/CitationEngine.errors.ts";
+/** Verified citation source lineage and unverified occurrence diagnostics.
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  CitationEngineSourceEvidence,
+  CitationExtractionDiagnostics,
+} from "./CitationEngine/CitationEngine.evidence.ts";
+/** Server-only raw source components and named modes; no callback request fields.
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  CitationBuiltinCleanerName,
+  CitationCleanerContainerKind,
+  CitationEngineCleanInput,
+  CitationEngineExtractionOptions,
+  CitationEngineResolutionInput,
+  CitationEngineSourceInput,
+  CitationEngineSourcePairInput,
+  CitationSourceRole,
+} from "./CitationEngine/CitationEngine.input.ts";
 /**
  * Schema-owned citation safety ceilings and explicitly supplied execution policy.
  *
@@ -19,11 +76,53 @@ export {
   CitationEngineLimitTightening,
 } from "./CitationEngine/CitationEngine.limits.ts";
 /**
+ * Closed server citation operations and failure boundary; no client export.
+ * @category errors
+ * @since 0.0.0
+ */
+export { CitationEngineOperation } from "./CitationEngine/CitationEngine.operations.ts";
+/** Completed citation operation diagnostics.
+ * @category models
+ * @since 0.0.0
+ */
+export { CitationEngineReport, CitationExtractionMeasurements } from "./CitationEngine/CitationEngine.report.ts";
+/** Server-only operation measurements, separate from citation semantics.
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  CitationEngineAnnotationResult,
+  CitationEngineCleanResult,
+  CitationEngineExtractionResult,
+  CitationEngineResolutionResult,
+} from "./CitationEngine/CitationEngine.result.ts";
+/** Server-only captured operation work and exact native Unicode layout.
+ * @category services
+ * @since 0.0.0
+ */
+export { CitationPythonUnicodeStorage, CitationTextBudget } from "./CitationEngine/CitationEngine.runtime.ts";
+/**
  * Closed citation resource names and nontruncating safety failures.
  * @category errors
  * @since 0.0.0
  */
 export { CitationSafetyBudget, CitationSafetyLimitExceeded } from "./CitationEngine/CitationEngine.safety.ts";
+/** Captured four-operation server citation service.
+ * @category services
+ * @since 0.0.0
+ */
+export { CitationEngine } from "./CitationEngine/CitationEngine.service.ts";
+/** Captured native tokenizer and token-plan contracts; no request callbacks.
+ * @category services
+ * @since 0.0.0
+ */
+export {
+  CitationAssemblyResult,
+  CitationTokenizer,
+  CitationTokenizerFailure,
+  CitationTokenizerResult,
+  CitationTokenSeed,
+} from "./CitationEngine/CitationEngine.tokenizer.ts";
 /**
  * Local failure-preserving source inspection tool.
  * @category tools
@@ -68,7 +167,8 @@ export * from "./ClaimSelfCheck.tools.ts";
  * @since 0.0.0
  */
 export * as DailyNotice from "./DailyNotice/index.ts";
-/** Document identification schemas, ports and pure pipeline. @category services @since 0.0.0 */
+/** Document identification schemas, ports and pure pipeline. @category services
+ * @since 0.0.0 */
 export * as DocumentIdentification from "./DocumentIdentification/index.ts";
 /**
  * IR-to-law mapping service contract exports.
@@ -116,7 +216,8 @@ export * as MailTagging from "./MailTagging/index.ts";
  * @since 0.0.0
  */
 export * as OfficeActionReview from "./OfficeActionReview/index.ts";
-/** Atomic office-action evidence exports. @category services @since 0.0.0 */
+/** Atomic office-action evidence exports. @category services
+ * @since 0.0.0 */
 export * as OfficeActionStructure from "./OfficeActionStructure/index.ts";
 /**
  * Typed patent-claim candidate mapping exports.
@@ -244,3 +345,8 @@ export * from "./Tools.ts";
  * @since 0.0.0
  */
 export * as VerdictProjector from "./VerdictProjector/index.ts";
+/** Captured cursor and reservation capabilities; all methods require no services.
+ * @category services
+ * @since 0.0.0
+ */
+export type { CitationCleanerCursor, CitationCleanerWork } from "./CitationEngine/CitationEngine.cleaner.ts";

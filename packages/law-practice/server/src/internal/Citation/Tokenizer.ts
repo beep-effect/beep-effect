@@ -2,8 +2,14 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import { LiteralKit } from "@beep/schema";
+import {
+  CitationEngineAbsoluteMaxima,
+  CitationPythonUnicodeStorage,
+  CitationSafetyLimitExceeded,
+  CitationTokenizer,
+  CitationTokenizerFailure,
+  CitationTokenizerResult,
+} from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
@@ -21,20 +27,14 @@ import {
   CitationExtractorRecipe,
   makeCitationExtractorRecipes,
 } from "./ExtractorRecipes.ts";
-import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
-import {
-  CitationAssemblyResult,
-  CitationTokenAssemblyFailure,
-  CitationTokenAssemblyHost,
-  makeCitationTokenAssembly,
-} from "./TokenAssembly.ts";
+import { CitationTokenAssemblyFailure, CitationTokenAssemblyHost, makeCitationTokenAssembly } from "./TokenAssembly.ts";
 import { CitationTokenCaptureRuntime, makeCitationTokenCapture } from "./TokenCapture.ts";
 import { CitationTokenEditionBinding } from "./TokenEditions.ts";
-import { CitationTokenSeed, makeCitationTokenObjects } from "./TokenObjects.ts";
+import { makeCitationTokenObjects } from "./TokenObjects.ts";
 import { makeCitationTokenText } from "./TokenText.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
@@ -98,21 +98,7 @@ export class CitationTokenizerConfiguration extends S.Opaque<
   )
 ) {}
 const Configuration = S.toType(CitationTokenizerConfiguration);
-const Reason = LiteralKit(["invalid-configuration", "invalid-source", "stage-failed"]).pipe(
-  $I.annoteSchema("Reason", { description: "Closed private tokenizer composition failures." })
-);
-/** @internal @category errors @since 0.0.0 */
-export class CitationTokenizerFailure extends S.TaggedError<
-  CitationTokenizerFailure,
-  { readonly brand: unique symbol }
->($I`CitationTokenizerFailure`)(
-  "CitationTokenizerFailure",
-  { reason: Reason },
-  $I.annoteError<CitationTokenizerFailure>("CitationTokenizerFailure", {
-    description: "Tokenizer composition failed without source payloads, patterns or causes.",
-  })
-) {}
-const failure = (reason: typeof Reason.Type) => CitationTokenizerFailure.make({ reason });
+const failure = (reason: CitationTokenizerFailure["reason"]) => CitationTokenizerFailure.make({ reason });
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const preserveSafety = (error: unknown) => (S.is(CitationSafetyLimitExceeded)(error) ? error : failure("stage-failed"));
@@ -160,24 +146,6 @@ const prepareTokenizerConfiguration = Effect.fn("Citation.prepareTokenizerConfig
   }
   return { installed, editionRows, entries, descriptors };
 });
-
-/** Owned private output plan. Plain text spans refer to the native source;
- * special-token snapshots retain their operation-local ids and native words.
- * @internal @category models @since 0.0.0
- */
-export class CitationTokenizerResult extends S.Opaque<CitationTokenizerResult, { readonly brand: unique symbol }>()(
-  S.Struct({
-    source: CitationPythonUnicodeStorage,
-    assembly: CitationAssemblyResult,
-    tokens: S.Array(S.Struct({ id: S.Natural, seed: CitationTokenSeed })).check(
-      S.isMaxLength(CitationEngineAbsoluteMaxima.tokens)
-    ),
-  }).pipe(
-    $I.annoteSchema("CitationTokenizerResult", {
-      description: "Complete native tokenizer plan with no partial-result success path or verified mention authority.",
-    })
-  )
-) {}
 
 /** Compose existing owners under one admitted, timed operation. Native matching
  * remains in the existing isolated worker and acknowledged retirement precedes
@@ -296,10 +264,21 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
         objects.snapshot(id).pipe(Effect.mapBoth({ onSuccess: (seed) => ({ id, seed }), onFailure: preserveSafety })),
       { concurrency: 1 }
     );
-    return CitationTokenizerResult.make({ source: source.value.storage, assembly: result, tokens });
+    return CitationTokenizerResult.make({
+      source: source.value.storage,
+      patternsChecked: selected.indices.length,
+      assembly: result,
+      tokens,
+    });
   }, timing.timed);
   return {
-    run: Effect.fn("Citation.runAdmittedTokenizer")((source: unknown) => admission.run("extract", tokenize(source))),
+    port: CitationTokenizer.of({
+      tokenize: Effect.fn("Citation.runAdmittedTokenizer")((source) =>
+        admission
+          .run("extract", tokenize(source))
+          .pipe(Effect.catchTag("CitationAdmissionFailure", () => Effect.fail(failure("stage-failed"))))
+      ),
+    }),
     snapshot: worker.snapshot,
     reap: worker.reap,
   };

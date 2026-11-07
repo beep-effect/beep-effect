@@ -2,8 +2,9 @@ import { makeCitationMetadataStrings } from "@beep/law-practice-server/internal/
 import { makeCitationMetadataYearFromBound } from "@beep/law-practice-server/internal/Citation/MetadataYear";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
-import { CitationTextBudget, makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
+import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { makeCitationTokenContext } from "@beep/law-practice-server/internal/Citation/TokenContext";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
