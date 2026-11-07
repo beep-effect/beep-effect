@@ -49,3 +49,32 @@ private-archive content.
   manifest into its exploration fixture, so it never caught this.
 - **Would have prevented it:** fixtures copied from a real manifest of each
   schema version instead of hand-written look-alikes.
+
+## 2026-11-07 — Box route failed as an opaque `sdk thrown` from a normal worktree
+
+- **Doing:** `research library acquire --route box` for the hop-0 nightlies.
+- **Evidence:** `Box file lookup failed: sdk thrown` with valid `DMS_BOX_*`
+  references. Bun auto-loads the worktree `.env` (copied from the main checkout
+  by `worktree new`), and that `.env` holds an hour-lived desktop
+  `CLOUD_BOX_TOKEN` that `resolveBoxLayer` preferred over CCG. Direct SDK and
+  driver probes with the same credentials succeeded; `bun --no-env-file`
+  succeeded.
+- **Would have prevented it:** explicit CCG settings outranking a developer
+  token, and a driver diagnostic naming the auth mode that failed. Sent to the
+  routes PR as a review finding.
+
+## 2026-11-07 — First hop-0 inventory rewrote the October intakes' derivations
+
+- **Doing:** the first November hop-0 inventory on the real library.
+- **Evidence:** before the run the catalog held 0 derivations; after it, each
+  of the four 2026-10-06 intake ids carried about 3k hop-1 and 87k hop-2
+  edges, because `recordLibraryHops` looped over every intake in the catalog.
+  `status` then ran past 14 minutes at 100% CPU (per-source linear scans over
+  51k sources).
+- **Recovery:** the library was restored from the reflink backup taken before
+  the first write, the hop derivation was scoped to the recorded intake and
+  indexed (commit `c860570375c`), and Box acquisition plus inventory were
+  re-run.
+- **Would have prevented it:** a replay test that runs `inventory` twice with
+  different roots and asserts the earlier intake's derivations are unchanged,
+  and a scale fixture at real catalog size.
