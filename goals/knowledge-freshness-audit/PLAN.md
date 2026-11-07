@@ -260,6 +260,14 @@ Reverse: Revert this citation repair and checkpoint together if the pinned upstr
 
 Reverse: Revert the wording clarification; retain the original source and parent qualification in the private archive.
 
+### Protect class coverage examples with real query regressions, 2026-11-07
+
+Reuse the already-declared public Oxigraph SPARQL service and MarkdownDocument/MarkdownFence APIs in a repo-cli regression. Execute both actual checklist query fences over six small in-memory synthetic fixtures: multiple language values, values shared across classes, no annotations, both definition properties, excluded blank-node classes and empty data. The corrected guide passes six cases; the original accepted-main guide fails two and passes four. Restore the corrected owned file byte-for-byte after the negative control. No dependency, installation, endpoint, driver source or real ontology asset is added. This closes the precise local standing-query regression gap, not campaign-wide acceptance or hosted proof. Earlier failed harness attempts remain private; PM and ADHD remain separate.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Revert this regression and checkpoint if the public query consumer contract changes; preserve the original-versus-corrected cardinality evidence.
+
 ### Scope timer network waits to research services, 2026-11-07
 
 Reverse: Restore the prior paragraph only if both service renderers add the documented wait
