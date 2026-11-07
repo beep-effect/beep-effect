@@ -207,12 +207,6 @@ export {
   filesCommand,
 } from "./commands/Files/index.ts";
 /**
- * Runner AMI command group.
- *
- * @category cli-commands
- * @since 0.0.0
- */
-/**
  * Repository Git integration command group (projection merge driver).
  *
  * @category cli-commands
@@ -382,6 +376,12 @@ export {
    */
   rootCommand,
 } from "./commands/Root.ts";
+/**
+ * Runner AMI command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export { runnersCommand } from "./commands/Runners/index.ts";
 /**
  * Workstation session ledger command group.
