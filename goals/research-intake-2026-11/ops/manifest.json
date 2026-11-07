@@ -75,12 +75,12 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
@@ -99,5 +99,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2892
+  }
 }

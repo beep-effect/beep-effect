@@ -31,8 +31,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify — intake run and mined; verification and the final PR are in
-progress.
+P3 Yeet: final PR [#2892](https://github.com/beep-effect/beep-effect/pull/2892) carries the
+reflection and `proposedCloseout` (`completed-retained`). The operative lifecycle
+stays `active` until completion verifies after merge; adoption follows in a
+separate packet-state PR.
 
 ## Latest Evidence
 
