@@ -1751,6 +1751,12 @@ Add four original HTML reference/filtering inputs to the public-engine replay, b
 
 Reverse: Retain original assertion criteria and complete source models if replay composition changes.
 
+### Replay original parenthetical court assertions through public extraction, 2026-11-07
+
+Join 29 original court parser calls to independent equality assertions. Schedule all 29 on both native configurations and qualify five diverse originals locally. Four final court/parser tests pass; package lint/types and Fallow pass. Retain the remaining 70 nonhelper extraction calls, including exact HTML/whitespace modes and the server-captured straighten_quotes callback, as open integration work. Evidence: history/evidence/2026-11-07-canonical-court-extraction.md; reflection: history/reflections/2026-11-07-codex-capture-profiles.md.
+
+Reverse: Revisit finite court bindings if the authenticated source observations or replay dependencies change.
+
 ### Replay original resolution parser fragments through the default public engine, 2026-11-07
 
 Join all 77 original parser calls to their exact single-citation assertions. Schedule all fragments on both runtimes; qualify the first of each seven observed kinds locally. Share Effect Ref source ownership, semantic edition comparisons, verified ranges and physical retirement checks with original HTML replay. Six focused tests pass. The remaining 70 parser assertions, full hosted corpus, alternate tokenizers, model laws and exhaustive acceptance remain open. Evidence: history/evidence/2026-11-07-original-resolution-parser-fragments.md.

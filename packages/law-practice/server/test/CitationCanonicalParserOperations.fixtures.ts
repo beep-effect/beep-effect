@@ -30,7 +30,7 @@ const Criterion = S.fromJsonString(
 const Operations = S.fromJsonString(CitationOracleOperations);
 const JsonModels = S.Array(S.JsonObject);
 
-const readRows = Effect.fn("CanonicalParserTest.read")(function* () {
+const readCaptures = Effect.fn("CanonicalParserTest.capture")(function* () {
   const operations = yield* readCitationOracleFixture(
     "operation-cases",
     "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
@@ -40,6 +40,11 @@ const readRows = Effect.fn("CanonicalParserTest.read")(function* () {
     "c7ea12ec5ba0d66257affc4c6e54e8b2fa2ffdd0d79f41c1b701000e0edaf33f"
   ).pipe(Effect.flatMap(S.decodeEffect(Capture)));
   const assertions = HashMap.fromIterable(A.map(capture.events, (row) => Tuple.make(row.id, row)));
+  return { operations, assertions };
+});
+
+const readRows = Effect.fn("CanonicalParserTest.read")(function* () {
+  const { operations, assertions } = yield* readCaptures();
   const selected = A.filter(operations.cases, (row) => row.operation === "get_citations" && row.sourceSiteId === site);
   expect(selected).toHaveLength(77);
   return yield* Effect.forEach(
@@ -59,9 +64,21 @@ const readRows = Effect.fn("CanonicalParserTest.read")(function* () {
       expect(body.input.plain_text, id).toBe(criterion.context.values.cite_text);
       const models = yield* S.decodeEffect(JsonModels)(body.outcome.value);
       expect(models, id).toEqual(criterion.context.values.cites);
-      return { id, body, expected: A.getUnsafe(body.outcome.value, 0) };
+      return { id, body, models, expected: A.getUnsafe(body.outcome.value, 0) };
     })
   );
+});
+type ParserReplayRow = Pick<Effect.Success<ReturnType<typeof readRows>>[number], "id" | "body" | "models">;
+const replayRows = Effect.fn("CanonicalParserTest.rows")(function* (
+  kind: CitationNativeRuntimeKind,
+  rows: ReadonlyArray<ParserReplayRow>
+) {
+  const replay = yield* makeCitationCanonicalExtractionReplay(kind);
+  for (const row of rows) {
+    const result = yield* replay.extract(row.body.input.plain_text, "plain", row.models, row.id);
+    expect(result.source.source.sourceText, row.id).toBe(row.body.stages.document.plainText);
+  }
+  yield* replay.assertRetired;
 });
 /** Execute raw original fragments through default cleaning, extraction and verification.
  * Original default API behavior is compared; alternate tokenizer interfaces and
@@ -81,10 +98,66 @@ export const replayCitationCanonicalParserOperations = Effect.fn("CanonicalParse
       : A.take(A.drop(rows, shard * size), size);
   expect(selected.length).toBe(entriesOnly === true ? 7 : Math.min(size, rows.length - shard * size));
   expect(selected.length).toBeGreaterThan(0);
-  const replay = yield* makeCitationCanonicalExtractionReplay(kind);
-  for (const row of selected) {
-    const result = yield* replay.extract(row.body.input.plain_text, "plain", [row.expected], row.id);
-    expect(result.source.source.sourceText, row.id).toBe(row.body.stages.document.plainText);
-  }
-  yield* replay.assertRetired;
+  yield* replayRows(kind, selected);
+});
+
+const courtSite = "tests/test_CourtsTest.py:41:29:get_citations";
+const CourtOperand = S.Struct({ kind: S.tag("value"), value: S.String });
+const CourtCriterion = S.fromJsonString(
+  S.Struct({
+    context: S.Struct({ values: S.Struct({ key: S.String, eyecite_result: JsonModels }) }),
+    passed: S.tag(true),
+    operands: S.Tuple([CourtOperand, CourtOperand]),
+    relation: S.Struct({ kind: S.tag("comparison"), equal: S.tag(true) }),
+  })
+);
+const CourtModel = S.Struct({ fields: S.Struct({ metadata: S.Struct({ fields: S.Struct({ court: S.String }) }) }) });
+const readCourtRows = Effect.fn("CanonicalParserTest.courts")(function* () {
+  const { operations, assertions } = yield* readCaptures();
+  const selected = A.filter(
+    operations.cases,
+    (row) => row.operation === "get_citations" && row.sourceSiteId === courtSite
+  );
+  expect(selected).toHaveLength(29);
+  return yield* Effect.forEach(
+    selected,
+    Effect.fnUntraced(function* (row) {
+      if (row.operation !== "get_citations") return yield* Effect.die("Expected original court extraction");
+      const body = row.payload.value;
+      if (body.outcome.kind !== "success") return yield* Effect.die("Expected original successful court extraction");
+      expect(body.input.tokenizer.tokenizer, row.id).toBe("AhocorasickTokenizer");
+      expect(body.input.clean_steps, row.id).toBeNull();
+      expect(body.input.markup_text, row.id).toBe("");
+      expect(body.input.remove_ambiguous, row.id).toBe(false);
+      const models = yield* S.decodeEffect(JsonModels)(body.outcome.value);
+      const id = Str.replace(courtSite, "tests/test_CourtsTest.py:42:12:caseDeclaration")(row.id);
+      const assertion = yield* Effect.fromOption(HashMap.get(assertions, id));
+      const criterion = yield* S.decodeEffect(CourtCriterion)(assertion.payload);
+      expect(body.input.plain_text, id).toBe(criterion.context.values.key);
+      expect(models, id).toEqual(criterion.context.values.eyecite_result);
+      expect(criterion.operands[0].value, id).toBe(criterion.operands[1].value);
+      expect(models, id).toHaveLength(1);
+      const model = yield* S.decodeUnknownEffect(CourtModel)(A.getUnsafe(models, 0));
+      expect(model.fields.metadata.fields.court, id).toBe(criterion.operands[1].value);
+      return { id, body, models };
+    })
+  );
+});
+/** Replay original court assertions, retaining independent operands and raw input.
+ * @internal @category testing @since 0.0.0
+ */
+export const replayCitationCanonicalCourtExtraction = Effect.fn("CanonicalParserTest.courtReplay")(function* (
+  kind: CitationNativeRuntimeKind,
+  shard: number,
+  size: number,
+  entriesOnly?: boolean
+) {
+  const rows = yield* readCourtRows();
+  const selected =
+    entriesOnly === true
+      ? A.map([0, 11, 12, 18, 28], (index) => A.getUnsafe(rows, index))
+      : A.take(A.drop(rows, shard * size), size);
+  expect(selected).toHaveLength(entriesOnly === true ? 5 : Math.min(size, rows.length - shard * size));
+  expect(selected.length).toBeGreaterThan(0);
+  yield* replayRows(kind, selected);
 });
