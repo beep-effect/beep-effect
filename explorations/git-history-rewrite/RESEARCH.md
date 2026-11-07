@@ -70,7 +70,7 @@ scripts live only in the out-of-repo cutover folder.
 | History rewrite runner (filter + graft + message map) | NOT FOUND in repo | July draft `cutover.sh`, `rehearse.sh`, `predict-pruning.py` (out of repo) |
 | Per-checkout reconvergence after a force-push | NOT FOUND in repo | July draft `converge.sh` (out of repo) |
 | Fleet census, drain and retire | EXISTS (partial) | `goals/legacy-drain` (residue-reap `drainable` class); `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueTerminalLaneLive.ts`; `beep worktree remove --archive`; `yeet sweep --retire` (`commands/Yeet/internal/Sweep.ts`, `Retire.ts`) |
-| `.repos` untracked, pinned references | EXISTS | `beep refs provision`, `scripts/references.json`; `.repos/*` symlinks into `$HOME/YeeBois/references/effect` |
+| `.repos` untracked, pinned references | EXISTS | `beep refs provision`, `packages/tooling/policy-pack/repo-configs/data/references.json`; `.repos/*` symlinks into `$HOME/YeeBois/references/effect` |
 | Typed git access | EXISTS | `@beep/git` driver `packages/drivers/git/src/Git.ts`; GitHub driver `packages/drivers/github/src/GitCommit.ts` |
 | Commit SHA schemas | EXISTS | `KnowledgeCommitSha` (`commands/Knowledge/Knowledge.refs.ts:510`), `GitCommitSha` (`commands/Codex/Findings.capture.schemas.ts:327`) |
 | SHA-citation rewrite over tracked files (commit-map → files) | NOT FOUND | NET-NEW if the rewrite goes ahead |

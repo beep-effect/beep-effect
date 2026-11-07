@@ -400,60 +400,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
     );
   }
 
-  it.effect("keeps compiler originals and unrelated files while removing only rotations and patched leftovers", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "tsgo-prune-fixture-" });
-      for (const name of ["native", "typescript-linux-x64"]) {
-        const lib = path.join(root, "node_modules", "@typescript", name, "lib");
-        yield* fs.makeDirectory(lib, { recursive: true });
-        for (const file of [
-          "tsc.original",
-          "tsc.original.1",
-          "tsc.original.12",
-          "tsc.patched",
-          "tsc.original.old",
-          "tsc",
-        ]) {
-          yield* fs.writeFileString(path.join(lib, file), file);
-        }
-      }
-      expect((yield* run("node", "prune-tsgo-backups.mjs", root)).exitCode).toBe(0);
-      for (const name of ["native", "typescript-linux-x64"]) {
-        const lib = path.join(root, "node_modules", "@typescript", name, "lib");
-        const exists7 = yield* fs.exists(path.join(lib, "tsc.original.1"));
-        expect(exists7).toBe(false);
-        const exists8 = yield* fs.exists(path.join(lib, "tsc.original.12"));
-        expect(exists8).toBe(false);
-        const exists9 = yield* fs.exists(path.join(lib, "tsc.patched"));
-        expect(exists9).toBe(false);
-        const readFileString10 = yield* fs.readFileString(path.join(lib, "tsc.original"));
-        expect(readFileString10).toBe("tsc.original");
-        const readFileString11 = yield* fs.readFileString(path.join(lib, "tsc.original.old"));
-        expect(readFileString11).toBe("tsc.original.old");
-        const readFileString12 = yield* fs.readFileString(path.join(lib, "tsc"));
-        expect(readFileString12).toBe("tsc");
-      }
-      expect((yield* run("node", "prune-tsgo-backups.mjs", root)).exitCode).toBe(0);
-    })
-  );
-
-  it.effect("does nothing before install and warns without blocking install on an invalid package directory", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "tsgo-prune-noop-" });
-      const result13 = yield* run("node", "prune-tsgo-backups.mjs", root);
-      expect(result13).toEqual({ exitCode: 0, stdout: "", stderr: "" });
-      yield* fs.makeDirectory(path.join(root, "node_modules"));
-      yield* fs.writeFileString(path.join(root, "node_modules", "@typescript"), "not a directory");
-      const failed = yield* run("node", "prune-tsgo-backups.mjs", root);
-      expect(failed.exitCode).toBe(0);
-      expect(failed.stderr).toContain("[prune-tsgo-backups] skipped:");
-    })
-  );
-
   it.effect("prunes only top-level third-party apt sources in a synthetic tree without privilege", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

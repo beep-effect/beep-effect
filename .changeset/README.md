@@ -8,7 +8,7 @@ Root configuration and other unowned paths do not independently require notes;
 release impact belongs to the affected publish-enabled workspace.
 
 Publication is dormant. The config, Changesets dependencies, and
-`scripts/changeset-changelog.cjs` remain for deliberate future activation.
+`@beep/repo-cli/ChangesetChangelog` formatter remain for deliberate future activation.
 Before activating a package, establish its release/versioning and compatibility
 policy, audit external consumers, remove any inappropriate `ignore` exemption,
 flip `private: false`, reconcile public access/provenance, add an approved publication workflow,

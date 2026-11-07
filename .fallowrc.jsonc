@@ -93,14 +93,10 @@
     "packages/ecosystem/effect-drizzle/test/integration/sqlite-drizzle-schema.ts",
     "packages/ecosystem/effect-drizzle/test/perf.consumer.ts",
     "packages/ecosystem/effect-drizzle/test/bundle-pg-integer.consumer.ts",
-    // Tool-loaded roots: syncpack auto-loads its config, Changesets loads its changelog
-    // module from config, and global-cleanup.ts is the vitest globalSetup for
-    // @beep/repo-cli.
+    // Tool-loaded roots: syncpack auto-loads its config and global-cleanup.ts is the
+    // vitest globalSetup for @beep/repo-cli. (Changesets loads its changelog module
+    // through the `@beep/repo-cli/ChangesetChangelog` package export.)
     "syncpack.config.ts",
-    "scripts/changeset-changelog.cjs",
-    // Human-operated, memory-only GitHub App registration, invoked directly with Bun.
-    "scripts/github-app/create-beep-reviewer.ts",
-    "scripts/github-app/create-beep-knowledge-mint.ts",
     "packages/tooling/tool/cli/test/global-cleanup.ts",
     // Standalone article builder, invoked by path rather than imported.
     "explorations/beep-ci-operational-ontology/assets/agentic-yoyo/build.mjs",
@@ -298,12 +294,6 @@
   // recognize it, and deleting it breaks `next build` (proven 2026-06-11 in
   // goals/fallow-zero-dead-code).
   "ignoreExports": [
-    // Knowledge mint App bootstrap: its test drives the handler from a Bun child
-    // (`bun --eval` with a dynamic import), which static analysis cannot follow.
-    {
-      "file": "packages/tooling/tool/cli/scripts/CreateKnowledgeMintApp.ts",
-      "exports": ["makeKnowledgeMintHandler"]
-    },
     // @beep/canvas command bridge: documented request/schema values kept as
     // public bridge contracts for typed host integrations.
     {

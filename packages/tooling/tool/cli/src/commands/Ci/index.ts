@@ -25,6 +25,8 @@ export * from "./Ci.errors.ts";
  * @since 0.0.0
  */
 export * from "./CiAdmission.ts";
+export * from "./CiBootstrap.command.ts";
+export * from "./CiCompileBinary.ts";
 /**
  * Hosted CI governance commands and policy checks.
  *
