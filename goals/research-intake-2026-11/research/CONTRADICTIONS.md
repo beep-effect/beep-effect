@@ -98,5 +98,19 @@ packet totals above but not described here.
 
 ## Deep-research receipts
 
-Pending: one `/deep-research` run per evidence gap (G1–G3), run sequentially;
-confirmed and refuted claims import with the harness receipt.
+Three runs, one per evidence gap, sequential, each through the
+`anthropic-skills:deep-research` skill in a separate Claude Opus 5.5 session.
+Reports, claims (`confirmed` / `refuted` / `unresolved`, each with source and
+quote) and harness receipts are in [`deep-research/`](./deep-research/).
+
+| Cluster | Report | Confirmed | Refuted | Unresolved | Verdict |
+| --- | --- | ---: | ---: | ---: | --- |
+| G1 | [ontology vs RAG](./deep-research/G1-ontology-vs-rag.md) | 9 | 2 | 2 | No study shows ontology grounding beating RAG at a matched budget; the closest ones confound structure with context volume or lose the gain when tokens match. |
+| G2 | [legal eval validity](./deep-research/G2-legal-eval-validity.md) | 13 | 2 | 3 | Legal citation benchmarks measure overlap with one opinion's citations, not recall of responsive authority; AI prosecution gains are vendor-reported. |
+| G3 | [skill-edit regressions](./deep-research/G3-skill-edit-regressions.md) | 8 | 8 | 1 | Skill and prompt edits do not reliably preserve mastered behavior; aggregate gains coexist with item-level breakage. |
+
+These results are evidence, not acceptance changes. The owning packets
+(`agent-outcome-experiments`, `verification-route`, `effect-native-legal-eval`,
+`citation-extraction-engine`, `uspto-prosecution-read`,
+`coding-agent-effectiveness-evidence-loop`, `agent-rating-critique-fixes`,
+`agent-pool-doctrine`) carry routing amendments that point here.
