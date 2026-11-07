@@ -257,7 +257,9 @@ const operationRecordInput = (ctx: GenesisContext, row: V.LegacyOperationRow) =>
     digest: row.input_content_digest,
     generation: row.input_generation,
     parentRequired: row.target_parent_rel_path !== null,
-    idempotencyKey: row.idempotency_key,
+    // The legacy key text stays in the imported row; the state takes the operation's own id, the only
+    // key the operation aggregate accepts, so an imported operation queues and retargets like a live one.
+    idempotencyKey: row.public_id,
   },
   status: row.status,
   attempts: row.attempt_count,

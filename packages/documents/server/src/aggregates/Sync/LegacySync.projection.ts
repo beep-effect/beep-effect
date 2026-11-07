@@ -100,7 +100,9 @@ const store = Effect.gen(function* () {
     stream: string,
     seq: number,
     at: number,
-    columns: Readonly<Record<string, unknown>>
+    columns: Readonly<Record<string, unknown>>,
+    // Written when the row is created and never updated, like the creation audit columns.
+    insertOnly: Readonly<Record<string, unknown>> = {}
   ) {
     yield* sql
       .withTransaction(
@@ -129,6 +131,7 @@ const store = Effect.gen(function* () {
             updated_at: at,
             created_by_principal: meta.principal,
             updated_by_principal: meta.principal,
+            ...insertOnly,
             ...columns,
           };
           yield* sql`INSERT INTO ${sql(table)} ${sql.insert(row)}
@@ -227,7 +230,6 @@ const operationColumns = (
     operation_type: input.type === "ensureFolder" ? "createFolder" : input.type,
     status: operationStatuses[state.status] ?? state.status,
     attempt_count: state.attempts,
-    idempotency_key: input.idempotencyKey,
     input_content_digest: input.digest,
     input_generation: input.generation,
     target_rel_path: input.path,
@@ -264,7 +266,6 @@ const cursorTarget = (event: { readonly _tag: string }, state: V.DestinationStat
     ? O.some({ workspaceId: state.workspaceId, cursor: state.cursor, cursorError: state.cursorError })
     : O.none();
 const SelectionRows = S.Array(S.Struct({ public_id: S.NullOr(S.String), paused: S.Boolean }));
-const OwnerRows = S.Array(S.Struct({ workspace_id: S.Int }));
 /**
  * Writes derived rows with D14 numeric references and transactional delivery checkpoints.
  *
@@ -295,14 +296,14 @@ export const LegacySyncProjections = Layer.mergeAll(
   ),
   LegacySyncOperation.toLayer(
     Effect.gen(function* () {
-      const { genesis, write, path, identity, sql } = yield* store;
-      // The operation belongs to its item's workspace; the item row is projected first.
-      const itemWorkspace = Effect.fnUntraced(function* (item: number) {
-        const owner = yield* sql`SELECT workspace_id FROM documents_sync_item WHERE id = ${item}`.pipe(
-          Effect.flatMap(S.decodeUnknownEffect(OwnerRows)),
-          Effect.orDie
-        );
-        return A.isReadonlyArrayNonEmpty(owner) ? { workspace_id: owner[0].workspace_id } : {};
+      const { genesis, write, path, identity } = yield* store;
+      const destinations = yield* V.SyncDestination;
+      // The operation belongs to its destination's workspace. The destination's registration commits
+      // before any operation can name it, so its state is the owner whatever order the item and
+      // operation projections run in; the item row, written by another projection, may not exist yet.
+      const destinationWorkspace = Effect.fnUntraced(function* (destinationId: V.DestinationId) {
+        const destination = yield* destinations.state(destinationId).pipe(Effect.orDie);
+        return destination?._tag === "Registered" ? { workspace_id: destination.workspaceId } : {};
       });
       return Effect.fnUntraced(function* (batch) {
         for (const { source, state, envelope, event } of batch) {
@@ -312,7 +313,7 @@ export const LegacySyncProjections = Layer.mergeAll(
           }
           if (state === null) continue;
           const item = yield* identity("item", state.input.itemId);
-          const owner = yield* itemWorkspace(item);
+          const owner = yield* destinationWorkspace(state.input.destinationId);
           const columns = { ...owner, ...operationColumns(state, event, item, path) };
           yield* write(
             "operation",
@@ -320,7 +321,10 @@ export const LegacySyncProjections = Layer.mergeAll(
             envelope.stream,
             envelope.seq,
             DateTime.toEpochMillis(envelope.at),
-            columns
+            columns,
+            // The key is fixed when the row is created: an imported row keeps its legacy key text through
+            // later live events, and a live row keeps the operation id it was queued under.
+            { idempotency_key: state.input.idempotencyKey }
           );
         }
       });

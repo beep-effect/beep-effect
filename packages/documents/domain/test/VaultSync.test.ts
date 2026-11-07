@@ -543,12 +543,14 @@ describe("restricted genesis transitions", () => {
         id: destination,
       })
     ).toEqual({ _tag: "Unregistered" });
+    // The legacy free text maps onto the closed literal; the event keeps the row verbatim.
     expect(
       V.SyncDestination.definition.evolve.CursorGenesisImported(destinationRecord, event, {
         ...envelope,
         id: destination,
       })
-    ).toMatchObject({ cursor: "opaque", cursorError: "old poll error" });
+    ).toMatchObject({ cursor: "opaque", cursorError: "pollEvents" });
+    expect(event.row.last_error).toBe("old poll error");
     const duplicate = V.CursorGenesisImported.make({
       ...Struct.omit(command, ["_tag"]),
       selected: false,

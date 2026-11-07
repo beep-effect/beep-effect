@@ -225,7 +225,12 @@ export const VaultSyncRootFromWorkspaceLive = Layer.effect(
     const sql = yield* SqlClient.SqlClient;
     const roots = yield* VaultSyncWorkspaceRoots;
     const missing = () =>
-      BoxMirrorUnavailable.make({ retryable: false, disconnectReason: null, operation: "local-root" });
+      BoxMirrorUnavailable.make({
+        retryable: false,
+        disconnectReason: null,
+        operation: "resolveRoot",
+        stage: "local-root",
+      });
     return VaultSyncRoot.of({
       resolve: Effect.fn($I`resolveRoot`)(function* (destinationId) {
         const rows = yield* sql`SELECT (state ->> 'workspaceId')::int AS workspace_id FROM alchemy_aggregate_instance

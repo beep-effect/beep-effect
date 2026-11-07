@@ -171,8 +171,9 @@ const seedCursors = Effect.fnUntraced(function* () {
     workspace_id: 10,
     stream_position: "selected-old",
     last_event_id: null,
-    status: "active",
-    last_error: null,
+    // Legacy cursor errors were free adapter text; genesis keeps it in the row and maps the state.
+    status: "error",
+    last_error: "Box answered 503 Service Unavailable (upstream timeout)",
   })}`;
 });
 // A crash on the fifteenth audit call leaves a half import; the next two runs converge.
@@ -220,6 +221,9 @@ const assertBindings = Effect.fnUntraced(function* () {
   const destinations = yield* V.SyncDestination;
   const state = yield* destinations.state(workspace9);
   expect(state).toMatchObject({ orgId: 17, paused: true, cursor: null });
+  // The selected legacy error cursor's free text becomes the closed `pollEvents` literal in state.
+  const selected = yield* destinations.state(workspace10);
+  expect(selected).toMatchObject({ cursor: "selected-old", cursorError: "pollEvents", paused: false });
   return { workspace9, workspace10 };
 });
 const clearLegacyTables = Effect.fnUntraced(function* () {
@@ -288,6 +292,26 @@ const assertPausedCursorKept = Effect.fnUntraced(function* (workspace9: V.Destin
   const after = yield* sql`SELECT * FROM documents_sync_cursor WHERE workspace_id=9 ORDER BY id`;
   expect(after).toEqual(before);
 });
+// A live event on an imported operation keeps the legacy key text; its reason column takes the literal.
+const assertImportedKeyKept = Effect.fnUntraced(function* () {
+  const sql = yield* SqlClient.SqlClient;
+  const operations = yield* V.SyncOperation;
+  const publicId = common("operation", 107).public_id;
+  const superseded = yield* operations.send(
+    V.OperationId.make(publicId),
+    V.SupersedeOperation.make({ reason: "kind-replaced" })
+  );
+  yield* LegacySyncOperation.caughtUp(superseded);
+  const rows = yield* sql`SELECT idempotency_key, last_error FROM documents_sync_operation
+    WHERE public_id = ${publicId}`.pipe(
+    Effect.repeat({
+      until: (found) => found[0]?.last_error === "kind-replaced",
+      schedule: Schedule.spaced("10 millis"),
+    }),
+    Effect.timeout("5 seconds")
+  );
+  expect(rows).toEqual([{ idempotency_key: "stored-key-107", last_error: "kind-replaced" }]);
+});
 // Redelivering every event from a reset checkpoint changes nothing.
 const assertRedeliveryStable = Effect.fnUntraced(function* (replayScope: Scope.Closeable) {
   const sql = yield* SqlClient.SqlClient;
@@ -328,6 +352,7 @@ describe("lossless offline genesis", () => {
         yield* assertReplayDiffs();
         yield* assertSelectedCursor(workspace10).pipe(Effect.provideContext(replay));
         yield* assertPausedCursorKept(workspace9).pipe(Effect.provideContext(replay));
+        yield* assertImportedKeyKept().pipe(Effect.provideContext(replay));
         yield* assertRedeliveryStable(replayScope);
       })
     );

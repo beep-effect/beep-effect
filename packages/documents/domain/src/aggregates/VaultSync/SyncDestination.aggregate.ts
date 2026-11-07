@@ -16,6 +16,10 @@ import * as V from "./Values.ts";
 import type { SyncRule } from "./SyncRuleViolation.rejection.ts";
 
 const refused = (rule: SyncRule) => SyncRuleViolation.make({ rule, evidence: "destination state" });
+// The legacy writer set a cursor's free-text `last_error` only when polling Box failed, so every
+// non-null legacy text names `pollEvents`. The genesis event keeps the row verbatim; the legacy
+// projection writes that row, so the text survives replay while the state holds the closed literal.
+const legacyCursorError = (text: string | null): V.MirrorOperation | null => (text === null ? null : "pollEvents");
 const sameOwner = (
   s: { readonly orgId: number; readonly workspaceId: number },
   c: { readonly orgId: number; readonly workspaceId: number }
@@ -112,7 +116,7 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
         : {
             ...s,
             paused: s.paused || e.paused,
-            ...(e.selected ? { cursor: e.row.stream_position, cursorError: e.row.last_error } : {}),
+            ...(e.selected ? { cursor: e.row.stream_position, cursorError: legacyCursorError(e.row.last_error) } : {}),
           },
     DestinationGenesisImported: (_s, e) => e.record,
     VaultSyncRequested: (s) => s,

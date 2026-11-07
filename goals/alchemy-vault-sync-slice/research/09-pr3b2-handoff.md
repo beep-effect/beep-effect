@@ -220,15 +220,7 @@ check reports drift 0.
 
 ### Still open
 
-- **Load-sensitive runtime assertion.** In one of three runs of the six
-  cutover pglite files together, `VaultSyncRuntime.pglite.test.ts` saw
-  `operationsByStatus(succeeded)` return `[]` right after the joined item and
-  operation row showed `succeeded`. It passed in isolation and in the next two
-  group runs. The operation row's `workspace_id` comes from the item row when
-  that row is already projected, and from the audit otherwise. A projection-order
-  race on that column is the likely cause. It has not been reproduced since and
-  is not fixed. The next step is to read the workspace from
-  `documents_sync_destination_binding` in the operation projection.
+- **Load-sensitive runtime assertion.** Fixed on `goals/vs-cutover-2`; see below.
 
 - **Provenance mapping for Api requests (D17 F8, 3b2 half).** The driver config
   takes a single `ProvenanceMapping`, and the cutover host already uses it for
@@ -240,3 +232,52 @@ check reports drift 0.
   records principal columns only for genesis events.
 - R7 (`layerCatalogEnrichment` with `StrictDesktop`) is not mounted. It is the
   same driver/observability follow-up.
+
+## Final 3a contract on `goals/vs-cutover-2` (2026-11-07)
+
+Branch `goals/vs-cutover-2` was cut from `goals/vs-cutover` (`cbbfdaef582`) and
+merges `goals/vs-api-2`, which carries the final PR 3a head `e2bd335249e`.
+
+- **BoxMirror conflict.** Both sides had fixed the stale-input claim leak. The
+  result keeps this branch's explicit `isLocalFailure` guard, now keyed on
+  `stage` (`local-root`, `stale-input`) instead of `operation`, and reports the
+  Box call name in `operation`. `VaultSyncRoot` failures are mapped to the
+  `local-root` stage of the call they serve; `VaultSyncRootFromWorkspaceLive`
+  reports `{ operation: "resolveRoot", stage: "local-root" }`.
+- **SyncRule.** `genesis-requires-empty-stream` joins the closed kit.
+- **Genesis mapping (decision
+  `2026-11-07-map-legacy-free-text-sync-reasons-losslessly-at-genesis.md`).**
+  The mapping is lossless rather than reconstructed: every genesis event keeps its
+  complete legacy row and the projection writes that row verbatim, so the legacy
+  text survives replay. Aggregate state takes closed values: a non-null legacy
+  cursor `last_error` becomes `cursorError: "pollEvents"`, and an imported
+  operation's `idempotencyKey` becomes its own id (the 3a merge had broken genesis
+  here: `SyncGenesis.pglite.test.ts` failed decoding the legacy key as an
+  `OperationId`). `idempotency_key` is now an insert-only projection column, so a
+  live event on an imported operation keeps its legacy key text. The genesis test
+  imports a selected error cursor with free vendor text, asserts the mapped state,
+  keeps the all-column zero diff, and supersedes an imported operation live.
+- **Flake root cause and fix.** `LegacySyncOperation` took `workspace_id` from
+  the item row, which the separate `LegacySyncItem` projection may not have
+  written yet; it then fell back to the audit's workspace, so
+  `operationsByStatus(workspaceId, "succeeded")` could miss the row. The
+  projection now reads the workspace from the operation's destination aggregate
+  state (`V.SyncDestination.state`). Registration commits before any operation
+  can name the destination, so the owner no longer depends on projection order.
+  `documents_sync_destination_binding` was not used: destinations registered
+  through name claims (3c) have no binding row. A new projection test queues an
+  operation for an item that was never projected, on a destination in workspace 9
+  while the audit default is 4; it fails on the old code (workspace 4) and passes
+  now.
+- **Six cutover PGlite suites together, 5 runs** (`SyncCutover`,
+  `SyncCutoverAdmission`, `SyncGenesis`, `VaultSyncRuntime`, `VaultSyncHosting`,
+  `LegacySync.projection`): 5 of 5 passed, 9 of 9 tests each run, 5.0 to 7.7 s.
+- **Fallow.** The BoxMirror test body reached cognitive 9 after the stage
+  assertions; the two-upload check moved into an `uploadTwice` helper.
+
+Verification: check clean for documents-domain, -use-cases, -server,
+professional-desktop and db-admin. Tests: domain 58, use-cases 64, server 106 (19
+files), desktop 285, db-admin 23. package-verify passed for all five. Coverage
+ratchet ok for all five. Entity-kit freeze, tsconfig-sync, cache-policy (0
+blocking), the three fallow checks and docs oxlint on touched sources exited 0.
+Effect Vitest: introduced=0.

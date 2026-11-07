@@ -68,9 +68,13 @@ describe("vault sync hosting failure paths", () => {
         const unconfigured = yield* Effect.flip(
           roots.resolve(V.DestinationId.make("documents_sync_destination_aunconfigured"))
         );
-        expect(unconfigured).toMatchObject({ _tag: "BoxMirrorUnavailable", operation: "local-root" });
+        expect(unconfigured).toMatchObject({
+          _tag: "BoxMirrorUnavailable",
+          operation: "resolveRoot",
+          stage: "local-root",
+        });
         const unknown = yield* Effect.flip(roots.resolve(V.DestinationId.make("documents_sync_destination_aunknown")));
-        expect(unknown).toMatchObject({ _tag: "BoxMirrorUnavailable", operation: "local-root" });
+        expect(unknown).toMatchObject({ _tag: "BoxMirrorUnavailable", operation: "resolveRoot", stage: "local-root" });
         yield* sql`DROP TABLE alchemy_aggregate_instance`;
       })
     );
