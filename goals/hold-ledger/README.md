@@ -43,11 +43,14 @@ first two ledger-driven unpins (#2462 statelyai, #2465 jsdom) proved the loop
 end to end. #2453 was pushed without a Yeet publish verdict, and #2755 was
 merged one commit past its verdict before its readiness monitor reported, so this
 docs-only re-final PR carries the `completed-retained` proposal and the gating
-verdict; the
-closeout reflection is `history/reflections/2026-11-01-claude.md`.
+verdict; the closeout reflection is `history/reflections/2026-11-01-claude.md`.
 
 ## Latest Evidence
 
+- 2026-11-06: re-final. `goals completion refresh --slug hold-ledger` read #2755
+  `unsatisfied`: its verdict named the pre-`yeet ready` head, and it merged before
+  its until-ready monitor reported. #2755 is now a supporting PR, and this PR
+  carries the proposal and a verdict bound to its own head.
 - 2026-11-06: closeout. Every `SPEC.md` acceptance criterion is checked with
   its PR; the sweep slice shipped as #2453 and both unpins it planned have
   merged. The final PR proposes `completed-retained`.

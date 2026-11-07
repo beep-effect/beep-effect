@@ -45,7 +45,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_hold-ledger-refinal-PLACEHOLDER/verdict.json",
+        "ref": ".beep/yeet/runs/docs_hold-ledger-refinal-54d622f4a5e1/verdict.json",
         "gating": true
       }
     ]
