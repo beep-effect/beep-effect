@@ -7,7 +7,8 @@
     "status": "completed-retained",
     "created": "2026-11-06",
     "updated": "2026-11-07",
-    "packetAnchorDocument": "SPEC.md"
+    "packetAnchorDocument": "SPEC.md",
+    "statusNote": "Completed-retained: completion verified via re-final #2882 (merge e1c960da1e), with 15 green required checks and a successful until-ready monitor. Implementation shipped in #2868; #2880 retained as the first re-final attempt."
   },
   "packetPath": "goals/research-library-routes",
   "lifecycle": "completed-retained",
