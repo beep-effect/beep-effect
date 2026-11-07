@@ -21,25 +21,40 @@ const $I = $DocumentsDomainId.create("aggregates/VaultSync/SyncItem.command");
  * @category aggregates
  * @since 0.0.0
  */
-export const ItemObservation = S.Struct({
-  destinationId: V.DestinationId,
-  workspaceId: S.Int,
-  path: V.VaultRelPath,
-  kind: V.SyncItemKind,
-  digest: S.NullOr(S.String),
-  contentSizeBytes: S.optionalKey(S.Natural),
-  generation: S.Int,
-  operationId: V.OperationId,
-  type: V.OperationType,
-  parentRequired: S.Boolean,
-}).pipe($I.annoteSchema("ItemObservation", { description: "ItemObservation persisted vault sync value." }));
+export class ItemObservation extends S.Opaque<ItemObservation, { readonly brand: unique symbol }>()(
+  S.Struct({
+    destinationId: V.DestinationId,
+    workspaceId: S.Int,
+    path: V.VaultRelPath,
+    kind: V.SyncItemKind,
+    digest: S.NullOr(S.String),
+    contentSizeBytes: S.optionalKey(S.Natural),
+    generation: S.Int,
+    operationId: V.OperationId,
+    type: V.OperationType,
+    parentRequired: S.Boolean,
+  }).pipe($I.annoteSchema("ItemObservation", { description: "ItemObservation persisted vault sync value." }))
+) {}
+
 /**
- * Runtime value accepted by {@link ItemObservation}.
+ * Persisted non-empty state of the ItemState aggregate.
  *
+ * **Example** (Inspect persisted state fields)
+ * ```ts
+ * import { ItemRecord } from "@beep/documents-domain/aggregates/VaultSync";
+ * console.log(ItemRecord.fields);
+ * ```
  * @category aggregates
  * @since 0.0.0
  */
-export type ItemObservation = typeof ItemObservation.Type;
+export class ItemRecord extends S.Opaque<ItemRecord, { readonly brand: unique symbol }>()(
+  S.Struct({
+    observation: ItemObservation,
+    remoteId: S.NullOr(V.RemoteItemId),
+    status: V.ItemStatus,
+    slots: S.HashMap(V.OperationType, V.OperationId),
+  }).pipe($I.annoteSchema("ItemRecord", { description: "Persisted non-empty vault sync state." }))
+) {}
 /**
  * ItemState vault sync contract.
  *
@@ -51,14 +66,9 @@ export type ItemObservation = typeof ItemObservation.Type;
  * @category aggregates
  * @since 0.0.0
  */
-export const ItemState = S.NullOr(
-  S.Struct({
-    observation: ItemObservation,
-    remoteId: S.NullOr(V.RemoteItemId),
-    status: V.ItemStatus,
-    slots: S.HashMap(V.OperationType, V.OperationId),
-  })
-).pipe($I.annoteSchema("ItemState", { description: "ItemState persisted vault sync value." }));
+export const ItemState = S.NullOr(ItemRecord).pipe(
+  $I.annoteSchema("ItemState", { description: "ItemState persisted vault sync value." })
+);
 /**
  * Runtime value accepted by {@link ItemState}.
  *

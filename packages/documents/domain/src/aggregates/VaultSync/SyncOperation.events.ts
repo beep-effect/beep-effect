@@ -21,23 +21,41 @@ const $I = $DocumentsDomainId.create("aggregates/VaultSync/SyncOperation.command
  * @category aggregates
  * @since 0.0.0
  */
-export const OperationInput = S.Struct({
-  destinationId: V.DestinationId,
-  itemId: V.ItemId,
-  type: V.OperationType,
-  path: V.VaultRelPath,
-  digest: S.NullOr(S.String),
-  generation: S.Int,
-  parentRequired: S.Boolean,
-  idempotencyKey: S.NonEmptyString,
-}).pipe($I.annoteSchema("OperationInput", { description: "OperationInput persisted vault sync value." }));
+export class OperationInput extends S.Opaque<OperationInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    destinationId: V.DestinationId,
+    itemId: V.ItemId,
+    type: V.OperationType,
+    path: V.VaultRelPath,
+    digest: S.NullOr(S.String),
+    generation: S.Int,
+    parentRequired: S.Boolean,
+    idempotencyKey: S.NonEmptyString,
+  }).pipe($I.annoteSchema("OperationInput", { description: "OperationInput persisted vault sync value." }))
+) {}
+
 /**
- * Runtime value accepted by {@link OperationInput}.
+ * Persisted non-empty state of the OperationState aggregate.
  *
+ * **Example** (Inspect persisted state fields)
+ * ```ts
+ * import { OperationRecord } from "@beep/documents-domain/aggregates/VaultSync";
+ * console.log(OperationRecord.fields);
+ * ```
  * @category aggregates
  * @since 0.0.0
  */
-export type OperationInput = typeof OperationInput.Type;
+export class OperationRecord extends S.Opaque<OperationRecord, { readonly brand: unique symbol }>()(
+  S.Struct({
+    input: OperationInput,
+    status: V.OperationStatus,
+    attempts: S.Int,
+    leaseEpoch: S.Int,
+    holder: S.NullOr(S.String),
+    expiresAt: S.Finite,
+    retryAt: S.Finite,
+  }).pipe($I.annoteSchema("OperationRecord", { description: "Persisted non-empty vault sync state." }))
+) {}
 /**
  * OperationState vault sync contract.
  *
@@ -49,17 +67,9 @@ export type OperationInput = typeof OperationInput.Type;
  * @category aggregates
  * @since 0.0.0
  */
-export const OperationState = S.NullOr(
-  S.Struct({
-    input: OperationInput,
-    status: V.OperationStatus,
-    attempts: S.Int,
-    leaseEpoch: S.Int,
-    holder: S.NullOr(S.String),
-    expiresAt: S.Finite,
-    retryAt: S.Finite,
-  })
-).pipe($I.annoteSchema("OperationState", { description: "OperationState persisted vault sync value." }));
+export const OperationState = S.NullOr(OperationRecord).pipe(
+  $I.annoteSchema("OperationState", { description: "OperationState persisted vault sync value." })
+);
 /**
  * Runtime value accepted by {@link OperationState}.
  *

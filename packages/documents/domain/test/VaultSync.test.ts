@@ -11,7 +11,7 @@ const encodeQueued = S.encodeEffect(V.OperationQueued);
 const destination = V.DestinationId.make("vault-unit");
 const id = V.OperationId.make("documents_sync_operation_a1");
 const itemId = V.ItemId.make("documents_sync_item_a1");
-const input: V.OperationInput = {
+const input = V.OperationInput.make({
   destinationId: destination,
   itemId,
   type: "uploadFile",
@@ -20,7 +20,7 @@ const input: V.OperationInput = {
   generation: 1,
   parentRequired: false,
   idempotencyKey: id,
-};
+});
 const ctx = { id, commandId: "cmd", stream: `SyncOperation/${id}`, version: 1, now: DateTime.makeUnsafe(1000) };
 const envelope = { id, stream: ctx.stream, seq: 1, at: ctx.now, commandId: "cmd", correlationId: "cmd" };
 const queued = V.SyncOperation.definition.evolve.OperationQueued(null, V.OperationQueued.make({ input }), envelope);
@@ -100,7 +100,7 @@ describe("vault sync pure transitions", () => {
     expect(result).toMatchObject({ rule: "wrong-key" });
   });
   it("push acknowledgements preserve other operation slots and ignore stale failures", () => {
-    const observation: V.ItemObservation = {
+    const observation = V.ItemObservation.make({
       destinationId: destination,
       workspaceId: 1,
       path: input.path,
@@ -110,14 +110,17 @@ describe("vault sync pure transitions", () => {
       operationId: id,
       type: "uploadFile",
       parentRequired: false,
-    };
+    });
     const move = V.OperationId.make("documents_sync_operation_amove");
-    const state: V.ItemState = {
+    const state = V.ItemRecord.make({
       observation,
       remoteId: null,
       status: "pending",
-      slots: H.make(["uploadFile", id], ["moveItem", move]),
-    };
+      slots: H.fromIterable<V.OperationType, V.OperationId>([
+        ["uploadFile", id],
+        ["moveItem", move],
+      ]),
+    });
     const event = V.ItemPushed.make({ remoteId: V.RemoteItemId.make("box1"), generation: 2, operationId: id });
     const next = V.SyncItem.definition.evolve.ItemPushed(state, event, { ...envelope, id: itemId });
     expect(next !== null && H.size(next.slots)).toBe(1);

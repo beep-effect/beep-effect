@@ -111,15 +111,16 @@ export class SyncOperation extends Domain.Aggregate("SyncOperation", {
     ReviveOperation: (s) => (s?.status === "failed" ? [C.OperationRevived.make({})] : []),
   },
   evolve: {
-    OperationQueued: (_, e): C.OperationState => ({
-      input: e.input,
-      status: "queued",
-      attempts: 0,
-      leaseEpoch: 0,
-      holder: null,
-      expiresAt: 0,
-      retryAt: 0,
-    }),
+    OperationQueued: (_, e): C.OperationState =>
+      C.OperationRecord.make({
+        input: e.input,
+        status: "queued",
+        attempts: 0,
+        leaseEpoch: 0,
+        holder: null,
+        expiresAt: 0,
+        retryAt: 0,
+      }),
     OperationRetargeted: (s, e): C.OperationState => (s === null ? s : { ...s, input: e.input }),
     OperationSquashed: (s, e): C.OperationState => (s === null ? s : { ...s, input: e.input }),
     OperationLeased: (s, e): C.OperationState =>

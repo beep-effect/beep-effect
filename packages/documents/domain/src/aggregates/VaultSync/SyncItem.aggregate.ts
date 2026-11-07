@@ -13,16 +13,17 @@ import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 
 const refused = (rule: string) => SyncRuleViolation.make({ rule, evidence: "item state" });
-const observed = (s: C.ItemState, e: { readonly observation: C.ItemObservation }): C.ItemState => ({
-  observation: e.observation,
-  remoteId: s?.observation.kind === e.observation.kind ? s.remoteId : null,
-  status: "pending",
-  slots: H.set(
-    s?.observation.kind === e.observation.kind ? s.slots : H.empty(),
-    e.observation.type,
-    e.observation.operationId
-  ),
-});
+const observed = (s: C.ItemState, e: { readonly observation: C.ItemObservation }): C.ItemRecord =>
+  C.ItemRecord.make({
+    observation: e.observation,
+    remoteId: s?.observation.kind === e.observation.kind ? s.remoteId : null,
+    status: "pending",
+    slots: H.set(
+      s?.observation.kind === e.observation.kind ? s.slots : H.empty(),
+      e.observation.type,
+      e.observation.operationId
+    ),
+  });
 /**
  * SyncItem vault sync contract.
  *
@@ -103,7 +104,7 @@ export class SyncItem extends Domain.Aggregate("SyncItem", {
     ItemDriftFlagged: (s): C.ItemState => (s === null ? s : { ...s, status: "drifted" }),
     ItemReturnedToPending: (s, e): C.ItemState => {
       const next = observed(s, e);
-      return next === null ? next : { ...next, slots: H.make([e.observation.type, e.observation.operationId]) };
+      return { ...next, slots: H.make([e.observation.type, e.observation.operationId]) };
     },
   },
 }) {}

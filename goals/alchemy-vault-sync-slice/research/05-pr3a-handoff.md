@@ -77,14 +77,16 @@ commands were used; no repository-wide quality battery ran.
 | Full `beep quality package-verify @beep/documents-domain @beep/documents-use-cases` | PASS on the final behavioral changes: domain lint/audit/docgen and use-cases lint/audit/docgen |
 | Scoped package verifier `--quick` | PASS for both packages |
 | Domain complete Vitest suite | PASS: 42 tests, 9 files |
-| Shared model scenarios | PASS: 26 tests across InMemory and PGlite, 2 files |
-| Complete use-cases suite under coverage | PASS: 63 tests, 10 files |
+| Shared model scenarios | PASS: 36 tests across InMemory and PGlite, 2 files |
+| Complete use-cases suite under coverage | PASS: 73 tests, 10 files |
 | Both packages' source and test type checks | PASS |
-| Domain docgen after improved command/aggregate examples | PASS: 141 examples compile |
+| Domain docgen after improved command/aggregate examples | PASS: all examples compile, including the new Opaque record examples |
 | Use-cases docgen | PASS: 107 examples compile; also passed the final full package verifier |
 | `beep laws entity-kit-freeze --check` | PASS: zero findings, 64 current importers match the shrinking baseline; no new frozen-kit import |
 | Coverage baseline write, both packages, `--add-missing-files-only` | PASS; 67/67 new source identities present; programmatic comparison found zero lowered package/file floors |
-| Coverage regression gate, both packages, without baseline-write flags | FAIL only on the four retained use-cases 100% package floors, detailed below |
+| Coverage regression gate, both packages, without baseline-write flags | PASS: both packages meet every retained package/file floor |
+| Scoped canonical schema-first | PASS, exit 0: 74 roots, 69 production files; zero introduced entries, parity or LiteralKit findings |
+| Scoped canonical effect-vitest | PASS, exit 0: 74 files; findings=0, introduced=0, resolved=0 |
 | `git diff --check` | PASS before handoff commit |
 | `beep goals decisions write --slug alchemy-vault-sync-slice` | PASS: no invalid decision records or remaining projection drift |
 | `beep goals manifest --write` | Run after adding the research deliverables |
@@ -93,14 +95,15 @@ The final coverage measurement is:
 
 | Package | Lines | Statements | Branches | Functions |
 | --- | ---: | ---: | ---: | ---: |
-| documents-domain | 96.11 | 93.60 | 64.86 | 94.53 |
-| documents-use-cases | 99.07 | 97.34 | 80.00 | 95.23 |
+| documents-domain | 96.07 | 93.51 | 64.98 | 94.53 |
+| documents-use-cases | 100.00 | 100.00 | 100.00 | 100.00 |
 
 Domain exceeds its existing package floors (92.78 / 92.92 / 58.33 / 85.00).
-Use-cases retains its existing 100% floors in all four columns. **Do not lower
-those floors to publish this work.** The formal scoped coverage gate reports
-these four regressions. Additional policy replay/failure/empty-state tests are
-needed before calling the branch coverage-green.
+Use-cases again meets its existing 100% floors in all four columns. The final
+scoped gate without baseline-write flags passes both packages. No floor or
+coverage-ignore comment was added or lowered. The add-missing-files-only write
+was rerun: no new identities were missing and only provenance metadata changed.
+All existing package/file floor values remain identical as data.
 
 The added scenarios cover name competition and cleanup, cross-org/case-only
 rename behavior, cursor failure retention, path claims, stable retargeting,
@@ -110,28 +113,87 @@ outcomes, kind replacement, remote-event dedupe, review scope and correction
 ordering, terminal item error, reconnect revival, and review healing.
 The domain-only model folds every aggregate event through its read contracts.
 
-## Gates not proven / publication holds
+## Follow-up hold clearance
 
-1. Coverage regression remains as described above. Existing floors were preserved.
-2. `beep quality cache-policy` reports the inherited global configuration drift
-   assigned by the orchestrator to PR #2881, plus the dependency-edge consequences
-   of these manifest edits. The PR 3a review/request files are prepared and
-   explicitly self-reviewed. They were not applied: this lane does not re-stamp
-   unrelated root cache policy. Refresh the request after integrating the inherited
-   fix and review the remaining local subjects.
-3. `beep lint schema-first` exited 1 with only its command banner and no detector
-   result. It is not a passing proof. `effect-vitest`'s broad scan was skipped
-   after that unsuccessful broad scan on the constrained host. Scoped type checks,
-   package audit, lint and docgen did pass.
-4. Hosted CI, independent review, Yeet final readiness and publication are unrun
-   by design; this handoff does not call the branch merge-ready.
-5. An earlier full package verifier attempt exited 130 before any package result.
-   A later attempt passed both packages; the earlier interruption is not the
-   final package result.
+Both requested holds are cleared locally. Five new shared cases run ten times
+across InMemory and PGlite, using direct typed policy replay where appropriate:
 
-Local process logs are under `~/.cache/vault-*.log`; the tables above record the
-results needed without those untracked logs. No out-of-repo corpus, client files
-or secrets were read or included.
+- Rejected first registration and rename-before-registration release their new
+  claims; rejected case-only rename in another workspace retains the current claim.
+- Connection recovery with no operation queue is an idempotent no-op.
+- An untracked remote conflict closes without a local item command.
+- Healing an already queued operation retargets its stable id without supersession.
+- Redelivery of an executed stale deadline after success is idempotent; an absent
+  failure snapshot leaves the operation unchanged.
+
+The first replay test timed out once while waiting for a 40 ms lease to expire.
+The final test executes the stale expiry command with its actual scheduled id
+after success, then replays the policy delivery. It has no wall-clock wait.
+Existing shared tests still exercise scheduled expiry and retry on both platforms.
+No platform defect is asserted from that one timeout.
+
+### Scoped lint reproduction
+
+Neither native lint command's help exposes a path, package, file or base filter.
+The committed [06-pr3a-scoped-lints.py](06-pr3a-scoped-lints.py) adapter therefore
+runs the canonical scanners against PR 3a's touched TypeScript files:
+
+~~~sh
+PATH="$HOME/.local/share/mise/shims:$PATH" python3 goals/alchemy-vault-sync-slice/research/06-pr3a-scoped-lints.py schema-first
+PATH="$HOME/.local/share/mise/shims:$PATH" python3 goals/alchemy-vault-sync-slice/research/06-pr3a-scoped-lints.py effect-vitest
+~~~
+
+The default base is the stack base 3b891a35348ad562e0d4b1d98d608fdbed078afa;
+--base is an adapter flag, not a native CLI option. The adapter copies canonical
+scan orchestration into ignored .beep/pr3a-scoped-lints/, bounds only source
+discovery, and anchors imports to their original modules. It exports the private
+schema collector for read-only membership comparison using the canonical entry
+key function. All detector implementations and lint inventories remain unchanged.
+Effect Vitest retains its graph/pin check, browser-safe filtering and membership
+ratchet, with baseline membership restricted to selected files. No write/census
+mode, exemption or ignore is used.
+
+The adapter refuses empty scope or changed scanner seams. Its schema pass sees
+74 roots including the five tests; the unchanged production exclusion selects
+69 production files. Both scans produced actual findings before remediation,
+and clean results afterward:
+
+| Scanner | Canonical orchestration SHA256 | Final result |
+| --- | --- | --- |
+| SchemaFirstScan.ts | 6569363df8be2bfc64e6fc58ff7f7102704e3eb25101f4d9f118fc69057a8a2c | exit 0; introduced=[], parity=[], literalKit=[] |
+| EffectVitestScan.ts | 140cc128263c3e8355b768d4bb32d5d39f5eb0c1149fa24a21c2da6fb760fc43 | exit 0; files=74, findings=0, introduced=0, resolved=0 |
+
+Six introduced bare-struct findings were fixed with branded, annotated S.Opaque
+declarations: NameClaim, ConflictRecord, ItemObservation, OperationInput, and the
+ItemRecord / OperationRecord structs inside the nullable states. Fixtures and
+initial evolutions now use their constructors. Encoded fields, ids and event
+versions are unchanged.
+
+One production dead fallback was deleted: ItemReturnedToPending no longer checks
+next === null, because observed now returns the non-null ItemRecord. The nullable
+failure-snapshot guard remains and is tested: alchemy's View trigger contract
+explicitly permits null state. The deadline test's redundant event-tag guard was
+replaced with the schema-derived S.is(OperationLeased) narrowing.
+
+Effect Vitest initially found EV006 (Boolean assertion shape) and EV014 (missing
+resource-layer hook timeout) in VaultSyncModel.test.ts. The test now uses
+assertTrue with the original Boolean polarity and an explicit 20-second layer
+hook budget. Neither final scoped scan died without detector output.
+
+### Remaining publication hold and exclusions
+
+1. The existing cache-policy drift/dependency-edge review remains for the
+   orchestrator after PR #2881. This follow-up did not apply or re-stamp that request.
+2. Hosted CI, independent review, Yeet readiness and publication remain unrun by
+   design. No repo-wide gate, push, PR or Yeet command ran in this follow-up.
+3. Earlier broad-scan failure and verifier interruption receipts are historical;
+   scoped lint and package proof above supersede them for the touched files.
+
+Final logs are under ~/.cache/vault-followup-*.log. The final coverage gate is
+vault-followup-coverage-final2.log; the passing lint logs are
+vault-followup-schema-final.log and vault-followup-vitest-final.log.
+The tables and committed adapter make the results reproducible without those
+untracked logs.
 
 ## Integration contracts and open questions
 
