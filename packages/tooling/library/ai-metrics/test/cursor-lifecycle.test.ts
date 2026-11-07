@@ -6,6 +6,7 @@ import {
   CursorLifecycleRuntime,
   forwardCursorLifecycleHook,
   makeCursorLifecycleReceiver,
+  projectCursorLifecycleHookInput,
 } from "@beep/repo-ai-metrics/cursor-lifecycle";
 import { encodeNativeTraceBatch, NativeExportInput } from "@beep/repo-ai-metrics/native-export";
 import { makeNativeIntakeJournal } from "@beep/repo-ai-metrics/native-intake";
@@ -20,7 +21,7 @@ import {
   nativeTraceWire,
 } from "@beep/repo-ai-metrics/test/cursor-lifecycle";
 import { cursorPeerDiagnosticBootstrap } from "@beep/repo-ai-metrics/test/cursor-peer-diagnostic";
-import { makeSealedRuntimeFixture } from "@beep/repo-ai-metrics/test/sealed-runtime";
+import { makeSealedRuntimeFixture, observeFixtureProcessStopped } from "@beep/repo-ai-metrics/test/sealed-runtime";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -33,6 +34,7 @@ import { expect } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -41,12 +43,15 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as References from "effect/References";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -219,6 +224,20 @@ const sql = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }
 const platformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.merge(NodeFileSystem.layer, NodePath.layer))
 );
+const syntheticHandle = (output: Stream.Stream<Uint8Array>, input: Sink.Sink<void, Uint8Array>, running: boolean) =>
+  ChildProcessSpawner.makeHandle({
+    all: output,
+    stdout: output,
+    stderr: Stream.empty,
+    stdin: input,
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(running),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    unref: Effect.succeed(Effect.void),
+  });
 const sha = Effect.fnUntraced(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs.readFile(path);
@@ -302,6 +321,181 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
   return { policy, journal, control, namespaceId, deliver, runtime };
 });
 
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
+  for (const fault of ["canonical", "owner", "writable", "size", "digest", "changed", "growth"]) {
+    it.effect(`interpreter ${fault} enrollment refuses before helper dispatch and durable admission`, () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        let dispatches = 0;
+        let opened = 0;
+        let released = 0;
+        const guarded = FileSystem.FileSystem.of({
+          ...fs,
+          realPath: (path) =>
+            path === f.policy.pythonExecutable && fault === "canonical"
+              ? Effect.succeed(`${path}-different-canonical-target`)
+              : fs.realPath(path),
+          open: (path, options) =>
+            fs.open(path, options).pipe(
+              Effect.flatMap((file) => {
+                if (path !== f.policy.pythonExecutable) return Effect.succeed(file);
+                return Effect.acquireRelease(
+                  Effect.sync(() => {
+                    opened++;
+                    return file;
+                  }),
+                  () =>
+                    Effect.sync(() => {
+                      released++;
+                    })
+                ).pipe(
+                  Effect.map((handle) => {
+                    let stats = 0;
+                    return {
+                      ...handle,
+                      stat: handle.stat.pipe(
+                        Effect.map((stat) => {
+                          stats++;
+                          if (fault === "owner") return { ...stat, uid: O.some(123456) };
+                          if (fault === "writable") return { ...stat, mode: stat.mode | 0o020 };
+                          if (fault === "size") return { ...stat, size: ByteSize.bytes(33554433) };
+                          if (fault === "changed" && stats > 1) return { ...stat, ino: O.none() };
+                          return stat;
+                        })
+                      ),
+                      readAlloc:
+                        fault === "growth" ? () => Effect.succeed(O.some(new Uint8Array(65536))) : handle.readAlloc,
+                    };
+                  })
+                );
+              })
+            ),
+        });
+        const policy = fault === "digest" ? CursorLifecyclePolicy.make({ ...f.policy, pythonSha256: id }) : f.policy;
+        const result = yield* f.deliver(start, policy).pipe(
+          Effect.provideService(FileSystem.FileSystem, guarded),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, {
+            ...spawner,
+            spawn: (...args) => {
+              dispatches++;
+              return spawner.spawn(...args);
+            },
+          })
+        );
+        assertFailure(result.result, CursorLifecycleError.make({ reason: "enrollment" }));
+        expect(dispatches).toBe(0);
+        expect(opened).toBe(fault === "canonical" ? 0 : 1);
+        expect(released).toBe(opened);
+        expect((yield* f.journal.stats).pages).toBe(0);
+      })
+    );
+  }
+  for (const fault of ["ready", "observed", "cwd", "digest", "overflow", "timeout"]) {
+    it.effect(`synthetic helper ${fault} output fails closed and finalizes without ACK or journal admission`, () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const started = yield* Deferred.make<void>();
+        let released = 0;
+        let dispatches = 0;
+        let acknowledgements = 0;
+        const ready = yield* encode({ ready: fault === "ready" ? false : true });
+        const observed = yield* encode({
+          peer: {
+            peerPid: 1,
+            peerStartTicks: "1",
+            runtimePid: 1,
+            runtimeStartTicks: "1",
+            runtimeSha256: fault === "digest" ? id : f.policy.runtimeSha256,
+            cwd: fault === "cwd" ? "/synthetic-wrong-root" : f.policy.workspace,
+            uid: 1000,
+          },
+          callback: start,
+        });
+        const lines =
+          fault === "overflow" ? Str.repeat(16385)("x") : `${ready}\n${fault === "observed" ? "{}" : observed}\n`;
+        const output =
+          fault === "timeout"
+            ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
+            : Stream.make(new TextEncoder().encode(lines));
+        const synthetic = ChildProcessSpawner.make(() =>
+          Effect.acquireRelease(
+            Effect.sync(() => {
+              dispatches++;
+              return syntheticHandle(
+                output,
+                Sink.forEach((chunk: Uint8Array) =>
+                  Effect.sync(() => {
+                    if (Str.includes("receiptId")(new TextDecoder().decode(chunk))) acknowledgements++;
+                  })
+                ),
+                false
+              );
+            }).pipe(Effect.tap(() => Deferred.succeed(started, undefined))),
+            () =>
+              Effect.sync(() => {
+                released++;
+              })
+          )
+        );
+        const receiver = yield* makeCursorLifecycleFixtureReceiver(f.policy).pipe(
+          Effect.provideService(CursorLifecycleRuntime, { journal: f.journal, control: f.control })
+        );
+        const running = yield* Effect.forkChild(
+          receiver.open().pipe(
+            Effect.flatMap((opened) => opened.accept),
+            Effect.result,
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, synthetic)
+          )
+        );
+        yield* Deferred.await(started);
+        if (fault === "timeout") yield* TestClock.adjust("10 seconds");
+        const result = yield* Fiber.join(running);
+        assertFailure(
+          result,
+          CursorLifecycleError.make({
+            reason: fault === "observed" ? "callback" : fault === "timeout" ? "transport" : "kernel-binding",
+          })
+        );
+        expect(dispatches).toBe(1);
+        expect(released).toBe(1);
+        expect(acknowledgements).toBe(0);
+        expect((yield* f.journal.stats).pages).toBe(0);
+      })
+    );
+  }
+  it.effect("a native session without generation or effort retains Unknown fields and stable replay identity", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const callback = {
+        hook_event_name: "sessionStart",
+        cursor_version: start.cursor_version,
+        session_id: "native-missing-generation",
+        conversation_id: "native-missing-generation",
+        is_background_agent: false,
+      };
+      const first = yield* f.deliver(callback);
+      if (Result.isFailure(first.result)) return yield* Effect.fail(first.result.failure);
+      const events = yield* f.journal.readNewEvents(first.result.success.page.receiptId);
+      if (O.isNone(events) || events.value[0] === undefined) return yield* Effect.die("missing lifecycle observation");
+      const lifecycle = yield* Effect.fromOption(events.value[0].nativeLifecycle);
+      assertNone(lifecycle.generationHash);
+      assertNone(lifecycle.reportedEffort);
+      const expectedId = yield* hashPrivateIdentifier(
+        `cursor-lifecycle/v1:${lifecycle.runtimeInstanceId}:${lifecycle.sessionHash}:Unknown:sessionStart`,
+        O.some(salt)
+      );
+      expect(events.value[0].eventId).toBe(expectedId);
+      yield* TestClock.adjust("1 second");
+      const replay = yield* f.deliver(callback);
+      if (Result.isFailure(replay.result)) return yield* Effect.fail(replay.result.failure);
+      expect(replay.result.success).toEqual(first.result.success);
+      expect(yield* f.journal.readNewEvents(first.result.success.page.receiptId)).toEqual(events);
+    })
+  );
+});
+
 const ackServer = Effect.fn("CursorLifecycleTest.syntheticAckServer")(function* (reply: string, hold: boolean) {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "ack-contract-" });
@@ -342,6 +536,24 @@ const ackServer = Effect.fn("CursorLifecycleTest.syntheticAckServer")(function* 
 });
 
 it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.makeMemoMapUnsafe() })((it) => {
+  it.effect("standalone projection refuses an oversized callback before any transport exists", () =>
+    Effect.gen(function* () {
+      const result = yield* projectCursorLifecycleHookInput(Str.repeat(8193)("x")).pipe(Effect.result);
+      assertFailure(result, CursorLifecycleError.make({ reason: "callback" }));
+    })
+  );
+  it.effect("a silent ACK peer times out and releases the production forwarder socket", () =>
+    Effect.gen(function* () {
+      const server = yield* ackServer("", true);
+      const body = yield* encode(start);
+      const sending = yield* Effect.forkChild(forwardCursorLifecycleHook(server.path, body).pipe(Effect.result));
+      yield* server.awaitRequest;
+      yield* TestClock.adjust("5 seconds");
+      const result = yield* Fiber.join(sending);
+      assertFailure(result, CursorLifecycleError.make({ reason: "transport" }));
+      expect((yield* server.received).length).toBeGreaterThan(0);
+    })
+  );
   for (const kind of ["valid", "malformed", "oversized"]) {
     it.effect(`production forwarder projects input and validates ${kind} synthetic ACK without durability claims`, () =>
       Effect.gen(function* () {
@@ -371,6 +583,145 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.
   );
 });
 it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeMemoMapUnsafe() })((it) => {
+  for (const fault of ["overflow", "wrong-drop-sentinel", "timeout"]) {
+    it.effect(`synthetic peer ${fault} output refuses and closes its owned fixture resources`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const requested = yield* Deferred.make<void>();
+        let released = 0;
+        const output =
+          fault === "timeout"
+            ? Stream.never
+            : Stream.make(new TextEncoder().encode(fault === "overflow" ? Str.repeat(1025)("x") : "unexpected\n"));
+        const observedOutput = Stream.concat(
+          Stream.fromEffect(Deferred.succeed(requested, undefined)).pipe(Stream.drain),
+          output
+        );
+        const spawner = ChildProcessSpawner.make(() =>
+          Effect.acquireRelease(Effect.succeed(syntheticHandle(observedOutput, Sink.drain, false)), () =>
+            Effect.sync(() => {
+              released++;
+            })
+          )
+        );
+        const runtime = yield* makeSealedRuntimeFixture().pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+        );
+        const sending = yield* Effect.forkChild(
+          runtime.send("/synthetic-no-listener", "{}", fault === "wrong-drop-sentinel").pipe(Effect.result)
+        );
+        yield* Deferred.await(requested);
+        if (fault === "timeout") yield* TestClock.adjust("6 seconds");
+        const result = yield* Fiber.join(sending);
+        if (Result.isSuccess(result)) return yield* Effect.die("unsafe synthetic child output admitted");
+        expect(result.failure.reason).toBe("transport");
+        yield* runtime.close;
+        expect(released).toBe(1);
+        const remains = yield* fs.exists(runtime.executable);
+        expect(remains).toBe(false);
+      })
+    );
+  }
+  it.effect("terminal observation refuses a still-running handle and never converts interruption into success", () =>
+    Effect.gen(function* () {
+      const handle = syntheticHandle(Stream.empty, Sink.drain, true);
+      const failed = yield* observeFixtureProcessStopped(handle).pipe(Effect.result);
+      if (Result.isSuccess(failed)) return yield* Effect.die("running handle accepted as stopped");
+      expect(failed.failure.reason).toBe("runtime");
+      const terminalFailure = ChildProcessSpawner.makeHandle({
+        ...handle,
+        exitCode: Effect.fail(
+          PlatformError.systemError({ _tag: "Unknown", module: "ChildProcess", method: "exitCode" })
+        ),
+        isRunning: Effect.succeed(false),
+      });
+      const stopped = yield* observeFixtureProcessStopped(terminalFailure).pipe(Effect.result);
+      assertSuccess(stopped, undefined);
+      const waiting = ChildProcessSpawner.makeHandle({ ...handle, exitCode: Effect.never });
+      const observing = yield* Effect.forkChild(observeFixtureProcessStopped(waiting));
+      yield* Fiber.interrupt(observing);
+      const exit = yield* Fiber.await(observing);
+      if (exit._tag !== "Failure") return yield* Effect.die("interrupted observation succeeded");
+      expect(Cause.hasInterruptsOnly(exit.cause)).toBe(true);
+    })
+  );
+  for (const fault of ["oversized-source", "missing-inodes", "changed-source", "different-copy-bytes"]) {
+    it.effect(`sealed copy ${fault} refuses before child dispatch and removes its owned directory`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const source = yield* fs.realPath(process.execPath);
+        const original = yield* fs.stat(source);
+        const sourceHash = yield* sha(source);
+        let sourceStats = 0;
+        let owned = "";
+        let dispatches = 0;
+        const guarded = FileSystem.FileSystem.of({
+          ...fs,
+          makeTempDirectoryScoped: (options) =>
+            fs.makeTempDirectoryScoped(options).pipe(
+              Effect.tap((path) =>
+                Effect.sync(() => {
+                  owned = path;
+                })
+              )
+            ),
+          stat: (path) =>
+            fs.stat(path).pipe(
+              Effect.map((stat) => {
+                if (path === source) {
+                  sourceStats++;
+                  if (fault === "oversized-source") return { ...stat, size: ByteSize.bytes(268435457) };
+                  if (fault === "changed-source" && sourceStats > 1) return { ...stat, size: ByteSize.bytes(1) };
+                }
+                return fault === "missing-inodes" ? { ...stat, ino: O.none() } : stat;
+              })
+            ),
+          readFile: (path) =>
+            fault === "different-copy-bytes" && path !== source
+              ? Effect.succeed(new Uint8Array([0]))
+              : fs.readFile(path),
+        });
+        const result = yield* makeSealedRuntimeFixture().pipe(
+          Effect.result,
+          Effect.provideService(FileSystem.FileSystem, guarded),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, {
+            ...spawner,
+            spawn: (...args) => {
+              dispatches++;
+              return spawner.spawn(...args);
+            },
+          })
+        );
+        if (Result.isSuccess(result)) return yield* Effect.die("unsafe synthetic runtime admitted");
+        expect(result.failure.reason).toBe("runtime");
+        expect(dispatches).toBe(0);
+        if (owned !== "") expect(yield* fs.exists(owned)).toBe(false);
+        expect((yield* fs.stat(source)).mode).toBe(original.mode);
+        expect(yield* sha(source)).toBe(sourceHash);
+      })
+    );
+  }
+  it.effect("raw fixture input bounds reject line injection and multibyte overflow without an ACK request", () =>
+    Effect.gen(function* () {
+      const runtime = yield* makeSealedRuntimeFixture();
+      const server = yield* ackServer("{}", false);
+      for (const [path, body] of [
+        [`${server.path}\nforged`, "{}"],
+        [server.path, "{}\nforged"],
+        [server.path, Str.repeat(4097)("é")],
+      ]) {
+        const result = yield* runtime.send(path, body, false).pipe(Effect.result);
+        if (Result.isSuccess(result)) return yield* Effect.die("invalid peer input admitted");
+        expect(result.failure.reason).toBe("transport");
+      }
+      expect(yield* server.received).toBe("");
+      const missing = yield* runtime.send(`${server.path}-absent`, "{}", false);
+      expect(missing).toBe("\n");
+      yield* runtime.close;
+      yield* runtime.closed;
+    })
+  );
   it.effect("private runtime close waits for child exit, removes its copy and preserves source permissions", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
