@@ -1175,7 +1175,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 209,
+      "line": 211,
       "owner": "@beep/law-practice-domain",
       "reason": "Source-led fixed ownership conformance and corrupt-plan regressions require exact token/core/head/frame/citation/route/partition anchors. Random independently generated schema values do not provide the joint qualified-source and grammatical-owner certificates these assertions exercise. This scoped exception covers only this file/rule occurrence; source proof, actual budget controls and output assertions remain required."
     },

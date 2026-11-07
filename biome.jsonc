@@ -74,6 +74,11 @@
       "!packages/law-practice/server/test/fixtures/claim-element/allowed-sampling.json",
       "!packages/law-practice/server/test/fixtures/claim-element/reference-freeze.json",
       "!apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json",
+      // Attorney-review pages are sha256-bound by preservation-freeze.json and the
+      // reference-input provenance records, so formatting them would break the seal.
+      "!goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "!goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "!goals/claim-element-antecedent-check/research/allowed-review.template.html",
       // Canonical Python payload bytes are hash-bound and deliberately retain
       // upstream text. ops/check-operations.ts validates this generated corpus.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
