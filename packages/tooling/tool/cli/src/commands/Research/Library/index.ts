@@ -68,6 +68,7 @@ export {
 export {
   LibraryAffirmativeCitoRelation,
   LibraryMineJob,
+  LibraryMineJobKind,
   LibraryMineOptions,
   LibraryMineOutcome,
   LibraryMineProfileId,

@@ -37,6 +37,7 @@ import {
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
@@ -45,6 +46,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const bytesOf = (text: string) => new TextEncoder().encode(text);
@@ -437,9 +439,8 @@ describe("research library routes", () => {
           qualifications: [],
           derivations,
         });
-        const started = Date.now();
-        const totals = yield* libraryHopTotals(root, catalog);
-        expect(Date.now() - started).toBeLessThan(10_000);
+        const [elapsed, totals] = yield* libraryHopTotals(root, catalog).pipe(Effect.timed, TestClock.withLive);
+        expect(Duration.toMillis(elapsed)).toBeLessThan(10_000);
         expect(totals[2]).toContain(`hop 2: identities=${count} readable=0 cataloguedOnly=${count}`);
       })
     );

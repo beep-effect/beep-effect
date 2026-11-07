@@ -21,7 +21,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { assembleLibraryOntology, libraryReferenceClass } from "./Library.ontology.ts";
+import { assembleLibraryOntology, libraryAbsentFindingBinding, libraryReferenceClass } from "./Library.ontology.ts";
 import type { AssembledClass } from "@beep/ontology";
 import type { LibraryCatalog } from "./Library.schemas.ts";
 
@@ -210,7 +210,7 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
     quads.push(Rdf.makeQuad(subject, RDF_TYPE, nn(cls.iri)));
     const projectPredicate = (predicate: AssembledClass["predicates"][number]) => {
       const raw = get(record, predicate.key);
-      if (raw === undefined) return;
+      if (raw === undefined || libraryAbsentFindingBinding(cls.name, predicate.key, raw)) return;
       const values = A.isArray(raw) ? raw : [raw];
       A.forEach(values, (value, index) => {
         const object =

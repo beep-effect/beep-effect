@@ -57,12 +57,12 @@ import {
   LibraryTriageRecord,
 } from "./Library.mine.schemas.ts";
 import { libraryTopics } from "./Library.projection.ts";
-import { LibraryCatalog, LibraryFinding, LibraryModelRun } from "./Library.schemas.ts";
+import { LibraryArtifact, LibraryCatalog, LibraryFinding, LibraryModelRun } from "./Library.schemas.ts";
 import { hashBytes, loadCatalog, saveImmutable, withCatalog } from "./Library.store.ts";
 import type { LibraryMineProfile } from "./Library.mine.runner.ts";
 import type { LibraryMineOptions, LibraryMineTier } from "./Library.mine.schemas.ts";
 import type { LibraryTopic } from "./Library.projection.ts";
-import type { LibraryArtifact, LibraryCapture, LibraryDerivation } from "./Library.schemas.ts";
+import type { LibraryCapture, LibraryDerivation, LibraryDocument, LibraryIntakeFile } from "./Library.schemas.ts";
 
 const MINE_ROOT = "ops/mine";
 const T1_TEXT_CAP = 24_000;
@@ -127,14 +127,63 @@ const resolveIntake = Effect.fn("Library.mine.resolveIntake")(function* (catalog
   });
 });
 
+const documentMediaTypes: ReadonlyArray<readonly [RegExp, string]> = [
+  [/\.md$/i, "text/markdown"],
+  [/\.jsonl$/i, "application/x-ndjson"],
+  [/\.json$/i, "application/json"],
+];
+
+const documentMediaType = (snapshotPath: string) =>
+  O.getOrElse(
+    O.map(
+      A.findFirst(documentMediaTypes, ([pattern]) => pattern.test(snapshotPath)),
+      ([, mediaType]) => mediaType
+    ),
+    () => "text/plain"
+  );
+
+const dedupeBy = <A>(items: ReadonlyArray<A>, key: (item: A) => string): ReadonlyArray<A> => {
+  let seen = HashSet.empty<string>();
+  return A.filter(items, (item) => {
+    if (HashSet.has(seen, key(item))) return false;
+    seen = HashSet.add(seen, key(item));
+    return true;
+  });
+};
+
+const documentJob = (document: LibraryDocument, file: LibraryIntakeFile) => {
+  const accessClass = document.accessClass === "private" || file.accessClass === "private" ? "private" : "public";
+  return LibraryMineJob.make({
+    key: `document-${document.id}-${document.sha256}`,
+    kind: "document",
+    artifactId: `document:${document.id}:${document.sha256}`,
+    sourceId: "",
+    captureId: "",
+    documentId: document.id,
+    accessClass,
+    artifact: LibraryArtifact.make({
+      accessClass,
+      path: document.snapshotPath,
+      sha256: document.sha256,
+      bytes: document.bytes,
+      mediaType: documentMediaType(document.snapshotPath),
+      role: "intake-snapshot",
+    }),
+  });
+};
+
 /**
- * Plan every mining unit of an intake: one bound text artifact per effective readable capture.
+ * Plan every mining unit of an intake: one bound text artifact per effective readable
+ * capture, then one job per parseable hop-0 intake document.
  *
  * **Details**
  *
  * Sources come from citations in the intake's documents and from derivations recorded
  * against the intake. Only complete, readable captures with a text artifact qualify;
- * an unread or incomplete source yields no job and therefore no finding.
+ * an unread or incomplete source yields no job and therefore no finding. Every parseable
+ * document snapshot of the intake is its own job bound to the snapshot bytes, except a
+ * document whose sha256 equals a planned capture text artifact: those are the same bytes,
+ * already read through the source. Document jobs inherit the document's access class.
  *
  * **Example** (Prepare a plan)
  * ```ts
@@ -153,12 +202,8 @@ export const planLibraryMine = Effect.fn("Library.mine.plan")(function* (root: s
   const catalog = yield* loadCatalog(root);
   const intake = yield* resolveIntake(catalog, intakeRef);
   const snapshots = HashSet.fromIterable(A.map(intake.files, (file) => file.snapshotPath));
-  const documentIds = HashSet.fromIterable(
-    A.map(
-      A.filter(catalog.documents, (document) => HashSet.has(snapshots, document.snapshotPath)),
-      (document) => document.id
-    )
-  );
+  const intakeDocuments = A.filter(catalog.documents, (document) => HashSet.has(snapshots, document.snapshotPath));
+  const documentIds = HashSet.fromIterable(A.map(intakeDocuments, (document) => document.id));
   const cited = HashSet.fromIterable([
     ...A.map(
       A.filter(catalog.occurrences, (occurrence) => HashSet.has(documentIds, occurrence.documentId)),
@@ -183,9 +228,11 @@ export const planLibraryMine = Effect.fn("Library.mine.plan")(function* (root: s
         return A.map(A.fromOption(libraryMineTextArtifact(capture)), (artifact) =>
           LibraryMineJob.make({
             key: `${capture.id}-${artifact.sha256}`,
+            kind: "source",
             artifactId: `${capture.id}:${artifact.sha256}`,
             sourceId: source.id,
             captureId: capture.id,
+            documentId: "",
             accessClass: source.accessClass === "private" || artifact.accessClass === "private" ? "private" : "public",
             artifact,
           })
@@ -193,12 +240,20 @@ export const planLibraryMine = Effect.fn("Library.mine.plan")(function* (root: s
       });
     })
   );
-  let seen = HashSet.empty<string>();
-  return A.filter(A.flatten(jobs), (job) => {
-    if (HashSet.has(seen, job.key)) return false;
-    seen = HashSet.add(seen, job.key);
-    return true;
-  });
+  const sourceJobs = dedupeBy(A.flatten(jobs), (job) => job.key);
+  const captured = HashSet.fromIterable(A.map(sourceJobs, (job) => job.artifact.sha256));
+  const parseableFiles = HashMap.fromIterable(
+    A.map(
+      A.filter(intake.files, (file) => file.parseable && Str.isNonEmpty(file.snapshotPath)),
+      (file) => [file.snapshotPath, file] as const
+    )
+  );
+  const documentJobs = A.flatMap(intakeDocuments, (document) =>
+    HashSet.has(captured, document.sha256)
+      ? []
+      : A.map(A.fromOption(HashMap.get(parseableFiles, document.snapshotPath)), (file) => documentJob(document, file))
+  );
+  return [...sourceJobs, ...dedupeBy(documentJobs, (job) => job.artifact.sha256)];
 });
 
 const tierDir = (tier: LibraryMineTier, kind: "records" | "receipts" | "prompts" | "outputs" | "scratch") =>
@@ -234,12 +289,17 @@ const recordExists = Effect.fn("Library.mine.recordExists")(function* (
     .pipe(mapFailure("Cannot inspect mining record."));
 });
 
-const readBoundText = Effect.fn("Library.mine.readBoundText")(function* (root: string, artifact: LibraryArtifact) {
+const readBoundText = Effect.fn("Library.mine.readBoundText")(function* (
+  root: string,
+  artifact: LibraryArtifact,
+  kind: LibraryMineJob["kind"] = "source"
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const bytes = yield* fs
-    .readFile(path.join(root, "objects/sha256", artifact.sha256))
-    .pipe(mapFailure("Cannot read bound capture text."));
+  // Capture text is content-addressed; a hop-0 document is read from its intake snapshot.
+  const location =
+    kind === "document" ? path.join(root, artifact.path) : path.join(root, "objects/sha256", artifact.sha256);
+  const bytes = yield* fs.readFile(location).pipe(mapFailure("Cannot read bound capture text."));
   if ((yield* hashBytes(bytes)) !== artifact.sha256)
     return yield* LibraryError.make({ message: "Bound capture text differs from its digest.", cause: artifact.path });
   return new TextDecoder().decode(bytes);
@@ -275,14 +335,26 @@ const boundExcerpt = (text: string, cap: number) => ({
       : `Capture text (complete, ${text.length} characters):`,
 });
 
+const jobSubject = (job: LibraryMineJob) =>
+  job.kind === "document" ? "one hop-0 intake report" : "one captured source";
+
 const sourceLine = (catalog: LibraryCatalog, job: LibraryMineJob) =>
-  O.match(
-    A.findFirst(catalog.sources, (source) => source.id === job.sourceId),
-    {
-      onNone: () => `Source ${job.sourceId}`,
-      onSome: (source) => `Source ${source.id}: ${source.canonicalUrl} (${source.kind})`,
-    }
-  );
+  job.kind === "document"
+    ? O.match(
+        A.findFirst(catalog.documents, (document) => document.id === job.documentId),
+        {
+          onNone: () => `Hop-0 intake report ${job.documentId}`,
+          onSome: (document) =>
+            `Hop-0 intake report ${document.id}: ${document.title}${Str.isNonEmpty(document.reportDate) ? ` (${document.reportDate})` : ""}`,
+        }
+      )
+    : O.match(
+        A.findFirst(catalog.sources, (source) => source.id === job.sourceId),
+        {
+          onNone: () => `Source ${job.sourceId}`,
+          onSome: (source) => `Source ${source.id}: ${source.canonicalUrl} (${source.kind})`,
+        }
+      );
 
 const triagePrompt = (
   catalog: LibraryCatalog,
@@ -291,7 +363,7 @@ const triagePrompt = (
   text: string
 ) => {
   const bound = boundExcerpt(text, T1_TEXT_CAP);
-  return `You are triaging one captured source for the beep-effect research library (tier T1).
+  return `You are triaging ${jobSubject(job)} for the beep-effect research library (tier T1).
 Decide whether a deep read (T2) is worth spending on it for any live packet topic below.
 Reply with only a JSON object: {"decision": "select" | "skip" | "defer", "reason": string, "topicIds": string[]}.
 - select: the text bears on at least one listed topic and deserves a deep read.
@@ -317,7 +389,7 @@ const readingPrompt = (
   text: string
 ) => {
   const bound = boundExcerpt(text, T2_TEXT_CAP);
-  return `You are deep-reading one captured source for the beep-effect research library (tier T2).
+  return `You are deep-reading ${jobSubject(job)} for the beep-effect research library (tier T2).
 Reply with only a JSON object:
 {"coverage": "complete" | "partial" | "unread", "summary": string, "findings": [{"citoRelation": string, "span": string, "summary": string, "topicIds": string[]}]}
 Rules:
@@ -484,7 +556,7 @@ const failureTag = (error: MineFailure) => error._tag;
 const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, job: LibraryMineJob) {
   if (yield* Ref.get(context.paused))
     return { key: job.key, outcome: "paused", label: `${job.artifactId} paused` } satisfies JobOutcome;
-  const text = yield* readBoundText(context.root, job.artifact);
+  const text = yield* readBoundText(context.root, job.artifact, job.kind);
   const prompt =
     context.tier === "t1"
       ? triagePrompt(context.catalog, job, context.topics, text)
@@ -530,6 +602,7 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
         artifactId: job.artifactId,
         sourceId: job.sourceId,
         captureId: job.captureId,
+        documentId: job.documentId,
         artifactSha256: job.artifact.sha256,
         decision: triage.decision,
         reason: triage.reason,
@@ -568,6 +641,7 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
         id: `mine:t2:${job.key}:${index}`,
         sourceId: job.sourceId,
         captureId: job.captureId,
+        documentId: job.documentId,
         citoRelation: finding.citoRelation,
         span: finding.span,
         summary: finding.summary,
@@ -580,6 +654,7 @@ const runJob = Effect.fn("Library.mine.runJob")(function* (context: JobContext, 
       artifactId: job.artifactId,
       sourceId: job.sourceId,
       captureId: job.captureId,
+      documentId: job.documentId,
       artifactSha256: job.artifact.sha256,
       coverage,
       summary: reading.summary,
@@ -745,7 +820,10 @@ const runTier = Effect.fn("Library.mine.runTier")(function* (
     yield* Console.log(`argv: ${A.join(libraryMineArgv(profile, placeholder), " ")}`);
     yield* Effect.forEach(
       pending,
-      (job) => Console.log(`${job.artifactId} source=${job.sourceId} access=${job.accessClass}`),
+      (job) =>
+        Console.log(
+          `${job.artifactId} ${job.kind === "document" ? `document=${job.documentId}` : `source=${job.sourceId}`} access=${job.accessClass}`
+        ),
       {
         discard: true,
       }

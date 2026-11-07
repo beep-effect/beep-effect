@@ -425,11 +425,26 @@ and backup for audit and do not edit historical artifacts.
 
 ## Mining (T1/T2/T3)
 
-`mine` turns an intake's readable sources into CiTO-typed findings. A mining unit
-is one bound text artifact (extracted full text, then transcript, then raw plain
-text) of an effective readable, complete capture of a source cited by the
-intake's documents or derived from the intake. Incomplete or unread sources yield
-no job and no finding.
+`mine` turns an intake's readable sources and its own hop-0 documents into
+CiTO-typed findings. There are two kinds of mining unit:
+
+- A source job is one bound text artifact (extracted full text, then transcript,
+  then raw plain text) of an effective readable, complete capture of a source
+  cited by the intake's documents or derived from the intake. Incomplete or unread
+  sources yield no job and no finding.
+- A document job is one parseable intake document (nightlies, link lists, the
+  private DM archive's markdown), bound to its snapshot under
+  `intakes/<date>/raw/`. A document whose sha256 equals a planned capture text
+  artifact (for example a Box nightly the Box route already captured) is skipped,
+  because the source job reads the same bytes. A document job inherits the
+  document's access class, so private documents are refused by `junie` and
+  `cursor` like private sources.
+
+A source finding binds `sourceId` and `captureId`. A document finding binds
+`documentId` with an empty `sourceId`. The generated SHACL shapes require
+exactly one of the two (`sh:xone`), and the projection writes no edge for the
+empty one. Document findings carry no `sourceId`, so the hop-2 routed-parent
+gate ignores them.
 
 ```sh
 bun run beep research library mine triage --intake <id-or-date> --dry-run
@@ -453,7 +468,7 @@ bun run beep research library mine synthesize <t3.json>
   that each name a `sourceId`, a readable `captureId`, a CiTO relation and a span.
 
 Every answer decodes against its tier schema. A finding whose span is not a
-verbatim substring of the bound capture text rejects the whole job
+verbatim substring of the bound text (capture text or document snapshot) rejects the whole job
 (`LibraryMineSpanError`). Affirmative relations (`citesAsEvidence`, `supports`,
 `extends`, `usesMethodIn`, `usesDataFrom`) are dropped from `partial` or `unread`
 readings, and a prompt truncated at 200,000 characters is never `complete`. Topic

@@ -149,6 +149,47 @@ const referenceClass = (name: string, key: string): O.Option<string> => {
 };
 
 /**
+ * Finding fields that bind a finding to its read text; exactly one is present per finding.
+ *
+ * **Details**
+ *
+ * A source finding carries `sourceId`, a hop-0 intake document finding carries
+ * `documentId`. Shapes make both optional and add one `sh:xone`; the projection
+ * emits no edge for an empty binding.
+ *
+ * **Example** (Inspect binding keys)
+ * ```ts
+ * import { libraryFindingBindingKeys } from "@beep/repo-cli/commands/Research/Library/Library.ontology"
+ * console.log(libraryFindingBindingKeys) // ["sourceId", "documentId"]
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const libraryFindingBindingKeys: ReadonlyArray<"sourceId" | "documentId"> = ["sourceId", "documentId"];
+const isFindingBinding = (name: string, key: string) =>
+  name === "Finding" && A.some(libraryFindingBindingKeys, (binding) => binding === key);
+
+/**
+ * Whether a projected value is an absent finding binding that must not become an RDF edge.
+ *
+ * **Example** (An empty document binding is absent)
+ * ```ts
+ * import { libraryAbsentFindingBinding } from "@beep/repo-cli/commands/Research/Library/Library.ontology"
+ * console.log(libraryAbsentFindingBinding("Finding", "documentId", "")) // true
+ * ```
+ * @param name - Ontology class name of the projected record.
+ * @param key - Field key being projected.
+ * @param value - Field value.
+ * @returns True for an empty `sourceId` or `documentId` on a finding.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const libraryAbsentFindingBinding: {
+  (name: string, key: string, value: unknown): boolean;
+  (key: string, value: unknown): (name: string) => boolean;
+} = dual(3, (name: string, key: string, value: unknown): boolean => isFindingBinding(name, key) && value === "");
+
+/**
  * Resolve explicit foreign keys consistently in shapes and projection.
  * **Example** (Resolve a source reference)
  * ```ts
@@ -201,7 +242,8 @@ export const libraryShapes = (assembled: AssembledOntology): ReadonlyArray<Shacl
     const flexible = A.contains(["findingId", "occurrenceId", "modelRunId", "intakeId", "derivedId"], predicate.key);
     return ShaclPropertyShape.make({
       path: nn(predicate.termIri),
-      minCount: AST.isOptional(ast) || AST.isArrays(ast) ? O.none() : O.some(1),
+      minCount:
+        AST.isOptional(ast) || AST.isArrays(ast) || isFindingBinding(cls.name, predicate.key) ? O.none() : O.some(1),
       maxCount: AST.isArrays(ast) ? O.none() : O.some(1),
       class: propertyClass(predicate, ref, flexible),
       datatype:
@@ -271,12 +313,36 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
     );
     membership(name, property, p);
   };
+  // Exactly one finding binding: `sh:xone` over one minCount-1 alternative per binding key.
+  const bindingQuads = (node: Rdf.NamedNode) => {
+    const head = nn(`${node.value}/xone/list/0`);
+    quads.push(Rdf.makeQuad(node, sh("xone"), head));
+    A.forEach(libraryFindingBindingKeys, (key, i) => {
+      const alternative = nn(`${node.value}/xone/${key}`);
+      const property = nn(`${alternative.value}/property`);
+      const item = nn(`${node.value}/xone/list/${i}`);
+      quads.push(
+        Rdf.makeQuad(item, nn(`${RDF_NAMESPACE}first`), alternative),
+        Rdf.makeQuad(
+          item,
+          nn(`${RDF_NAMESPACE}rest`),
+          i + 1 === libraryFindingBindingKeys.length
+            ? nn(`${RDF_NAMESPACE}nil`)
+            : nn(`${node.value}/xone/list/${i + 1}`)
+        ),
+        Rdf.makeQuad(alternative, sh("property"), property),
+        Rdf.makeQuad(property, sh("path"), nn(`${$I.iri}/${key}`)),
+        Rdf.makeQuad(property, sh("minCount"), Rdf.makeLiteral("1", XSD_INTEGER.value))
+      );
+    });
+  };
   A.forEach(shapes, (shape) => {
     const node = O.getOrThrow(shape.id);
     const target = O.getOrThrow(shape.targetClass);
     quads.push(Rdf.makeQuad(node, RDF_TYPE, sh("NodeShape")), Rdf.makeQuad(node, sh("targetClass"), target));
     const name = O.getOrThrow(A.last(Str.split(target.value, "/")));
     A.forEach(shape.properties, (property, index) => propertyQuads(node, name, property, index));
+    if (name === "Finding") bindingQuads(node);
   });
   return Rdf.makeDataset(Rdf.sortDatasetQuads(Rdf.makeDataset(quads)));
 };

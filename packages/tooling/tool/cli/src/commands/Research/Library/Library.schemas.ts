@@ -688,7 +688,13 @@ export class LibraryManifest extends S.Opaque<LibraryManifest, { readonly brand:
 ) {}
 
 /**
- * A source-bound finding with citation semantics and model provenance.
+ * A finding bound to a source capture or a hop-0 intake document, with citation semantics and model provenance.
+ *
+ * **Details**
+ *
+ * Exactly one binding is present: a source finding carries `sourceId` (and its
+ * `captureId`), a hop-0 document finding carries `documentId` with an empty
+ * `sourceId`. Rows recorded before `documentId` existed decode with an empty one.
  *
  * **Example** (Inspect LibraryFinding)
  * ```ts
@@ -712,6 +718,10 @@ export class LibraryFinding extends S.Opaque<LibraryFinding, { readonly brand: u
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
     ),
+    documentId: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultKey(Effect.succeed(""))
+    ),
     citoRelation: LibraryCitoRelation,
     span: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultKey(Effect.succeed(""))),
     summary: S.String,
@@ -727,11 +737,13 @@ export class LibraryFinding extends S.Opaque<LibraryFinding, { readonly brand: u
   })
     .pipe(
       $I.annoteSchema("LibraryFinding", {
-        description: "A source-bound finding with citation semantics and model provenance.",
+        description: "A finding bound to a source capture or a hop-0 document, with citation semantics and provenance.",
       })
     )
     .annotate(
-      $I.class("Finding", { description: "A source-bound finding with citation semantics and model provenance." })
+      $I.class("Finding", {
+        description: "A finding bound to a source capture or a hop-0 document, with citation semantics and provenance.",
+      })
     )
 ) {}
 

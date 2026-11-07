@@ -237,7 +237,43 @@ export class LibraryReadingOutput extends S.Opaque<LibraryReadingOutput, { reado
 ) {}
 
 /**
- * A planned mining unit: one text artifact of one effective readable capture.
+ * What a mining job reads: a source capture's text or a hop-0 intake document snapshot.
+ *
+ * **Example** (Inspect LibraryMineJobKind)
+ * ```ts
+ * import { LibraryMineJobKind } from "@beep/repo-cli/commands/Research"
+ * console.log(LibraryMineJobKind.literals) // ["source", "document"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LibraryMineJobKind = LiteralKit(["source", "document"]).pipe(
+  $I.annoteSchema("LibraryMineJobKind", {
+    description: "What a mining job reads: a source capture's text or a hop-0 intake document snapshot.",
+  })
+);
+/**
+ * Runtime values of LibraryMineJobKind.
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryMineJobKind = typeof LibraryMineJobKind.Type;
+
+const emptyString = S.String.pipe(
+  S.withConstructorDefault(Effect.succeed("")),
+  S.withDecodingDefaultKey(Effect.succeed(""))
+);
+
+/**
+ * A planned mining unit: one text artifact of one effective readable capture, or one
+ * parseable hop-0 document of the intake.
+ *
+ * **Details**
+ *
+ * A `source` job binds `sourceId` and `captureId`; its artifact is content-addressed under
+ * `objects/sha256`. A `document` job binds `documentId` with empty source and capture ids;
+ * its artifact path is the intake snapshot under `intakes/<date>/raw/`.
  *
  * **Example** (Inspect job fields)
  * ```ts
@@ -251,12 +287,18 @@ export class LibraryReadingOutput extends S.Opaque<LibraryReadingOutput, { reado
 export class LibraryMineJob extends S.Opaque<LibraryMineJob, { readonly brand: unique symbol }>()(
   S.Struct({
     key: S.String,
+    kind: LibraryMineJobKind,
     artifactId: S.String,
     sourceId: S.String,
     captureId: S.String,
+    documentId: S.String,
     accessClass: LibraryAccessClass,
     artifact: LibraryArtifact,
-  }).pipe($I.annoteSchema("LibraryMineJob", { description: "One text artifact of one readable capture." }))
+  }).pipe(
+    $I.annoteSchema("LibraryMineJob", {
+      description: "One text artifact of one readable capture, or one parseable hop-0 intake document.",
+    })
+  )
 ) {}
 
 /**
@@ -276,6 +318,7 @@ export class LibraryTriageRecord extends S.Opaque<LibraryTriageRecord, { readonl
     artifactId: S.String,
     sourceId: S.String,
     captureId: S.String,
+    documentId: emptyString,
     artifactSha256: LibraryArtifact.fields.sha256,
     decision: LibraryTriageDecision,
     reason: S.String,
@@ -303,6 +346,7 @@ export class LibraryReadingRecord extends S.Opaque<LibraryReadingRecord, { reado
     artifactId: S.String,
     sourceId: S.String,
     captureId: S.String,
+    documentId: emptyString,
     artifactSha256: LibraryArtifact.fields.sha256,
     coverage: LibraryReadingCoverage,
     summary: S.String,

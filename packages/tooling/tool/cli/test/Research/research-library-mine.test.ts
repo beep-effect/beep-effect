@@ -1,8 +1,13 @@
+import * as Rdf from "@beep/rdf/Rdf";
 import {
   LibraryArtifact,
   LibraryCapture,
   LibraryCatalog,
+  LibraryDerivation,
   LibraryDocument,
+  LibraryFinding,
+  LibraryHopGateInput,
+  LibraryHopPolicy,
   LibraryIntake,
   LibraryIntakeFile,
   LibraryIntakeRoot,
@@ -15,9 +20,12 @@ import {
   LibraryMineUnreadError,
   LibraryModelRun,
   LibraryOccurrence,
+  LibraryPacketConcept,
   LibraryReadingOutput,
+  LibraryReadingRecord,
   LibrarySource,
   LibraryTriageOutput,
+  libraryHopGate,
   loadCatalog,
   mineLibraryRead,
   mineLibrarySynthesize,
@@ -25,7 +33,15 @@ import {
   saveImmutable,
   withCatalog,
 } from "@beep/repo-cli/commands/Research";
+import {
+  assembleLibraryOntology,
+  libraryShapes,
+  libraryShapesDataset,
+} from "@beep/repo-cli/commands/Research/Library/Library.ontology";
+import { catalogDataset } from "@beep/repo-cli/commands/Research/Library/Library.projection";
 import { checkLibraryMineSpans, planLibraryMine } from "@beep/repo-cli/test/ResearchLibrary";
+import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
+import { ShaclValidationServiceLive } from "@beep/shacl";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -45,6 +61,8 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 const ModelRunJson = S.fromJsonString(LibraryModelRun);
 const CatalogJson = S.fromJsonString(LibraryCatalog);
 const ReceiptJson = S.fromJsonString(LibraryMineReceipt);
+const FindingJson = S.fromJsonString(LibraryFinding);
+const ReadingRecordJson = S.fromJsonString(LibraryReadingRecord);
 const ReadingOutputJson = S.fromJsonString(LibraryReadingOutput);
 const TriageOutputJson = S.fromJsonString(LibraryTriageOutput);
 const readingEquivalent = S.toEquivalence(LibraryReadingOutput);
@@ -53,8 +71,10 @@ const encodeJson = S.encodeUnknownEffect(UnknownJson);
 
 const publicText = "Bitemporal stores keep valid time and transaction time apart. They support audit queries.";
 const privateText = "A private note about retrieval spans and citation checks.";
+const reportText = "See https://example.com/one and https://example.com/two";
+const dmText = "# DM archive\n\nWe agreed the ledger stays append-only.";
 
-const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, ShaclValidationServiceLive);
 
 const webCapture = Effect.fn("test.webCapture")(function* (
   root: string,
@@ -113,7 +133,6 @@ const fixture = Effect.gen(function* () {
   yield* fs.makeDirectory(path.join(repo, "goals/demo-memory/ops"), { recursive: true });
   const manifest = yield* encodeJson({ initiative: { id: "demo-memory", title: "Demo memory" } });
   yield* fs.writeFileString(path.join(repo, "goals/demo-memory/ops/manifest.json"), manifest);
-  const reportText = "See https://example.com/one and https://example.com/two";
   const report = yield* saveImmutable(root, "intakes/2026-11-06/raw/report.md", new TextEncoder().encode(reportText));
   const sources = A.map(
     [
@@ -182,6 +201,56 @@ const fixture = Effect.gen(function* () {
   return { root, repo, fs, path };
 });
 
+/**
+ * Add hop-0 intake documents: a nightly whose bytes equal source one's captured text
+ * (the same bytes a Box route captured) and a private DM archive markdown file.
+ */
+const documentFixture = Effect.gen(function* () {
+  const base = yield* fixture;
+  const { root, repo, path } = base;
+  const add = Effect.fn(function* (id: string, name: string, text: string, accessClass: "public" | "private") {
+    const saved = yield* saveImmutable(root, `intakes/2026-11-06/raw/${name}`, new TextEncoder().encode(text));
+    const originalPath = path.join(repo, name);
+    return {
+      document: LibraryDocument.make({
+        id,
+        accessClass,
+        originalPath,
+        snapshotPath: saved.path,
+        sha256: saved.sha256,
+        bytes: saved.bytes,
+        title: id,
+        reportDate: "2026-11-06",
+        expectedOccurrences: 0,
+      }),
+      file: LibraryIntakeFile.make({
+        accessClass,
+        originalPath,
+        snapshotPath: saved.path,
+        sha256: saved.sha256,
+        bytes: saved.bytes,
+        parseable: true,
+      }),
+    };
+  });
+  const added = [
+    yield* add("nightly", "nightly.md", publicText, "public"),
+    yield* add("dm", "dm.md", dmText, "private"),
+  ];
+  yield* withCatalog(root, (catalog) =>
+    Effect.succeed(
+      LibraryCatalog.make({
+        ...catalog,
+        documents: [...catalog.documents, ...A.map(added, (entry) => entry.document)],
+        intakes: A.map(catalog.intakes, (intake) =>
+          LibraryIntake.make({ ...intake, files: [...intake.files, ...A.map(added, (entry) => entry.file)] })
+        ),
+      })
+    )
+  );
+  return base;
+});
+
 const options = (
   repo: string,
   profile: LibraryMineOptions["profile"],
@@ -213,13 +282,19 @@ const fakeRunner = Effect.fn("test.fakeRunner")(function* (answer: Answer) {
 const selectAll: Answer = () => '{"decision":"select","reason":"on topic","topicIds":["goals/demo-memory","nope"]}';
 
 const isPublicJob = (request: LibraryMineRunRequest) => Str.includes("capture-one")(request.jobKey);
+const isReportJob = (request: LibraryMineRunRequest) => Str.startsWith("document-report-")(request.jobKey);
+const isDmJob = (request: LibraryMineRunRequest) => Str.startsWith("document-dm-")(request.jobKey);
 
 const readings: Answer = (request) =>
-  isPublicJob(request)
-    ? `\`\`\`json
+  isReportJob(request)
+    ? '{"coverage":"complete","summary":"links","findings":[{"citoRelation":"citesAsRelated","span":"See https://example.com/one","summary":"link list","topicIds":["goals/demo-memory"]}]}'
+    : isDmJob(request)
+      ? '{"coverage":"complete","summary":"dm","findings":[{"citoRelation":"discusses","span":"the ledger stays append-only","summary":"ledger","topicIds":["goals/demo-memory"]}]}'
+      : isPublicJob(request)
+        ? `\`\`\`json
 {"coverage":"complete","summary":"bitemporal","findings":[{"citoRelation":"supports","span":"keep valid time and transaction time apart","summary":"separation","topicIds":["goals/demo-memory"]}]}
 \`\`\``
-    : '{"coverage":"partial","summary":"skimmed","findings":[{"citoRelation":"supports","span":"retrieval spans","summary":"x","topicIds":[]},{"citoRelation":"discusses","span":"citation checks","summary":"y","topicIds":[]}]}';
+        : '{"coverage":"partial","summary":"skimmed","findings":[{"citoRelation":"supports","span":"retrieval spans","summary":"x","topicIds":[]},{"citoRelation":"discusses","span":"citation checks","summary":"y","topicIds":[]}]}';
 
 const receiptsUnder = Effect.fn("test.receiptsUnder")(function* (root: string, tier: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -318,9 +393,10 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
     Effect.gen(function* () {
       const { root, repo } = yield* fixture;
       const plan = yield* planLibraryMine(root, "intake-2026-11-06");
-      expect(A.map(plan, (job) => [job.sourceId, job.accessClass])).toStrictEqual([
-        ["one", "public"],
-        ["two", "private"],
+      expect(A.map(plan, (job) => [job.kind, job.sourceId, job.documentId, job.accessClass])).toStrictEqual([
+        ["source", "one", "", "public"],
+        ["source", "two", "", "private"],
+        ["document", "", "report", "public"],
       ]);
       const runner = yield* fakeRunner(selectAll);
       yield* mineLibraryTriage(root, options(repo, "codex-luna", { dryRun: true })).pipe(
@@ -336,20 +412,20 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
       const { root, repo } = yield* fixture;
       const first = yield* triageAll(root, repo);
       const calls = yield* Ref.get(first.calls);
-      strictEqual(calls.length, 2);
+      strictEqual(calls.length, 3);
       const catalog = yield* loadCatalog(root);
-      strictEqual(catalog.modelRuns.length, 2);
+      strictEqual(catalog.modelRuns.length, 3);
       const run = A.getUnsafe(catalog.modelRuns, 0);
       expect([run.model, run.effort, run.route]).toStrictEqual(["gpt-6-luna", "medium", "codex-cli"]);
       expect(A.take(run.argv, 4)).toStrictEqual(["codex", "exec", "-m", "gpt-6-luna"]);
       assertTrue(A.contains(run.argv, "--output-schema"));
       assertTrue(A.contains(run.argv, 'model_reasoning_effort="medium"'));
       const receipts = yield* receiptsUnder(root, "t1");
-      expect(A.map(receipts, (receipt) => receipt.outcome)).toStrictEqual(["completed", "completed"]);
-      expect(A.flatMap(receipts, (receipt) => receipt.droppedTopicIds)).toStrictEqual(["nope", "nope"]);
+      expect(A.map(receipts, (receipt) => receipt.outcome)).toStrictEqual(["completed", "completed", "completed"]);
+      expect(A.flatMap(receipts, (receipt) => receipt.droppedTopicIds)).toStrictEqual(["nope", "nope", "nope"]);
       const again = yield* triageAll(root, repo);
       strictEqual((yield* Ref.get(again.calls)).length, 0);
-      strictEqual((yield* loadCatalog(root)).modelRuns.length, 2);
+      strictEqual((yield* loadCatalog(root)).modelRuns.length, 3);
     })
   );
 
@@ -371,7 +447,7 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
         Effect.provideService(LibraryMineRunner, publicOnly.service)
       );
       const calls = yield* Ref.get(publicOnly.calls);
-      expect(A.map(calls, (call) => call.profile.id)).toStrictEqual(["junie"]);
+      expect(A.map(calls, (call) => call.profile.id)).toStrictEqual(["junie", "junie"]);
       assertTrue(A.some(A.getUnsafe(calls, 0).argv, Str.startsWith("--task=Read the job file")));
     })
   );
@@ -391,10 +467,16 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
           { onNone: () => sourceId, onSome: (source) => source.canonicalUrl }
         );
       expect(
-        A.map(catalog.findings, (finding) => [urlOf(finding.sourceId), finding.citoRelation, finding.span])
+        A.map(catalog.findings, (finding) => [
+          urlOf(finding.sourceId),
+          finding.documentId,
+          finding.citoRelation,
+          finding.span,
+        ])
       ).toStrictEqual([
-        ["https://example.com/one", "supports", "keep valid time and transaction time apart"],
-        ["https://example.com/two", "discusses", "citation checks"],
+        ["https://example.com/one", "", "supports", "keep valid time and transaction time apart"],
+        ["https://example.com/two", "", "discusses", "citation checks"],
+        ["", "report", "citesAsRelated", "See https://example.com/one"],
       ]);
       expect(A.getUnsafe(catalog.findings, 0).topicIds).toStrictEqual(["goals/demo-memory"]);
       const runIds = A.map(catalog.modelRuns, (run) => run.id);
@@ -484,6 +566,209 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
       yield* fs.writeFileString(unbound, unboundText);
       const error = yield* Effect.flip(mineLibrarySynthesize(root, unbound, O.some(repo), false));
       assertInstanceOf(error, LibraryMineUnreadError);
+    })
+  );
+
+  it.effect("plans parseable intake documents, skips byte-identical captures and keeps document access", () =>
+    Effect.gen(function* () {
+      const { root } = yield* documentFixture;
+      const plan = yield* planLibraryMine(root, "2026-11-06");
+      expect(A.map(plan, (job) => [job.kind, job.captureId || job.documentId, job.accessClass])).toStrictEqual([
+        ["source", "capture-one", "public"],
+        ["source", "capture-two", "private"],
+        ["document", "report", "public"],
+        ["document", "dm", "private"],
+      ]);
+      const dm = O.getOrThrow(A.findFirst(plan, (job) => job.documentId === "dm"));
+      expect([dm.artifact.path, dm.artifact.mediaType, dm.captureId]).toStrictEqual([
+        dm.artifact.path,
+        "text/markdown",
+        "",
+      ]);
+      assertTrue(Str.startsWith("intakes/2026-11-06/raw/")(dm.artifact.path));
+    })
+  );
+
+  it.effect("refuses a private intake document for junie before any launch", () =>
+    Effect.gen(function* () {
+      const { root, repo } = yield* documentFixture;
+      yield* triageAll(root, repo);
+      const runner = yield* fakeRunner(readings);
+      const error = yield* Effect.flip(
+        mineLibraryRead(root, options(repo, "junie")).pipe(Effect.provideService(LibraryMineRunner, runner.service))
+      );
+      assertInstanceOf(error, LibraryMinePrivateRouteError);
+      expect(A.some(error.artifactIds, Str.startsWith("document:dm:"))).toBe(true);
+      strictEqual((yield* Ref.get(runner.calls)).length, 0);
+    })
+  );
+
+  it.effect("binds T2 document findings to documentId, checks spans on the snapshot and passes SHACL", () =>
+    Effect.gen(function* () {
+      const { root, repo } = yield* documentFixture;
+      yield* triageAll(root, repo);
+      const runner = yield* fakeRunner(readings);
+      yield* mineLibraryRead(root, options(repo, "claude")).pipe(
+        Effect.provideService(LibraryMineRunner, runner.service)
+      );
+      const calls = yield* Ref.get(runner.calls);
+      const prompts = A.map(A.filter(calls, isDmJob), (call) => call.prompt);
+      assertTrue(A.every(prompts, Str.includes("one hop-0 intake report")));
+      const catalog = yield* loadCatalog(root);
+      const documentFindings = A.filter(catalog.findings, (finding) => Str.isNonEmpty(finding.documentId));
+      expect(
+        A.map(documentFindings, (finding) => [finding.documentId, finding.sourceId, finding.captureId, finding.span])
+      ).toStrictEqual([
+        ["dm", "", "", "the ledger stays append-only"],
+        ["report", "", "", "See https://example.com/one"],
+      ]);
+      const runIds = A.map(catalog.modelRuns, (run) => run.id);
+      assertTrue(A.every(documentFindings, (finding) => A.contains(runIds, finding.modelRunId)));
+      const receipts = yield* receiptsUnder(root, "t2");
+      assertTrue(
+        A.some(
+          receipts,
+          (receipt) => Str.startsWith("document:dm:")(receipt.artifactId) && receipt.outcome === "completed"
+        )
+      );
+      const validator = yield* ShaclValidationService;
+      const ontology = yield* assembleLibraryOntology();
+      const shapes = libraryShapes(ontology);
+      const validate = (dataset: Rdf.Dataset) =>
+        validator.validate(
+          ShaclValidationRequest.make({ dataset, shapes, shapesDataset: O.some(libraryShapesDataset(shapes)) })
+        );
+      const dataset = yield* catalogDataset(catalog);
+      const result = yield* validate(dataset);
+      expect(result.violations).toStrictEqual([]);
+      assertTrue(result.conforms);
+      const findingEdges = (key: string) =>
+        A.filter(
+          dataset.quads,
+          (quad) => Str.includes("/Finding/")(quad.subject.value) && Str.endsWith(`/${key}`)(quad.predicate.value)
+        );
+      assertTrue(
+        A.every([...findingEdges("sourceId"), ...findingEdges("documentId")], (q) => q.object.termType === "NamedNode")
+      );
+      strictEqual(findingEdges("documentId").length, 2);
+      const unbound = yield* validate(
+        Rdf.makeDataset(A.filter(dataset.quads, (quad) => !A.contains(findingEdges("documentId"), quad)))
+      );
+      assertTrue(!unbound.conforms);
+      const [sourceEdge] = findingEdges("sourceId");
+      const doubled = yield* validate(
+        Rdf.makeDataset([
+          ...dataset.quads,
+          Rdf.makeQuad(
+            O.getOrThrow(O.fromNullishOr(sourceEdge)).subject,
+            A.getUnsafe(findingEdges("documentId"), 0).predicate,
+            A.getUnsafe(findingEdges("documentId"), 0).object
+          ),
+        ])
+      );
+      assertTrue(!doubled.conforms);
+    })
+  );
+
+  it.effect("decodes legacy findings and reading records without documentId", () =>
+    Effect.gen(function* () {
+      const legacy = {
+        id: "f",
+        sourceId: "one",
+        captureId: "capture-one",
+        citoRelation: "discusses",
+        span: "x",
+        summary: "y",
+        topicIds: [],
+        modelRunId: "run",
+        recordedAt: "2026-11-01",
+      };
+      const legacyText = yield* encodeJson(legacy);
+      const finding = yield* S.decodeEffect(FindingJson)(legacyText);
+      expect([finding.sourceId, finding.documentId]).toStrictEqual(["one", ""]);
+      const recordText = yield* encodeJson({
+        artifactId: "capture-one:abc",
+        sourceId: "one",
+        captureId: "capture-one",
+        artifactSha256: Str.repeat(64)("a"),
+        coverage: "complete",
+        summary: "s",
+        findings: [legacy],
+        modelRunId: "run",
+        modelRun: { id: "run", model: "m", effort: "medium", route: "r", startedAt: "2026-11-01" },
+        recordedAt: "2026-11-01",
+      });
+      const record = yield* S.decodeEffect(ReadingRecordJson)(recordText);
+      expect([record.documentId, A.getUnsafe(record.findings, 0).documentId]).toStrictEqual(["", ""]);
+    })
+  );
+
+  it.effect("ignores a hop-0 document finding with live topics in the routed-parent hop gate", () =>
+    Effect.sync(() => {
+      const source = (id: string, url: string) =>
+        LibrarySource.make({
+          id,
+          kind: "web",
+          canonicalUrl: url,
+          identity: url,
+          revision: "",
+          repository: "",
+          ownership: "external",
+          locators: [url],
+        });
+      const parent = source("parent", "https://parent.example/a");
+      const child = source("child", "https://child.example/b");
+      const edge = (hopDepth: number, from: string, to: string) =>
+        LibraryDerivation.make({
+          id: `d-${to}`,
+          derivedId: to,
+          sourceId: from,
+          intakeId: "intake-2026-11-06",
+          rootId: "report",
+          hopDepth,
+          recordedAt: "2026-11-06",
+        });
+      const finding = (id: string, sourceId: string, documentId: string) =>
+        LibraryFinding.make({
+          id,
+          sourceId,
+          documentId,
+          citoRelation: "discusses",
+          summary: "s",
+          topicIds: ["goals/demo-memory"],
+          recordedAt: "2026-11-06",
+        });
+      const decide = (findings: ReadonlyArray<LibraryFinding>) =>
+        A.map(
+          libraryHopGate(
+            LibraryCatalog.make({
+              schema: "beep.research.library/v2",
+              documents: [],
+              sources: [parent, child],
+              occurrences: [],
+              derivations: [edge(1, "report", "parent"), edge(2, "parent", "child")],
+              findings,
+              captures: [],
+              qualifications: [],
+            }),
+            LibraryHopGateInput.make({
+              concepts: [
+                LibraryPacketConcept.make({
+                  id: "goals/demo-memory",
+                  initiativeId: "demo-memory",
+                  status: "active",
+                  live: true,
+                }),
+              ],
+              policy: LibraryHopPolicy.make({}),
+            })
+          ),
+          (decision) => [decision.sourceId, decision.admitted, decision.reason]
+        );
+      expect(decide([finding("doc-finding", "", "report")])).toStrictEqual([["child", false, "unrouted-parent"]]);
+      expect(decide([finding("doc-finding", "", "report"), finding("src-finding", "parent", "")])).toStrictEqual([
+        ["child", true, "routed-parent"],
+      ]);
     })
   );
 });
