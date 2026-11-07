@@ -62,11 +62,14 @@ export const CHANGE_ATOM_KIND_VALUES = [
   "cfg:lint-rules",
   "cfg:vitest",
   "cfg:workflow",
+  "cfg:baseline",
   "docs:markdown",
   "packet",
+  "packet:data",
   "lockfile",
   "toolchain-pin",
   "env",
+  "scratchpad",
   "asset",
   "commits",
   "unknown",
@@ -257,6 +260,179 @@ export class CheckFootprint extends S.Opaque<CheckFootprint, { readonly brand: u
     $I.annoteSchema("CheckFootprint", {
       description:
         "Atom kinds that can change one lane's verdict, its propagation class, transformer and external-input flags, and fixture refs.",
+    })
+  )
+) {}
+
+/**
+ * Whether the route may act on a refinement: `shadow` refinements are
+ * measured and reported but every lane they remove still runs; `enforced`
+ * refinements skip the lane.
+ *
+ * **Example** (Guard a refinement mode)
+ *
+ * ```ts import.meta.vitest name="Guard a refinement mode"
+ * import { RouteRefinementMode } from "@beep/repo-cli/commands/Ci"
+ *
+ * RouteRefinementMode.is.enforced("enforced") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RouteRefinementMode = LiteralKit(["shadow", "enforced"]).pipe(
+  $I.annoteSchema("RouteRefinementMode", {
+    description: "shadow: measured and reported, the lane still runs; enforced: the route skips the lane.",
+  })
+);
+
+/**
+ * Type of {@link RouteRefinementMode}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type RouteRefinementMode = typeof RouteRefinementMode.Type;
+
+/**
+ * One admitted footprint refinement: the atom kinds removed from a set of
+ * lanes, the mutation fixtures that prove each absence, the replay evidence
+ * that admitted it, and whether the route may act on it.
+ *
+ * **Details**
+ *
+ * `removedKinds` can never contain `unknown`, so a refined footprint still
+ * reaches every lane through the catch-all (exploration ruling "admission
+ * rule").
+ *
+ * **Example** (A shadow refinement)
+ *
+ * ```ts import.meta.vitest name="A shadow refinement"
+ * import { RouteRefinement } from "@beep/repo-cli/commands/Ci"
+ *
+ * const refinement = RouteRefinement.make({
+ *   id: "packet-out-of-build",
+ *   lanes: ["build"],
+ *   removedKinds: ["packet"],
+ *   mode: "shadow",
+ *   fixtures: ["a packet markdown edit skips build"],
+ *   evidence: "replay recall 100%",
+ * })
+ * refinement.mode // => "shadow"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RouteRefinement extends S.Opaque<RouteRefinement, { readonly brand: unique symbol }>()(
+  S.Struct({
+    id: S.NonEmptyString,
+    lanes: S.NonEmptyArray(CiLaneId),
+    removedKinds: S.NonEmptyArray(ChangeAtomKind).check(
+      S.makeFilter(
+        (kinds) => !A.contains(kinds, "unknown"),
+        $I.annote("RefinementRemovedKinds", {
+          title: "Refinement removed kinds",
+          description: "The atom kinds a refinement removes from its lanes; never the unknown catch-all.",
+          message: "A refinement cannot remove the unknown kind.",
+        })
+      )
+    ),
+    mode: RouteRefinementMode,
+    fixtures: S.NonEmptyArray(S.NonEmptyString),
+    evidence: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("RouteRefinement", {
+      description: "Atom kinds removed from lanes, with mutation fixtures, replay evidence and an enforcement mode.",
+    })
+  )
+) {}
+
+/**
+ * What the route does with one lane for one change: run it, skip it under
+ * enforced refinements, or run it while recording that a shadow refinement
+ * would have skipped it.
+ *
+ * **Example** (Guard a route decision)
+ *
+ * ```ts import.meta.vitest name="Guard a route decision"
+ * import { RouteDecision } from "@beep/repo-cli/commands/Ci"
+ *
+ * RouteDecision.is["shadow-skipped"]("shadow-skipped") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RouteDecision = LiteralKit(["selected", "skipped", "shadow-skipped"]).pipe(
+  $I.annoteSchema("RouteDecision", {
+    description:
+      "selected: the lane runs; skipped: enforced refinements remove it; shadow-skipped: a shadow or revoked refinement would remove it, so it still runs.",
+  })
+);
+
+/**
+ * Type of {@link RouteDecision}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type RouteDecision = typeof RouteDecision.Type;
+
+/**
+ * One lane's route decision and the refinements responsible for a skip.
+ *
+ * **Example** (A selected lane)
+ *
+ * ```ts import.meta.vitest name="A selected lane"
+ * import { RouteLaneDecision } from "@beep/repo-cli/commands/Ci"
+ *
+ * const row = RouteLaneDecision.make({ lane: "check", decision: "selected", refinements: [] })
+ * row.decision // => "selected"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RouteLaneDecision extends S.Opaque<RouteLaneDecision, { readonly brand: unique symbol }>()(
+  S.Struct({
+    lane: CiLaneId,
+    decision: RouteDecision,
+    refinements: S.Array(S.NonEmptyString),
+  }).pipe(
+    $I.annoteSchema("RouteLaneDecision", {
+      description: "One lane's route decision with the refinement ids responsible for a skip.",
+    })
+  )
+) {}
+
+/**
+ * The revocation sentinel: refinements an operator or a shadow miss revoked.
+ * A revoked refinement behaves as `shadow` everywhere, whatever its declared
+ * mode; revoking is a one-line commit to the tracked sentinel file.
+ *
+ * **Example** (An empty sentinel)
+ *
+ * ```ts import.meta.vitest name="An empty sentinel"
+ * import { RouteSentinel } from "@beep/repo-cli/commands/Ci"
+ *
+ * RouteSentinel.make({ revoked: [] }).revoked.length // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RouteSentinel extends S.Opaque<RouteSentinel, { readonly brand: unique symbol }>()(
+  S.Struct({
+    revoked: S.Array(
+      S.Struct({
+        id: S.NonEmptyString,
+        reason: S.NonEmptyString,
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("RouteSentinel", {
+      description: "Refinement ids revoked with a reason; a revoked refinement is treated as shadow.",
     })
   )
 ) {}

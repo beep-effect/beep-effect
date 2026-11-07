@@ -384,3 +384,18 @@ layer(serviceLayer, { timeout: "60 seconds" })("InstrumentationCatalog.run", (it
     })
   );
 });
+
+layer(serviceLayer, { timeout: "120 seconds" })("InstrumentationCatalog.run scoped", (it) => {
+  it.effect(
+    "resolves attributes declared outside the scoped packages",
+    Effect.fn("ObservabilityCatalogTest.scopedCrossPackageAttributes")(function* () {
+      // The desktop metrics reference `beep.outcome`, declared by @beep/observability. A scoped
+      // run (the pre-commit hook) used to load only in-scope declarations and report it undeclared.
+      const context = yield* Layer.build(InstrumentationCatalogLive);
+      const report = yield* Context.get(context, InstrumentationCatalog).run("check", [
+        "apps/professional-desktop/src/runtime/Layer.ts",
+      ]);
+      expect(report.conflicts).toEqual([]);
+    })
+  );
+});

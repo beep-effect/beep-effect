@@ -6,7 +6,7 @@
     "title": "Verification Route",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-31",
+    "updated": "2026-11-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/verification-route",
@@ -35,10 +35,14 @@
     "goals/verification-route/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/census-2026-10-31.md",
     "research/corpus/RECEIPTS.json",
-    "research/corpus/hosted-runs.ndjson.gz"
+    "research/corpus/hosted-runs.ndjson.gz",
+    "research/slice-2-design.md",
+    "research/slice-2-layer1-dryrun.md",
+    "research/slice-2-replay.md"
   ],
   "agentLaunchers": [
     {
@@ -60,7 +64,7 @@
     {
       "id": "P1",
       "name": "Slice 2: refinements, both layers, final-check",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
