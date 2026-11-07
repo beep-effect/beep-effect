@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-07T11:50:56.253Z",
+  "generatedAt": "2026-11-07T12:23:08.363Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3777,
-    "publicExports": 26946,
+    "publicExports": 26950,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -418352,7 +418352,7 @@
         "srcDir": "src",
         "sourceFileCount": 80,
         "publicModuleCount": 80,
-        "publicExportCount": 272
+        "publicExportCount": 276
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -419620,7 +419620,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 21,
+          "exportCount": 25,
           "remediationStatus": "resolved"
         },
         {
@@ -420580,8 +420580,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/VaultSync/DestinationNameReservation.aggregate.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/DestinationNameReservation.aggregate.ts",
-          "line": 26,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-destinationnamereservation-aggregate-ts-26-destinationnamereservation",
+          "line": 25,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-destinationnamereservation-aggregate-ts-25-destinationnamereservation",
           "currentTags": [
             "@category",
             "@since"
@@ -422982,8 +422982,8 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 13,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-13-export-remoteitemid-syncitemkind-vaultrelpath-from-values-sync-sync-values-ts",
+          "line": 20,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-20-export-remoteitemid-syncitemkind-vaultrelpath-from-values-sync-sync-values-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -423001,8 +423001,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 28,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-28-itemid",
+          "line": 36,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-36-itemid",
           "currentTags": [
             "@category",
             "@since"
@@ -423023,8 +423023,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 35,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-35-itemid",
+          "line": 43,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-43-itemid",
           "currentTags": [
             "@category",
             "@since"
@@ -423045,8 +423045,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 47,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-47-operationid",
+          "line": 55,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-55-operationid",
           "currentTags": [
             "@category",
             "@since"
@@ -423067,8 +423067,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 54,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-54-operationid",
+          "line": 62,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-62-operationid",
           "currentTags": [
             "@category",
             "@since"
@@ -423089,8 +423089,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 66,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-66-conflictid",
+          "line": 74,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-74-conflictid",
           "currentTags": [
             "@category",
             "@since"
@@ -423111,8 +423111,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 73,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-73-conflictid",
+          "line": 81,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-81-conflictid",
           "currentTags": [
             "@category",
             "@since"
@@ -423133,8 +423133,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 85,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-85-destinationid",
+          "line": 103,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-103-destinationid",
           "currentTags": [
             "@category",
             "@since"
@@ -423155,8 +423155,52 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 95,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-95-destinationid",
+          "line": 115,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-115-destinationid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeDestinationId",
+          "exportKind": "const",
+          "filePath": "src/aggregates/VaultSync/Values.ts",
+          "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
+          "line": 128,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-128-makedestinationid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "mintDestinationId",
+          "exportKind": "const",
+          "filePath": "src/aggregates/VaultSync/Values.ts",
+          "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
+          "line": 141,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-141-mintdestinationid",
           "currentTags": [
             "@category",
             "@since"
@@ -423177,8 +423221,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 107,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-107-reservationkey",
+          "line": 160,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-160-reservationkey",
           "currentTags": [
             "@category",
             "@since"
@@ -423199,8 +423243,52 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 117,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-117-reservationkey",
+          "line": 170,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-170-reservationkey",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "normalizeDestinationName",
+          "exportKind": "const",
+          "filePath": "src/aggregates/VaultSync/Values.ts",
+          "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
+          "line": 182,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-182-normalizedestinationname",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "reservationKey",
+          "exportKind": "const",
+          "filePath": "src/aggregates/VaultSync/Values.ts",
+          "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
+          "line": 200,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-200-reservationkey",
           "currentTags": [
             "@category",
             "@since"
@@ -423221,8 +423309,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 129,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-129-orgkey",
+          "line": 213,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-213-orgkey",
           "currentTags": [
             "@category",
             "@since"
@@ -423243,8 +423331,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 139,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-139-orgkey",
+          "line": 223,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-223-orgkey",
           "currentTags": [
             "@category",
             "@since"
@@ -423265,8 +423353,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 151,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-151-operationtype",
+          "line": 235,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-235-operationtype",
           "currentTags": [
             "@category",
             "@since"
@@ -423287,8 +423375,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 166,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-166-operationtype",
+          "line": 250,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-250-operationtype",
           "currentTags": [
             "@category",
             "@since"
@@ -423309,8 +423397,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 178,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-178-operationstatus",
+          "line": 262,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-262-operationstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -423331,8 +423419,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 187,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-187-operationstatus",
+          "line": 271,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-271-operationstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -423353,8 +423441,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 199,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-199-itemstatus",
+          "line": 283,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-283-itemstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -423375,8 +423463,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 208,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-208-itemstatus",
+          "line": 292,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-292-itemstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -423397,8 +423485,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 222,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-222-remoteevidence",
+          "line": 306,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-306-remoteevidence",
           "currentTags": [
             "@category",
             "@since"
@@ -423419,8 +423507,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/VaultSync/Values.ts",
           "repoPath": "packages/documents/domain/src/aggregates/VaultSync/Values.ts",
-          "line": 236,
-          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-236-remoteevidence",
+          "line": 320,
+          "anchor": "packages-documents-domain-src-aggregates-vaultsync-values-ts-320-remoteevidence",
           "currentTags": [
             "@category",
             "@since"
@@ -481926,8 +482014,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/VaultSync/VaultSync.policy-handlers.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/VaultSync/VaultSync.policy-handlers.ts",
-          "line": 35,
-          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-vaultsync-policy-handlers-ts-35-vaultsyncpolicies",
+          "line": 34,
+          "anchor": "packages-documents-use-cases-src-aggregates-vaultsync-vaultsync-policy-handlers-ts-34-vaultsyncpolicies",
           "currentTags": [
             "@category",
             "@since"

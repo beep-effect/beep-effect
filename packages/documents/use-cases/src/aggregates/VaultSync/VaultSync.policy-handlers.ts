@@ -9,7 +9,6 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as Str from "effect/String";
 import {
   ConflictRegistration,
   ConflictReviews,
@@ -65,8 +64,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
             onSuccess: () => Effect.succeed(true),
             onFailure: Effect.fnUntraced(function* () {
               const current = yield* destinations.state(c.destinationId);
-              const currentKey =
-                current._tag === "Registered" ? `${current.orgId}:${Str.toLowerCase(Str.trim(current.name))}` : null;
+              const currentKey = current._tag === "Registered" ? V.reservationKey(current) : null;
               if (currentKey !== source.id)
                 yield* claims.send(source.id, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
                   commandId: `${envelope.stream}:${envelope.seq}:release-rejected`,
@@ -76,7 +74,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
           })
         );
         if (!accepted || c.previousName === null) return;
-        const old = V.ReservationKey.make(`${c.orgId}:${Str.toLowerCase(Str.trim(c.previousName))}`);
+        const old = V.reservationKey({ orgId: c.orgId, name: c.previousName });
         if (old !== source.id)
           yield* claims.send(old, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
             commandId: `${envelope.stream}:${envelope.seq}:release`,

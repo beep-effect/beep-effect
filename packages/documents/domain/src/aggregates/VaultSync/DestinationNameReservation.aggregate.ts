@@ -6,7 +6,6 @@
  */
 import * as Domain from "@alchemy.run/domain";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as C from "./DestinationNameReservation.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
@@ -17,7 +16,7 @@ import * as V from "./Values.ts";
  * **Example** (Address one aggregate stream)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
- * const ref=V.DestinationNameReservation.ref(V.ReservationKey.make("1:vault"));
+ * const ref=V.DestinationNameReservation.ref(V.reservationKey({ orgId: 1, name: "vault" }));
  * console.log(ref.id);
  * ```
  * @category aggregates
@@ -30,8 +29,7 @@ export class DestinationNameReservation extends Domain.Aggregate("DestinationNam
   commands: [C.ClaimDestinationName, C.ReleaseDestinationName],
   decide: {
     ClaimDestinationName: (s, c, { id }) => {
-      if (id !== `${c.claim.orgId}:${Str.toLowerCase(Str.trim(c.claim.name))}`)
-        return SyncRuleViolation.make({ rule: "wrong-key", evidence: id });
+      if (id !== V.reservationKey(c.claim)) return SyncRuleViolation.make({ rule: "wrong-key", evidence: id });
       if (s !== null && s.destinationId !== c.claim.destinationId)
         return SyncRuleViolation.make({ rule: "name-held", evidence: id });
       return s?.name === c.claim.name ? [] : [C.DestinationNameClaimed.make(Struct.omit(c, ["_tag"]))];

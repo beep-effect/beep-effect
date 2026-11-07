@@ -14,7 +14,7 @@ import * as V from "./Values.ts";
  * **Example** (Build a command for dispatch)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
- * const command=V.RecordConflict.make({record:{publicId:V.ConflictId.make("documents_sync_conflict_a1"),destinationId:V.DestinationId.make("vault"),workspaceId:1,remoteEventId:"event1",itemId:V.ItemId.make("documents_sync_item_a1"),evidence:"remote rename",reviewed:false}});
+ * const command=V.RecordConflict.make({record:{publicId:V.ConflictId.make("documents_sync_conflict_a1"),destinationId:V.DestinationId.make("documents_sync_destination_avault"),workspaceId:1,remoteEventId:"event1",itemId:V.ItemId.make("documents_sync_item_a1"),evidence:"remote rename",reviewed:false}});
  * console.log(command._tag);
  * ```
  * @category aggregates
