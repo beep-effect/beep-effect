@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "claim-antecedent-operator-gate/v1",
+  "date": "2026-10-28",
+  "status": "operator-action-required; goal not complete",
+  "phase": "P2 in progress; P3 entry not met",
+  "requirementEvidence": [
+    {
+      "path": "SPEC.md",
+      "requirement": "Acceptance: about 10% of positive families are spot-checked by the attorney and the agreement is recorded."
+    },
+    {
+      "path": "research/LABEL-PROTOCOL.md",
+      "requirement": "Supply stabilized source references and unresolved points for actual attorney review; agents cannot supply the human verdict."
+    },
+    {
+      "path": "PLAN.md",
+      "requirement": "P3 entry requires P2 exit and the merged review-verdict-envelope P1 schema; the sibling schema dependency is resolved."
+    }
+  ],
+  "sourceFamilyCount": 60,
+  "selectedClaimCount": 538,
+  "draftReferenceFamilyCount": 60,
+  "draftReferenceClaimCount": 538,
+  "independentlyAcceptedFamilyCount": 57,
+  "independentlyAcceptedClaimCount": 517,
+  "attorneyHeldFamilies": [
+    "16068637-root-11",
+    "13575735-root-1",
+    "17617663-root-1"
+  ],
+  "attorneyConventionQuestionCount": 8,
+  "spotCheck": {
+    "familyCount": 6,
+    "claimCount": 50,
+    "sample": "research/attorney-sample.json",
+    "originalPacket": "history/attorney-review/index.html",
+    "originalPacketReceipt": "history/attorney-review/packet.json",
+    "additionalQuestion": "history/attorney-review/addendum.html",
+    "additionalQuestionReceipt": "history/attorney-review/addendum.json",
+    "humanVerdictsReceived": false,
+    "agreementRecorded": false,
+    "reviewAction": "An actual attorney selects role and anonymous reviewer reference, reviews all 50 claims and the seven original questions, completes the separate one-question addendum, and returns both JSON exports through the task workflow. Preserve original agreement before applying adjudications."
+  },
+  "verification": [
+    {
+      "command": "bun run beep quality package-verify @beep/law-practice-domain",
+      "result": "audit and docgen pass"
+    },
+    {
+      "command": "bun run beep quality package-verify @beep/law-practice-use-cases",
+      "result": "audit and docgen pass"
+    },
+    {
+      "command": "bun run beep quality package-verify @beep/law-practice-server",
+      "result": "audit and docgen pass"
+    },
+    {
+      "command": "bun run beep quality package-verify @beep/uspto",
+      "result": "audit and docgen pass"
+    },
+    {
+      "command": "bunx --bun vitest run test/ClaimElement.reference.test.ts test/ClaimSelfCheck.corpus.test.ts",
+      "scope": "law-practice-server",
+      "result": "2 files /3 tests pass; missing selected reference files now fail instead of skipping"
+    },
+    {
+      "command": "bun run beep goals doctor",
+      "result": "no new blocking findings; existing unrelated completion evidence findings retained"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "implementationDigest": "15b747f35410d9eaabc9bfe48415ee809c6b0bec05787be35342f6d275e2639a",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "positiveBenchmarkPredictionsRun": false,
+  "preservedInvariants": [
+    "PatentDocument/PatentClaim model byte-identical to base HEAD",
+    "All 60 current extractor/critic rounds within 1\u20133",
+    "Original attorney packet bytes and source/reference versions unchanged",
+    "All 538 selected positive claims retained; 200 allowed sets retain 3,184 source claims",
+    "No production LLM decomposition, chemical/Markush extension or new write tool"
+  ],
+  "remainingAfterOperatorGate": [
+    "Record actual spot-check agreement and adjudicate all eight round-limited questions without overwriting pre-adjudication agreement",
+    "Complete P3 read-only claim-finding ReviewItem integration and strict structural evaluation",
+    "Adjudicate allowed-claim findings on the declared probability sample and report false-positive interval",
+    "Run non-US IPRally smoke test within stated scope",
+    "Run Yeet to mergeable PR and complete retained closeout/reflection"
+  ],
+  "completionClaim": false
+}

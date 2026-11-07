@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-28",
+  "oldFamilyId": "18107161-root-18",
+  "oldClaimCount": 6,
+  "newFamilyId": "13575735-root-1",
+  "newClaimCount": 5,
+  "cpcSection": "B",
+  "reason": "source eligibility/fidelity only; no predictions inspected",
+  "previousSlot": {
+    "applicationNumber": "18107161",
+    "rootClaimNumber": 18,
+    "claimNumbers": [
+      18,
+      19,
+      20,
+      21,
+      25,
+      26
+    ],
+    "claimCount": 6,
+    "cpcSection": "B",
+    "familyId": "18107161-root-18",
+    "fixtureDirectory": "18107161-root-18",
+    "status": "source-ineligible",
+    "sourceAuditVerdict": "ineligible",
+    "sourceCriticStatus": "ineligible"
+  }
+}
