@@ -2475,3 +2475,139 @@ Rejected:
   keeps the composition root in tooling under a standing exception.
 - Bare `@beep/<group>` names. They collide with product vocabulary such as
   knowledge, harness, files, and media.
+
+## 2026-11-06: Infrastructure Stacks Are A Tooling Kind; Platform Stacks Live In `tooling/infra`
+
+- **Status:** Active
+- **Amends:** 2026-10-28 "One beep App Composes beep-Prefixed Command Tools" (kind catalog)
+
+Decision:
+
+Infrastructure-as-code written as Effect programs over Alchemy is a tooling
+concern with its own kind. The tooling kind catalog becomes `library`, `tool`,
+`policy-pack`, `test-kit`, `infra`.
+
+- `packages/tooling/infra/<name>` (`@beep/infra-<name>`) holds one Alchemy
+  stack per repo-platform concern: CI runner fleet, turbo cache, cost controls,
+  GitHub repository settings, host deployments. Each is created with
+  `beep create-package`, follows the canonical package shape (`src/`, `test/`,
+  generated scripts, tsgo diagnostics, docgen) and exposes its stack through
+  `alchemy.run.ts` at the package root.
+- An application's own deployment stack lives beside the application
+  (`apps/<app>/alchemy.run.ts`), as `apps/beep-effect-web` already does. It is
+  not an `infra` package.
+- Repo-owned Alchemy resources and providers (a Vercel provider over
+  `@distilled.cloud/vercel`, AWS resources Alchemy lacks, the GitHub runner
+  composite) are `tooling/library` packages named `@beep/alchemy-<provider>`,
+  written to Alchemy's provider conventions and test harness so the generic ones
+  can be upstreamed unchanged.
+- `infra` packages may depend on `tooling/library` packages, `drivers`, and
+  `foundation`; nothing depends on an `infra` package. They may not import
+  product slices.
+- Infrastructure code is subject to every repo law a `@beep/*` package is
+  subject to. No Python, no shell, no Pulumi, no separate toolchain pin.
+
+The root workspace member `infra/` (the Pulumi workspace) is transitional until
+`goals/infra-alchemy-rebuild` deletes it; new Pulumi programs are forbidden.
+
+Rationale:
+
+The Pulumi workspace sat outside every package law: its own TypeScript 6 pin
+loaded by a preload, Python and shell labs beside the programs, nested
+sub-packages with their own lockfiles, no tsgo diagnostics, and `node:crypto`
+and async/await in a Lambda the repo's Effect laws would never accept elsewhere.
+A kind puts stacks under the same `create-package`, lint, check and docgen gates
+as everything else and gives the dependency table one row. Alchemy's own
+guidance (per-package stacks for different deploy cadences) already placed the
+first stack beside its app; the two placements are complementary, not
+competing. Operator decisions D5, D13 and D14 of the 2026-11-06 grill session in
+`explorations/pulumi-to-alchemy/DECISIONS.md`.
+
+Rejected:
+
+- One `@beep/infra` package under `tooling/tool` holding every stack. One
+  package would carry every cloud credential and every deploy cadence, and a
+  CLI `tool` is not what a stack is.
+- Stacks as `tooling/library` packages. A stack is deployed, not imported.
+- Every stack beside whatever it serves, with no platform packages. The runner
+  fleet and the turbo cache serve the repository, not one app; they would have
+  landed under `.github/` or inside the CLI.
+- Keeping `infra/` as a root workspace exception. That is the situation this
+  entry ends.
+
+## 2026-11-06: Slices Adopt `@alchemy.run/domain`; The Entity Kit Is Frozen
+
+- **Status:** Active
+- **Amends:** "CQRS, Events, Workflows, Cluster, And Read Models" and the
+  domain/use-case/server role vocabularies in `standards/ARCHITECTURE.md`
+
+Decision:
+
+Event-sourced slices declare their write model with `@alchemy.run/domain`
+(pinned 2.0.0-beta.85, bumped only as a named goal task): `Event`, `Command`,
+`Rejection`, `Aggregate`, `View`, `Policy`, `Saga`, `Projection`, `Stream`,
+`ExternalSystem`, `RequestContext`, `Api` and `Model`. Slice `domain` packages
+import it directly, the way they import `effect/Schema`; there is no
+`@beep/shared-domain` facade.
+
+Placement follows purity. `domain` holds the declarations that are pure:
+events, commands, rejections, aggregates (decide/evolve), views, streams,
+external-system contracts, request contexts and middleware declarations.
+`use-cases` holds the assembled `Model` and each `Api`, plus policy, saga and
+projection declarations; alchemy's command dispatch is the use-case execution
+boundary. `server` instantiates: the Platform Layer, the workflow engine, the
+`toLayer` implementations of policies, sagas, projections and external systems,
+the Session middleware's server half, and HTTP/MCP/CLI hosting. Declarative
+constructors describe; Layers host.
+
+Event streams are the system of record. Existing tables survive as read models
+rebuilt by Projections; a slice cuts over as a single writer (genesis import of
+its rows as version-1 events, then the Model is the only writer and the
+effect-drizzle write path is deleted in the same PR). Every stored event
+carries a schema version (a static on the event class, default 1); upcasters
+run at read and stored events are never rewritten. Provenance (principal,
+source kind, timestamp) is a `RequestContext` the Session middleware provides;
+the Platform driver persists it beside the event, never as payload fields
+unless the actor is business-meaningful. Stream ids are the existing branded
+public ids; unique-value reservations are org-qualified.
+
+The persistence Platform is a driver: `@beep/alchemy-postgres`
+(`packages/drivers/alchemy-postgres`) implements the alchemy `Platform` contract
+on Postgres and provides the workflow engine through `effect/cluster`.
+`Domain.InMemory` hosts tests and Stories. A conformance suite runs the same
+scenarios on both.
+
+The hand-rolled entity kit in `packages/shared/domain/src/entity/`
+(`EntityKit`, `BaseEntity`, `AuditEntity`, `OrgEntity`, `ProductEntity`,
+`primitives`, and the `entity` barrel) is frozen: forbidden in new work and
+enforced by `bun run beep laws entity-kit-freeze --check` against the committed
+baseline `standards/entity-kit-freeze.baseline.jsonc`, which only shrinks. Each
+slice migration removes its own importers; the kit is deleted with its last
+consumer. `Principal`, `SourceKind`, `PublicEntityId`, `EntityId` and
+`EntityRef` survive as explicit value schemas and are not frozen.
+
+Rationale:
+
+Operator ruling 2026-11-03 (D0) and the grilled decisions D1–D17 in
+`explorations/alchemy-domain-adoption/DECISIONS.md`, graduated into
+`goals/alchemy-vault-sync-slice`. The kit bakes SQL column metadata,
+inheritance and audit stamping into every model and is a weaker DDD substrate
+than alchemy's block set. The P0 spikes
+(`goals/alchemy-vault-sync-slice/research/01-p0-spikes.md`) showed field
+annotations and `LiteralKit` survive alchemy constructors, that the kernel hands
+a driver the encoded request context with every command, and that the kernel
+envelope has no version or provenance slot, which fixes where each lives.
+
+Rejected:
+
+- Cloudflare Durable Objects as product storage. Product data stays on Postgres.
+- A `@beep/shared-domain` facade over alchemy. It would become the next kit.
+- Keeping CRUD rows authoritative with alchemy as a decision layer, or a
+  dual-write shadow period. Both keep two sources of truth.
+- Deleting the kit in the first migration. 64 files across seven packages
+  (agents, architecture-lab, documents, epistemic, law-practice, shared and
+  workspace) import the frozen modules, per the
+  `standards/entity-kit-freeze.baseline.jsonc` census; a strangler keeps each
+  slice's PR bounded.
+- Tracking alchemy betas continuously. 84 betas in 203 days with breaking
+  changes; each bump is a named task with a migration note.

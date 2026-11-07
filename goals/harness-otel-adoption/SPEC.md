@@ -1,9 +1,9 @@
 # Harness OTel Adoption Spec
 
-> Future reuse (2026-09-09): new token-heavy Codex work uses `gpt-6-astra`
-> with `medium` reasoning, per [root agent guidance](../../AGENTS.md#token-heavy-codex-work).
-> This completed packet retains its original execution details below as
-> historical provenance; the routing update applies only to future work.
+> Future reuse (2026-11-06): follow the [current root model policy](../../AGENTS.md#volume-pools).
+> The 2026-09-09 routing note prescribed `gpt-6-astra` with `medium`
+> reasoning. That note is superseded for new work. This completed packet
+> retains its original execution details below as historical provenance.
 
 ## Objective
 

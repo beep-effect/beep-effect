@@ -1,0 +1,26 @@
+diff --git a/lib/Aggregate.d.ts b/lib/Aggregate.d.ts
+index 7700bb258c5fabdb160ca7e06b5addc7877502a8..bce55170f0ed881d5b9836368ca548ca54ba0ced 100644
+--- a/lib/Aggregate.d.ts
++++ b/lib/Aggregate.d.ts
+@@ -582,7 +582,7 @@ type ReadOf<R> = undefined extends R ? undefined : R;
+  */
+ export type Resolved<Id extends IdSchema, S extends Schema.Top, C extends ReadonlyArray<Command.Any>, Ms extends Middleware.List = readonly [], Rejects extends ReadonlyArray<Rejection.Any> = readonly [], R extends Read.AnyContract | undefined = Read.AnyContract | undefined> = Definition<Id, S, C, Ms, Rejects> & {
+     readonly events: ReadonlyArray<EventsOf<C>>;
+-    readonly read: R;
++    readonly read?: R;
+ };
+ /**
+  * The class type returned by {@link make}.
+diff --git a/src/Aggregate.ts b/src/Aggregate.ts
+index 7de9848ebc4cc661ccfb52f53a3ff3b087fb2cd7..bee9c92fd4ec9908c1bbe20b6e49ccdc05e639cf 100644
+--- a/src/Aggregate.ts
++++ b/src/Aggregate.ts
+@@ -773,7 +773,7 @@ export type Resolved<
+   R extends Read.AnyContract | undefined = Read.AnyContract | undefined,
+ > = Definition<Id, S, C, Ms, Rejects> & {
+   readonly events: ReadonlyArray<EventsOf<C>>;
+-  readonly read: R;
++  readonly read?: R;
+ };
+ 
+ /**

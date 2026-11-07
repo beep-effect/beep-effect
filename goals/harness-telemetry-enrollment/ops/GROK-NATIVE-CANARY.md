@@ -32,15 +32,36 @@ marketplaces, MCP or LSP entries, no enabled foreign compatibility source and
 only the one exact private configuration layer. Unexpected required policy or
 config drift refuses admission. Existing host/user managed and requirements
 files must be absent under this finite qualification; if they appear, preserve
-and requalify them rather than hiding or deleting them. Remote policy and cloud
+and requalify them rather than hiding or deleting them. Only the exact private
+`GROK_HOME/managed_config.toml` and `GROK_HOME/requirements.toml` placeholders
+may instead exist as owned single-link regular 0600 files of exactly zero bytes.
+The adapter checks metadata through the held canonical private-parent descriptor,
+with no-follow opens and stable entry/descriptor/parent observations; it reads no
+placeholder contents. Zero-byte TOML contains no policy directives and is treated
+as equivalent to absence only for these two private placeholders. Whitespace and
+any other policy bytes refuse. This exception
+never applies to system/original-user policy or private authentication files.
+A native-created empty placeholder does not change the fixed profile, the two
+fresh zero-inventory inspections, auth checks, source budget or replay fence.
+Remote policy and cloud
 retention are not frozen by the local qualification.
 
 Authentication uses the existing normal native login-store consumer through
 `GROK_AUTH_PATH`. The adapter reads only the authentication file's owner, mode,
 inode and timestamp metadata. It never opens, copies or serializes its contents.
 The child inherits only the fixed environment: no API key, provider command,
-transport/endpoint override or ambient environment is passed. Native credential
-refresh may change metadata; such drift causes Unknown and never grants replay.
+transport/endpoint override or ambient environment is passed. The initial admitted credential metadata stays bound to the request. Before each
+native operation, the last accepted metadata must still match. Immediately after
+one bounded pinned native operation, the adapter may observe a changed credential
+file only at the same canonical location, with an owned regular single-link 0600
+file, bounded nonempty size, a no-follow metadata descriptor and unchanged owned
+parent identity. Binary, profile, MCP, original policy and session pins remain
+strict. This supports native automatic credential replacement without reading
+credential bytes. An additive optional isolation field records at most three
+`changed-during-native-phase` transitions, with cause and auth health `Unknown`;
+it does not prove which writer changed the file or that a refresh was legitimate.
+Unexpected pre-operation drift, unsafe structure or changed parent still refuses.
+No transition grants a new source attempt or permits replay of a failed run.
 The owner separately binds the authorized existing native subscription route.
 
 The implementation uses a direct native executable in the owned pilot worktree,

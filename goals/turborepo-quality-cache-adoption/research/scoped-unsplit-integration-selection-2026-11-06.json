@@ -1,0 +1,327 @@
+{
+  "schemaVersion": "unsplit-integration-selection-observation/v1",
+  "at": "2026-11-06T22:07:59.181981+00:00",
+  "sourceRevision": "894a8613d8222c7eb2b9cf7bb03109df4eb517f4",
+  "clients": {
+    "stable": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "version": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "observations": [
+    {
+      "case": "scoped-unsplit",
+      "channel": "stable",
+      "args": ["--filter=!@fixture/split", "--filter=@fixture/unsplit"],
+      "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+      "rawSha256": "6418bc62b2bb4dbdcebdfb6da8b174e9688095e18e3b776fb53a7d49ef5f2ed2",
+      "rawBytes": 2130,
+      "exit": 0
+    },
+    {
+      "case": "scoped-unsplit",
+      "channel": "canary",
+      "args": ["--filter=!@fixture/split", "--filter=@fixture/unsplit"],
+      "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+      "rawSha256": "c683f765162e99c73a395fde7065eac11db8dcfc15de66186101c56ba5644510",
+      "rawBytes": 2139,
+      "exit": 0
+    },
+    {
+      "case": "scoped-split-excluded",
+      "channel": "stable",
+      "args": ["--filter=!@fixture/split", "--filter=@fixture/split"],
+      "selectedExecutableTasks": [],
+      "rawSha256": "757e937dd2fa3aa9d85f22504d2946da37087b7ea1f0ddba7f6df77dbbd931ef",
+      "rawBytes": 786,
+      "exit": 0
+    },
+    {
+      "case": "scoped-split-excluded",
+      "channel": "canary",
+      "args": ["--filter=!@fixture/split", "--filter=@fixture/split"],
+      "selectedExecutableTasks": [],
+      "rawSha256": "13e48fb63b8cdc778075c8e958958eec2724c1f8adb4c9f99af37ba15be54020",
+      "rawBytes": 795,
+      "exit": 0
+    },
+    {
+      "case": "union-preserved",
+      "channel": "stable",
+      "args": [
+        "--filter=!@fixture/split",
+        "--filter=@fixture/unsplit",
+        "--filter=@fixture/split"
+      ],
+      "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+      "rawSha256": "ef19a81f27589ff696c2e7ddcb58ffb17ef939f5ad5066f9e583d49bd1729a3b",
+      "rawBytes": 2130,
+      "exit": 0
+    },
+    {
+      "case": "union-preserved",
+      "channel": "canary",
+      "args": [
+        "--filter=!@fixture/split",
+        "--filter=@fixture/unsplit",
+        "--filter=@fixture/split"
+      ],
+      "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+      "rawSha256": "68b47ee8b4113e1c28e329ce58e367b5a56f32fbf9802bf5006f7e7e43982788",
+      "rawBytes": 2139,
+      "exit": 0
+    },
+    {
+      "case": "affected-unsplit",
+      "channel": "stable",
+      "args": ["--filter=!@fixture/split", "--affected"],
+      "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+      "rawSha256": "b7edbedd6e56ffb710ac1a8fc36d8a3d4418c0ac48b42b1255d96704be419083",
+      "rawBytes": 2130,
+      "exit": 0
+    },
+    {
+      "case": "affected-unsplit",
+      "channel": "canary",
+      "args": ["--filter=!@fixture/split", "--affected"],
+      "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+      "rawSha256": "34340e53a1191251d222c17c7097e891c0a4c5d2ce099283fcd5f5df17171eb6",
+      "rawBytes": 2139,
+      "exit": 0
+    },
+    {
+      "case": "affected-split-excluded",
+      "channel": "stable",
+      "args": ["--filter=!@fixture/split", "--affected"],
+      "selectedExecutableTasks": [],
+      "rawSha256": "fc736a22e144ee9984cd644a577db3f720b46c6935c155dbfbf66b3f0187eabf",
+      "rawBytes": 786,
+      "exit": 0
+    },
+    {
+      "case": "affected-split-excluded",
+      "channel": "canary",
+      "args": ["--filter=!@fixture/split", "--affected"],
+      "selectedExecutableTasks": [],
+      "rawSha256": "145b189f3dfde7e212812fb91ea1e5e50f2ed92485c423a0eed58790b2b2dcd1",
+      "rawBytes": 795,
+      "exit": 0
+    }
+  ],
+  "taskBodiesExecuted": false,
+  "secretsLoaded": false,
+  "qualitySuitesRun": false,
+  "authority": "Native metadata-only fixture selection proof. Does not execute or typecheck the changed Quality helper, run integration tests, qualify caching, or establish full hosted correctness.",
+  "bounds": {
+    "calls": 10,
+    "secondsPerCall": 25,
+    "overallSeconds": 180,
+    "bytesPerStream": 2097152,
+    "aggregateBytes": 25165824,
+    "virtualMemoryBytes": 1073741824
+  },
+  "ownersWithIntegrationSource": [
+    {
+      "package": "@beep/m365-mcp",
+      "manifest": "packages/drivers/m365-mcp/package.json",
+      "manifestSha256": "a6b6878cc1a35d30b0c8a58e2bb5c48f36623ea168940efe08ad2d29dcd0c550",
+      "command": "bun run beep:test:integration",
+      "integrationSourceFiles": 1,
+      "examples": [
+        "packages/drivers/m365-mcp/test/integration/Outbox.live.test.ts"
+      ]
+    },
+    {
+      "package": "@beep/git",
+      "manifest": "packages/drivers/git/package.json",
+      "manifestSha256": "1d171154ca58d1048052544abd2d79d914177766511c24daf03f6f9551d6f2e1",
+      "command": "bun run beep:test:integration",
+      "integrationSourceFiles": 3,
+      "examples": [
+        "packages/drivers/git/test/integration/Git.int.test.ts",
+        "packages/drivers/git/test/integration/GitSurface.int.test.ts"
+      ]
+    },
+    {
+      "package": "@beep/memfs",
+      "manifest": "packages/tooling/test-kit/memfs/package.json",
+      "manifestSha256": "46795f72a882b22c975ae470c18849bf0306cf3b0711388d8635c3509641591f",
+      "command": "bun run beep:test:integration",
+      "integrationSourceFiles": 5,
+      "examples": [
+        "packages/tooling/test-kit/memfs/test/integration/bun.int.test.ts",
+        "packages/tooling/test-kit/memfs/test/integration/case-insensitive.int.test.ts"
+      ]
+    },
+    {
+      "package": "@beep/config-file",
+      "manifest": "packages/foundation/capability/config-file/package.json",
+      "manifestSha256": "d1722f594fc8e704ab026386891d4703d8f2d90be8b369a8fcc1231d8cfb9521",
+      "command": "bun run beep:test:integration",
+      "integrationSourceFiles": 2,
+      "examples": [
+        "packages/foundation/capability/config-file/test/integration/ConfigFileTest.int.test.ts",
+        "packages/foundation/capability/config-file/test/integration/ConfigResolver.int.test.ts"
+      ]
+    },
+    {
+      "package": "@beep/managed-section",
+      "manifest": "packages/foundation/modeling/managed-section/package.json",
+      "manifestSha256": "f8366c21e311575eb5cb67c2237a6999d2c62c2e17fb03dbba17f5cbdb65a8f0",
+      "command": "bun run beep:test:integration",
+      "integrationSourceFiles": 1,
+      "examples": [
+        "packages/foundation/modeling/managed-section/test/integration/ManagedSection.int.test.ts"
+      ]
+    },
+    {
+      "package": "@beep/repo-workspaces",
+      "manifest": "packages/tooling/library/repo-workspaces/package.json",
+      "manifestSha256": "2f8814c804c6171798b30dee61e3e6fb01fab9218f6613af28d46e0acf4b8fad",
+      "command": "bun run beep:test:integration",
+      "integrationSourceFiles": 13,
+      "examples": [
+        "packages/tooling/library/repo-workspaces/test/integration/ConfigDependencyFetch.int.test.ts",
+        "packages/tooling/library/repo-workspaces/test/integration/ConfigDependencyHooks.int.test.ts"
+      ]
+    },
+    {
+      "package": "@beep/jsonl",
+      "manifest": "packages/foundation/modeling/jsonl/package.json",
+      "manifestSha256": "572ec1ff8482771befd4a4f3828092ecd3cb472ea9c521396c2ba16afefcfb20",
+      "command": "bun run beep:test:integration",
+      "integrationSourceFiles": 1,
+      "examples": [
+        "packages/foundation/modeling/jsonl/test/integration/Journal.int.test.ts"
+      ]
+    }
+  ],
+  "candidateSourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": "bdd6b70139a1f576b283949ae2cc49b17527be05435574174039afd597162b06",
+    "packages/tooling/tool/cli/test/quality-tasks.test.ts": "b849e2d527f5eba9cfc4dbbf5c406ff4455b49feb9133845c74f52e6efbe2ca9"
+  },
+  "candidateImplementationState": "working-tree source; metadata fixture does not execute this helper. Ordinary formatting hooks may change source bytes after this capture; original digests remain historical.",
+  "observedPlainOnlyManifestCandidates": 106,
+  "inventoryLimitation": "Manifest-source candidates, not a new canonical workspace census. Seven named owners with integration source are retained separately; file counts include support sources.",
+  "enabledFutureFlagFixture": {
+    "futureFlags": {
+      "affectedUsingTaskInputs": true,
+      "filterUsingTasks": true,
+      "globalConfiguration": true
+    },
+    "rootConfigurationSha256": "ba3d45bf5d2f8c42a9953d3ec950c3c689bb3a0ab8ef70163d052dead9350378",
+    "observations": [
+      {
+        "case": "scoped-unsplit",
+        "channel": "stable",
+        "args": ["--filter=!@fixture/split", "--filter=@fixture/unsplit"],
+        "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+        "rawSha256": "6225929988b36f6137f3995287df15b82e35eaf39564d0c23d1d871b4a319668",
+        "rawBytes": 2130,
+        "exit": 0
+      },
+      {
+        "case": "scoped-unsplit",
+        "channel": "canary",
+        "args": ["--filter=!@fixture/split", "--filter=@fixture/unsplit"],
+        "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+        "rawSha256": "bad50d7c67478980cf01dc49998baa447fb04ca214d5fe3fb48500560782c57c",
+        "rawBytes": 2139,
+        "exit": 0
+      },
+      {
+        "case": "scoped-split-excluded",
+        "channel": "stable",
+        "args": ["--filter=!@fixture/split", "--filter=@fixture/split"],
+        "selectedExecutableTasks": [],
+        "rawSha256": "fdc2123b19ee28453eef877c2dd9a090cba0b40395c7ddb065a2c189dc936ea4",
+        "rawBytes": 786,
+        "exit": 0
+      },
+      {
+        "case": "scoped-split-excluded",
+        "channel": "canary",
+        "args": ["--filter=!@fixture/split", "--filter=@fixture/split"],
+        "selectedExecutableTasks": [],
+        "rawSha256": "b683ebba2241e5083641059017f5237efdf55b86c0a12daf1f735b4a37c905de",
+        "rawBytes": 795,
+        "exit": 0
+      },
+      {
+        "case": "union-preserved",
+        "channel": "stable",
+        "args": [
+          "--filter=!@fixture/split",
+          "--filter=@fixture/unsplit",
+          "--filter=@fixture/split"
+        ],
+        "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+        "rawSha256": "d629f77154a6cf5434529b62a7110fe7401aee771b4c83d9a6bd5b3479337351",
+        "rawBytes": 2130,
+        "exit": 0
+      },
+      {
+        "case": "union-preserved",
+        "channel": "canary",
+        "args": [
+          "--filter=!@fixture/split",
+          "--filter=@fixture/unsplit",
+          "--filter=@fixture/split"
+        ],
+        "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+        "rawSha256": "9ccdc9f093a64eddbbbe00a12e76a528b094b409dd9cca74a7cea9b287f9c712",
+        "rawBytes": 2139,
+        "exit": 0
+      },
+      {
+        "case": "affected-unsplit",
+        "channel": "stable",
+        "args": ["--filter=!@fixture/split", "--affected"],
+        "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+        "rawSha256": "24c690d1bfaae9ec2051599dd5142674269a0048b421967f8fd33a0316a37939",
+        "rawBytes": 2130,
+        "exit": 0
+      },
+      {
+        "case": "affected-unsplit",
+        "channel": "canary",
+        "args": ["--filter=!@fixture/split", "--affected"],
+        "selectedExecutableTasks": ["@fixture/unsplit#test:integration"],
+        "rawSha256": "2baad71c44e650948e2413a075439be46f215191099ea8d9e7ae8b951770904d",
+        "rawBytes": 2139,
+        "exit": 0
+      },
+      {
+        "case": "affected-split-excluded",
+        "channel": "stable",
+        "args": ["--filter=!@fixture/split", "--affected"],
+        "selectedExecutableTasks": [],
+        "rawSha256": "960939fc1a42a7db7c3c358af6088ff4022aff16886bb64c2c6a25a6a96b552a",
+        "rawBytes": 786,
+        "exit": 0
+      },
+      {
+        "case": "affected-split-excluded",
+        "channel": "canary",
+        "args": ["--filter=!@fixture/split", "--affected"],
+        "selectedExecutableTasks": [],
+        "rawSha256": "d75794b91b21cab114481fa33de650dcee5a74f64f635edab6de17e73d85ec13",
+        "rawBytes": 795,
+        "exit": 0
+      }
+    ],
+    "bounds": {
+      "calls": 10,
+      "secondsPerCall": 25,
+      "overallSeconds": 180,
+      "bytesPerStream": 2097152,
+      "aggregateBytes": 25165824,
+      "virtualMemoryBytes": 1073741824
+    }
+  },
+  "totalMetadataPlans": 20
+}

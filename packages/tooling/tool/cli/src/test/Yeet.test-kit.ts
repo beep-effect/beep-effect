@@ -32,6 +32,7 @@ export * from "../commands/Yeet/internal/FinalCheck.ts";
 export * from "../commands/Yeet/internal/FinalCheckRefresh.schemas.ts";
 export * from "../commands/Yeet/internal/FinalCheckRefresh.ts";
 export * from "../commands/Yeet/internal/GateStaleness.ts";
+export * from "../commands/Yeet/internal/GateTable.ts";
 export * from "../commands/Yeet/internal/GhOps.ts";
 export * from "../commands/Yeet/internal/GitErrorAdapter.ts";
 export {

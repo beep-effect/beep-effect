@@ -10,7 +10,11 @@ import {
   PrRepository,
   RegisterReport,
   RegisterReportJson,
+  RegisterRow,
   RegisterRowJson,
+  RulingRowJson,
+  RulingsReport,
+  RulingsReportJson,
   recordSweepDone,
   renderSessionRow,
   SessionLedger,
@@ -25,7 +29,7 @@ import {
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it, vi } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertInclude, assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -658,6 +662,374 @@ describe("beep session", () => {
             Effect.ensuring(Effect.sync(() => encoder.mockRestore()))
           );
           expect(error.message).toBe("[session] Failed to encode the register report.");
+        })
+      )
+    );
+
+    it.effect("converts an in-process unit in one step and refuses a conversion it cannot make", () =>
+      withScratchCheckout(({ clone, lane, stateRoot }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const home = path.dirname(stateRoot);
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "add",
+                "--kind",
+                "in-process-agent",
+                "--address",
+                "agent-a1",
+                "--name",
+                "coverage fixer",
+                "--owns",
+                "PR #7",
+                "--waiting",
+                "final sha",
+                "--orphan-plan",
+                "relaunch from its brief",
+              ])
+            )
+          );
+          const converted = yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "convert",
+                "--kind",
+                "in-process-agent",
+                "--address",
+                "agent-a1",
+                "--to-kind",
+                "scheduled-task",
+                "--to-address",
+                "task_42",
+                "--brief",
+                "briefs/agent-a1.md",
+              ])
+            )
+          );
+          expect(converted).toContain(
+            "[session] converted in-process-agent agent-a1 -> scheduled-task task_42 (active)"
+          );
+          const json = yield* captureOutput(withCwd(clone, runSession(["register", "list", "--json"])));
+          const report = yield* RegisterReportJson.decode(json);
+          expect(A.map(report.rows, (unit) => `${unit.kind} ${unit.address}`)).toStrictEqual([
+            "scheduled-task task_42",
+          ]);
+          const [moved] = report.rows;
+          expect(moved?.owns).toStrictEqual(["PR #7"]);
+          expect(O.getOrNull(moved?.waitingOnOrchestrator ?? O.none())).toBe("final sha");
+          expect(moved?.orphanPlan).toBe("relaunch from its brief");
+          expect(O.getOrNull(moved?.note ?? O.none())).toBe(
+            "converted from in-process-agent agent-a1; brief briefs/agent-a1.md"
+          );
+
+          const refusals: ReadonlyArray<readonly [ReadonlyArray<string>, string]> = [
+            [
+              [
+                "--kind",
+                "in-process-agent",
+                "--address",
+                "agent-a1",
+                "--to-kind",
+                "background-job",
+                "--to-address",
+                "j",
+              ],
+              "is already retired",
+            ],
+            [
+              ["--kind", "in-process-agent", "--address", "nobody", "--to-kind", "background-job", "--to-address", "j"],
+              "is not registered",
+            ],
+            [
+              [
+                "--kind",
+                "scheduled-task",
+                "--address",
+                "task_42",
+                "--to-kind",
+                "in-process-agent",
+                "--to-address",
+                "a",
+              ],
+              "cannot become an in-process-agent",
+            ],
+            [
+              [
+                "--kind",
+                "scheduled-task",
+                "--address",
+                "task_42",
+                "--to-kind",
+                "scheduled-task",
+                "--to-address",
+                "task_42",
+              ],
+              "is already that unit",
+            ],
+            [
+              ["--kind", "robot", "--address", "x", "--to-kind", "background-job", "--to-address", "j"],
+              "--kind and --to-kind must be one of",
+            ],
+            [
+              ["--kind", "scheduled-task", "--address", " ", "--to-kind", "background-job", "--to-address", "j"],
+              "--address and --to-address must say",
+            ],
+          ];
+          for (const [args, message] of refusals) {
+            const error = yield* withCwd(lane, runSession(["register", "convert", ...args])).pipe(Effect.flip);
+            expect(error.message).toContain(message);
+          }
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession(["register", "add", "--kind", "background-job", "--address", "j9", "--orphan-plan", "rerun"])
+            )
+          );
+          const taken = yield* withCwd(
+            lane,
+            runSession([
+              "register",
+              "convert",
+              "--kind",
+              "scheduled-task",
+              "--address",
+              "task_42",
+              "--to-kind",
+              "background-job",
+              "--to-address",
+              "j9",
+            ])
+          ).pipe(Effect.flip);
+          expect(taken.message).toContain("cannot take a target that already has a live row");
+
+          // A row written before last contact was recorded lists as "never".
+          const registerFile = path.join(
+            home,
+            ".local",
+            "state",
+            "beep",
+            "orchestrator",
+            "github.com__beep-effect__beep-effect.jsonl"
+          );
+          const silent = yield* RegisterRowJson.encode(
+            RegisterRow.make({
+              schemaVersion: "orchestrator-register/v1",
+              repository,
+              kind: "external-person",
+              address: "the operator",
+              name: O.none(),
+              owns: [],
+              state: "active",
+              waitingOnOrchestrator: O.none(),
+              lastContact: O.none(),
+              orphanPlan: "fleet desk",
+              note: O.none(),
+              recordedBy: O.none(),
+              recordedAt: DateTime.makeUnsafe("2026-11-06T00:00:00Z"),
+            })
+          );
+          yield* fs.writeFileString(registerFile, `${silent}\n`, { flag: "a" });
+          const listed = yield* captureOutput(withCwd(clone, runSession(["register", "list"])));
+          assertInclude(listed, "- external-person the operator [active] owns: \n  last contact: never");
+        })
+      )
+    );
+
+    it.effect("records rulings, supersedes one, and renders HANDOFF.md from the files", () =>
+      withScratchCheckout(({ clone, lane, stateRoot }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const usage = yield* captureOutput(runSession(["ruling"]));
+          expect(usage).toContain("Ruling commands:");
+          const none = yield* captureOutput(withCwd(clone, runSession(["ruling", "list"])));
+          expect(none).toContain("[session] no rulings recorded for beep-effect/beep-effect");
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "ruling",
+                "add",
+                "--id",
+                "review-window",
+                "--date",
+                "2026-10-06",
+                "--verbatim",
+                "I do not merge until 20 minutes after the later of 'marked ready' and your last push",
+                "--source",
+                "memory feedback-review-window-before-merge",
+              ])
+            )
+          );
+          const superseding = yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "ruling",
+                "add",
+                "--id",
+                "fix-at-root",
+                "--date",
+                "2026-10-24",
+                "--verbatim",
+                "fixed at their root cause | not deferred",
+                "--source",
+                "AGENTS.md Autonomy",
+                "--note",
+                "supersedes the round-2 stop",
+                "--supersedes",
+                "review-window",
+              ])
+            )
+          );
+          expect(superseding).toContain("[session] recorded ruling fix-at-root (2026-10-24); review-window superseded");
+          const inForce = yield* captureOutput(withCwd(clone, runSession(["ruling", "list"])));
+          expect(inForce).toContain("[session] 1 ruling(s):");
+          const all = yield* captureOutput(withCwd(clone, runSession(["ruling", "list", "--all"])));
+          expect(all).toContain("review-window [superseded by fix-at-root]");
+          const markdown = yield* captureOutput(withCwd(clone, runSession(["ruling", "list", "--markdown"])));
+          expect(markdown).toContain(
+            '| 2026-10-24 | "fixed at their root cause \\| not deferred" (supersedes the round-2 stop) | AGENTS.md Autonomy |'
+          );
+          const json = yield* captureOutput(withCwd(clone, runSession(["ruling", "list", "--json"])));
+          expect(json).toContain('"schemaVersion":"orchestrator-rulings-report/v1"');
+          const cause = yield* S.encodeUnknownEffect(RulingsReport)(undefined).pipe(Effect.flip);
+          const reportEncoder = vi.spyOn(RulingsReportJson, "encode").mockReturnValue(Effect.fail(cause));
+          const reportError = yield* withCwd(clone, runSession(["ruling", "list", "--json"])).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.sync(() => reportEncoder.mockRestore()))
+          );
+          expect(reportError.message).toBe("[session] Failed to encode the rulings report.");
+          const rowEncoder = vi.spyOn(RulingRowJson, "encode").mockReturnValue(Effect.fail(cause));
+          const rowError = yield* withCwd(
+            lane,
+            runSession(["ruling", "add", "--id", "x", "--date", "2026-10-24", "--verbatim", "x", "--source", "y"])
+          ).pipe(Effect.flip, Effect.ensuring(Effect.sync(() => rowEncoder.mockRestore())));
+          expect(rowError.message).toBe("[session] Failed to encode the ruling row.");
+          for (const [args, message] of [
+            [
+              ["--id", "Not Kebab", "--date", "2026-10-24", "--verbatim", "x", "--source", "y"],
+              "--id must be kebab-case",
+            ],
+            [["--id", "x", "--date", "Oct 24", "--verbatim", "x", "--source", "y"], "--date must be YYYY-MM-DD"],
+            [["--id", "x", "--date", "2026-10-24", "--verbatim", " ", "--source", "y"], "--verbatim must not be empty"],
+            [
+              ["--id", "x", "--date", "2026-10-24", "--verbatim", "x", "--source", "y", "--supersedes", "nope"],
+              'names "nope", which is not recorded',
+            ],
+          ] as const) {
+            const error = yield* withCwd(lane, runSession(["ruling", "add", ...args])).pipe(Effect.flip);
+            expect(error.message).toContain(message);
+          }
+
+          // The orchestrator claims the role, registers a unit and keeps a journal and a prose section.
+          yield* captureOutput(
+            withCwd(lane, runSession(["note", "--role", "orchestrator", "--next", "gate the queue"]))
+          );
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "add",
+                "--kind",
+                "systemd-unit",
+                "--address",
+                "gate.service",
+                "--orphan-plan",
+                "restart",
+              ])
+            )
+          );
+          const handoffFile = path.join(stateRoot, "orchestrator-cache", "HANDOFF.md");
+          yield* fs.makeDirectory(path.dirname(handoffFile), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(path.dirname(handoffFile), "STATE.md"),
+            "- 2026-11-06T10:00Z first\n- 2026-11-06T11:00Z MERGED #7\n\n"
+          );
+          yield* fs.writeFileString(
+            handoffFile,
+            "# Orchestrator hand-off — old\n\nHolder: someone else\nGate clone: ~/clone\n\n## Next actions (ordered)\n\n1. merge #7\n\n## Notes\n\nkeep me\n"
+          );
+          const snapshot = path.join(stateRoot, "gate.txt");
+          yield* fs.writeFileString(snapshot, "# gate-table now\n#7\tready\n");
+          const printed = yield* captureOutput(
+            withCwd(clone, runSession(["handoff", "--file", handoffFile, "--gate-snapshot", snapshot]))
+          );
+          expect(printed).toContain("Holder: lane (feat/lane) session thread-1 since ");
+          expect(printed).toContain("Gate clone: ~/clone");
+          expect(printed).not.toContain("Holder: someone else");
+          expect(printed).toContain("## Next actions (ordered)\n\n1. merge #7");
+          expect(printed).toContain("## Notes\n\nkeep me\n\n## Journal pointer");
+          expect(printed).toContain("| systemd-unit | gate.service |");
+          expect(printed).toContain("#7\tready");
+          expect(printed).toContain("> - 2026-11-06T11:00Z MERGED #7");
+          expect(printed).toContain("fixed at their root cause");
+          expect(printed).not.toContain("I do not merge until 20 minutes");
+
+          const written = yield* captureOutput(
+            withCwd(clone, runSession(["handoff", "--file", handoffFile, "--write"]))
+          );
+          expect(written).toContain(`[session] wrote ${handoffFile} (previous kept as `);
+          const files = yield* fs.readDirectory(path.dirname(handoffFile));
+          expect(A.some(files, (file) => Str.startsWith("HANDOFF.")(file) && Str.endsWith(".bak.md")(file))).toBe(true);
+          const rewritten = yield* fs.readFileString(handoffFile);
+          expect(rewritten).toContain("## Next actions (ordered)\n\n1. merge #7");
+          // No snapshot this time: the previous file's rendered snapshot section is kept as written.
+          expect(rewritten).toContain("## Gate snapshot");
+        })
+      )
+    );
+
+    it.effect("finds HANDOFF.md through the env override or the XDG cache, and reports an unreadable file", () =>
+      withScratchCheckout(({ clone, stateRoot }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const home = path.dirname(stateRoot);
+          const withEnv = <A, E, R>(extra: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
+            effect.pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromEnv({
+                  env: { BEEP_SESSION_STATE_ROOT: stateRoot, HOME: home, CODEX_THREAD_ID: "thread-1", ...extra },
+                })
+              )
+            );
+          // No file yet: the XDG cache default is written, with nothing to back up.
+          const written = yield* captureOutput(withCwd(clone, runSession(["handoff", "--write"])));
+          const defaultFile = path.join(home, ".cache", "beep", "orchestrator", "HANDOFF.md");
+          expect(written).toBe(`[session] wrote ${defaultFile}`);
+          const defaultExists = yield* fs.exists(defaultFile);
+          expect(defaultExists).toBe(true);
+          // A blank override falls back to the default; a set one is used.
+          const blank = yield* captureOutput(
+            withEnv({ BEEP_ORCHESTRATOR_HANDOFF: "  " }, withCwd(clone, runSession(["handoff", "--write"])))
+          );
+          assertInclude(blank, `[session] wrote ${defaultFile} (previous kept as `);
+          const envFile = path.join(stateRoot, "env-handoff", "HANDOFF.md");
+          // Without HOME the XDG cache cannot be resolved and no --file was given.
+          const unresolved = yield* withEnv(
+            { HOME: "", BEEP_ORCHESTRATOR_STATE_ROOT: stateRoot },
+            withCwd(clone, runSession(["handoff"]))
+          ).pipe(Effect.flip);
+          assertInclude(
+            unresolved.message,
+            "Could not resolve HANDOFF.md: pass --file or set BEEP_ORCHESTRATOR_HANDOFF."
+          );
+          const viaEnv = yield* captureOutput(
+            withEnv({ BEEP_ORCHESTRATOR_HANDOFF: envFile }, withCwd(clone, runSession(["handoff", "--write"])))
+          );
+          expect(viaEnv).toBe(`[session] wrote ${envFile}`);
+          // A directory is not a missing file: the read fails instead of rendering over it.
+          const error = yield* withCwd(clone, runSession(["handoff", "--file", stateRoot])).pipe(Effect.flip);
+          expect(error._tag).toBe("CliReportedExit");
         })
       )
     );
