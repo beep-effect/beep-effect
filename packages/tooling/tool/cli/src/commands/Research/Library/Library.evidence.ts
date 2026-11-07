@@ -25,6 +25,12 @@ import { readLibraryProviderEvents } from "./Library.events.ts";
 import { LibraryDispositionImportPayload, LibraryImportPayload, libraryDispositionValid } from "./Library.import.ts";
 import { libraryArtifactIntegrity } from "./Library.integrity.ts";
 import { AlphaFullText, validateProviderQualification } from "./Library.provenance.ts";
+import {
+  libraryBoxRevisionValid,
+  validateLibraryAlphaxivEvidence,
+  validateLibraryBoxEvidence,
+  validateLibraryVidbeeEvidence,
+} from "./Library.routeEvidence.ts";
 import { LibraryArtifact, LibraryCapture } from "./Library.schemas.ts";
 import { hashBytes } from "./Library.store.ts";
 import { libraryCitedRevisions } from "./Library.versions.ts";
@@ -1366,6 +1372,8 @@ const arxivCapturedRevisionValid = (capture: LibraryCapture) =>
   /^v\d+$/.test(capture.capturedRevision) &&
   (capture.requestedRevision === "" || capture.capturedRevision === capture.requestedRevision);
 const sourceCapturedRevisionValid = (source: LibrarySource, capture: LibraryCapture) => {
+  const box = libraryBoxRevisionValid(source, capture);
+  if (O.isSome(box)) return box.value;
   if (source.kind === "youtube" || Str.startsWith("github-")(source.kind)) return true;
   if (source.kind === "paper" && Str.startsWith("arxiv:")(source.identity)) return arxivCapturedRevisionValid(capture);
   return capture.capturedRevision === capture.requestedRevision;
@@ -1392,7 +1400,11 @@ export const librarySourceEvidenceValid = Effect.fn("Research.Library.verifySour
   const revisions = A.dedupe([source.revision, ...A.map(source.versions, (version) => version.revision)]);
   if (!A.contains(revisions, capture.requestedRevision) || !sourceCapturedRevisionValid(source, capture)) return false;
   if (!(yield* libraryArtifactsValid(root, capture.artifacts))) return false;
+  if (capture.method === "box") return yield* validateLibraryBoxEvidence(root, source, capture);
+  if (capture.method === "alphaxiv" && A.some(capture.artifacts, (artifact) => artifact.role === "alphaxiv-binding"))
+    return yield* validateLibraryAlphaxivEvidence(root, source, capture);
   const context = yield* makeEvidenceContext(root, source, capture);
+  if (capture.method === "vidbee") return yield* validateLibraryVidbeeEvidence(root, context.url, capture);
   if (Str.startsWith("github-")(source.kind)) return yield* validateGithubEvidence(context);
   if (source.kind === "youtube") return yield* validateYoutubeEvidence(context);
   const imported = yield* validateImportedEvidence(context);

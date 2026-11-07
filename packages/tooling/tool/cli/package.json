@@ -185,6 +185,7 @@
   },
   "dependencies": {
     "@beep/ai-sync": "workspace:^",
+    "@beep/box": "workspace:^",
     "@beep/chalk": "workspace:^",
     "@beep/cli-kit": "workspace:^",
     "@beep/colors": "workspace:^",
@@ -195,6 +196,7 @@
     "@beep/exiftool": "workspace:^",
     "@beep/ffmpeg": "workspace:^",
     "@beep/file-processing": "workspace:^",
+    "@beep/firecrawl": "workspace:^",
     "@beep/git": "workspace:^",
     "@beep/github": "workspace:^",
     "@beep/github-actions": "workspace:^",
@@ -215,6 +217,7 @@
     "@beep/obs": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/occt": "workspace:^",
+    "@beep/onepassword-cli": "workspace:^",
     "@beep/ontology": "workspace:^",
     "@beep/oxigraph": "workspace:^",
     "@beep/package-json": "workspace:^",

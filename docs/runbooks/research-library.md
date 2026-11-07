@@ -34,14 +34,19 @@ configured MCP server, and a successful provider request are insufficient: the
 target source, returned content, and completeness must also pass. Keep secret
 values out of commands, logs, import manifests, and packet documents.
 
-Web, docs, and registry sources have no acquisition route, because the repository
-has no web scraper. `acquire` gives them an unsupported `disposition` receipt that
-points to `import-result`, and `qualify` never probes a web route. To read one of
-these sources, scrape it with a session tool and import the result (see
-[Session-owned provider results](#session-owned-provider-results)), or record a
-reviewed disposition. Captures and the qualification receipt from the removed
-`firecrawl` route remain valid. `verify`, `status`, and `render` still check them
-against their retained response, HTML, and Markdown.
+Web, docs, and registry sources take the native `firecrawl` route through the
+`@beep/firecrawl` driver. The key is the reference
+`op://BEEP_SECRETS/BEEP_SECRETS/AI_FIRECRAWL_API_KEY`, read through the PATH `op`
+shim on the first scrape; `FIRECRAWL_API_KEY` may instead hold a resolved key (for
+example under `op run`) or another `op://` reference. The key never appears in
+argv, logs, receipts, or packet files. A capture retains the exact bounded response
+body as `raw-response`, its `rawHtml` as `raw-full-text`, and its `markdown` as
+`extracted-full-text`, which is the envelope `Library.web.ts` validates, so native
+captures and October's imported scrapes verify under one contract. The response
+stream is cut at 20 MB before bytes are kept, whatever `Content-Length` declares,
+and a PDF target is refused as `unsupported` even when it is labelled HTML: cite the
+PDF as a paper source instead. Qualify the route with
+`qualify --adapter firecrawl --max-probes 1`.
 
 Acquisition retains a start receipt before each attempt and records its terminal
 result. Qualified routes can progress independently. Inspect failed receipts
@@ -49,8 +54,7 @@ before using `--retry-failed`; do not repeatedly retry an unavailable source or
 mistake a provider outage for source unavailability. `--source <source-id>` selects
 a source for a bounded retry. A valid reviewed disposition survives a blanket
 `--retry-failed` run. An explicit source selection can force a reviewed network
-route; X imports, web sources, and unresolved disposition routes remain explicit
-imports.
+route; X imports and unresolved disposition routes remain explicit imports.
 Concurrency is bounded from 1 through 8. GitHub operations are sequential within
 one repository and concurrent across repository groups; catalog writes share one
 writer. `qualify --adapter <adapter> --source <source-id> --max-probes <1..3>`
@@ -84,6 +88,62 @@ comes from the retained paper header or
 from official metadata plus identical bytes from an explicitly versioned PDF;
 never infer a version number.
 
+## Box route
+
+`acquire --route box --box-folder <id>` (repeatable; subfolders included, at most
+200 folders) or `--box-file <id>` lists the selection through `@beep/box`, keeps the
+listing as a `box-listing` receipt, and registers each file as a `docs` source at
+`https://app.box.com/file/<id>`. Box sources and their artifacts are private unless
+`--box-public` is passed. The Box file version id is the source revision and the
+captured revision is `<fileId>:<versionId>`; a capture is readable only when the
+downloaded bytes match the SHA-1 Box reports. Each file gets one start and one
+terminal receipt and the catalog is written after every file, because Box quota is
+not observable. A rerun downloads nothing that is already captured readable for its
+version; byte-identical files share one object under `objects/sha256`. A new Box
+version is registered and acquired once more; earlier versions keep their captures.
+If the route has no valid qualification, the first selected file is downloaded as
+the qualification probe before the rest.
+
+Credentials: `CLOUD_BOX_TOKEN` selects a developer token. Otherwise the client
+credentials grant reads `DMS_BOX_CLIENT_ID`, `DMS_BOX_CLIENT_SECRET`, and
+`DMS_BOX_ENTERPRISE_ID` from `BEEP_SECRETS` through the `op` shim. The enterprise
+service account sees only folders shared with it; set `DMS_BOX_USER_ID=<box user id>`
+to take a user as the token subject for user-owned files.
+
+## Hops and the hop-2 gate
+
+`inventory` records a hop-1 `Derivation` (with `hopDepth = 1`) for every citation in
+a hop-0 document of each intake. It then reads the readable text of every hop-1
+capture (Markdown, plain text, and transcripts up to 5 MB) and records each URL in it
+as a hop-2 `Source` with a `hopDepth = 2` derivation from its hop-1 parent. Depth is
+on the edge; nothing is dropped, and re-running inventory adds no duplicate edges. Run
+`inventory`, `acquire`, then `inventory` again to catalogue hop 2.
+
+`acquire` fetches a hop-2-only source only when the gate admits it:
+
+- a hop-1 parent has a `Finding` whose topics name a live packet concept: a goal
+  whose status is `active` or `paused`, or an exploration that is not `parked`,
+  `killed`, or `graduated`;
+- GitHub is never transitive: a GitHub child, or any child of a GitHub parent, is
+  refused;
+- arXiv hop 2 is catalogued only; name it with `--source <id>` to acquire it on
+  demand;
+- every other domain admits at most 25 acquired hop-2 sources per intake
+  (`--hop2-domain-cap <n>`), counting sources already captured; candidates are taken
+  in canonical-URL order.
+
+Catalogued-only hop-2 identities are counted as `cataloguedHop2` by `verify` instead
+of being reported missing. `status` ends with per-hop totals:
+
+```text
+hop 0: documents=<n> citations=<n>
+hop 1: identities=<n> readable=<n>
+hop 2: identities=<n> readable=<n> cataloguedOnly=<n> gateAdmitted=<n> gateRefused=<n> (<reason>=<n> ...)
+```
+
+`hops --limit <n>` prints the same totals and the first `n` gate decisions
+(`admit|refuse <reason> <domain> <sourceId> <url>`) without acquiring.
+
 ## Session-owned provider results
 
 Use `import-result <manifest-file>` for evidence obtained through a session tool,
@@ -102,6 +162,24 @@ capture becomes readable only when the status is 2xx, `sourceURL` matches the ci
 URL, and both full-text files equal the response's `rawHtml` and `markdown`. A
 `target-metadata` redirect proof can bind a resolved URL that differs from the
 cited one.
+
+A VidBee bundle imports with a `kind: "vidbee"` manifest naming `sourceId`,
+`canonicalUrl`, and three originals (`path` relative to the manifest, `sha256`,
+`bytes`, `mediaType`): `media`, `transcript` (the `.vtt`), and `faq` (the FAQ `.md`).
+The transcript is kept as `raw-full-text` and the FAQ as `ai-interpretation`; the
+media file is hashed in place and never copied. The FAQ frontmatter must name the same
+media file (`media:`) and, if it records one, the same `source_url`. Its `model` (a
+`model(effort)` pin or a separate `effort:` key) becomes the `ModelRun` agent; a
+missing effort is recorded as `unrecorded`. The yt-dlp caption route stays primary
+for cited YouTube URLs; VidBee is the fallback import.
+
+An alphaXiv paper imports with a `kind: "alphaxiv"` manifest naming `sourceId`,
+`canonicalUrl`, `arxivId`, `version` (`vN`), a `fullText` original of at least 1,000
+characters, and an optional `references` list of `{ "arxivId" }` or `{ "url" }`
+entries. The source must be the inventoried `arxiv:<arxivId>` paper and the version
+must match any cited version, or the import fails with an identity error. Full text is
+kept as `extracted-full-text` bound to the id and version; references become hop-2
+sources with a derivation edge and no capture.
 
 Grok research must dispatch the literal `/deep-research` workflow and retain both
 launch and completion evidence. An ordinary model answer is insufficient. Grok

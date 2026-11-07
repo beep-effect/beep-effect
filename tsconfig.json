@@ -2469,7 +2469,9 @@
       "@beep/alchemy-postgres": [
         "./packages/drivers/alchemy-postgres/src/index.ts"
       ],
-      "@beep/alchemy-postgres/*": ["./packages/drivers/alchemy-postgres/src/*"]
+      "@beep/alchemy-postgres/*": ["./packages/drivers/alchemy-postgres/src/*"],
+      "@beep/firecrawl": ["./packages/drivers/firecrawl/src/index.ts"],
+      "@beep/firecrawl/*": ["./packages/drivers/firecrawl/src/*"]
     }
   }
 }
