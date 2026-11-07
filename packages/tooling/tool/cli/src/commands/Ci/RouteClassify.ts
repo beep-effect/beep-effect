@@ -247,6 +247,7 @@ const BIOME_CONFIG_NAMES = ["biome.json", "biome.jsonc"];
 const TEST_FILE_SUFFIXES = [".test.ts", ".test.tsx", ".spec.ts"];
 const MARKDOWN_EXTENSIONS = [".md", ".mdx"];
 const PACKET_ROOTS = ["goals/", "explorations/", "research/", "docs/_internal/"];
+const BASELINE_EXTENSIONS = [".json", ".jsonc"];
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".mjs", ".cjs", ".json"];
 const ASSET_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".woff", ".woff2", ".ttf", ".pdf", ".mp4"];
 const MANIFEST_NAME = "package.json";
@@ -270,6 +271,18 @@ const isUnder =
 
 const isMarkdown = (facts: PathFacts): boolean => A.contains(MARKDOWN_EXTENSIONS, facts.extension);
 
+const isPacketPath = (facts: PathFacts): boolean => A.some(PACKET_ROOTS, (root) => Str.startsWith(root)(facts.path));
+
+const hasTestSuffix = (facts: PathFacts): boolean =>
+  A.some(TEST_FILE_SUFFIXES, (suffix) => Str.endsWith(suffix)(facts.name));
+
+// A test path is a test-suffixed file, or a file under a `test` directory that is not inside the
+// owner's `src/`: `src/internal/test/*.ts` compiles into `dist`, so it is source, not test.
+const isTestPath = (facts: PathFacts): boolean =>
+  hasTestSuffix(facts) ||
+  (A.contains(facts.directories, "test") &&
+    !O.exists(facts.ownerDirectory, (directory) => Str.startsWith(sourceRoot(directory))(facts.path)));
+
 const PATH_RULES: ReadonlyArray<readonly [ChangeAtomKind, P.Predicate<PathFacts>]> = [
   ["unknown", (facts) => facts.name === MANIFEST_NAME],
   ["lockfile", (facts) => facts.path === "bun.lock"],
@@ -291,12 +304,10 @@ const PATH_RULES: ReadonlyArray<readonly [ChangeAtomKind, P.Predicate<PathFacts>
     P.or(P.or(isUnder("docs/generated/"), isUnder("graft/")), (facts) => pipe(facts.name, Str.includes(".generated."))),
   ],
   ["src:story", (facts) => Str.endsWith(".stories.tsx")(facts.name)],
-  [
-    "src:test",
-    (facts) =>
-      A.contains(facts.directories, "test") || A.some(TEST_FILE_SUFFIXES, (suffix) => Str.endsWith(suffix)(facts.name)),
-  ],
-  ["packet", P.and(isMarkdown, (facts) => A.some(PACKET_ROOTS, (root) => Str.startsWith(root)(facts.path)))],
+  ["packet", P.and(isMarkdown, isPacketPath)],
+  ["packet:data", isPacketPath],
+  ["cfg:baseline", P.and(isUnder("standards/"), (facts) => A.contains(BASELINE_EXTENSIONS, facts.extension))],
+  ["src:test", isTestPath],
   ["docs:markdown", isMarkdown],
   [
     "src:module",
@@ -304,6 +315,7 @@ const PATH_RULES: ReadonlyArray<readonly [ChangeAtomKind, P.Predicate<PathFacts>
       A.contains(SOURCE_EXTENSIONS, facts.extension) &&
       O.exists(facts.ownerDirectory, (directory) => Str.startsWith(sourceRoot(directory))(facts.path)),
   ],
+  ["scratchpad", P.and(isUnder("scratchpad/"), P.not(isUnder("scratchpad/src/")))],
   ["asset", (facts) => A.contains(ASSET_EXTENSIONS, facts.extension)],
 ];
 
@@ -316,9 +328,11 @@ const PATH_RULES: ReadonlyArray<readonly [ChangeAtomKind, P.Predicate<PathFacts>
  * The first matching rule wins, in this order: root `bun.lock`, root
  * toolchain pins, `.env*`, `.github/workflows/**`, `turbo.json`,
  * `tsconfig*.json`, Biome and oxlint configs, the lint-rules package,
- * Vite/Vitest configs, generated files, stories, tests, packet markdown, other
- * markdown, sources under the owner's `src/`, and media. Anything else is
- * `unknown`.
+ * Vite/Vitest configs, generated files, stories, packet markdown, other packet
+ * files, `standards/` JSON baselines, tests, other markdown, sources under the
+ * owner's `src/`, scratchpad files outside `scratchpad/src/`, and media.
+ * Anything else is `unknown`. A file under a `test` directory inside the
+ * owner's `src/` is source, not test, unless its name has a test suffix.
  *
  * **Gotchas**
  *
