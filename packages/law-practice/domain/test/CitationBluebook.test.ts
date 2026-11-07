@@ -8,6 +8,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -175,7 +176,7 @@ describe("lawful supported Bluebook transforms", () => {
       const text = BluebookText.make("Élodie 😀 v. Bar, 1 U.S. 1 (2000)");
       const view = yield* S.encodeEffect(BluebookTextFromBluebookCitation)(text);
       expect(view.plaintiff).toBe("Élodie 😀");
-      expect(view.pinCite).toEqual(O.none());
+      assertNone(view.pinCite);
       const rendered = yield* S.decodeEffect(BluebookTextFromBluebookCitation)(view);
       expect(rendered).toBe(text);
       for (const input of [
