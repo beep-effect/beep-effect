@@ -1,4 +1,9 @@
-/** Source-aligned lexical inspection adapter over the existing NLP capability. @packageDocumentation @since 0.0.0 */
+/**
+ * Source-aligned lexical inspection adapter over the existing NLP capability.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import {
