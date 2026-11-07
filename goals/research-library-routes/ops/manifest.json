@@ -27,6 +27,10 @@
     "pullRequests": [
       {
         "number": 2868,
+        "role": "supporting"
+      },
+      {
+        "number": 2880,
         "role": "final"
       }
     ],
@@ -108,6 +112,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2868
+    "finalPullRequest": 2880
   }
 }
