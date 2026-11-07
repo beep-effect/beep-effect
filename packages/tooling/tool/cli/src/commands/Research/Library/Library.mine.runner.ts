@@ -380,6 +380,9 @@ const launchEnvironment = Effect.fnUntraced(function* (profile: LibraryMineProfi
   } as const;
 });
 
+const decodedText = <E, R>(stream: Stream.Stream<Uint8Array, E, R>) =>
+  stream.pipe(Stream.decodeText(), Stream.mkString);
+
 const makeLiveRunner = Effect.fn("LibraryMineRunner.make")(function* () {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const fs = yield* FileSystem.FileSystem;
@@ -401,14 +404,9 @@ const makeLiveRunner = Effect.fn("LibraryMineRunner.make")(function* () {
           stderr: "pipe",
           forceKillAfter: Duration.seconds(5),
         });
-        return yield* Effect.all(
-          [
-            handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
-            handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
-            handle.exitCode,
-          ],
-          { concurrency: "unbounded" }
-        );
+        return yield* Effect.all([decodedText(handle.stdout), decodedText(handle.stderr), handle.exitCode], {
+          concurrency: "unbounded",
+        });
       })
     ).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),

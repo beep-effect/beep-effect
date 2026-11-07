@@ -10,6 +10,7 @@ import {
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -83,8 +84,8 @@ it.layer(LibraryPlatform, { timeout: "60 seconds" })("research library private i
         A.findFirst(catalog.artifacts, (artifact) => artifact.path === intake.manifestPath)
       );
       expect(manifest.accessClass).toBe("private");
-      expect(sourceAccess(catalog, "https://example.com/public-paper")).toEqual(O.some("public"));
-      expect(sourceAccess(catalog, "https://example.com/private-paper")).toEqual(O.some("private"));
+      deepStrictEqual(sourceAccess(catalog, "https://example.com/public-paper"), O.some("public"));
+      deepStrictEqual(sourceAccess(catalog, "https://example.com/private-paper"), O.some("private"));
     })
   );
 
@@ -121,13 +122,13 @@ it.layer(LibraryPlatform, { timeout: "60 seconds" })("research library private i
       const shared = "https://github.com/owner/shared/issues/7";
       yield* fs.writeFileString(path.join(privateRoot, "private.md"), `# Private intake report\nTracks ${shared}.\n`);
       const first = yield* inventoryLibrary(options);
-      expect(sourceAccess(first, shared)).toEqual(O.some("private"));
+      deepStrictEqual(sourceAccess(first, shared), O.some("private"));
       // The repository identity a private citation implies is private context too.
-      expect(sourceAccess(first, "https://github.com/owner/shared")).toEqual(O.some("private"));
+      deepStrictEqual(sourceAccess(first, "https://github.com/owner/shared"), O.some("private"));
       yield* fs.writeFileString(path.join(aggregation, "public.md"), `# Public aggregation report\nAlso ${shared}.\n`);
       const second = yield* inventoryLibrary(options);
-      expect(sourceAccess(second, shared)).toEqual(O.some("public"));
-      expect(sourceAccess(second, "https://github.com/owner/shared")).toEqual(O.some("public"));
+      deepStrictEqual(sourceAccess(second, shared), O.some("public"));
+      deepStrictEqual(sourceAccess(second, "https://github.com/owner/shared"), O.some("public"));
     })
   );
 
@@ -143,7 +144,7 @@ it.layer(LibraryPlatform, { timeout: "60 seconds" })("research library private i
       ]);
       expect(A.dedupe(A.map(copies, (document) => document.snapshotPath))).toHaveLength(1);
       // The public copy cites the same source, so the source stays public.
-      expect(sourceAccess(catalog, "https://example.com/private-paper")).toEqual(O.some("public"));
+      deepStrictEqual(sourceAccess(catalog, "https://example.com/private-paper"), O.some("public"));
     })
   );
 

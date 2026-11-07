@@ -37,6 +37,7 @@ import {
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
@@ -55,6 +56,7 @@ import type { LibraryMineRunRequest } from "@beep/repo-cli/commands/Research";
 const UnknownJson = S.fromJsonString(S.Unknown);
 const PageTextsJson = S.String.pipe(S.Array, S.fromJsonString);
 const DerivedTextJson = S.fromJsonString(LibraryMineDerivedText);
+const derivedTextEquivalent = S.toEquivalence(LibraryMineDerivedText);
 const ReceiptJson = S.fromJsonString(LibraryMineReceipt);
 const TriageRecordJson = S.fromJsonString(LibraryTriageRecord);
 const ReadingRecordJson = S.fromJsonString(LibraryReadingRecord);
@@ -579,3 +581,16 @@ it.layer(services, { timeout: "30 seconds" })("research library mine PDFs", (it)
     })
   );
 });
+
+it.effect.prop(
+  "round-trips schema-derived derived-text records through their JSON codec",
+  { derived: LibraryMineDerivedText },
+  ({ derived }) =>
+    Effect.gen(function* () {
+      const record = LibraryMineDerivedText.make(derived);
+      const text = yield* S.encodeEffect(DerivedTextJson)(record);
+      const back = yield* S.decodeEffect(DerivedTextJson)(text);
+      assertTrue(derivedTextEquivalent(back, record));
+    }),
+  { arbitrary: fcRuns(25) }
+);

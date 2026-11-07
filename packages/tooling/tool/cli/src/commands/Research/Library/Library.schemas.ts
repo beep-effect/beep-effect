@@ -11,7 +11,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
-import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
+import { LibraryHopPolicy, LibraryStringList } from "./Library.hopPolicy.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
 
@@ -246,10 +246,7 @@ const topicFields = {
     S.withConstructorDefault(Effect.succeed("")),
     S.withDecodingDefaultKey(Effect.succeed(""))
   ),
-  topics: S.Array(S.String).pipe(
-    S.withConstructorDefault(Effect.succeed([])),
-    S.withDecodingDefaultKey(Effect.succeed([]))
-  ),
+  topics: LibraryStringList,
 };
 
 /**
@@ -410,10 +407,7 @@ export class LibrarySource extends S.Opaque<LibrarySource, { readonly brand: uni
     revision: S.String,
     repository: S.String,
     ownership: LibraryOwnership,
-    aliasIds: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    aliasIds: LibraryStringList,
     versions: S.Array(LibrarySourceVersion).pipe(
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultKey(Effect.succeed([]))
@@ -725,10 +719,7 @@ export class LibraryFinding extends S.Opaque<LibraryFinding, { readonly brand: u
     citoRelation: LibraryCitoRelation,
     span: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultKey(Effect.succeed(""))),
     summary: S.String,
-    topicIds: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    topicIds: LibraryStringList,
     modelRunId: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
@@ -807,10 +798,7 @@ export class LibraryModelRun extends S.Opaque<LibraryModelRun, { readonly brand:
     effort: S.String,
     route: S.String,
     startedAt: S.String,
-    argv: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    argv: LibraryStringList,
   })
     .pipe($I.annoteSchema("LibraryModelRun", { description: "Model execution provenance for recorded findings." }))
     .annotate($I.class("ModelRun", { description: "Model execution provenance for recorded findings." }))
@@ -885,10 +873,7 @@ export class LibraryInventoryOptions extends S.Opaque<LibraryInventoryOptions, {
   S.Struct({
     libraryRoot: S.String,
     inputRoots: S.Array(S.String),
-    privateInputRoots: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    privateInputRoots: LibraryStringList,
   })
     .pipe(
       $I.annoteSchema("LibraryInventoryOptions", {

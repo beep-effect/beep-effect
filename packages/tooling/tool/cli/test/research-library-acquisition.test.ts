@@ -54,6 +54,8 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const encodeCatalogJson = S.encodeEffect(S.fromJsonString(LibraryCatalog));
+
 const LibraryImportPayloadJson = S.fromJsonString(LibraryImportPayload);
 const UnknownJson = S.fromJsonString(S.Unknown);
 const LibraryCaptureCorrectionJson = S.fromJsonString(LibraryCaptureCorrection);
@@ -251,7 +253,7 @@ it.layer(
       yield* withCatalog(root, (catalog) => Effect.succeed(LibraryCatalog.make({ ...catalog, sources: [source] })));
       const canonical = path.join(root, "catalog/library.json");
       const other = LibraryCatalog.make({ ...(yield* loadCatalog(root)), sources: [] });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryCatalog))(other);
+      const encoded = yield* encodeCatalogJson(other);
       yield* fs.writeFileString(canonical, `${encoded}\n`);
       const seen = yield* withCatalog(root, Effect.succeed);
       expect(seen.sources).toHaveLength(0);

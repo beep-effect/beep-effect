@@ -23,7 +23,20 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_research-intake-2026-11-ebddb065462a/verdict.json",
+        "gating": true
+      }
+    ],
+    "pullRequests": [
+      {
+        "number": 2892,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",

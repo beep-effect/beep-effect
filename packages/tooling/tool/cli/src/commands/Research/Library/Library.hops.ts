@@ -19,7 +19,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { libraryEffectiveCaptures } from "./Library.evidence.ts";
-import { LibraryHopPolicy } from "./Library.hopPolicy.ts";
+import { LibraryHopPolicy, LibraryStringList } from "./Library.hopPolicy.ts";
 import { classifyLibraryReference, extractLibraryReferences } from "./Library.inventory.ts";
 import { LibraryCatalog, LibraryDerivation } from "./Library.schemas.ts";
 import { hashBytes } from "./Library.store.ts";
@@ -660,10 +660,7 @@ export class LibraryHopGateInput extends S.Opaque<LibraryHopGateInput, { readonl
   S.Struct({
     concepts: S.Array(LibraryPacketConcept),
     policy: LibraryHopPolicy,
-    explicit: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultKey(Effect.succeed([]))
-    ),
+    explicit: LibraryStringList,
   }).pipe(
     $I.annoteSchema("LibraryHopGateInput", {
       description: "Packet concepts, hop policy and explicit on-demand source ids for one gate evaluation.",

@@ -8,6 +8,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { LibraryStringList } from "./Library.hopPolicy.ts";
 import {
   LibraryAccessClass,
   LibraryArtifact,
@@ -18,11 +19,6 @@ import {
 } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.mine.schemas");
-
-const emptyStrings = S.Array(S.String).pipe(
-  S.withConstructorDefault(Effect.succeed([])),
-  S.withDecodingDefaultKey(Effect.succeed([]))
-);
 
 /**
  * Mining tier: T1 triage, T2 deep read, T3 session synthesis.
@@ -488,7 +484,7 @@ export class LibrarySynthesisAuthor extends S.Opaque<LibrarySynthesisAuthor, { r
     model: S.NonEmptyString,
     effort: S.NonEmptyString,
     route: S.NonEmptyString,
-    argv: emptyStrings,
+    argv: LibraryStringList,
   }).pipe($I.annoteSchema("LibrarySynthesisAuthor", { description: "Orchestrator that authored a synthesis." }))
 ) {}
 
@@ -511,7 +507,7 @@ export class LibrarySynthesisFinding extends S.Opaque<LibrarySynthesisFinding, {
     citoRelation: LibraryCitoRelation,
     span: S.NonEmptyString,
     summary: S.String,
-    topicIds: emptyStrings,
+    topicIds: LibraryStringList,
   }).pipe($I.annoteSchema("LibrarySynthesisFinding", { description: "A T3 finding bound to a readable capture." }))
 ) {}
 

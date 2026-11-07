@@ -11,6 +11,28 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Research/Library/Library.hopPolicy");
 
 /**
+ * String list that decodes and constructs as empty when the key is absent.
+ *
+ * **Example** (Default an omitted list)
+ *
+ * ```ts
+ * import { LibraryStringList } from "@beep/repo-cli/commands/Research/Library/Library.hopPolicy"
+ * import * as S from "effect/Schema"
+ *
+ * const Ids = S.Struct({ ids: LibraryStringList })
+ * console.log(S.decodeUnknownSync(Ids)({}).ids) // []
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LibraryStringList = S.Array(S.String).pipe(
+  S.withConstructorDefault(Effect.succeed([])),
+  S.withDecodingDefaultKey(Effect.succeed([])),
+  $I.annoteSchema("LibraryStringList", { description: "String list defaulting to empty when omitted." })
+);
+
+/**
  * Social, profile, consent and brand-asset hosts whose hop-2 links are page chrome, not citations.
  *
  * **Details**
