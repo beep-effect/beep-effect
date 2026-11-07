@@ -31,13 +31,17 @@
       },
       {
         "number": 2880,
+        "role": "supporting"
+      },
+      {
+        "number": 2882,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_research-library-routes-adopt-ad677b8ed14a/verdict.json",
+        "ref": ".beep/yeet/runs/docs_research-library-routes-refinal-c00b652bab7e/verdict.json",
         "gating": true
       }
     ]
@@ -112,6 +116,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2880
+    "finalPullRequest": 2882
   }
 }

@@ -38,8 +38,11 @@ P4 Close — re-final the closeout through a goals-only PR, then verify and adop
 Implementation PR [#2868](https://github.com/beep-effect/beep-effect/pull/2868)
 merged as `821f4287e2` over attributed S11 reds. Its merge-time completion receipt
 is unsatisfied. Re-final PR [#2880](https://github.com/beep-effect/beep-effect/pull/2880)
-re-finals the existing reflection and closeout proposal
-through the strict merge gate; it changes no implementation or acceptance criteria.
+merged as `9bc3bffb27` with all 15 required checks green, but before the review
+window elapsed and before its monitor recorded readiness. Completion remains
+unknown. Second re-final [#2882](https://github.com/beep-effect/beep-effect/pull/2882)
+binds a new publish verdict and must reach
+`merge-ready: yes` before merging. It changes no implementation or acceptance criteria.
 
 ## Latest Evidence
 
