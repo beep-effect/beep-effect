@@ -666,7 +666,7 @@ export const scenarios = <E>({
           const list = yield* V.DestinationList;
           const queue = yield* V.OperationQueue;
           const status = yield* V.VaultSyncStatus;
-          yield* eventually(list.query(V.OrgKey.make("1")), O.isSome);
+          yield* eventually(list.query(V.WorkspaceKey.make("1:1")), O.isSome);
           const rows = yield* eventually(queue.query(V.SyncDestination.ref(destination)), O.isSome);
           expect(O.isSome(rows) && H.size(rows.value)).toBeGreaterThan(0);
           yield* eventually(status.query(V.SyncDestination.ref(destination)), O.isSome);

@@ -28,6 +28,9 @@ const Receipt = S.Struct({ remoteId: V.RemoteItemId, name: S.String, parentRemot
 const Stored = S.Array(S.Struct({ fingerprint: S.String, result: S.NullOr(S.String) })).pipe(
   $I.annoteSchema("StoredBoxReceipt", { description: "Persisted intent fingerprint and optional acknowledged result." })
 );
+const localOperations = ["local-root", "stale-input"];
+const isLocalFailure = (error: D.DmsMirrorUnavailable | BoxMirrorUnavailable): error is BoxMirrorUnavailable =>
+  error._tag === "BoxMirrorUnavailable" && A.contains(localOperations, error.operation);
 const unavailable = (operation: string) =>
   BoxMirrorUnavailable.make({
     retryable: false,
@@ -137,7 +140,18 @@ export const BoxMirrorLive = BoxMirror.toLayer(
         );
         return found.value;
       }
-      const item = yield* call.pipe(Effect.mapError(() => unavailable("uncertain-outcome-held")));
+      const item = yield* call.pipe(
+        Effect.catch((error) =>
+          // A local read failure happens before any Box request, so nothing can be in doubt:
+          // release the claim and report it. Anything else may have reached Box and stays held.
+          isLocalFailure(error)
+            ? sql`DELETE FROM documents_sync_box_receipt WHERE operation_id = ${receiptId}`.pipe(
+                Effect.orDie,
+                Effect.andThen(Effect.fail(error))
+              )
+            : Effect.fail(unavailable("uncertain-outcome-held"))
+        )
+      );
       const receipt = { remoteId: item.remoteId, name: item.name, parentRemoteId: O.getOrNull(item.parentRemoteId) };
       const result = yield* encode(receipt).pipe(Effect.orDie);
       yield* sql`UPDATE documents_sync_box_receipt SET result = ${result} WHERE operation_id = ${receiptId}`.pipe(
@@ -156,6 +170,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       return yield* mutation(args.operationId, args.generation, encoded, call);
     });
     const implementation: Context.Service.Shape<typeof BoxMirror> = {
+      probe: () => Effect.map(availability.refresh, (result) => ({ connected: result.connected })),
       resolveRoot: () => Effect.map(rootId, (remoteId) => ({ remoteId })),
       ensureFolder: Effect.fnUntraced(function* (args) {
         const parentRemoteId = yield* parent(args.parentRemoteId);

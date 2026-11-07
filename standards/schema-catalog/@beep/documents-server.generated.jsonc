@@ -28,7 +28,7 @@
     {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"ObservedFile","kind":"struct-const","owner":"@beep/documents-server","identity":"ObservedFile","description":"A safely read regular vault file."},
     {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"ObservedFolder","kind":"struct-const","owner":"@beep/documents-server","identity":"ObservedFolder","description":"A visible directory within the canonical vault root."},
     {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"VaultScanObservation","kind":"struct-const","owner":"@beep/documents-server","identity":"VaultScanObservation","description":"Files and folders observed by a safe vault scan."},
-    {"file":"packages/documents/server/src/aggregates/Sync/VaultSyncModel.service.ts","symbol":"VaultSyncRootRegistryLive","kind":"struct-const","owner":"@beep/documents-server","identity":"resolveRoot"},
+    {"file":"packages/documents/server/src/aggregates/Sync/VaultSyncModel.service.ts","symbol":"ensureVaultSyncOwnerMembership","kind":"codec","owner":"@beep/documents-server","identity":"ensureVaultSyncOwnerMembership"},
     {"file":"packages/documents/server/src/aggregates/Sync/VaultSyncPass.saga-handlers.ts","symbol":"VaultSyncPassLive","kind":"struct-const","owner":"@beep/documents-server"}
   ]
 }

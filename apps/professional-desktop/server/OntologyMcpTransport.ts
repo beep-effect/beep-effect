@@ -54,7 +54,13 @@ const ontologyMcpOriginDecisions = Metric.counter("desktop_ontology_mcp_origin_d
   incremental: true,
 });
 
-const ontologyMcpAllowedOrigins: ReadonlyArray<string> = [
+/**
+ * Browser origins allowed to reach sidecar MCP routes.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const ontologyMcpAllowedOrigins: ReadonlyArray<string> = [
   // Canonical portless dev origin; the 1421 entries cover the PORTLESS=0
   // diagnostic bypass (vite falls back to --port 1421).
   "http://professional-desktop.beep.localhost:1355",
@@ -107,7 +113,25 @@ const originMiddleware = HttpMiddleware.make((effect) =>
   })
 );
 
-const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted) =>
+/**
+ * Origin allowlist, launch-token check and CORS for a sidecar MCP route.
+ *
+ * **Details**
+ *
+ * Shared by the ontology and vault-sync MCP routes so both authenticate the same way.
+ *
+ * **Example** (Build the security middleware)
+ *
+ * ```ts
+ * import * as Redacted from "effect/Redacted";
+ * import { desktopMcpSecurityMiddleware } from "./OntologyMcpTransport.ts"
+ * const security = desktopMcpSecurityMiddleware(Redacted.make("test-token"))
+ * console.log(typeof security.layer)
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export const desktopMcpSecurityMiddleware = (token: Redacted.Redacted) =>
   HttpRouter.middleware(originMiddleware)
     .combine(token.pipe(requireRpcSessionToken, (middleware) => HttpRouter.middleware(middleware)))
     .combine(
@@ -184,7 +208,7 @@ export const makeOntologyMcpTransportLayer = (options: {
   readonly egressFetch?: typeof globalThis.fetch | undefined;
 }) => {
   const approvedTools = options.approvedMutationTools ?? [];
-  const security = ontologyMcpSecurityMiddleware(options.token);
+  const security = desktopMcpSecurityMiddleware(options.token);
   // `layerHttp` fails with `IllegalArgumentError` only on a malformed path or an
   // empty protocol list, both of which are literals here — so a failure is a
   // defect, not a startup condition the desktop shell can report.

@@ -6,6 +6,7 @@
  */
 import * as Domain from "@alchemy.run/domain";
 import * as S from "effect/Schema";
+import { Session } from "./Session.middleware.ts";
 import * as E from "./SyncConflict.events.ts";
 import { OperationInput } from "./SyncOperation.events.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
@@ -23,6 +24,7 @@ import * as V from "./Values.ts";
  * @since 0.0.0
  */
 export class ReviewConflict extends Domain.Command("ReviewConflict", {
+  middleware: [Session],
   target: V.ConflictId,
   input: {
     remoteEventId: S.String,

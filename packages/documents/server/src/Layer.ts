@@ -9,11 +9,10 @@
 import { AlchemyPostgres, AlchemyPostgresConfig, ProvenanceMapping } from "@beep/alchemy-postgres";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
-  VaultSyncEngine,
-  VaultSyncReadUnavailable,
-  VaultSyncWriterUnavailable,
-} from "@beep/documents-use-cases/aggregates/Sync/server";
-import { VaultSyncPassModel, VaultSyncPolicies } from "@beep/documents-use-cases/aggregates/VaultSync";
+  VaultSyncPassModel,
+  VaultSyncPolicies,
+  VaultSyncRequestsLive,
+} from "@beep/documents-use-cases/aggregates/VaultSync";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -29,13 +28,11 @@ import {
   ensureSyncCutover,
   LegacySyncAuditLive,
   LegacySyncProjections,
-  LegacySyncReadModel,
   LegacySyncReadModelLive,
-  makeVaultSyncModelEngine,
   SyncAdmissionOptions,
   VaultSyncMirrorRoot,
   VaultSyncPassLive,
-  VaultSyncRootRegistryLive,
+  VaultSyncRootFromWorkspaceLive,
 } from "./aggregates/Sync/index.ts";
 
 /**
@@ -133,62 +130,44 @@ const platformConfig = AlchemyPostgresConfig.make({
 });
 
 const ModelHost = VaultSyncPassModel.layer(
-  Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive, LegacySyncProjections)
+  Layer.mergeAll(VaultSyncPolicies, VaultSyncRequestsLive, VaultSyncPassLive, LegacySyncProjections)
 ).pipe(
   Layer.provide(BoxMirrorLive),
-  Layer.provide(Layer.mergeAll(LegacySyncAuditLive, NoBoxMirrorEvidence, VaultSyncRootRegistryLive)),
+  Layer.provide(Layer.mergeAll(LegacySyncAuditLive, NoBoxMirrorEvidence, VaultSyncRootFromWorkspaceLive)),
   Layer.provide(AlchemyPostgres.layer(platformConfig)),
   // A store whose event tables cannot be created is not a recoverable sync state.
   Layer.orDie
 );
 
-const maintenanceEngine = Effect.fnUntraced(function* (reason: string) {
-  const reads = yield* LegacySyncReadModel;
-  const message = `vault sync is in maintenance: ${reason}`;
-  const refused = Effect.fn("VaultSyncEngine.maintenanceWrite")(() =>
-    Effect.fail(VaultSyncWriterUnavailable.make({ reason: message }))
-  );
-  return VaultSyncEngine.of({
-    listOpenConflicts: Effect.fn("VaultSyncEngine.maintenanceConflicts")((input) =>
-      reads.openConflicts(input.workspaceId)
-    ),
-    markConflictReviewed: refused,
-    status: Effect.fn("VaultSyncEngine.maintenanceStatus")(() =>
-      Effect.fail(VaultSyncReadUnavailable.make({ reason: message }))
-    ),
-    syncOnce: refused,
-  });
-});
-
-const EngineLive = Layer.effect(
-  VaultSyncEngine,
+// Genesis and admission run once, after the host is built and before any consumer gets the Model.
+const Admission = Layer.effectDiscard(
   Effect.gen(function* () {
     const root = yield* VaultSyncMirrorRoot;
-    // Genesis and admission run once, before the engine accepts a command.
-    return yield* ensureSyncCutover(SyncAdmissionOptions.make({ mirrorRootName: root.name })).pipe(
-      Effect.matchCauseEffect({
-        onFailure: (cause) =>
-          Effect.logError("vault sync admission refused; serving read-only maintenance").pipe(
-            Effect.annotateLogs({ cause: Cause.pretty(cause) }),
-            Effect.andThen(maintenanceEngine(Cause.hasFails(cause) ? "admission refused" : "admission failed"))
-          ),
-        onSuccess: () => makeVaultSyncModelEngine(),
-      })
-    );
-  })
+    yield* ensureSyncCutover(SyncAdmissionOptions.make({ mirrorRootName: root.name }));
+  }).pipe(
+    Effect.tapCause((cause) =>
+      Effect.logError("vault sync admission refused; the Model is not served").pipe(
+        Effect.annotateLogs({ cause: Cause.pretty(cause) })
+      )
+    ),
+    Effect.withSpan("DocumentsVaultSync.admission")
+  )
 );
 
 /**
- * Vault sync over the alchemy Model as the only writer of the four legacy tables.
+ * The vault-sync Model as the only writer of the four legacy sync tables.
  *
  * **Details**
  *
  * Hosts `VaultSyncPassModel` with its policies, the durable pass saga, the
- * BoxMirror adapter and the SQL projections on `AlchemyPostgres.layer()`. On
- * build it runs genesis and admission once (a no-op on an admitted store); if
- * admission refuses, the engine serves reads and refuses writes. Requires the
- * DMS mirror with its availability probe, `SqlClient`, `PostgresDrizzle`,
- * `VaultSyncOwnership`, `VaultSyncMirrorRoot`, and platform filesystem and path.
+ * BoxMirror adapter and the SQL projections on `AlchemyPostgres.layer()`, and
+ * provides the Model's aggregates and Views plus `LegacySyncReadModel`. The
+ * layer finishes building only after genesis and admission succeed (a no-op
+ * on an admitted store); a refusal fails the layer with its typed error so
+ * the host can serve vault sync in maintenance instead. Requires the DMS
+ * mirror with its availability probe, `SqlClient`, `PostgresDrizzle`,
+ * `VaultSyncOwnership`, `VaultSyncMirrorRoot`, `VaultSyncWorkspaceRoots`, and
+ * platform filesystem and path.
  *
  * **Example** (Import DocumentsVaultSyncLive)
  *
@@ -201,8 +180,9 @@ const EngineLive = Layer.effect(
  * @category layers
  * @since 0.0.0
  */
-export const DocumentsVaultSyncLive = EngineLive.pipe(
-  Layer.provide(Layer.mergeAll(ModelHost, LegacySyncAuditLive, LegacySyncReadModelLive, VaultSyncRootRegistryLive))
+export const DocumentsVaultSyncLive = Layer.mergeAll(Admission, LegacySyncReadModelLive).pipe(
+  Layer.provideMerge(ModelHost),
+  Layer.provide(LegacySyncAuditLive)
 );
 
 /**

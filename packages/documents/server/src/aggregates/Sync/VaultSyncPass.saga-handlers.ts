@@ -93,14 +93,23 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
     return Effect.fn("Documents.VaultSyncPass")(function* ({
       key,
       destinationId,
+      probeOnly,
     }: {
       readonly key: string;
       readonly destinationId: V.DestinationId;
+      readonly probeOnly?: boolean;
     }): Effect.fn.Return<
       { readonly operationsSucceeded: number; readonly conflicts: number },
       never,
       WorkflowEngine.WorkflowEngine | WorkflowEngine.WorkflowInstance
     > {
+      if (probeOnly === true) {
+        yield* Activity.make({
+          name: "refresh-probe",
+          execute: mirror.probe({ destinationId }).pipe(Effect.orDie),
+        });
+        return { operationsSucceeded: 0, conflicts: 0 };
+      }
       const options = (step: string) => ({ commandId: `${key}/${step}` });
       yield* Activity.make({
         name: "probe",

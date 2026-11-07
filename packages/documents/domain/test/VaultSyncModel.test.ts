@@ -199,7 +199,7 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
         queue.query(V.SyncDestination.ref(destination)),
         (s) => O.isSome(s) && O.exists(H.get(s.value, superseded), (v) => v?.status === "superseded")
       );
-      yield* eventually(list.query(V.OrgKey.make("1")), (s) => O.isSome(s) && H.size(s.value) === 1);
+      yield* eventually(list.query(V.WorkspaceKey.make("1:1")), (s) => O.isSome(s) && H.size(s.value) === 1);
       const summary = yield* eventually(
         status.query(V.SyncDestination.ref(destination)),
         (s) => O.isSome(s) && H.size(s.value.items) === 1 && H.size(s.value.operations) === 2

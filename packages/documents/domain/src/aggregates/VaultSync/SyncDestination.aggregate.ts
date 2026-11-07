@@ -35,6 +35,8 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
     G.ImportCursorGenesis,
     G.ImportDestinationGenesis,
     C.RegisterDestination,
+    C.RequestVaultSync,
+    C.ProbeDestination,
     C.RenameDestination,
     C.ResolveDestinationRoot,
     C.PauseDestination,
@@ -50,6 +52,16 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
       s._tag === "Unregistered"
         ? [G.DestinationGenesisImported.make(Struct.omit(c, ["_tag"]))]
         : SyncRuleViolation.make({ rule: "genesis-requires-empty-stream", evidence: c.importId }),
+    RequestVaultSync: (s, c) =>
+      s._tag === "Registered"
+        ? s.paused
+          ? refused("destination-paused")
+          : [C.VaultSyncRequested.make({ requestId: c.requestId })]
+        : refused("not-registered"),
+    ProbeDestination: (s, c) =>
+      s._tag === "Registered"
+        ? [C.DestinationProbeRequested.make({ requestId: c.requestId })]
+        : refused("not-registered"),
     RegisterDestination: (s, c) =>
       s._tag === "Unregistered"
         ? [C.DestinationRegistered.make(Struct.omit(c, ["_tag"]))]
@@ -108,6 +120,8 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
             ...(e.selected ? { cursor: e.row.stream_position, cursorError: e.row.last_error } : {}),
           },
     DestinationGenesisImported: (_s, e) => e.record,
+    VaultSyncRequested: (s) => s,
+    DestinationProbeRequested: (s) => s,
     DestinationRegistered: (_, e): C.DestinationState => ({
       _tag: "Registered",
       orgId: e.orgId,

@@ -7201,6 +7201,42 @@
             "branches": 0,
             "functions": 0
           }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/Session.context.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/Session.middleware.ts": {
+          "lines": 15.38,
+          "statements": 14.28,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 11,
+            "statements": 12,
+            "branches": 14,
+            "functions": 2
+          }
+        },
+        "packages/documents/domain/src/aggregates/VaultSync/VaultSyncRequest.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
         }
       }
     },
@@ -7491,6 +7527,66 @@
             "statements": 11,
             "branches": 4,
             "functions": 8
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncApi.ts": {
+          "lines": 72.41,
+          "statements": 72.41,
+          "branches": 0,
+          "functions": 50,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 16,
+            "functions": 8
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncMcp.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncRpcs.api.ts": {
+          "lines": 100,
+          "statements": 97.26,
+          "branches": 55.55,
+          "functions": 92.59,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 8,
+            "functions": 2
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncSession.repository.ts": {
+          "lines": 88.88,
+          "statements": 88.88,
+          "branches": 100,
+          "functions": 75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSyncSession.ts": {
+          "lines": 93.22,
+          "statements": 87.5,
+          "branches": 80.76,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 4,
+            "statements": 8,
+            "branches": 5,
+            "functions": 1
           }
         }
       }
@@ -8052,6 +8148,30 @@
           }
         },
         "packages/documents/use-cases/src/aggregates/VaultSync/VaultSyncPass.saga.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/aggregates/VaultSync/Api.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/aggregates/VaultSync/VaultSyncRequests.policy.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

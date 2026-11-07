@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -24,20 +23,12 @@ import type * as Layer from "effect/Layer";
 const rpcAuthDecisions = Metric.counter("desktop_rpc_auth_decisions_total", { incremental: true });
 
 /**
- * Environment variable carrying the per-launch sidecar RPC session token.
+ * Per-launch session token configuration, shared with the runtime's vault-sync binding.
  *
  * @category configuration
  * @since 0.0.0
  */
-const DESKTOP_RPC_SESSION_TOKEN_ENV = "BEEP_DESKTOP_RPC_SESSION_TOKEN" as const;
-
-/**
- * Optional redacted session token read by the sidecar on boot.
- *
- * @category configuration
- * @since 0.0.0
- */
-export const DesktopRpcSessionToken = Config.Redacted(DESKTOP_RPC_SESSION_TOKEN_ENV).pipe(Config.option);
+export { DesktopRpcSessionToken, DesktopRpcSessionTokenRequired } from "@/runtime/SessionToken";
 
 /**
  * Build the HTTP Authorization header value for a desktop RPC session token.

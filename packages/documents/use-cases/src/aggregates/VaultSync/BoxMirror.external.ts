@@ -59,6 +59,7 @@ const error = BoxMirrorUnavailable;
  * @since 0.0.0
  */
 export class BoxMirror extends Domain.ExternalSystem("BoxMirror", {
+  probe: { args: destination, success: { connected: S.Boolean }, error },
   resolveRoot: { args: { ...destination, name: S.NonEmptyString }, success: remote, error },
   ensureFolder: {
     args: { ...mutation, path: V.VaultRelPath, parentRemoteId: V.RemoteItemId },

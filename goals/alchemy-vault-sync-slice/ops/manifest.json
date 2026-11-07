@@ -45,6 +45,7 @@
     "research/07-cutover-design.md",
     "research/08-pr3b1-handoff.md",
     "research/09-pr3b2-handoff.md",
+    "research/10-pr3c-handoff.md",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/cache-baseline-request-pr2a.json",
@@ -54,6 +55,7 @@
     "research/cache-baseline-request-pr3b1.json",
     "research/cache-baseline-request-pr3b2-main.json",
     "research/cache-baseline-request-pr3b2.json",
+    "research/cache-baseline-request-pr3c.json",
     "research/cache-baseline-request.json",
     "research/cache-baseline-review-pr2a.md",
     "research/cache-baseline-review-pr2b-main.md",
@@ -62,7 +64,9 @@
     "research/cache-baseline-review-pr3b1.md",
     "research/cache-baseline-review-pr3b2-main.md",
     "research/cache-baseline-review-pr3b2.md",
-    "research/cache-baseline-review.md"
+    "research/cache-baseline-review-pr3c.md",
+    "research/cache-baseline-review.md",
+    "research/pr3c-scoped-lints.py"
   ],
   "agentLaunchers": [
     {

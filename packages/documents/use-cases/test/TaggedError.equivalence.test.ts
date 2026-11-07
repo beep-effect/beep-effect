@@ -7,9 +7,7 @@ import {
   DmsMirrorUnavailable,
   VaultScanFailed,
   VaultSyncActionError,
-  VaultSyncConflictNotFound,
   VaultSyncReadUnavailable,
-  VaultSyncWriterUnavailable,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
@@ -69,24 +67,12 @@ describe("documents-use-cases tagged-error declared equivalence", () => {
     );
   });
 
-  it("compares vault sync read and writer errors by their declared fields", () => {
-    expectDeclaredEquivalence(
-      VaultSyncConflictNotFound,
-      VaultSyncConflictNotFound.make({ conflictId: 1 }),
-      VaultSyncConflictNotFound.make({ conflictId: 1 }),
-      VaultSyncConflictNotFound.make({ conflictId: 2 })
-    );
+  it("compares vault sync read-model errors by their declared fields", () => {
     expectDeclaredEquivalence(
       VaultSyncReadUnavailable,
       VaultSyncReadUnavailable.make({ reason: "database unavailable" }),
       VaultSyncReadUnavailable.make({ reason: "database unavailable" }),
       VaultSyncReadUnavailable.make({ reason: "transaction aborted" })
-    );
-    expectDeclaredEquivalence(
-      VaultSyncWriterUnavailable,
-      VaultSyncWriterUnavailable.make({ reason: "pass failed" }),
-      VaultSyncWriterUnavailable.make({ reason: "pass failed" }),
-      VaultSyncWriterUnavailable.make({ reason: "admission refused" })
     );
   });
 });

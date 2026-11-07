@@ -21,6 +21,7 @@ import { DbSchema as ArchitectureLabDbSchema } from "@beep/architecture-lab-tabl
 import { DbSchema as DocumentsDbSchema } from "@beep/documents-tables/tables";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
 import { DbSchema as LawPracticeDbSchema } from "@beep/law-practice-tables";
+import { Membership } from "@beep/shared-tables/entities";
 import { DbSchema as WorkspaceDbSchema } from "@beep/workspace-tables";
 
 /**
@@ -550,3 +551,25 @@ export const lawPracticeCorrectionDeltaTable: typeof LawPracticeDbSchema.correct
  */
 export const lawPracticeLegalOppositionCandidateTable: typeof LawPracticeDbSchema.legalOppositionCandidate =
   LawPracticeDbSchema.legalOppositionCandidate;
+
+/**
+ * Shared organization membership table (drizzle-kit generate surface).
+ *
+ * **Details**
+ *
+ * The vault-sync sessions read current grants from active, undeleted rows on
+ * every call, so every store that hosts the Model needs this table.
+ *
+ * **Example** (Read the membership table name)
+ *
+ * ```ts
+ * import { sharedMembershipTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
+ *
+ * console.log(getTableName(sharedMembershipTable)) // "shared_membership"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const sharedMembershipTable: typeof Membership.Table = Membership.Table;
