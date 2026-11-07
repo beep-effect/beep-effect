@@ -45,6 +45,7 @@ const Manifest = S.Struct({
   attemptSequence: S.Natural,
 });
 const Count = S.Tuple([S.Struct({ n: S.Natural })]);
+const decodeQuotaCount = S.decodeUnknownEffect(Count);
 const StoredRows = S.Array(S.Struct({ ordinal: S.Natural, name: S.String, payload: S.String, digest: Sha256Hex }));
 const sequence = (sql: SqlClient.SqlClient, name: string) =>
   sql`SELECT coalesce((SELECT seq FROM sqlite_sequence WHERE name=${name}),0) AS n`.pipe(
@@ -238,6 +239,13 @@ export const makeEvidenceRecovery = Effect.fn("AiMetrics.makeEvidenceRecovery")(
     const manifest = yield* readManifest(expectedDigest);
     if (manifest.state === "restored") return "already-restored";
     yield* requireCurrentGeneration(manifest, current);
+    // Lifetime quota snapshots survive retirement. New-window acknowledgments must
+    // still prevent rollback, even though old-window snapshots intentionally remain.
+    const quota =
+      yield* sql`SELECT count(*) AS n FROM observation_availability_snapshots WHERE evidence_epoch>=${current.epoch}`.pipe(
+        Effect.flatMap(decodeQuotaCount)
+      );
+    if (quota[0].n !== 0) return yield* Effect.fail("conflict");
     yield* requireEmptyTables();
     if (manifest.rows > maxRows || manifest.bytes > maxBytes) return yield* Effect.fail("capacity");
     const progress = yield* restoreRows();

@@ -24,7 +24,7 @@
 - GitHub Docs, "Removing sensitive data from a repository" — <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository> (RESEARCH.md, GitHub section)
 - git-filter-repo README — <https://github.com/newren/git-filter-repo>
 - git-filter-repo `COPYING` — <https://raw.githubusercontent.com/newren/git-filter-repo/main/COPYING>
-- git-filter-repo manual — `docs/man1/git-filter-repo.1` on the `docs` branch of `newren/git-filter-repo` (RESEARCH.md, filter-repo section)
+- git-filter-repo manual — `newren/git-filter-repo:docs/man1/git-filter-repo.1` on the `docs` branch of `newren/git-filter-repo` (RESEARCH.md, filter-repo section)
 
 ## 4. In-repo capability references
 

@@ -27,13 +27,17 @@
     "pullRequests": [
       {
         "number": 2785,
+        "role": "supporting"
+      },
+      {
+        "number": 2858,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_git-history-rewrite-exploration-467a1506e050/verdict.json",
+        "ref": ".beep/yeet/runs/fix_history-semantic-delta-refs-cda2207dedd5/verdict.json",
         "gating": true
       }
     ]
@@ -100,6 +104,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2785
+    "finalPullRequest": 2858
   }
 }
