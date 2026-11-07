@@ -126,13 +126,13 @@ export const makeObservationOutcomes = Effect.fn("AiMetrics.makeObservationOutco
     const receipts = yield* launches.read(launchId, epoch);
     const prepared = A.findFirst(receipts, (r) => r.fact._tag === "Prepared");
     if (O.isNone(prepared) || prepared.value.fact._tag !== "Prepared") return O.none<ObservationLaunchOutcome>();
-    const processId = A.findFirstMap(receipts, (r) =>
+    const processId = A.findFirst(receipts, (r) =>
       r.fact._tag === "Started" ? O.some(r.fact.processInstanceId) : O.none()
     );
-    const session = A.findFirstMap(receipts, (r) =>
+    const session = A.findFirst(receipts, (r) =>
       r.fact._tag === "SessionBound" ? O.some(r.fact.sourceSessionId) : O.none()
     );
-    const terminal = A.findFirstMap(receipts, (r) =>
+    const terminal = A.findFirst(receipts, (r) =>
       r.fact._tag === "Finished" ? O.some({ outcome: r.fact.outcome, recordedAt: r.recordedAt }) : O.none()
     );
     return O.some(
