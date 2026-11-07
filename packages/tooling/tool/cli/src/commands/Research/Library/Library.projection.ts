@@ -21,7 +21,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { assembleLibraryOntology, libraryReferenceClass } from "./Library.ontology.ts";
+import { assembleLibraryOntology, libraryAbsentFindingBinding, libraryReferenceClass } from "./Library.ontology.ts";
 import type { AssembledClass } from "@beep/ontology";
 import type { LibraryCatalog } from "./Library.schemas.ts";
 
@@ -32,13 +32,28 @@ const text = (value: unknown, key: string): string => {
   const item = get(value, key);
   return P.isString(item) ? item : "";
 };
-class Packet extends S.Opaque<Packet, { readonly brand: unique symbol }>()(
+class GoalPacket extends S.Opaque<GoalPacket, { readonly brand: unique symbol }>()(
   S.Struct({
     initiative: S.Struct({ id: S.String, title: S.String }),
-  }).pipe($I.annoteSchema("TopicPacket", { description: "Minimal packet topic metadata." }))
+  }).pipe($I.annoteSchema("TopicPacket", { description: "Minimal goal packet topic metadata." }))
 ) {}
 
-const PacketJson = S.fromJsonString(Packet);
+class ExplorationPacket extends S.Opaque<ExplorationPacket, { readonly brand: unique symbol }>()(
+  S.Struct({
+    exploration: S.Struct({ slug: S.String, title: S.String }),
+  }).pipe($I.annoteSchema("TopicExplorationPacket", { description: "Minimal exploration packet topic metadata." }))
+) {}
+
+const PacketJson = S.fromJsonString(S.Union([GoalPacket, ExplorationPacket]));
+
+const packetTopic = (kind: string, slug: string, packet: GoalPacket | ExplorationPacket) =>
+  "initiative" in packet
+    ? LibraryTopic.make({ id: `${kind}/${slug}`, initiativeId: packet.initiative.id, title: packet.initiative.title })
+    : LibraryTopic.make({
+        id: `${kind}/${slug}`,
+        initiativeId: packet.exploration.slug,
+        title: packet.exploration.title,
+      });
 
 /**
  * Packet-backed SKOS concept metadata.
@@ -61,6 +76,25 @@ export class LibraryTopic extends S.Opaque<LibraryTopic, { readonly brand: uniqu
   }).pipe($I.annoteSchema("LibraryTopic", { description: "Packet identifier and preferred title." }))
 ) {}
 
+type PacketRead =
+  | { readonly _tag: "Topic"; readonly topic: LibraryTopic }
+  | { readonly _tag: "Unreadable" }
+  | { readonly _tag: "NotAPacket" };
+
+// Loose files and template folders beside the packets carry no manifest and are not topics.
+const readPacketTopic = Effect.fnUntraced(function* (manifest: string, kind: string, slug: string) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(manifest).pipe(Effect.orElseSucceed(() => false))))
+    return { _tag: "NotAPacket" } satisfies PacketRead as PacketRead;
+  const packet = yield* fs
+    .readFileString(manifest)
+    .pipe(Effect.flatMap(S.decodeUnknownEffect(PacketJson)), Effect.option);
+  return O.match(packet, {
+    onNone: (): PacketRead => ({ _tag: "Unreadable" }),
+    onSome: (value): PacketRead => ({ _tag: "Topic", topic: packetTopic(kind, slug, value) }),
+  });
+});
+
 /**
  * Read packet manifests without admitting their unrelated fields.
  * **Example** (Prepare topic discovery)
@@ -74,32 +108,26 @@ export class LibraryTopic extends S.Opaque<LibraryTopic, { readonly brand: uniqu
 export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: string, reportWarnings = true) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const topics: Array<LibraryTopic> = [];
-  let warnings = 0;
-  for (const kind of ["goals", "explorations"]) {
-    const directory = path.join(repoRoot, kind);
-    const entries = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(() => []));
-    for (const slug of A.sort(entries, Str.Order)) {
-      const packet = yield* fs
-        .readFileString(path.join(directory, slug, "ops/manifest.json"))
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(PacketJson)), Effect.option);
-      if (O.isNone(packet)) {
-        warnings++;
-        continue;
-      }
-      topics.push(
-        LibraryTopic.make({
-          id: `${kind}/${slug}`,
-          initiativeId: packet.value.initiative.id,
-          title: packet.value.initiative.title,
-        })
-      );
-    }
-  }
+  const listed = yield* Effect.forEach(["goals", "explorations"], (kind) =>
+    fs.readDirectory(path.join(repoRoot, kind)).pipe(
+      Effect.orElseSucceed(A.empty<string>),
+      Effect.map((entries) => A.map(A.sort(entries, Str.Order), (slug) => ({ kind, slug })))
+    )
+  );
+  const reads = yield* Effect.forEach(A.flatten(listed), ({ kind, slug }) =>
+    readPacketTopic(path.join(repoRoot, kind, slug, "ops/manifest.json"), kind, slug)
+  );
+  const topics = A.flatMap(reads, (read) => (read._tag === "Topic" ? [read.topic] : []));
+  const warnings = A.filter(reads, (read) => read._tag === "Unreadable").length;
   if (warnings > 0 && reportWarnings === true)
     yield* Effect.logWarning(`library topics: skipped=${warnings} unreadable manifests`);
   return topics;
 });
+
+// Keys whose value names any catalogued record. A derivation's parent is a Report on hop 1 and a
+// Source on hop 2, so the projection links whichever record the id names.
+const linksKnownRecord = (name: string, key: string): boolean =>
+  A.contains(["derivedId", "intakeId"], key) || (name === "Derivation" && key === "sourceId");
 
 /**
  * Project decoded catalog records using predicate IRIs supplied by the fold.
@@ -169,7 +197,7 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
   const reference = (name: string, key: string, value: unknown): Rdf.ObjectTerm => {
     if (!P.isString(value)) return literal(value);
     const matched = HashMap.get(key === "intakeId" ? intakeNodes : known, value);
-    if (A.contains(["derivedId", "intakeId"], key) && O.isSome(matched)) return matched.value;
+    if (linksKnownRecord(name, key) && O.isSome(matched)) return matched.value;
     const ref = libraryReferenceClass(name, key);
     if (O.isNone(ref) || !Str.isNonEmpty(value)) return literal(value);
     if (ref.value === "Source") return O.getOrElse(HashMap.get(sourcesByAlias, value), () => iri("Source", value));
@@ -198,7 +226,7 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
     quads.push(Rdf.makeQuad(subject, RDF_TYPE, nn(cls.iri)));
     const projectPredicate = (predicate: AssembledClass["predicates"][number]) => {
       const raw = get(record, predicate.key);
-      if (raw === undefined) return;
+      if (raw === undefined || libraryAbsentFindingBinding(cls.name, predicate.key, raw)) return;
       const values = A.isArray(raw) ? raw : [raw];
       A.forEach(values, (value, index) => {
         const object =

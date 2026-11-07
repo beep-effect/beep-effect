@@ -7,6 +7,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { N3TurtleCodecLive } from "@beep/n3";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
+import { PdfTools } from "@beep/pdf-tools";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -16,6 +17,8 @@ import { LibraryBoxLive } from "./Library.box.ts";
 import { LibraryFirecrawlLive } from "./Library.firecrawl.ts";
 import { importLibraryRoutedResult } from "./Library.importMethods.ts";
 import { migrateLibrary } from "./Library.migrate.ts";
+import { LibraryMineRunnerLive } from "./Library.mine.runner.ts";
+import { mineLibraryRead, mineLibrarySynthesize, mineLibraryTriage } from "./Library.mine.ts";
 import { renderLibraryOntology } from "./Library.ontology.ts";
 import { qualifyLibrary } from "./Library.qualify.ts";
 import { renderLibrary } from "./Library.render.ts";
@@ -42,6 +45,9 @@ export type ResearchLibraryRequirements =
   | Effect.Services<ReturnType<typeof renderLibraryOntology>>
   | Effect.Services<ReturnType<typeof libraryStatus>>
   | Effect.Services<ReturnType<typeof migrateLibrary>>
+  | Effect.Services<ReturnType<typeof mineLibraryTriage>>
+  | Effect.Services<ReturnType<typeof mineLibraryRead>>
+  | Effect.Services<ReturnType<typeof mineLibrarySynthesize>>
   | Effect.Services<ReturnType<typeof acquireLibraryBox>>
   | Effect.Services<ReturnType<typeof libraryHopReport>>;
 
@@ -78,6 +84,13 @@ export class ResearchLibrary extends Context.Service<
     ) => Provided<ReturnType<typeof renderLibraryOntology>>;
     readonly migrate: (...args: Parameters<typeof migrateLibrary>) => Provided<ReturnType<typeof migrateLibrary>>;
     readonly status: (...args: Parameters<typeof libraryStatus>) => Provided<ReturnType<typeof libraryStatus>>;
+    readonly mineTriage: (
+      ...args: Parameters<typeof mineLibraryTriage>
+    ) => Provided<ReturnType<typeof mineLibraryTriage>>;
+    readonly mineRead: (...args: Parameters<typeof mineLibraryRead>) => Provided<ReturnType<typeof mineLibraryRead>>;
+    readonly mineSynthesize: (
+      ...args: Parameters<typeof mineLibrarySynthesize>
+    ) => Provided<ReturnType<typeof mineLibrarySynthesize>>;
     readonly acquireBox: (
       ...args: Parameters<typeof acquireLibraryBox>
     ) => Provided<ReturnType<typeof acquireLibraryBox>>;
@@ -117,6 +130,15 @@ const makeResearchLibrary = Effect.fn("ResearchLibrary.make")(function* () {
     status: Effect.fn("ResearchLibrary.status")((...args) =>
       libraryStatus(...args).pipe(Effect.provide(runtimeContext))
     ),
+    mineTriage: Effect.fn("ResearchLibrary.mineTriage")((...args) =>
+      mineLibraryTriage(...args).pipe(Effect.provide(runtimeContext))
+    ),
+    mineRead: Effect.fn("ResearchLibrary.mineRead")((...args) =>
+      mineLibraryRead(...args).pipe(Effect.provide(runtimeContext))
+    ),
+    mineSynthesize: Effect.fn("ResearchLibrary.mineSynthesize")((...args) =>
+      mineLibrarySynthesize(...args).pipe(Effect.provide(runtimeContext))
+    ),
     acquireBox: Effect.fn("ResearchLibrary.acquireBox")((...args) =>
       acquireLibraryBox(...args).pipe(Effect.provide(runtimeContext))
     ),
@@ -145,5 +167,7 @@ export const ResearchLibraryLive = Layer.effect(ResearchLibrary, makeResearchLib
     OxigraphSparqlQueryServiceLive,
     LibraryFirecrawlLive,
     LibraryBoxLive,
+    LibraryMineRunnerLive,
+    PdfTools.makeLayer(),
   ])
 );

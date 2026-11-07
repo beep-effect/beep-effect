@@ -15,7 +15,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
-import { libraryOutputAncestor } from "./Library.paths.ts";
+import { libraryOutputAncestor, libraryPdfSnapshot } from "./Library.paths.ts";
 import {
   LibraryArtifact,
   LibraryCapture,
@@ -184,7 +184,7 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
           path: document.snapshotPath,
           sha256: document.sha256,
           bytes: document.bytes,
-          mediaType: "text/markdown",
+          mediaType: libraryPdfSnapshot(document.snapshotPath) ? "application/pdf" : "text/markdown",
           role: "report",
         })
       );

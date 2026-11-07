@@ -112,6 +112,8 @@ const fixture = {
   derivations: [
     { id: "d1", sourceId: "s1", derivedId: "f1", intakeId: "i1", rootId: "r1", hopDepth: 1, recordedAt: "2026-11-06" },
     { id: "d2", sourceId: "s1", derivedId: "f1", intakeId: "s1", rootId: "r1", hopDepth: 1, recordedAt: "2026-11-06" },
+    // A recorded hop-1 edge: its parent is the hop-0 report, not a source.
+    { id: "d3", sourceId: "r1", derivedId: "s1", intakeId: "i1", rootId: "r1", hopDepth: 1, recordedAt: "2026-11-06" },
   ],
   modelRuns: [{ id: "m1", model: "fixture", effort: "medium", route: "local", startedAt: "2026-11-06" }],
   intakes: [
@@ -235,6 +237,15 @@ describe("research library ontology", () => {
               Str.endsWith("/Source/s1")(q.object.value)
           )
         ).toBe(true);
+        expect(
+          A.some(
+            dataset.quads,
+            (q) =>
+              Str.endsWith("/Derivation/d3")(q.subject.value) &&
+              Str.endsWith("/sourceId")(q.predicate.value) &&
+              Str.endsWith("/Report/r1")(q.object.value)
+          )
+        ).toBe(true);
         const missing = yield* validate(
           Rdf.makeDataset(A.filter(dataset.quads, (q) => !Str.endsWith("/summary")(q.predicate.value)))
         );
@@ -305,18 +316,33 @@ describe("research library ontology", () => {
         const nextShapes = yield* fs.readFileString(shapesPath);
         expect(nextTbox).toBe(tbox);
         expect(nextShapes).toBe(shapes);
-        for (const kind of ["goals", "explorations"]) {
+        const manifests = [
+          ["goals", { initiative: { id: "example", title: "Example" }, ignored: "extra metadata" }],
+          [
+            "explorations",
+            {
+              schemaVersion: "exploration-manifest/v1",
+              exploration: { slug: "example-exploration", title: "Example exploration", status: "active" },
+            },
+          ],
+        ] as const;
+        for (const [kind, manifest] of manifests) {
           const dir = path.join(root, kind, "example", "ops");
           yield* fs.makeDirectory(dir, { recursive: true });
-          const json = yield* S.encodeEffect(SUnknownJson)({
-            initiative: { id: "example", title: "Example" },
-            ignored: "extra metadata",
-          });
+          const json = yield* S.encodeEffect(SUnknownJson)(manifest);
           yield* fs.writeFileString(path.join(dir, "manifest.json"), json);
         }
         yield* fs.makeDirectory(path.join(root, "goals/broken"), { recursive: true });
+        // A manifest that exists but does not decode is skipped and counted, not fatal.
+        yield* fs.makeDirectory(path.join(root, "goals/garbled/ops"), { recursive: true });
+        yield* fs.writeFileString(path.join(root, "goals/garbled/ops/manifest.json"), "not json");
+        const quiet = yield* libraryTopics(root, false);
         const topics = yield* libraryTopics(root);
-        expect(A.map(topics, (topic) => topic.id)).toEqual(["goals/example", "explorations/example"]);
+        expect(quiet).toEqual(topics);
+        expect(A.map(topics, (topic) => [topic.id, topic.initiativeId, topic.title])).toEqual([
+          ["goals/example", "example", "Example"],
+          ["explorations/example", "example-exploration", "Example exploration"],
+        ]);
       })
     );
   });

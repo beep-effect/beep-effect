@@ -22,6 +22,14 @@ export * from "../commands/Research/Library/Library.evidence.ts";
 export { acquireLibraryWeb, LibraryFirecrawlLive } from "../commands/Research/Library/Library.firecrawl.ts";
 export { acquireLibraryGithub } from "../commands/Research/Library/Library.github.ts";
 export * from "../commands/Research/Library/Library.integrity.ts";
+export * from "../commands/Research/Library/Library.mine.text.ts";
+export {
+  checkLibraryMineSpans,
+  importLibraryMineRecords,
+  libraryMinePdfArtifact,
+  libraryMineTextArtifact,
+  planLibraryMine,
+} from "../commands/Research/Library/Library.mine.ts";
 export * from "../commands/Research/Library/Library.provenance.ts";
 export * from "../commands/Research/Library/Library.routeEvidence.ts";
 export { mergeLibraryVersions } from "../commands/Research/Library/Library.store.ts";
