@@ -9,6 +9,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -18,10 +19,13 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import { LibraryAdapterResult } from "./Library.adapter.ts";
+import { acquireLibraryBoxFile, libraryBoxAdapter, libraryBoxFileId } from "./Library.box.ts";
 import { correctLibraryCaptures } from "./Library.corrections.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { libraryEffectiveCaptures, libraryQualificationValid, librarySourceEvidenceValid } from "./Library.evidence.ts";
+import { acquireLibraryWeb, libraryWebAdapter } from "./Library.firecrawl.ts";
 import { acquireLibraryGithub } from "./Library.github.ts";
+import { libraryRefusedHopTwo } from "./Library.hops.ts";
 import { libraryDispositionValid } from "./Library.import.ts";
 import { LibraryCapture, LibraryCatalog, LibrarySource } from "./Library.schemas.ts";
 import { hashBytes, loadCatalog, withCatalog } from "./Library.store.ts";
@@ -32,7 +36,8 @@ import type { LibraryAcquireOptions } from "./Library.schemas.ts";
 /**
  * Identify the actual acquisition route.
  * **Details**
- * Web, docs, and registry sources have no network route: they take the `disposition` route, so their evidence
+ * Web, docs, and registry sources take the native `firecrawl` route; Box file locators take the
+ * `box` route. Sources with no automatic route take the `disposition` route, so their evidence
  * arrives through `library import-result` or a reviewed disposition.
  *
  * **Example** (Select the paper route)
@@ -49,38 +54,19 @@ import type { LibraryAcquireOptions } from "./Library.schemas.ts";
  * @since 0.0.0
  */
 export const libraryAdapterFor = (source: LibrarySource): string =>
-  Match.value(source.kind).pipe(
-    Match.when("paper", () => "paper"),
-    Match.when("youtube", () => "youtube-captions"),
-    Match.when("x", () => "grok-x-import"),
-    Match.when(
-      (kind) => Str.startsWith("github-")(kind),
-      () => "github"
-    ),
-    Match.orElse(() => "disposition")
-  );
-
-/**
- * Route of the removed in-repo web scraper.
- *
- * **Details**
- *
- * Retained captures and qualification receipts on this route still verify. No source routes to it,
- * `library qualify` refuses to probe it, and a retained receipt that is no longer verified is reported
- * by its evidence integrity alone instead of failing `library verify` as a required route.
- *
- * **Example** (Recognize the removed web route)
- *
- * ```ts
- * import { removedLibraryWebAdapter } from "@beep/repo-cli/commands/Research"
- *
- * console.log(removedLibraryWebAdapter) // "firecrawl"
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const removedLibraryWebAdapter = "firecrawl";
+  O.isSome(libraryBoxFileId(source.canonicalUrl))
+    ? libraryBoxAdapter
+    : Match.value(source.kind).pipe(
+        Match.when("paper", () => "paper"),
+        Match.when("youtube", () => "youtube-captions"),
+        Match.when("x", () => "grok-x-import"),
+        Match.whenOr("web", "docs", "registry", () => libraryWebAdapter),
+        Match.when(
+          (kind) => Str.startsWith("github-")(kind),
+          () => "github"
+        ),
+        Match.orElse(() => "disposition")
+      );
 
 /**
  * Required operational routes for a catalog.
@@ -100,10 +86,7 @@ export const requiredLibraryAdapters = (catalog: LibraryCatalog) =>
   A.dedupe([
     "grok-deep-research",
     ...A.map(
-      A.filter(
-        catalog.qualifications,
-        (qualification) => qualification.required && qualification.adapter !== removedLibraryWebAdapter
-      ),
+      A.filter(catalog.qualifications, (qualification) => qualification.required),
       (qualification) => qualification.adapter
     ),
     ...A.filter(
@@ -131,16 +114,7 @@ const disposition = (reason: string) =>
     })
   );
 const dispositionReason = (source: LibrarySource) =>
-  Match.value(source.kind).pipe(
-    Match.whenOr(
-      "web",
-      "docs",
-      "registry",
-      (kind) =>
-        `Source kind ${kind} has no acquisition route; import a session capture with library import-result or record a reviewed disposition.`
-    ),
-    Match.orElse((kind) => `Source kind ${kind} requires an explicit resolution or operational disposition.`)
-  );
+  `Source kind ${source.kind} requires an explicit resolution or operational disposition.`;
 const adapter = (root: string, source: LibrarySource, prefix: string) => {
   if (source.ownership !== "external" && !(source.ownership === "project" && Str.startsWith("github-")(source.kind)))
     return disposition(`Ownership ${source.ownership}; no external acquisition admitted.`);
@@ -148,6 +122,8 @@ const adapter = (root: string, source: LibrarySource, prefix: string) => {
     Match.when("github", () => acquireLibraryGithub(root, source, prefix)),
     Match.when("paper", () => acquireLibraryPaper(root, source, prefix)),
     Match.when("youtube-captions", () => acquireLibraryYoutube(root, source, prefix)),
+    Match.when(libraryWebAdapter, () => acquireLibraryWeb(root, source, prefix)),
+    Match.when(libraryBoxAdapter, () => acquireLibraryBoxFile(root, source, prefix)),
     Match.when("grok-x-import", () =>
       disposition("X requires imported raw evidence from an observed Grok X Search tool call.")
     ),
@@ -354,7 +330,9 @@ export const acquireLibrary = Effect.fn("Library.acquire")(function* (root: stri
         if (O.isNone(latest) || latest.value.status === "interrupted" || (options.retryFailed && !reusable))
           targets.push(source);
       });
-      for (const source of versions) yield* selectTarget(source);
+      const refused = yield* libraryRefusedHopTwo(catalog, options.hopPolicy, options.sourceIds);
+      const eligible = A.filter(versions, (source) => !HashSet.has(refused, source.id));
+      for (const source of eligible) yield* selectTarget(source);
       const admitted: Array<LibrarySource> = [];
       let qualificationValidity = Record.empty<string, boolean>();
       for (const method of A.dedupe(A.map(targets, libraryAdapterFor))) {

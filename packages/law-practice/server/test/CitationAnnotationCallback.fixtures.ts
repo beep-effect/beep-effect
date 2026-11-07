@@ -16,7 +16,6 @@ import { LiteralKit } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
@@ -25,7 +24,6 @@ import {
   CitationAnnotationReplayReplacement,
   makeCitationAnnotationReplay,
 } from "./CitationAnnotationReplay.fixtures.ts";
-import { makeCitationRegexTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import { installCitationXmlWorker } from "./CitationXmlWorker.fixtures.ts";
@@ -126,9 +124,6 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
     "b212c0289337730e0c0196b596c846a01c1cfba8ca0565d6f9226e2bcaeade09"
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   const setup = yield* installCitationXmlWorker(kind);
-  const fs = yield* FileSystem.FileSystem;
-  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-callback-regex-" });
-  const runtime = yield* makeCitationRegexTestRuntime(kind, directory);
   const rows = selectRows(corpus.cases, full, uncheckedOnly ?? false);
   let children = 0;
   for (const row of rows) {
@@ -148,7 +143,7 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
     const processor = yield* Match.value(row.mode).pipe(
       Match.when("unchecked", () => Effect.succeedNone),
       Match.when("skip", () => makeCitationSkipAnnotationSpans().pipe(Effect.asSome)),
-      Match.when("wrap", () => makeCitationWrapAnnotationSpans(setup.limits, runtime).pipe(Effect.asSome)),
+      Match.when("wrap", () => makeCitationWrapAnnotationSpans(setup.limits, setup.regexRuntime).pipe(Effect.asSome)),
       Match.exhaustive,
       Effect.provideContext(setup.provided),
       Effect.provideService(CitationTextBudget, setup.budget),

@@ -1328,6 +1328,20 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/firecrawl": {
+      "name": "@beep/firecrawl",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/freshbooks": {
       "name": "@beep/freshbooks",
       "version": "0.0.0",
@@ -4116,6 +4130,7 @@
       },
       "dependencies": {
         "@beep/ai-sync": "workspace:^",
+        "@beep/box": "workspace:^",
         "@beep/chalk": "workspace:^",
         "@beep/cli-kit": "workspace:^",
         "@beep/colors": "workspace:^",
@@ -4126,6 +4141,7 @@
         "@beep/exiftool": "workspace:^",
         "@beep/ffmpeg": "workspace:^",
         "@beep/file-processing": "workspace:^",
+        "@beep/firecrawl": "workspace:^",
         "@beep/git": "workspace:^",
         "@beep/github": "workspace:^",
         "@beep/github-actions": "workspace:^",
@@ -4146,6 +4162,7 @@
         "@beep/obs": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/occt": "workspace:^",
+        "@beep/onepassword-cli": "workspace:^",
         "@beep/ontology": "workspace:^",
         "@beep/oxigraph": "workspace:^",
         "@beep/package-json": "workspace:^",
@@ -4942,6 +4959,8 @@
     "@beep/ffmpeg": ["@beep/ffmpeg@workspace:packages/drivers/ffmpeg"],
 
     "@beep/file-processing": ["@beep/file-processing@workspace:packages/foundation/capability/file-processing"],
+
+    "@beep/firecrawl": ["@beep/firecrawl@workspace:packages/drivers/firecrawl"],
 
     "@beep/freshbooks": ["@beep/freshbooks@workspace:packages/drivers/freshbooks"],
 
@@ -9785,7 +9804,6 @@
 
     "js-yaml/argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 
-
     "json-bigint/bignumber.js": ["bignumber.js@9.3.1", "", {}, "sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ=="],
 
     "jsonld-context-parser/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
@@ -10721,7 +10739,6 @@
     "gcp-metadata/gaxios/node-fetch": ["node-fetch@3.3.2", "", { "dependencies": { "data-uri-to-buffer": "^4.0.0", "fetch-blob": "^3.1.4", "formdata-polyfill": "^4.0.10" } }, "sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA=="],
 
     "google-auth-library/gaxios/node-fetch": ["node-fetch@3.3.2", "", { "dependencies": { "data-uri-to-buffer": "^4.0.0", "fetch-blob": "^3.1.4", "formdata-polyfill": "^4.0.10" } }, "sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA=="],
-
 
     "jsonld-context-parser/@types/node/undici-types": ["undici-types@5.26.5", "", {}, "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="],
 

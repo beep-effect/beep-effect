@@ -2470,11 +2470,13 @@
         "./packages/drivers/alchemy-postgres/src/index.ts"
       ],
       "@beep/alchemy-postgres/*": ["./packages/drivers/alchemy-postgres/src/*"],
-      "@beep/law-practice-server/ClaimInspection": [
-        "./packages/law-practice/server/src/ClaimInspection/index.ts"
-      ],
       "@beep/repo-cli/commands/History": [
         "./packages/tooling/tool/cli/src/commands/History/index.ts"
+      ],
+      "@beep/firecrawl": ["./packages/drivers/firecrawl/src/index.ts"],
+      "@beep/firecrawl/*": ["./packages/drivers/firecrawl/src/*"],
+      "@beep/law-practice-server/ClaimInspection": [
+        "./packages/law-practice/server/src/ClaimInspection/index.ts"
       ]
     }
   }
