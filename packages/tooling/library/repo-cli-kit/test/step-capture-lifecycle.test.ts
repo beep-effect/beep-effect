@@ -807,7 +807,7 @@ describe("StepExec bounded output fold", () => {
     { bound: OutputBound },
     ({ bound }) =>
       Effect.gen(function* () {
-        const encoded = yield* encodeOutputBound(bound);
+        const encoded = yield* encodeOutputBound(OutputBound.make(bound));
         const decoded = yield* decodeOutputBound(encoded);
         expect(decoded).toEqual(bound);
         const legacy = yield* decodeOutputBound({ maxChars: bound.maxChars, truncatedNotice: bound.truncatedNotice });
