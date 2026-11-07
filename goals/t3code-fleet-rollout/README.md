@@ -33,7 +33,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify complete — all four hosts on `0.1.7-fork.20261106.1401`, every link reachable, desktop pairings confirmed, one delegated turn per host (beep-worker after approving its project MCP state). Residual: tom-pc-1 reboot proof at the PC user\'s next sign-in (restart path already exercised). Next: P4 Close.
+P2 Verify complete — all four hosts on `0.1.7-fork.20261106.1401`, every link reachable, desktop pairings confirmed, one delegated turn per host (beep-worker after recording its project MCP approvals). Residual: tom-pc-1 reboot proof at the PC user's next sign-in (restart path already exercised). Next: P3 Yeet (this receipt PR to mergeable), then P4 Close.
 
 ## Latest Evidence
 
