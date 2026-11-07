@@ -4,13 +4,13 @@
     "id": "research-library-routes",
     "packetId": "goal-packet/v1:5e47ae68aade9b0103f3cd3890e3a8f0a83c3329057362d52940005b4ed34267",
     "title": "Research library acquisition routes",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
     "updated": "2026-11-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/research-library-routes",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Add the acquisition routes the library lacks: a @beep/firecrawl driver with a native web route, a Box route on @beep/box with per-file receipts, VidBee and alphaXiv import-result methods, per-hop citation extraction, and the routed-finding hop-2 gate with domain caps.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -114,7 +114,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2882
   }
