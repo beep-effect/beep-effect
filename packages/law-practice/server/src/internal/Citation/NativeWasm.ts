@@ -126,6 +126,7 @@ export class CitationNativeWasmInstance extends S.Opaque<
     $I.annoteSchema("CitationNativeWasmInstance", { description: "Runtime instance before pinned export decoding." })
   )
 ) {}
+const decodeNativeInstance = S.decodeUnknownEffect(CitationNativeWasmInstance);
 const InitializationExports = S.Struct({ memory: CitationNativeWasmMemory, _initialize: CitationNativeWasmVoid0 }).pipe(
   $I.annoteSchema("InitializationExports", { description: "Common authenticated reactor initialization capability." })
 );
@@ -180,7 +181,7 @@ export const compileCitationNativeWasm = Effect.fn("Citation.compileNativeWasm")
       try: () => new runtime.WebAssembly.Instance(module, { wasi_snapshot_preview1: host.imports }),
       catch: failed,
     });
-    const created = yield* S.decodeUnknownEffect(CitationNativeWasmInstance)(instance).pipe(Effect.mapError(failed));
+    const created = yield* decodeNativeInstance(instance).pipe(Effect.mapError(failed));
     return { exports: created.exports, bindMemory: host.bindMemory };
   });
   return {

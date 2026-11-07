@@ -2606,3 +2606,50 @@ checking absence in both inventories. Keep raw digest, source, complete group,
 resource-bound and artifact-authentication checks unchanged. A missing detail
 section with a present target group must still refuse. Do not manufacture a
 file-level pass or relabel older evidence from a different dependency profile.
+
+### 2026-11-07 — In-memory scheduled command can lose an early wake
+
+- Work: qualify the CI diagnostic prerequisite on PR #2871.
+- Evidence: hosted unit-b job 128331156278 fails the unchanged Alchemy InMemory
+  scheduling conformance case at its three-second eventual-state bound. Source
+  inspection finds one sleep followed by one wall-clock due check; an early wake
+  leaves the timer pending with no next notification. This mechanism is supported
+  by source, but its attribution to the observed timeout awaits hosted regression.
+- Repair: extend the existing pinned domain patch in both TypeScript and JavaScript
+  entrypoints to repeat the remaining sleep until the actual deadline. Add a
+  separate TestClock regression with an independently controlled wall clock;
+  retain the existing live conformance case, its timeout and all assertions.
+- Prevention: timer notification and due-time checks must share a rearm contract.
+  No local test suite, timeout increase, baseline change or suppression is used.
+
+### 2026-11-07 — Reuse decoders in the pinned native diff replay
+
+- Work: resolve the additional unit-d failure observed while qualifying PR #2873.
+- Evidence: hosted job 128333717511 reports CitationDiffKernel's 1,005-case
+  exact-source replay exceeding the existing 29,750-ms instrumentation watchdog
+  under its unchanged 30-second test deadline. The other malformed-input/asset
+  control passes. The four inherited fixture failures remain owned by PR #2849.
+- Repair: reuse module-scoped request, edit-step and native-instance decoders
+  instead of constructing identical decoder functions for every request, native
+  instance and edit step. No native instance, result, key or source input is shared.
+- Prevention: construct immutable-schema decoders outside repeated native loops.
+  Hosted CI must establish whether this reduction suffices; no performance pass
+  is claimed from source inspection. Keep the corpus, exact assertions, source
+  identity, fresh native ownership, watchdog and every production ceiling intact.
+
+### 2026-11-07 — Keep heavyweight native golden replays sequential within their layers
+
+- Work: attribute the complete retained unit-d footer from PR #2871.
+- Evidence: job 128333804552 preserves nine failures across six files, including
+  both 180-second extraction replays and the 120-second checked annotation replay
+  reaching their existing watchdogs. The earlier #2873 run also hit the diff
+  corpus's 30-second watchdog. Shared Vitest configuration enables concurrent
+  cases by default; these layers did not override it. Each extraction replay
+  proves ownership across more than 100 real native children.
+- Repair: run the cases of each extraction, annotation and diff corpus layer
+  sequentially, with an explicit five-second acquisition cap for their lightweight
+  platform services. Keep every corpus row, assertion, native ownership check and
+  original 30/120/180-second test deadline. Production concurrency is unchanged.
+- Prevention: heavyweight per-runtime conformance replays must declare their local
+  scheduling policy rather than inherit global concurrency. Hosted evidence must
+  prove the fix; no local suite, retry, corpus reduction or deadline increase.
