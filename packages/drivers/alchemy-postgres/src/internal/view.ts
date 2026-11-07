@@ -101,15 +101,14 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
             );
             yield* Effect.forEach(
               result.entries,
-              (entry) =>
-                Effect.gen(function* () {
-                  const event = yield* encodeJson(entry.event);
-                  const envelope = yield* encodeJson(entry.envelope);
-                  const state = yield* encodeJson(entry.state);
-                  yield* sql`INSERT INTO ${sql(tables.viewEntry)} (model, view, key, seq, event, envelope, state)
+              Effect.fnUntraced(function* (entry) {
+                const event = yield* encodeJson(entry.event);
+                const envelope = yield* encodeJson(entry.envelope);
+                const state = yield* encodeJson(entry.state);
+                yield* sql`INSERT INTO ${sql(tables.viewEntry)} (model, view, key, seq, event, envelope, state)
                     VALUES (${modelName}, ${name}, ${key}, ${entry.seq}, ${event}::jsonb, ${envelope}::jsonb,
                       ${state}::jsonb)`;
-                }),
+              }),
               { discard: true }
             );
             const live = yield* Backfill.routeCommit(

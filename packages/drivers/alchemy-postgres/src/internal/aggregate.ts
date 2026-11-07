@@ -43,46 +43,43 @@ interface EventVersion {
  * Each event class's static `schemaVersion` (default 1) and optional static
  * `upcast(fromVersion, json)`, by tag.
  */
-export const eventVersionsOf = (events: ReadonlyArray<{ readonly tag: string }>) =>
-  pipe(
-    events,
-    A.map((event): readonly [string, EventVersion] => [
-      event.tag,
-      {
-        version: pipe(
-          O.liftPredicate(event, P.hasProperty("schemaVersion")),
-          O.map(({ schemaVersion }) => schemaVersion),
-          O.filter(P.isNumber),
-          O.getOrElse(() => 1)
-        ),
-        upcast: pipe(
-          O.liftPredicate(event, P.hasProperty("upcast")),
-          O.map(({ upcast }) => upcast),
-          O.filter(
-            (upcast): upcast is (fromVersion: number, json: unknown) => unknown =>
-              P.isFunction(upcast) && upcast.length === 2
-          )
-        ),
-      },
-    ]),
-    MutableHashMap.fromIterable
-  );
+export const eventVersionsOf = flow(
+  A.map((event: { readonly tag: string }): readonly [string, EventVersion] => [
+    event.tag,
+    {
+      version: pipe(
+        O.liftPredicate(event, P.hasProperty("schemaVersion")),
+        O.map(({ schemaVersion }) => schemaVersion),
+        O.filter(P.isNumber),
+        O.getOrElse(() => 1)
+      ),
+      upcast: pipe(
+        O.liftPredicate(event, P.hasProperty("upcast")),
+        O.map(({ upcast }) => upcast),
+        O.filter(
+          (upcast): upcast is (fromVersion: number, json: unknown) => unknown =>
+            P.isFunction(upcast) && upcast.length === 2
+        )
+      ),
+    },
+  ]),
+  MutableHashMap.fromIterable
+);
 
 /** Lift a stored row's event JSON from the version it was written at to its class's current one. */
 export const upcastRow =
   (versions: MutableHashMap.MutableHashMap<string, EventVersion>) =>
   (row: EventRow): DomainPlatform.StoredEvent => {
-    const lifted = O.match(MutableHashMap.get(versions, row.tag), {
-      onNone: () => row.event,
-      onSome: ({ upcast, version }) =>
-        O.match(upcast, {
-          onNone: () => row.event,
-          onSome: (lift) =>
-            row.schema_version < version
-              ? A.reduce(A.range(row.schema_version, version - 1), row.event, (json, from) => lift(from, json))
-              : row.event,
-        }),
-    });
+    const lifted = pipe(
+      MutableHashMap.get(versions, row.tag),
+      O.flatMap(({ upcast, version }) => O.map(upcast, (lift) => ({ lift, version }))),
+      O.filter(({ version }) => row.schema_version < version),
+      O.match({
+        onNone: () => row.event,
+        onSome: ({ lift, version }) =>
+          A.reduce(A.range(row.schema_version, version - 1), row.event, (json, from) => lift(from, json)),
+      })
+    );
     return { event: lifted, envelope: row.envelope };
   };
 

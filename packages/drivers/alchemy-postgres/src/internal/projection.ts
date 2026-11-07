@@ -94,50 +94,52 @@ export const makeProjectionStore =
         );
       const kick = (key: string, flush: boolean) => background(process(key, flush));
 
-      const run = (key: string, flush: boolean): Effect.Effect<void, SqlError.SqlError | S.SchemaError> =>
-        Effect.gen(function* () {
-          const partition = yield* partitionOf(key);
-          const count = yield* countOf(key);
-          if (partition.processed >= count) return;
-          const size = batch?.size ?? 1;
-          const at = yield* now;
-          // There is an unprocessed input, so the oldest one exists.
-          const oldest = yield* sql`SELECT position, delivery, at FROM ${sql(tables.consumerInput)}
+      const run = Effect.fnUntraced(function* (
+        key: string,
+        flush: boolean
+      ): Effect.fn.Return<void, SqlError.SqlError | S.SchemaError> {
+        const partition = yield* partitionOf(key);
+        const count = yield* countOf(key);
+        if (partition.processed >= count) return;
+        const size = batch?.size ?? 1;
+        const at = yield* now;
+        // There is an unprocessed input, so the oldest one exists.
+        const oldest = yield* sql`SELECT position, delivery, at FROM ${sql(tables.consumerInput)}
             WHERE model = ${modelName} AND consumer = ${consumerId} AND key = ${key} AND position > ${partition.processed}
             ORDER BY position LIMIT 1`.pipe(Effect.flatMap(decodeOldest));
-          const waited = at - A.headNonEmpty(oldest).at;
-          if (!flush && batch !== undefined && count - partition.processed < size && waited < batch.waitMillis) {
-            if (!MutableHashSet.has(timers, key)) {
-              MutableHashSet.add(timers, key);
-              yield* background(
-                Duration.millis(batch.waitMillis - waited).pipe(
-                  Effect.sleep,
-                  Effect.andThen(Effect.sync(() => MutableHashSet.remove(timers, key))),
-                  Effect.andThen(process(key, true))
-                )
-              );
-            }
-            return;
+        const waited = at - A.headNonEmpty(oldest).at;
+        if (!flush && batch !== undefined && count - partition.processed < size && waited < batch.waitMillis) {
+          if (!MutableHashSet.has(timers, key)) {
+            MutableHashSet.add(timers, key);
+            yield* background(
+              Duration.millis(batch.waitMillis - waited).pipe(
+                Effect.sleep,
+                Effect.andThen(Effect.sync(() => MutableHashSet.remove(timers, key))),
+                Effect.andThen(process(key, true))
+              )
+            );
           }
-          const accepted = yield* inputs(key, partition.processed, size);
-          yield* kit.run(key, accepted);
-          const checkpoints = A.reduce(accepted, { ...partition.checkpoints }, (acc, { delivery }) => ({
-            ...acc,
-            [delivery.source]: Math.max(
-              O.getOrElse(R.get(acc, delivery.source), () => 0),
-              delivery.seq
-            ),
-          }));
-          yield* save(
-            key,
-            PartitionRow.make({
-              processed: partition.processed + A.length(accepted),
-              intake: partition.intake,
-              checkpoints,
-            })
-          );
-          yield* run(key, flush);
-        });
+          return;
+        }
+        const accepted = yield* inputs(key, partition.processed, size);
+        yield* kit.run(key, accepted);
+        const checkpoints = A.reduce(accepted, { ...partition.checkpoints }, (acc, { delivery }) => ({
+          ...acc,
+          [delivery.source]: Math.max(
+            O.getOrElse(R.get(acc, delivery.source), () => 0),
+            delivery.seq
+          ),
+        }));
+        yield* save(
+          key,
+          PartitionRow.make({
+            processed: partition.processed + A.length(accepted),
+            intake: partition.intake,
+            checkpoints,
+          })
+        );
+        yield* run(key, flush);
+      });
 
       /** Accept a delivery into its key's log (once), then handle the log. */
       const intake = (delivery: DomainPlatform.Delivery): Effect.Effect<void> =>

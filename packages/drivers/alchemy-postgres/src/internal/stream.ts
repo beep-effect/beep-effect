@@ -62,21 +62,20 @@ export const makeStreamStore = (ctx: HostContext) => (_definition: DomainStream.
               if (!isAfter(write.origin, meta.origin)) return;
               yield* Effect.forEach(
                 write.events,
-                (event, index) =>
-                  Effect.gen(function* () {
-                    const seq = meta.seq + index + 1;
-                    const envelope: DomainPlatform.EnvelopeJson = {
-                      id: key,
-                      stream: `${name}/${key}`,
-                      seq,
-                      at: write.at,
-                      commandId: write.commandId,
-                    };
-                    const encodedEvent = yield* encodeJson(event);
-                    const encodedEnvelope = yield* encodeJson(envelope);
-                    yield* sql`INSERT INTO ${sql(tables.streamEntry)} (model, stream, key, seq, event, envelope)
+                Effect.fnUntraced(function* (event, index) {
+                  const seq = meta.seq + index + 1;
+                  const envelope: DomainPlatform.EnvelopeJson = {
+                    id: key,
+                    stream: `${name}/${key}`,
+                    seq,
+                    at: write.at,
+                    commandId: write.commandId,
+                  };
+                  const encodedEvent = yield* encodeJson(event);
+                  const encodedEnvelope = yield* encodeJson(envelope);
+                  yield* sql`INSERT INTO ${sql(tables.streamEntry)} (model, stream, key, seq, event, envelope)
                       VALUES (${modelName}, ${name}, ${key}, ${seq}, ${encodedEvent}::jsonb, ${encodedEnvelope}::jsonb)`;
-                  }),
+                }),
                 { discard: true }
               );
               yield* saveMeta(key, {

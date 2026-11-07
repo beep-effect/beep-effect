@@ -360,24 +360,23 @@ export const makeContext = (deps: HostDeps) => {
       RETURNING address, job_id, revision`.pipe(Effect.flatMap(decodeJobRefs));
     yield* Effect.forEach(
       claimed,
-      ({ address, job_id, revision }) =>
-        Effect.gen(function* () {
-          const where = sql`model = ${modelName} AND address = ${address} AND job_id = ${job_id}`;
-          const exit = yield* O.match(jobRunner(address), {
-            // A role no longer in the model: nothing to run.
-            onNone: () => Effect.exit(Effect.void),
-            onSome: (runJob) => Effect.exit(runJob(job_id)),
-          });
-          if (Exit.isSuccess(exit)) {
-            yield* sql`DELETE FROM ${sql(tables.backfillJob)} WHERE ${where} AND revision = ${revision}`;
-            yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0 WHERE ${where}`;
-            return;
-          }
-          yield* Effect.logError(`alchemy-postgres ${modelName} backfill job ${address} ${job_id} failed`, exit.cause);
-          const later = yield* now;
-          yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0, due_at = ${later + jobRetryMillis}
+      Effect.fnUntraced(function* ({ address, job_id, revision }) {
+        const where = sql`model = ${modelName} AND address = ${address} AND job_id = ${job_id}`;
+        const exit = yield* O.match(jobRunner(address), {
+          // A role no longer in the model: nothing to run.
+          onNone: () => Effect.exit(Effect.void),
+          onSome: (runJob) => Effect.exit(runJob(job_id)),
+        });
+        if (Exit.isSuccess(exit)) {
+          yield* sql`DELETE FROM ${sql(tables.backfillJob)} WHERE ${where} AND revision = ${revision}`;
+          yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0 WHERE ${where}`;
+          return;
+        }
+        yield* Effect.logError(`alchemy-postgres ${modelName} backfill job ${address} ${job_id} failed`, exit.cause);
+        const later = yield* now;
+        yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0, due_at = ${later + jobRetryMillis}
             WHERE ${where}`;
-        }),
+      }),
       { discard: true }
     );
     return A.isReadonlyArrayNonEmpty(claimed);
