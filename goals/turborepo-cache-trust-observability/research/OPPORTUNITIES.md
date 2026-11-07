@@ -2636,3 +2636,20 @@ file-level pass or relabel older evidence from a different dependency profile.
   Hosted CI must establish whether this reduction suffices; no performance pass
   is claimed from source inspection. Keep the corpus, exact assertions, source
   identity, fresh native ownership, watchdog and every production ceiling intact.
+
+### 2026-11-07 — Keep heavyweight native golden replays sequential within their layers
+
+- Work: attribute the complete retained unit-d footer from PR #2871.
+- Evidence: job 128333804552 preserves nine failures across six files, including
+  both 180-second extraction replays and the 120-second checked annotation replay
+  reaching their existing watchdogs. The earlier #2873 run also hit the diff
+  corpus's 30-second watchdog. Shared Vitest configuration enables concurrent
+  cases by default; these layers did not override it. Each extraction replay
+  proves ownership across more than 100 real native children.
+- Repair: run the cases of each extraction, annotation and diff corpus layer
+  sequentially, with an explicit five-second acquisition cap for their lightweight
+  platform services. Keep every corpus row, assertion, native ownership check and
+  original 30/120/180-second test deadline. Production concurrency is unchanged.
+- Prevention: heavyweight per-runtime conformance replays must declare their local
+  scheduling policy rather than inherit global concurrency. Hosted evidence must
+  prove the fix; no local suite, retry, corpus reduction or deadline increase.
