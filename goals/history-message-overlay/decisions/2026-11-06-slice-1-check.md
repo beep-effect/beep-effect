@@ -2,7 +2,7 @@
 title: "Slice 1 landed in the lane: map tracked, history notes --check"
 date: 2026-11-06
 kind: checkpoint
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 pullRequest: 2785
 reversal: "Revert the slice-1 commits on the branch"
 ---

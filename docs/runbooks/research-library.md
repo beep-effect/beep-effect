@@ -132,19 +132,29 @@ version is registered and acquired once more; earlier versions keep their captur
 If the route has no valid qualification, the first selected file is downloaded as
 the qualification probe before the rest.
 
-Credentials: `CLOUD_BOX_TOKEN` selects a developer token. Otherwise the client
-credentials grant reads `DMS_BOX_CLIENT_ID`, `DMS_BOX_CLIENT_SECRET`, and
-`DMS_BOX_ENTERPRISE_ID` from `BEEP_SECRETS` through the `op` shim. The enterprise
+Credentials: the client credentials grant reads `DMS_BOX_CLIENT_ID`,
+`DMS_BOX_CLIENT_SECRET`, and a subject from `BEEP_SECRETS` through the `op` shim; each
+variable may also hold a resolved value or another `op://` reference. The enterprise
 service account sees only folders shared with it; set `DMS_BOX_USER_ID=<box user id>`
-to take a user as the token subject for user-owned files.
+to take a user as the token subject for user-owned files. Precedence:
+
+1. `DMS_BOX_USER_ID` set: client credentials grant with that user.
+2. `DMS_BOX_ENTERPRISE_ID` set: client credentials grant with the enterprise subject.
+3. `CLOUD_BOX_TOKEN` set and non-empty: the developer token.
+4. Otherwise: client credentials grant with the `BEEP_SECRETS` enterprise subject.
+
+An explicit subject wins over `CLOUD_BOX_TOKEN` because Bun loads a worktree's `.env`,
+which can carry an expired desktop developer token; that token would otherwise fail
+every lookup with `Box file lookup failed: sdk thrown`. An empty `CLOUD_BOX_TOKEN`
+counts as unset.
 
 ## Hops and the hop-2 gate
 
 `inventory` records a hop-1 `Derivation` (with `hopDepth = 1`) for every citation in
-a hop-0 document of each intake. It then reads the readable text of every hop-1
+a hop-0 document of the intake that run recorded; earlier intakes keep their edges unchanged. It then reads the readable text of every hop-1
 capture (Markdown, plain text, and transcripts up to 5 MB) and records each URL in it
 as a hop-2 `Source` with a `hopDepth = 2` derivation from its hop-1 parent. Depth is
-on the edge; nothing is dropped, and re-running inventory adds no duplicate edges. Run
+on the edge; nothing is dropped, and re-running inventory on the same roots adds no duplicate edges. Run
 `inventory`, `acquire`, then `inventory` again to catalogue hop 2.
 
 `acquire` fetches a hop-2-only source only when the gate admits it:

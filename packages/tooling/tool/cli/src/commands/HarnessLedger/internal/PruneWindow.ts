@@ -15,6 +15,7 @@ import {
   HookPulseDisarmSentinel,
   HookPulseDisarmWindow,
   HookPulseEvent,
+  HookPulseInstrumentClass,
   HookPulseRefusal,
   HookPulseRefusalReason,
   HookPulseV1,
@@ -119,6 +120,42 @@ const isTerminalToolEvent = S.is(TerminalToolEvent);
 const isUnknownStart = (pulse: HookPulseV1) => pulse.hookEvent === "SessionStart" && O.isNone(pulse.harnessHash);
 
 const ANY_SHARD = /^hook-pulse-.*\.ndjson$/;
+// The writer appends a session's rows only to `hook-pulse-<UTC day>-<session
+// digest>.ndjson`, so an undecodable line in such a shard can only belong to that
+// session. A line in any other shard has no recoverable owner.
+const SESSION_SHARD = /^hook-pulse-.+-([0-9a-f]{64})\.ndjson$/;
+const shardSession = (name: string): O.Option<string> => O.fromNullishOr(SESSION_SHARD.exec(name)?.[1]);
+
+// Just enough of a row to read its instrument class. A spike or meta row that
+// predates the current schema (the 2026-08-01 hook-semantics spike corpus) is
+// not production evidence whatever else it fails, so it is set aside by its
+// declared class instead of poisoning the production window as corruption.
+const decodeRowInstrument = S.decodeUnknownResult(
+  S.fromJsonString(S.Struct({ instrumentClass: HookPulseInstrumentClass }))
+);
+const isNonProductionLine = (line: string): boolean =>
+  Result.match(decodeRowInstrument(line), {
+    onFailure: F.constFalse,
+    onSuccess: (row) => row.instrumentClass !== HookPulseInstrumentClass.Enum.production,
+  });
+
+// Why a hook-shard line is not folded. `non-production` lines are counted and
+// set aside; `undecodable` lines are corruption: unknown content, never zero.
+const ShardLineSkip = LiteralKit(["non-production", "undecodable"]).pipe(
+  $I.annoteSchema("ShardLineSkip", {
+    description: "Reason a hook-pulse shard line is not folded into a production window.",
+  })
+);
+type ShardLineSkip = typeof ShardLineSkip.Type;
+const readShardLine = (line: string): Result.Result<HookPulseV1, ShardLineSkip> =>
+  Result.match(HookPulseV1.decodeJsonResult(line), {
+    onFailure: () =>
+      Result.fail(isNonProductionLine(line) ? ShardLineSkip.Enum["non-production"] : ShardLineSkip.Enum.undecodable),
+    onSuccess: (pulse) =>
+      pulse.instrumentClass === HookPulseInstrumentClass.Enum.production
+        ? Result.succeed(pulse)
+        : Result.fail(ShardLineSkip.Enum["non-production"]),
+  });
 
 // Which side of the current harness a session falls on. `in-regime`: at least
 // one SessionStart stamp, every stamp equal to the current harness hash.
@@ -134,11 +171,13 @@ type SessionTally = {
   readonly maxTs: number;
   readonly agentKind: HookPulseAgentKind;
   readonly parent: string;
+  readonly sessionId: string;
   readonly key: string;
   readonly userTurns: number;
   readonly toolEvents: number;
   readonly primary: boolean;
   readonly child: boolean;
+  readonly roleUnknown: boolean;
   readonly unknownStart: boolean;
   readonly freshStarts: HashSet.HashSet<number>;
   readonly surfaces: HashSet.HashSet<string>;
@@ -165,6 +204,13 @@ type ShardScan = {
   readonly stateDir: string;
   readonly tallies: MutableHashMap.MutableHashMap<string, SessionTally>;
   undecodableLines: number;
+  nonProductionLines: number;
+  corruptShards: number;
+  // Sessions owning a shard with an undecodable line, and undecodable lines no
+  // shard name can attribute. The first excludes those sessions; the second
+  // fails the whole window closed.
+  corruptSessions: HashSet.HashSet<string>;
+  unscopedUndecodableLines: number;
   shardsRead: number;
   readonly disarmWindows: ReadonlyArray<HookPulseDisarmWindow>;
   readonly openDisarm: boolean;
@@ -184,18 +230,22 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
   if (pulse.instrumentClass !== "production") return;
   const ts = DateTime.toEpochMillis(pulse.ts);
   const parent = `${pulse.agentKind}:${pulse.sessionId}`;
-  const key = `${parent}:${O.getOrElse(pulse.transcriptPath, () => "no-transcript")}`;
+  // A child that shares its root's session id and transcript path (Claude Code
+  // subagents) is still its own tally: its native agent id keys it apart.
+  const key = `${parent}:${O.getOrElse(pulse.transcriptPath, () => "no-transcript")}:${O.getOrElse(pulse.agentId, () => "root")}`;
   const tally = O.getOrElse(MutableHashMap.get(tallies, key), () => ({
     minTs: ts,
     endedAt: O.none<number>(),
     maxTs: ts,
     agentKind: pulse.agentKind,
     parent,
+    sessionId: pulse.sessionId,
     key,
     userTurns: 0,
     toolEvents: 0,
     primary: false,
     child: false,
+    roleUnknown: false,
     unknownStart: false,
     freshStarts: HashSet.empty<number>(),
     surfaces: HashSet.empty<string>(),
@@ -205,6 +255,7 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
     ...tally,
     primary: tally.primary || O.contains(pulse.sessionRole, "primary"),
     child: tally.child || O.contains(pulse.sessionRole, "subagent"),
+    roleUnknown: tally.roleUnknown || O.contains(pulse.sessionRole, "unknown"),
     unknownStart: tally.unknownStart || isUnknownStart(pulse),
     freshStarts: O.contains(pulse.sessionStartSource, "startup")
       ? HashSet.add(tally.freshStarts, ts)
@@ -235,16 +286,33 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
   });
 };
 
-const foldShardText = (scan: ShardScan, text: string): void => {
+const foldShardText = (scan: ShardScan, name: string, text: string): void => {
   scan.shardsRead += 1;
+  let shardUndecodable = 0;
   for (const line of pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty))) {
-    Result.match(HookPulseV1.decodeJsonResult(line), {
-      onFailure: () => {
-        scan.undecodableLines += 1;
-      },
+    Result.match(readShardLine(line), {
       onSuccess: (pulse) => foldPulse(scan.tallies, pulse),
+      onFailure: ShardLineSkip.match({
+        "non-production": () => {
+          scan.nonProductionLines += 1;
+        },
+        undecodable: () => {
+          shardUndecodable += 1;
+        },
+      }),
     });
   }
+  if (shardUndecodable === 0) return;
+  scan.undecodableLines += shardUndecodable;
+  scan.corruptShards += 1;
+  O.match(shardSession(name), {
+    onNone: () => {
+      scan.unscopedUndecodableLines += shardUndecodable;
+    },
+    onSome: (session) => {
+      scan.corruptSessions = HashSet.add(scan.corruptSessions, session);
+    },
+  });
 };
 
 const readShard = Effect.fnUntraced(function* (scan: ShardScan, name: string) {
@@ -253,7 +321,7 @@ const readShard = Effect.fnUntraced(function* (scan: ShardScan, name: string) {
   const text = yield* fs
     .readFileString(path.join(scan.stateDir, name))
     .pipe(Effect.mapError(HarnessLedgerIoError.wrap(`Failed to read hook-pulse shard ${name}.`)));
-  foldShardText(scan, text);
+  foldShardText(scan, name, text);
 });
 
 // Skipped sessions of `regime` newer than the window's oldest session; every
@@ -307,6 +375,10 @@ const windowReport = (
         DateTime.toEpochMillis(row.ts) + 999 >= tally.minTs &&
         !O.exists(tally.endedAt, (end) => end < DateTime.toEpochMillis(row.ts))
     );
+  // Corruption is scoped to the session whose shard holds it. Lines no shard
+  // name can attribute, and an unreadable refusal ledger, fail every session.
+  const windowCorrupt = scan.unscopedUndecodableLines > 0 || scan.refusalUndecodableLines > 0;
+  const corrupt = (tally: SessionTally) => windowCorrupt || HashSet.has(scan.corruptSessions, tally.sessionId);
   // Group once: summaries and root selection never scan the complete history
   // from inside a per-transcript predicate.
   const groups = A.groupBy(ranked, (tally) => tally.parent);
@@ -326,6 +398,7 @@ const windowReport = (
         stamps: A.reduce(group, HashSet.empty<string>(), (acc, other) => HashSet.union(acc, other.stamps)),
         primary: A.some(group, (other) => other.primary && !other.child),
         child: A.every(group, (other) => other.child),
+        roleUnknown: A.some(group, (other) => other.roleUnknown),
         unknownStart: A.some(group, (other) => other.unknownStart || missingOpening(other)),
         userTurns: 0,
         toolEvents: 0,
@@ -354,7 +427,7 @@ const windowReport = (
     A.filter(
       ranked,
       (tally) =>
-        scan.undecodableLines === 0 &&
+        !corrupt(parentSummary(tally)) &&
         parentRegime(tally) === "in-regime" &&
         !preCutover(parentSummary(tally)) &&
         !parentSummary(tally).unknownStart &&
@@ -375,7 +448,15 @@ const windowReport = (
     A.filter(qualifying, (tally) => tally.agentKind === agentKind),
     window
   );
-  const selectedGrouped = A.filter(R.values(summaries), (tally) => tally.agentKind === agentKind);
+  const grouped = R.values(summaries);
+  const selectedGrouped = A.filter(grouped, (tally) => tally.agentKind === agentKind);
+  // A session whose rows say the harness cannot tell root from child is
+  // unattributable, not merely skipped: a client made only of such sessions
+  // cannot measure roots at all, so its coverage reads `unsupported`.
+  const unattributable = (tally: SessionTally) => !tally.primary && tally.roleUnknown;
+  const roleUnsupported = (kind: HookPulseAgentKind) =>
+    A.some(grouped, (tally) => tally.agentKind === kind && unattributable(tally)) &&
+    !A.some(grouped, (tally) => tally.agentKind === kind && tally.primary);
   const oldest = A.length(inRegime) < window ? O.none<SessionTally>() : A.last(inRegime);
   return ObservedSessionWindow.make({
     harnessHash,
@@ -384,19 +465,22 @@ const windowReport = (
     sessionsSkippedMixedFingerprint: A.length(A.filter(selectedGrouped, (tally) => HashSet.size(tally.stamps) > 1)),
     refusalsByAgentKind: scan.refusalsByAgentKind,
     clientCoverage: {
-      ...R.map(counts, (count) =>
+      ...R.map(counts, (count, kind) =>
         scan.provenDisarmed
           ? O.some(HookPulseClientCoverage.Enum.disabled)
           : count > 0
             ? O.some(HookPulseClientCoverage.Enum.stamped)
-            : O.none()
+            : roleUnsupported(kind)
+              ? O.some(HookPulseClientCoverage.Enum.unsupported)
+              : O.none()
       ),
       junie: O.some(HookPulseClientCoverage.Enum.unsupported),
       grok: O.some(HookPulseClientCoverage.Enum.unsupported),
     },
     sessionsSkippedDisarmed: A.length(A.filter(selectedGrouped, overlapsDisarm)),
     sessionsSkippedRefused: A.length(A.filter(selectedGrouped, overlapsRefusal)),
-    sessionsSkippedCorrupt: scan.undecodableLines > 0 ? A.length(selectedGrouped) : 0,
+    sessionsSkippedCorrupt: A.length(A.filter(selectedGrouped, corrupt)),
+    sessionsSkippedRoleUnattributable: A.length(A.filter(selectedGrouped, unattributable)),
     sessionsBelowActivityFloor: A.length(
       A.filter(
         selectedGrouped,
@@ -417,6 +501,8 @@ const windowReport = (
     touched: A.reduce(ranked, HashSet.empty<string>(), (acc, tally) => HashSet.union(acc, tally.surfaces)),
     shardsRead: scan.shardsRead,
     undecodableLines: scan.undecodableLines,
+    nonProductionLines: scan.nonProductionLines,
+    corruptShards: scan.corruptShards,
   });
 };
 
@@ -458,7 +544,11 @@ const readRefusals = Effect.fn("HarnessLedger.readRefusals")(function* (root: st
  * Reads complete shards so restarted, mixed, child, and disarmed sessions
  * cannot be hidden by a date-bound shortcut. Windows are per client. A root
  * needs a user turn and a tool event; children add touches without adding
- * sessions. Invalid lines are counted. A missing state directory observes zero.
+ * sessions, and a child that shares its root's transcript is keyed apart by its
+ * native agent id. Spike and meta lines, including pre-schema spike rows, are
+ * set aside by their declared instrument class. Undecodable lines are counted
+ * and disqualify the session that owns their shard, or every session when the
+ * shard name names no owner. A missing state directory observes zero.
  * Sessions that began before `namespaceCutover` (epoch milliseconds of the
  * applied hook-pulse namespace projection) are excluded from the window and
  * counted in `sessionsSkippedPreCutover`.
@@ -522,6 +612,10 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     stateDir,
     tallies: MutableHashMap.empty(),
     undecodableLines: refusalUndecodableLines,
+    nonProductionLines: 0,
+    corruptShards: 0,
+    corruptSessions: HashSet.empty(),
+    unscopedUndecodableLines: 0,
     shardsRead: 0,
     disarmWindows: windows,
     openDisarm,
@@ -670,11 +764,16 @@ const readReconciliationHooks = Effect.fn("HarnessLedger.readReconciliationHooks
       .readFileString(path.join(stateDir, shard))
       .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read reconciliation shard.")));
     for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      Result.match(HookPulseV1.decodeJsonResult(line), {
-        onFailure: () => {
-          undecodableLines += 1;
-        },
-        onSuccess: (row) => foldReconciliationHook(row, agentKind, bindings, hooks),
+      // Non-production lines are not hook evidence, and a pre-schema spike row
+      // is not corruption of the production store.
+      Result.match(readShardLine(line), {
+        onSuccess: (pulse) => foldReconciliationHook(pulse, agentKind, bindings, hooks),
+        onFailure: ShardLineSkip.match({
+          "non-production": F.constVoid,
+          undecodable: () => {
+            undecodableLines += 1;
+          },
+        }),
       });
     }
   }

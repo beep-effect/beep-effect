@@ -4,13 +4,14 @@
     "id": "research-library-routes",
     "packetId": "goal-packet/v1:5e47ae68aade9b0103f3cd3890e3a8f0a83c3329057362d52940005b4ed34267",
     "title": "Research library acquisition routes",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
     "updated": "2026-11-07",
-    "packetAnchorDocument": "SPEC.md"
+    "packetAnchorDocument": "SPEC.md",
+    "statusNote": "Completed-retained: completion verified via re-final #2882 (merge e1c960da1e), with 15 green required checks and a successful until-ready monitor. Implementation shipped in #2868; #2880 retained as the first re-final attempt."
   },
   "packetPath": "goals/research-library-routes",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Add the acquisition routes the library lacks: a @beep/firecrawl driver with a native web route, a Box route on @beep/box with per-file receipts, VidBee and alphaXiv import-result methods, per-hop citation extraction, and the routed-finding hop-2 gate with domain caps.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +24,28 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2868,
+        "role": "supporting"
+      },
+      {
+        "number": 2880,
+        "role": "supporting"
+      },
+      {
+        "number": 2882,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_research-library-routes-refinal-c00b652bab7e/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -37,8 +59,10 @@
   "researchReports": [
     "research/SOURCES.md",
     "research/cache-baseline-request-routes-firecrawl.json",
+    "research/cache-baseline-request-routes-policy.json",
     "research/cache-baseline-request-routes.json",
     "research/cache-baseline-review-routes-firecrawl.md",
+    "research/cache-baseline-review-routes-policy.md",
     "research/cache-baseline-review-routes.md"
   ],
   "agentLaunchers": [
@@ -71,12 +95,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -90,5 +114,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2882
+  }
 }

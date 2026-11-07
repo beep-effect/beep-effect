@@ -25,6 +25,7 @@ import {
   acquireLibraryYoutube,
   correctLibraryCaptures,
   encodeLibraryCaptureJson,
+  LibraryBoxFixture,
   LibraryCaptureCorrection,
   libraryCaptionProvenance,
   libraryQualificationValid,
@@ -155,7 +156,7 @@ it.layer(
       HttpClient.make(() => Effect.die("Unexpected fixture HTTP request"))
     ),
     fixtureFirecrawl,
-    makeLibraryBoxTest({ folders: {}, bytes: {} })
+    makeLibraryBoxTest(LibraryBoxFixture.make({ folders: {}, bytes: {} }))
   ),
   { timeout: "30 seconds" }
 )("research acquisition integrity", (it) => {

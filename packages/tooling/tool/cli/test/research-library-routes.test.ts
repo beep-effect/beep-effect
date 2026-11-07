@@ -1,5 +1,7 @@
 import { decodeFirecrawlScrapeBody, Firecrawl } from "@beep/firecrawl";
 import { Git } from "@beep/git/Git";
+import { N3TurtleCodecLive } from "@beep/n3";
+import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import {
   acquireLibraryBox,
   classifyLibraryReference,
@@ -25,18 +27,25 @@ import {
   libraryHopTotals,
   libraryPacketConcepts,
   loadCatalog,
+  verifyLibrary,
   withCatalog,
 } from "@beep/repo-cli/commands/Research";
 import {
   acquireLibrarySource,
   LibraryBoxFile,
+  LibraryBoxFixture,
+  libraryBoxAuthMode,
   libraryBoxSha1,
+  libraryBoxSource,
   librarySourceEvidenceValid,
   makeLibraryBoxTest,
+  saveLibraryText,
 } from "@beep/repo-cli/test/ResearchLibrary";
+import { ShaclValidationServiceLive } from "@beep/shacl";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -69,11 +78,10 @@ const firecrawl = Firecrawl.makeTestLayer((request) =>
 );
 
 const boxBytes = { shared: bytesOf("Identical exhibit bytes."), other: bytesOf("A different memo.") };
-const boxDownloads: Array<string> = [];
 const boxFixture = Effect.gen(function* () {
   const sharedSha1 = yield* libraryBoxSha1(boxBytes.shared);
   const otherSha1 = yield* libraryBoxSha1(boxBytes.other);
-  return {
+  return LibraryBoxFixture.make({
     folders: {
       top: [
         LibraryBoxFile.make({ id: "101", versionId: "1", name: "exhibit.pdf", sha1: sharedSha1, size: 24 }),
@@ -83,13 +91,26 @@ const boxFixture = Effect.gen(function* () {
       tampered: [
         LibraryBoxFile.make({ id: "104", versionId: "1", name: "bad.txt", sha1: Str.repeat(40)("0"), size: 17 }),
       ],
+      versioned: [LibraryBoxFile.make({ id: "105", versionId: "2", name: "draft.txt", sha1: sharedSha1, size: 24 })],
     },
     subfolders: { top: ["nested"] },
-    bytes: { "101": boxBytes.shared, "102": boxBytes.shared, "103": boxBytes.other, "104": boxBytes.other },
-    downloads: boxDownloads,
-  };
+    bytes: {
+      "101": boxBytes.shared,
+      "102": boxBytes.shared,
+      "103": boxBytes.other,
+      "104": boxBytes.other,
+      "105": boxBytes.other,
+    },
+  });
 });
-const boxLayer = Layer.unwrap(Effect.map(boxFixture, makeLibraryBoxTest)).pipe(Layer.provide(NodeCrypto.layer));
+// The constructed fixture owns its download log; the Box test reads it from here.
+let boxFixtureLog: ReadonlyArray<string> = [];
+const boxLayer = Layer.unwrap(
+  Effect.map(boxFixture, (fixture) => {
+    boxFixtureLog = fixture.downloads;
+    return makeLibraryBoxTest(fixture);
+  })
+).pipe(Layer.provide(NodeCrypto.layer));
 
 const platform = Layer.mergeAll(
   NodeServices.layer,
@@ -99,7 +120,10 @@ const platform = Layer.mergeAll(
     HttpClient.make(() => Effect.die("Unexpected fixture HTTP request"))
   ),
   firecrawl,
-  boxLayer
+  boxLayer,
+  N3TurtleCodecLive,
+  ShaclValidationServiceLive,
+  OxigraphSparqlQueryServiceLive
 );
 const services = Layer.provideMerge(Git.layer, platform);
 
@@ -140,7 +164,7 @@ describe("research library routes", () => {
     it.effect("acquires a Box folder with one receipt per file, shared objects and resumable reruns", () =>
       Effect.gen(function* () {
         const { root, fs, path } = yield* tempLibrary();
-        boxDownloads.length = 0;
+        const before = boxFixtureLog.length;
         const options = LibraryBoxAcquireOptions.make({ folderIds: ["top"], fileIds: [] });
         const first = yield* acquireLibraryBox(root, options);
         const boxSources = A.filter(first.sources, (source) => Str.startsWith("box:")(source.identity));
@@ -170,10 +194,53 @@ describe("research library routes", () => {
         expect(A.dedupe(hashes)).toHaveLength(2);
         const observed2 = yield* fs.exists(path.join(root, "objects/sha256", A.getUnsafe(hashes, 0)));
         expect(observed2).toBe(true);
-        expect(A.sort(boxDownloads, Str.Order)).toEqual(["101", "102", "103"]);
+        expect(A.sort(A.drop(boxFixtureLog, before), Str.Order)).toEqual(["101", "102", "103"]);
 
         yield* acquireLibraryBox(root, options);
-        expect(boxDownloads).toHaveLength(3);
+        expect(boxFixtureLog).toHaveLength(before + 3);
+      })
+    );
+
+    it.effect("accepts a readable Box capture's version in verify", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        yield* acquireLibraryBox(root, LibraryBoxAcquireOptions.make({ folderIds: ["nested"], fileIds: [] }));
+        const failure = yield* verifyLibrary(root).pipe(Effect.flip);
+        expect(failure.message).not.toContain("revision differs from source versions");
+        expect(failure.message).not.toContain("Box requested version differs");
+      })
+    );
+
+    it.effect("downloads a superseded Box version against its retained listing SHA-1", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        const otherSha1 = yield* libraryBoxSha1(boxBytes.other);
+        const superseded = LibraryBoxFile.make({
+          id: "105",
+          versionId: "1",
+          name: "draft.txt",
+          sha1: otherSha1,
+          size: 17,
+        });
+        const listingText = yield* encodeJson({ folderIds: [], fileIds: ["105"], files: [superseded] });
+        yield* withCatalog(root, (catalog) => Effect.succeed(catalog));
+        const listing = yield* saveLibraryText(
+          root,
+          "receipts/box/old.json",
+          listingText,
+          "application/json",
+          "box-listing"
+        );
+        const source = yield* libraryBoxSource(superseded, "private");
+        yield* withCatalog(root, (catalog) =>
+          Effect.succeed(
+            LibraryCatalog.make({ ...catalog, sources: [source], artifacts: [...catalog.artifacts, listing] })
+          )
+        );
+        const capture = yield* acquireLibrarySource(root, source);
+        expect([capture.status, capture.capturedRevision]).toEqual(["readable", "105:1"]);
+        const valid = yield* librarySourceEvidenceValid(root, source, capture);
+        expect(valid).toBe(true);
       })
     );
 
@@ -633,6 +700,28 @@ describe("hop extraction locators", () => {
           "https://x.com/EffectTS_",
           "https://en.wikipedia.org/wiki/Effect_(band)",
         ]);
+      })
+    );
+  });
+});
+
+describe("Box authentication precedence", () => {
+  const modeWith = (env: Record<string, string>) =>
+    libraryBoxAuthMode().pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
+  layer(Layer.empty, { timeout: "10 seconds" })((it) => {
+    it.effect("prefers explicit CCG subjects over a developer token loaded from .env", () =>
+      Effect.gen(function* () {
+        const modes = yield* Effect.forEach(
+          [
+            { CLOUD_BOX_TOKEN: "stale-desktop-token", DMS_BOX_USER_ID: "51443111498" },
+            { CLOUD_BOX_TOKEN: "stale-desktop-token", DMS_BOX_ENTERPRISE_ID: "123" },
+            { CLOUD_BOX_TOKEN: "developer-token" },
+            { CLOUD_BOX_TOKEN: "  " },
+            {},
+          ],
+          modeWith
+        );
+        expect(modes).toEqual(["ccg-user", "ccg-enterprise", "developer-token", "ccg-enterprise", "ccg-enterprise"]);
       })
     );
   });

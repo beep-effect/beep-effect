@@ -21,6 +21,7 @@ import {
 } from "@beep/box";
 import { $RepoCliId } from "@beep/identity/packages";
 import { OnePasswordCli } from "@beep/onepassword-cli";
+import { LiteralKit } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -32,6 +33,7 @@ import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
@@ -40,7 +42,7 @@ import * as Str from "effect/String";
 import { encodeLibraryJson, LibraryAdapterResult, saveLibraryText } from "./Library.adapter.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { LibraryArtifact, LibraryCatalog, LibrarySource, LibrarySourceVersion } from "./Library.schemas.ts";
-import { hashBytes, mergeLibraryVersions, saveImmutable, withCatalog } from "./Library.store.ts";
+import { hashBytes, loadCatalog, mergeLibraryVersions, saveImmutable, withCatalog } from "./Library.store.ts";
 import type { LibraryAccessClass } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.box");
@@ -286,31 +288,96 @@ const boxCredential = Effect.fn("LibraryBox.credential")(function* (op: OnePassw
 
 const unwrap = (value: Redacted.Redacted<string>) => Redacted.value(value);
 
+/**
+ * How the Box route authenticates.
+ *
+ * **Example** (List authentication modes)
+ *
+ * ```ts
+ * import { LibraryBoxAuthMode } from "@beep/repo-cli/test/ResearchLibrary"
+ *
+ * console.log(LibraryBoxAuthMode.literals) // ["ccg-user", "ccg-enterprise", "developer-token"]
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const LibraryBoxAuthMode = LiteralKit(["ccg-user", "ccg-enterprise", "developer-token"]).pipe(
+  $I.annoteSchema("LibraryBoxAuthMode", { description: "Box token subject selected for the library route." })
+);
+
+/**
+ * Runtime type of {@link LibraryBoxAuthMode}.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryBoxAuthMode = typeof LibraryBoxAuthMode.Type;
+
+const configured = (name: string) =>
+  Config.String(name).pipe(
+    Config.option,
+    Effect.orElseSucceed(() => O.none<string>()),
+    Effect.map(O.filter((value: string) => Str.isNonEmpty(Str.trim(value))))
+  );
+
+/**
+ * Select the Box token subject from the environment.
+ *
+ * **Details**
+ *
+ * An explicit `DMS_BOX_USER_ID` or `DMS_BOX_ENTERPRISE_ID` selects the client credentials grant even
+ * when `CLOUD_BOX_TOKEN` is set: Bun loads a worktree `.env`, which can carry a stale desktop developer
+ * token that would otherwise win. An empty `CLOUD_BOX_TOKEN` counts as unset. Without any of them the
+ * grant uses the enterprise subject from `BEEP_SECRETS`.
+ *
+ * **Example** (Prepare the selection)
+ *
+ * ```ts
+ * import { libraryBoxAuthMode } from "@beep/repo-cli/test/ResearchLibrary"
+ * import * as Effect from "effect/Effect";
+ *
+ * console.log(Effect.isEffect(libraryBoxAuthMode()))
+ * ```
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const libraryBoxAuthMode = Effect.fn("LibraryBox.authMode")(function* () {
+  const user = yield* configured("DMS_BOX_USER_ID");
+  const enterprise = yield* configured("DMS_BOX_ENTERPRISE_ID");
+  const token = yield* configured("CLOUD_BOX_TOKEN");
+  if (O.isSome(user)) return LibraryBoxAuthMode.Enum["ccg-user"];
+  if (O.isSome(enterprise) || O.isNone(token)) return LibraryBoxAuthMode.Enum["ccg-enterprise"];
+  return LibraryBoxAuthMode.Enum["developer-token"];
+});
+
 const resolveBoxLayer = Effect.fn("LibraryBox.resolveLayer")(function* (op: OnePasswordCli["Service"]) {
-  const token = yield* Config.Redacted("CLOUD_BOX_TOKEN").pipe(Config.option, Effect.orElseSucceed(O.none));
-  if (O.isSome(token)) return Box.makeLayer(BoxDeveloperTokenConfig.make({ token: token.value }));
+  const mode = yield* libraryBoxAuthMode();
+  if (mode === "developer-token") {
+    const token = yield* Config.Redacted("CLOUD_BOX_TOKEN").pipe(
+      Effect.mapError((cause) => LibraryError.make({ message: "CLOUD_BOX_TOKEN is unreadable.", cause }))
+    );
+    return Box.makeLayer(BoxDeveloperTokenConfig.make({ token }));
+  }
   const clientId = yield* boxCredential(op, "DMS_BOX_CLIENT_ID");
   const clientSecret = yield* boxCredential(op, "DMS_BOX_CLIENT_SECRET");
-  // An explicitly configured user subject wins: the enterprise service account cannot see user-owned files.
-  const explicitUser = yield* Config.Redacted("DMS_BOX_USER_ID").pipe(Config.option, Effect.orElseSucceed(O.none));
-  const userId = O.isSome(explicitUser)
-    ? yield* boxCredential(op, "DMS_BOX_USER_ID")
-    : O.none<Redacted.Redacted<string>>();
-  const enterpriseId = O.isSome(userId)
-    ? O.none<Redacted.Redacted<string>>()
-    : yield* boxCredential(op, "DMS_BOX_ENTERPRISE_ID");
-  if (O.isNone(clientId) || O.isNone(clientSecret) || (O.isNone(enterpriseId) && O.isNone(userId)))
+  const subject = yield* boxCredential(op, mode === "ccg-user" ? "DMS_BOX_USER_ID" : "DMS_BOX_ENTERPRISE_ID");
+  if (O.isNone(clientId) || O.isNone(clientSecret) || O.isNone(subject))
     return yield* LibraryError.make({
       message:
-        "Box credentials unavailable: set CLOUD_BOX_TOKEN or the DMS_BOX_* client credentials (op:// references allowed).",
+        "Box credentials unavailable: set the DMS_BOX_* client credentials (op:// references allowed) or CLOUD_BOX_TOKEN.",
       cause: "box-config",
     });
   return Box.makeCcgLayer(
     BoxCcgConfig.make({
       clientId: unwrap(clientId.value),
       clientSecret: clientSecret.value,
-      enterpriseId: O.map(enterpriseId, unwrap),
-      userId: O.map(userId, unwrap),
+      enterpriseId: mode === "ccg-enterprise" ? O.map(subject, unwrap) : O.none(),
+      userId: mode === "ccg-user" ? O.map(subject, unwrap) : O.none(),
     })
   );
 });
@@ -326,10 +393,10 @@ const buildBox = Effect.fn("LibraryBox.build")(function* (op: OnePasswordCli["Se
  *
  * **Details**
  *
- * `CLOUD_BOX_TOKEN` selects a developer token. Otherwise the `DMS_BOX_*` client credentials grant is
- * used; each value may be resolved or an `op://` reference, and unset values read the canonical
- * `BEEP_SECRETS` references. A set `DMS_BOX_USER_ID` selects that user as the token subject instead
- * of the enterprise service account, which cannot see user-owned files. Driver `BoxError`s map to `LibraryError` at this boundary.
+ * {@link libraryBoxAuthMode} picks the token subject. The client credentials grant reads the
+ * `DMS_BOX_*` values, each resolved or an `op://` reference, and unset values read the canonical
+ * `BEEP_SECRETS` references. A set `DMS_BOX_USER_ID` selects that user instead of the enterprise
+ * service account, which cannot see user-owned files. Driver `BoxError`s map to `LibraryError` at this boundary.
  *
  * **Example** (Reference the live Box port)
  *
@@ -431,6 +498,37 @@ export const LibraryBoxLive = Layer.effect(
 ).pipe(Layer.provide(OnePasswordCli.makeLayer()));
 
 /**
+ * Fixture served by {@link makeLibraryBoxTest}: folder listings, subfolders, file bytes and a download log.
+ *
+ * **Example** (Build an empty fixture)
+ *
+ * ```ts
+ * import { LibraryBoxFixture } from "@beep/repo-cli/test/ResearchLibrary"
+ *
+ * console.log(LibraryBoxFixture.make({ folders: {}, bytes: {} }).downloads) // []
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class LibraryBoxFixture extends S.Opaque<LibraryBoxFixture, { readonly brand: unique symbol }>()(
+  S.Struct({
+    folders: S.Record(S.String, S.Array(LibraryBoxFile)),
+    subfolders: S.Record(S.String, S.Array(S.String)).pipe(
+      S.withConstructorDefault(Effect.succeed({})),
+      S.withDecodingDefaultKey(Effect.succeed({}))
+    ),
+    bytes: S.Record(S.String, S.Uint8Array),
+    downloads: S.Array(S.String).pipe(
+      S.mutable,
+      S.withConstructorDefault(Effect.sync(() => [])),
+      S.withDecodingDefaultKey(Effect.sync(() => []))
+    ),
+  }).pipe($I.annoteSchema("LibraryBoxFixture", { description: "In-memory Box listings, bytes and download log." }))
+) {}
+
+/**
  * Deterministic in-memory Box port for tests.
  *
  * **Example** (Build a test port)
@@ -447,19 +545,14 @@ export const LibraryBoxLive = Layer.effect(
  * @category layers
  * @since 0.0.0
  */
-export const makeLibraryBoxTest = (fixture: {
-  readonly bytes: Readonly<Record<string, Uint8Array>>;
-  readonly downloads?: Array<string>;
-  readonly folders: Readonly<Record<string, ReadonlyArray<LibraryBoxFile>>>;
-  readonly subfolders?: Readonly<Record<string, ReadonlyArray<string>>>;
-}) => {
+export const makeLibraryBoxTest = (fixture: LibraryBoxFixture) => {
   const all = A.flatten(R.values(fixture.folders));
   const missing = (id: string) => LibraryError.make({ message: `Box item ${id} not found.`, cause: "box" });
   const listFolder = Effect.fn("LibraryBoxTest.listFolder")(function* (folderId: string) {
     const files = yield* Effect.fromOption(O.fromUndefinedOr(fixture.folders[folderId])).pipe(
       Effect.mapError(() => missing(folderId))
     );
-    return { files, folders: fixture.subfolders?.[folderId] ?? [] };
+    return { files, folders: fixture.subfolders[folderId] ?? [] };
   });
   const describeFile = Effect.fn("LibraryBoxTest.describeFile")(function* (fileId: string) {
     return yield* Effect.fromOption(A.findFirst(all, (file) => file.id === fileId)).pipe(
@@ -470,7 +563,7 @@ export const makeLibraryBoxTest = (fixture: {
     const bytes = yield* Effect.fromOption(O.fromUndefinedOr(fixture.bytes[file.id])).pipe(
       Effect.mapError(() => missing(file.id))
     );
-    fixture.downloads?.push(file.id);
+    fixture.downloads.push(file.id);
     if (bytes.byteLength > maxBytes)
       return yield* LibraryError.make({ message: "Box download exceeded the bound.", cause: "body-bound" });
     return bytes;
@@ -561,12 +654,40 @@ export const libraryBoxSource = Effect.fn("Library.box.source")(function* (
   });
 });
 
+const BoxListing = S.fromJsonString(S.Struct({ files: S.Array(LibraryBoxFile) })).pipe(
+  $I.annoteSchema("LibraryBoxListing", { description: "Retained Box listing receipt with file versions." })
+);
+
+// The requested version is the current one, or a superseded one whose SHA-1 a retained listing recorded.
+const requestedBoxVersion = Effect.fn("Library.box.requestedVersion")(function* (
+  root: string,
+  current: LibraryBoxFile,
+  revision: string
+) {
+  if (Str.isEmpty(revision) || current.versionId === revision) return O.some(current);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const catalog = yield* loadCatalog(root);
+  const listings = A.filter(catalog.artifacts, (artifact) => artifact.role === "box-listing");
+  for (const listing of A.reverse(listings)) {
+    const decoded = yield* fs
+      .readFileString(path.resolve(root, listing.path))
+      .pipe(Effect.flatMap(S.decodeEffect(BoxListing)), Effect.option);
+    const match = O.flatMap(decoded, (value) =>
+      A.findFirst(value.files, (file) => file.id === current.id && file.versionId === revision)
+    );
+    if (O.isSome(match)) return match;
+  }
+  return O.none<LibraryBoxFile>();
+});
+
 /**
  * Download the current version of one Box file, verify Box's SHA-1 and retain the original bytes.
  *
  * **Details**
  *
- * The captured revision is `<fileId>:<versionId>`. Byte-identical downloads share one object under
+ * The captured revision is `<fileId>:<versionId>`. A superseded version is downloaded by its version id,
+ * checked against the SHA-1 its registration listing recorded. Byte-identical downloads share one object under
  * `objects/sha256`, so a resumed run never stores a duplicate.
  *
  * **Example** (Prepare a Box file acquisition)
@@ -596,15 +717,17 @@ export const acquireLibraryBoxFile = Effect.fn("Library.acquireBoxFile")(functio
       reason: "Source is not a Box file locator.",
     });
   const box = yield* LibraryBox;
-  const file = yield* box.describeFile(fileId.value);
-  if (Str.isNonEmpty(source.revision) && file.versionId !== source.revision)
+  const current = yield* box.describeFile(fileId.value);
+  const pinned = yield* requestedBoxVersion(root, current, source.revision);
+  if (O.isNone(pinned))
     return LibraryAdapterResult.make({
       artifacts: [],
       revision: "",
       status: "blocked",
       complete: false,
-      reason: `Box file ${file.id} is now version ${file.versionId}, not the registered ${source.revision}; re-run acquire --route box to register it.`,
+      reason: `Box file ${current.id} version ${source.revision} has no retained listing with its SHA-1; re-run acquire --route box to register it.`,
     });
+  const file = pinned.value;
   const bytes = yield* box.download(file, LIBRARY_BOX_MAX_BYTES);
   const sha1 = yield* libraryBoxSha1(bytes);
   const safeName = Str.replace(/[^A-Za-z0-9._-]+/g, "_")(file.name);

@@ -165,6 +165,8 @@ const hops = Command.make(
   },
   Effect.fn("ResearchLibrary.hopsCommand")(function* ({ library, limit, hop2DomainCap }) {
     const research = yield* ResearchLibrary;
+    if (hop2DomainCap < 0)
+      return yield* LibraryError.make({ message: "--hop2-domain-cap must be zero or more.", cause: hop2DomainCap });
     const root = yield* resolveLibraryRoot(library);
     yield* research.hops(root, limit, LibraryHopPolicy.make({ domainCap: hop2DomainCap }));
   })

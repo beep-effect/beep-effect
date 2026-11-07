@@ -1,7 +1,7 @@
 ---
 title: "Canonical note body is the message with exactly one trailing newline"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 pullRequest: 2785
 reversal: "Change historyNoteBody in commands/History/History.schemas.ts and rebuild refs/notes/history with --write"
 ---
