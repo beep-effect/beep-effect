@@ -17,8 +17,11 @@ Gated candidates (not promised now; re-entry points):
 - `epistemic-library-model-promotion` — move the library's finding/evidence
   model into `packages/epistemic/domain` once a second consumer exists.
 - `legal-ontology-pile-deep-read` — T2 reads of the 449-PDF Box pile, fired
-  when `legal-ontology-landscape`, `lynx-lkg-ontology-grounding` or
-  `legal-patent-kg-deepening` names it.
+  when `goals/legal-document-intake` or a live successor of the graduated
+  legal ontology explorations names it in its plan. Re-pointed 2026-11-07
+  because the original trigger packets graduated; the intake's 379 T1
+  selections are the worklist
+  ([decision](../../goals/research-intake-2026-11/decisions/2026-11-07-map-gated-candidates-reevaluated.md)).
 
 ## Sequencing
 

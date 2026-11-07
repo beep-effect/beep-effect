@@ -10,7 +10,13 @@ export { LibraryBoxAcquireOptions, registerLibraryBoxSources } from "./Library.b
 export { libraryCommand } from "./Library.command.ts";
 export { LibraryError } from "./Library.errors.ts";
 export { libraryWebAdapter } from "./Library.firecrawl.ts";
-export { LibraryHopPolicy } from "./Library.hopPolicy.ts";
+export {
+  LibraryHopChromeHosts,
+  LibraryHopChromePathSegments,
+  LibraryHopNonContentExtensions,
+  LibraryHopNonContentHosts,
+  LibraryHopPolicy,
+} from "./Library.hopPolicy.ts";
 export { libraryHopTotals } from "./Library.hopStatus.ts";
 export {
   LibraryHopDecision,
@@ -18,6 +24,7 @@ export {
   LibraryHopGateReason,
   LibraryPacketConcept,
   libraryHopGate,
+  libraryHopNonContent,
   libraryHopTwoOnly,
   libraryLiveConcepts,
   libraryPacketConcepts,
@@ -47,6 +54,49 @@ export {
 } from "./Library.importMethods.ts";
 export { classifyLibraryReference, extractLibraryReferences, inventoryLibrary } from "./Library.inventory.ts";
 export {
+  LibraryMineBatchError,
+  LibraryMinePrivateRouteError,
+  LibraryMineRunnerError,
+  LibraryMineSpanError,
+  LibraryMineUnreadError,
+} from "./Library.mine.errors.ts";
+export {
+  LibraryMineLaunchPaths,
+  LibraryMineProfile,
+  LibraryMinePromptTransport,
+  LibraryMineRunner,
+  LibraryMineRunnerLive,
+  LibraryMineRunRequest,
+  libraryMineAnswerJson,
+  libraryMineArgv,
+  libraryMineProfile,
+  libraryMineProfileServes,
+} from "./Library.mine.runner.ts";
+export {
+  LibraryAffirmativeCitoRelation,
+  LibraryMineDerivedText,
+  LibraryMineJob,
+  LibraryMineJobKind,
+  LibraryMineOptions,
+  LibraryMineOutcome,
+  LibraryMineProfileId,
+  LibraryMineReceipt,
+  LibraryMineTextOutcome,
+  LibraryMineTextSource,
+  LibraryMineTier,
+  LibraryReadingCoverage,
+  LibraryReadingFindingOutput,
+  LibraryReadingOutput,
+  LibraryReadingRecord,
+  LibrarySynthesisAuthor,
+  LibrarySynthesisFinding,
+  LibrarySynthesisImport,
+  LibraryTriageDecision,
+  LibraryTriageOutput,
+  LibraryTriageRecord,
+} from "./Library.mine.schemas.ts";
+export { mineLibraryRead, mineLibrarySynthesize, mineLibraryTriage } from "./Library.mine.ts";
+export {
   LIBRARY_MIGRATIONS_DIR,
   LIBRARY_ONTOLOGY_DIR,
   LIBRARY_SHAPES_FILE,
@@ -74,6 +124,7 @@ export {
   LibraryFinding,
   LibraryIntake,
   LibraryIntakeFile,
+  LibraryIntakeRetention,
   LibraryIntakeRoot,
   LibraryInventoryOptions,
   LibraryManifest,

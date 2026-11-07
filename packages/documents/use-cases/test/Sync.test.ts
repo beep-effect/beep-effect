@@ -47,6 +47,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import type { DmsMirrorShape, VaultSyncEngineShape } from "@beep/documents-use-cases/aggregates/Sync/server";
 
 const decodeGetVaultSyncStatusPayload = S.decodeEffect(GetVaultSyncStatusPayload);
@@ -142,6 +143,7 @@ describe("DmsMirror port models", () => {
         return yield* service.probe;
       }).pipe(
         Effect.provideService(DmsMirrorAvailability, {
+          changes: Stream.fromEffect(connectedProbe),
           probe: connectedProbe,
           refresh: connectedProbe,
         })

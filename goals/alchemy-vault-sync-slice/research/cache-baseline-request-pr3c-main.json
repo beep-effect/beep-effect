@@ -1,0 +1,14 @@
+{
+  "previous": "fa053f6048cc89d72bb850f33e52ea415778773027552da507fa9a25319d1485",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (orchestrator, goals/vault-sync-api-pr)",
+    "reason": "Record PR 3c's @beep/mcp-kit and @beep/shared-tables dependency edges on @beep/documents-server on top of main after #2894; no command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3c-main.md",
+      "sha256": "81478cddfdc3c247e3041f2260f33dbe79e47411c895c2530b9a0a5433e533de"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

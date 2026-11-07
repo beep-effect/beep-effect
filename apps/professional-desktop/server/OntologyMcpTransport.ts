@@ -31,6 +31,7 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
 import * as McpProtocol from "effect/ai/McpProtocol";
 import * as McpServer from "effect/ai/McpServer";
 import * as Context from "effect/Context";
@@ -54,7 +55,13 @@ const ontologyMcpOriginDecisions = Metric.counter("desktop_ontology_mcp_origin_d
   incremental: true,
 });
 
-const ontologyMcpAllowedOrigins: ReadonlyArray<string> = [
+/**
+ * Browser origins allowed to reach sidecar MCP routes.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const ontologyMcpAllowedOrigins: ReadonlyArray<string> = [
   // Canonical portless dev origin; the 1421 entries cover the PORTLESS=0
   // diagnostic bypass (vite falls back to --port 1421).
   "http://professional-desktop.beep.localhost:1355",
@@ -107,7 +114,25 @@ const originMiddleware = HttpMiddleware.make((effect) =>
   })
 );
 
-const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted) =>
+/**
+ * Origin allowlist, launch-token check and CORS for a sidecar MCP route.
+ *
+ * **Details**
+ *
+ * Shared by the ontology and vault-sync MCP routes so both authenticate the same way.
+ *
+ * **Example** (Build the security middleware)
+ *
+ * ```ts
+ * import * as Redacted from "effect/Redacted";
+ * import { desktopMcpSecurityMiddleware } from "./OntologyMcpTransport.ts"
+ * const security = desktopMcpSecurityMiddleware(Redacted.make("test-token"))
+ * console.log(typeof security.layer)
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export const desktopMcpSecurityMiddleware = (token: Redacted.Redacted) =>
   HttpRouter.middleware(originMiddleware)
     .combine(token.pipe(requireRpcSessionToken, (middleware) => HttpRouter.middleware(middleware)))
     .combine(
@@ -148,6 +173,52 @@ const ontologyEgressSink = ExecutionSink.make({
 // expire together and an expired run can only deny.
 const ontologySessionGrantTtl = Duration.hours(12);
 
+// A function value is a runtime capability held by reference: its schema only recognizes a
+// function and is never encoded or decoded.
+type OntologyMcpEgressFetch = typeof globalThis.fetch;
+
+const OntologyMcpEgressFetch = S.declare((u: unknown): u is OntologyMcpEgressFetch => P.isFunction(u)).pipe(
+  $I.annoteSchema("OntologyMcpEgressFetch", {
+    description: "Transport function a test injects beneath the governed egress boundary.",
+  })
+);
+
+/**
+ * Options for {@link makeOntologyMcpTransportLayer}.
+ *
+ * **Example** (Build transport options)
+ *
+ * ```ts
+ * import * as Redacted from "effect/Redacted";
+ * import { OntologyMcpTransportOptions } from "./OntologyMcpTransport.ts"
+ * const options = OntologyMcpTransportOptions.make({ token: Redacted.make("test-token") })
+ * console.log(options.approvedMutationTools)
+ * // undefined
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class OntologyMcpTransportOptions extends S.Opaque<
+  OntologyMcpTransportOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    token: S.Redacted(S.String).annotateKey({
+      description: "Launch token every MCP request must present as its bearer credential.",
+    }),
+    approvedMutationTools: S.String.pipe(S.Array, S.optionalKey).annotateKey({
+      description: "Mutation tools granted to the session; test-only, production grants none.",
+    }),
+    egressFetch: OntologyMcpEgressFetch.pipe(S.optionalKey).annotateKey({
+      description: "Fetch beneath the governed egress boundary; test-only, production uses the platform fetch.",
+    }),
+  }).pipe(
+    $I.annoteSchema("OntologyMcpTransportOptions", {
+      description: "Options for the authenticated ontology MCP transport layer.",
+    })
+  )
+) {}
+
 /**
  * Builds the `/mcp` route layer with read-only registration independent of mutation enablement.
  *
@@ -164,27 +235,24 @@ const ontologySessionGrantTtl = Duration.hours(12);
  *
  * `approvedMutationTools` lets a test register mutation tools while granting
  * none of them, proving that registration is not authorization. Production
- * never passes it.
+ * never passes it, nor `egressFetch`, which only tests supply to observe the
+ * governed egress boundary without reaching the network.
  *
  * **Example** (Build the ontology transport layer)
  *
  * ```ts
  * import * as Layer from "effect/Layer";
  * import * as Redacted from "effect/Redacted";
- * import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts"
- * const layer = makeOntologyMcpTransportLayer({ token: Redacted.make("test-token") })
+ * import { makeOntologyMcpTransportLayer, OntologyMcpTransportOptions } from "./OntologyMcpTransport.ts"
+ * const layer = makeOntologyMcpTransportLayer(OntologyMcpTransportOptions.make({ token: Redacted.make("test-token") }))
  * console.log(Layer.isLayer(layer))
  * ```
  * @category layers
  * @since 0.0.0
  */
-export const makeOntologyMcpTransportLayer = (options: {
-  readonly token: Redacted.Redacted;
-  readonly approvedMutationTools?: ReadonlyArray<string> | undefined;
-  readonly egressFetch?: typeof globalThis.fetch | undefined;
-}) => {
+export const makeOntologyMcpTransportLayer = (options: OntologyMcpTransportOptions) => {
   const approvedTools = options.approvedMutationTools ?? [];
-  const security = ontologyMcpSecurityMiddleware(options.token);
+  const security = desktopMcpSecurityMiddleware(options.token);
   // `layerHttp` fails with `IllegalArgumentError` only on a malformed path or an
   // empty protocol list, both of which are literals here — so a failure is a
   // defect, not a startup condition the desktop shell can report.

@@ -11,6 +11,7 @@ import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import type * as Stream from "effect/Stream";
 import type { DmsMirrorUnavailable } from "./Sync.errors.ts";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Sync/DmsMirror");
@@ -622,17 +623,23 @@ export class DmsMirrorProbe extends S.Opaque<DmsMirrorProbe, { readonly brand: u
  * must actually re-ask the provider instead of replaying a cached failure.
  * Adapters without caching implement both members as the same effect.
  *
+ * `changes` emits the current probe when subscribed, then every later probe
+ * resolution, so a status subscription can push a new frame when only the
+ * connection state moved. Adapters whose answer never changes emit their one
+ * probe and end.
+ *
  * **Example** (Build availability shape)
  *
  * ```ts
  * import { DmsMirrorProbe, type DmsMirrorAvailabilityShape } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
+ * import * as Stream from "effect/Stream"
  *
  * const probe = Effect.succeed(
  *   DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("probe-failed"), provider: "box" })
  * )
- * const availability: DmsMirrorAvailabilityShape = { probe, refresh: probe }
+ * const availability: DmsMirrorAvailabilityShape = { changes: Stream.fromEffect(probe), probe, refresh: probe }
  * console.log(Effect.runSync(availability.probe).connected)
  * ```
  *
@@ -640,6 +647,7 @@ export class DmsMirrorProbe extends S.Opaque<DmsMirrorProbe, { readonly brand: u
  * @since 0.0.0
  */
 export interface DmsMirrorAvailabilityShape {
+  readonly changes: Stream.Stream<DmsMirrorProbe>;
   readonly probe: Effect.Effect<DmsMirrorProbe>;
   readonly refresh: Effect.Effect<DmsMirrorProbe>;
 }
@@ -656,8 +664,9 @@ export interface DmsMirrorAvailabilityShape {
  *   type DmsMirrorAvailabilityShape
  * } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const probe = Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" }))
- * const availability: DmsMirrorAvailabilityShape = { probe, refresh: probe }
+ * const availability: DmsMirrorAvailabilityShape = { changes: Stream.fromEffect(probe), probe, refresh: probe }
  *
  * const program = Effect.gen(function* () {
  *   const service = yield* DmsMirrorAvailability

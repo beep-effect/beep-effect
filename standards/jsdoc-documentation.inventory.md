@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-07T19:46:44.010Z
+Generated: 2026-11-07T20:47:54.321Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 176 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3806 |
-| publicExports | 27048 |
+| publicModules | 3821 |
+| publicExports | 27184 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -193,7 +193,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 135 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 72 | 0 | 0 |
 | 136 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
 | 137 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 138 | `@beep/documents-domain` | `packages/documents/domain` | clean | 80 | 282 | 0 | 0 |
+| 138 | `@beep/documents-domain` | `packages/documents/domain` | clean | 83 | 309 | 0 | 0 |
 | 139 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 45 | 183 | 0 | 0 |
 | 140 | `@beep/execution-authority-domain` | `packages/execution-authority/domain` | clean | 12 | 81 | 0 | 0 |
 | 141 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 178 | 838 | 0 | 0 |
@@ -208,7 +208,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 150 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
 | 151 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
 | 152 | `@beep/documents-tables` | `packages/documents/tables` | clean | 19 | 48 | 0 | 0 |
-| 153 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 38 | 161 | 0 | 0 |
+| 153 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 40 | 170 | 0 | 0 |
 | 154 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 29 | 81 | 0 | 0 |
 | 155 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 37 | 146 | 0 | 0 |
 | 156 | `@beep/execution-authority-config` | `packages/execution-authority/config` | clean | 7 | 20 | 0 | 0 |
@@ -218,14 +218,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 160 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
 | 161 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
 | 162 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 163 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 547 | 5008 | 45 | 29 |
+| 163 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 552 | 5083 | 45 | 29 |
 | 164 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
 | 165 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
 | 166 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
 | 167 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
 | 168 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
 | 169 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 170 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 38 | 133 | 2 | 0 |
+| 170 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 43 | 158 | 2 | 0 |
 | 171 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
 | 172 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 19 | 43 | 0 | 0 |
 | 173 | `@beep/execution-authority-server` | `packages/execution-authority/server` | clean | 10 | 19 | 0 | 0 |
