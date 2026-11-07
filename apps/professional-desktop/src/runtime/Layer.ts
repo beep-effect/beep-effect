@@ -34,17 +34,30 @@ import { AnthropicLanguageModelOptions, AnthropicLive, makeAnthropicLanguageMode
 import { Box, BoxCcgConfig, BoxDeveloperTokenConfig } from "@beep/box";
 import { DocTextFileProcessingEngine } from "@beep/doc-text";
 import {
+  ensureLegacyBoxDestination,
+  ensureVaultSyncOwnerMembership,
+  VaultSyncMembershipLive,
+  VaultSyncOwnership,
+  VaultSyncRpcOrganization,
+  VaultSyncRpcsApiLive,
+  VaultSyncSessionLive,
+  VaultSyncSidecarChannelLive,
+  VaultSyncWorkspaceRoots,
+} from "@beep/documents-server/aggregates/Sync";
+import {
   BoxMirrorConfigLayer,
   DmsMirrorAvailabilityBoxLayer,
   DmsMirrorBoxLive,
   DocumentsServerLive,
   DocumentsServerLlmLive,
-  DocumentsSyncDrizzleLive,
-  DocumentsSyncFixtureLive,
+  DocumentsVaultSyncFixtureLive,
+  DocumentsVaultSyncLive,
   FILING_DECISION_DEFAULT_MODEL,
   FILING_DECISION_MODEL_ENV,
   FilingDecisionLlmConfigLayer,
+  VaultSyncMirrorRootLayer,
 } from "@beep/documents-server/layer";
+import { VaultSyncActionError, VaultSyncRpcs } from "@beep/documents-use-cases/public";
 import {
   EpistemicServerDrizzleLive,
   EpistemicServerDrizzleRpcLive,
@@ -53,16 +66,20 @@ import {
 import { ContradictionReviewer, ContradictionReviewScope } from "@beep/epistemic-use-cases/server";
 import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
+import { makeDrizzleLayer } from "@beep/postgres";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { SourceText, Thread, Workspace } from "@beep/workspace-server";
+import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
 import { BunServices } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Stream from "effect/Stream";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
 import { ContradictionQaSeedLive } from "@/contradiction/ContradictionQaSeed";
@@ -70,10 +87,11 @@ import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake
 import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { OntologyWorkspaceSeedLive } from "@/ontology/OntologyWorkspaceSeed";
+import { migrateOnBoot } from "@/runtime/Migrations";
 import { ObservabilityLive } from "@/runtime/Observability";
-import { PgliteDrizzleLive } from "@/runtime/Pglite";
+import { makeBundledPgliteLayer, PgliteDrizzleLive } from "@/runtime/Pglite";
 import { DmsMirrorAvailabilityDisconnectedLayer, DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected";
-import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator";
+import { VaultSyncDesktopBindingLive } from "@/sync/VaultSyncSession";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
 import type { ThreadStoreUnavailable } from "@beep/workspace-use-cases/server";
 import type * as PlatformError from "effect/PlatformError";
@@ -101,7 +119,6 @@ const DesktopHandlersBase = Layer.mergeAll(
   WorkspaceVaultHandlersLive,
   DocumentIntakeHandlersLive,
   VaultDirectoryPickerHandlersLive,
-  VaultSyncHandlersLive,
   OntologyHandlersLive
 );
 
@@ -111,9 +128,6 @@ const ContradictionQaSeedDesktopLive = ContradictionQaSeedLive.pipe(
 );
 
 const EpistemicServerDesktopLive = Layer.merge(EpistemicServerDrizzleRpcLive, ContradictionQaSeedDesktopLive);
-
-const DesktopHandlersLive = Layer.merge(DesktopHandlersBase, EpistemicServerDesktopLive);
-const DesktopHandlersTest = Layer.merge(DesktopHandlersBase, EpistemicServerRpcLive);
 
 /**
  * Typed startup failures preserved by the desktop runtime.
@@ -149,7 +163,12 @@ export type DesktopStartupError = Config.ConfigError | PlatformError.PlatformErr
  * @category models
  * @since 0.0.0
  */
-export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>, DesktopStartupError>;
+export type DesktopHandlersLayer = Layer.Layer<
+  | Layer.Success<typeof DesktopHandlersBase>
+  | Layer.Success<typeof EpistemicServerDesktopLive>
+  | Layer.Success<typeof VaultSyncMaintenanceRpcs>,
+  DesktopStartupError
+>;
 
 /**
  * The `CHAT_AGENT` env flag: `anthropic` (default) selects the live layers,
@@ -293,39 +312,150 @@ const boxAuthLayer = Effect.gen(function* () {
   return O.none<Layer.Layer<Box>>();
 });
 
+// The sidecar hosts one local organization; it owns every workspace's sync destination.
+const VaultSyncHostingLive = Layer.mergeAll(
+  Layer.succeed(VaultSyncOwnership, {
+    orgOf: Effect.fn("DesktopVaultSync.orgOf")(() => Effect.succeed(desktopOrganizationId)),
+  }),
+  VaultSyncMirrorRootLayer,
+  // A pass reads the vault root from the authorized workspace configuration every time it needs it.
+  Layer.effect(
+    VaultSyncWorkspaceRoots,
+    Effect.gen(function* () {
+      const store = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;
+      return VaultSyncWorkspaceRoots.of({
+        rootOf: Effect.fn("DesktopVaultSync.rootOf")((workspaceId: number) =>
+          store.getVaultConfig(WorkspaceIdentity.WorkspaceId.make(workspaceId)).pipe(
+            Effect.map((config) => config.vaultRootPath),
+            Effect.catch((error) =>
+              Effect.logWarning("vault sync could not read the workspace vault root").pipe(
+                Effect.annotateLogs({ workspaceId, reason: error._tag }),
+                Effect.as(O.none<string>())
+              )
+            )
+          )
+        ),
+      });
+    })
+  )
+);
+
 /**
- * Select the documents vault-sync engine layer. `CHAT_AGENT=fixture` keeps the
- * fully deterministic keyless engine (in-memory repos + fixture mirror);
- * otherwise the Drizzle-backed engine runs against the Box mirror when Box
- * credentials are configured — {@link boxAuthLayer} prefers the
- * self-refreshing Client Credentials Grant over the static `CLOUD_BOX_TOKEN`
- * developer token — or against the app-local disconnected mirror layers
- * (typed `DmsMirrorUnavailable` + probe `connected: false`) when neither is
- * set — the honest not-connected state while the Box test tenant is not
- * provisioned.
+ * Select the documents vault-sync Model host. Every branch runs the same
+ * alchemy Model as the only writer of the four sync tables (genesis and
+ * admission run once at startup over the sidecar's PGlite store); only the DMS
+ * mirror differs. `CHAT_AGENT=fixture` uses the deterministic fixture mirror;
+ * otherwise the Box mirror runs when Box credentials are configured —
+ * {@link boxAuthLayer} prefers the self-refreshing Client Credentials Grant
+ * over the static `CLOUD_BOX_TOKEN` developer token — or the app-local
+ * disconnected mirror layers (typed `DmsMirrorUnavailable` + probe
+ * `connected: false`) when neither is set. The mirror availability probe stays
+ * in the output for the RPC status reads.
  *
  * @category layers
  * @since 0.0.0
  */
-const DocumentsSyncLive = selectByChatAgent(
-  DocumentsSyncFixtureLive,
+const VaultSyncModelLive = selectByChatAgent(
+  DocumentsVaultSyncFixtureLive,
   Effect.gen(function* () {
     const box = yield* boxAuthLayer;
     return O.match(box, {
       onNone: () =>
-        DocumentsSyncDrizzleLive.pipe(
-          Layer.provide([DmsMirrorDisconnectedLayer, DmsMirrorAvailabilityDisconnectedLayer])
+        DocumentsVaultSyncLive.pipe(
+          Layer.provideMerge(Layer.mergeAll(DmsMirrorDisconnectedLayer, DmsMirrorAvailabilityDisconnectedLayer))
         ),
       onSome: (boxDriver) =>
-        DocumentsSyncDrizzleLive.pipe(
+        DocumentsVaultSyncLive.pipe(
           // The availability probe resolves the mirror root itself, so it needs
           // the Box driver and mirror config just like the mirror layer.
-          Layer.provide([DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer))]),
+          Layer.provideMerge(
+            Layer.mergeAll(DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer)))
+          ),
           Layer.provide(boxDriver)
         ),
     });
   })
 );
+
+// The desktop's signed-in owner and its workspace destination, seeded once and idempotently.
+const VaultSyncBootstrap = Layer.effectDiscard(
+  Effect.gen(function* () {
+    yield* ensureVaultSyncOwnerMembership(desktopReviewer.userId, desktopOrganizationId);
+    yield* ensureLegacyBoxDestination(desktopWorkspaceId);
+  }).pipe(Effect.withSpan("DesktopVaultSync.bootstrap"))
+);
+
+const hostOver = <E, R>(model: Layer.Layer<Layer.Success<typeof VaultSyncModelLive>, E, R>) =>
+  VaultSyncBootstrap.pipe(Layer.provideMerge(model), Layer.provideMerge(VaultSyncHostingLive));
+
+/**
+ * The hosted vault-sync Model on the sidecar PGlite, with the bootstrap applied.
+ *
+ * **Details**
+ *
+ * The RPC handlers and the HTTP, `/vault-sync/rpc` and MCP transport share
+ * this one value, so layer memoization hosts a single Model per sidecar.
+ *
+ * **Example** (Verify the host layer)
+ *
+ * ```ts
+ * import { VaultSyncDesktopHostLive } from "@/runtime/Layer"
+ * import * as Layer from "effect/Layer";
+ * console.log(Layer.isLayer(VaultSyncDesktopHostLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const VaultSyncDesktopHostLive = hostOver(VaultSyncModelLive);
+
+const VaultSyncMaintenanceRpcs = VaultSyncRpcs.toLayer(
+  Effect.succeed(
+    VaultSyncRpcs.of({
+      GetVaultSyncStatus: () => VaultSyncActionError.failEffect("Vault sync is in maintenance."),
+      ListVaultSyncConflicts: () => VaultSyncActionError.failEffect("Vault sync is in maintenance."),
+      MarkVaultSyncConflictReviewed: () => VaultSyncActionError.failEffect("Vault sync is in maintenance."),
+      TriggerVaultSync: () => VaultSyncActionError.failEffect("Vault sync is in maintenance."),
+      WatchVaultSyncStatus: () => Stream.fail(VaultSyncActionError.make({ message: "Vault sync is in maintenance." })),
+    })
+  )
+);
+
+// The four desktop RPCs, served through the vault-sync Api with the legacy wire unchanged.
+// A refused admission leaves the store with no writer; the panel then reports maintenance.
+const vaultSyncRpcsOver = <E, R>(host: Layer.Layer<Layer.Success<typeof VaultSyncDesktopHostLive>, E, R>) =>
+  VaultSyncRpcsApiLive.pipe(
+    Layer.provide(
+      VaultSyncSessionLive.pipe(
+        Layer.provideMerge(VaultSyncSidecarChannelLive),
+        Layer.provideMerge(Layer.mergeAll(VaultSyncDesktopBindingLive, VaultSyncMembershipLive)),
+        Layer.provideMerge(host)
+      )
+    ),
+    Layer.provide(Layer.succeed(VaultSyncRpcOrganization, { orgId: desktopOrganizationId })),
+    Layer.catchCause((cause) =>
+      Layer.effectDiscard(
+        Effect.logError("vault sync is unavailable; serving maintenance RPCs").pipe(
+          Effect.annotateLogs({ cause: Cause.pretty(cause) })
+        )
+      ).pipe(Layer.provideMerge(VaultSyncMaintenanceRpcs))
+    )
+  );
+
+// The fixture runtime has no shared database, so vault sync gets a migrated in-memory PGlite of its own.
+const SyncDatabaseInMemory = makeDrizzleLayer().pipe(
+  Layer.tap((context) => Effect.provide(migrateOnBoot, context)),
+  Layer.provideMerge(makeBundledPgliteLayer()),
+  Layer.orDie
+);
+
+const VaultSyncRpcsLive = vaultSyncRpcsOver(VaultSyncDesktopHostLive);
+const VaultSyncTestHost = DocumentsVaultSyncFixtureLive.pipe(hostOver, Layer.provideMerge(SyncDatabaseInMemory));
+// The same layer value is memoized, so the handlers and the host share one in-memory store.
+const VaultSyncRpcsTest = vaultSyncRpcsOver(VaultSyncTestHost).pipe(Layer.provide(SyncDatabaseInMemory));
+
+const DesktopHandlersLive = Layer.mergeAll(DesktopHandlersBase, EpistemicServerDesktopLive, VaultSyncRpcsLive);
+const DesktopHandlersTest = Layer.mergeAll(DesktopHandlersBase, EpistemicServerRpcLive, VaultSyncRpcsTest);
 
 /**
  * App-local live runtime Layer for chat and ontology sidecar handlers.
@@ -350,7 +480,6 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     ContradictionRequestContextLive,
     UsageRecordSinkDrizzle,
     DocumentsFilingLive,
-    DocumentsSyncLive,
     // The workbench pre-fills a starter document path; seeding materializes it
     // so a fresh workspace opens something instead of failing on Open. Keep the
     // server services available to the handlers while also providing them to
@@ -386,7 +515,6 @@ export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersTest.pipe(
     ContradictionRequestContextLive,
     UsageRecordSinkInMemory,
     DocumentsServerLive,
-    DocumentsSyncFixtureLive,
     OntologyServerLive,
   ]),
   Layer.provide(BunCrypto.layer),

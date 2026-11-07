@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   layerVaultSyncTransportSession,
   VAULT_SYNC_RPC_PATH,
@@ -13,7 +12,6 @@ import {
   VaultSyncMcpLive,
   VaultSyncMembershipLive,
   VaultSyncRpcHttp,
-  VaultSyncSessionBinding,
 } from "@beep/documents-server/aggregates/Sync";
 import { vaultSyncRemoteCli } from "@beep/documents-use-cases/aggregates/VaultSync";
 import * as McpProtocol from "effect/ai/McpProtocol";
@@ -21,7 +19,7 @@ import * as McpServer from "effect/ai/McpServer";
 import * as Effect from "effect/Effect";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 import * as Layer from "effect/Layer";
-import * as S from "effect/Schema";
+import { layerDesktopVaultSyncBinding } from "@/sync/VaultSyncSession";
 import { desktopMcpSecurityMiddleware, ontologyMcpAllowedOrigins } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionTokenRequired, rpcSessionAuthorizationHeader } from "./RpcSessionAuth.ts";
 import type * as Redacted from "effect/Redacted";
@@ -33,42 +31,6 @@ import type * as Redacted from "effect/Redacted";
  * @since 0.0.0
  */
 export const VAULT_SYNC_MCP_PATH = "/vault-sync/mcp" as const;
-
-// The same user, organization and workspace the desktop already acts as for contradiction review.
-const desktopVaultSyncRequest = S.decodeEffect(V.VaultSyncRequest)({
-  principal: { kind: "User", userId: 1 },
-  principalKey: "User:1",
-  actorSourceKind: "User",
-  sourceKind: "sidecar",
-  orgId: 1,
-  workspaceId: 1,
-  correlationId: "desktop-launch",
-  sessionRef: "desktop-launch",
-});
-
-/**
- * Binds the launch token to the desktop principal for every vault-sync session adapter.
- *
- * **Example** (Build the binding)
- *
- * ```ts
- * import * as Layer from "effect/Layer";
- * import * as Redacted from "effect/Redacted";
- * import { layerDesktopVaultSyncBinding } from "./VaultSyncTransport.ts"
- * console.log(Layer.isLayer(layerDesktopVaultSyncBinding(Redacted.make("test-token"))))
- * ```
- *
- * @category layers
- * @since 0.0.0
- */
-export const layerDesktopVaultSyncBinding = (token: Redacted.Redacted<string>) =>
-  Layer.effect(
-    VaultSyncSessionBinding,
-    desktopVaultSyncRequest.pipe(
-      Effect.map((request) => VaultSyncSessionBinding.of({ request, token })),
-      Effect.orDie
-    )
-  );
 
 /**
  * HTTP, remote-CLI RPC and Views-only MCP routes over one hosted vault-sync model.

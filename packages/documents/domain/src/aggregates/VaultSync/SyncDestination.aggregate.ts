@@ -4,16 +4,22 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Struct from "effect/Struct";
 import * as C from "./SyncDestination.command.ts";
+import * as G from "./SyncGenesis.command.ts";
 import { SyncRuleViolation } from "./SyncRuleViolation.rejection.ts";
 import * as V from "./Values.ts";
 import type { SyncRule } from "./SyncRuleViolation.rejection.ts";
 
 const refused = (rule: SyncRule) => SyncRuleViolation.make({ rule, evidence: "destination state" });
+// The legacy writer set a cursor's free-text `last_error` only when polling Box failed, so every
+// non-null legacy text names `pollEvents`. The genesis event keeps the row verbatim; the legacy
+// projection writes that row, so the text survives replay while the state holds the closed literal.
+const legacyCursorError = (text: string | null): V.MirrorOperation | null => (text === null ? null : "pollEvents");
 const sameOwner = (
   s: { readonly orgId: number; readonly workspaceId: number },
   c: { readonly orgId: number; readonly workspaceId: number }
@@ -41,6 +47,8 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
   state: C.DestinationState,
   initial: { _tag: "Unregistered" },
   commands: [
+    G.ImportCursorGenesis,
+    G.ImportDestinationGenesis,
     C.RegisterDestination,
     C.RequestVaultSync,
     C.ProbeDestination,
@@ -53,6 +61,12 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
     C.ReleaseItemPath,
   ],
   decide: {
+    ImportCursorGenesis: (s, c) =>
+      s._tag === "Registered" ? [G.CursorGenesisImported.make(Struct.omit(c, ["_tag"]))] : refused("not-registered"),
+    ImportDestinationGenesis: (s, c) =>
+      s._tag === "Unregistered"
+        ? [G.DestinationGenesisImported.make(Struct.omit(c, ["_tag"]))]
+        : SyncRuleViolation.make({ rule: "genesis-requires-empty-stream", evidence: c.importId }),
     RequestVaultSync: (s, c) =>
       s._tag === "Registered"
         ? s.paused
@@ -96,6 +110,15 @@ export class SyncDestination extends Domain.Aggregate("SyncDestination", {
         : [],
   },
   evolve: {
+    CursorGenesisImported: (s, e): C.DestinationState =>
+      s._tag !== "Registered"
+        ? s
+        : {
+            ...s,
+            paused: s.paused || e.paused,
+            ...(e.selected ? { cursor: e.row.stream_position, cursorError: legacyCursorError(e.row.last_error) } : {}),
+          },
+    DestinationGenesisImported: (_s, e) => e.record,
     VaultSyncRequested: (s) => s,
     DestinationProbeRequested: (s) => s,
     DestinationRegistered: (_, e): C.DestinationState => ({

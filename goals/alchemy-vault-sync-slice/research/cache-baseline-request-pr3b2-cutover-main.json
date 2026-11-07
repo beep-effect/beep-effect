@@ -1,0 +1,14 @@
+{
+  "previous": "6f4ca8ee32d450fb91d88640dec80a36b444fe272bd98892bdd52aebd82c559c",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover-pr PR 3b part 2)",
+    "reason": "Record the db-admin shared-tables dependency edge for the shared_membership migration on top of the PR 3c baseline merged as #2899. No command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-cutover-main.md",
+      "sha256": "9f4f4a73b4739de11e3f6bbf0480e017fd86c1a236ac872bb776fbd840c01289"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
