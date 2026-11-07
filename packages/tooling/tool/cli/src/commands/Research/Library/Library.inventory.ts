@@ -11,6 +11,8 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constant, dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -34,7 +36,12 @@ import {
   LibrarySourceVersion,
 } from "./Library.schemas.ts";
 import { hashBytes, mergeLibraryVersions, saveImmutable, withCatalog } from "./Library.store.ts";
-import type { LibraryInventoryOptions, LibraryOwnership, LibrarySourceKind } from "./Library.schemas.ts";
+import type {
+  LibraryAccessClass,
+  LibraryInventoryOptions,
+  LibraryOwnership,
+  LibrarySourceKind,
+} from "./Library.schemas.ts";
 
 // `effect/String` match results type `index` as optional; every match here comes from a global
 // `matchAll`, which always sets it.
@@ -536,6 +543,54 @@ const listInputs = Effect.fn("ResearchLibrary.listInputs")(function* (root: stri
   return A.sort(files, Order.String);
 });
 
+const isWithin = (path: Path.Path, parent: string, child: string) => {
+  const relative = path.relative(parent, child);
+  return (
+    relative === "" || (!path.isAbsolute(relative) && relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative))
+  );
+};
+
+// A private-only citation is private context; one public citation makes the source public.
+// Box registrations carry their own partition and are never reclassified from citations.
+const reclassifySourceAccess = (
+  sources: ReadonlyArray<LibrarySource>,
+  occurrences: ReadonlyArray<LibraryOccurrence>,
+  documents: ReadonlyArray<LibraryDocument>
+): Array<LibrarySource> => {
+  const documentAccess = HashMap.fromIterable(A.map(documents, (d) => [d.id, d.accessClass] as const));
+  const sourceById = HashMap.fromIterable(A.map(sources, (source) => [source.id, source] as const));
+  let evidence = HashMap.empty<string, HashSet.HashSet<LibraryAccessClass>>();
+  const record = (key: string, access: LibraryAccessClass) =>
+    (evidence = HashMap.set(
+      evidence,
+      key,
+      HashSet.add(O.getOrElse(HashMap.get(evidence, key), HashSet.empty<LibraryAccessClass>), access)
+    ));
+  for (const occurrence of occurrences) {
+    const access = HashMap.get(documentAccess, occurrence.documentId);
+    if (O.isNone(access)) continue;
+    record(occurrence.sourceId, access.value);
+    const cited = HashMap.get(sourceById, occurrence.sourceId);
+    if (O.isSome(cited) && Str.isNonEmpty(cited.value.repository) && cited.value.ownership === "external")
+      record(`repository:${Str.toLowerCase(cited.value.repository)}`, access.value);
+  }
+  return A.map(sources, (source) => {
+    if (Str.startsWith("box:")(source.identity)) return source;
+    const direct = O.getOrElse(HashMap.get(evidence, source.id), HashSet.empty<LibraryAccessClass>);
+    const repository =
+      source.kind === "github-repository"
+        ? O.getOrElse(
+            HashMap.get(evidence, `repository:${Str.toLowerCase(source.repository)}`),
+            HashSet.empty<LibraryAccessClass>
+          )
+        : HashSet.empty<LibraryAccessClass>();
+    const access = HashSet.union(direct, repository);
+    if (HashSet.size(access) === 0) return source;
+    const accessClass: LibraryAccessClass = HashSet.has(access, "public") ? "public" : "private";
+    return accessClass === source.accessClass ? source : LibrarySource.make({ ...source, accessClass });
+  });
+};
+
 /**
  * Snapshot input documents and record every extracted citation without fetching sources.
  * **Example** (Inventory two roots)
@@ -595,7 +650,7 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
       // A read-only first pass establishes explicit paper identities independent of input order.
       let knownPaperReferences: ReadonlyArray<string> = [];
       const collectKnownPaperReferences = Effect.fn("ResearchLibrary.collectKnownPaperReferences")(function* () {
-        for (const inputRoot of options.inputRoots) {
+        for (const inputRoot of [...options.inputRoots, ...options.privateInputRoots]) {
           for (const inputPath of yield* listInputs(path.resolve(inputRoot))) {
             if (!/\.(?:md|json|jsonl)$/i.test(inputPath)) continue;
             const inputText = yield* fs.readFileString(inputPath).pipe(failure("Cannot read paper identity census."));
@@ -639,8 +694,20 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
           sources = A.map(sources, (item) => (item.id === merged.id ? merged : item));
         }
       };
+      const privateRoots = A.dedupe(A.map(options.privateInputRoots, (root) => path.resolve(root)));
+      const publicRoots = A.filter(
+        A.dedupe(A.map(options.inputRoots, (root) => path.resolve(root))),
+        (root) => !A.contains(privateRoots, root)
+      );
+      // Classification follows the document location: the innermost private root wins its subtree.
+      const accessFor = (file: string): LibraryAccessClass =>
+        A.some(privateRoots, (root) => isWithin(path, root, file)) ? "private" : "public";
+      let inventoried = HashSet.empty<string>();
       const snapshotInputFiles = Effect.fn("ResearchLibrary.snapshotInputFiles")(function* (inputRoot: string) {
         for (const originalPath of yield* listInputs(path.resolve(inputRoot))) {
+          if (HashSet.has(inventoried, originalPath)) continue;
+          inventoried = HashSet.add(inventoried, originalPath);
+          const accessClass = accessFor(originalPath);
           const bytes = yield* fs.readFile(originalPath).pipe(failure("Cannot read corpus input."));
           const sha256 = yield* hashBytes(bytes);
           const id = yield* hashText(`${originalPath}\n${sha256}`);
@@ -648,7 +715,14 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
           const parseable = /\.(?:md|json|jsonl)$/i.test(originalPath);
           intakeFiles = A.append(
             intakeFiles,
-            LibraryIntakeFile.make({ originalPath, snapshotPath, sha256, bytes: bytes.byteLength, parseable })
+            LibraryIntakeFile.make({
+              accessClass,
+              originalPath,
+              snapshotPath,
+              sha256,
+              bytes: bytes.byteLength,
+              parseable,
+            })
           );
           yield* saveImmutable(options.libraryRoot, snapshotPath, bytes);
           // Recheck snapshot hashes even on reruns; preserved original paths retain provenance.
@@ -682,6 +756,7 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
             documents,
             LibraryDocument.make({
               id,
+              accessClass,
               originalPath,
               snapshotPath,
               sha256,
@@ -773,19 +848,19 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
           yield* collectDocumentOccurrences();
         }
       });
-      const snapshotInputRoot = Effect.fn("ResearchLibrary.snapshotInputRoot")(function* (inputRoot: string) {
+      const snapshotInputRoot = Effect.fn("ResearchLibrary.snapshotInputRoot")(function* (
+        inputRoot: string,
+        accessClass: LibraryAccessClass
+      ) {
         // A root outside any repository (or with no commit) records no commit.
         const repoCommit = yield* Effect.flatMap(Git, (git) => git.revParse(path.resolve(inputRoot), "HEAD")).pipe(
           Effect.orElseSucceed(() => "")
         );
-        intakeRoots = A.append(intakeRoots, LibraryIntakeRoot.make({ path: path.resolve(inputRoot), repoCommit }));
-        const relativeLibrary = path.relative(path.resolve(inputRoot), path.resolve(options.libraryRoot));
-        if (
-          relativeLibrary === "" ||
-          (!path.isAbsolute(relativeLibrary) &&
-            relativeLibrary !== ".." &&
-            !Str.startsWith(`..${path.sep}`)(relativeLibrary))
-        ) {
+        intakeRoots = A.append(
+          intakeRoots,
+          LibraryIntakeRoot.make({ path: path.resolve(inputRoot), repoCommit, accessClass })
+        );
+        if (isWithin(path, path.resolve(inputRoot), path.resolve(options.libraryRoot))) {
           return yield* LibraryError.make({
             message: "Library output must not be inside an input corpus root.",
             cause: inputRoot,
@@ -793,7 +868,8 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
         }
         yield* snapshotInputFiles(path.resolve(inputRoot));
       });
-      for (const inputRoot of options.inputRoots) yield* snapshotInputRoot(inputRoot);
+      for (const inputRoot of publicRoots) yield* snapshotInputRoot(inputRoot, "public");
+      for (const inputRoot of privateRoots) yield* snapshotInputRoot(inputRoot, "private");
       // Exact repository shorthand can resolve only against explicit URL evidence.
       const resolveExactAliases = Effect.fn("ResearchLibrary.resolveExactAliases")(function* () {
         for (const candidate of A.filter(sources, (source) => source.ownership === "unresolved")) {
@@ -836,6 +912,7 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
           A.some(catalog.captures, (capture) => capture.sourceId === source.id) ||
           A.some(catalog.derivations, (derivation) => derivation.derivedId === source.id)
       );
+      sources = reclassifySourceAccess(sources, occurrences, documents);
       const census = yield* LibraryIntakeFile.pipe(
         S.Array,
         S.fromJsonString,
@@ -843,7 +920,7 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
       )(intakeFiles).pipe(failure("Cannot encode intake census."));
       const intakeId = yield* hashText(
         `${date}\n${census}\n${A.join(
-          A.map(intakeRoots, (r) => `${r.path}:${r.repoCommit}`),
+          A.map(intakeRoots, (r) => `${r.path}:${r.repoCommit}${r.accessClass === "private" ? ":private" : ""}`),
           "\n"
         )}`
       );
@@ -875,7 +952,13 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
         [
           ...catalog.artifacts,
           LibraryArtifact.make({ ...rootArtifact, mediaType: "application/json", role: "library-manifest" }),
-          LibraryArtifact.make({ ...intakeArtifact, mediaType: "application/json", role: "intake-manifest" }),
+          LibraryArtifact.make({
+            ...intakeArtifact,
+            // The census names private input paths, so it belongs to the private partition.
+            accessClass: A.some(intakeFiles, (file) => file.accessClass === "private") ? "private" : "public",
+            mediaType: "application/json",
+            role: "intake-manifest",
+          }),
         ],
         (a, b) => a.path === b.path
       );

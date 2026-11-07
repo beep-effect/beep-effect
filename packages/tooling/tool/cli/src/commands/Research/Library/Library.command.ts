@@ -34,14 +34,28 @@ const inventory = Command.make(
       Flag.atLeast(0),
       Flag.withDescription("Corpus directory; repeat to include every root")
     ),
+    privateInput: Flag.String("private-input").pipe(
+      Flag.atLeast(0),
+      Flag.withDescription(
+        "Corpus directory inventoried into the private partition; repeat for every root. A private root may sit inside an --input root and wins for that subtree"
+      )
+    ),
   },
-  Effect.fn("ResearchLibrary.inventoryCommand")(function* ({ library, input }) {
+  Effect.fn("ResearchLibrary.inventoryCommand")(function* ({ library, input, privateInput }) {
     const research = yield* ResearchLibrary;
     const libraryRoot = yield* resolveLibraryRoot(library);
-    const inputRoots = yield* resolveLibraryInputRoots(input);
-    const catalog = yield* research.inventory(libraryRoot, LibraryInventoryOptions.make({ libraryRoot, inputRoots }));
+    // Explicit private roots alone must not pull in the default public corpus roots.
+    const inputRoots =
+      A.isReadonlyArrayEmpty(input) && A.isReadonlyArrayNonEmpty(privateInput)
+        ? []
+        : yield* resolveLibraryInputRoots(input);
+    const catalog = yield* research.inventory(
+      libraryRoot,
+      LibraryInventoryOptions.make({ libraryRoot, inputRoots, privateInputRoots: privateInput })
+    );
+    const privateDocuments = A.filter(catalog.documents, (document) => document.accessClass === "private").length;
     yield* Console.log(
-      `Inventoried ${catalog.documents.length} documents, ${catalog.sources.length} source identities, ${catalog.occurrences.length} citations in ${libraryRoot}`
+      `Inventoried ${catalog.documents.length} documents (${privateDocuments} private), ${catalog.sources.length} source identities, ${catalog.occurrences.length} citations in ${libraryRoot}`
     );
   })
 ).pipe(

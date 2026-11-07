@@ -561,6 +561,7 @@ export class LibraryQualification extends S.Opaque<LibraryQualification, { reado
  */
 export class LibraryIntakeFile extends S.Opaque<LibraryIntakeFile, { readonly brand: unique symbol }>()(
   S.Struct({
+    accessClass: LibraryAccessClassField,
     originalPath: S.String,
     snapshotPath: S.String,
     sha256: S.String.check(S.isPattern(/^[a-f0-9]{64}$/)),
@@ -585,7 +586,7 @@ export class LibraryIntakeFile extends S.Opaque<LibraryIntakeFile, { readonly br
  * @since 0.0.0
  */
 export class LibraryIntakeRoot extends S.Opaque<LibraryIntakeRoot, { readonly brand: unique symbol }>()(
-  S.Struct({ path: S.String, repoCommit: S.String })
+  S.Struct({ path: S.String, repoCommit: S.String, accessClass: LibraryAccessClassField })
     .pipe(
       $I.annoteSchema("LibraryIntakeRoot", {
         description: "Exact input root and source repository commit if available.",
@@ -816,6 +817,13 @@ export class LibraryCatalog extends S.Opaque<LibraryCatalog, { readonly brand: u
 
 /**
  * InventoryOptions record for persisted research provenance.
+ *
+ * **Details**
+ *
+ * `privateInputRoots` are inventoried like `inputRoots`, but their documents and intake
+ * census entries join the private partition. A private root may sit inside a public root;
+ * its files are then inventoried once, as private.
+ *
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryInventoryOptions } from "@beep/repo-cli/commands/Research"
@@ -830,6 +838,10 @@ export class LibraryInventoryOptions extends S.Opaque<LibraryInventoryOptions, {
   S.Struct({
     libraryRoot: S.String,
     inputRoots: S.Array(S.String),
+    privateInputRoots: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultKey(Effect.succeed([]))
+    ),
   })
     .pipe(
       $I.annoteSchema("LibraryInventoryOptions", {

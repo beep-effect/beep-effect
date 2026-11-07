@@ -29,6 +29,34 @@ new document versions and intake snapshots. Earlier evidence remains available.
 Do not edit snapshots or acquired artifacts to repair extraction: change the
 extractor or import a new derivation with its own provenance.
 
+### Private inputs
+
+Pass `--private-input <dir>` (repeatable) for a root whose documents belong to the
+private partition:
+
+```sh
+bun run beep research library inventory \
+  --input /absolute/path/to/aggregation \
+  --private-input /absolute/path/to/aggregation/Research-11-5-26
+```
+
+- Files under a private root are inventoried exactly like `--input` files, but their
+  documents, intake census entries and roots carry `accessClass: "private"`. A private
+  root may sit inside an `--input` root: the private class wins for that subtree and
+  each file is inventoried once.
+- The class belongs to the document's location, not its bytes. A byte-identical copy
+  under a public root shares the snapshot object but stays a public document.
+- Every inventory run reclassifies cited sources from all catalogued occurrences. A
+  source cited only by private documents is private, and so is the GitHub repository
+  identity such a citation implies. One public citation makes it public. Box sources
+  keep the class `acquire --route box` gave them.
+- The intake manifest of a run with private files is a private artifact. Private roots
+  enter the intake identity, so changing a root's class records a new intake snapshot.
+- `--private-input` alone does not add the default public roots; pass `--input` too
+  when both are wanted.
+- `status` reports the result on its `private partition:` line; views and `render`
+  leave it out unless `--include-private` is given.
+
 Qualification performs actual source acquisition. An installed executable, a
 configured MCP server, and a successful provider request are insufficient: the
 target source, returned content, and completeness must also pass. Keep secret
