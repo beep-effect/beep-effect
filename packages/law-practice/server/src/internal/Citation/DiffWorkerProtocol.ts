@@ -61,7 +61,7 @@ export class CitationDiffWorkerJob extends S.Opaque<CitationDiffWorkerJob, { rea
 export class CitationDiffWorkerReady extends S.Opaque<CitationDiffWorkerReady, { readonly brand: unique symbol }>()(
   S.TaggedStruct("Ready", { version: S.tag("citation-diff-worker/v1") }).pipe(
     $I.annoteSchema("CitationDiffWorkerReady", {
-      description: "Pinned kernel authentication and compilation completed.",
+      description: "Selected fixed diff backend initialization completed.",
     })
   )
 ) {}

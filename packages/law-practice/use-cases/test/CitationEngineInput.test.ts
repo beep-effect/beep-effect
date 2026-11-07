@@ -107,6 +107,9 @@ it.effect("retains exact raw Unicode and identity without granting a verified ca
       replacements: [CitationAnnotationReplacement.make({ start: -2, end: 200, before: emptyWord, after: emptyWord })],
     });
     expect(annotation.mode).toBe("unchecked");
+    expect(annotation.useDmp).toBe(true);
+    const builtin = yield* S.decodeEffect(CitationEngineAnnotationInput)({ ...annotation, useDmp: false });
+    expect(builtin.useDmp).toBe(false);
     expect(annotation.replacements[0]?.start).toBe(-2);
     expect(annotation.replacements[0]?.end).toBe(200);
     expect(CitationAnnotationMode.literals).toEqual(["unchecked", "skip", "wrap"]);

@@ -40,14 +40,15 @@ export const makeCitationDiffTestRuntime = Effect.fn("DiffWorkerTest.runtime")(f
 });
 export const makeCitationDiffWorkerFixture = Effect.fn("DiffWorkerTest.fixture")(function* (
   kind: CitationNativeRuntimeKind,
-  policy: unknown
+  policy: unknown,
+  useDmp = true
 ) {
   const fs = yield* FileSystem.FileSystem;
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-diff-worker-" });
   const runtime = yield* makeCitationDiffTestRuntime(kind, cwd);
   const admission = yield* makeCitationNativeProcessAdmission(policy);
   const observed = yield* makeCitationObservedSpawner();
-  const worker = yield* makeCitationDiffWorker(policy, runtime).pipe(
+  const worker = yield* makeCitationDiffWorker(policy, runtime, useDmp).pipe(
     Effect.provideService(CitationNativeProcessAdmission, admission),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
   );

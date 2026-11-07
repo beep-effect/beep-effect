@@ -24,7 +24,11 @@ import {
   makeCitationEditionInference,
   prepareCitationEditionInferenceInput,
 } from "./EditionInference.ts";
-import { CitationTokenExtractionInput, validateCitationTokenWord } from "./ExtractionContext.ts";
+import {
+  CitationTokenExtractionInput,
+  normalizeCitationModelPage,
+  validateCitationTokenWord,
+} from "./ExtractionContext.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import {
   CitationPublicationMetadataConfiguration,
@@ -256,7 +260,10 @@ const prepare = Effect.fn("Citation.constructReferenceToken")(function* (
     ),
     Match.orElse(() => Effect.fail(fail("not-reference-token")))
   );
-  return { index: request.index, token, outcome };
+  // Short-form pin extraction consumes the original page prefix before the
+  // CitationBase constructor normalizes missing-page model groups.
+  const modelToken = yield* normalizeCitationModelPage(token);
+  return { index: request.index, token: modelToken, outcome };
 });
 /** Preserve the original four constructor branches under one operation, Scope,
  * captured deadline and text authority. Returned extract has R=never; no host

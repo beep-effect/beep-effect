@@ -3,18 +3,36 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngine, CitationEngineLimits, CitationInputError } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngine,
+  CitationEngineLimits,
+  CitationInputError,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { CitationOperationAdmission, makeCitationOperationAdmission } from "../internal/Citation/Admission.ts";
 import { CitationAnnotationEntryConfiguration } from "../internal/Citation/AnnotationEntry.ts";
 import { failCitationAnnotationBoundary } from "../internal/Citation/AnnotationFailure.ts";
 import { makeCitationAnnotationOperation } from "../internal/Citation/AnnotationOperation.ts";
 import { CitationMissingPageIdentityFactory } from "../internal/Citation/CallbackRuntimeIndex.ts";
+import { CitationDefaultConfigurationInput } from "../internal/Citation/DefaultConfiguration.ts";
+import { makeCitationDocumentServices } from "../internal/Citation/DocumentServices.ts";
+import {
+  CitationEngineBuildIdentity,
+  makeCitationDefaultEngineConfiguration,
+} from "../internal/Citation/EngineArtifact.ts";
 import { failCitationExtractionBoundary } from "../internal/Citation/EngineFailure.ts";
-import { CitationNativeProcessAdmission } from "../internal/Citation/NativeAdmission.ts";
+import { CitationFrozenEditions } from "../internal/Citation/FrozenEditions.ts";
+import {
+  CitationNativeProcessAdmission,
+  makeCitationNativeProcessAdmission,
+} from "../internal/Citation/NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "../internal/Citation/NativeProcess.ts";
-import { captureCitationOperationPolicy } from "../internal/Citation/Snapshot.ts";
+import { captureCitationOperationPolicy, snapshotCitationValue } from "../internal/Citation/Snapshot.ts";
 import { makeCitationSourceCleaning } from "../internal/Citation/SourceCleaning.ts";
 import { makeCitationSourcePairDocument } from "../internal/Citation/SourceDocument.ts";
 import { makeCitationSourceResolution } from "../internal/Citation/SourceResolution.ts";
@@ -51,9 +69,11 @@ export class CitationEngineConfiguration extends S.Opaque<
   )
 ) {}
 const Configuration = S.toType(CitationEngineConfiguration);
+const ConfigurationJson = CitationEngineConfiguration.pipe(S.toCodecJson, S.fromJsonString);
 const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
   const invalid = () => CitationInputError.make({ operation: "extract" });
-  const configuration = yield* S.decodeUnknownEffect(Configuration)(raw).pipe(Effect.mapError(invalid));
+  const decoded = yield* S.decodeUnknownEffect(Configuration)(raw).pipe(Effect.mapError(invalid));
+  const configuration = yield* snapshotCitationValue(ConfigurationJson, decoded, invalid);
   const { limits, engineArtifact } = yield* captureCitationOperationPolicy(
     configuration.limits,
     configuration.extraction.engineArtifact,
@@ -105,3 +125,93 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
  */
 export const CitationEngineLive = (configuration: CitationEngineConfiguration) =>
   Layer.effect(CitationEngine, make(configuration));
+
+/** Complete installation data for the production default owner assembly.
+ * Runtimes and paths are trusted deployment inputs; source requests cannot
+ * select them. Build metadata must describe the actual implementation and ports.
+ * Every backend must have the declared build runtime kind. This schema does not
+ * attest executable contents or infer deployment identities from asset hashes.
+ * **Example** (Inspect the explicit installation requirements)
+ * ```ts
+ * import { CitationEngineDefaultConfiguration } from "@beep/law-practice-server/layer"
+ * console.log(CitationEngineDefaultConfiguration.fields.assets !== undefined) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CitationEngineDefaultConfiguration extends S.Opaque<
+  CitationEngineDefaultConfiguration,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    limits: CitationEngineLimits,
+    build: CitationEngineBuildIdentity,
+    assets: CitationDefaultConfigurationInput,
+    runtime: CitationNativeProcessRuntime,
+    htmlRuntime: CitationNativeProcessRuntime,
+    xmlRuntime: CitationNativeProcessRuntime,
+  }).pipe(
+    $I.annoteSchema("CitationEngineDefaultConfiguration", {
+      description:
+        "Explicit build, policy, authenticated asset locations and native backends for one scoped engine owner cohort.",
+    })
+  )
+) {}
+const DefaultConfiguration = S.toType(CitationEngineDefaultConfiguration);
+const DefaultConfigurationJson = CitationEngineDefaultConfiguration.pipe(S.toCodecJson, S.fromJsonString);
+const makeDefault = Effect.fn("Citation.makeDefaultEngine")(function* (raw: unknown) {
+  const invalid = () => CitationInputError.make({ operation: "extract" });
+  const decoded = yield* S.decodeUnknownEffect(DefaultConfiguration)(raw).pipe(Effect.mapError(invalid));
+  // Snapshot before asynchronous asset reads or host acquisition can mutate input.
+  const configuration = yield* snapshotCitationValue(DefaultConfigurationJson, decoded, invalid);
+  const { limits, build, runtime, htmlRuntime, xmlRuntime, assets } = configuration;
+  if (
+    !A.every([runtime, htmlRuntime, xmlRuntime, assets.diffRuntime], (backend) => backend.kind === build.runtime.kind)
+  )
+    return yield* invalid();
+  const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.mapError(invalid));
+  const native = yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.mapError(invalid));
+  const owners = Context.make(CitationOperationAdmission, operation).pipe(
+    Context.add(CitationNativeProcessAdmission, native)
+  );
+  const installed = yield* makeCitationDefaultEngineConfiguration(limits, assets, build).pipe(Effect.mapError(invalid));
+  const services = yield* makeCitationDocumentServices(limits, htmlRuntime).pipe(
+    Effect.provideContext(owners),
+    Effect.mapError((error) =>
+      S.is(CitationSafetyLimitExceeded)(error)
+        ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: error.limit })
+        : invalid()
+    )
+  );
+  const captured = Context.merge(owners, services.context).pipe(
+    Context.add(CitationFrozenEditions, installed.editions)
+  );
+  const engine = yield* make(
+    CitationEngineConfiguration.make({
+      limits,
+      runtime,
+      extraction: { extraction: installed.configuration, engineArtifact: installed.engineArtifact },
+      annotation: { geometry: installed.configuration.extraction.document, xmlRuntime },
+    })
+  ).pipe(Effect.provideContext(captured));
+  return Context.add(captured, CitationEngine, engine);
+});
+/** Install authenticated default parsing, cleaner/value/container owners, one
+ * shared operation admission and one shared native admission for all four
+ * operations. The Layer scope owns cleanup, including failed acquisition.
+ * Trusted source, host cleaner/object-identity and platform services remain
+ * required and are captured at installation. The output Context also contains
+ * the coherent owner services for trusted server plan/container setup. No test protocol or synthetic
+ * missing-page hash is substituted. An existing caller owner is not reused by
+ * this explicitly independent default assembly; use CitationEngineLive when
+ * composing an already shared owner cohort.
+ * **Example** (Inspect the default Layer constructor)
+ * ```ts
+ * import { CitationEngineDefaultLive } from "@beep/law-practice-server/layer"
+ * console.log(typeof CitationEngineDefaultLive) // "function"
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export const CitationEngineDefaultLive = (configuration: CitationEngineDefaultConfiguration) =>
+  Layer.effectContext(makeDefault(configuration));
