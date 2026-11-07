@@ -195,99 +195,106 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
 });
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) => {
-  it.effect("bounded startup qualification does not consume the configured post-readiness listen window", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      const fs = yield* FileSystem.FileSystem;
-      const startup = yield* Deferred.make<void>();
-      const ready = yield* Deferred.make<string, CoworkLifecycleError | PlatformError>();
-      let delayed = false;
-      const policy = CoworkLifecyclePolicy.make({ ...f.policy, listenMillis: 3000 });
-      const guarded = FileSystem.FileSystem.of({
-        ...fs,
-        open: Effect.fn("CoworkLifecycleTest.delayedInterpreter")((path, options) =>
-          fs.open(path, options).pipe(
-            Effect.map((file) =>
-              path !== policy.pythonExecutable
-                ? file
-                : {
-                    ...file,
-                    stat: file.stat,
-                    readAlloc: Effect.fn("CoworkLifecycleTest.delayedRead")((size) => {
-                      if (delayed) return file.readAlloc(size);
-                      delayed = true;
-                      return Deferred.succeed(startup, undefined).pipe(
-                        Effect.andThen(Effect.sleep("3 seconds")),
-                        Effect.andThen(file.readAlloc(size))
-                      );
-                    }),
-                  }
-            )
-          )
-        ),
-      });
-      const receiver = yield* makeCoworkLifecycleFixtureReceiver(policy).pipe(
-        Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control }),
-        Effect.provideService(FileSystem.FileSystem, guarded)
-      );
-      const receiving = yield* Effect.forkChild(
-        receiver.open().pipe(
-          Effect.tapError((error) => Deferred.fail(ready, error)),
-          Effect.flatMap((opened) => Deferred.succeed(ready, opened.socketPath).pipe(Effect.andThen(opened.accept))),
-          Effect.result,
-          Effect.provideService(FileSystem.FileSystem, guarded)
-        )
-      );
-      yield* Deferred.await(startup).pipe(
-        Effect.timeoutOrElse({ duration: "5 seconds", orElse: () => Effect.die("startup-delay-not-observed") }),
-        TestClock.withLive
-      );
-      yield* TestClock.adjust("3 seconds");
-      const path = yield* Deferred.await(ready).pipe(
-        Effect.timeoutOrElse({ duration: "5 seconds", orElse: () => Effect.die("readiness-not-observed-after-delay") }),
-        TestClock.withLive
-      );
-      yield* TestClock.adjust("2500 millis");
-      const body = yield* encode(start);
-      const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
-      const projected = yield* coworkLifecycleFixtureCodecs.encodeEnvelope(
-        coworkLifecycleFixtureCodecs.makeEnvelope({ callback, occurrenceId: "late-in-configured-window" })
-      );
-      yield* f.ancestor.send(path, projected).pipe(TestClock.withLive);
-      const result = yield* Fiber.join(receiving).pipe(
-        Effect.timeoutOrElse({
-          duration: "5 seconds",
-          orElse: () => Effect.die("admission-not-terminal-after-callback"),
-        }),
-        TestClock.withLive
-      );
-      const receipt = yield* Effect.fromResult(result);
-      expect(receipt.accepted).toBe(1);
-      expect((yield* f.journal.stats).pages).toBe(1);
-    })
-  );
-  it.effect(
-    "a stalled journal acknowledgement expires without a commit or durable ACK and removes the owned listener",
-    () =>
+  it.layer(TestClock.layer())((it) =>
+    it.effect("bounded startup qualification does not consume the configured post-readiness listen window", () =>
       Effect.gen(function* () {
         const f = yield* fixture();
         const fs = yield* FileSystem.FileSystem;
-        const attempted = yield* Deferred.make<void>();
-        const journal: typeof f.journal = {
-          ...f.journal,
-          acceptBatch: () => Deferred.succeed(attempted, undefined).pipe(Effect.andThen(Effect.never)),
-        };
-        const deliver = makeDelivery(f.policy, journal, f.control, f.ancestor);
-        const delivering = yield* Effect.forkChild(deliver(start));
-        yield* Deferred.await(attempted);
-        yield* TestClock.adjust("1 second");
-        const delivered = yield* Fiber.join(delivering);
-        assertFailure(delivered.result, CoworkLifecycleError.make({ reason: "transport" }));
-        assertFailure(delivered.reply, CoworkLifecycleError.make({ reason: "transport" }));
-        expect((yield* f.journal.stats).pages).toBe(0);
-        const listener = yield* fs.exists(f.policy.socketPath);
-        assertFalse(listener);
+        const startup = yield* Deferred.make<void>();
+        const ready = yield* Deferred.make<string, CoworkLifecycleError | PlatformError>();
+        let delayed = false;
+        const policy = CoworkLifecyclePolicy.make({ ...f.policy, listenMillis: 3000 });
+        const guarded = FileSystem.FileSystem.of({
+          ...fs,
+          open: Effect.fn("CoworkLifecycleTest.delayedInterpreter")((path, options) =>
+            fs.open(path, options).pipe(
+              Effect.map((file) =>
+                path !== policy.pythonExecutable
+                  ? file
+                  : {
+                      ...file,
+                      stat: file.stat,
+                      readAlloc: Effect.fn("CoworkLifecycleTest.delayedRead")((size) => {
+                        if (delayed) return file.readAlloc(size);
+                        delayed = true;
+                        return Deferred.succeed(startup, undefined).pipe(
+                          Effect.andThen(Effect.sleep("3 seconds")),
+                          Effect.andThen(file.readAlloc(size))
+                        );
+                      }),
+                    }
+              )
+            )
+          ),
+        });
+        const receiver = yield* makeCoworkLifecycleFixtureReceiver(policy).pipe(
+          Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control }),
+          Effect.provideService(FileSystem.FileSystem, guarded)
+        );
+        const receiving = yield* Effect.forkChild(
+          receiver.open().pipe(
+            Effect.tapError((error) => Deferred.fail(ready, error)),
+            Effect.flatMap((opened) => Deferred.succeed(ready, opened.socketPath).pipe(Effect.andThen(opened.accept))),
+            Effect.result,
+            Effect.provideService(FileSystem.FileSystem, guarded)
+          )
+        );
+        yield* Deferred.await(startup).pipe(
+          Effect.timeoutOrElse({ duration: "5 seconds", orElse: () => Effect.die("startup-delay-not-observed") }),
+          TestClock.withLive
+        );
+        yield* TestClock.adjust("3 seconds");
+        const path = yield* Deferred.await(ready).pipe(
+          Effect.timeoutOrElse({
+            duration: "5 seconds",
+            orElse: () => Effect.die("readiness-not-observed-after-delay"),
+          }),
+          TestClock.withLive
+        );
+        yield* TestClock.adjust("2500 millis");
+        const body = yield* encode(start);
+        const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
+        const projected = yield* coworkLifecycleFixtureCodecs.encodeEnvelope(
+          coworkLifecycleFixtureCodecs.makeEnvelope({ callback, occurrenceId: "late-in-configured-window" })
+        );
+        yield* f.ancestor.send(path, projected).pipe(TestClock.withLive);
+        const result = yield* Fiber.join(receiving).pipe(
+          Effect.timeoutOrElse({
+            duration: "5 seconds",
+            orElse: () => Effect.die("admission-not-terminal-after-callback"),
+          }),
+          TestClock.withLive
+        );
+        const receipt = yield* Effect.fromResult(result);
+        expect(receipt.accepted).toBe(1);
+        expect((yield* f.journal.stats).pages).toBe(1);
       })
+    )
+  );
+  it.layer(TestClock.layer())((it) =>
+    it.effect(
+      "a stalled journal acknowledgement expires without a commit or durable ACK and removes the owned listener",
+      () =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          const fs = yield* FileSystem.FileSystem;
+          const attempted = yield* Deferred.make<void>();
+          const journal: typeof f.journal = {
+            ...f.journal,
+            acceptBatch: () => Deferred.succeed(attempted, undefined).pipe(Effect.andThen(Effect.never)),
+          };
+          const deliver = makeDelivery(f.policy, journal, f.control, f.ancestor);
+          const delivering = yield* Effect.forkChild(deliver(start));
+          yield* Deferred.await(attempted);
+          yield* TestClock.adjust("1 second");
+          const delivered = yield* Fiber.join(delivering);
+          assertFailure(delivered.result, CoworkLifecycleError.make({ reason: "transport" }));
+          assertFailure(delivered.reply, CoworkLifecycleError.make({ reason: "transport" }));
+          expect((yield* f.journal.stats).pages).toBe(0);
+          const listener = yield* fs.exists(f.policy.socketPath);
+          assertFalse(listener);
+        })
+    )
   );
   it.effect(
     "fixed public pins permit inert construction but synthetic source enrollment still refuses before dispatch",
@@ -315,107 +322,109 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
       })
   );
   for (const fault of ["cwd", "runtime", "app-pid", "app-generation", "startup-timeout", "listen-timeout"]) {
-    it.effect(
-      `synthetic observed Cowork ${fault} mismatch refuses without durable ACK and releases its helper port`,
-      () =>
-        Effect.gen(function* () {
-          const f = yield* fixture();
-          const policySeen = yield* Deferred.make<void>();
-          let policyFrames = 0;
-          let acknowledgements = 0;
-          let releases = 0;
-          const body = yield* encode(start);
-          const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
-          const envelope = coworkLifecycleFixtureCodecs.makeEnvelope({
-            callback,
-            occurrenceId: "synthetic-mismatch-occurrence",
-          });
-          const ready = yield* encode({ ready: true });
-          const observed = yield* encode({
-            peer: {
-              peerPid: 1,
-              peerStartTicks: "1",
-              runtimePid: 1,
-              runtimeStartTicks: "1",
-              uid: 1000,
-              cwd: fault === "cwd" ? "/synthetic-wrong-root" : f.policy.workspace,
-              runtimeSha256: fault === "runtime" ? id : f.policy.runtimeSha256,
-              appPid: fault === "app-pid" ? f.policy.appPid + 1 : f.policy.appPid,
-              appStartTicks: fault === "app-generation" ? "not-the-enrolled-generation" : f.policy.appStartTicks,
-            },
-            callback: envelope,
-          });
-          const response =
-            fault === "startup-timeout"
-              ? Stream.never
-              : fault === "listen-timeout"
-                ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
-                : Stream.make(new TextEncoder().encode(`${ready}\n${observed}\n`));
-          const output = policySeen.pipe(Deferred.await, Stream.fromEffect, Stream.drain, Stream.concat(response));
-          const spawner = ChildProcessSpawner.make((command) =>
-            Effect.gen(function* () {
-              const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
-              if (!Stream.isStream(input)) return yield* Effect.die("synthetic input stream missing");
-              yield* Effect.forkScoped(
-                Stream.runForEach(input, (chunk) => {
-                  if (!(chunk instanceof Uint8Array)) return Effect.die("synthetic input chunk invalid");
-                  if (Str.includes("receiptId")(new TextDecoder().decode(chunk)))
+    it.layer(TestClock.layer())((it) =>
+      it.effect(
+        `synthetic observed Cowork ${fault} mismatch refuses without durable ACK and releases its helper port`,
+        () =>
+          Effect.gen(function* () {
+            const f = yield* fixture();
+            const policySeen = yield* Deferred.make<void>();
+            let policyFrames = 0;
+            let acknowledgements = 0;
+            let releases = 0;
+            const body = yield* encode(start);
+            const callback = yield* coworkLifecycleFixtureCodecs.decodeCallback(body);
+            const envelope = coworkLifecycleFixtureCodecs.makeEnvelope({
+              callback,
+              occurrenceId: "synthetic-mismatch-occurrence",
+            });
+            const ready = yield* encode({ ready: true });
+            const observed = yield* encode({
+              peer: {
+                peerPid: 1,
+                peerStartTicks: "1",
+                runtimePid: 1,
+                runtimeStartTicks: "1",
+                uid: 1000,
+                cwd: fault === "cwd" ? "/synthetic-wrong-root" : f.policy.workspace,
+                runtimeSha256: fault === "runtime" ? id : f.policy.runtimeSha256,
+                appPid: fault === "app-pid" ? f.policy.appPid + 1 : f.policy.appPid,
+                appStartTicks: fault === "app-generation" ? "not-the-enrolled-generation" : f.policy.appStartTicks,
+              },
+              callback: envelope,
+            });
+            const response =
+              fault === "startup-timeout"
+                ? Stream.never
+                : fault === "listen-timeout"
+                  ? Stream.concat(Stream.make(new TextEncoder().encode(`${ready}\n`)), Stream.never)
+                  : Stream.make(new TextEncoder().encode(`${ready}\n${observed}\n`));
+            const output = policySeen.pipe(Deferred.await, Stream.fromEffect, Stream.drain, Stream.concat(response));
+            const spawner = ChildProcessSpawner.make((command) =>
+              Effect.gen(function* () {
+                const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
+                if (!Stream.isStream(input)) return yield* Effect.die("synthetic input stream missing");
+                yield* Effect.forkScoped(
+                  Stream.runForEach(input, (chunk) => {
+                    if (!(chunk instanceof Uint8Array)) return Effect.die("synthetic input chunk invalid");
+                    if (Str.includes("receiptId")(new TextDecoder().decode(chunk)))
+                      return Effect.sync(() => {
+                        acknowledgements++;
+                      });
                     return Effect.sync(() => {
-                      acknowledgements++;
-                    });
-                  return Effect.sync(() => {
-                    policyFrames++;
-                  }).pipe(Effect.andThen(Deferred.succeed(policySeen, undefined)));
-                })
-              );
-              return yield* Effect.acquireRelease(
-                Effect.succeed(
-                  ChildProcessSpawner.makeHandle({
-                    all: output,
-                    stdout: output,
-                    stderr: Stream.empty,
-                    stdin: Sink.drain,
-                    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-                    isRunning: Effect.succeed(false),
-                    kill: () => Effect.void,
-                    getInputFd: () => Sink.drain,
-                    getOutputFd: () => Stream.empty,
-                    pid: ChildProcessSpawner.ProcessId(1),
-                    unref: Effect.succeed(Effect.void),
+                      policyFrames++;
+                    }).pipe(Effect.andThen(Deferred.succeed(policySeen, undefined)));
                   })
-                ),
-                () =>
-                  Effect.sync(() => {
-                    releases++;
-                  })
-              );
-            })
-          );
-          const receiver = yield* makeCoworkLifecycleFixtureReceiver(f.policy).pipe(
-            Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
-          );
-          const running = yield* Effect.forkChild(
-            receiver.open().pipe(
-              Effect.flatMap((opened) => opened.accept),
-              Effect.result,
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-            )
-          );
-          yield* Deferred.await(policySeen).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
-          if (fault === "startup-timeout") yield* TestClock.adjust("10 seconds");
-          if (fault === "listen-timeout") yield* TestClock.adjust("32 seconds");
-          const result = yield* Fiber.join(running).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
-          assertFailure(
-            result,
-            CoworkLifecycleError.make({
-              reason: fault === "startup-timeout" || fault === "listen-timeout" ? "transport" : "callback",
-            })
-          );
-          expect(policyFrames).toBe(1);
-          expect(acknowledgements).toBe(0);
-          expect(releases).toBe(1);
-          expect((yield* f.journal.stats).pages).toBe(0);
-        })
+                );
+                return yield* Effect.acquireRelease(
+                  Effect.succeed(
+                    ChildProcessSpawner.makeHandle({
+                      all: output,
+                      stdout: output,
+                      stderr: Stream.empty,
+                      stdin: Sink.drain,
+                      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+                      isRunning: Effect.succeed(false),
+                      kill: () => Effect.void,
+                      getInputFd: () => Sink.drain,
+                      getOutputFd: () => Stream.empty,
+                      pid: ChildProcessSpawner.ProcessId(1),
+                      unref: Effect.succeed(Effect.void),
+                    })
+                  ),
+                  () =>
+                    Effect.sync(() => {
+                      releases++;
+                    })
+                );
+              })
+            );
+            const receiver = yield* makeCoworkLifecycleFixtureReceiver(f.policy).pipe(
+              Effect.provideService(CoworkLifecycleRuntime, { journal: f.journal, control: f.control })
+            );
+            const running = yield* Effect.forkChild(
+              receiver.open().pipe(
+                Effect.flatMap((opened) => opened.accept),
+                Effect.result,
+                Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+              )
+            );
+            yield* Deferred.await(policySeen).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+            if (fault === "startup-timeout") yield* TestClock.adjust("10 seconds");
+            if (fault === "listen-timeout") yield* TestClock.adjust("32 seconds");
+            const result = yield* Fiber.join(running).pipe(Effect.timeout("5 seconds"), TestClock.withLive);
+            assertFailure(
+              result,
+              CoworkLifecycleError.make({
+                reason: fault === "startup-timeout" || fault === "listen-timeout" ? "transport" : "callback",
+              })
+            );
+            expect(policyFrames).toBe(1);
+            expect(acknowledgements).toBe(0);
+            expect(releases).toBe(1);
+            expect((yield* f.journal.stats).pages).toBe(0);
+          })
+      )
     );
   }
 });
