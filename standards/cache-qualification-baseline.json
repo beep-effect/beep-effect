@@ -80,11 +80,11 @@
       }
     },
     "@beep/alchemy-postgres": {
-      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
-      "reason": "Restore the @beep/postgres dev-dependency edge record for @beep/alchemy-postgres on top of #2881's re-recorded baseline; re-stamp the root turbo.json source review row. No command, input, output, env or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (orchestrator, fix/alchemy-postgres-spans)",
+      "reason": "Record the @beep/observability dependency edge added to @beep/alchemy-postgres for its declared instruments; no command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b-main.md",
-        "sha256": "54c4e0290bd5f7e9967b8a95f609040f65cdb19ba2fe63de416450c06701213d"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-observability.md",
+        "sha256": "2de762fa10b67ec04867f4fcef42a15d0f32636f1bcbf5acb0a59dd398f2f1f2"
       }
     },
     "@beep/anthropic": {
@@ -9509,6 +9509,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/observability#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
@@ -9567,6 +9568,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/observability#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
@@ -9611,6 +9613,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/observability#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
@@ -9739,6 +9742,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/observability#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -9949,6 +9953,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/observability#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/schema#transit",
@@ -9996,6 +10001,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/observability#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
           "@beep/schema#transit",
@@ -10051,6 +10057,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/observability#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
           "@beep/schema#build",
