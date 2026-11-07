@@ -1621,6 +1621,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert public result production and restore the previous private source/diagnostic definitions together; retain all original source, native and restoration corpora.
 
+### Preserve authenticated canonical annotation-stage proof during ledger regeneration, 2026-11-07
+
+Replay all 23 original canonical annotation assertions through the default public engine on Bun and Node. Bind their exact source observations to hashed evidence and target tests through the explicit proof plan. These are nonterminal annotation-stage proofs: original upstream cleaning/extraction are not recomputed, no case is complete, and all full-goal acceptance duties remain. The validator and exporter reject stale or escaping references, duplicate identities and stage proof promoted to completion. See history/evidence/2026-11-07-canonical-annotation-ledger.md.
+
+Lane `feat/citation-default-owners` · PR #2847
+
+Reverse: Remove the explicit binding and regenerate the ledgers; cases return to audit without changing original observations.
+
 ### Preserve exact resolution safety diagnostics, 2026-11-07
 
 Resolution admission, callback/list/resource guards and projection now retain actual closed budget names through nested sanitizers using Effect Struct.pick. Thirty-one tests pass in 3.97s, including original 76 default contexts, receipt restoration and retained mutation/alias safety controls. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Generic table/set owner attribution, public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-resolution-limit-diagnostics.md.

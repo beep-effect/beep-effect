@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "384195dc53547bd9f5a1cd8c8cec75d9b49543cad458a03070221d66f8db6980",
+  "planSha256": "d20dea7c430f03bbed54da6a863d42917de6f31621ebe19ee435b8b3a15b59fa",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1736,7 +1736,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationBuiltinDiff.test.ts",
-          "sha256": "4f39d6b1845ef92dcd50ae1308237aa92ae14a0caadc9ecf3899ac5320bfacc1"
+          "sha256": "0242eaff4ffda9caef65c64d9342eadd66080ed6c4468f849c481909ba56b335"
         },
         {
           "path": "packages/law-practice/server/test/CitationBuiltinDiff.fixtures.ts",
@@ -1745,6 +1745,26 @@
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/builtin-diff.json",
           "sha256": "3b8cb9c95fd5b9525c585b9d05ab2e10cdb6b6c774c91dbfcae2100307c6bc11"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-annotation-ledger.md",
+          "sha256": "bee7984de7eed37b95ba4e528f2c55b64372040fd41e4adb0c760dd31722cc0e"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
+          "sha256": "de739e2df65338c84640cea152ec550e8a63f4a687e7daf114aa8515138dc8b8"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
+          "sha256": "cb5b76cb5ecfae64cc9ac2baefa9b053f56f8b7797936357d75216e944d000ae"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.test.ts",
+          "sha256": "fab662ceeb813f285530ed67e820cf644aeeefc89dc04d8b2720495fcff70298"
+        },
+        {
+          "path": "packages/law-practice/use-cases/src/internal/citationOracleLedgers.ts",
+          "sha256": "ebe3884da3a1cbf91e925b1e7d2064ce5159b712a2bb91b8529817fe754bc519"
         }
       ],
       "workflowState": "audit",

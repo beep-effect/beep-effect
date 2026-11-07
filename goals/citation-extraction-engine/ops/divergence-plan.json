@@ -437,7 +437,12 @@
         "packages/law-practice/server/src/internal/Citation/BuiltinDiff.ts",
         "packages/law-practice/server/test/CitationBuiltinDiff.test.ts",
         "packages/law-practice/server/test/CitationBuiltinDiff.fixtures.ts",
-        "packages/law-practice/use-cases/test/fixtures/eyecite/builtin-diff.json"
+        "packages/law-practice/use-cases/test/fixtures/eyecite/builtin-diff.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-annotation-ledger.md",
+        "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
+        "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
+        "packages/law-practice/server/test/CitationCanonicalAnnotation.test.ts",
+        "packages/law-practice/use-cases/src/internal/citationOracleLedgers.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

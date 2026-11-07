@@ -2,15 +2,22 @@
 import {
   CitationOracleAssertions,
   CitationOracleDiscovery,
+  CitationOracleLedgerProofPlan,
   CitationOracleLedgers,
   CitationOracleOperations,
 } from "@beep/law-practice-use-cases/test";
+import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const root = new URL("../../../", import.meta.url);
 const fixtureRoot =
@@ -27,6 +34,26 @@ const equalIds = (left: ReadonlyArray<string>, right: ReadonlyArray<string>) =>
 const read = (path: string | URL) => Effect.tryPromise(() => Bun.file(path).text());
 const filePath = (name: string) =>
   typeof fixtureRoot === "string" ? `${fixtureRoot}${name}` : new URL(name, fixtureRoot);
+const ProofPlanJson = S.fromJsonString(CitationOracleLedgerProofPlan);
+const checkedReference = Effect.fn("LedgerProof.checkReference")(function* (relative: string, expected: string) {
+  if (Str.startsWith("/")(relative) || A.contains(Str.split(relative, "/"), ".."))
+    return yield* reject("proof reference must be repository relative");
+  const url = yield* Effect.try(() => new URL(relative, root));
+  if (url.protocol !== "file:" || !Str.startsWith(root.href)(url.href))
+    return yield* reject("proof reference escaped repository");
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const inputPath = yield* path.fromFileUrl(url);
+  const rootPath = yield* path.fromFileUrl(root);
+  const physical = yield* fs.realPath(inputPath);
+  const physicalRoot = yield* fs.realPath(rootPath);
+  const relativePath = path.relative(physicalRoot, physical);
+  if (path.isAbsolute(relativePath) || Str.startsWith("..")(relativePath))
+    return yield* reject("proof reference escaped repository through a link");
+  const bytes = yield* fs.readFile(physical);
+  if (hash(bytes) !== expected) return yield* reject("stale proof reference");
+  return new TextDecoder().decode(bytes);
+});
 const program = Effect.gen(function* () {
   const values = yield* Effect.all(
     A.map(["source-inventory.json", "canonical-cases.json", "regex-inventory.json"], (name) =>
@@ -39,6 +66,54 @@ const program = Effect.gen(function* () {
     regex: values[2],
   });
   const { inventory, canonical, regex } = bundle;
+  const planRaw = yield* checkedReference(canonical.proofPlan.path, canonical.proofPlan.sha256);
+  const plan = yield* S.decodeEffect(ProofPlanJson)(planRaw);
+  let bindings = HashMap.empty<string, (typeof plan.bindings)[number]>();
+  for (const binding of plan.bindings) {
+    if (binding.workflowState === "complete" && binding.proof.scope !== "complete-case")
+      return yield* reject("stage proof cannot complete a canonical case");
+    yield* checkedReference(binding.proof.evidencePath, binding.proof.evidenceSha256);
+    for (const target of binding.proof.targetTests) {
+      const source = yield* checkedReference(target.path, target.sha256);
+      if (!Str.includes(target.name)(source)) return yield* reject("target test label absent");
+    }
+    for (const reference of binding.proof.references) yield* checkedReference(reference.path, reference.sha256);
+    for (const entry of binding.cases) {
+      if (HashMap.has(bindings, entry.id)) return yield* reject("duplicate source proof binding");
+      bindings = HashMap.set(bindings, entry.id, binding);
+    }
+  }
+  for (const entry of canonical.cases) {
+    const selected = HashMap.get(bindings, entry.id);
+    if (O.isNone(selected)) {
+      if (
+        entry.proof !== null ||
+        entry.targetTest !== null ||
+        entry.workflowState === "complete" ||
+        entry.workflowState === "ready"
+      )
+        return yield* reject("unbound canonical proof claim");
+      continue;
+    }
+    const binding = selected.value;
+    const sourceCase = A.findFirst(binding.cases, (value) => value.id === entry.id);
+    if (
+      O.isNone(sourceCase) ||
+      entry.workflowState !== binding.workflowState ||
+      entry.observation.normalizedSha256 !== sourceCase.value.observationSha256 ||
+      !same(entry.proof, binding.proof) ||
+      !same(entry.targetTest, binding.proof.targetTests[0])
+    )
+      return yield* reject("canonical proof binding mismatch");
+  }
+  if (!A.every(A.fromIterable(HashMap.keys(bindings)), (id) => A.some(canonical.cases, (entry) => entry.id === id)))
+    return yield* reject("unknown canonical proof binding");
+
+  for (const entry of [...canonical.capabilities, ...regex.families, ...regex.extractorInstances]) {
+    if (entry.proof !== null || entry.workflowState === "ready" || entry.workflowState === "complete")
+      return yield* reject("source or regex proof needs an explicit supported binding");
+  }
+
   const exporter = yield* Effect.tryPromise(() => Bun.file(new URL("./export-ledgers.py", import.meta.url)).bytes());
   for (const ledger of [inventory, canonical, regex]) {
     if (ledger.generatorSha256 !== hash(exporter)) return yield* reject("ledger generator hash mismatch");
@@ -251,12 +326,14 @@ const program = Effect.gen(function* () {
   ).length;
   if (process.argv.includes("--complete") && (pending > 0 || A.some(canonical.cases, (row) => row.targetTest === null)))
     return yield* reject("unfinished parity or safety proof");
+  const ready = A.filter(canonical.cases, (row) => row.workflowState === "ready").length;
   yield* Console.log(
-    `Ledger projections valid: ${inventory.rows.length} source rows, ${canonical.cases.length} cases, ${regex.families.length} regex families, ${regex.extractorInstances.length} instances; ${pending} rows still lack completion proof.`
+    `Ledger projections valid: ${inventory.rows.length} source rows, ${canonical.cases.length} cases, ${regex.families.length} regex families, ${regex.extractorInstances.length} instances; ${pending} rows still lack completion proof; ${ready} canonical cases carry nonterminal proof.`
   );
 });
 Effect.runPromise(
   program.pipe(
+    Effect.provide(BunServices.layer),
     Effect.catchCause(() =>
       Console.error("Citation ledger validation failed; inspect projections, provenance and proof state.").pipe(
         Effect.tap(() =>

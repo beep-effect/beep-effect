@@ -77,8 +77,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const { corpus, limits, plans } = yield* readCitationSpanOffsetsCorpus();
         let maps = 0;
         let queries = 0;
-        for (const row of corpus.maps) {
-          if (row.engine !== "builtin") continue;
+        for (const row of A.filter(corpus.maps, (row) => row.engine === "builtin")) {
           const steps = yield* runCitationBuiltinDiff({
             before: CitationPythonUnicodeStorage.make(row.before),
             after: CitationPythonUnicodeStorage.make(row.after),
