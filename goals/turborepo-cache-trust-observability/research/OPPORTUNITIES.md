@@ -2594,3 +2594,15 @@ packet documents, retain all unchecked acceptance and observation requirements, 
 record the reversal in native per-decision files. No lifecycle status changes here.
 Prevent recurrence by treating the governing closeout sequence as a shared contract
 when updating launchers and phase templates.
+
+## 2026-11-07: retain optional-detail absence without weakening raw comparison
+
+The dependency evidence collector retained a successful raw snapshot comparison but
+reported its historical node-gyp detail check false on the refreshed installation.
+The production diagnostic emits that optional section only when target regular
+files exist; neither complete package-group inventory contains node-gyp. Preserve
+the original receipts and record detail analysis as not applicable only after
+checking absence in both inventories. Keep raw digest, source, complete group,
+resource-bound and artifact-authentication checks unchanged. A missing detail
+section with a present target group must still refuse. Do not manufacture a
+file-level pass or relabel older evidence from a different dependency profile.

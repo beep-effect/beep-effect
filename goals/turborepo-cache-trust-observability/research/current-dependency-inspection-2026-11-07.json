@@ -1,39 +1,103 @@
 {
-  "at": "2026-11-07T03:17:07.944929+00:00",
-  "runId": 42332185638,
-  "attempt": 1,
-  "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42332185638",
-  "sourceRevision": "cf46c700488b6950ea7340369e0d0508e596cd1e",
-  "conclusion": "success",
-  "resolvedWorkflows": [
+  "schemaVersion": "cache-dependency-file-detail-pair/v1",
+  "at": "2026-11-07T03:39:40.529094+00:00",
+  "comparablePairPassed": true,
+  "observations": [
     {
-      "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
-      "sha": "cf46c700488b6950ea7340369e0d0508e596cd1e",
-      "ref": "refs/heads/main"
+      "runId": 42332185638,
+      "sourceRevision": "cf46c700488b6950ea7340369e0d0508e596cd1e",
+      "dependencySha256": "c112ea17c1f7526a0d6a43583ca3d27179220c00d1ba706e8ef941ea1e11ab3d",
+      "receiptSha256": "d347325abcfcc94b7c441c45561aac4e703326b226189fd25270ec26557abbe3",
+      "diagnosticSeconds": 43.781,
+      "aggregateReportBytes": 3411533,
+      "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42332185638",
+      "jobId": 128280973652,
+      "attempt": 1,
+      "packageGroups": 2194,
+      "resolvedWorkflows": [
+        {
+          "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+          "sha": "cf46c700488b6950ea7340369e0d0508e596cd1e",
+          "ref": "refs/heads/main"
+        }
+      ],
+      "fileDetailsPresent": false,
+      "fileLevelComparisonPassed": false,
+      "artifacts": [
+        {
+          "id": 13558283590,
+          "name": "cache-producer-inspection-42332185638-1",
+          "archiveBytes": 2747838,
+          "archiveSha256": "9c4c77301dc2b343d9811d0d6193f238413ccece4aac86f79af568df89fbedcd",
+          "reportBytes": 2747702,
+          "reportSha256": "3aa4a0e5c7b66e648e7311b83aecab35543900bd7309cc3ea353c337d4e3a936",
+          "expiresAt": "2026-11-08T03:16:21Z"
+        },
+        {
+          "id": 13558615984,
+          "name": "cache-producer-dependencies-42332185638-1",
+          "archiveBytes": 663979,
+          "archiveSha256": "aca6149bd27d330937d32d1c3d26d84439af252ff7af7eee1c25a6a3ec60f87d",
+          "reportBytes": 663831,
+          "reportSha256": "401d6f0ecf7ae7f16f36184ceefcda27fd5643223debfc8abbc364a15a4c5eee",
+          "expiresAt": "2026-11-08T03:16:22Z"
+        }
+      ]
+    },
+    {
+      "runId": 42333355378,
+      "sourceRevision": "cf46c700488b6950ea7340369e0d0508e596cd1e",
+      "dependencySha256": "c112ea17c1f7526a0d6a43583ca3d27179220c00d1ba706e8ef941ea1e11ab3d",
+      "receiptSha256": "84d3c8467c120f416278d821c74cb69fcde48159287ce55787456d173a5eeae8",
+      "diagnosticSeconds": 44.406,
+      "aggregateReportBytes": 3411533,
+      "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/42333355378",
+      "jobId": 128284638231,
+      "attempt": 1,
+      "packageGroups": 2194,
+      "resolvedWorkflows": [
+        {
+          "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+          "sha": "cf46c700488b6950ea7340369e0d0508e596cd1e",
+          "ref": "refs/heads/main"
+        }
+      ],
+      "fileDetailsPresent": false,
+      "fileLevelComparisonPassed": false,
+      "artifacts": [
+        {
+          "id": 13559495305,
+          "name": "cache-producer-inspection-42333355378-1",
+          "archiveBytes": 2747838,
+          "archiveSha256": "57889aa6b391e8c66953b2e10e86d427a9a321d6b1479c5cc5a356a0cb917857",
+          "reportBytes": 2747702,
+          "reportSha256": "3aa4a0e5c7b66e648e7311b83aecab35543900bd7309cc3ea353c337d4e3a936",
+          "expiresAt": "2026-11-08T03:38:31Z"
+        },
+        {
+          "id": 13558577895,
+          "name": "cache-producer-dependencies-42333355378-1",
+          "archiveBytes": 663979,
+          "archiveSha256": "f8d574d888e9dd5452d52c845fad34f270bf4f6327f41509f106045e572c6f47",
+          "reportBytes": 663831,
+          "reportSha256": "1b5393ccf12ca4009c8e88a67c83fcccc9808a2c86325d3d5ff30207e734023a",
+          "expiresAt": "2026-11-08T03:38:32Z"
+        }
+      ]
     }
   ],
-  "aggregateReportBytes": 3411533,
-  "diagnosticStatus": "stable-match",
-  "sourceUnchanged": true,
-  "snapshotsEqual": true,
-  "declaredDigestMatches": true,
-  "observedDependencySha256": "c112ea17c1f7526a0d6a43583ca3d27179220c00d1ba706e8ef941ea1e11ab3d",
-  "packageGroups": 2194,
-  "diagnosticSeconds": 43.781,
-  "sourceInspectionPassed": true,
-  "successfulDiagnosticObservation": true,
-  "executedInspectionJobId": 128280973652,
-  "approvalGranted": false,
-  "credentialsOrSigningActivated": false,
-  "taskBodiesExecuted": false,
-  "schemaVersion": "cache-current-dependency-observation-checkpoint/v1",
-  "pairStatus": "awaiting-second-observation",
-  "secondRun": {
-    "runId": 42333355378,
-    "sourceRevision": "cf46c700488b6950ea7340369e0d0508e596cd1e",
-    "url": "https://github.com/beep-effect/beep-effect/actions/runs/42333355378"
-  },
-  "receiptSha256": "d347325abcfcc94b7c441c45561aac4e703326b226189fd25270ec26557abbe3",
+  "sourceDifferencePaths": [],
+  "all13ControlsAndResourceBoundsEqual": true,
+  "rawCanonicalDigestEqual": true,
+  "changedGroups": [],
+  "changedFiles": [],
+  "fileDetailComparison": "not-applicable-target-group-absent-in-both-complete-group-inventories",
+  "fileDetailTargetGroupPresent": [false, false],
+  "changedFileKindCounts": {},
+  "driftConfinedToFilesClassifiedPythonBytecode": false,
+  "bytecodeGenerationMechanismProven": false,
+  "digestsNormalizedOrFilesExcluded": false,
+  "scope": "Actual same-source dependency repeatability diagnosis only. A failed raw comparison remains failed. No producer approval, task qualification, signing, production/window or whole-goal acceptance.",
   "controls": [
     {
       "path": ".github/workflows/cache-producer-inspect.yml",
@@ -111,32 +175,8 @@
     "regularFiles": 512,
     "encodedBytes": 131072
   },
-  "fileDetailApplicability": {
-    "targetGroup": "node-gyp",
-    "presentInCompleteGroupInventory": false,
-    "detailPresent": false,
-    "fileLevelComparisonPassed": false,
-    "reason": "Target group absent; production diagnostic emits the optional section only when target regular files exist. Full raw dependency equality remains required."
-  },
-  "authority": "Accepted-source installation observation only. The paired repeatability result, independent producer approval, signed execution/publication/import, task qualification and representative windows remain unproven.",
-  "artifacts": [
-    {
-      "id": 13558283590,
-      "name": "cache-producer-inspection-42332185638-1",
-      "archiveBytes": 2747838,
-      "archiveSha256": "9c4c77301dc2b343d9811d0d6193f238413ccece4aac86f79af568df89fbedcd",
-      "reportBytes": 2747702,
-      "reportSha256": "3aa4a0e5c7b66e648e7311b83aecab35543900bd7309cc3ea353c337d4e3a936",
-      "expiresAt": "2026-11-08T03:16:21Z"
-    },
-    {
-      "id": 13558615984,
-      "name": "cache-producer-dependencies-42332185638-1",
-      "archiveBytes": 663979,
-      "archiveSha256": "aca6149bd27d330937d32d1c3d26d84439af252ff7af7eee1c25a6a3ec60f87d",
-      "reportBytes": 663831,
-      "reportSha256": "401d6f0ecf7ae7f16f36184ceefcda27fd5643223debfc8abbc364a15a4c5eee",
-      "expiresAt": "2026-11-08T03:16:22Z"
-    }
-  ]
+  "approvalGranted": false,
+  "credentialsOrSigningActivated": false,
+  "taskBodiesExecuted": false,
+  "authority": "Two authenticated serial source-only inspections at the exact accepted revision. Dependency repeatability only; no independent producer approval, protected execution/publication/import, task qualification, representative windows or whole-goal acceptance."
 }
