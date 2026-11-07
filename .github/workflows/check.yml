@@ -267,7 +267,7 @@ jobs:
           set -euo pipefail
           bun run beep worktree prepare
           configured="$(git config --local --get merge.regenerate.driver)"
-          [[ "$configured" == *"scripts/regenerate-merge-driver.sh"* ]]
+          [[ "$configured" == *"beep git merge-driver regenerate"* ]]
           [[ "$(git check-attr merge -- tsconfig.json)" == "tsconfig.json: merge: regenerate" ]]
 
       - name: Run verification lane

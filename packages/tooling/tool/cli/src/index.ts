@@ -207,6 +207,19 @@ export {
   filesCommand,
 } from "./commands/Files/index.ts";
 /**
+ * Runner AMI command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+/**
+ * Repository Git integration command group (projection merge driver).
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { gitCommand } from "./commands/Git/index.ts";
+/**
  * Image and video curation command group.
  *
  * @category cli-commands
@@ -369,12 +382,6 @@ export {
    */
   rootCommand,
 } from "./commands/Root.ts";
-/**
- * Runner AMI command group.
- *
- * @category cli-commands
- * @since 0.0.0
- */
 export { runnersCommand } from "./commands/Runners/index.ts";
 /**
  * Workstation session ledger command group.
@@ -398,6 +405,13 @@ export {
    */
   syncDataToTsCommand,
 } from "./commands/SyncDataToTs/index.ts";
+/**
+ * Patched TypeScript toolchain maintenance command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { toolchainCommand } from "./commands/Toolchain/index.ts";
 /**
  * Dependency topological sort command.
  *

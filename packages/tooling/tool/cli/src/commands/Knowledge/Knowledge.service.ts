@@ -11,6 +11,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { sanitizeSensitiveText } from "@beep/observability";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
 import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
+import { KnowledgeRefsRewriteRulesPath } from "@beep/repo-configs/PolicyData";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
@@ -1927,7 +1928,7 @@ export const rewriteKnowledgeReferences = Effect.fn("Knowledge.rewriteReferences
   function* (root: string, dryRun: boolean) {
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
-    const rulesText = yield* fs.readFileString(path.join(root, "scripts", "knowledge-refs-rewrite.rules.json"));
+    const rulesText = yield* fs.readFileString(path.join(root, KnowledgeRefsRewriteRulesPath));
     const input = yield* S.decodeEffect(KnowledgeRewriteRulesJson)(rulesText);
     const grouped = A.reduce(
       input.rules,

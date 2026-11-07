@@ -141,6 +141,14 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/Files/index.ts").then((module) => module.filesCommand)),
   groupRoute(
+    { name: "git", description: "Repository Git integration commands" },
+    []
+  )(() => import("../../commands/Git/index.ts").then((module) => module.gitCommand)),
+  groupRoute(
+    { name: "github", description: "GitHub integration commands" },
+    []
+  )(() => import("../../commands/Github/index.ts").then((module) => module.githubCommand)),
+  groupRoute(
     {
       name: "goals",
       description: "Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption)",
@@ -260,6 +268,11 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     { name: "sync-data-to-ts", description: "Sync official upstream datasets into checked-in TypeScript modules" },
     []
   )(() => import("../../commands/SyncDataToTs/index.ts").then((module) => module.syncDataToTsCommand)),
+  // Root `prepare` runs this during install: the platform base alone keeps it light.
+  groupRoute(
+    { name: "toolchain", description: "Patched TypeScript toolchain maintenance" },
+    []
+  )(() => import("../../commands/Toolchain/index.ts").then((module) => module.toolchainCommand)),
   groupRoute(
     {
       name: "tsconfig-sync",

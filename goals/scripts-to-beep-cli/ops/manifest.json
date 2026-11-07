@@ -50,12 +50,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
