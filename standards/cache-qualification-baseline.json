@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
-      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Record the @beep/postgres dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the real-Postgres integration project; re-stamp the inherited identity, types and root turbo.json source review rows from main. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
-        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b.md",
+        "sha256": "e954c8f42e51c51f419a98af06a4cfe6ac17485daacc32b27de9e04f99b0f874"
       }
     },
     "@beep/acp": {
@@ -80,11 +80,11 @@
       }
     },
     "@beep/alchemy-postgres": {
-      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
-      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Record the @beep/postgres dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the real-Postgres integration project; re-stamp the inherited identity, types and root turbo.json source review rows from main. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
-        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b.md",
+        "sha256": "e954c8f42e51c51f419a98af06a4cfe6ac17485daacc32b27de9e04f99b0f874"
       }
     },
     "@beep/anthropic": {
@@ -600,11 +600,11 @@
       }
     },
     "@beep/identity": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Record the @beep/postgres dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the real-Postgres integration project; re-stamp the inherited identity, types and root turbo.json source review rows from main. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b.md",
+        "sha256": "e954c8f42e51c51f419a98af06a4cfe6ac17485daacc32b27de9e04f99b0f874"
       }
     },
     "@beep/infra": {
@@ -1440,11 +1440,11 @@
       }
     },
     "@beep/types": {
-      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-driver PR 2a)",
-      "reason": "Record the @beep/pglite dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the PGlite conformance project; no command, input, output, env or cache flag changes, and no qualification is granted. Also re-stamps the inherited @beep/types turbo.json source review row from main.",
+      "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+      "reason": "Record the @beep/postgres dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the real-Postgres integration project; re-stamp the inherited identity, types and root turbo.json source review rows from main. No command, input, output, env or cache flag changes, and no qualification is granted.",
       "basis": {
-        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2a.md",
-        "sha256": "195dd170569ba0e9650cc19920e67d779afc7b5333e4318f31fd6687acfaf096"
+        "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b.md",
+        "sha256": "e954c8f42e51c51f419a98af06a4cfe6ac17485daacc32b27de9e04f99b0f874"
       }
     },
     "@beep/ui": {
@@ -9332,6 +9332,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9388,6 +9389,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9430,6 +9432,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -9554,6 +9557,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/utils#transit"
@@ -9759,6 +9763,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/utils#transit"
         ],
@@ -9804,6 +9809,7 @@
         "dependencies": [
           "@beep/identity#transit",
           "@beep/pglite#transit",
+          "@beep/postgres#transit",
           "@beep/schema#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
@@ -9857,6 +9863,7 @@
         "dependencies": [
           "@beep/identity#build",
           "@beep/pglite#build",
+          "@beep/postgres#build",
           "@beep/schema#build",
           "@beep/utils#build"
         ],
@@ -49285,6 +49292,7 @@
             "!../../../../.beep/**",
             "!../../../../.claude/worktrees/**",
             "!../../../../.fallow/**",
+            "!../../../../.repos/**",
             "!.beep/**",
             "!.fallow/**",
             "../../../../**/.gitignore",
@@ -113394,17 +113402,19 @@
         "configuration": {
           "cache": false,
           "inputs": [
-            "!../../../../tsconfig*.json",
             "!.beep/**",
-            "!.beep/**",
-            "!.fallow/**",
             "!.fallow/**",
             "../../../../.bun-version",
+            "../../../../.gitignore",
             "../../../../.nvmrc",
             "../../../../biome.jsonc",
             "../../../../package.json",
+            "../../../../packages/.gitignore",
+            "../../../../packages/foundation/.gitignore",
+            "../../../../packages/foundation/primitive/.gitignore",
             "../../../../packages/tooling/policy-pack/lint-rules/configs/**",
             "../../../../packages/tooling/policy-pack/lint-rules/rules/**",
+            "../../../../tsconfig*.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json"
@@ -122442,11 +122452,11 @@
       },
       {
         "path": "packages/foundation/modeling/identity/turbo.json",
-        "sha256": "1c694094dcfeef53b714e7980f8193cf93b2c34690f9a9a4dcd5936f328456e8"
+        "sha256": "91fae88ab5bd2b458852a0bde1d2cee7fc81e2045ad0256c63bf2b10d66cfed3"
       },
       {
         "path": "packages/foundation/primitive/types/turbo.json",
-        "sha256": "7a3bc28477bb6761fefb109a38019dfc9b75e6c6d070be51251cd2b29328f486"
+        "sha256": "06e627058b8867187be271aa6ca71ce0d487ba42d2260feb0864212dd6a486c6"
       },
       {
         "path": "packages/tooling/library/ai-sync/turbo.json",
@@ -122470,7 +122480,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "d008d4886ce9b68d4e90a661e823afb525185d1c14d5aef85dfe29c54681a769"
+        "sha256": "3ff39ab1e09b72b96d418cb250b304429d3c2ff3569a8c09edbeefe5f40b4400"
       }
     ]
   }

@@ -1,0 +1,14 @@
+{
+  "previous": "ef9473f7712075e3adcf824b7633165ca509287a60727331f81bed129b096e0b",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/alchemy-postgres-views PR 2b)",
+    "reason": "Record the @beep/postgres dev-dependency edge (and its tsconfig reference) added to @beep/alchemy-postgres for the real-Postgres integration project; re-stamp the inherited identity, types and root turbo.json source review rows from main. No command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr2b.md",
+      "sha256": "e954c8f42e51c51f419a98af06a4cfe6ac17485daacc32b27de9e04f99b0f874"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

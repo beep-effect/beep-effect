@@ -18,6 +18,9 @@ import { consumers } from "./consumers.ts";
 import { conformance } from "./scenarios.ts";
 import type * as Layer from "effect/Layer";
 
+/** Encodes any JSON value to its JSON text, compiled once. */
+const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+
 /** Register both suites for the Postgres platform over `base`, its tables under `tablePrefix`. */
 export const postgresSuites = <E>({
   base,
@@ -90,8 +93,8 @@ export const postgresSuites = <E>({
   /** Write an `Order` event at schema version 1 (before `amount` existed), as an older deploy stored it. */
   const legacyOrder = Effect.fn("test.legacyOrder")(function* (model: string, id: string, json: unknown) {
     const sql = yield* SqlClient.SqlClient;
-    const event = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(json);
-    const envelope = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))({
+    const event = yield* encodeJsonText(json);
+    const envelope = yield* encodeJsonText({
       id,
       stream: `Order/${id}`,
       seq: 1,
