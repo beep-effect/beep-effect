@@ -74,6 +74,8 @@ const Configuration = S.Struct({
   agentGuidance: S.Boolean,
 });
 const Manifest = S.Struct({ scripts: S.Record(S.String, S.String) });
+const WorkspaceManifest = S.Struct({ workspaces: S.Array(S.String) });
+const decodeWorkspaceManifest = S.decodeEffect(S.fromJsonString(WorkspaceManifest));
 const Summary = S.Struct({ tasks: S.Array(TaskSummary) });
 const decodeConfiguration = S.decodeEffect(S.fromJsonString(Configuration));
 const decodeManifest = S.decodeEffect(S.fromJsonString(Manifest));
@@ -431,9 +433,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         const manifestText = yield* fs.readFileString(path.join(repo, "package.json"));
         const rootManifest = yield* decodeManifest(manifestText);
         expect(rootManifest.scripts["lint:effect-imports"]).toBe("bun run beep laws effect-imports --check");
-        const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ workspaces: S.Array(S.String) })))(
-          manifestText
-        );
+        const manifest = yield* decodeWorkspaceManifest(manifestText);
         const encoded = yield* jsonStringifyPretty({
           workspaces: manifest.workspaces,
           global: configuration.global,
