@@ -10,6 +10,7 @@
 export const observationJournalTables = [
   "observation_intake_config",
   "observation_launch_facts",
+  "observation_availability_snapshots",
   "observation_intake_pages",
   "observation_source_cursors",
   "observation_schedule_cursor",

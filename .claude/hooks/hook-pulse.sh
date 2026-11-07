@@ -314,6 +314,26 @@ esac
 
 payload="$(cat)"
 
+# Cursor also runs the project's Claude Code hooks (its Claude-compatibility
+# loader), so this script receives every Cursor event a second time, untagged
+# and therefore defaulted to `claude-code`, with Cursor's camelCase event names.
+# The jq projection then yields nothing and the writer used to append a
+# `claude-code` `empty-output` refusal, which overlaps and disqualifies every open
+# Claude session (measured 2026-11-07: 595 of 601 such refusals fell on the second
+# of a Cursor row). The Cursor adapter in `.cursor/hooks/hook-pulse.sh` already
+# records the event as `cursor-cli`, so the duplicate delivery is dropped here:
+# it is neither a Claude event nor a Claude collection failure. Only Cursor sends
+# `cursor_version`; the substring gate keeps the jq probe off ordinary payloads.
+if [ "${agent_kind}" = "claude-code" ]; then
+  case "${payload}" in
+    *'"cursor_version"'*)
+      if jq -e 'type == "object" and has("cursor_version")' <<<"${payload}" >/dev/null 2>&1; then
+        exit 0
+      fi
+      ;;
+  esac
+fi
+
 # One extraction pass for the three private identifiers, NUL-delimited. A `cwd`
 # or `transcript_path` containing a newline is legal on POSIX, and a
 # line-delimited read would silently hash a truncated value while still
@@ -323,6 +343,9 @@ payload="$(cat)"
 # rather than in the main program so that exactly one expression decides what
 # gets hashed. The fourth field is the raw event name, read only to gate the
 # SessionStart harness walk below; it is never hashed or written from here.
+# The fifth is the native subagent `agent_id` (Claude Code and Codex send it only
+# from inside a child agent); it is a private identifier, so only its salted
+# digest reaches the row, as `agentId`.
 identifier_program='
 def as_string: if type == "string" then . else null end;
 def as_present: as_string | if . == "" then null else . end;
@@ -330,7 +353,8 @@ def nul: [0] | implode;
 ((.session_id | as_present) // ""), nul,
 ((.cwd | as_string) // $fallbackCwd), nul,
 ((.transcript_path | as_present) // ""), nul,
-((.hook_event_name | as_present) // ""), nul
+((.hook_event_name | as_present) // ""), nul,
+((.agent_id | as_present) // ""), nul
 '
 
 # The trailing `nul` is what makes the last read succeed rather than hit EOF,
@@ -346,16 +370,19 @@ raw_session_id=""
 raw_cwd=""
 raw_transcript_path=""
 raw_hook_event=""
+raw_agent_id=""
 {
   IFS= read -r -d '' raw_session_id || raw_session_id=""
   IFS= read -r -d '' raw_cwd || raw_cwd=""
   IFS= read -r -d '' raw_transcript_path || raw_transcript_path=""
   IFS= read -r -d '' raw_hook_event || raw_hook_event=""
+  IFS= read -r -d '' raw_agent_id || raw_agent_id=""
 } < <(jq -j --arg fallbackCwd "${PWD}" "${identifier_program}" <<<"${payload}" 2>/dev/null)
 
 session_id_hash="$(sha256_private_identifier "${raw_session_id}")" || { refuse digest-failed; exit 0; }
 cwd_hash="$(sha256_private_identifier "${raw_cwd}")" || { refuse digest-failed; exit 0; }
 transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || { refuse digest-failed; exit 0; }
+agent_id_hash="$(sha256_private_identifier "${raw_agent_id}")" || { refuse digest-failed; exit 0; }
 
 # Context surface (goals/harness-evidence-ledger, D8): which repo surface a
 # successful tool call touched, as an unsalted digest of `${kind}:${name}`. The
@@ -843,6 +870,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
 | ($transcriptPathHash | as_present) as $transcriptPath
 | ($surfaceHash | as_present) as $surface
 | ($harnessHash | as_present) as $harness
+| ($agentIdHash | as_present) as $agentId
 | (.permission_mode | as_present) as $permissionMode
 | (.notification_type | as_present) as $notificationTypeRaw
 | (.duration_ms | as_non_negative) as $durationMs
@@ -862,10 +890,18 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      (if $notificationTypeRaw == "idle_prompt" then "idle-input" else "unknown" end)
    else "none"
    end) as $waitReason
-| (if $agentKind == "claude-code" and (.transcript_path? | type) == "string" then
+# Mirrors `deriveSessionRole` in hook-pulse.ts. A native `agent_id` marks a
+# child on Claude Code and Codex; Claude fires the hooks of a child with the ROOT
+# transcript path, so the path test alone would call the child a root. Cursor
+# sends no ancestry signal, so its rows say "unknown" instead of omitting it.
+| (if $agentKind == "cursor-cli" then "unknown"
+   elif $agentId != null then "subagent"
+   elif $agentKind == "claude-code" and (.transcript_path? | type) == "string" then
      if (.transcript_path | test("(^|/)(subagents|workflow)(/|$)")) then "subagent"
      elif (.transcript_path | test("(^|/)[0-9a-f-]{36}\\.jsonl$")) then "primary"
      else null end
+   elif $agentKind == "codex-cli" and (.transcript_path? | type) == "string" then
+     if (.transcript_path | test("(^|/)rollout-[^/]*[0-9a-f-]{36}\\.jsonl$")) then "primary" else null end
    else null end) as $sessionRole
 | .source? as $sessionStartSource
 | if $sessionId == null or $cwd == null or $hookEvent == null then
@@ -888,6 +924,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      | put("promptId"; $promptId)
      | put("transcriptPath"; $transcriptPath)
      | put("sessionRole"; $sessionRole)
+     | put("agentId"; $agentId)
      | put("sessionStartSource"; (if $hookEvent == "SessionStart" and ($sessionStartSource == "startup" or $sessionStartSource == "resume" or $sessionStartSource == "clear" or $sessionStartSource == "compact") then $sessionStartSource else null end))
      | put("permissionMode"; $permissionMode)
      | put("notificationType"; (if $hookEvent == "Notification" then $notificationType else null end))
@@ -918,6 +955,7 @@ output="$(
     --arg transcriptPathHash "${transcript_path_hash}" \
     --arg surfaceHash "${surface_hash}" \
     --arg harnessHash "${harness_hash}" \
+    --arg agentIdHash "${agent_id_hash}" \
     "${jq_program}" <<<"${payload}" 2>/dev/null
 )" || { refuse encode-failed; exit 0; }
 

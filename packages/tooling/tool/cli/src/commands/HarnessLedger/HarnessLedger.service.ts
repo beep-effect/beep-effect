@@ -372,8 +372,11 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
   const rows = yield* readLedgerRows(options.repoRoot);
   const blocked = yield* blockedTargets(rows, observed.harnessHash);
   const untouched = A.filter(candidates, (candidate) => !HashSet.has(observed.touched, candidate.surfaceId));
-  // No observed session is no evidence, not zero touches: propose nothing.
-  const zeroTouch = observed.sessionsObserved === 0 ? A.empty<PruneSurfaceCandidate>() : untouched;
+  // No observed session is no evidence, not zero touches: propose nothing. An
+  // undecodable line may have carried a touch, so any corruption also leaves the
+  // touch set incomplete even when it only disqualifies its own session.
+  const zeroTouch =
+    observed.sessionsObserved === 0 || observed.undecodableLines > 0 ? A.empty<PruneSurfaceCandidate>() : untouched;
   const notOpen = A.filter(zeroTouch, (candidate) => !HashSet.has(blocked.open, candidate.surfaceId));
   const fresh = A.filter(notOpen, (candidate) => !HashSet.has(blocked.decided, candidate.surfaceId));
   const proposals = yield* O.match(observed.windowEnd, {
@@ -401,6 +404,9 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     sessionsSkippedDisarmed: observed.sessionsSkippedDisarmed,
     sessionsSkippedRefused: observed.sessionsSkippedRefused,
     sessionsSkippedCorrupt: observed.sessionsSkippedCorrupt,
+    sessionsSkippedRoleUnattributable: observed.sessionsSkippedRoleUnattributable,
+    nonProductionLines: observed.nonProductionLines,
+    corruptShards: observed.corruptShards,
     sessionsBelowActivityFloor: observed.sessionsBelowActivityFloor,
     sessionsSkippedRole: observed.sessionsSkippedRole,
     sessionsSkippedUnknownRestart: observed.sessionsSkippedUnknownRestart,

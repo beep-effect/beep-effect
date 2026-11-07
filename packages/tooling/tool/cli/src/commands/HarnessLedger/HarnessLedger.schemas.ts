@@ -504,6 +504,18 @@ const SessionWindowTallyFields = {
   sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
   sessionsSkippedRefused: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
   sessionsSkippedCorrupt: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  sessionsSkippedRoleUnattributable: S.Natural.pipe(
+    S.withConstructorDefault(Effect.succeed(0)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(0))
+  ),
+  nonProductionLines: S.Natural.pipe(
+    S.withConstructorDefault(Effect.succeed(0)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(0))
+  ),
+  corruptShards: S.Natural.pipe(
+    S.withConstructorDefault(Effect.succeed(0)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(0))
+  ),
   sessionsSkippedUnknownRestart: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
   writerRefusalsTotal: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
   sessionsSkippedRole: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
@@ -583,7 +595,14 @@ export class ObservedSessionWindow extends S.Opaque<ObservedSessionWindow, { rea
  * `sessionsObserved` counts only sessions under `harnessHash`, the current
  * harness hash; the two skip counts say how many newer sessions ran under
  * another regime or carry no stamp. `undecodableLines` includes undecodable
- * hook and refusal rows. Collection, refusal, role, activity, disarm and restart
+ * hook and refusal rows; `corruptShards` counts hook shards holding one. Hook
+ * corruption disqualifies the session that owns the shard (or every session when
+ * no shard name names its owner) and blocks every zero-touch proposal, since the
+ * lost line may have carried a touch. `nonProductionLines` counts spike and meta
+ * lines set aside by their declared instrument class, including pre-schema spike
+ * rows. `sessionsSkippedRoleUnattributable` counts sessions whose harness sent no
+ * root/child signal (`sessionRole: unknown`); a client made only of those reports
+ * `unsupported` coverage. Collection, refusal, role, activity, disarm and restart
  * counters cover all scanned history; regime skip counts cover observations
  * newer than the selected window boundary (all history when the window is short).
  * `windowFull` is true when `sessionsObserved` reached `windowSessions`.

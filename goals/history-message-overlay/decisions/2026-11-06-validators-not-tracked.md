@@ -1,7 +1,7 @@
 ---
 title: "July validator scripts are archived, not tracked"
 date: 2026-11-06
-lane: "docs/git-history-rewrite-exploration"
+lane: "git-history-rewrite"
 reversal: "Copy census/*.mjs from $HOME/.local/state/beep/archive/beep-effect-cutover/ into docs/history/"
 ---
 

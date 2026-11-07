@@ -625,13 +625,24 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       assertSome(A.last(harnessLedgerPruneReportLines(narrow, false)), "nothing written: no fresh proposals.");
       // Only the skipped sessions newer than the window's oldest session count.
       expect([narrow.sessionsSkippedOutOfRegime, narrow.sessionsSkippedUnstamped]).toStrictEqual([1, 1]);
+      // A corrupt line in a session's own shard disqualifies only that session,
+      // but it may have hidden a touch, so no zero-touch proposal can be made.
       yield* writeShard(stateDir, "2026-09-28", sessionD, ["{not json"]);
       const corrupt = yield* ledger.pruneProposals(options);
-      expect(corrupt.sessionsObserved).toBe(0);
-      expect(corrupt.sessionsSkippedCorrupt).toBe(4);
+      expect(corrupt.sessionsObserved).toBe(2);
+      expect(corrupt.sessionsSkippedCorrupt).toBe(1);
+      expect(corrupt.corruptShards).toBe(1);
       expect(corrupt.undecodableLines).toBe(1);
       expect(corrupt.touchedCandidates).toBe(3);
+      expect(corrupt.proposals).toHaveLength(0);
       expect(corrupt.windowFull).toBe(false);
+      // A corrupt line no shard name can attribute fails every session closed.
+      yield* fs.writeFileString(path.join(stateDir, "hook-pulse-legacy.ndjson"), "{not json\n");
+      const unscoped = yield* ledger.pruneProposals(options);
+      expect(unscoped.sessionsObserved).toBe(0);
+      expect(unscoped.sessionsSkippedCorrupt).toBe(4);
+      expect(unscoped.corruptShards).toBe(2);
+      expect(unscoped.undecodableLines).toBe(2);
     })
   );
 
@@ -703,7 +714,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(again.alreadyProposed).toBe(0);
       expect(again.decidedUnderHarness).toBe(3);
       expect(again.written).toBe(false);
-      expect(harnessLedgerPruneReportLines(again, true)[3]).toBe(
+      expect(harnessLedgerPruneReportLines(again, true)[4]).toBe(
         "candidates: 3; touched: 0; already proposed: 0; decided under this harness: 3"
       );
       const readLedgerLines16 = yield* readLedgerLines(root);
@@ -917,9 +928,11 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
       );
 
-      expect(report.sessionsObserved).toBe(0);
-      expect(report.sessionsSkippedCorrupt).toBe(5);
-      assertNone(report.windowEnd);
+      // The corrupt shard names a session with no decodable row: nothing else is disqualified.
+      expect(report.sessionsObserved).toBe(1);
+      expect(report.sessionsSkippedCorrupt).toBe(0);
+      expect(report.corruptShards).toBe(1);
+      assertSome(report.windowEnd, DateTime.makeUnsafe("2026-09-20T08:05:00.000Z"));
       expect(report.sessionsSkippedOutOfRegime).toBe(1);
       expect(report.sessionsSkippedUnstamped).toBe(2);
       expect(report.shardsRead).toBe(8);
@@ -1740,6 +1753,141 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
       expect(report.sessionsSkippedRefused).toBe(1);
       expect(report.sessionsObserved).toBe(0);
       expect(report.sessionsSkippedRole).toBe(0);
+    })
+  );
+
+  it.effect("a pre-schema spike shard is set aside by instrument class instead of zeroing the window", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { stateDir, options } = yield* activeSessionFixture("harness-spike-shard-");
+      // The 2026-08-01 spike corpus shape: raw identifiers, so it fails the
+      // current row schema, but it declares itself a spike.
+      const spikeRow = yield* encodeUnknownTranscript({
+        schemaVersion: "hook-pulse/v1",
+        ts: "2026-08-01T06:40:07.000Z",
+        sessionId: "raw-spike-session",
+        agentKind: "claude-code",
+        hookEvent: "Stop",
+        cwd: "/workspace/beep-effect2",
+        notifierRev: "spike-0",
+        instrumentClass: "spike",
+        evidenceTier: "observed",
+        waitReason: "none",
+      });
+      yield* fs.writeFileString(path.join(stateDir, "hook-pulse-spike.ndjson"), `${spikeRow}\n${spikeRow}\n`);
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(options);
+      expect(report.sessionsObserved).toBe(1);
+      expect(report.nonProductionLines).toBe(2);
+      expect(report.undecodableLines).toBe(0);
+      expect(report.corruptShards).toBe(0);
+      expect(report.sessionsSkippedCorrupt).toBe(0);
+      // The same shape claiming production is corruption no shard name can scope.
+      yield* fs.writeFileString(
+        path.join(stateDir, "hook-pulse-spike.ndjson"),
+        `${Str.replace('"spike"', '"production"')(spikeRow)}\n`
+      );
+      const poisoned = yield* ledger.pruneProposals(options);
+      expect(poisoned.sessionsObserved).toBe(0);
+      expect(poisoned.sessionsSkippedCorrupt).toBe(1);
+      expect(poisoned.undecodableLines).toBe(1);
+    })
+  );
+
+  it.effect("a child keyed by its native agent id neither disqualifies its root nor fills the window", () =>
+    Effect.gen(function* () {
+      const { stateDir, options } = yield* activeSessionFixture("harness-agent-id-");
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      const childLine = yield* pulseRow(
+        sessionA,
+        "2026-10-09T10:01:30Z",
+        "PostToolUse",
+        O.some(alphaId),
+        O.none(),
+        O.some("subagent")
+      );
+      const childRow = yield* HookPulseV1.decodeJsonEffect(childLine);
+      const child = yield* HookPulseV1.encodeJsonEffect(
+        HookPulseV1.make({ ...childRow, agentId: O.some(Sha256Hex.make(Str.repeat(64)("9"))) })
+      );
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const shard = path.join(stateDir, `hook-pulse-2026-10-09-${sessionA}.ndjson`);
+      const rootLines = yield* fs.readFileString(shard);
+      yield* fs.writeFileString(shard, `${rootLines}${child}\n`);
+      const report = yield* (yield* HarnessLedgerService).pruneProposals(options);
+      expect(report.sessionsObserved).toBe(1);
+      expect(report.sessionsSkippedRole).toBe(0);
+      expect(report.touchedCandidates).toBe(1);
+    })
+  );
+
+  it.effect("Codex roots qualify and Cursor sessions without an ancestry signal are reported unattributable", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* makeHookStateDir("harness-client-roles-");
+      const asKind = Effect.fnUntraced(function* (encoded: string, agentKind: HookPulseAgentKind) {
+        const row = yield* HookPulseV1.decodeJsonEffect(encoded);
+        return yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...row, agentKind }));
+      });
+      const rows = Effect.fnUntraced(function* (
+        sessionId: Sha256Hex,
+        agentKind: HookPulseAgentKind,
+        role: HookPulseV1["sessionRole"]
+      ) {
+        return yield* Effect.forEach(
+          [
+            yield* pulseRow(sessionId, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current), role),
+            yield* pulseRow(sessionId, "2026-10-09T10:00:30Z", "UserPromptSubmit", O.none(), O.none(), role),
+            yield* pulseRow(sessionId, "2026-10-09T10:01:00Z", "PostToolUse", O.none(), O.none(), role),
+          ],
+          (encoded) => asKind(encoded, agentKind)
+        );
+      });
+      const codexRows = yield* rows(sessionA, "codex-cli", O.some("primary"));
+      const cursorRows = yield* rows(sessionB, "cursor-cli", O.some("unknown"));
+      yield* writeShard(stateDir, "2026-10-09", sessionA, codexRows);
+      yield* writeShard(stateDir, "2026-10-09", sessionB, cursorRows);
+      const ledger = yield* HarnessLedgerService;
+      const codex = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, agentKind: "codex-cli" })
+      );
+      expect(codex.sessionsObserved).toBe(1);
+      assertSome(codex.clientCoverage["codex-cli"], "stamped");
+      const cursor = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1, agentKind: "cursor-cli" })
+      );
+      expect(cursor.sessionsObserved).toBe(0);
+      expect(cursor.sessionsSkippedRoleUnattributable).toBe(1);
+      expect(cursor.sessionsSkippedRole).toBe(1);
+      assertSome(cursor.clientCoverage["cursor-cli"], "unsupported");
+      expect(cursor.sessionsByAgentKind).toEqual({ "claude-code": 0, "codex-cli": 1, "cursor-cli": 0 });
+    })
+  );
+
+  it.effect("reconciliation ignores pre-schema spike lines instead of counting them undecodable", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const stateDir = yield* makeHookStateDir("harness-reconcile-spike-");
+      const transcripts = yield* fs.makeTempDirectoryScoped({ prefix: "harness-reconcile-spike-transcripts-" });
+      const spikeRow = yield* encodeUnknownTranscript({
+        schemaVersion: "hook-pulse/v1",
+        ts: "2026-08-01T06:40:07.000Z",
+        sessionId: "raw-spike-session",
+        agentKind: "claude-code",
+        hookEvent: "Stop",
+        cwd: "/workspace/beep-effect2",
+        notifierRev: "spike-0",
+        instrumentClass: "spike",
+        evidenceTier: "observed",
+        waitReason: "none",
+      });
+      yield* fs.writeFileString(path.join(stateDir, "hook-pulse-spike.ndjson"), `${spikeRow}\n{not json\n`);
+      const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, transcripts, "claude-code");
+      expect(report.undecodableLines).toBe(1);
     })
   );
 
