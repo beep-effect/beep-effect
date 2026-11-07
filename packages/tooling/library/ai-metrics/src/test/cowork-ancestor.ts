@@ -15,6 +15,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { failure } from "../internal/cursor-lifecycle-schemas.ts";
 import { makeSealedRuntimeFixture, sealedRuntimeSocketPeerSource } from "./sealed-runtime.ts";
+import type { CursorLifecycleError } from "../internal/cursor-lifecycle-schemas.ts";
 
 const $I = $RepoAiMetricsId.create("test/cowork-ancestor");
 const identity = S.Struct({ appPid: S.Int, appStartTicks: S.String, peerPid: S.Int }).pipe(
@@ -26,6 +27,31 @@ const scriptResult = S.Struct({ code: S.Int, stdout: S.String, stderr: S.String 
 const encode = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeIdentity = S.decodeEffect(S.fromJsonString(identity));
 const decodeScriptResult = S.decodeEffect(S.fromJsonString(scriptResult));
+/**
+ * Named source-only process fixture port; no inferred private error brands cross this boundary.
+ * **Example** (Reference the port type without launching a process)
+ * ```ts
+ * import type { CoworkAncestorFixture } from "@beep/repo-ai-metrics/test/cowork-ancestor"
+ * type Close = CoworkAncestorFixture["close"]
+ * ```
+ * @category interfaces
+ * @since 0.0.0
+ */
+export interface CoworkAncestorFixture {
+  readonly appPid: number;
+  readonly appStartTicks: string;
+  readonly close: Effect.Effect<void>;
+  readonly closed: Effect.Effect<void, CursorLifecycleError>;
+  readonly peerPid: number;
+  readonly runScript: (
+    script: string,
+    path: string,
+    body: string,
+    selector: string
+  ) => Effect.Effect<typeof scriptResult.Type, CursorLifecycleError>;
+  readonly runtime: Effect.Success<ReturnType<typeof makeSealedRuntimeFixture>>;
+  readonly send: (path: string, body: string, drop?: boolean) => Effect.Effect<string, CursorLifecycleError>;
+}
 // The real application wrapper owns the real persistent callback child. Only its own
 // PID/start ticks and bounded child replies cross stdout; no process argv/env is read.
 const appSource = String.raw`
@@ -130,7 +156,8 @@ export const makeCoworkAncestorFixture = Effect.fn("CoworkTest.ancestor")(functi
       Effect.flatMap((running) => (running ? Effect.fail(failure("transport")) : runtimeStopped)),
       Effect.mapError(() => failure("transport"))
     );
-    return { ...app, runtime, send, runScript, close, closed };
+    const fixture: CoworkAncestorFixture = { ...app, runtime, send, runScript, close, closed };
+    return fixture;
   }).pipe(
     Scope.provide(owned),
     Effect.onError(() => close),
