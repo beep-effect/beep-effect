@@ -1,3 +1,4 @@
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   isTrackedShellAllowed,
   lawsCommand,
@@ -134,6 +135,55 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })((it) => {
         assertTrue(Exit.isSuccess(report), failureText(report));
         expect(failureText(check)).toContain("effect-governance-tracked-shell-allowlist: check failed.");
         expect(failureText(lint)).toContain("lint laws: tracked-shell-allowlist failed.");
+      })
+    );
+
+    it.effect(
+      "passes bare `lint laws` on a checkout with only allowed shell scripts",
+      Effect.fnUntraced(function* () {
+        const root = yield* makeFixtureCheckout([]);
+        yield* enterDirectory(root);
+
+        const lint = yield* runLint(["laws"]).pipe(withEmptyConfig, Effect.exit);
+
+        assertTrue(Exit.isSuccess(lint), failureText(lint));
+      })
+    );
+
+    it.effect(
+      "fails with its execution error when the root or the git index cannot be read",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = yield* findRepoRoot();
+        const options = TrackedShellAllowlistOptions.make({ cwd: repoRoot, strictCheck: true });
+
+        const rootless = yield* runTrackedShellAllowlist(options).pipe(
+          Effect.provideService(FileSystem.FileSystem, { ...fs, exists: () => Effect.succeed(false) }),
+          Effect.flip
+        );
+        const unlisted = yield* runTrackedShellAllowlist(options).pipe(
+          Effect.provideService(
+            Git,
+            Git.makeTest({
+              lsFiles: () =>
+                Effect.fail(
+                  GitCommandError.make({
+                    kind: "failed",
+                    args: ["ls-files"],
+                    cwd: repoRoot,
+                    exitCode: 128,
+                    stderr: "fatal",
+                  })
+                ),
+            })
+          ),
+          Effect.flip
+        );
+
+        expect(rootless._tag).toBe("TrackedShellAllowlistExecutionError");
+        expect(rootless.message).toContain("Failed to locate the repository root");
+        expect(unlisted._tag).toBe("TrackedShellAllowlistExecutionError");
+        expect(unlisted.message).toBe("git ls-files --stage -z failed with exit code 128.");
       })
     );
 

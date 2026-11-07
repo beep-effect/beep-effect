@@ -24,6 +24,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as FileSystem from "effect/FileSystem";
+import * as F from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -99,7 +100,8 @@ const shortEscapes: Readonly<Record<string, string>> = {
 const hexDigits = Str.split("0123456789abcdef", "");
 const escapeUnit = (unit: string): string =>
   O.getOrElse(R.get(shortEscapes, unit), () => {
-    const code = O.getOrElse(Str.charCodeAt(unit, 0), () => 0);
+    // `unit` is one UTF-16 code unit, so the fallback never runs.
+    const code = O.getOrElse(Str.charCodeAt(unit, 0), F.constant(0));
     return code >= 0x20 && code < 0x7f
       ? unit
       : `\\u${A.join(
