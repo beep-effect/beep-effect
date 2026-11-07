@@ -332,9 +332,10 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           yield* accounts.schedule(id, Remind.make({}), { at: soon, commandId: "remind-at" });
           yield* eventually(accounts.state(id), (state) => state._tag === "Open" && state.reminders >= 2);
 
-          yield* accounts.schedule(id, Remind.make({}), { after: "100 millis", commandId: "remind-3" });
+          // A wide delay: a loaded runner must still unschedule before the due time.
+          yield* accounts.schedule(id, Remind.make({}), { after: "1 second", commandId: "remind-3" });
           yield* accounts.unschedule(id, "remind-3");
-          yield* Effect.sleep(Duration.millis(400));
+          yield* Effect.sleep(Duration.millis(1300));
           const state6 = yield* accounts.state(id);
           deepStrictEqual(state6, { _tag: "Open", owner: "fay", balance: 0, reminders: 2 });
         })
@@ -400,13 +401,16 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const commandId = `${refusedPrefix}remind`;
           yield* accounts.send(id, OpenAccount.make({ owner: "kim" })).pipe(asUser);
           yield* accounts.schedule(id, Remind.make({}), { after: "50 millis", commandId });
-          yield* Effect.sleep(Duration.millis(400));
+          // Wait for the fire itself where the target can report it, so a loaded runner cannot race the asserts.
+          if (target.scheduleStatus !== undefined) {
+            const scheduleStatus = target.scheduleStatus;
+            const status = yield* eventually(scheduleStatus("Account", id, commandId), (value) => value === "rejected");
+            strictEqual(status, "rejected");
+          } else {
+            yield* Effect.sleep(Duration.millis(1000));
+          }
           const state = yield* accounts.state(id);
           deepStrictEqual(state, { _tag: "Open", owner: "kim", balance: 0, reminders: 0 });
-          if (target.scheduleStatus !== undefined) {
-            const status = yield* target.scheduleStatus("Account", id, commandId);
-            strictEqual(status, "rejected");
-          }
           // No receipt was written: nothing to cancel, and the id can be scheduled again.
           const nothing = yield* accounts.unschedule(id, commandId).pipe(Effect.flip);
           strictEqual(nothing._tag, "NotScheduled");
