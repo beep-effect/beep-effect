@@ -1739,6 +1739,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Restore the original consumer paths only together with an executable retained source for those archived inputs; preserve source bytes and metrics.
 
+### Retain original complex markup regressions and integrated parity reflection, 2026-11-07
+
+Original canonical inputs 122, 123 and 129 pass on Bun and Node with unchanged engine and canonical test limits. Retain six focused public-engine regressions and record implementation sequencing lessons. These passing isolated checks do not explain the earlier hosted operation deadline or close the full corpus, safety or accounting obligations. See history/reflections/2026-11-07-integrated-parity-feedback.md.
+
+Reverse: Preserve all original inputs and assertions if regression placement changes.
+
 ### Verify pin-cite-inclusive source components, 2026-11-07
 
 Publish canonical spanWithPincite evidence using the pinned source algorithm and closed per-component diagnostics. The source-v2 corpus adds 157 direct ranges and sixteen actual-model endpoint overrides without changing any prior observation. Nine public/private regression tests pass; source replay and eight corruption controls pass. Component issue and text limits remain enforced. See history/evidence/2026-11-07-verified-pincite-components.md.
