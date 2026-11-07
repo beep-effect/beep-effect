@@ -4,6 +4,7 @@
 import * as Effect from "effect/Effect";
 import { CitationOperationAdmission } from "./Admission.ts";
 import { makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
+import { failCitationCleanerBoundary } from "./PortFailure.ts";
 
 /** Capture the shared admission owner and the owned cleaner runtime. A composed
  * engine supplies one admission instance to every operation adapter; nested plans
@@ -14,9 +15,11 @@ export const makeCitationCleanerOperation = Effect.fn("Citation.makeCleanerOpera
   const admission = yield* CitationOperationAdmission;
   const pipeline = yield* makeCitationCleanerPipeline(policy);
   return {
-    run: Effect.fn("Citation.runAdmittedCleaner")((input: unknown) => admission.run("clean", pipeline.run(input))),
+    run: Effect.fn("Citation.runAdmittedCleaner")((input: unknown) =>
+      admission.run("clean", pipeline.run(input)).pipe(Effect.catch(failCitationCleanerBoundary))
+    ),
     runOwned: Effect.fn("Citation.runAdmittedOwnedCleaner")((input: unknown) =>
-      admission.run("clean", pipeline.runOwned(input))
+      admission.run("clean", pipeline.runOwned(input)).pipe(Effect.catch(failCitationCleanerBoundary))
     ),
   };
 });

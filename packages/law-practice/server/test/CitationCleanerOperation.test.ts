@@ -9,15 +9,54 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
+import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
 it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
+  it.effect("closes malformed/port failures and preserves interruption with admission release", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const h = yield* makeCitationCleanerRegistryHarness();
+      const admission = yield* makeCitationOperationAdmission(limits);
+      const cleaner = yield* makeCitationCleanerOperation(limits).pipe(
+        Effect.provideService(CitationOperationAdmission, admission),
+        Effect.provideService(CitationCleaner, h.registry.runtime)
+      );
+      const malformed = cleaner.run({});
+      const closed: Effect.Effect<Effect.Success<typeof malformed>, CitationEngineFailure> = malformed;
+      const invalid = yield* closed.pipe(Effect.flip);
+      expect(invalid).toMatchObject({ _tag: "CitationInputError", operation: "clean" });
+      h.hooks({
+        open: Effect.fn("CleanerOperationTest.refuse")(() =>
+          Effect.fail(CitationCleanerFailure.make({ reason: "callback-failed" }))
+        ),
+      });
+      const refused = yield* cleaner.run({ text: "text", plan: "closed-port" }).pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "CitationInputError", operation: "clean" });
+      const entered = yield* Deferred.make<void>();
+      h.hooks({
+        open: Effect.fn("CleanerOperationTest.block")(function* () {
+          yield* Deferred.succeed(entered, undefined);
+          return yield* Effect.never;
+        }),
+      });
+      const pending = yield* cleaner.run({ text: "text", plan: "interrupted" }).pipe(Effect.forkChild);
+      yield* Deferred.await(entered);
+      yield* Fiber.interrupt(pending);
+      const exit = yield* Fiber.await(pending);
+      expect(Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause)).toBe(true);
+      const state = yield* admission.snapshot;
+      expect(state).toMatchObject({ active: 0, queued: 0 });
+    })
+  );
   it.effect("shares admission across cleaner instances while nested plans reuse the outer permit and ledger", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;

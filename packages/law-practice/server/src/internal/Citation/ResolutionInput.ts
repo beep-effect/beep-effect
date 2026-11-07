@@ -95,6 +95,10 @@ export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")
 ): Effect.fn.Return<PreparedCitationResolution, CitationResolutionInputFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(InputType)(input).pipe(Effect.mapError(invalid));
   const source = decoded.verifiedSource;
+  if (A.length(decoded.mentions) > decoded.limits.mentions)
+    return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded", limit: "mentions" });
+  if (Str.length(source.sourceText) > decoded.limits.sourceUtf16)
+    return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded", limit: "sourceUtf16" });
   const json = yield* S.encodeEffect(Json)({
     source: source.source,
     engineArtifact: decoded.engineArtifact,
@@ -105,10 +109,6 @@ export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")
   const snapshot = yield* S.decodeEffect(Json)(json).pipe(Effect.mapError(invalid));
   const editions = HashMap.fromIterable(A.map(snapshot.editions, (edition) => Tuple.make(edition.edition, edition)));
   if (HashMap.size(editions) !== A.length(snapshot.editions)) return yield* invalid();
-  if (A.length(snapshot.mentions) > snapshot.limits.mentions)
-    return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded", limit: "mentions" });
-  if (Str.length(source.sourceText) > snapshot.limits.sourceUtf16)
-    return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded", limit: "sourceUtf16" });
   const mentions = yield* Effect.forEach(
     snapshot.mentions,
     (mention) =>

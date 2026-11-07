@@ -1517,6 +1517,14 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional table budget bindings and owner mappings together while retaining source table histories, capture controls and all acceptance duties.
 
+### Close cleaner and resolver method failure surfaces, 2026-11-07
+
+Admitted cleaner methods and a captured registered-resolver boundary now expose CitationEngineFailure with R=never. Known resource/evidence categories and interruption are preserved; incidental private payloads are removed. Seven focused tests pass in 2.36s and twenty-two resolver/cleaner regressions in 4.64s; lint/types, declarations, blocking laws and scoped Fallow pass. Complete extraction translation, admitted public resolver/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-cleaner-resolver-boundaries.md.
+
+Lane `feat/citation-diff-kernel` · PR #2737
+
+Reverse: Revert the typed method translators/wrappers and restore preflight placement together while retaining source corpora, closed-method tests and all acceptance requirements.
+
 ### Connect verified extraction and document resolution, 2026-11-07
 
 One admitted operation now connects canonical source resolution, native semantic extraction, verified occurrences, authenticated edition spelling and registered default resolution. Three actual Bun/Node/shortcut tests pass in 33.68s, including independent plain/markup lineage, exact original spans/grouping and complete receipt restoration. Lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Public Engine/Layer, complete failure boundaries and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-connected-source-document.md.

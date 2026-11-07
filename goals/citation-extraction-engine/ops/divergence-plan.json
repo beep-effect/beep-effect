@@ -387,7 +387,11 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-07-resolution-limit-diagnostics.md",
         "packages/law-practice/server/test/CitationResolutionLimit.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-11-07-table-capacity-bindings.md",
-        "packages/law-practice/server/test/CitationTableCapacity.test.ts"
+        "packages/law-practice/server/test/CitationTableCapacity.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-07-cleaner-resolver-boundaries.md",
+        "packages/law-practice/server/src/internal/Citation/PortFailure.ts",
+        "packages/law-practice/server/test/CitationPortFailure.test.ts",
+        "packages/law-practice/server/test/CitationResolverBoundary.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

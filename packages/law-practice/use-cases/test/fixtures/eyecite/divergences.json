@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "bcc3796db7b070c5f1b9712fbfe383ca44fe29648a53ceb61ea19349bb344277",
+  "planSha256": "01ef2d7a4ceef5be9cce366334e712b9aebf8532dd68e5a3899deb46c9d1fe82",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -1545,6 +1545,22 @@
         {
           "path": "packages/law-practice/server/test/CitationTableCapacity.test.ts",
           "sha256": "dae073ffb043bcc062ae7de013fdbdf4cb7aac21e09a1919be5ae5f6ffa13e42"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-cleaner-resolver-boundaries.md",
+          "sha256": "18ce63dee5f40ec284fa2a53266251a6fa3502a2533484622fe77d0fb9fa3ea4"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/PortFailure.ts",
+          "sha256": "18eaba9737367a5e9ee374ff8478bb3d100f19f4f12dbf3095aba307cd55ce1c"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationPortFailure.test.ts",
+          "sha256": "4b14007e54cdd2c8c23cc53bc6f0fd7e90c349b3ccbe84ba323e99edf27d75b7"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
+          "sha256": "03b8732f4f2452b0dac1a775ac0edf6966e9ff1a5796f9c29caa20dbfcf4bcae"
         }
       ],
       "workflowState": "audit",
@@ -1793,7 +1809,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegisteredResolver.ts",
-          "sha256": "c8908a0e98f32f356aa06dbddaad27de47ee6de5f2c7d99364e53089ad1bfe57"
+          "sha256": "6b78d8ac628ae13ea7614e175c591bee8c1d5b5ae926e4baaff12240b4882693"
         },
         {
           "path": "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
@@ -2549,7 +2565,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/RegisteredResolver.ts",
-          "sha256": "c8908a0e98f32f356aa06dbddaad27de47ee6de5f2c7d99364e53089ad1bfe57"
+          "sha256": "6b78d8ac628ae13ea7614e175c591bee8c1d5b5ae926e4baaff12240b4882693"
         },
         {
           "path": "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
