@@ -22,6 +22,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmit": true,
+    "pretty": false,
     "rootDir": "../..",
     "sourceMap": false,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.stories.tsbuildinfo",
@@ -44,10 +45,6 @@
       ],
       "@beep/md": ["../../packages/foundation/modeling/md/src/index.ts"],
       "@beep/md/*": ["../../packages/foundation/modeling/md/src/*"],
-      "@beep/schema": [
-        "../../packages/foundation/modeling/schema/src/index.ts"
-      ],
-      "@beep/schema/*": ["../../packages/foundation/modeling/schema/src/*"],
       "@beep/ui": ["../../packages/foundation/ui-system/ui/src/index.ts"],
       "@beep/ui/*": ["../../packages/foundation/ui-system/ui/src/*"]
     }
