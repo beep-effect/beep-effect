@@ -104,11 +104,21 @@ version is registered and acquired once more; earlier versions keep their captur
 If the route has no valid qualification, the first selected file is downloaded as
 the qualification probe before the rest.
 
-Credentials: `CLOUD_BOX_TOKEN` selects a developer token. Otherwise the client
-credentials grant reads `DMS_BOX_CLIENT_ID`, `DMS_BOX_CLIENT_SECRET`, and
-`DMS_BOX_ENTERPRISE_ID` from `BEEP_SECRETS` through the `op` shim. The enterprise
+Credentials: the client credentials grant reads `DMS_BOX_CLIENT_ID`,
+`DMS_BOX_CLIENT_SECRET`, and a subject from `BEEP_SECRETS` through the `op` shim; each
+variable may also hold a resolved value or another `op://` reference. The enterprise
 service account sees only folders shared with it; set `DMS_BOX_USER_ID=<box user id>`
-to take a user as the token subject for user-owned files.
+to take a user as the token subject for user-owned files. Precedence:
+
+1. `DMS_BOX_USER_ID` set: client credentials grant with that user.
+2. `DMS_BOX_ENTERPRISE_ID` set: client credentials grant with the enterprise subject.
+3. `CLOUD_BOX_TOKEN` set and non-empty: the developer token.
+4. Otherwise: client credentials grant with the `BEEP_SECRETS` enterprise subject.
+
+An explicit subject wins over `CLOUD_BOX_TOKEN` because Bun loads a worktree's `.env`,
+which can carry an expired desktop developer token; that token would otherwise fail
+every lookup with `Box file lookup failed: sdk thrown`. An empty `CLOUD_BOX_TOKEN`
+counts as unset.
 
 ## Hops and the hop-2 gate
 

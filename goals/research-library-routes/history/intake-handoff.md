@@ -34,9 +34,11 @@ Firecrawl key: `op://BEEP_SECRETS/BEEP_SECRETS/AI_FIRECRAWL_API_KEY`, read throu
 the PATH `op` shim on the first scrape. `FIRECRAWL_API_KEY` may hold a resolved key or
 another `op://` reference.
 
-Box credentials: `CLOUD_BOX_TOKEN`, or the `DMS_BOX_*` client credentials from
-`BEEP_SECRETS`. For user-owned files set `DMS_BOX_USER_ID=<box user id>`; the
-enterprise service account cannot see them (observed in the live probe). Box sources
+Box credentials: the `DMS_BOX_*` client credentials from `BEEP_SECRETS`. For
+user-owned files set `DMS_BOX_USER_ID=<box user id>`; the enterprise service account
+cannot see them (observed in the live probe). An explicit `DMS_BOX_USER_ID` or
+`DMS_BOX_ENTERPRISE_ID` wins over a `CLOUD_BOX_TOKEN` loaded from a worktree `.env`;
+the token is used only when neither subject is set. Box sources
 are private by default and stay out of `render` unless `--include-private`.
 
 ## Import manifests

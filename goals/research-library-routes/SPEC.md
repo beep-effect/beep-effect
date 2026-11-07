@@ -178,6 +178,14 @@ Lane `feat/research-library-routes`
 
 Reverse: Model Box files under a new source kind via an ontology-core change, or record the version only in capturedRevision
 
+### Explicit Box CCG subjects win over CLOUD_BOX_TOKEN, 2026-11-07
+
+Intake review found that Bun loads a worktree .env holding an expired desktop CLOUD_BOX_TOKEN, so every acquire --route box failed with 'Box file lookup failed: sdk thrown' even with DMS_BOX_USER_ID set. libraryBoxAuthMode now selects the CCG user subject, then an explicit enterprise subject, then a non-empty developer token, then the BEEP_SECRETS enterprise subject. A live probe with a bogus CLOUD_BOX_TOKEN plus DMS_BOX_USER_ID captured readable.
+
+Lane `feat/research-library-routes`
+
+Reverse: Give CLOUD_BOX_TOKEN first precedence again in libraryBoxAuthMode
+
 ### firecrawl is a live required route again; the removed-adapter carve-out is gone, 2026-11-07
 
 libraryAdapterFor sends web, docs and registry sources to firecrawl, so requiredLibraryAdapters requires a verified firecrawl qualification and verify fails when its latest probe fails. Native captures use method firecrawl like October's imports, so both verify through the unchanged webResponseValid path; the October replay still passes byte for byte.

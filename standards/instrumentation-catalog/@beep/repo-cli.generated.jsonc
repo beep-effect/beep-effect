@@ -2245,6 +2245,7 @@
     {"name":"Library.viewRecords","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.writeOntology","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.youtube.retainCaptionTrack","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"LibraryBox.authMode","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"LibraryBox.build","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"LibraryBox.credential","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"LibraryBox.describeFile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
