@@ -1325,3 +1325,7 @@ Heavy / Check job 128224640320 on #2824 reported TS6133 at cache-pilot-orchestra
 ### Types pilot prerequisite refusal coverage, 2026-11-07
 
 PR #2824 hosted coverage measured Cache.pilot.ts functions at 87.30 against the unchanged 87.95 floor. Inspecting all six provider-digest-verified unit coverage artifacts identified unexercised installed-dependency and runtime-linker absence refusals. Add process-boundary controls for both types prerequisites: exact typed cause, zero task invocations, no private sandbox or observation receipt. Tests are authored for hosted CI; no local quality suite ran. Coverage success remains unproven until the new head completes.
+
+### Separate Effect execution from assertion construction, 2026-11-07
+
+PR #2824 hosted Check rejected the new observation-absence assertion with TS377171: yield in call argument. Bind the filesystem result before asserting it. The negative control and coverage floor remain unchanged. Prevent this with the existing Effect test-authoring checklist; hosted CI remains authoritative and no local quality suite was run.

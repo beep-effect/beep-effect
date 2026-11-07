@@ -994,7 +994,8 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
         );
         expect(calls).toHaveLength(0);
         expect(A.fromIterable(privateDirectories)).toHaveLength(0);
-        expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
+        const observationExists = yield* fs.exists(path.join(root, ".beep/cache/experiments"));
+        expect(observationExists).toBe(false);
       })
     );
   }
