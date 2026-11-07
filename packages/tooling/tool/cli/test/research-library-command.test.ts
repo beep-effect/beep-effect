@@ -1,6 +1,8 @@
 import { LibraryAcquireOptions, LibraryHopPolicy, libraryCommand } from "@beep/repo-cli/commands/Research";
-import { NodeServices } from "@effect/platform-node";
-import { describe, expect, layer } from "@effect/vitest";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -13,7 +15,7 @@ import { NodeCommandTestLayer } from "./support/CommandTest.ts";
 
 // No case reaches the network: flag validation and the Box selection guard fail ahead
 // of any catalog read, and the empty temporary library catalogs no source to fetch.
-const testLayer = Layer.mergeAll(NodeCommandTestLayer, FetchHttpClient.layer.pipe(Layer.provide(NodeServices.layer)));
+const testLayer = Layer.mergeAll(NodeCommandTestLayer, FetchHttpClient.layer);
 
 const runLibrary = (args: ReadonlyArray<string>) =>
   Command.runWith(libraryCommand, { version: "test", renderErrors: false })(args).pipe(Effect.exit);
@@ -26,7 +28,19 @@ const makeLibrary = Effect.gen(function* () {
 });
 
 describe("LibraryAcquireOptions hop policy", () => {
-  layer(testLayer)((it) => {
+  it.effect.prop(
+    "property: schema-generated acquire options survive an encode/decode round trip",
+    { options: Arbitrary.schema(LibraryAcquireOptions) },
+    ({ options }) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(LibraryAcquireOptions)(options);
+        const decoded = yield* S.decodeEffect(LibraryAcquireOptions)(encoded);
+        expect(decoded).toEqual(options);
+      }),
+    { arbitrary: fcRuns(32) }
+  );
+
+  layer(testLayer, { timeout: "60 seconds" })((it) => {
     it.effect(
       "defaults the hop policy on construction and on decode",
       Effect.fn(function* () {
@@ -82,7 +96,7 @@ describe("research library command", () => {
         const library = yield* makeLibrary;
         const exit = yield* runLibrary(["acquire", "--library", library, "--hop2-domain-cap", "3"]);
         // The empty library catalogs no sources, so the routed acquisition fetches nothing.
-        expect(Exit.isSuccess(exit)).toBe(true);
+        exit.pipe(Exit.isSuccess, assertTrue);
       })
     );
 
@@ -94,7 +108,7 @@ describe("research library command", () => {
         expect(failureText(cap)).toContain("--hop2-domain-cap must be zero or more.");
         const report = yield* runLibrary(["hops", "--library", library, "--limit", "1"]);
         // An empty library loads an empty catalog, so the report prints zero totals and succeeds.
-        expect(Exit.isSuccess(report)).toBe(true);
+        report.pipe(Exit.isSuccess, assertTrue);
       })
     );
   });
