@@ -38,7 +38,7 @@ const decodeScriptResult = S.decodeEffect(S.fromJsonString(scriptResult));
  * import type { CoworkAncestorFixture } from "@beep/repo-ai-metrics/test/cowork-ancestor"
  * type Close = CoworkAncestorFixture["close"]
  * ```
- * @category interfaces
+ * @category testing
  * @since 0.0.0
  */
 export interface CoworkAncestorFixture {
