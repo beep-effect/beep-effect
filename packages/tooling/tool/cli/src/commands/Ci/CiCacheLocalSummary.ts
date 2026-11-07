@@ -78,24 +78,24 @@ const CheckLabel = S.String.check(
 );
 const Observations = S.Array(S.Unknown).check(S.isMaxLength(1024));
 const LocalReceipt = S.Struct({
-  schemaVersion: S.Literal("cache-pilot-local/v5"),
-  authority: S.Literal("local-observation-only"),
+  schemaVersion: S.tag("cache-pilot-local/v5"),
+  authority: S.tag("local-observation-only"),
   sourceRevision: S.String,
   channel: S.String,
   key: S.Struct({ computation: S.Unknown }),
   client: S.Struct({
     version: S.String.check(S.isPattern(/^[0-9]+\.[0-9]+\.[0-9]+(?:-canary\.[0-9]+)?$/u)),
     sha256: S.String.check(S.isPattern(/^[a-f0-9]{64}$/u)),
-    namespace: S.Literal("team_beep_local_observation_v1"),
+    namespace: S.tag("team_beep_local_observation_v1"),
   }),
-  selection: S.Literal("full"),
+  selection: S.tag("full"),
   checks: S.Array(S.Struct({ passed: S.Boolean, name: CheckLabel })).check(S.isMinLength(1), S.isMaxLength(1024)),
   runs: Observations,
   mutations: Observations,
   nonExecutions: Observations,
 });
 const decodeReceipt = S.decodeUnknownEffect(LocalReceipt);
-const LocalRequest = S.Struct({ channel: S.Unknown, client: S.Unknown, selection: S.Literal("full") });
+const LocalRequest = S.Struct({ channel: S.Unknown, client: S.Unknown, selection: S.tag("full") });
 const decodeRequest = S.decodeUnknownEffect(LocalRequest);
 const ReceiptEnvelope = S.Struct({ client: S.Unknown });
 const decodeEnvelope = S.decodeUnknownEffect(ReceiptEnvelope);
