@@ -1772,7 +1772,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-extraction-corpus.md",
-          "sha256": "a82a9b8a6a4d3f1570227b82e0f42a7f4bcd427e16f4c1f7f1831ec99d0e1712"
+          "sha256": "01827444a61995afc03271f0fa61717e7c173cd0b31bb0a3932f6db94c4c6a96"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",

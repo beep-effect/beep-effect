@@ -53,3 +53,8 @@ lint/types and the Fallow new-only audit pass with zero introduced findings.
 The expanded focused replay is pending at this checkpoint; all full hosted
 results remain unqualified. GitHub REST and GraphQL status reads are currently
 rate-limited, which prevents a fresh hosted-status claim.
+
+Final focused result for the expanded replay: all eight tests pass in 105.74
+seconds. This covers the two original case/whitespace inputs and the first
+original law, journal and Tax Court input on both runtimes. It does not qualify
+the remaining scheduled integration inputs.
