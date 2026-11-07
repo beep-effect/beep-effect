@@ -13,7 +13,7 @@ timer plus agent judgment, and the scheduler bypasses admission on exactly the h
 
 ## Appetite
 
-Two goals. `catalog-writer-incremental`: about one week, one PR train, parity-proved. 
+Two goals. `catalog-writer-incremental`: about one week, one PR train, parity-proved.
 `compute-profile-gate-routing`: two to three weeks, at most three concurrent PRs (profile +
 scheduler; yeet + lefthook; CI step + docs). Neither waits on the other.
 
