@@ -30,18 +30,7 @@
     "goals/docs-lint-oxlint-rules/GOAL.md",
     "goals/docs-lint-oxlint-rules/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/cache-baseline-request.json",
-    "research/cache-baseline-review.md",
-    "research/cli-audit-attribution.md",
-    "research/effect-vitest-review.md",
-    "research/generated-inventory-drift.md",
-    "research/schema-catalog-drift.md",
-    "research/spike.md",
-    "research/verification.tsv"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -98,5 +87,13 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/docs-lint-oxlint-rules",
+    "commit": "f77d31261342f65d8d383ddedb153e898121a16d",
+    "contentHash": "02d43f52d6f5648487e45a7164c3238160b9a405",
+    "archivedAt": "2026-11-07T01:32:45.327Z",
+    "sourceCommit": "c19514e0d0dd38a24d97e83e561e06729cc480d6"
+  }
 }

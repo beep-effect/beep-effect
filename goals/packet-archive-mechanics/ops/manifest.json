@@ -51,7 +51,7 @@
     {
       "id": "P0",
       "name": "Tooling",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
@@ -61,7 +61,7 @@
     {
       "id": "P2",
       "name": "Sweep",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

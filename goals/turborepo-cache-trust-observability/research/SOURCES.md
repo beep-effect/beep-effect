@@ -760,3 +760,5 @@ protected producer provenance, current-main qualification or production rollout.
 
 - [Failed accepted-source inspection](https://github.com/beep-effect/beep-effect/actions/runs/42142818104/job/127647045003): source binding failed before diagnostics; no artifacts.
 - `source-inspection-byte-budget-repair-2026-11-06.json`: immutable Git metadata, exact failed-log digest, bounded complete-byte repair and authored hosted controls. This grants no producer approval, signing activation or qualification.
+
+- `accepted-source-repeatability-and-drift-2026-11-07.json` and `.md`: two real matching inspection observations at b0c9bab1, authenticated artifact hashes and unchanged resource bounds; later accepted root manifest/lock drift is explicit. No current-profile approval or runtime qualification is granted.

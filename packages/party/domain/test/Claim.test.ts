@@ -50,7 +50,7 @@ describe("party claim binding", () => {
       const decoded = yield* S.decodeUnknownEffect(ClaimVersion)(row);
       const encoded = yield* S.encodeEffect(ClaimVersion)(decoded);
       expect(encoded).toEqual(row);
-      expect(SchemaAST.resolveIdentifier(ClaimVersion.ast)).toContain("party-domain");
+      expect(SchemaAST.resolveIdentifier(ClaimVersion.ast)).toContain("@beep/party-domain/entities/Claim/");
     })
   );
 

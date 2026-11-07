@@ -58,7 +58,7 @@ Consume `GroundedExtraction[]`, or an equally span-preserving array, and never
 `AnnotatedDocument` as the evidence boundary.
 
 Execution is blocked on P0/P1 of
-[`citation-verified-span-substrate`](../../goals/citation-verified-span-substrate/PLAN.md),
+[`citation-verified-span-substrate`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/citation-verified-span-substrate/PLAN.md),
 which must first freeze and implement the verified-anchor contract. The
 docketing goal's manifest currently lists only M365 and reliability
 dependencies; graduation from this exploration must add this explicit
