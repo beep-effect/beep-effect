@@ -43,6 +43,7 @@ import { encodeLibraryJson, LibraryAdapterResult, saveLibraryText } from "./Libr
 import { LibraryError } from "./Library.errors.ts";
 import { LibraryArtifact, LibraryCatalog, LibrarySource, LibrarySourceVersion } from "./Library.schemas.ts";
 import { hashBytes, loadCatalog, mergeLibraryVersions, saveImmutable, withCatalog } from "./Library.store.ts";
+import type { BoxError } from "@beep/box";
 import type { LibraryAccessClass } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.box");
@@ -355,7 +356,40 @@ export const libraryBoxAuthMode = Effect.fn("LibraryBox.authMode")(function* () 
   return LibraryBoxAuthMode.Enum["developer-token"];
 });
 
-const resolveBoxLayer = Effect.fn("LibraryBox.resolveLayer")(function* (op: OnePasswordCli["Service"]) {
+/**
+ * Resolve the `@beep/box` driver layer for the selected authentication mode.
+ *
+ * **Details**
+ *
+ * The developer-token mode reads `CLOUD_BOX_TOKEN`. The client credentials grant reads
+ * `DMS_BOX_CLIENT_ID`, `DMS_BOX_CLIENT_SECRET` and the user or enterprise subject; a configured
+ * literal value is used as is, a configured `op://` reference or an unset value is read through
+ * `op`, and any unreadable credential fails with a `box-config` {@link LibraryError}. Building the
+ * returned layer performs no network request.
+ *
+ * **Example** (Prepare driver resolution)
+ *
+ * ```ts
+ * import { resolveLibraryBoxDriver } from "@beep/repo-cli/test/ResearchLibrary"
+ * import { OnePasswordCli } from "@beep/onepassword-cli"
+ * import * as Effect from "effect/Effect"
+ *
+ * const driver = Effect.gen(function* () {
+ *   const op = yield* OnePasswordCli
+ *   return yield* resolveLibraryBoxDriver(op)
+ * })
+ * console.log(Effect.isEffect(driver))
+ * ```
+ *
+ * @internal
+ * @param op - 1Password CLI service used for `op://` credential references.
+ * @returns The Box driver layer for the selected token subject.
+ * @category layers
+ * @since 0.0.0
+ */
+export const resolveLibraryBoxDriver: (op: OnePasswordCli["Service"]) => LibraryBoxDriver = Effect.fn(
+  "LibraryBox.resolveLayer"
+)(function* (op: OnePasswordCli["Service"]) {
   const mode = yield* libraryBoxAuthMode();
   if (mode === "developer-token") {
     const token = yield* Config.Redacted("CLOUD_BOX_TOKEN").pipe(
@@ -382,11 +416,136 @@ const resolveBoxLayer = Effect.fn("LibraryBox.resolveLayer")(function* (op: OneP
   );
 });
 
-const buildBox = Effect.fn("LibraryBox.build")(function* (op: OnePasswordCli["Service"]) {
-  const layer = yield* resolveBoxLayer(op);
+const buildBox = Effect.fn("LibraryBox.build")(function* (driver: LibraryBoxDriver) {
+  const layer = yield* driver;
   const context = yield* layer.pipe(Layer.build, Effect.scoped, Effect.mapError(boxFailure("client setup")));
   return Context.get(context, Box);
 });
+
+/**
+ * Effect that resolves the `@beep/box` driver layer a {@link makeLibraryBoxLayer} port builds on first use.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryBoxDriver = Effect.Effect<Layer.Layer<Box, BoxError>, LibraryError>;
+
+/**
+ * Box port over a lazily resolved `@beep/box` driver layer.
+ *
+ * **Details**
+ *
+ * The driver is resolved and built once, on the first call, and reused afterwards. Folder listings
+ * page through Box markers up to 100 pages, keep `file` and `folder` entries and skip entries that
+ * do not decode; downloads stop at the byte bound. Driver `BoxError`s map to `LibraryError`.
+ *
+ * **Example** (Build a Box port over a fake SDK client)
+ *
+ * ```ts
+ * import { Box } from "@beep/box"
+ * import { makeLibraryBoxLayer } from "@beep/repo-cli/test/ResearchLibrary"
+ * import * as Effect from "effect/Effect"
+ *
+ * const layer = makeLibraryBoxLayer(Effect.succeed(Box.makeLayerFromClient({})))
+ * console.log(layer !== undefined)
+ * ```
+ *
+ * @internal
+ * @param driver - Effect resolving the Box driver layer.
+ * @returns A layer serving {@link LibraryBox} over that driver.
+ * @category layers
+ * @since 0.0.0
+ */
+export const makeLibraryBoxLayer = (driver: LibraryBoxDriver) =>
+  Layer.effect(
+    LibraryBox,
+    Effect.gen(function* () {
+      const box = yield* driver.pipe(buildBox, Effect.cached);
+      const describeFile = Effect.fn("LibraryBox.describeFile")(function* (fileId: string) {
+        const client = yield* box;
+        const file = yield* client.files
+          .getFileById(
+            FilesGetFileByIdPayload.make({
+              fileId,
+              optionalsInput: GetFileByIdOptionalsInput.make({
+                queryParams: GetFileByIdQueryParams.make({ fields: BOX_FIELDS }),
+              }),
+            })
+          )
+          .pipe(Effect.mapError(boxFailure("file lookup")));
+        const entry = yield* S.decodeEffect(BoxEntry)(file).pipe(Effect.mapError(boxFailure("file decoding")));
+        return toBoxFile(entry);
+      });
+      const listPage = Effect.fn("LibraryBox.listPage")(function* (folderId: string, marker: O.Option<string>) {
+        const client = yield* box;
+        const items = yield* client.folders
+          .getFolderItems(
+            FoldersGetFolderItemsPayload.make({
+              folderId,
+              optionalsInput: GetFolderItemsOptionalsInput.make({
+                queryParams: GetFolderItemsQueryParams.make({
+                  fields: BOX_FIELDS,
+                  usemarker: true,
+                  limit: 1000,
+                  ...getSomesStruct({ marker }),
+                }),
+              }),
+            })
+          )
+          .pipe(Effect.mapError(boxFailure("folder listing")));
+        const entries = A.getSomes(A.map(items.entries ?? [], (entry) => S.decodeOption(BoxEntry)(entry)));
+        return {
+          files: A.map(
+            A.filter(entries, (entry) => entry.type === "file"),
+            toBoxFile
+          ),
+          folders: A.map(
+            A.filter(entries, (entry) => entry.type === "folder"),
+            (entry) => entry.id
+          ),
+          next: O.filter(O.fromNullishOr(items.nextMarker), Str.isNonEmpty),
+        };
+      });
+      const listFolder = Effect.fn("LibraryBox.listFolder")(function* (folderId: string) {
+        const files: Array<LibraryBoxFile> = [];
+        const folders: Array<string> = [];
+        let marker = O.none<string>();
+        for (let page = 0; page < 100; page++) {
+          const listed = yield* listPage(folderId, marker);
+          files.push(...listed.files);
+          folders.push(...listed.folders);
+          marker = listed.next;
+          if (O.isNone(marker)) return { files, folders };
+        }
+        return yield* LibraryError.make({
+          message: `Box folder ${folderId} exceeded 100 listing pages.`,
+          cause: "box",
+        });
+      });
+      const download = Effect.fn("LibraryBox.download")(function* (file: LibraryBoxFile, maxBytes: number) {
+        if (file.size > maxBytes)
+          return yield* LibraryError.make({
+            message: `Box file ${file.id} declares ${file.size} bytes above the ${maxBytes}-byte bound.`,
+            cause: "body-bound",
+          });
+        const client = yield* box;
+        const payload = BoxDownloadFilePayload.make({
+          fileId: file.id,
+          ...(Str.isEmpty(file.versionId)
+            ? {}
+            : {
+                optionalsInput: DownloadFileOptionalsInput.make({
+                  queryParams: DownloadFileQueryParams.make({ version: file.versionId }),
+                }),
+              }),
+        });
+        const stream = client.downloads.downloadFile(payload).pipe(Stream.mapError(boxFailure("download")));
+        return yield* readBounded(stream, maxBytes);
+      });
+      return LibraryBox.of({ listFolder, describeFile, download });
+    })
+  );
 
 /**
  * Live Box port over `@beep/box`; credentials resolve through the PATH `op` shim on first use.
@@ -410,90 +569,10 @@ const buildBox = Effect.fn("LibraryBox.build")(function* (op: OnePasswordCli["Se
  * @category layers
  * @since 0.0.0
  */
-export const LibraryBoxLive = Layer.effect(
-  LibraryBox,
+export const LibraryBoxLive = Layer.unwrap(
   Effect.gen(function* () {
     const op = yield* OnePasswordCli;
-    const box = yield* Effect.cached(buildBox(op));
-    const describeFile = Effect.fn("LibraryBox.describeFile")(function* (fileId: string) {
-      const client = yield* box;
-      const file = yield* client.files
-        .getFileById(
-          FilesGetFileByIdPayload.make({
-            fileId,
-            optionalsInput: GetFileByIdOptionalsInput.make({
-              queryParams: GetFileByIdQueryParams.make({ fields: BOX_FIELDS }),
-            }),
-          })
-        )
-        .pipe(Effect.mapError(boxFailure("file lookup")));
-      const entry = yield* S.decodeEffect(BoxEntry)(file).pipe(Effect.mapError(boxFailure("file decoding")));
-      return toBoxFile(entry);
-    });
-    const listPage = Effect.fn("LibraryBox.listPage")(function* (folderId: string, marker: O.Option<string>) {
-      const client = yield* box;
-      const items = yield* client.folders
-        .getFolderItems(
-          FoldersGetFolderItemsPayload.make({
-            folderId,
-            optionalsInput: GetFolderItemsOptionalsInput.make({
-              queryParams: GetFolderItemsQueryParams.make({
-                fields: BOX_FIELDS,
-                usemarker: true,
-                limit: 1000,
-                ...getSomesStruct({ marker }),
-              }),
-            }),
-          })
-        )
-        .pipe(Effect.mapError(boxFailure("folder listing")));
-      const entries = A.getSomes(A.map(items.entries ?? [], (entry) => S.decodeOption(BoxEntry)(entry)));
-      return {
-        files: A.map(
-          A.filter(entries, (entry) => entry.type === "file"),
-          toBoxFile
-        ),
-        folders: A.map(
-          A.filter(entries, (entry) => entry.type === "folder"),
-          (entry) => entry.id
-        ),
-        next: O.filter(O.fromNullishOr(items.nextMarker), Str.isNonEmpty),
-      };
-    });
-    const listFolder = Effect.fn("LibraryBox.listFolder")(function* (folderId: string) {
-      const files: Array<LibraryBoxFile> = [];
-      const folders: Array<string> = [];
-      let marker = O.none<string>();
-      for (let page = 0; page < 100; page++) {
-        const listed = yield* listPage(folderId, marker);
-        files.push(...listed.files);
-        folders.push(...listed.folders);
-        marker = listed.next;
-        if (O.isNone(marker)) return { files, folders };
-      }
-      return yield* LibraryError.make({ message: `Box folder ${folderId} exceeded 100 listing pages.`, cause: "box" });
-    });
-    const download = Effect.fn("LibraryBox.download")(function* (file: LibraryBoxFile, maxBytes: number) {
-      if (file.size > maxBytes)
-        return yield* LibraryError.make({
-          message: `Box file ${file.id} declares ${file.size} bytes above the ${maxBytes}-byte bound.`,
-          cause: "body-bound",
-        });
-      const client = yield* box;
-      const payload = BoxDownloadFilePayload.make({
-        fileId: file.id,
-        ...(Str.isEmpty(file.versionId)
-          ? {}
-          : {
-              optionalsInput: DownloadFileOptionalsInput.make({
-                queryParams: DownloadFileQueryParams.make({ version: file.versionId }),
-              }),
-            }),
-      });
-      const stream = client.downloads.downloadFile(payload).pipe(Stream.mapError(boxFailure("download")));
-      return yield* readBounded(stream, maxBytes);
-    });
-    return LibraryBox.of({ listFolder, describeFile, download });
+    return makeLibraryBoxLayer(resolveLibraryBoxDriver(op));
   })
 ).pipe(Layer.provide(OnePasswordCli.makeLayer()));
 
@@ -589,9 +668,7 @@ export const makeLibraryBoxTest = (fixture: LibraryBoxFixture) => {
  */
 export const libraryBoxSha1 = Effect.fn("Library.box.sha1")(function* (bytes: Uint8Array) {
   const digest = yield* Digest.Digest;
-  const value = yield* digest
-    .digest(Digest.sha1, bytes)
-    .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot hash Box download.", cause })));
+  const value = yield* digest.digest(Digest.sha1, bytes);
   return Hex.encode(value);
 });
 
