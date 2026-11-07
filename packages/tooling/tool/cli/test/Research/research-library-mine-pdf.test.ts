@@ -20,6 +20,7 @@ import {
   mineLibraryRead,
   mineLibraryTriage,
   saveImmutable,
+  verifyLibrary,
   withCatalog,
 } from "@beep/repo-cli/commands/Research";
 import {
@@ -42,7 +43,9 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -554,6 +557,23 @@ it.layer(services, { timeout: "30 seconds" })("research library mine PDFs", (it)
         );
         expect(result.violations).toStrictEqual([]);
         assertTrue(result.conforms);
+        const census = "PDF report carries a citation census";
+        const verified = yield* Effect.exit(verifyLibrary(root));
+        assertTrue(!Str.includes(census)(Exit.match(verified, { onFailure: Cause.pretty, onSuccess: () => "" })));
+        yield* withCatalog(root, (current) =>
+          Effect.succeed(
+            LibraryCatalog.make({
+              ...current,
+              documents: A.map(current.documents, (document) =>
+                document.id === report.id ? LibraryDocument.make({ ...document, expectedOccurrences: 1 }) : document
+              ),
+            })
+          )
+        );
+        const tampered = yield* Effect.exit(verifyLibrary(root));
+        expect(Exit.match(tampered, { onFailure: Cause.pretty, onSuccess: () => "" })).toContain(
+          `${report.id}: ${census}`
+        );
       })
   );
 

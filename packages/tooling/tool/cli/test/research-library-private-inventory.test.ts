@@ -6,14 +6,17 @@ import {
   LibraryInventoryOptions,
   libraryStatus,
   renderLibrary,
+  verifyLibrary,
 } from "@beep/repo-cli/commands/Research";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
@@ -113,6 +116,22 @@ it.layer(LibraryPlatform, { timeout: "60 seconds" })("research library private i
           (file) => file.retention === "snapshot"
         )
       ).toBe(true);
+    })
+  );
+
+  it.effect("flags referenced media whose size changed after the intake census", () =>
+    Effect.gen(function* () {
+      const { fs, path, aggregation, root, options } = yield* nestedFixture();
+      const video = path.join(aggregation, "Videos", "talk.mp4");
+      yield* fs.makeDirectory(path.dirname(video), { recursive: true });
+      yield* fs.writeFileString(video, "short");
+      yield* inventoryLibrary(options);
+      const issue = `${video}: referenced media size changed since the intake census`;
+      const before = yield* Effect.exit(verifyLibrary(root));
+      expect(Exit.match(before, { onFailure: Cause.pretty, onSuccess: () => "" })).not.toContain(issue);
+      yield* fs.writeFileString(video, "a longer recording");
+      const after = yield* Effect.exit(verifyLibrary(root));
+      expect(Exit.match(after, { onFailure: Cause.pretty, onSuccess: () => "" })).toContain(issue);
     })
   );
 

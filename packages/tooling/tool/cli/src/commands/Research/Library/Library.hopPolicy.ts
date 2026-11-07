@@ -31,6 +31,13 @@ export const LibraryStringList = S.Array(S.String).pipe(
   S.withDecodingDefaultKey(Effect.succeed([])),
   $I.annoteSchema("LibraryStringList", { description: "String list defaulting to empty when omitted." })
 );
+/**
+ * Runtime type of LibraryStringList.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type LibraryStringList = typeof LibraryStringList.Type;
 
 /**
  * Social, profile, consent and brand-asset hosts whose hop-2 links are page chrome, not citations.

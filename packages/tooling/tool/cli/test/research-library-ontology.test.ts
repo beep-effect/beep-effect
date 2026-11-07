@@ -322,7 +322,12 @@ describe("research library ontology", () => {
           yield* fs.writeFileString(path.join(dir, "manifest.json"), json);
         }
         yield* fs.makeDirectory(path.join(root, "goals/broken"), { recursive: true });
+        // A manifest that exists but does not decode is skipped and counted, not fatal.
+        yield* fs.makeDirectory(path.join(root, "goals/garbled/ops"), { recursive: true });
+        yield* fs.writeFileString(path.join(root, "goals/garbled/ops/manifest.json"), "not json");
+        const quiet = yield* libraryTopics(root, false);
         const topics = yield* libraryTopics(root);
+        expect(quiet).toEqual(topics);
         expect(A.map(topics, (topic) => [topic.id, topic.initiativeId, topic.title])).toEqual([
           ["goals/example", "example", "Example"],
           ["explorations/example", "example-exploration", "Example exploration"],
