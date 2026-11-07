@@ -26,6 +26,34 @@ export * from "./Ci.errors.ts";
  */
 export * from "./CiAdmission.ts";
 export * from "./CiBootstrap.command.ts";
+/**
+ * Public local cache observation summary export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiCacheLocalSummary.ts";
+/**
+ * Public cache pilot literal domain export.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./CiCachePilot.schemas.ts";
+/**
+ * Public cache pilot host preparation and cleanup export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiCachePilotHost.ts";
+/**
+ * Public cache pilot input preparation export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiCachePilotInputs.ts";
 export * from "./CiCompileBinary.ts";
 /**
  * Hosted CI governance commands and policy checks.

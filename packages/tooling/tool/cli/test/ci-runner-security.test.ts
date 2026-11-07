@@ -199,6 +199,9 @@ const gitIn =
 // for the `beep` the fetch-beep-ci action puts on PATH.
 const CI_ENTRY = "packages/tooling/tool/cli/src/bin-ci.ts";
 const FETCH_BEEP_CI_ACTION = "./.github/actions/fetch-beep-ci";
+// The typed commands that replaced the cache-pilot shell adapters.
+const CACHE_PILOT_HOST_SOURCE = "packages/tooling/tool/cli/src/commands/Ci/CiCachePilotHost.ts";
+const CACHE_PILOT_INPUTS_SOURCE = "packages/tooling/tool/cli/src/commands/Ci/CiCachePilotInputs.ts";
 
 const changeProfile = (
   cliEntry: string,
@@ -2035,12 +2038,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       });
       const sandboxName = "Ensure native sandbox inspection dependency";
       const sandbox = stepByName(steps, sandboxName);
-      expect(sandbox.run).toBe("bash scripts/ci-cache-native-sandbox.sh");
-      const sandboxScript = yield* fs.readFileString(`${root}/scripts/ci-cache-native-sandbox.sh`);
-      expect(sandboxScript).toContain("dnf install -y bubblewrap");
-      expect(sandboxScript).toContain("apt-get install -y --no-install-recommends bubblewrap");
-      expect(sandboxScript).toContain("test -x /usr/bin/bwrap");
-      expect(sandboxScript).toContain("/usr/bin/bwrap --version");
+      expect(sandbox.run).toBe("bun --no-env-file run beep ci cache-sandbox");
+      const sandboxSource = yield* fs.readFileString(`${root}/${CACHE_PILOT_HOST_SOURCE}`);
+      expect(sandboxSource).toContain('withPrivilege("dnf", ["install", "-y", "bubblewrap"])');
+      expect(sandboxSource).toContain(
+        'withPrivilege("apt-get", ["install", "-y", "--no-install-recommends", "bubblewrap"])'
+      );
+      expect(sandboxSource).toContain('bwrap: "/usr/bin/bwrap"');
+      expect(sandboxSource).toContain('runStep(paths.bwrap, ["--version"])');
       expect(stepIndexByName(steps, sandboxName)).toBeLessThan(
         stepIndexByName(steps, "Write bounded source inspection")
       );
@@ -2377,11 +2382,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(stepRun(steps, runName)).toContain("timeout --signal=TERM --kill-after=30s 50m");
       expect(stepRun(steps, runName)).toContain("cache producer-run");
       expect(stepRun(steps, "Prepare fixed full-pilot inputs without credentials")).toBe(
-        "bash scripts/ci-cache-pilot-inputs.sh signed"
+        "bun --no-env-file run beep ci cache-pilot-inputs signed"
       );
-      const inputScript = yield* fs.readFileString(`${root}/scripts/ci-cache-pilot-inputs.sh`);
-      expect(inputScript).toContain("'selection':'full'");
-      expect(inputScript).toContain("Signed execution remains restricted to identity lint.");
+      const inputSource = yield* fs.readFileString(`${root}/${CACHE_PILOT_INPUTS_SOURCE}`);
+      expect(inputSource).toContain('selection: "full"');
+      expect(inputSource).toContain("Signed execution remains restricted to identity lint.");
       expect(stepByName(steps, publishName).env).toEqual({
         R2_ACCESS_KEY_ID: "${{ secrets.BEEP_CACHE_TRIAL_R2_ACCESS_KEY_ID }}",
         R2_SECRET_ACCESS_KEY: "${{ secrets.BEEP_CACHE_TRIAL_R2_SECRET_ACCESS_KEY }}",
@@ -2426,12 +2431,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "always() && steps.private.outputs.root != ''"
       );
       expect(stepRun(steps, "Remove only this trial's private files and worktrees")).toBe(
-        "bash scripts/ci-cache-pilot-cleanup.sh signed"
+        "bun --no-env-file run beep ci cache-pilot-cleanup signed"
       );
-      const cleanupScript = yield* fs.readFileString(`${root}/scripts/ci-cache-pilot-cleanup.sh`);
-      expect(cleanupScript).toContain('"$TRIAL_ROOT" == "$HOME/.cache/beep/cache-producer-trial-v1"');
-      expect(cleanupScript).toContain('git worktree remove -- "$tree"');
-      expect(cleanupScript).not.toContain("--force");
+      const cleanupSource = yield* fs.readFileString(`${root}/${CACHE_PILOT_HOST_SOURCE}`);
+      expect(cleanupSource).toContain('trialRoot === `${yield* variable("HOME")}/.cache/beep/cache-producer-trial-v1`');
+      expect(cleanupSource).toContain('runInherited("git", ["worktree", "remove", "--", tree])');
+      expect(cleanupSource).not.toContain("--force");
     })
   );
 
@@ -2863,7 +2868,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const localSteps = jobSteps(jobs, "local-pilot-observe");
       expect(stepRun(localSteps, "Observe the existing local pilot")).toContain("15m");
       expect(stepRun(localSteps, "Observe the existing local pilot")).toContain("cache pilot");
-      expect(stepRun(localSteps, "Project only bounded digest and count evidence")).toContain("-I -S -B");
+      expect(stepRun(localSteps, "Project only bounded digest and count evidence")).toContain(
+        "bun --no-env-file run beep ci cache-local-summary"
+      );
       expect(stepByName(localSteps, "Retain only the public summary for one day").with).toMatchObject({
         "retention-days": 1,
         path: "${{ steps.summary.outputs.path }}",

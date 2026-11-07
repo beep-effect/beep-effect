@@ -119,6 +119,14 @@ Lane `goals/scripts-to-beep-cli`
 
 Reverse: Compile src/bin-main.ts with native externals and fix its eager DuckDB load
 
+### Port the #2850 cache-pilot scripts into beep ci commands in PR 2, 2026-11-07
+
+#2850 (e9187a295fe) added `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh` and `ci-cache-local-summary.py` (with a Python test) under scripts/ after PR 1 branched. SPEC acceptance requires scripts/ to hold only `cloud/bootstrap.sh` and the tracked-shell law rejects them, so PR 2 ports each to a `beep ci` subcommand with identical behaviour, moves the Python test to vitest, and switches heavy.yml to `bun --no-env-file run beep ci <command>`. Every call runs after `setup-monorepo-ci`, and the pinned CI binary predates the new commands, so they run from the checkout; `cache-sandbox` and `cache-pilot-cleanup` are also registered in the bootstrap set, so a later pin bump can move them onto the binary. Their workflow semantics stay owned by the cache-pilot lane.
+
+Lane `goals/scripts-to-beep-cli-p2`
+
+Reverse: Restore the four scripts/ci-cache-* files and their heavy.yml calls from #2850
+
 ### change-profile reads the checkout's pattern file and fails open like the shell, 2026-11-07
 
 Parity with the retired ci-change-profile.sh: pinned `BEEP_CI_PR_BASE_SHA`/`BEEP_CI_PR_HEAD_SHA` win over positional base/head; a missing pin or failed diff on a pull_request warns and keeps every profile active; patterns come from the checkout's `CiOperational.patterns.json` when present (fail closed on an invalid file) because the binary is main's code but must classify the PR's tree.
