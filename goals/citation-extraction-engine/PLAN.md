@@ -1751,6 +1751,12 @@ Add four original HTML reference/filtering inputs to the public-engine replay, b
 
 Reverse: Retain original assertion criteria and complete source models if replay composition changes.
 
+### Replay original resolution parser fragments through the default public engine, 2026-11-07
+
+Join all 77 original parser calls to their exact single-citation assertions. Schedule all fragments on both runtimes; qualify the first of each seven observed kinds locally. Share Effect Ref source ownership, semantic edition comparisons, verified ranges and physical retirement checks with original HTML replay. Six focused tests pass. The remaining 70 parser assertions, full hosted corpus, alternate tokenizers, model laws and exhaustive acceptance remain open. Evidence: history/evidence/2026-11-07-original-resolution-parser-fragments.md.
+
+Reverse: Revisit finite assertion bindings if authenticated source observations or retained replay dependencies change.
+
 ### Replay public resolution groups and require explicit identity ownership, 2026-11-07
 
 The public resolver replays all thirty original default operation groups across ninety-four mentions. This exposed omitted short-case selected editions, now authenticated as case editions, and an absent missing-page identity owner. The Layer now explicitly requires the existing identity factory at installation. Test identity values are controlled; production allocation and exact native hash proof remain open. Fourteen public/private regression tests pass; no source expectation or semantic waiver changes. See history/evidence/2026-11-07-public-resolution-groups.md.
