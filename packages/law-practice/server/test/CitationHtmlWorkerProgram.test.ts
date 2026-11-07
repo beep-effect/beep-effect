@@ -1,9 +1,11 @@
+import * as NodeURL from "node:url";
 import { citationHtmlWorkerProgram } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProgram";
 import {
   CitationHtmlWorkerJob,
   decodeCitationHtmlReply,
   encodeCitationHtmlJob,
 } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+import { CitationHtmlWorkerStartup } from "@beep/law-practice-server/internal/Citation/HtmlWorkerRpc";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -14,10 +16,22 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Predicate from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import type { CitationHtmlWorkerReply } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+
+const Startup = S.fromJsonString(CitationHtmlWorkerStartup);
+const startupArgs = S.encodeEffect(Startup)(
+  CitationHtmlWorkerStartup.make({
+    maximum: 4096,
+    assetPath: NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)),
+  })
+).pipe(
+  Effect.map((value) => [value]),
+  Effect.orDie
+);
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program boundary", (it) => {
   it.effect("emits ready, started and exactly one complete result for a bounded request", () =>
@@ -35,7 +49,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
         yield* citationHtmlWorkerProgram.pipe(
           Effect.provideService(Stdio.Stdio, {
             ...stdio,
-            args: Effect.succeed(["4096"]),
+            args: startupArgs,
             stdin: Stream.make(frame),
             stdout: () =>
               Sink.forEach((chunk: string | Uint8Array) =>
@@ -77,7 +91,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
       const error = yield* citationHtmlWorkerProgram.pipe(
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: Effect.succeed(["4096"]),
+          args: startupArgs,
           stdin: Stream.empty,
           stdout: () => Sink.drain,
         }),
@@ -93,7 +107,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
       const error = yield* citationHtmlWorkerProgram.pipe(
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: Effect.succeed(["4096"]),
+          args: startupArgs,
           stdout: () => Sink.fail(PlatformError.systemError({ module: "Stdio", method: "stdout", _tag: "Unknown" })),
         }),
         Effect.flip
@@ -110,7 +124,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("HTML worker program b
         Effect.provideService(FileSystem.FileSystem, { ...fs, stream: () => Stream.make(new Uint8Array(0)) }),
         Effect.provideService(Stdio.Stdio, {
           ...stdio,
-          args: Effect.succeed(["4096"]),
+          args: startupArgs,
           stdout: () => Sink.die("truncated asset reached worker readiness"),
         }),
         Effect.flip

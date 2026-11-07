@@ -1693,6 +1693,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert only the documentation tag/lead normalization; this reopens the observed hosted since/blank findings and does not change runtime semantics.
 
+### Repair source replay contracts and original missing-page models, 2026-11-07
+
+Repair required tokenizer counts and schema-encoded HTML startup, and replay private cleaner categories under existing admission without changing public errors. Normalize original missing-page model groups and retain independent canonical regressions. Selected unit and cleaner tests pass; callback diagnostic replay passes at existing limits but its historical timeout cause remains unknown. Record source-free row and confirmed-child diagnostics and use hosted integration for broad qualification. See history/evidence/2026-11-07-citation-fixture-and-missing-page-repairs.md.
+
+Reverse: Retain exact source expectations and public redaction if replay ownership changes.
+
 ### Replay every original builtin find-citations input through the default engine, 2026-11-07
 
 Add all 130 original builtin Tokenizer inputs from the canonical assertion capture to the default public engine replay. Thirteen ten-document shards per runtime cover the full set in hosted integration; focused tests run the first two cases. Compare independent expected citation kinds/components/metadata and original observed primary spans. Alternate tokenizers and unrepresented methods remain separate obligations; no case is promoted on scheduled tests. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
