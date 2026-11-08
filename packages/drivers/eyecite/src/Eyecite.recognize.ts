@@ -8,6 +8,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { extractCitations } from "eyecite-ts";
@@ -69,7 +70,7 @@ const project = (token: Citation) =>
         partyName: text(value.partyName),
       })
     ),
-    Match.when({ type: "statute", title: 35, code: "U.S.C." }, (value) =>
+    Match.when({ type: "statute", title: 35, code: "U.S.C.", section: P.isString }, (value) =>
       O.some({
         type: value.type,
         range: range(value.span),
@@ -78,7 +79,7 @@ const project = (token: Citation) =>
         section: value.section,
       })
     ),
-    Match.when({ type: "regulation", title: 37, code: "C.F.R." }, (value) =>
+    Match.when({ type: "regulation", title: 37, code: "C.F.R.", section: P.isString }, (value) =>
       O.some({
         type: value.type,
         range: range(value.span),

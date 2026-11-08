@@ -46,6 +46,12 @@ export const EyeciteComponentName = LiteralKit([
   "defendant",
   "caseName",
   "year",
+  "volume",
+  "reporter",
+  "page",
+  "title",
+  "code",
+  "section",
 ]).pipe(
   $I.annoteSchema("EyeciteComponentName", {
     description: "Finite raw component names needed by the verified-source adapter.",
@@ -71,7 +77,7 @@ export class EyeciteComponent extends S.Opaque<EyeciteComponent, { readonly bran
     })
   )
 ) {}
-const common = { range: EyeciteRawRange, components: S.Array(EyeciteComponent).check(S.isMaxLength(6)) };
+const common = { range: EyeciteRawRange, components: S.Array(EyeciteComponent).check(S.isMaxLength(12)) };
 const optionalText = S.NullOr(SourceText);
 const Case = S.Struct({
   type: S.tag("case"),
