@@ -9,9 +9,11 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const hash = (character: string) => Sha256Hex.make(Str.repeat(64)(character));
 const fixture = Effect.gen(function* () {
@@ -54,6 +56,21 @@ it.layer(BunCrypto.layerDigest)("six-form installation artifact", (it) => {
       const digests = yield* Effect.forEach(variants, makeCitationSixFormArtifact, { concurrency: 1 });
       expect(A.contains(digests, baseline)).toBe(false);
       expect(A.dedupe(digests)).toHaveLength(variants.length);
+    })
+  );
+  it.effect("redacts a failing installed digest service without returning an artifact", () =>
+    Effect.gen(function* () {
+      const source = yield* fixture;
+      const failure = yield* makeCitationSixFormArtifact(source).pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest(() => Effect.die("PRIVATE-DIGEST-CAUSE"))
+        ),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+      expect(failure).not.toHaveProperty("cause");
+      expect(failure).not.toHaveProperty("input");
     })
   );
   it.effect("refuses malformed installation claims through the existing source-free extraction input error", () =>

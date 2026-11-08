@@ -114,6 +114,73 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
       expect(state).toMatchObject({ active: 0, quarantined: 0 });
     })
   );
+  it.effect("distinguishes a direct stdout failure from EOF without retaining private causes", () =>
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner;
+      const childCommand = yield* command();
+      const child = yield* spawner.spawn(childCommand);
+      const privateError = PlatformError.systemError({
+        module: "ChildProcess",
+        method: "read",
+        _tag: "Unknown",
+        cause: "PRIVATE-STDOUT",
+      });
+      for (const [stdout, tag] of [
+        [Stream.fail(privateError), "SocketReadError"],
+        [Stream.empty, "SocketCloseError"],
+      ] as const) {
+        const socket = yield* makeCitationNativeSocket({ ...child, stdout });
+        const reader = yield* socket.reader;
+        const error = yield* reader.pull.pipe(Effect.flip);
+        expect(error.reason._tag).toBe(tag);
+        if (error.reason._tag === "SocketReadError") expect(error.reason.cause).toBeUndefined();
+      }
+    })
+  );
+  it.effect("writes batches in order and closes the stdin queue before rejecting later writes", () =>
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner;
+      const childCommand = yield* command();
+      const child = yield* spawner.spawn(childCommand);
+      const completed = yield* Deferred.make<ReadonlyArray<Uint8Array>>();
+      const stdin = Sink.collect<Uint8Array>().pipe(
+        Sink.mapEffect((chunks) => Deferred.succeed(completed, chunks).pipe(Effect.asVoid))
+      );
+      const socket = yield* makeCitationNativeSocket({ ...child, stdin });
+      const writer = yield* socket.writer;
+      yield* writer.writeAll(["first", new TextEncoder().encode("second")]);
+      yield* writer.write(new Socket.CloseEvent());
+      const chunks = yield* Deferred.await(completed);
+      expect(A.map(chunks, (chunk) => new TextDecoder().decode(chunk))).toEqual(["first", "second"]);
+      const failure = yield* writer.write("PRIVATE-AFTER-CLOSE").pipe(Effect.flip);
+      expect(failure.reason._tag).toBe("SocketCloseError");
+    })
+  );
+  it.effect("keeps stdin failure sticky for a subsequent direct write", () =>
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner;
+      const childCommand = yield* command();
+      const child = yield* spawner.spawn(childCommand);
+      const socket = yield* makeCitationNativeSocket({
+        ...child,
+        stdin: Sink.fail(
+          PlatformError.systemError({
+            module: "ChildProcess",
+            method: "write",
+            _tag: "Unknown",
+            cause: "PRIVATE-STDIN",
+          })
+        ),
+      });
+      const writer = yield* socket.writer;
+      const reader = yield* socket.reader;
+      const first = yield* reader.pull.pipe(Effect.flip);
+      expect(first.reason._tag).toBe("SocketWriteError");
+      const next = yield* writer.write("PRIVATE-SOURCE").pipe(Effect.flip);
+      expect(next.reason._tag).toBe("SocketWriteError");
+      if (next.reason._tag === "SocketWriteError") expect(next.reason.cause).toBeUndefined();
+    })
+  );
   it.effect("keeps the supervisor responsive and retires a synchronously blocked child on deadline", () =>
     Effect.gen(function* () {
       const { limits } = yield* defaultCitationEnginePolicy;

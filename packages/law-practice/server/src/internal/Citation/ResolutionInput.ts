@@ -104,6 +104,7 @@ export class CitationResolutionInputFailure extends S.TaggedError<
   })
 ) {}
 const invalid = () => CitationResolutionInputFailure.make({ reason: "invalid-input" });
+const evidenceFailed = () => CitationResolutionInputFailure.make({ reason: "evidence-failed" });
 const validateMentionOrder = Effect.fnUntraced(function* (mentions: typeof Snapshot.Type.mentions) {
   let previousEnd = 0;
   for (const mention of mentions) {
@@ -148,8 +149,7 @@ export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")
   const excluded = decoded.excludedAnchors ?? [];
   if (hasExcluded && A.length(excluded) + A.length(decoded.mentions) > decoded.limits.candidates)
     return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded", limit: "candidates" });
-  if (!A.every(excluded, (anchor) => sameSource(anchor.source, source.source)))
-    return yield* CitationResolutionInputFailure.make({ reason: "evidence-failed" });
+  if (!A.every(excluded, (anchor) => sameSource(anchor.source, source.source))) return yield* evidenceFailed();
   if (A.length(decoded.mentions) > decoded.limits.mentions)
     return yield* CitationResolutionInputFailure.make({ reason: "limit-exceeded", limit: "mentions" });
   if (Str.length(source.sourceText) > decoded.limits.sourceUtf16)
@@ -170,7 +170,7 @@ export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")
     snapshot.mentions,
     (mention) =>
       restoreCitationMentionAgainstVerifiedSource(mention, source, snapshot.engineArtifact).pipe(
-        Effect.mapError(() => CitationResolutionInputFailure.make({ reason: "evidence-failed" }))
+        Effect.mapError(evidenceFailed)
       ),
     { concurrency: 1 }
   );
@@ -179,7 +179,7 @@ export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")
     (anchor) =>
       verifyTextAnchorAgainstVerifiedSource(
         VerifyTextAnchorAgainstVerifiedSourceInput.make({ verifiedSource: source, anchor })
-      ).pipe(Effect.mapError(() => CitationResolutionInputFailure.make({ reason: "evidence-failed" }))),
+      ).pipe(Effect.mapError(evidenceFailed)),
     { concurrency: 1 }
   );
   return PreparedCitationResolution.make({

@@ -46,3 +46,21 @@ A subsequent controlled mixed-profile probe reproduced the Id predecessor defect
 and is retained with its repair receipt. The final six server suites pass 61
 tests and the driver passes five, including barrier ordering, chains, ambiguity
 reset, reestablishment and resource controls. Frozen labels remain unchanged.
+
+## Hosted coverage repair and queue semantics
+
+After all unit shards passed, hosted coverage comparison found owned missed
+existing-row paths plus new result filters. Focused source/ordering/privacy
+controls restore the reported paths without lowering committed floors. The
+expanded direct socket control also found a real defect: Queue.offer returns
+false after closure, so mapping its nonexistent error channel did not reject a
+discarded write. Checking the supplied boolean fixes this without another lock,
+flag or transport.
+
+Review must distinguish code executing in the physical child from parent-side
+error/setup paths. Child-only launchers have real behavioral proof even though
+the parent's collector cannot observe them. Parent paths need reachable boundary
+controls or a precise invariant/interface rationale. New measured row review
+must use canonical complete evidence; it never authorizes lowering an existing
+floor. This remains a prospective reflection while hosted acceptance and
+retention are open.

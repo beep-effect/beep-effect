@@ -75,6 +75,19 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   const limited = yield* install({ ...setup.limits, sourceUtf16: 3 });
   const refused = yield* limited.extract({ plain: "eyecite" }).pipe(Effect.flip);
   expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });
+  const oversized = yield* limited.extract({ plain: "long source", markup: null }).pipe(Effect.flip);
+  expect(oversized).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });
+  const missingPlan = yield* stage.extract({ plain: "text", cleanSteps: { plan: "not-installed" } }).pipe(Effect.flip);
+  expect(missingPlan).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-input" });
+  const malformedConfiguration = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, {}).pipe(
+    Effect.provideContext(entryContext),
+    DateTime.withCurrentZoneOffset(0),
+    Effect.flip
+  );
+  expect(malformedConfiguration).toMatchObject({
+    _tag: "CitationExtractionEntryFailure",
+    reason: "invalid-configuration",
+  });
   const empty = yield* stage.extract({}).pipe(Effect.flip);
   expect(empty).toMatchObject({
     _tag: "CitationDocumentInputFailure",

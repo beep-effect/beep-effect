@@ -249,6 +249,18 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
       }
     })
   );
+  it.effect("refuses reversed supported mentions even when the excluded stream is empty", () =>
+    Effect.gen(function* () {
+      const citation = yield* full("Alpha");
+      const input = yield* context([citation, citation]);
+      const failure = yield* resolveSixFormCitationMentions({
+        ...input,
+        mentions: A.reverse(input.mentions),
+        excludedAnchors: [],
+      }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-input" });
+    })
+  );
   it.effect("charges excluded candidates without adding a candidates gate to legacy inputs", () =>
     Effect.gen(function* () {
       const citation = yield* full("Alpha");

@@ -14,6 +14,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -106,6 +107,58 @@ it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recogn
       { timeout: 30_000 }
     );
   }
+  it.effect("redacts failure of independent exit acknowledgement after actual child exit", () =>
+    Effect.gen(function* () {
+      const { runtime } = yield* fixture("bun");
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const observed = yield* makeCitationObservedSpawner();
+      const spawner = ChildProcessSpawner.of({
+        ...observed.spawner,
+        spawn: Effect.fnUntraced(function* (command) {
+          const child = yield* observed.spawner.spawn(command);
+          return {
+            ...child,
+            exitCode: child.exitCode.pipe(
+              Effect.andThen(
+                Effect.fail(
+                  PlatformError.systemError({
+                    module: "ChildProcess",
+                    method: "exitCode",
+                    _tag: "Unknown",
+                    cause: "PRIVATE-EXIT-CAUSE",
+                  })
+                )
+              )
+            ),
+          };
+        }),
+      });
+      const worker = yield* makeCitationRecognizerWorker(limits, runtime).pipe(
+        Effect.provideService(ChildProcessSpawner, spawner)
+      );
+      const failure = yield* worker.recognize("35 U.S.C. 101").pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationRecognizerFailure", reason: "channel-failed" });
+      expect(failure).not.toHaveProperty("cause");
+      const physical = yield* observed.snapshot;
+      expect(physical).toEqual({ spawned: 1, confirmed: 1 });
+    })
+  );
+  it.effect("refuses invalid installation and non-string source without spawning", () =>
+    Effect.gen(function* () {
+      const { runtime } = yield* fixture("bun");
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const observed = yield* makeCitationObservedSpawner();
+      const invalid = yield* makeCitationRecognizerWorker(limits, {}).pipe(Effect.flip);
+      expect(invalid).toMatchObject({ _tag: "CitationRecognizerFailure", reason: "invalid-runtime" });
+      const worker = yield* makeCitationRecognizerWorker(limits, runtime).pipe(
+        Effect.provideService(ChildProcessSpawner, observed.spawner)
+      );
+      const failure = yield* worker.recognize({ source: "PRIVATE-SOURCE" }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationRecognizerFailure", reason: "invalid-input" });
+      const physical = yield* observed.snapshot;
+      expect(physical).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("refuses source before spawn and complete candidate overflow after acknowledged retirement", () =>
     Effect.gen(function* () {
       const { runtime } = yield* fixture("bun");

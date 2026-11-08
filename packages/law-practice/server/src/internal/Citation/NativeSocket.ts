@@ -63,7 +63,8 @@ export const makeCitationNativeSocket = Effect.fn("Citation.makeNativeSocket")(f
           return;
         }
         const bytes = P.isString(chunk) ? encoder.encode(chunk) : chunk;
-        yield* Queue.offer(queue, bytes).pipe(Effect.mapError(closed), Effect.raceFirst(failure));
+        const offered = yield* Queue.offer(queue, bytes).pipe(Effect.raceFirst(failure));
+        if (!offered) return yield* closed();
         yield* healthy;
       });
       return {

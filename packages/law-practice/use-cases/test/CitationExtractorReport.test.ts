@@ -1,3 +1,5 @@
+import { fixtureSource, TestCrypto } from "@beep/law-practice-domain/test";
+import { CitationDocument } from "@beep/law-practice-domain/values";
 import { CourtReporterArtifact } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 import * as Root from "@beep/law-practice-use-cases";
 import * as Public from "@beep/law-practice-use-cases/public";
@@ -5,6 +7,7 @@ import {
   CitationEngineFailure,
   CitationExtractorFailure,
   CitationExtractorReport,
+  CitationExtractorResult,
   CitationRecognitionError,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -93,3 +96,45 @@ it.effect("serializes only finite recognition reasons and leaves legacy failures
     expect(refused._tag).toBe("SchemaError");
   })
 );
+
+it.layer(TestCrypto)("six-form result identity and accounting", (it) => {
+  it.effect("accepts genuine source evidence and refuses mismatched source, artifact and completion counts", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const { source, verifiedSource } = yield* fixtureSource("35 U.S.C. 101");
+      const other = yield* fixtureSource("37 C.F.R. 1.56");
+      const artifact = Sha256Hex.make(Str.repeat(64)("a"));
+      const document = CitationDocument.make({
+        source,
+        engineArtifact: artifact,
+        mentions: [],
+        authorities: [],
+        resolutions: [],
+        groups: [],
+        memberLists: [],
+        detachedCitations: [],
+      });
+      const report = CitationExtractorReport.make({
+        engineArtifact: artifact,
+        vocabularyVersion: Result.getOrThrow(CourtReporterArtifact).artifactVersion,
+        limits,
+        recognizedMentions: 0,
+        outsideProfile: 1,
+      });
+      const valid = { source: verifiedSource, document, report };
+      const decode = S.decodeUnknownEffect(S.toType(CitationExtractorResult));
+      const accepted = yield* decode(valid);
+      expect(accepted.source).toBe(verifiedSource);
+      for (const invalid of [
+        { ...valid, source: other.verifiedSource },
+        { ...valid, source: {} },
+        { ...valid, report: { ...report, engineArtifact: Sha256Hex.make(Str.repeat(64)("b")) } },
+        { ...valid, report: { ...report, limits: { ...limits, sourceUtf16: 1 } } },
+        { ...valid, report: { ...report, recognizedMentions: 1 } },
+      ]) {
+        const failure = yield* decode(invalid).pipe(Effect.flip);
+        expect(failure._tag).toBe("SchemaError");
+      }
+    })
+  );
+});

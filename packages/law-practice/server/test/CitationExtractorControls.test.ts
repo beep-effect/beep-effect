@@ -1,6 +1,9 @@
 import * as NodeURL from "node:url";
 import { ResolvedSourceText, SourceTextResolver, SourceTextResolverError } from "@beep/file-processing/SourceText";
-import { CourtReporterArtifact } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
+import {
+  CourtReporterArtifact,
+  CourtReporterArtifactVersion,
+} from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 import { CitationExtractorConfiguration, CitationExtractorLive } from "@beep/law-practice-server/layer";
 import {
   CitationExtractor,
@@ -18,6 +21,7 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -48,6 +52,8 @@ const fixture = Effect.fnUntraced(function* (
     readonly limits?: Partial<CitationEngineLimits>;
     readonly entry?: URL;
     readonly resolver?: SourceTextResolver["Service"];
+    readonly wrongRuntime?: boolean;
+    readonly wrongVocabulary?: boolean;
   } = {}
 ) {
   const source = yield* citationFixtureSourceProof(text);
@@ -74,9 +80,12 @@ const fixture = Effect.fnUntraced(function* (
     runtime,
     installation: {
       implementation,
-      runtime: { kind: "bun", version: Bun.version },
+      runtime: { kind: options.wrongRuntime === true ? "node" : "bun", version: Bun.version },
       limits,
-      vocabularyVersion: Result.getOrThrow(CourtReporterArtifact).artifactVersion,
+      vocabularyVersion:
+        options.wrongVocabulary === true
+          ? CourtReporterArtifactVersion.make("uninstalled-artifact")
+          : Result.getOrThrow(CourtReporterArtifact).artifactVersion,
     },
   });
   const context = yield* Layer.build(CitationExtractorLive(configuration)).pipe(
@@ -102,6 +111,34 @@ const expectPhysical = Effect.fnUntraced(function* (
 });
 const testLayer = Layer.mergeAll(BunServices.layer, BunCrypto.layer, BunCrypto.layerDigest);
 it.layer(testLayer, { excludeTestServices: true })("public extractor refusal controls", (it) => {
+  it.effect("refuses inconsistent runtime and vocabulary installations before exposing a service", () =>
+    Effect.gen(function* () {
+      for (const options of [{ wrongRuntime: true }, { wrongVocabulary: true }]) {
+        const failure = yield* fixture("35 U.S.C. 101", options).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+        expect(failure).not.toHaveProperty("cause");
+      }
+    })
+  );
+  it.effect("redacts a resolver defect and preserves resolver interruption before spawning", () =>
+    Effect.gen(function* () {
+      const defective = yield* fixture("35 U.S.C. 101", {
+        resolver: SourceTextResolver.of({
+          resolve: Effect.fn("ExtractorControls.defect")(() => Effect.die("PRIVATE-RESOLVER-DEFECT")),
+        }),
+      });
+      const failure = yield* defective.extractor.extract(defective.input).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationRecognitionError", reason: "transport-failed" });
+      yield* expectPrivateFailure(failure, defective.cwd);
+      yield* expectPhysical(defective.snapshot, 0);
+      const interrupted = yield* fixture("35 U.S.C. 101", {
+        resolver: SourceTextResolver.of({ resolve: Effect.fn("ExtractorControls.interrupt")(() => Effect.interrupt) }),
+      });
+      const exit = yield* interrupted.extractor.extract(interrupted.input).pipe(Effect.exit);
+      expect(Exit.hasInterrupts(exit)).toBe(true);
+      yield* expectPhysical(interrupted.snapshot, 0);
+    })
+  );
   it.effect("refuses caller text mismatch before parser spawn", () =>
     Effect.gen(function* () {
       const control = yield* fixture("35 U.S.C. 101");
@@ -191,6 +228,17 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
       })
     );
   }
+  it.effect("maps a typed child parser failure to a closed public refusal after retirement", () =>
+    Effect.gen(function* () {
+      const control = yield* fixture("35 U.S.C. 101", {
+        entry: new URL("./CitationRecognizerFailure.entry.ts", import.meta.url),
+      });
+      const failure = yield* control.extractor.extract(control.input).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationRecognitionError", reason: "parser-failed" });
+      yield* expectPrivateFailure(failure, control.cwd);
+      yield* expectPhysical(control.snapshot, 1);
+    })
+  );
   it.effect("maps a real late worker diagnostic to a source-free public refusal after retirement", () =>
     Effect.gen(function* () {
       const control = yield* fixture("35 U.S.C. 101", {
