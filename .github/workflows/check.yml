@@ -208,18 +208,13 @@ jobs:
     name: Repo Sanity
     needs: [change-profile]
     if: needs.change-profile.outputs.goals_only != 'true'
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: ${{ matrix.timeout_minutes }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - id: repo-sanity
-            name: Repo Sanity
-            runner: ubuntu-24.04
-            timeout_minutes: 30
+    env:
+      BEEP_CI_LANE_ID: repo-sanity
+      BEEP_CI_LANE_NAME: Repo Sanity
     steps: &verification-steps
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -248,13 +243,13 @@ jobs:
           # nothing to prove. Repo Sanity validates `.changeset/*.md`, which that
           # rule counts as documentation, so only packet prose suppresses it.
           skip_profile="$docs_only"
-          if [[ "${{ matrix.id }}" == "repo-sanity" ]]; then
+          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then
             skip_profile="$goals_only"
           fi
           if [[ "$skip_profile" == "true" ]]; then
             should_run=false
           fi
-          if [[ "${{ matrix.id }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
             if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
               git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
@@ -268,7 +263,7 @@ jobs:
           # Ecosystem Contracts type-tests and bundle-probes the family against
           # effect and drizzle-orm only (src imports no workspace package), so
           # its inputs are the family, the resolved toolchain and the lane body.
-          if [[ "${{ matrix.id }}" == "ecosystem" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "ecosystem" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
             if ! grep -Eq '(^packages/ecosystem/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^\.github/workflows/check\.yml$|^(package\.json|bun\.lock|tsconfig\.base\.json|\.bun-version)$)' <<< "$changed_files"; then
               should_run=false
@@ -294,11 +289,11 @@ jobs:
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
       - name: Check workflow policy
-        if: matrix.id == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
+        if: env.BEEP_CI_LANE_ID == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
         run: bun run beep ci workflow-lint
 
       - name: Verify regenerate merge-driver bootstrap
-        if: matrix.id == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
+        if: env.BEEP_CI_LANE_ID == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -338,9 +333,9 @@ jobs:
           # Only the ids declared in this job's matrix have arms; the heavy
           # lanes (check, test-integration, lint-policy) dispatch
           # from heavy.yml.
-          case "${{ matrix.id }}" in
+          case "${{ env.BEEP_CI_LANE_ID }}" in
             codegen|ecosystem)
-              run_lane ci lane "${{ matrix.id }}"
+              run_lane ci lane "${{ env.BEEP_CI_LANE_ID }}"
               ;;
             shadcn-lint)
               run_lane ci lane shadcn-lint
@@ -358,17 +353,17 @@ jobs:
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: turbo-summary-verify-${{ matrix.id || matrix.partition || 'single' }}
+          name: turbo-summary-verify-${{ env.BEEP_CI_LANE_ID }}
           path: .turbo/runs/*.json
           retention-days: 7
           if-no-files-found: warn
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
-        run: echo "Skipping ${{ matrix.name }} for this change set."
+        run: echo "Skipping ${{ env.BEEP_CI_LANE_NAME }} for this change set."
 
       - name: Warn when the intended runner image is stale
-        if: always() && matrix.id == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
+        if: always() && env.BEEP_CI_LANE_ID == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
         run: |
           if ! bun run beep runners bake --check --manifest infra/ci-runners/runner-image.json; then
             echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
@@ -378,54 +373,39 @@ jobs:
     name: Ecosystem Contracts
     needs: [change-profile]
     if: needs.change-profile.outputs.docs_only != 'true'
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: ${{ matrix.timeout_minutes }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - id: ecosystem
-            name: Ecosystem Contracts
-            runner: ubuntu-24.04
-            timeout_minutes: 30
+    env:
+      BEEP_CI_LANE_ID: ecosystem
+      BEEP_CI_LANE_NAME: Ecosystem Contracts
     steps: *verification-steps
 
   shadcn-lint:
     name: Shadcn Lint
     needs: [change-profile]
     if: needs.change-profile.outputs.docs_only != 'true'
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: ${{ matrix.timeout_minutes }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - id: shadcn-lint
-            name: Shadcn Lint
-            runner: ubuntu-24.04
-            timeout_minutes: 20
+    env:
+      BEEP_CI_LANE_ID: shadcn-lint
+      BEEP_CI_LANE_NAME: Shadcn Lint
     steps: *verification-steps
 
   codegen:
     name: Codegen Drift
     needs: [change-profile]
     if: needs.change-profile.outputs.docs_only != 'true'
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: ${{ matrix.timeout_minutes }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - id: codegen
-            name: Codegen Drift
-            runner: ubuntu-24.04
-            timeout_minutes: 30
+    env:
+      BEEP_CI_LANE_ID: codegen
+      BEEP_CI_LANE_NAME: Codegen Drift
     steps: *verification-steps
 
   # lab-apps-lifecycle P2 (ratified row 10): visible, permanently NON-required

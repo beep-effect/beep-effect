@@ -30,9 +30,10 @@ Forks retain ordinary admission and require the existing explicit fork
 authorization before Heavy can run. Both callers bind classification to the
 PR event's base and head SHAs.
 
-Verification and heavy jobs use literal check names with singleton matrices
-and shared YAML step anchors. Literal names allow job-level skips to retain
-the required contexts without allocating placeholder runners. The required
+Verification and heavy jobs use literal check names, literal runner/timeouts,
+job-local environment parameters, and shared YAML step anchors. They have no
+matrix that could append values to an active check name. Literal names allow
+job-level skips to retain the required contexts without allocating placeholder runners. The required
 check names, rulesets, trusted `heavy.yml@main` reference, fork authorization,
 producer isolation, security checks, SAST, and secret scanning remain in force.
 Repo Sanity retains its narrower goals-only exception, so changesets and
@@ -57,10 +58,12 @@ regressions execute the real workflow shell for successful, failed, cancelled,
 and missing classification and shard outcomes.
 
 A small PR workflow exercises a local reusable workflow with literal names,
-singleton matrices, and anchored steps. Its active and skipped checks have
-unique names, so they cannot satisfy production required contexts. Hosted
-acceptance must confirm the exact skipped check name and absence of runner
-allocation.
+job-local environment parameters, and anchored steps. A second caller skips
+every job to exercise the complete docs-only callee shape. These checks have
+unique names, so they cannot satisfy production required contexts.
+The first hosted probe caught GitHub appending matrix values to the active name while keeping the skipped name exact. That result required removing the
+singleton matrices. Hosted acceptance must confirm both final active and
+skipped exact names, and absence of runner allocation for the skipped job.
 
 The implementation PR uses the trusted production reusable workflow from
 `main`; it cannot prove its own edited `heavy.yml` through that reference.

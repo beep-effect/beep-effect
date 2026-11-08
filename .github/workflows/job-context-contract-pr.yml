@@ -16,3 +16,9 @@ jobs:
   contract:
     name: Context Contract Probe
     uses: ./.github/workflows/job-context-contract.yml
+
+  all-skipped:
+    name: All Skipped Context Contract Probe
+    uses: ./.github/workflows/job-context-contract.yml
+    with:
+      active: false

@@ -10,6 +10,55 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
+const heavyGuard =
+  "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}";
+const heavyLaneContracts = [
+  { job: "verify", id: "lint-policy", name: "Lint Policy", timeout: 50, docgen: "3", typos: "true", guard: heavyGuard },
+  { job: "check", id: "check", name: "Check", timeout: 120, docgen: "3", typos: "false", guard: heavyGuard },
+  {
+    job: "test-integration",
+    id: "test-integration",
+    name: "Test Integration",
+    timeout: 90,
+    docgen: "3",
+    typos: "false",
+    guard: heavyGuard,
+  },
+  { job: "docgen", id: "docgen", name: "Docgen", timeout: 60, docgen: "6", typos: "false", guard: heavyGuard },
+  { job: "doctest", id: "doctest", name: "Doctest", timeout: 60, docgen: "3", typos: "false", guard: heavyGuard },
+  { job: "build", id: "build", name: "Build", timeout: 40, docgen: "3", typos: "false", guard: heavyGuard },
+];
+const verificationLaneContracts = [
+  {
+    job: "verify",
+    id: "repo-sanity",
+    name: "Repo Sanity",
+    timeout: 30,
+    guard: "needs.change-profile.outputs.goals_only != 'true'",
+  },
+  {
+    job: "ecosystem",
+    id: "ecosystem",
+    name: "Ecosystem Contracts",
+    timeout: 30,
+    guard: "needs.change-profile.outputs.docs_only != 'true'",
+  },
+  {
+    job: "shadcn-lint",
+    id: "shadcn-lint",
+    name: "Shadcn Lint",
+    timeout: 20,
+    guard: "needs.change-profile.outputs.docs_only != 'true'",
+  },
+  {
+    job: "codegen",
+    id: "codegen",
+    name: "Codegen Drift",
+    timeout: 30,
+    guard: "needs.change-profile.outputs.docs_only != 'true'",
+  },
+];
+
 const aggregateCases = A.flatMap(["success", "failure", "skipped", "cancelled"], (classification) =>
   A.flatMap(["true", "false", "", "invalid"], (docs) =>
     A.map(["success", "failure", "skipped", "cancelled"], (result) => ({ classification, docs, result }))
@@ -144,9 +193,51 @@ it.effect(
       const steps = yield* decodeWorkflowSteps(yamlAt(workflow, ["jobs", "verify", "steps"]));
       const uploads = A.filter(steps, (step) => yamlAt(step, ["name"]) === "Upload trusted Turbo summaries");
       assert.strictEqual(uploads.length, 1);
+      const artifact = yamlAt(A.head(uploads).pipe(O.getOrThrow), ["with", "name"]);
+      assertTrue(isWorkflowText(artifact));
+      assert.strictEqual(artifact, "turbo-summary-verify-${{ env.BEEP_CI_LANE_ID }}");
+      const contracts = file === "heavy.yml" ? heavyLaneContracts : verificationLaneContracts;
+      for (const contract of contracts) {
+        assert.isUndefined(yamlAt(workflow, ["jobs", contract.job, "strategy"]));
+        assert.strictEqual(yamlAt(workflow, ["jobs", contract.job, "name"]), contract.name);
+        assert.strictEqual(yamlAt(workflow, ["jobs", contract.job, "if"]), contract.guard);
+        assert.strictEqual(yamlAt(workflow, ["jobs", contract.job, "timeout-minutes"]), contract.timeout);
+        assert.strictEqual(
+          yamlAt(workflow, ["jobs", contract.job, "runs-on"]),
+          file === "heavy.yml" ? "beep-ec2-heavy" : "ubuntu-24.04"
+        );
+        assert.deepEqual(yamlAt(workflow, ["jobs", contract.job, "permissions"]), { contents: "read" });
+        assert.deepEqual(yamlAt(workflow, ["jobs", contract.job, "steps"]), steps);
+        assert.strictEqual(yamlAt(workflow, ["jobs", contract.job, "env", "BEEP_CI_LANE_ID"]), contract.id);
+        assert.strictEqual(yamlAt(workflow, ["jobs", contract.job, "env", "BEEP_CI_LANE_NAME"]), contract.name);
+        assert.strictEqual(
+          pipe(artifact, Str.replaceAll("${{ env.BEEP_CI_LANE_ID }}", contract.id)),
+          `turbo-summary-verify-${contract.id}`
+        );
+      }
+    }
+  })
+);
+
+it.effect(
+  "preserves each Heavy lane's effective toolchain, cache writer, and producer isolation parameters",
+  Effect.fnUntraced(function* () {
+    const source = yield* Effect.tryPromise({
+      try: () => Bun.file(new URL("../../../../../.github/workflows/heavy.yml", import.meta.url)).text(),
+      catch: CiCommandError.new("Unable to read the Heavy parameter contract."),
+    });
+    const workflow = parseWorkflowYaml(source);
+    for (const contract of heavyLaneContracts) {
+      assert.deepEqual(yamlAt(workflow, ["jobs", contract.job, "env"]), {
+        BEEP_CI_LANE_ID: contract.id,
+        BEEP_CI_LANE_NAME: contract.name,
+        BEEP_CI_LANE_USES_TURBO: "true",
+        BEEP_CI_LANE_INSTALL_TYPOS: contract.typos,
+        BEEP_DOCGEN_CONCURRENCY: contract.docgen,
+      });
       assert.strictEqual(
-        yamlAt(A.head(uploads).pipe(O.getOrThrow), ["with", "name"]),
-        "turbo-summary-verify-${{ matrix.id || matrix.partition || 'single' }}"
+        yamlAt(workflow, ["jobs", contract.job, "environment"]),
+        "${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}"
       );
     }
   })
