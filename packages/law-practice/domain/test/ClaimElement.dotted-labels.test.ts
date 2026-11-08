@@ -4,6 +4,7 @@ import {
   ClaimInputRecord,
   ClaimLexicalEvidence,
   ClaimLexicalToken,
+  ClaimSourceControlEvidence,
   ClaimSourceElementPlan,
   decomposeClaimInput,
   decomposePreparedClaimRoles,
@@ -215,6 +216,40 @@ describe("source-owned dotted alphabetic declarations", () => {
         assert.strictEqual(O.getOrThrow(A.head(report.records)).status, "partial");
       })
     );
+  it.effect("rejects a coherent downgrade of every dotted label to an unsupported bare label", () =>
+    Effect.gen(function* () {
+      const plan = yield* planOf("A system comprising: a. a plate; b. a cover.");
+      const short = (label: TextAnchor): TextAnchor =>
+        TextAnchor.make({ ...label, endChar: label.endChar - 1, quote: Str.slice(0, -1)(label.quote) });
+      const corrupted = ClaimSourceElementPlan.make({
+        ...plan,
+        declarations: A.map(plan.declarations, (declaration) => ({
+          ...declaration,
+          items: A.map(declaration.items, (item) => ({ ...item, label: short(item.label) })),
+        })),
+        declarationPlans: A.map(plan.declarationPlans, (declaration) =>
+          declaration.kind === "labelled"
+            ? { ...declaration, items: A.map(declaration.items, (item) => ({ ...item, label: short(item.label) })) }
+            : declaration
+        ),
+        sourceExclusions: A.map(plan.sourceExclusions, (exclusion) =>
+          exclusion.kind === "declaration-metadata" ? { ...exclusion, extent: short(exclusion.extent) } : exclusion
+        ),
+        tokenOwnership: A.map(plan.tokenOwnership, (token) =>
+          token.kind === "control" && token.extent.quote === "." && token.evidence.kind === "exclusion"
+            ? { ...token, evidence: ClaimSourceControlEvidence.cases.punctuation.make({}) }
+            : token
+        ),
+      });
+      assert.deepStrictEqual(
+        A.map(O.getOrThrow(A.head(corrupted.declarations)).items, (item) => item.label.quote),
+        ["a", "b"]
+      );
+      assert.isFalse(validateClaimSourceOwnership(corrupted, meter().charge));
+      const parenthesized = yield* planOf("A system comprising: (a) a plate; (b) a cover.");
+      assert.isTrue(validateClaimSourceOwnership(parenthesized, meter().charge));
+    })
+  );
   it.effect("rejects direct corruption of declaration rank, anchor, child and owner", () =>
     Effect.gen(function* () {
       const plan = yield* planOf("A system comprising: a. a plate; b. a cover.");

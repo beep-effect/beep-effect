@@ -2613,6 +2613,16 @@ const sourceLabelListMatches = (
 };
 // Operational source-local validation cache; never persisted as evidence.
 type SourceLabelValidation = { labelled: number; raw: O.Option<ReadonlyArray<SourceLabelToken>> };
+const parenthesizedSourceLabelPattern =
+  /^\((?:[a-z]|(?=[ivxlcdm]+\)$)m*(?:cm|cd|d?c{0,3})(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3}))\)$/u;
+const parenthesizedSourceLabel = (
+  plan: ClaimSourceElementPlan,
+  label: TextAnchor,
+  charge: (amount: number) => boolean
+): boolean =>
+  charge(label.quote.length * 3 + 6) &&
+  O.isSome(Str.match(parenthesizedSourceLabelPattern)(Str.toLowerCase(label.quote))) &&
+  sourceAnchor(plan, label, charge);
 const sourceLabelRawTokens = (
   plan: ClaimSourceElementPlan,
   state: SourceLabelValidation,
@@ -2633,7 +2643,7 @@ const validateSourceLabelDeclaration = (
   const list = A.get(plan.declarations, state.labelled++);
   if (O.isNone(list) || !sourceLabelListMatches(declaration, list.value, charge)) return false;
   const dotted = A.some(declaration.items, (item) => sourceDottedLabelRank(item.label.quote) >= 0);
-  if (!dotted) return true;
+  if (!dotted) return A.every(declaration.items, (item) => parenthesizedSourceLabel(plan, item.label, charge));
   return (
     sourceLabelRawTokens(plan, state, charge) &&
     dottedDeclarationItems(plan, declaration, O.getOrThrow(state.raw), charge)
