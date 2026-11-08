@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "claim-adjudication-authority-guard-receipt/v1",
+  "date": "2026-10-31",
+  "baselineCommit": "56a68c4455",
+  "historicalFilesByteCompared": 207,
+  "runtimeFilesHashVerified": 20,
+  "runtimeChanged": false,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "reviewPacketsChanged": false,
+  "operatorReportsAttorneyReviewAvailable": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "positiveStrictMatchesRetained": 31,
+  "syntheticBoundaryTestsPassed": 8,
+  "actualPacketEmptyPreviewControl": {
+    "sampleClaims": 30,
+    "unresolvedClaims": 30,
+    "actualAttorneyAdjudicationRecorded": false,
+    "adjudicatedPointEstimate": null,
+    "adjudicatedInterval": null,
+    "basis": "Private explicitly labelled empty synthetic preview; not human evidence."
+  },
+  "files": [
+    {
+      "path": "goals/claim-element-antecedent-check/research/summarize-allowed-verdicts.py",
+      "sha256": "081ed2ce553a77166227d0379dcf975b9f8a4e1284d9ad0c5b9324f938fbe129"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/test-allowed-verdicts.py",
+      "sha256": "5ea7731b568fe73ca132610ee414f20f9e2710fbf06ad2af535c8dc9d53cb615"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-adjudication-authority-guard.md",
+      "sha256": "2d8795e19b550ae3a5b5e5fb0a754de99c7752d4b816512a6c850b7da519bdb2"
+    }
+  ]
+}

@@ -688,11 +688,11 @@
       }
     },
     "@beep/law-practice-server": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (steward lane for #2864, launched by the orchestrator)",
+      "reason": "Re-record only the two claim-inspection workspace dependency edges (@beep/wink on law-practice-server, @beep/nlp-processing on law-practice-use-cases) on top of main 8e6ebf6611 baseline; no command, input, output, env or cache flag change and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/claim-check-performance/research/cache-baseline-review-main-8e6ebf-2026-11-07.md",
+        "sha256": "5853c27312ebdf766dca0d19c1e31866c53789b867b7040366a11f028fac39bd"
       }
     },
     "@beep/law-practice-tables": {
@@ -704,11 +704,11 @@
       }
     },
     "@beep/law-practice-use-cases": {
-      "reviewer": "Claude Opus 5.5 (fix/cache-baseline-root-projection, inherited-red unblocker)",
-      "reason": "Record the #2856 Turbo global-input swap from package.json to the generated root-package projection, which re-keyed every task without a baseline re-record, and the regenerated projection that adds packages/drivers/firecrawl; no command, input glob, output, env or cache flag changes beyond that reviewed swap, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (steward lane for #2864, launched by the orchestrator)",
+      "reason": "Re-record only the two claim-inspection workspace dependency edges (@beep/wink on law-practice-server, @beep/nlp-processing on law-practice-use-cases) on top of main 8e6ebf6611 baseline; no command, input, output, env or cache flag change and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/cache-baseline-review-root-projection-2026-11-07.md",
-        "sha256": "4c4a9c5af9f626d68a65ccca18099b1bd1781a9310525f6c49f6b57dd445ee8a"
+        "path": "goals/claim-check-performance/research/cache-baseline-review-main-8e6ebf-2026-11-07.md",
+        "sha256": "5853c27312ebdf766dca0d19c1e31866c53789b867b7040366a11f028fac39bd"
       }
     },
     "@beep/lejeune-bolt-workbench": {
@@ -56850,7 +56850,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": true,
@@ -56934,7 +56935,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": true,
@@ -57004,7 +57006,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": false,
@@ -57125,7 +57128,8 @@
           "@beep/tika#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/wink#transit"
         ],
         "configuration": {
           "cache": true,
@@ -57238,7 +57242,8 @@
           "@beep/test-utils#transit",
           "@beep/tika#transit",
           "@beep/uspto#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/wink#transit"
         ],
         "configuration": {
           "cache": true,
@@ -57473,7 +57478,8 @@
           "@beep/test-utils#transit",
           "@beep/tika#transit",
           "@beep/uspto#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/wink#transit"
         ],
         "configuration": {
           "cache": false,
@@ -57547,7 +57553,8 @@
           "@beep/tika#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/wink#transit"
         ],
         "configuration": {
           "cache": true,
@@ -57627,7 +57634,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": false,
@@ -57697,7 +57705,8 @@
           "@beep/test-utils#build",
           "@beep/tika#build",
           "@beep/uspto#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/wink#build"
         ],
         "configuration": {
           "cache": false,
@@ -58332,6 +58341,7 @@
           "@beep/law-practice-domain#build",
           "@beep/mcp-kit#build",
           "@beep/nlp#build",
+          "@beep/nlp-processing#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -58400,6 +58410,7 @@
           "@beep/law-practice-domain#build",
           "@beep/mcp-kit#build",
           "@beep/nlp#build",
+          "@beep/nlp-processing#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -58454,6 +58465,7 @@
           "@beep/law-practice-domain#build",
           "@beep/mcp-kit#build",
           "@beep/nlp#build",
+          "@beep/nlp-processing#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
@@ -58592,6 +58604,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/mcp-kit#transit",
           "@beep/nlp#transit",
+          "@beep/nlp-processing#transit",
           "@beep/provenance#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -58812,6 +58825,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/mcp-kit#transit",
           "@beep/nlp#transit",
+          "@beep/nlp-processing#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -58869,6 +58883,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/mcp-kit#transit",
           "@beep/nlp#transit",
+          "@beep/nlp-processing#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -58934,6 +58949,7 @@
           "@beep/law-practice-domain#transit",
           "@beep/mcp-kit#transit",
           "@beep/nlp#transit",
+          "@beep/nlp-processing#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",

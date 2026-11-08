@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "claim-performance-provider-lifetime-admission/v1",
+  "status": "prospective-concrete-source-review-required-before-activation",
+  "sourceHead": "c6d1991c0c8db6180e3f136b124e83b6a6089010",
+  "proposalSha256": "ffce0fd554f4c2bcda09fde2d3f3ceac43824b963e171403024d930c7e181fde",
+  "planReview": {
+    "packet": "provider-lifetime-plan-independent-review-001/receipt.json",
+    "sha256": "9cea9e6f970a465109eef424f57853e4fc662bef6e28d1c10f97430cdc0b198c",
+    "requiredCount": 0
+  },
+  "oldRuntimeDigest": "69be3f99dc52593966e8ffdf84156980bb70e829fdb5a822f4d2c929c532b5e1",
+  "oldEntrypointSha256": "8e7bea142b1e74e384990589b1dc063f1825352b9bc22cb8ebccb46f8f323ffb",
+  "oldEntrypointArchive": "goals/claim-check-performance/research/legacy-protocol/inspection-tool.pre-shared-tokenizer.ts.txt",
+  "activeEntrypoint": {
+    "path": "packages/law-practice/server/test/evaluation/inspection-tool.main.ts",
+    "sha256": "ad870ac19d1663c365337a38b1ce35da60ec159d626181b7e0f5c4b86c111d20"
+  },
+  "focusedControls": {
+    "path": "packages/law-practice/server/test/ClaimInspection.lexical.test.ts",
+    "sha256": "fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4",
+    "count": 26
+  },
+  "oldBaseline": {
+    "path": "goals/claim-check-performance/research/implementation-clause-composed-metadata-004.json",
+    "sha256": "45de13116179b36814c2d0ed1380970db3affc78d4ae2f32a3a44cbacb049692",
+    "implementationDigest": "7756ce459ad68b50d7572fbba85cbf0f704afa1cbb4226e3217272247e7f0c01"
+  },
+  "lifetime": "One ordinary native Layer.build in existing outer evaluation Scope; borrowed fixed provider Context; sequential per-family real acquisition and Scope unchanged",
+  "typedFailure": "Original WinkEngineError Result reused through Effect.fail + Layer.effectContext and same existing factory; no retry; honest unavailable coverage; defects/interruption escape",
+  "apiCorrection": "Effect4 has no Layer.fail constructor; native equivalent uses existing effectContext failure form",
+  "unchanged": {
+    "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+    "referenceScorerLabelsThresholdsAndNormalization": true,
+    "familyConcurrency": 1,
+    "lockSha256": "b7aa98fe7f7a9aaa015c26e9c7e6543f4f2020312632931c27c927e5bd7edc07",
+    "bunVersionFileSha256": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35",
+    "lexicalManifestSha256": "6aef503a580a23a6d12d0f781125c4ffd2a0b475faad91e8c420e858cbd42fd0",
+    "lexicalAssets": 94,
+    "grammarAndPolicyBytes": true,
+    "preservationVerifierAndLocationAddenda": true,
+    "referenceSelectionDigest": "ffcffd914a33dbabbe6f878e375bf6d9d41f9f30487e835d7061760b1593b8ff"
+  },
+  "scope": "Source/lifetime admission only. Original failed42/515 capture/results and historical freezes remain unchanged. No fresh capture/full538 until concrete independent review and root approval.",
+  "concreteReview": {
+    "packet": "provider-lifetime-implementation-independent-review-001/receipt.json",
+    "sha256": "dc79b4bd4a0bbd884868b0c5710c9dc67dc27b7b7748ac575d6a44f787ea0b46",
+    "requiredCount": 0
+  },
+  "nativeInventoryAdoption": {
+    "path": "standards/effect-vitest.inventory.jsonc",
+    "beforeSha256": "561809d8597ff076ebe8afeb53302645759245b2e1b83f53709035c38da0e63f",
+    "afterSha256": "d83380c82e62251ecaacd72ca2cea26029cb74dbb21e2ca17cb9a1ae1b3871a8",
+    "proposalSha256": "fdd5d5e3cfa98fdc37e4ceb2912df9527e15333f3ea6c4fb43ea04fe6f79af26",
+    "deliveryReviewSha256": "663679b4bb800f90181d4e9472e25255801da470b7b45f6b2b4069ae43acb6c9",
+    "sourceTestSha256": "fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4",
+    "canonicalMembershipKeys": [
+      "EV004::packages/law-practice/server/test/ClaimInspection.lexical.test.ts::scoped::inner-helper-scope-lifetime-review::Effect.scoped::v2:a0e89e4dac2fabf550ef12b4837662eedcb14d3d2e084a6318cb2e91648522d4::#1",
+      "EV004::packages/law-practice/server/test/ClaimInspection.lexical.test.ts::scoped::inner-helper-scope-lifetime-review::Effect.scoped::v2:f78b6fc474f4d6190c67fcf2afcff705a748205bbdac4e8c0bd5294fdc581842::#1"
+    ],
+    "oldRows": 496,
+    "newRows": 498,
+    "allOldFieldsPreserved": true,
+    "nativeScopedIntroducedBefore": 2,
+    "nativeScopedIntroducedAfter": 0,
+    "onlyStatusExceptionAndReviewedReasonsAdopted": true
+  }
+}

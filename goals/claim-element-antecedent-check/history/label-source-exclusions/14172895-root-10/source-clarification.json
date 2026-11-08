@@ -1,0 +1,46 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14172895-root-10",
+  "role": "supplemental-source-clarification-reviewer",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "status": "supplemental evidence; source remains held; not an acceptance round",
+  "priorCriticReceiptUnchanged": true,
+  "pdfEvidence": {
+    "documentIdentifier": "HRA3SSZAPXXIFW3",
+    "sha256": "25a9fb0de97b8492c91b8070dea05379d924759331d39f850b7c348117be8861",
+    "pdfPagesInspected": [5, 6, 7],
+    "printedPages": [28, 29, 30],
+    "purpose": "Independent visual original corroboration only."
+  },
+  "quotes": [
+    {
+      "claimNumber": 12,
+      "nativeQuote": "a=Vrop−Kdls",
+      "originalQuote": "a = V_rop K_dls",
+      "originalRendering": "PDF6 shows adjacent subscripted variables multiplied by juxtaposition, with no subtraction sign. Raw native XML contains literal minus."
+    },
+    {
+      "claimNumber": 12,
+      "nativeQuote": "c=acsc{circumflex over (θ)}inc cot {circumflex over (θ)}azi",
+      "originalQuote": "c = −a csc θ̂_inc cot θ̂_azi",
+      "originalRendering": "PDF6 visibly contains negative sign before a; raw native XML omits it."
+    },
+    {
+      "claimNumber": 15,
+      "nativeQuote": "{dot over (x)}azim=[xaziv−xazim−λ(cxincv+buinc]/λ",
+      "originalQuote": "ẋ_azi^m = [x_azi^v − x_azi^m − λ(c x_inc^v + b u_inc)]/λ",
+      "originalRendering": "PDF7 closes inner parenthesis after u_inc before square bracket. Raw native XML does not."
+    }
+  ],
+  "resolved": [
+    "Complete selected10-16 original text and readable formulas are now available as visual corroboration; earlier original OCR sign/subscript omissions are resolved by the PDF."
+  ],
+  "remainsHeld": [
+    "Raw native claim12 has mathematically material product/subtraction and sign discrepancies against original PDF.",
+    "Raw native claim15 lacks a closing parenthesis visible in the original.",
+    "Actual112(b)/second-paragraph statutory ground/scope is still absent from retained action excerpt."
+  ],
+  "quotationConvention": "Original quotes transcribe the visible amendment including old and new words where relevant; originalRendering explicitly distinguishes deletions/insertions. Mathematical originals use readable Unicode/subscript notation; raw native quotes are exact canonical claims.json substrings checked against raw native XML where the fidelity conflict occurs.",
+  "independence": "No native source/provenance/expected/critic changes, new acceptance round, network, secrets, git or delegation. No attorney agreement claimed."
+}

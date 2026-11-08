@@ -1,0 +1,11 @@
+{
+  "baseline": "349e52733fb5b4891e05f4f0c6dfd40d9cfc5919",
+  "checkedFiles": 1103,
+  "mismatches": [],
+  "schemaVersion": "claim-full-history-preservation/v1",
+  "date": "2026-11-01",
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "v11OriginalBytesRestored": true,
+  "scope": "Every history and public claim-element fixture file already present at the pre-handover source commit. New artifacts are added alongside."
+}

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "claim-current-strict-public-slice/v1",
+  "runtimeFreeze": "research/implementation-repair-v19-freeze.json",
+  "implementationDigest": "12c49d54d2734330e1dbe580e15a8c8f598696b952c13958dbe142fdc82a5263",
+  "baselineCommit": "07dc26d8a1",
+  "familyId": "12838228-root-1",
+  "applicationNumber": "12838228",
+  "publicationNumber": "US20110074901A1",
+  "claimNumber": 9,
+  "officeActionDocumentIdentifier": "H2KCNOYDPXXIFW4",
+  "officeActionMailDate": "2012-05-25",
+  "statutoryGround": "35 USC112 second paragraph, exact retained source quote",
+  "sourcePhrase": "the brush roller",
+  "findingKind": "missing-antecedent",
+  "findingPath": "9.a",
+  "anchor": {
+    "startChar": 44,
+    "endChar": 60,
+    "quote": "the brush roller"
+  },
+  "strictTreeEquality": true,
+  "strictProtocol": "strict-source-map/v1, unchanged scorer",
+  "referenceProjectionApplied": false,
+  "sourceCanonicalTextEqual": true,
+  "legacyFootSliceStillPasses": true,
+  "testCount": 2,
+  "referenceFilesByteIdentical": true,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "newBenchmarkClaims": 0,
+  "positiveStrictMatchesStill": 37,
+  "selection": "Post-measurement choice from existing strict passing claims for a vertical-slice regression witness, not held-out validation or a fresh accuracy estimate.",
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "sourceFiles": [
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/expected.json",
+      "sha256": "ec8c5d46441ddef8c6bf387f4590d99ab70098db4c0e829eb8f472a126351cca"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/claims.json",
+      "sha256": "a1673d124a37a3aabe3cd8584ccb5b33f400e1d7e874db9c906830b90b6d6bc9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/provenance.json",
+      "sha256": "bda14f3efa68fa8eb78f714a0224e178f7c49d414b9fccbf6703c0e0991791e8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/source.claims.xml",
+      "sha256": "343afe495d288121b42bd5048e6c25b0505663e9ea51653731354145e1c4d0ba"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/extractor.json",
+      "sha256": "4a5a97930210d7c92c03790bfde7753ded21c5a75ba24336ac76ded9e7380b16"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/critic.json",
+      "sha256": "0cc4c17f54610e846d5653d2be1d853a602b6c9ad5521e76363d67efe3098697"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/source-critic.json",
+      "sha256": "a74f4ce4db3a2bd5629cb6880fa674ab3659513a709843107536d0ad22578419"
+    }
+  ]
+}

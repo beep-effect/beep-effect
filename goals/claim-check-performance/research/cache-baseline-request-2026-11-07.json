@@ -1,0 +1,21 @@
+{
+  "previous": "ef9473f7712075e3adcf824b7633165ca509287a60727331f81bed129b096e0b",
+  "review": {
+    "reviewer": "GPT-6.1-Sol independent review; receipt SHA256 eb4886fe133d6cf53ec6c3a61ae3b1ab9e6a4b26e6b9333b7b9c2a8ed43b335f",
+    "reason": "Record only 23 changed computation projections across five subjects, caused by the two claim inspection workspace dependencies and three accepted-main Turbo inputs; no qualification/scope/profile/epoch or exception growth.",
+    "basis": {
+      "path": "goals/claim-check-performance/research/cache-baseline-review-2026-11-07.md",
+      "sha256": "8a7265f2a2a3357fc7924b37e13e3ae1aae77552ed107f3670755d052ede405b"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/identity",
+    "@beep/law-practice-server",
+    "@beep/law-practice-use-cases",
+    "@beep/types"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
