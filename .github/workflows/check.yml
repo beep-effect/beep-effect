@@ -25,6 +25,33 @@ env:
   BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
 jobs:
+  # Classify once with the checksum-pinned binary before installing dependencies.
+  # Missing pinned diffs retain full verification; command failures block consumers.
+  change-profile:
+    name: Change Profile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      docs_only: ${{ steps.profile.outputs.docs_only }}
+      goals_only: ${{ steps.profile.outputs.goals_only }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/actions/fetch-beep-ci/action.yml
+            /packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+      - name: Classify pinned pull request diff
+        id: profile
+        shell: bash
+        run: beep ci change-profile
+
   pr-size:
     name: PR Size Label
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
@@ -58,20 +85,30 @@ jobs:
   # is applied, so the label never restarts tier 1.
   admission:
     name: Heavy Admission
+    needs: [change-profile]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
       actions: write
     outputs:
-      verdict: ${{ steps.decide.outputs.verdict }}
-      admitted: ${{ steps.decide.outputs.admitted }}
-      docs_only: ${{ steps.decide.outputs.docs_only }}
+      verdict: ${{ steps.decide.outputs.verdict || steps.docs.outputs.verdict }}
+      admitted: ${{ steps.decide.outputs.admitted || steps.docs.outputs.admitted }}
+      docs_only: ${{ needs.change-profile.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
-      legacy_coverage: ${{ steps.coverage-rollout.outputs.legacy_coverage }}
+      legacy_coverage: ${{ needs.change-profile.outputs.docs_only == 'true' && 'false' || steps.coverage-rollout.outputs.legacy_coverage }}
     steps:
+      - name: Satisfy documentation-only admission
+        id: docs
+        if: needs.change-profile.outputs.docs_only == 'true'
+        shell: bash
+        run: |
+          echo "verdict=skip-satisfied" >> "$GITHUB_OUTPUT"
+          echo "admitted=false" >> "$GITHUB_OUTPUT"
+          echo "Documentation-only diff: no dependency installation or heavy proof needed."
       - name: Checkout repository
+        if: needs.change-profile.outputs.docs_only != 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -79,17 +116,19 @@ jobs:
           persist-credentials: false
 
       - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
+        if: needs.change-profile.outputs.docs_only != 'true' && github.event_name == 'pull_request'
         shell: bash
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Setup monorepo CI
+        if: needs.change-profile.outputs.docs_only != 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           free-disk: "false"
 
       - name: Decide heavy admission
+        if: needs.change-profile.outputs.docs_only != 'true'
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
@@ -97,6 +136,7 @@ jobs:
       # Inspect the reusable revision GitHub actually resolved for this run,
       # rather than this PR's edited workflow or a moving main branch.
       - name: Determine coverage rollout context
+        if: needs.change-profile.outputs.docs_only != 'true'
         id: coverage-rollout
         shell: bash
         env:
@@ -150,7 +190,7 @@ jobs:
     # `hold` skips the caller so no `Heavy / *` check run exists and the
     # ruleset keeps the PR blocked; never pass `hold` through as
     # `admitted: false`, which would report every lane as passing without work.
-    if: ${{ needs.admission.outputs.verdict != 'hold' }}
+    if: ${{ needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied' }}
     permissions:
       contents: read
       # GitHub validates every nested job, including the gated producer.
@@ -164,7 +204,9 @@ jobs:
       route_skips: ${{ needs.admission.outputs.route_skips }}
       route_receipt: ${{ needs.admission.outputs.route_receipt }}
   verify:
-    name: ${{ matrix.name }}
+    name: Repo Sanity
+    needs: [change-profile]
+    if: needs.change-profile.outputs.goals_only != 'true'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     permissions:
@@ -177,22 +219,7 @@ jobs:
             name: Repo Sanity
             runner: ubuntu-24.04
             timeout_minutes: 30
-          - id: ecosystem
-            name: Ecosystem Contracts
-            runner: ubuntu-24.04
-            timeout_minutes: 30
-          # Strict @shadcn/lint design-system lane (.oxlintrc.shadcn.json,
-          # docs/runbooks/design-system-lint.md). Visible and non-required
-          # until a branch-ruleset action promotes it.
-          - id: shadcn-lint
-            name: Shadcn Lint
-            runner: ubuntu-24.04
-            timeout_minutes: 20
-          - id: codegen
-            name: Codegen Drift
-            runner: ubuntu-24.04
-            timeout_minutes: 30
-    steps:
+    steps: &verification-steps
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -346,12 +373,68 @@ jobs:
             echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
           fi
 
+  ecosystem:
+    name: Ecosystem Contracts
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: ecosystem
+            name: Ecosystem Contracts
+            runner: ubuntu-24.04
+            timeout_minutes: 30
+    steps: *verification-steps
+
+  shadcn-lint:
+    name: Shadcn Lint
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: shadcn-lint
+            name: Shadcn Lint
+            runner: ubuntu-24.04
+            timeout_minutes: 20
+    steps: *verification-steps
+
+  codegen:
+    name: Codegen Drift
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: codegen
+            name: Codegen Drift
+            runner: ubuntu-24.04
+            timeout_minutes: 30
+    steps: *verification-steps
+
   # lab-apps-lifecycle P2 (ratified row 10): visible, permanently NON-required
   # labs proof lane. Never add "Labs" to the required ruleset (10240248). It is
   # a job of its own, not a verify matrix leg, because Coverage Regression
   # consumes its artifact and `needs` can name a job but never one matrix leg.
   labs:
     name: Labs
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -371,16 +454,13 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
-      - name: Fetch beep CI binary
-        uses: ./.github/actions/fetch-beep-ci
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(beep ci change-profile)"
+          docs_only="${{ needs.change-profile.outputs.docs_only }}"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -492,6 +572,8 @@ jobs:
 
   lint-shard:
     name: Lint (${{ matrix.partition }})
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -515,16 +597,13 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
-      - name: Fetch beep CI binary
-        uses: ./.github/actions/fetch-beep-ci
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(beep ci change-profile)"
+          docs_only="${{ needs.change-profile.outputs.docs_only }}"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -606,20 +685,25 @@ jobs:
   lint:
     name: Lint
     timeout-minutes: 5
-    needs: [lint-shard]
+    needs: [change-profile, lint-shard]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Lint shard
         shell: bash
         run: |
-          if [[ "${{ needs.lint-shard.result }}" != "success" ]]; then
-            echo "Lint shards finished with result: ${{ needs.lint-shard.result }}"
-            exit 1
-          fi
+          set -euo pipefail
+          [[ "${{ needs.change-profile.result }}" == "success" ]]
+          case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.lint-shard.result }}" in
+            true:skipped) echo "Documentation-only diff: Lint shards were not allocated." ;;
+            false:success) echo "Every Lint shard passed." ;;
+            *) echo "Unexpected classification or shard result"; exit 1 ;;
+          esac
 
   test-unit-shard:
     name: Test Unit (${{ matrix.partition }})
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -643,16 +727,13 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
-      - name: Fetch beep CI binary
-        uses: ./.github/actions/fetch-beep-ci
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(beep ci change-profile)"
+          docs_only="${{ needs.change-profile.outputs.docs_only }}"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -774,17 +855,20 @@ jobs:
   test-unit:
     name: Test Unit
     timeout-minutes: 5
-    needs: [test-unit-shard]
+    needs: [change-profile, test-unit-shard]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Test Unit shard
         shell: bash
         run: |
-          if [[ "${{ needs.test-unit-shard.result }}" != "success" ]]; then
-            echo "Test Unit shards finished with result: ${{ needs.test-unit-shard.result }}"
-            exit 1
-          fi
+          set -euo pipefail
+          [[ "${{ needs.change-profile.result }}" == "success" ]]
+          case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.test-unit-shard.result }}" in
+            true:skipped) echo "Documentation-only diff: Test Unit shards were not allocated." ;;
+            false:success) echo "Every Test Unit shard passed." ;;
+            *) echo "Unexpected classification or shard result"; exit 1 ;;
+          esac
 
   coverage-regression:
     # Keep this PR's new artifact proof distinct while @main still runs its
@@ -792,7 +876,7 @@ jobs:
     # existing coverage context, without a ruleset edit or duplicate check name.
     name: ${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}
     needs: [admission, test-unit, labs]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && needs.admission.outputs.docs_only != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -933,6 +1017,8 @@ jobs:
 
   professional-desktop-ipc-stdio:
     name: Professional Desktop IPC Stdio
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions:
@@ -1052,6 +1138,8 @@ jobs:
     # addition) is a P4 close criterion after a stable green history. The
     # nightly sweep (property-laws-nightly.yml) covers ALL suites at 1000+.
     name: Property Laws
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -1071,16 +1159,13 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
-      - name: Fetch beep CI binary
-        uses: ./.github/actions/fetch-beep-ci
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(beep ci change-profile)"
+          docs_only="${{ needs.change-profile.outputs.docs_only }}"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -1153,6 +1238,8 @@ jobs:
 
   fallow-advisory:
     name: Fallow Advisory Envelopes
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -1190,9 +1277,6 @@ jobs:
       # Fallow reads code only, so a docs-only diff skips the envelopes. A
       # diff this depth-100 checkout cannot classify (failed base fetch, no
       # merge base) keeps the full run.
-      - name: Fetch beep CI binary
-        uses: ./.github/actions/fetch-beep-ci
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
@@ -1202,7 +1286,7 @@ jobs:
           set -euo pipefail
           should_run=true
           if [[ "$BASE_FETCH_STATUS" == "0" ]]; then
-            eval "$(beep ci change-profile || true)"
+            docs_only="${{ needs.change-profile.outputs.docs_only }}"
             if [[ "${docs_only:-false}" == "true" ]]; then
               should_run=false
             fi
@@ -1303,6 +1387,8 @@ jobs:
 
   jsdoc-ratchet:
     name: JSDoc Ratchet
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -1685,6 +1771,8 @@ jobs:
 
   nix:
     name: Nix Shell
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:

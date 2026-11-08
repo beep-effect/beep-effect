@@ -94,7 +94,11 @@ const workflowJobs = Effect.fnUntraced(function* (document: unknown) {
 
 // The heavy verify job's matrix lanes; each dispatches one `beep ci lane`.
 const heavyMatrixLanes = (document: unknown) =>
-  decodeYamlRecords(yamlAt(document, ["jobs", "verify", "strategy", "matrix", "include"]));
+  Effect.forEach(
+    ["verify", "check", "test-integration", "docgen", "doctest", "build"],
+    (job) => decodeYamlRecords(yamlAt(document, ["jobs", job, "strategy", "matrix", "include"]) ?? []),
+    { concurrency: 1 }
+  ).pipe(Effect.map(A.flatten));
 
 const jobSteps = (jobs: WorkflowJobs, jobId: string): ReadonlyArray<WorkflowStep> =>
   O.getOrThrowWith(
@@ -1328,7 +1332,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       assert.include(stepRun(sast, "Run SAST"), "bun run beep ci lane sast");
 
-      for (const jobId of ["lint", "test-unit", "coverage-regression"]) {
+      for (const jobId of ["lint", "test-unit"]) {
         assert.strictEqual(yamlAt(policy.workflow, ["jobs", jobId, "if"]), "${{ !cancelled() }}", jobId);
       }
     })
@@ -1535,7 +1539,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavyJobs = yield* workflowJobs(heavyWorkflow);
       const storybookJobs = yield* workflowJobs(policy.storybook);
       assert.deepStrictEqual(cacheSaveSteps(checkJobs), []);
-      assert.deepStrictEqual(cacheSaveSteps(heavyJobs), ["verify/Save main Docgen Turbo cache"]);
+      assert.deepStrictEqual(
+        cacheSaveSteps(heavyJobs),
+        A.map(
+          ["verify", "check", "test-integration", "docgen", "doctest", "build"],
+          (job) => `${job}/Save main Docgen Turbo cache`
+        )
+      );
       assert.deepStrictEqual(cacheSaveSteps(storybookJobs), ["storybook/Save Playwright Chromium cache"]);
       assert.include(
         stepByName(jobSteps(heavyJobs, "verify"), "Save main Docgen Turbo cache").if,
@@ -1858,6 +1868,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const root = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
       const exemptions = [
+        "check.yml:Change Profile",
+        "job-context-contract.yml:Active Static Context",
+        "job-context-contract.yml:Skipped Static Context",
+        "job-context-contract-pr.yml:Context Contract Probe",
         // Publishes the compiled pre-toolchain binary from main; a release step, not a quality lane.
         "beep-ci-binary.yml:Publish Beep CI Binary",
         "check.yml:Heavy Admission",
@@ -2002,7 +2016,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
+        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
         A.join(
@@ -2146,7 +2160,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
+        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "if"])).toBe(
         A.join(
@@ -2301,7 +2315,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
+        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toBe(
         A.join(
@@ -2567,7 +2581,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "test-unit",
         "labs",
       ]);
-      expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe("${{ !cancelled() }}");
+      expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe(
+        "${{ !cancelled() && needs.admission.outputs.docs_only != 'true' }}"
+      );
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "name"])).toBe(
         "${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}"
       );

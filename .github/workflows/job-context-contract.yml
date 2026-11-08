@@ -1,0 +1,31 @@
+name: Job Context Contract
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  active:
+    name: Active Static Context
+    if: ${{ true }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    strategy:
+      matrix:
+        include:
+          - id: active
+    steps: &context-steps
+      - name: Exercise shared static job steps
+        run: echo "Static context contract for ${{ matrix.id }}"
+  skipped:
+    name: Skipped Static Context
+    if: ${{ false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    strategy:
+      matrix:
+        include:
+          - id: skipped
+    steps: *context-steps

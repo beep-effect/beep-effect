@@ -75,11 +75,28 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
       const heads = {
         goals: yield* branch("goals-only", ["goals/demo/PLAN.md", "goals/demo/ops/manifest.json"]),
         docs: yield* branch("docs-only", ["docs/runbooks/ci.md", "README.md", ".changeset/quiet.md"]),
+        pr2932: yield* branch("pr-2932", [
+          "goals/knowledge-freshness-audit/PLAN.md",
+          "goals/knowledge-freshness-audit/decisions/2026-11-08-preserve-published-history-after-generated-refresh.md",
+          "standards/generated-artifacts.policy.md",
+        ]),
+        workflow: yield* branch("workflow", ["docs/notes.md", ".github/workflows/check.yml"]),
+        security: yield* branch("security", ["docs/notes.md", "osv-scanner.toml"]),
+        config: yield* branch("config", ["docs/notes.md", "package.json"]),
         desktop: yield* branch("desktop", ["apps/professional-desktop/src-tauri/src/lib.rs"]),
         mixed: yield* branch("mixed", ["docs/notes.md", "packages/example/next.ts"]),
         packageDocs: yield* branch("package-docs", ["packages/example/README.md"]),
         quoted: yield* branch("quoted", ["docs/café.md"]),
       };
+
+      git(["checkout", "-q", "-b", "source-deletion", base]);
+      git(["rm", "packages/example/index.ts"]);
+      git(["commit", "-q", "-m", "delete source"]);
+      const deletedSource = git(["rev-parse", "HEAD"]);
+      git(["checkout", "-q", "-b", "source-to-docs", base]);
+      git(["mv", "packages/example/index.ts", "README.md"]);
+      git(["commit", "-q", "-m", "rename source to docs"]);
+      const renamedSource = git(["rev-parse", "HEAD"]);
 
       const profileLines = (goals: boolean, docs: boolean, desktop: boolean) =>
         `goals_only=${goals}\ndocs_only=${docs}\ndesktop_rust_relevant=${desktop}\n`;
@@ -89,6 +106,12 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
       const cases: ReadonlyArray<readonly [string, string, ReadonlyArray<string>, string, string, string, boolean]> = [
         ["goals-only", "pull_request", [base, heads.goals], "", "", profileLines(true, true, false), false],
         ["docs-only", "pull_request", [base, heads.docs], "", "", profileLines(false, true, false), false],
+        ["actual PR 2932 paths", "pull_request", [base, heads.pr2932], "", "", profileLines(false, true, false), false],
+        ["workflow with docs", "pull_request", [base, heads.workflow], "", "", profileLines(false, false, true), false],
+        ["security config with docs", "pull_request", [base, heads.security], "", "", none, false],
+        ["root config with docs", "pull_request", [base, heads.config], "", "", none, false],
+        ["source deletion", "pull_request", [base, deletedSource], "", "", none, false],
+        ["source renamed to docs", "pull_request", [base, renamedSource], "", "", none, false],
         ["desktop", "pull_request", [base, heads.desktop], "", "", profileLines(false, false, true), false],
         ["mixed", "pull_request", [base, heads.mixed], "", "", none, false],
         ["package docs", "pull_request", [base, heads.packageDocs], "", "", none, false],

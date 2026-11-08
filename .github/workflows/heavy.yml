@@ -5,14 +5,11 @@ on:
     inputs:
       admitted:
         description: >-
-          Whether the heavy matrix runs. `false` moves the verify job to a
-          GitHub-hosted runner and skips every lane step, so each
-          `Heavy / <lane>` context still expands and reports success (accepted
-          by the main ruleset) without consuming a beep-ec2-heavy runner.
-          A job-level skip cannot do this: a skipped matrix job never expands
-          and reports one context named `Heavy / matrix.name` (probe #1164).
-          Callers pass `false` only for admission verdicts that must satisfy
-          the ruleset without proof (docs-only pull requests).
+          Whether the heavy lanes run. Each lane has a literal job name so
+          `false` skips it before runner allocation while retaining its exact
+          `Heavy / <lane>` check context. Dynamic job names cannot be skipped
+          this way: they report `Heavy / matrix.name` (probe #1164).
+          Callers pass `false` only for documentation-only admission verdicts.
         required: false
         type: boolean
         default: true
@@ -103,15 +100,10 @@ env:
 
 jobs:
   verify:
-    name: ${{ matrix.name }}
-    # Not admitted: run the matrix on a GitHub-hosted runner with every step
-    # but `lane-gate` skipped (no checkout; `lane-gate` says
-    # `should_run=false`), so each context reports success without touching
-    # the heavy pool. Every ordinary quality call must still expand the
-    # matrix: skipping it leaves required contexts "Expected". Only the
-    # dedicated manual inspection, preparation or execution selects a job below;
-    # it does not publish quality verdicts.
-    if: ${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    name: Lint Policy
+    # Literal names survive job-level skips without expanding a dynamic
+    # matrix. Singleton matrices retain the shared lane step parameters.
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
     runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
@@ -126,42 +118,9 @@ jobs:
             timeout_minutes: 50
             uses_turbo: "true"
             install_typos: "true"
-          - id: check
-            name: Check
-            timeout_minutes: 120
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: test-integration
-            name: Test Integration
-            timeout_minutes: 40
-            uses_turbo: "true"
-            install_typos: "false"
-          - id: docgen
-            name: Docgen
-            timeout_minutes: 60
-            uses_turbo: "true"
-            install_typos: "false"
-            docgen_concurrency: 6
-          - id: doctest
-            name: Doctest
-            timeout_minutes: 60
-            uses_turbo: "true"
-            install_typos: "false"
-          # Quality-lane audit D12: pull requests prove the tsc emit + babel
-          # build affected-scoped with remote-cache read; trusted main pushes
-          # run unscoped and stay the only cache writer. The lane lives here
-          # rather than in check.yml because the runner group admits this
-          # reusable workflow at main. check.yml calls it at @main, so its
-          # jobs use the admitted definition on pull requests; a job defined
-          # directly in a pull-request workflow has no fleet access.
-          - id: build
-            name: Build
-            timeout_minutes: 40
-            uses_turbo: "true"
-            install_typos: "false"
-    env:
+    env: &heavy-lane-env
       BEEP_DOCGEN_CONCURRENCY: ${{ matrix.docgen_concurrency || 3 }}
-    steps:
+    steps: &heavy-lane-steps
       - name: Checkout repository
         if: inputs.admitted
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -373,6 +332,107 @@ jobs:
           if [[ -x infra/r2-cache/adapter.sh ]]; then
             infra/r2-cache/adapter.sh stop-ci
           fi
+
+  check:
+    name: Check
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: check
+            name: Check
+            timeout_minutes: 120
+            uses_turbo: "true"
+            install_typos: "false"
+    env: *heavy-lane-env
+    steps: *heavy-lane-steps
+
+  test-integration:
+    name: Test Integration
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: test-integration
+            name: Test Integration
+            timeout_minutes: 40
+            uses_turbo: "true"
+            install_typos: "false"
+    env: *heavy-lane-env
+    steps: *heavy-lane-steps
+
+  docgen:
+    name: Docgen
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: docgen
+            name: Docgen
+            timeout_minutes: 60
+            uses_turbo: "true"
+            install_typos: "false"
+            docgen_concurrency: 6
+    env: *heavy-lane-env
+    steps: *heavy-lane-steps
+
+  doctest:
+    name: Doctest
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: doctest
+            name: Doctest
+            timeout_minutes: 60
+            uses_turbo: "true"
+            install_typos: "false"
+    env: *heavy-lane-env
+    steps: *heavy-lane-steps
+
+  build:
+    name: Build
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    environment: ${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: build
+            name: Build
+            timeout_minutes: 40
+            uses_turbo: "true"
+            install_typos: "false"
+    env: *heavy-lane-env
+    steps: *heavy-lane-steps
 
   # This leaf lives in the runner group's selected heavy.yml@main path.
   # Caller-controlled inputs alone cannot admit another source or event.
