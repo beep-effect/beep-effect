@@ -4,7 +4,6 @@ import {
   lawsCommand,
   runTrackedShellAllowlist,
   TrackedShellAllowlistOptions,
-  TrackedShellTransitionalFile,
 } from "@beep/repo-cli/commands/Laws";
 import { lintLawsCommand } from "@beep/repo-cli/commands/Lint";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
@@ -53,8 +52,6 @@ const allowedFixtures = [
   "scripts/cloud/bootstrap.sh",
   "packages/tooling/tool/cli/test/fixtures/models/locators.sh",
   "packages/tooling/tool/docgen/test/fixtures/section-example/tsc-wrapper.sh",
-  // Transitional: heavy.yml@main still calls these until PR 3 deletes them.
-  ...TrackedShellTransitionalFile.literals,
 ];
 
 /** A checkout with every allowed shape plus `extra` tracked shell files, a staged deletion and an untracked file. */

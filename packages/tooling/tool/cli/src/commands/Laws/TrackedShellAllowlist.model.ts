@@ -6,8 +6,8 @@
  * Shell is allowed only where no repo toolchain exists yet (the agent hook
  * directories and the cloud bootstrap) and in the reviewed exceptions of the
  * `goals/scripts-to-beep-cli` Exception Ledger (decision
- * 2026-11-07-tracked-shell-allowlist-scope). The allowlist is three exact
- * literal domains, roots, files and transitional files, with no glob patterns.
+ * 2026-11-07-tracked-shell-allowlist-scope). The allowlist is two exact
+ * literal domains, roots and files, with no glob patterns.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -100,68 +100,6 @@ export const TrackedShellAllowedFile = LiteralKit([
  * @since 0.0.0
  */
 export type TrackedShellAllowedFile = typeof TrackedShellAllowedFile.Type;
-
-/**
- * Removal condition shared by every {@link TrackedShellTransitionalFile}.
- *
- * **Example** (Read the removal condition)
- *
- * ```ts
- * import { trackedShellTransitionalRemovalCondition } from "@beep/repo-cli/commands/Laws/TrackedShellAllowlist.model"
- *
- * console.log(trackedShellTransitionalRemovalCondition)
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const trackedShellTransitionalRemovalCondition =
-  "deleted by PR 3 after #2906's heavy.yml is heavy.yml@main" as const;
-
-/**
- * Transitional tracked `.sh` files the law allows until their removal condition holds.
- *
- * **Details**
- *
- * `check.yml` calls `heavy.yml@main`, so a pull request's own `heavy.yml`
- * takes effect only after it merges. These exact files are the scripts the
- * pre-binary `heavy.yml@main` still calls; nothing else in the repository runs
- * them. Each entry is removed under
- * {@link trackedShellTransitionalRemovalCondition} (decision
- * 2026-11-07-heavy-at-main-three-prs).
- *
- * **Example** (Check a transitional file)
- *
- * ```ts
- * import { TrackedShellTransitionalFile } from "@beep/repo-cli/commands/Laws/TrackedShellAllowlist.model"
- *
- * console.log(TrackedShellTransitionalFile.is["scripts/ci-change-profile.sh"]("scripts/ci-change-profile.sh")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const TrackedShellTransitionalFile = LiteralKit([
-  "scripts/ci-cache-native-sandbox.sh",
-  "scripts/ci-cache-pilot-cleanup.sh",
-  "scripts/ci-cache-pilot-inputs.sh",
-  "scripts/ci-change-profile.sh",
-  "scripts/ci-prune-apt-sources.sh",
-  "scripts/ci-runner-resources.sh",
-]).pipe(
-  $I.annoteSchema("TrackedShellTransitionalFile", {
-    description:
-      "Transitional shell script that heavy.yml@main still calls; deleted by PR 3 after #2906's heavy.yml is heavy.yml@main.",
-  })
-);
-
-/**
- * Type-level member of {@link TrackedShellTransitionalFile}.
- *
- * @category models
- * @since 0.0.0
- */
-export type TrackedShellTransitionalFile = typeof TrackedShellTransitionalFile.Type;
 
 /**
  * One tracked shell script outside the allowlist.

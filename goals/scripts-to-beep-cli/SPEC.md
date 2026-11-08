@@ -70,7 +70,7 @@ in `beep lint laws`.
 
 ## Acceptance Criteria
 
-- [ ] `ls scripts` shows only `cloud/bootstrap.sh` (and `cloud/` itself).
+- [x] `ls scripts` shows only `cloud/bootstrap.sh` (and `cloud/` itself).
 - [ ] `check.yml`, `heavy.yml`, `storybook.yml`, `release-desktop.yml` and
       `setup-monorepo-ci/action.yml` call `beep ci ...` through the fetched binary; a hosted run
       is green on each.
@@ -187,4 +187,3 @@ Reverse: Remove the extra roots from the law's allowlist once their owners delet
 | `infra/` `.sh` files | `infra/` root (10 files on 2026-11-07) | `infra-alchemy-rebuild` | Pulumi-era infra scripts the Alchemy rebuild replaces | `infra-alchemy-rebuild` retires `infra/` |
 | `packages/tooling/tool/cli/test/fixtures/models/locators.sh` | one test fixture | `@beep/repo-cli` | `models-check.test.ts` locates model pins inside a shell source | the models manifest stops listing shell locator fixtures |
 | `packages/tooling/tool/docgen/test/fixtures/section-example/tsc-wrapper.sh` | one test fixture | `@beep/docgen` | `Core.test.ts` proves docgen runs a configured compiler wrapper | docgen drops the wrapped-compiler configuration |
-| Transitional `scripts/ci-change-profile.sh`, `ci-runner-resources.sh`, `ci-prune-apt-sources.sh`, `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh` (plus `ci-cache-local-summary.py`) | six exact `.sh` files and one `.py` | packet owner | `check.yml` calls `heavy.yml@main`, which still runs them until #2906's binary-calling `heavy.yml` is the `@main` copy; nothing else calls them (decision 2026-11-07-heavy-at-main-three-prs) | deleted by PR 3 after #2906's heavy.yml is heavy.yml@main |
