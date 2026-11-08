@@ -1468,3 +1468,14 @@ external process. This makes the physical path boundary explicit and supports
 aliased temporary roots without replacing the real subject with memory services.
 No assertion, baseline or detector policy changes. The syntax inspection does
 not execute test bodies or grant a quality receipt; hosted CI remains authoritative.
+
+## 2026-11-08: completion audits retained the obsolete single-PR lifecycle
+
+Both current completion audits still directed completed-retained adoption in the
+final implementation PR, despite SPEC AC-09 requiring a verified proposal and a
+separate merged packet-state PR. Their specification digests also differed from
+the current files; the existing `test_current_audit_hash_bindings_match_reviewed_files`
+assertion in `test_cargo_review_integrity.py` checks that binding. Refresh AC-09
+and the digests, preserve the original evidence source revision, and explicitly
+limit the amendment to requirement navigation. All eighteen acceptance statuses
+stay unproven. No runtime test or goal completion is inferred. Owner: PR #2926.
