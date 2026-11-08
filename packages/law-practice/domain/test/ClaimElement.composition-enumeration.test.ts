@@ -1,14 +1,20 @@
 import {
   ClaimInputCollection,
   ClaimInputRecord,
+  ClaimLexicalEvidence,
+  ClaimLexicalToken,
   decomposeClaim,
   decomposeClaimInput,
+  decomposePreparedClaimRoles,
+  prepareClaimInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { normalizePatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
+import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
@@ -70,6 +76,65 @@ describe("closed flat composition enumerations in inspection", () => {
         }
         assert.isFalse(A.some(tree.edges, (edge) => edge.kind === "functional" && edge.element === element.path));
       }
+    })
+  );
+
+  it.effect("retains the inspection classification with aligned part-of-speech fallback evidence", () =>
+    Effect.gen(function* () {
+      const text = "A fixture comprising a module; the module includes a bracket and a bushing; and stores the signal.";
+      const sourceKey = "synthetic-composition-enumeration-pos";
+      const tags = HashMap.fromIterable<string, string>([
+        ["a", "DET"],
+        ["the", "DET"],
+        ["and", "CCONJ"],
+        ["comprising", "VERB"],
+        ["includes", "VERB"],
+        ["stores", "VERB"],
+        [";", "PUNCT"],
+        [".", "PUNCT"],
+      ]);
+      const input = ClaimInputCollection.make({
+        sourceKey,
+        records: [
+          ClaimInputRecord.cases.text.make({
+            sourceOrdinal: 1,
+            numberText: O.some("1"),
+            sourceText: text,
+            canonicalText: text,
+          }),
+        ],
+      });
+      const evidence = ClaimLexicalEvidence.cases.aligned.make({
+        sourceKey,
+        sourceOrdinal: 1,
+        qualifiedText: text,
+        provider: "synthetic-explicit-pos",
+        assetDigest: "test-only",
+        lexicalWorkConsumed: 0,
+        tokens: A.map(A.fromIterable(Str.matchAll(/[\p{L}\p{N}]+|[^\s\p{L}\p{N}]/gu)(text)), (match) => {
+          const startChar = O.getOrThrow(O.fromUndefinedOr(match.index));
+          return ClaimLexicalToken.make({
+            anchor: TextAnchor.make({ startChar, endChar: startChar + match[0].length, quote: match[0] }),
+            pos: O.getOrElse(HashMap.get(tags, Str.toLowerCase(match[0])), () => "NOUN"),
+            lemma: O.none(),
+          });
+        }),
+      });
+      const prepared = yield* prepareClaimInspection(input);
+      const result = yield* decomposePreparedClaimRoles(prepared, [evidence]);
+      assert.deepStrictEqual(result.plans, []);
+      const decomposition = O.getOrThrow(A.head(result.decompositions));
+      assert.strictEqual(decomposition.status, "decomposed");
+      if (decomposition.status !== "decomposed") return;
+      const element = O.getOrThrow(A.findFirst(decomposition.tree.elements, ({ path }) => path === "1.b"));
+      assert.strictEqual(element.kind, "limitation");
+      assert.deepStrictEqual(
+        A.map(element.terms, ({ anchor }) => anchor.quote),
+        ["the module", "a bracket", "a bushing"]
+      );
+      assert.isFalse(
+        A.some(decomposition.tree.edges, (edge) => edge.kind === "functional" && edge.element === element.path)
+      );
     })
   );
 

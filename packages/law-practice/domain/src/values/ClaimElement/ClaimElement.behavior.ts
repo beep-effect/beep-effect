@@ -1079,6 +1079,7 @@ const relationalNominalPlan = (
   );
 };
 type LexicalGrammar = {
+  readonly closedCompositionInspection: boolean;
   readonly coordinatedPredicates: boolean;
   readonly boundBareHead: (tokens: ReadonlyArray<Span>, index: number, end: number) => number;
   readonly plan: NominalPlanner;
@@ -1091,6 +1092,7 @@ type LexicalGrammar = {
   ) => O.Option<InspectionSourceRole>;
 };
 const strictLexicalGrammar: LexicalGrammar = {
+  closedCompositionInspection: false,
   coordinatedPredicates: false,
   boundBareHead: (_tokens, _index, end) => end,
   plan: legacyNominalPlan,
@@ -1099,6 +1101,7 @@ const strictLexicalGrammar: LexicalGrammar = {
   refineTerms: (_span, terms) => terms,
 };
 const inspectionLexicalGrammar: LexicalGrammar = {
+  closedCompositionInspection: true,
   coordinatedPredicates: true,
   boundBareHead: (_tokens, _index, end) => end,
   functionalAt: () => false,
@@ -1300,7 +1303,7 @@ const elementOf =
       anchor: anchorOf(span),
       kind:
         kind !== "preamble-subject" &&
-        !(grammar === inspectionLexicalGrammar && closedCompositionEnumeration(span, terms, tokens)) &&
+        !(grammar.closedCompositionInspection && closedCompositionEnumeration(span, terms, tokens)) &&
         (grammar.functionalAt(span) ||
           A.some(tokens, (_, index) => isPredicateToken(tokens, index)) ||
           O.isSome(
