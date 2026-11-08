@@ -105,11 +105,13 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import * as Tuple from "effect/Tuple";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -6616,48 +6618,65 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           fault = ""
         ) {
           let liveAncestorGib = ancestorGib;
+          const unavailableRoot = fault === "root-absent" || fault === "root-denied";
+          const partialRoot = fault === "root-partial";
+          const tightRoot = fault === "namespace-root" || fault === "subtree-root";
+          const rootFailure = Effect.failSync(() =>
+            PlatformError.systemError({
+              _tag: fault === "root-denied" ? "PermissionDenied" : "NotFound",
+              module: "FileSystem",
+              method: "readFileString",
+            })
+          );
+          const controllerReadings = R.fromEntries(
+            A.flatMap(["", "/shared", "/shared/caller", "/caller", "/execution"], (suffix) => {
+              const isRoot = suffix === "";
+              const rootMissing = isRoot && unavailableRoot;
+              // The changing limit is evaluated only when the file is read.
+              const limit = Effect.sync(
+                () => `${(isRoot && tightRoot ? 20 : suffix === "/shared/caller" ? 32 : liveAncestorGib) * GIB}`
+              );
+              const current = Effect.sync(() => (fault === "current" ? "malformed" : "0"));
+              const directory = `/sys/fs/cgroup${suffix}`;
+              return [
+                Tuple.make(`${directory}/memory.high`, rootMissing || (isRoot && partialRoot) ? rootFailure : limit),
+                Tuple.make(`${directory}/memory.max`, rootMissing ? rootFailure : limit),
+                Tuple.make(`${directory}/memory.current`, rootMissing ? rootFailure : current),
+              ];
+            })
+          );
+          const readings = R.fromEntries(
+            A.appendAll(R.toEntries(controllerReadings), [
+              Tuple.make(
+                "/proc/meminfo",
+                Effect.sync(() => `MemAvailable: ${hostGib * 1024 * 1024} kB\nMemTotal: 134217728 kB\n`)
+              ),
+              Tuple.make(
+                "/proc/self/mountinfo",
+                Effect.sync(() =>
+                  fault === "mount"
+                    ? "invalid"
+                    : `1 0 0:1 ${fault === "subtree-root" ? "/shared" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
+                )
+              ),
+              Tuple.make(
+                `/proc/${process.pid}/cgroup`,
+                Effect.sync(() => (fault === "caller" ? "invalid" : "0::/shared/caller\n"))
+              ),
+              Tuple.make(
+                `/proc/${process.ppid}/cgroup`,
+                Effect.sync(() => (malformed === true ? "invalid" : `0::${member}\n`))
+              ),
+            ])
+          );
           const mocked = FileSystem.FileSystem.of({
             ...fs,
-            readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) => {
-              if (target === "/proc/meminfo")
-                return Effect.succeed(`MemAvailable: ${hostGib * 1024 * 1024} kB\nMemTotal: 134217728 kB\n`);
-              if (target === "/proc/self/mountinfo" && fault === "mount") return Effect.succeed("invalid");
-              if (target === "/proc/self/mountinfo")
-                return Effect.succeed(
-                  `1 0 0:1 ${fault === "subtree-root" ? "/shared" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
-                );
-              if (target === `/proc/${process.pid}/cgroup`)
-                return Effect.succeed(fault === "caller" ? "invalid" : "0::/shared/caller\n");
-              if (target === `/proc/${process.ppid}/cgroup`)
-                return Effect.succeed(malformed === true ? "invalid" : `0::${member}\n`);
-              if (Str.startsWith("/sys/fs/cgroup/")(target)) {
-                const rootFile = A.length(Str.split(target, "/")) === 5;
-                if (
-                  rootFile &&
-                  (fault === "root-absent" ||
-                    fault === "root-denied" ||
-                    (fault === "root-partial" && Str.endsWith("memory.high")(target)))
-                ) {
-                  return Effect.fail(
-                    PlatformError.systemError({
-                      _tag: fault === "root-denied" ? "PermissionDenied" : "NotFound",
-                      module: "FileSystem",
-                      method: "readFileString",
-                    })
-                  );
-                }
-                if (Str.endsWith("memory.current")(target))
-                  return Effect.succeed(fault === "current" ? "malformed" : "0");
-                const gib =
-                  rootFile && (fault === "namespace-root" || fault === "subtree-root")
-                    ? 20
-                    : Str.startsWith("/sys/fs/cgroup/shared/caller/")(target)
-                      ? 32
-                      : liveAncestorGib;
-                return Effect.succeed(`${gib * GIB}`);
-              }
-              return fs.readFileString(target, encoding);
-            }),
+            readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) =>
+              pipe(
+                R.get(readings, target),
+                O.getOrElse(() => fs.readFileString(target, encoding))
+              )
+            ),
           });
           const context = yield* Layer.build(
             memoryStatsLayerFor({

@@ -5,6 +5,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { RunScopeCgroupPath } from "./RunScope.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/MemoryStats.schemas");
 
@@ -38,3 +39,26 @@ export const CgroupBytes = S.NumberFromString.pipe(
  * @since 0.0.0
  */
 export type CgroupBytes = typeof CgroupBytes.Type;
+
+/**
+ * One finite ancestor memory ceiling and its currently unconsumed capacity.
+ *
+ * **Example** (Record a live controller reading)
+ *
+ * ```ts
+ * import { CgroupMemoryBudget } from "./MemoryStats.schemas.ts"
+ * const budget = CgroupMemoryBudget.make({ path: "/worker", ceilingGib: 32, availableGib: 20 })
+ * console.log(budget.availableGib) // 20
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class CgroupMemoryBudget extends S.Opaque<CgroupMemoryBudget, { readonly brand: unique symbol }>()(
+  S.Struct({ path: RunScopeCgroupPath, ceilingGib: S.Finite, availableGib: S.Finite }).pipe(
+    $I.annoteSchema("CgroupMemoryBudget", {
+      description: "Finite memory ceiling and live availability of one cgroup ancestor.",
+    })
+  )
+) {}

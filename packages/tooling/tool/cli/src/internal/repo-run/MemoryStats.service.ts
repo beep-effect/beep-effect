@@ -16,8 +16,9 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { constrainedCeilingGib, liveComputeMemorySource } from "./ComputeProfile.ts";
-import { CgroupBytes } from "./MemoryStats.schemas.ts";
+import { CgroupBytes, CgroupMemoryBudget } from "./MemoryStats.schemas.ts";
 import { processIdentityStatus } from "./ProcessIdentity.ts";
 import { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import { RunScopeCgroupPath } from "./RunScope.schemas.ts";
@@ -133,6 +134,91 @@ const cgroupContains = (ancestor: string, member: string): boolean =>
 
 const decodeCgroupBytes = S.decodeUnknownOption(CgroupBytes);
 
+const invalidBudget = () => QualitySchedulerError.make({ message: "Cannot establish cgroup admission budget." });
+const requireBudgetMetadata = <T>(value: O.Option<T>) => Effect.fromOption(value).pipe(Effect.mapError(invalidBudget));
+
+const readCgroupMembership = Effect.fnUntraced(function* (pid: number) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs
+    .readFileString(`/proc/${pid}/cgroup`)
+    .pipe(Effect.map(cgroupMembership), Effect.orElseSucceed(O.none<string>));
+});
+
+const readLeaseMembership = Effect.fnUntraced(function* (lease: YeetAdmissionLease) {
+  const before = yield* processIdentityStatus(lease);
+  const member = yield* readCgroupMembership(lease.pid);
+  const finalMember = yield* readCgroupMembership(lease.pid);
+  const after = yield* processIdentityStatus(lease);
+  return lease.runScope !== undefined &&
+    Equal.equals(member, finalMember) &&
+    before === "alive" &&
+    after === "alive" &&
+    Str.isNonEmpty(lease.procStart)
+    ? member
+    : O.none<string>();
+});
+
+// Native roots lack both controller files; namespace roots can expose limits.
+// Permission failures, a partial controller pair and malformed bytes stay errors.
+const readControllerBudget = Effect.fnUntraced(function* (ancestor: string, directory: string, isRoot: boolean) {
+  const fs = yield* FileSystem.FileSystem;
+  const limitTexts = yield* Effect.forEach(
+    ["memory.high", "memory.max"],
+    (name) =>
+      fs.readFileString(`${directory}/${name}`).pipe(
+        Effect.asSome,
+        Effect.catchIf(
+          (error) => error.reason._tag === "NotFound",
+          () => Effect.succeed(O.none<string>())
+        )
+      ),
+    { concurrency: 1 }
+  );
+  if (isRoot && A.every(limitTexts, O.isNone)) return O.none<CgroupMemoryBudget>();
+  const limits = yield* Effect.forEach(
+    limitTexts,
+    Effect.fnUntraced(function* (text) {
+      const raw = yield* requireBudgetMetadata(text);
+      const value = Str.trim(raw);
+      return value === "max" ? Number.POSITIVE_INFINITY : yield* requireBudgetMetadata(decodeCgroupBytes(value));
+    }),
+    { concurrency: 1 }
+  );
+  const ceiling = A.reduce(limits, Number.POSITIVE_INFINITY, Num.min);
+  if (!S.is(S.Finite)(ceiling)) return O.none<CgroupMemoryBudget>();
+  const currentText = yield* fs.readFileString(`${directory}/memory.current`);
+  const current = yield* requireBudgetMetadata(decodeCgroupBytes(Str.trim(currentText)));
+  return O.some(
+    CgroupMemoryBudget.make({
+      path: ancestor,
+      ceilingGib: ceiling / GIB,
+      availableGib: Math.max(0, (ceiling - current) / GIB),
+    })
+  );
+});
+
+const readAncestorBudgets = Effect.fnUntraced(function* (target: string, mountRoot: string, mountPoint: string) {
+  const ancestors = A.unfold<O.Option<string>, string>(O.some(target), (current) =>
+    pipe(
+      current,
+      O.map((ancestor) => {
+        const rawParent = pipe(Str.split(ancestor, "/"), A.dropRight(1), A.join("/"));
+        const parent = Str.isEmpty(rawParent) ? "/" : rawParent;
+        return Tuple.make(ancestor, ancestor === mountRoot ? O.none<string>() : O.some(parent));
+      })
+    )
+  );
+  return yield* Effect.forEach(
+    ancestors,
+    Effect.fnUntraced(function* (ancestor) {
+      const suffix = mountRoot === "/" ? ancestor : Str.slice(mountRoot.length)(ancestor);
+      const directory = `${mountPoint}${suffix === "/" ? "" : suffix}`;
+      return yield* readControllerBudget(ancestor, directory, ancestor === mountRoot);
+    }),
+    { concurrency: 1 }
+  ).pipe(Effect.map(A.getSomes));
+});
+
 const makeReservationCapacity = (
   fs: FileSystem.FileSystem,
   source: ComputeMemorySource,
@@ -148,126 +234,58 @@ const makeReservationCapacity = (
       Effect.map((available) => admissionCapacityTokensFor(available, config))
     );
     const inspect = Effect.gen(function* () {
-      const invalid = () =>
-        QualitySchedulerError.make({
-          message: "Cannot establish cgroup admission budget.",
-        });
-      const required = <T>(value: O.Option<T>) => Effect.fromOption(value).pipe(Effect.mapError(invalid));
-      const readMembership = (pid: number) =>
-        fs
-          .readFileString(`/proc/${pid}/cgroup`)
-          .pipe(Effect.map(cgroupMembership), Effect.orElseSucceed(O.none<string>));
-      const ownerMembership = yield* readMembership(process.pid);
-      const owner = yield* required(ownerMembership);
+      const ownerMembership = yield* readCgroupMembership(process.pid);
+      const owner = yield* requireBudgetMetadata(ownerMembership);
       const budgetPath = pipe(
         destination,
         O.getOrElse(() => owner)
       );
       const callerOption = O.liftPredicate(S.is(RunScopeCgroupPath))(budgetPath);
-      const caller = yield* required(callerOption);
+      const caller = yield* requireBudgetMetadata(callerOption);
       const mounts = yield* fs.readFileString("/proc/self/mountinfo");
-      const mount = yield* required(
-        pipe(
-          Str.split(mounts, "\n"),
-          A.findFirst((line) => pipe(line, Str.includes(" - cgroup2 "))),
-          O.map((line) => Str.split(line, " "))
-        )
+      const mountOption = pipe(
+        Str.split(mounts, "\n"),
+        A.findFirst((line) => pipe(line, Str.includes(" - cgroup2 "))),
+        O.map((line) => Str.split(line, " "))
       );
-      const mountRoot = yield* required(A.get(mount, 3));
-      const mountPoint = yield* required(A.get(mount, 4));
-      // Escaped mount paths and a namespace outside the visible mount are unknown.
+      const mount = yield* requireBudgetMetadata(mountOption);
+      const mountRoot = yield* requireBudgetMetadata(A.get(mount, 3));
+      const mountPoint = yield* requireBudgetMetadata(A.get(mount, 4));
       if (
         !S.is(RunScopeCgroupPath)(mountPoint) ||
         !S.is(RunScopeCgroupPath)(mountRoot) ||
         !cgroupContains(mountRoot, caller)
       ) {
-        return yield* invalid();
+        return yield* invalidBudget();
       }
-      const memberships = yield* Effect.forEach(
-        leases,
-        (lease) =>
-          Effect.gen(function* () {
-            const before = yield* processIdentityStatus(lease);
-            const member = yield* readMembership(lease.pid);
-            const finalMember = yield* readMembership(lease.pid);
-            const after = yield* processIdentityStatus(lease);
-            return lease.runScope !== undefined &&
-              Equal.equals(member, finalMember) &&
-              before === "alive" &&
-              after === "alive" &&
-              Str.isNonEmpty(lease.procStart)
-              ? member
-              : O.none<string>();
-          }),
-        { concurrency: 1 }
-      );
+      const memberships = yield* Effect.forEach(leases, readLeaseMembership, { concurrency: 1 });
       const availableGib = yield* hostAvailableGib;
-      let capacity = admissionCapacityTokensFor(availableGib, config);
+      const hostCapacity = admissionCapacityTokensFor(availableGib, config);
       const globalTokens = A.reduce(leases, 0, (total, lease) => total + lease.weightTokens);
-      const readBytes = (file: string) =>
-        fs.readFileString(file).pipe(Effect.flatMap((text) => required(decodeCgroupBytes(Str.trim(text)))));
-      let minimumLimitGib = Number.POSITIVE_INFINITY;
-      let ancestor = caller;
-      while (true) {
-        const suffix = mountRoot === "/" ? ancestor : Str.slice(mountRoot.length)(ancestor);
-        const directory = `${mountPoint}${suffix === "/" ? "" : suffix}`;
-        // A native hierarchy root lacks memory controller files, but a
-        // namespace/subtree root may expose finite limits. Only definite
-        // absence of BOTH files proves there is no root controller to charge.
-        const limitTexts = yield* Effect.forEach(
-          ["memory.high", "memory.max"],
-          (name) =>
-            fs.readFileString(`${directory}/${name}`).pipe(
-              Effect.asSome,
-              Effect.catchIf(
-                (error) => error.reason._tag === "NotFound",
-                () => Effect.succeed(O.none<string>())
-              )
-            ),
-          { concurrency: 1 }
+      const budgets = yield* readAncestorBudgets(caller, mountRoot, mountPoint);
+      const capacity = A.reduce(budgets, hostCapacity, (remaining, budget) => {
+        const localTokens = A.reduce(
+          A.zip(leases, memberships),
+          0,
+          (total, [lease, member]) =>
+            total +
+            (O.match(member, { onNone: () => true, onSome: (value) => cgroupContains(budget.path, value) })
+              ? lease.weightTokens
+              : 0)
         );
-        if (ancestor !== mountRoot || A.some(limitTexts, O.isSome)) {
-          const limits = yield* Effect.forEach(
-            limitTexts,
-            (text) =>
-              Effect.gen(function* () {
-                const raw = yield* required(text);
-                const value = Str.trim(raw);
-                return value === "max" ? Number.POSITIVE_INFINITY : yield* required(decodeCgroupBytes(value));
-              }),
-            { concurrency: 1 }
-          );
-          const limit = A.reduce(limits, Number.POSITIVE_INFINITY, Num.min);
-          if (S.is(S.Finite)(limit)) {
-            minimumLimitGib = Math.min(minimumLimitGib, limit / GIB);
-            const current = yield* readBytes(`${directory}/memory.current`);
-            const localTokens = A.reduce(
-              A.zip(leases, memberships),
-              0,
-              (total, [lease, member]) =>
-                total +
-                (O.match(member, {
-                  onNone: () => true,
-                  onSome: (value) => cgroupContains(ancestor, value),
-                })
-                  ? lease.weightTokens
-                  : 0)
-            );
-            const localCapacity = admissionCapacityTokensFor(Math.max(0, (limit - current) / GIB), config);
-            capacity = Math.min(capacity, globalTokens - localTokens + localCapacity);
-          }
-        }
-        if (ancestor === mountRoot) break;
-        ancestor = pipe(Str.split(ancestor, "/"), A.dropRight(1), A.join("/"));
-        if (Str.isEmpty(ancestor)) ancestor = "/";
-      }
-      // The runtime may see a tighter controller than the visible mount. Do not
-      // replace its clamp unless procfs accounts for at least that ceiling.
+        return Math.min(
+          remaining,
+          globalTokens - localTokens + admissionCapacityTokensFor(budget.availableGib, config)
+        );
+      });
+      const minimumLimitGib = A.reduce(budgets, Number.POSITIVE_INFINITY, (limit, budget) =>
+        Math.min(limit, budget.ceilingGib)
+      );
       const constrained = constrainedCeilingGib(source);
       if (O.isNone(destination) && O.isSome(constrained) && constrained.value < minimumLimitGib) return yield* fallback;
-      const finalMembership = yield* readMembership(process.pid);
-      const finalCaller = yield* required(finalMembership);
-      return owner === finalCaller ? capacity : yield* invalid();
+      const finalMembership = yield* readCgroupMembership(process.pid);
+      const finalCaller = yield* requireBudgetMetadata(finalMembership);
+      return owner === finalCaller ? capacity : yield* invalidBudget();
     });
     return yield* inspect.pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
