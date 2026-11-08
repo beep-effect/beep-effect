@@ -321,11 +321,21 @@
       "gained": 1,
       "matchedElements": 858,
       "matchedEdges": 2317,
-      "decision": "adopted as 5e5d76d67ba"
+      "decision": "adopted, then revised by c4 after it cut correct mentions"
+    },
+    {
+      "id": "c4",
+      "change": "cut a trailing adjective only before ADP or PART; a word before a parenthetical reference numeral is nominal",
+      "strict": 47,
+      "lost": 0,
+      "gained": 0,
+      "matchedElements": 866,
+      "matchedEdges": 2331,
+      "decision": "adopted"
     }
   ],
   "adoptedReplay": {
-    "sourceCommit": "5e5d76d67ba",
+    "sourceCommit": "04233248374",
     "kind": "development replay without a runtime-closure freeze; not a gate measurement",
     "strict": 47,
     "parsed": 537,
@@ -353,9 +363,9 @@
         "anyFailedHeadOrDet": 36
       },
       "anySignature": {
-        "edge:antecedent": 468,
+        "edge:antecedent": 467,
         "edge:functional": 393,
-        "term-anchor": 352,
+        "term-anchor": 345,
         "edge:part-of": 291,
         "span": 249,
         "edge:depends-on-element": 246,
@@ -364,7 +374,7 @@
         "term-owner": 3
       },
       "singleDefectFailures": {
-        "edge:antecedent": 21,
+        "edge:antecedent": 23,
         "edge:depends-on-element": 11
       },
       "edgeTotals": {
@@ -380,19 +390,19 @@
         },
         "antecedent": {
           "gold": 3545,
-          "pred": 2974,
-          "matched": 899
+          "pred": 2975,
+          "matched": 915
         },
         "functional": {
           "gold": 1230,
           "pred": 1086,
-          "matched": 399
+          "matched": 397
         }
       },
       "termTotals": {
         "gold": 8161,
-        "pred": 8607,
-        "matched": 7273
+        "pred": 8604,
+        "matched": 7286
       },
       "elementTotals": {
         "gold": 1976,
@@ -442,5 +452,27 @@
   },
   "frozenClosureBlocker": "freeze-runtime-closure.py refuses the last admitted baseline because bun.lock changed on accepted main; a metadata admission is owed before any frozen measurement.",
   "usefulnessEstablished": false,
-  "independentCorrectnessEstablished": false
+  "independentCorrectnessEstablished": false,
+  "siblingCombination": {
+    "pullRequest": 2980,
+    "kind": "development replay of this code plus the behavior change from #2980 at ac116008f23; not a gate measurement",
+    "results": [
+      {
+        "change": "#2980 unchanged on the first head of this PR",
+        "strict": 47,
+        "lost": 0,
+        "note": "its enumeration rule has no effect here"
+      },
+      {
+        "change": "#2980 with its grammar guard widened to any non-strict grammar, plus c4",
+        "strict": 49,
+        "lostFrom46": 0,
+        "gained": [
+          "14659462-root-1/6",
+          "16628033-root-1/5",
+          "16628033-root-1/7"
+        ]
+      }
+    ]
+  }
 }
