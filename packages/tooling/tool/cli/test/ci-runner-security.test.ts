@@ -22,7 +22,6 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -92,21 +91,37 @@ const workflowJobs = Effect.fnUntraced(function* (document: unknown) {
   return yield* decodeWorkflowJobs(yamlAt(document, ["jobs"]));
 });
 
-// The static Heavy jobs keep their shared step parameters in job-local env.
+// Enumerate every job, including unexpected jobs without Turbo metadata.
+const isYamlSequence = S.is(S.Array(S.Unknown));
 const heavyLaneParameters = (document: unknown) =>
-  Effect.forEach(
-    ["verify", "check", "test-integration", "docgen", "doctest", "build"],
-    (job) =>
-      decodeYamlRecord(yamlAt(document, ["jobs", job, "env"]) ?? {}).pipe(
-        Effect.map((env) => ({
-          id: env.BEEP_CI_LANE_ID,
-          name: env.BEEP_CI_LANE_NAME,
-          uses_turbo: env.BEEP_CI_LANE_USES_TURBO,
-          docgen_concurrency: env.BEEP_DOCGEN_CONCURRENCY,
-        }))
-      ),
-    { concurrency: 1 }
-  ).pipe(Effect.map(A.filter((lane) => P.isString(lane.uses_turbo))));
+  decodeYamlRecord(yamlAt(document, ["jobs"]) ?? {}).pipe(
+    Effect.flatMap((jobs) =>
+      Effect.forEach(
+        R.keys(jobs),
+        (job) =>
+          decodeYamlRecord(yamlAt(document, ["jobs", job, "env"]) ?? {}).pipe(
+            Effect.map((env) => {
+              const entries = O.fromUndefinedOr(yamlAt(document, ["jobs", job, "strategy", "matrix", "include"])).pipe(
+                O.map((value) => {
+                  assertTrue(isYamlSequence(value));
+                  return value;
+                }),
+                O.getOrElse(A.empty)
+              );
+              return {
+                job,
+                id: env.BEEP_CI_LANE_ID,
+                ids: [job, env.BEEP_CI_LANE_ID, ...A.map(entries, (entry) => yamlAt(entry, ["id"]))],
+                name: env.BEEP_CI_LANE_NAME,
+                uses_turbo: env.BEEP_CI_LANE_USES_TURBO,
+                docgen_concurrency: env.BEEP_DOCGEN_CONCURRENCY,
+              };
+            })
+          ),
+        { concurrency: 1 }
+      )
+    )
+  );
 
 const jobSteps = (jobs: WorkflowJobs, jobId: string): ReadonlyArray<WorkflowStep> =>
   O.getOrThrowWith(
@@ -1272,9 +1287,30 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       assert.include(gate, "labs_checks=false");
       assert.include(stepRun(steps, "Run Labs lane"), "run_lane ci lane labs --coverage-output .beep/ci-coverage/labs");
-      // Not a verify matrix leg: Coverage Regression `needs` the Labs job itself.
-      const heavyLaneParameters11 = yield* heavyLaneParameters(workflow);
-      assertNone(A.findFirst(heavyLaneParameters11, (lane) => lane.id === "labs"));
+      // Coverage Regression needs the dedicated Labs job, while Verify owns Repo Sanity.
+      assert.strictEqual(yamlAt(workflow, ["jobs", "verify", "env", "BEEP_CI_LANE_ID"]), "repo-sanity");
+    })
+  );
+
+  it.effect(
+    "detects forbidden lanes in unexpected jobs, declared ids, and legacy matrix entries",
+    Effect.fnUntraced(function* () {
+      for (const fixture of [
+        { id: "coverage", yaml: "jobs:\n  coverage:\n    runs-on: ubuntu-24.04\n    steps: []\n" },
+        {
+          id: "effect-diagnostics",
+          yaml: "jobs:\n  unexpected:\n    env:\n      BEEP_CI_LANE_ID: effect-diagnostics\n      BEEP_CI_LANE_USES_TURBO: false\n    steps: []\n",
+        },
+        {
+          id: "labs",
+          yaml: "jobs:\n  unexpected:\n    strategy:\n      matrix:\n        include:\n          - id: labs\n    steps: []\n",
+        },
+        { id: "coverage", yaml: "jobs:\n  coverage:\n    env:\n      BEEP_CI_LANE_ID: check\n    steps: []\n" },
+      ]) {
+        const lanes = yield* heavyLaneParameters(parseWorkflowYaml(fixture.yaml));
+        const forbidden = A.findFirst(lanes, (lane) => A.contains(lane.ids, fixture.id));
+        assert.throws(() => assertNone(forbidden));
+      }
     })
   );
 
@@ -1585,7 +1621,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // Effect rules run inside the patched tsrs typecheck, so the standalone
       // diagnostics matrix lane is retired.
       const heavyLaneParameters17 = yield* heavyLaneParameters(heavyWorkflow);
-      assertNone(A.findFirst(heavyLaneParameters17, (lane) => lane.id === "effect-diagnostics"));
+      assertNone(A.findFirst(heavyLaneParameters17, (lane) => A.contains(lane.ids, "effect-diagnostics")));
+      assertNone(A.findFirst(heavyLaneParameters17, (lane) => A.contains(lane.ids, "labs")));
       assert.notInclude(heavyWorkflowText, "run_lane ci lane effect-diagnostics");
       assert.notInclude(heavyWorkflowText, "commands/Quality/EffectDiagnostics.ts");
       assert.include(heavyWorkflowText, "check|test-integration|build)");
@@ -2601,7 +2638,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}"
       );
       const heavyLaneParameters31 = yield* heavyLaneParameters(policy.heavyWorkflow);
-      expect(A.some(heavyLaneParameters31, (lane) => lane.id === "coverage")).toBe(false);
+      expect(A.some(heavyLaneParameters31, (lane) => A.contains(lane.ids, "coverage"))).toBe(false);
       expect(policy.heavyWorkflowText).not.toContain("Verify coverage runtime features");
       expect(policy.heavyWorkflowText).not.toContain("append-turbo-summary --all");
       const download = stepByName(comparison, "Download coverage evidence");

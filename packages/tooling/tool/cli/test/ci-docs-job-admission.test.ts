@@ -242,3 +242,109 @@ it.effect(
     }
   })
 );
+
+it.effect(
+  "resolves cancellation without checkout and never cancels by a fork's colliding branch name",
+  Effect.fnUntraced(function* () {
+    const source = yield* Effect.tryPromise({
+      try: () => Bun.file(new URL("../../../../../.github/workflows/check.yml", import.meta.url)).text(),
+      catch: CiCommandError.new("Unable to read the no-checkout cancellation contract."),
+    });
+    const workflow = parseWorkflowYaml(source);
+    const steps = yield* decodeWorkflowSteps(yamlAt(workflow, ["jobs", "admission", "steps"]));
+    const cancel = A.findFirst(steps, (step) => yamlAt(step, ["name"]) === "Cancel superseded Heavy Admit runs").pipe(
+      O.getOrThrow
+    );
+    assert.strictEqual(yamlAt(cancel, ["env", "GH_REPO"]), "${{ github.repository }}");
+    assert.strictEqual(yamlAt(cancel, ["env", "GH_TOKEN"]), "${{ github.token }}");
+    assert.strictEqual(yamlAt(cancel, ["env", "PR_NUMBER"]), "${{ github.event.pull_request.number }}");
+    const guard = yamlAt(cancel, ["if"]);
+    const run = yamlAt(cancel, ["run"]);
+    assertTrue(isWorkflowText(guard));
+    assertTrue(isWorkflowText(run));
+    assert.strictEqual(
+      guard,
+      "github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository"
+    );
+    for (const row of [
+      {
+        event: "pull_request",
+        head: "beep-effect/beep-effect",
+        repo: "beep-effect/beep-effect",
+        success: true,
+        executes: true,
+      },
+      {
+        event: "pull_request",
+        head: "contributor/fork",
+        repo: "beep-effect/beep-effect",
+        success: true,
+        executes: false,
+      },
+      { event: "pull_request", head: "", repo: "beep-effect/beep-effect", success: true, executes: false },
+      {
+        event: "push",
+        head: "beep-effect/beep-effect",
+        repo: "beep-effect/beep-effect",
+        success: true,
+        executes: false,
+      },
+      { event: "pull_request", head: "beep-effect/beep-effect", repo: "", success: false, executes: false },
+    ]) {
+      const condition = pipe(
+        guard,
+        Str.replaceAll("github.event_name", `'${row.event}'`),
+        Str.replaceAll("github.event.pull_request.head.repo.full_name", `'${row.head}'`),
+        Str.replaceAll("github.repository", "'beep-effect/beep-effect'")
+      );
+      const script = `gh() {
+  [[ "$GH_REPO" == 'beep-effect/beep-effect' ]] || return 97
+  if [[ "$1" == 'api' ]]; then
+    printf 'repo-resolved\\n' >&2
+    if [[ "$*" == *'status=queued'* ]]; then
+      cat <<'RUNS'
+{"workflow_runs":[
+  {"id":101,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"old-head"},
+  {"id":102,"head_repository":{"full_name":"contributor/fork"},"pull_requests":[{"number":2935}],"head_sha":"old-head"},
+  {"id":103,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":99}],"head_sha":"old-head"},
+  {"id":104,"head_repository":{"full_name":"beep-effect/beep-effect"},"head_sha":"old-head"},
+  {"id":105,"pull_requests":[{"number":2935}],"head_sha":"old-head"},
+  {"id":106,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"fixture-head"},
+  {"id":107,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}]},
+  {"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"old-head"}
+]}
+RUNS
+    else
+      printf '{"workflow_runs":[]}\\n'
+    fi
+  elif [[ "$1 $2" == 'run cancel' ]]; then
+    printf 'cancelled:%s\\n' "$3"
+  else
+    return 98
+  fi
+}
+if [[ ${condition} ]]; then
+${run}
+fi`;
+      const executed = Bun.spawnSync(["bash", "-c", script], {
+        cwd: "/",
+        env: {
+          ...process.env,
+          GH_REPO: row.repo,
+          GH_TOKEN: "fixture",
+          HEAD_REF: "main",
+          PR_NUMBER: "2935",
+          HEAD_SHA: "fixture-head",
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      assert.strictEqual(executed.exitCode === 0, row.success);
+      assert.strictEqual(
+        executed.stdout.toString(),
+        row.executes ? "cancelling superseded Heavy Admit run 101\ncancelled:101\n" : ""
+      );
+      assert.strictEqual(pipe(executed.stderr.toString(), Str.includes("repo-resolved")), row.executes);
+    }
+  })
+);
