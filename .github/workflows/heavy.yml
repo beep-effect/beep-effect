@@ -957,6 +957,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          umask 077
           timeout --signal=TERM --kill-after=30s 15m \
             bun --no-env-file run beep cache pilot \
             --request .beep/cache/local-pilot-observation/request.json \

@@ -22,8 +22,11 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
@@ -2902,6 +2905,41 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(readFileString37).toBe("");
       const readFileString38 = yield* fs.readFileString(calls);
       expect(readFileString38).toContain(`show ${sha}:.github/workflows/heavy.yml`);
+    })
+  );
+  it.effect("executes local and signed pilots with the private activation creation mask", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const jobs = yield* workflowJobs(parseWorkflowYaml(heavyText));
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const pilotSteps: ReadonlyArray<readonly [string, string]> = [
+        ["local-pilot-observe", "Observe the existing local pilot"],
+        ["producer-execute", "Execute closed signed trial and retain private observation"],
+      ];
+      for (const [job, name] of pilotSteps) {
+        const script = stepRun(jobSteps(jobs, job), name);
+        // Observe the mask at the real shell's execution boundary, without running a pilot.
+        const child = yield* spawner.spawn(
+          ChildProcess.make("/usr/bin/bash", ["-c", `umask 022\ntimeout() { umask; }\n${script}`], {
+            env: { BEEP_CACHE_PRODUCER_PRIVATE_ROOT: "/private-pilot-fixture" },
+            stdout: "pipe",
+            stderr: "pipe",
+          })
+        );
+        const [status, stdout, stderr] = yield* Effect.all(
+          [
+            child.exitCode,
+            child.stdout.pipe(Stream.decodeText(), Stream.mkString),
+            child.stderr.pipe(Stream.decodeText(), Stream.mkString),
+          ],
+          { concurrency: "unbounded" }
+        );
+        expect(Number(status)).toBe(0);
+        expect(Str.trim(stdout)).toBe("0077");
+        expect(stderr).toBe("");
+      }
     })
   );
   it.effect("keeps manual local observations separate from protected producers and quality verdicts", () =>

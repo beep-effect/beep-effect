@@ -3,7 +3,12 @@
  */
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { Citation } from "@beep/law-practice-domain/values";
-import { CitationEngineSourcePairInput } from "@beep/law-practice-use-cases/server";
+import { normalizeCitationModelPage } from "@beep/law-practice-server/internal/Citation/ExtractionContext";
+import {
+  CitationEngineSourcePairInput,
+  CitationPythonUnicodeStorage,
+  CitationTokenSeed,
+} from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
@@ -50,6 +55,49 @@ const Capture = S.fromJsonString(
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
   "original short-form missing pages",
   (it) => {
+    it.effect("normalizes only underscore pages and preserves the raw token and other groups", () =>
+      Effect.gen(function* () {
+        const encoder = new TextEncoder();
+        const raw = CitationPythonUnicodeStorage.make({ width: 1, bytes: encoder.encode("raw") });
+        const cases: ReadonlyArray<readonly [string, boolean]> = [
+          ["", false],
+          ["\n", false],
+          ["_a", false],
+          ["___", true],
+          ["__\n", true],
+          [Str.repeat(4096)("_"), true],
+        ];
+        yield* Effect.forEach(
+          cases,
+          Effect.fnUntraced(function* ([text, missing]) {
+            const page = CitationPythonUnicodeStorage.make({ width: 1, bytes: encoder.encode(text) });
+            const token = CitationTokenSeed.make({
+              kind: "CitationToken",
+              data: raw,
+              start: 0,
+              end: 3,
+              groups: { page, volume: raw },
+              exact: [3],
+              variation: [4],
+              short: true,
+            });
+            const normalized = yield* normalizeCitationModelPage(token);
+            expect(normalized).toMatchObject({
+              kind: token.kind,
+              data: raw,
+              start: 0,
+              end: 3,
+              groups: { page: missing ? null : page, volume: raw },
+              exact: [3],
+              variation: [4],
+              short: true,
+            });
+          }),
+          { discard: true }
+        );
+      })
+    );
+
     for (const kind of ["bun", "node"] as const) {
       it.effect(
         `preserves the raw pin prefix before normalizing model pages on ${kind}`,

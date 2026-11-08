@@ -171,6 +171,41 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot host commands in proc
   );
 
   it.effect(
+    "runs the install directly as root or without geteuid and through sudo -n otherwise",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const { bin, apt, bwrap } = yield* makeTools(["dnf"]);
+      // `process.geteuid` is replaced per case and restored when the test ends.
+      const previous = Object.getOwnPropertyDescriptor(process, "geteuid");
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() =>
+          Object.defineProperty(
+            process,
+            "geteuid",
+            previous ?? { value: undefined, configurable: true, writable: true }
+          )
+        )
+      );
+      const firstSpawn = Effect.fnUntraced(function* (geteuid: (() => number) | undefined) {
+        const installing = ScriptedSpawner.make(() => ({}));
+        yield* fs.remove(bwrap, { force: true });
+        Object.defineProperty(process, "geteuid", { value: geteuid, configurable: true, writable: true });
+        yield* sandbox({ bwrap, aptSources: apt }).pipe(
+          withPath(bin),
+          provideSpawnerWith(installing, installBwrap(fs, bwrap))
+        );
+        return A.head(spawnLines(installing));
+      });
+      const root = yield* firstSpawn(() => 0);
+      const noGeteuid = yield* firstSpawn(undefined);
+      const user = yield* firstSpawn(() => 1000);
+      assertSome(root, "dnf install -y bubblewrap");
+      assertSome(noGeteuid, "dnf install -y bubblewrap");
+      assertSome(user, "sudo -n dnf install -y bubblewrap");
+    }, freshConsole)
+  );
+
+  it.effect(
     "prunes the apt sources before an apt-get install and reports a failed prune",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

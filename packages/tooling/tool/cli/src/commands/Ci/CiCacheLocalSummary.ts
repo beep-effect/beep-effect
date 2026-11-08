@@ -19,7 +19,7 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -239,9 +239,9 @@ export const readBoundedRegularFile: {
             read = fs.readSync(descriptor, buffer, total, buffer.byteLength - total, null);
           const after = fs.fstatSync(descriptor, { bigint: true });
           const identity = (info: typeof before) => [info.dev, info.ino, info.size, info.mtimeNs, info.ctimeNs];
-          return BigInt(total) === before.size && Equal.equals(identity(before), identity(after))
-            ? O.some(buffer.subarray(0, total))
-            : O.none<Uint8Array>();
+          // A short read or a file changed while it was read both refuse.
+          const settled = Equal.equals([before.size, ...identity(before)], [BigInt(total), ...identity(after)]);
+          return O.filter(O.some(buffer.subarray(0, total)), constant(settled));
         } finally {
           fs.closeSync(descriptor);
         }
