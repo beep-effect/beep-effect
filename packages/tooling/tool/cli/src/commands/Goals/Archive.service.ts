@@ -79,6 +79,8 @@ export const INBOUND_LINK_ROOTS: ReadonlyArray<string> = [
 ];
 
 const INBOUND_LINK_EXTENSIONS: ReadonlyArray<string> = [".md", ".mdx", ".ts", ".tsx", ".json"];
+// The knowledge doctor reads code spans only in Markdown; elsewhere a backticked path may be program output.
+const CODE_SPAN_CITATION_EXTENSIONS: ReadonlyArray<string> = [".md", ".mdx"];
 const QUERY_OR_FRAGMENT = /[?#].*$/;
 const FRAGMENT = /#.*$/;
 
@@ -330,10 +332,10 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
       )
     )
   );
-  return A.appendAll(
-    A.getSomes(resolved),
-    A.flatMap(proseLines, (line) => scanLineCodeSpans(file, line))
-  );
+  const codeSpans = A.some(CODE_SPAN_CITATION_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+    ? A.flatMap(proseLines, (line) => scanLineCodeSpans(file, line))
+    : A.empty<ScannedLink>();
+  return A.appendAll(A.getSomes(resolved), codeSpans);
 });
 
 const scanInboundLinks = Effect.fnUntraced(function* (repoRoot: string) {
@@ -367,8 +369,14 @@ const planEntry = Effect.fnUntraced(function* (
     .revParse(options.repoRoot, `HEAD:${dir}`)
     .pipe(Effect.mapError(gitFailed(options.repoRoot)));
   const removed = HashSet.fromIterable(remove);
+  const under = (target: string): ((file: string) => boolean) => Str.startsWith(`${target}/`);
+  // A cited directory breaks only when the tombstone keeps nothing under it.
+  const citesRemovedDirectory = (target: string): boolean =>
+    Str.startsWith(`${dir}/`)(target) && A.some(remove, under(target)) && !A.some(keep, under(target));
+  const cited = (link: ScannedLink): boolean =>
+    HashSet.has(removed, link.target) || (link.form === "code-span" && citesRemovedDirectory(link.target));
   const inbound = A.map(
-    A.filter(links, (link) => !Str.startsWith(`${dir}/`)(link.file) && HashSet.has(removed, link.target)),
+    A.filter(links, (link) => !Str.startsWith(`${dir}/`)(link.file) && cited(link)),
     (link) =>
       InboundLink.make({
         file: link.file,
