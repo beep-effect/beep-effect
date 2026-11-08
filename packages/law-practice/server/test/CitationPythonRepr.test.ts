@@ -81,6 +81,25 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           expect(recovered).toEqual({ width: 1, bytes: new Uint8Array([39, 39]) });
         })
     );
+    it.effect("refuses an invalid policy or oversized budget and keeps long text whole across chunks", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const raw = yield* table;
+        const refused = yield* makeCitationPythonRepr({}, raw).pipe(Effect.flip);
+        expect(refused).toMatchObject({ reason: "invalid-policy" });
+        const repr = yield* makeCitationPythonRepr(policy.limits, raw);
+        // Longer than one assembly chunk (1024) and one cooperative yield interval (4096).
+        const bytes = new Uint8Array(5000).fill(97);
+        const output = yield* repr.text({ width: 1, bytes });
+        expect(new TextDecoder().decode(output.bytes)).toBe(`'${new TextDecoder().decode(bytes)}'`);
+        const larger = yield* makeCitationTextBudget(policy.limits);
+        const oversized = yield* makeCitationPythonRepr({ ...policy.limits, producedTextUtf16: 1 }, raw).pipe(
+          Effect.provideService(CitationTextBudget, larger),
+          Effect.flip
+        );
+        expect(oversized).toMatchObject({ reason: "invalid-policy" });
+      })
+    );
     it.effect("retains the captured shared text budget when the caller supplies a replacement", () =>
       Effect.gen(function* () {
         const policy = yield* defaultCitationEnginePolicy;
