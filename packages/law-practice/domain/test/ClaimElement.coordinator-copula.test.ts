@@ -83,7 +83,8 @@ describe("inspection coordinator before a copula", () => {
           const noun = plural ? "housings" : "housing";
           const subject = plural ? "plates" : "a plate";
           const text = `A system comprising ${subject} that ${copula} coupled to the ${noun} ${coordinator} ${copula} coated.`;
-          const tree = O.getOrThrow(A.head(yield* inspect([text])));
+          const trees = yield* inspect([text]);
+          const tree = O.getOrThrow(A.head(trees));
           assert.deepStrictEqual(
             A.map(bodyTerms(tree), (term) => term.anchor.quote),
             [subject, `the ${noun}`]
@@ -110,9 +111,8 @@ describe("inspection coordinator before a copula", () => {
   }
   it.effect("uses the same boundary for a bare nominal without a stray coordinator", () =>
     Effect.gen(function* () {
-      const tree = O.getOrThrow(
-        A.head(yield* inspect(["A system comprising a plate that is coupled to housing and/or is coated."]))
-      );
+      const trees = yield* inspect(["A system comprising a plate that is coupled to housing and/or is coated."]);
+      const tree = O.getOrThrow(A.head(trees));
       assert.deepStrictEqual(
         A.map(bodyTerms(tree), (term) => term.anchor.quote),
         ["a plate", "housing"]
@@ -122,7 +122,8 @@ describe("inspection coordinator before a copula", () => {
   );
   it.effect("closes a leading nominal in the existing copular subject planner", () =>
     Effect.gen(function* () {
-      const tree = O.getOrThrow(A.head(yield* inspect(["A system comprising the housing and/or is coated."])));
+      const trees = yield* inspect(["A system comprising the housing and/or is coated."]);
+      const tree = O.getOrThrow(A.head(trees));
       assert.deepStrictEqual(
         A.map(bodyTerms(tree), (term) => term.anchor.quote),
         ["the housing"]
@@ -133,7 +134,8 @@ describe("inspection coordinator before a copula", () => {
   it.effect("retains exact UTF-16 coordinates after a quoted supplementary character", () =>
     Effect.gen(function* () {
       const text = 'A system comprising a "🧩 plate" that is coupled to the housing and/or is coated.';
-      const tree = O.getOrThrow(A.head(yield* inspect([text])));
+      const trees = yield* inspect([text]);
+      const tree = O.getOrThrow(A.head(trees));
       const term = O.getOrThrow(A.findFirst(bodyTerms(tree), (candidate) => candidate.head === "housing"));
       const startChar = O.getOrThrow(Str.indexOf("the housing")(text));
       assert.deepStrictEqual(
@@ -183,7 +185,8 @@ describe("inspection coordinator before a copula", () => {
     it.effect(`preserves existing lexical behavior without a boundary witness: ${body}`, () =>
       Effect.gen(function* () {
         const text = `A system comprising ${body}.`;
-        const current = O.getOrThrow(A.head(yield* inspect([text])));
+        const trees = yield* inspect([text]);
+        const current = O.getOrThrow(A.head(trees));
         const strict = yield* strictTree(text);
         assert.deepStrictEqual(current.elements, strict.elements);
         assert.deepStrictEqual(current.edges, strict.edges);
