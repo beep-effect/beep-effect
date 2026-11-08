@@ -15,6 +15,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -257,7 +258,36 @@ export const ArchivePlanId = S.String.check(
 export type ArchivePlanId = typeof ArchivePlanId.Type;
 
 /**
- * One link into a file the archive will remove from `main`, and the archive
+ * How a document cites a removed packet path: a Markdown `link` destination,
+ * or a plain `inline-code` span with no link around it.
+ *
+ * **Example** (Recognize a citation form)
+ *
+ * ```ts
+ * import { InboundLinkForm } from "@beep/repo-cli/commands/Goals/Archive.schemas"
+ *
+ * console.log(InboundLinkForm.is["inline-code"]("inline-code")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const InboundLinkForm = LiteralKit(["link", "inline-code"]).pipe(
+  $I.annoteSchema("InboundLinkForm", {
+    description: "Whether an inbound citation is a Markdown link destination or a plain inline-code span.",
+  })
+);
+
+/**
+ * How a document cites a removed packet path.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type InboundLinkForm = typeof InboundLinkForm.Type;
+
+/**
+ * One citation of a file the archive will remove from `main`, and the archive
  * URL it is rewritten to.
  *
  * **Example** (Construct an inbound link)
@@ -268,6 +298,7 @@ export type ArchivePlanId = typeof ArchivePlanId.Type;
  * const link = InboundLink.make({
  *   file: "docs/README.md",
  *   line: 3,
+ *   form: "link",
  *   destination: "../goals/demo/PLAN.md",
  *   rewrittenTo: "https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/demo/PLAN.md",
  * })
@@ -281,11 +312,12 @@ export class InboundLink extends S.Opaque<InboundLink, { readonly brand: unique 
   S.Struct({
     file: S.String,
     line: S.Int.check(S.isGreaterThanOrEqualTo(1)),
+    form: InboundLinkForm,
     destination: S.String,
     rewrittenTo: S.String,
   }).pipe(
     $I.annoteSchema("InboundLink", {
-      description: "A link from a file outside the packet into a removed packet file, with its archive blob URL.",
+      description: "A citation from a file outside the packet of a removed packet path, with its archive blob URL.",
     })
   )
 ) {}

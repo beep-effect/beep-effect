@@ -30,8 +30,21 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ExplorationManifest, ExplorationStatus } from "../Explore/Atlas.ts";
-import { knowledgeDocumentLines, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
-import { ArchivePlan, ArchivePlanEntry, ArchiveRepoRef, InboundLink, tombstoneKeeps } from "./Archive.schemas.ts";
+import {
+  isKnowledgeCommandSpan,
+  knowledgeDocumentLines,
+  knowledgeInlineSpans,
+  knowledgeLinkDestinations,
+  normalizeKnowledgeRepoPath,
+} from "../Knowledge/Knowledge.refs.ts";
+import {
+  ArchivePlan,
+  ArchivePlanEntry,
+  ArchiveRepoRef,
+  InboundLink,
+  InboundLinkForm,
+  tombstoneKeeps,
+} from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, GoalStatus } from "./Goals.schemas.ts";
 import { isTerminalPacketStatus } from "./Harvest.service.ts";
@@ -72,6 +85,8 @@ export const INBOUND_LINK_ROOTS: ReadonlyArray<string> = [
 ];
 
 const INBOUND_LINK_EXTENSIONS: ReadonlyArray<string> = [".md", ".mdx", ".ts", ".tsx", ".json"];
+// The knowledge doctor reads inline-code spans as tracked paths only in Markdown documents.
+const INLINE_CITATION_EXTENSIONS: ReadonlyArray<string> = [".md", ".mdx"];
 const QUERY_OR_FRAGMENT = /[?#].*$/;
 const FRAGMENT = /#.*$/;
 
@@ -277,9 +292,32 @@ export const resolveLinkDestination = Effect.fn("Archive.resolveLinkDestination"
 type ScannedLink = {
   readonly file: string;
   readonly line: number;
+  readonly form: InboundLinkForm;
   readonly destination: string;
   readonly target: string;
 };
+
+// Plain inline-code citations on one prose line. A span used as link text is rewritten with its link.
+const inlineCitationsOn = (file: string, line: KnowledgeDocumentLine): ReadonlyArray<ScannedLink> =>
+  A.getSomes(
+    A.map(
+      A.filter(
+        knowledgeInlineSpans(line.text),
+        (inline) => !isKnowledgeCommandSpan(inline.span) && !Str.includes(`[\`${inline.span}\`](`)(line.text)
+      ),
+      (inline) =>
+        O.map(
+          normalizeKnowledgeRepoPath(file, inline.span),
+          (target): ScannedLink => ({
+            file,
+            line: line.number,
+            form: InboundLinkForm.Enum["inline-code"],
+            destination: inline.span,
+            target,
+          })
+        )
+    )
+  );
 
 const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -292,10 +330,21 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
   const resolved = yield* Effect.forEach(candidates, (candidate) =>
     Effect.map(
       resolveLinkDestination(file, candidate.destination),
-      O.map((target): ScannedLink => ({ file, line: candidate.line, destination: candidate.destination, target }))
+      O.map(
+        (target): ScannedLink => ({
+          file,
+          line: candidate.line,
+          form: InboundLinkForm.Enum.link,
+          destination: candidate.destination,
+          target,
+        })
+      )
     )
   );
-  return A.getSomes(resolved);
+  const inlineCitations = A.some(INLINE_CITATION_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+    ? A.flatMap(proseLines, (line) => inlineCitationsOn(file, line))
+    : A.empty<ScannedLink>();
+  return A.appendAll(A.getSomes(resolved), inlineCitations);
 });
 
 const scanInboundLinks = Effect.fnUntraced(function* (repoRoot: string) {
@@ -329,12 +378,20 @@ const planEntry = Effect.fnUntraced(function* (
     .revParse(options.repoRoot, `HEAD:${dir}`)
     .pipe(Effect.mapError(gitFailed(options.repoRoot)));
   const removed = HashSet.fromIterable(remove);
+  const underTarget = (target: string): ((file: string) => boolean) => Str.startsWith(`${target}/`);
+  // A directory citation breaks only when the tombstone keeps nothing under it.
+  const citesRemovedDirectory = (target: string): boolean =>
+    Str.startsWith(`${dir}/`)(target) && A.some(remove, underTarget(target)) && !A.some(keep, underTarget(target));
+  const cited = (link: ScannedLink): boolean =>
+    HashSet.has(removed, link.target) ||
+    (InboundLinkForm.is["inline-code"](link.form) && citesRemovedDirectory(link.target));
   const inbound = A.map(
-    A.filter(links, (link) => !Str.startsWith(`${dir}/`)(link.file) && HashSet.has(removed, link.target)),
+    A.filter(links, (link) => !Str.startsWith(`${dir}/`)(link.file) && cited(link)),
     (link) =>
       InboundLink.make({
         file: link.file,
         line: link.line,
+        form: link.form,
         destination: link.destination,
         rewrittenTo: `https://github.com/${options.repo}/blob/main/${link.target}${fragmentOf(link.destination)}`,
       })
